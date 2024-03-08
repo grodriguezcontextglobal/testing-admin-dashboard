@@ -1,0 +1,283 @@
+import { Grid, Typography } from "@mui/material";
+import { Button, Card, Popconfirm, notification } from "antd";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import { ExchangeIcon, LostItem, ReturnIcon } from "../../../../../components/icons/Icons";
+import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
+import {
+  onReceiverObjectToReplace,
+  onTriggerModalToReplaceReceiver,
+} from "../../../../../store/slices/helperSlice";
+import {
+  onAddCustomer,
+  onAddDevicesAssignedInPaymentIntent,
+  onAddPaymentIntentDetailSelected,
+  onAddPaymentIntentSelected,
+} from "../../../../../store/slices/stripeSlice";
+import { DangerButton } from "../../../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
+import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
+import Choice from "../lostFee/Choice";
+import { Replace } from "./Replace";
+import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
+const ActionsMainPage = () => {
+  const [openLostModal, setOpenLostModal] = useState(false);
+  const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
+  const { event } = useSelector((state) => state.event);
+  const { triggerModal } = useSelector((state) => state.helper);
+  const dispatch = useDispatch();
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (type, msg) => {
+    api[type]({
+      message: type,
+      description: msg,
+    });
+  };
+
+  const handleReturnDevice = async () => {
+    const respo = await devitrakApi.post('/receiver/receiver-assigned-list', {
+      'device.serialNumber': deviceInfoSelected.entireData.device,
+      'device.status': true,
+      'device.deviceType': deviceInfoSelected.entireData.type,
+      eventSelected: event.eventInfoDetail.eventName,
+      provider: event.company
+    })
+    if (respo.data.ok) {
+      const assignedDevice = respo.data.listOfReceivers.at(-1)
+      await devitrakApi.patch(
+        `/receiver/receiver-update/${assignedDevice.id}`,
+        {
+          id: assignedDevice.id,
+          device: { ...assignedDevice.device, status: false },
+          timeStamp: new Date().getTime()
+        },
+
+      );
+      const respoPool = await devitrakApi.post('/receiver/receiver-pool-list', {
+        device: deviceInfoSelected.entireData.device,
+        type: deviceInfoSelected.entireData.type,
+        activity: "YES",
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company
+      })
+      if (respoPool.data.ok) {
+        const poolDevice = respoPool.data.receiversInventory.at(-1)
+        await devitrakApi.patch(
+          `/receiver/receivers-pool-update/${poolDevice.id}`,
+          {
+            id: poolDevice.id,
+            activity: "No"
+          }
+        );
+        openNotificationWithIcon("success", "Device returned.");
+        dispatch(onAddDeviceToDisplayInQuickGlance({
+          ...deviceInfoSelected,
+          activity: "No",
+          entireData: {
+            ...deviceInfoSelected.entireData,
+            activity: "YES",
+
+          }
+        }))
+      }
+    }
+  };
+  const handleLostSingleDevice = async () => {
+    try {
+      const respo = await devitrakApi.post('/receiver/receiver-assigned-list', {
+        'device.serialNumber': deviceInfoSelected.serialNumber,
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company
+      })
+      if (respo.data.ok) {
+        const emailUser = respo.data.listOfReceivers.at(-1).user
+        const customerHTTP = await devitrakApi.post("/auth/users", {
+          email: emailUser
+        })
+        if (customerHTTP.data.ok) {
+          const userFound = customerHTTP.data.users.at(-1)
+          const templateConsumer = {
+            ...userFound,
+            uid: userFound.id
+          }
+          dispatch(
+            onAddDevicesAssignedInPaymentIntent([respo.data.listOfReceivers.at(-1)])
+          );
+          dispatch(
+            onAddPaymentIntentSelected(
+              respo.data.listOfReceivers.at(-1).paymentIntent
+            )
+          );
+          dispatch(onAddPaymentIntentDetailSelected(respo.data.listOfReceivers.at(-1)));
+          dispatch(
+            onAddCustomer(templateConsumer)
+          );
+          dispatch(
+            onAddCustomerInfo(templateConsumer)
+          );
+          dispatch(
+            onReceiverObjectToReplace({
+              deviceType: deviceInfoSelected.entireData.type,
+              serialNumber: deviceInfoSelected.entireData.device,
+            })
+          );
+          dispatch(
+            onAddDevicesAssignedInPaymentIntent(respo.data.listOfReceivers.at(-1))
+          );
+          setOpenLostModal(true);
+        }
+      }
+    } catch (error) {
+      openNotificationWithIcon(
+        "error",
+        `Something went wrong, please try later! ${error.message}`
+      );
+    }
+  };
+
+  const exchangeDefectedDevice = () => {
+    dispatch(onTriggerModalToReplaceReceiver(true));
+    dispatch(
+      onReceiverObjectToReplace({
+        deviceType: deviceInfoSelected.entireData.type,
+        serialNumber: deviceInfoSelected.entireData.device,
+        status: true,
+      })
+    );
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <Grid
+        padding={"0px"}
+        display={"flex"}
+        justifyContent={"space-between"}
+        textAlign={"left"}
+        alignItems={"flex-start"}
+        alignSelf={"stretch"}
+        item
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
+      >
+        <Card
+          style={{
+            borderRadius: "12px",
+            border: "none",
+            background: "transparent",
+            boxShadow: "none",
+            textAlign: "right",
+            padding: 0
+          }}
+        >
+
+          {deviceInfoSelected.activity === "YES" && (
+
+            <Grid
+              container
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Grid
+                display={"flex"}
+                justifyContent={'center'}
+                alignItems={'center'}
+                margin={'0 5px 0 0'}
+                item
+                xs={12}
+                sm={12}
+                md={4}
+                lg={3}
+
+              >
+                <Button
+                  onClick={() => handleLostSingleDevice()}
+                  style={DangerButton}
+                >
+                  <LostItem />
+                  <Typography
+                    textTransform={"capitalize"}
+                    textAlign={"left"}
+                    style={DangerButtonText}
+                  >
+                    lost
+                  </Typography>
+                </Button>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={'center'}
+                alignItems={'center'}
+                margin={'0 5px 0 0'}
+                gap={1}
+                item
+                xs={12}
+                sm={12}
+                md={4}
+                lg={3}
+              >
+                <Button
+                  onClick={() => exchangeDefectedDevice()}
+                  style={DangerButton}
+                >
+                  <ExchangeIcon />
+                  <Typography
+                    textTransform={"capitalize"}
+                    textAlign={"left"}
+                    style={DangerButtonText}
+                  >
+                    exchange
+                  </Typography>
+                </Button>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={'center'}
+                alignItems={'center'}
+                item
+                xs={12}
+                sm={12}
+                md={4}
+                lg={3}
+              >
+                <Popconfirm
+                  title="Are you sure?"
+                  onConfirm={() => handleReturnDevice()}
+                ><Button
+                  style={LightBlueButton}
+                >
+
+                    <ReturnIcon />
+                    <Typography
+                      textAlign={"left"}
+                      style={LightBlueButtonText}
+                    >Return
+                    </Typography>
+
+                  </Button></Popconfirm>
+              </Grid>
+            </Grid>
+          )}
+        </Card>
+      </Grid>
+      {/* {openDeviceModal && <CreateDevice
+        openDeviceModal={openDeviceModal}
+        setOpenDeviceModal={setOpenDeviceModal}
+      />} */}
+      {openLostModal && (
+        <Choice
+          openModal={openLostModal}
+          setOpenModal={setOpenLostModal}
+        />
+      )}
+      {triggerModal && <Replace />}
+    </>
+  );
+};
+
+export default ActionsMainPage;

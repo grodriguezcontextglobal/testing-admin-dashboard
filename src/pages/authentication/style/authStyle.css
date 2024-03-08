@@ -1,0 +1,38 @@
+#section-img-login-component {
+  background: url("../../../assets/section-login.png"), lightgray 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.register-container {
+  width: 30rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+@media screen and (min-width: 1540px) {
+  .register-container {
+    margin: auto;
+    width: 50rem;
+  }
+}
+.register-form-container {
+  margin: auto;
+  width: 85%;
+  /* height: 55dvh; */
+}
+@media screen and (min-width: 1540px) {
+  .register-form-container {
+    margin: auto;
+    width: 70%;
+  }
+}

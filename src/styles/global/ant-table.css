@@ -1,0 +1,7 @@
+.table-ant-customized {
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: 12px;
+}
+.table-ant-customized > tr {
+  background-color:var(--main-background-color)
+}

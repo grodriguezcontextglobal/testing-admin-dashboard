@@ -1,0 +1,31 @@
+{
+  "subscriptionsList": [
+    {
+      "id": 1,
+      "name": "Basic",
+      "adminUser": 1,
+      "support": false,
+      "training": false,
+      "merchantService": false,
+      "dataHistory":false
+    },
+    {
+      "id": 2,
+      "name": "Business",
+      "adminUser": 5,
+      "support": true,
+      "training": false,
+      "merchantService": true,
+      "dataHistory":false
+    },
+    {
+      "id": 3,
+      "name": "Enterprise",
+      "adminUser": "Unlimited",
+      "support": true,
+      "training": true,
+      "merchantService": true,
+      "dataHistory":true
+    }
+  ]
+}

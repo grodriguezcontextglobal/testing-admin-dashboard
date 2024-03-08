@@ -1,0 +1,148 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
+:root {
+  width: 95vw;
+  min-height: 100dvh;
+  display: flex;
+  margin: 0;
+  align-self: stretch;
+  text-align: center;
+  color-scheme: light dark;
+  color: rgba(39, 38, 38, 0.87);
+  background-color: var(--main-background-color);
+  font-family: "Inter", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* colors pallet */
+  --white: rgba(255, 255, 255, 0);
+  --main-colorscarbon: rgba(51, 51, 51, 1);
+
+  --baseblack: rgba(0, 0, 0, 1);
+  --gray900: rgba(15, 23, 40, 1);
+  --main-background-color: #f9fafb;
+  --blue-dark--800: rgba(0, 64, 193, 1);
+  --blue-dark--700: rgba(0, 78, 234, 1);
+  --blue700: rgba(23, 92, 211, 1);
+  --blue-dark--600: rgba(21, 93, 238, 1);
+  --haddocks-sweater: rgba(30, 115, 190, 1);
+  --main-colorsfresh-blue-of-bel-air: rgba(21, 170, 245, 1);
+  --bunting: rgba(22, 22, 81, 0.502);
+  --main-colorsfly-by-night: rgba(22, 22, 81, 1);
+  --border-line-component: #d0d5dd;
+  --cover-of-night: rgba(73, 76, 79, 1);
+  --main-colorsexcalibur: rgba(102, 102, 102, 1);
+  --main-colorsaluminium: rgba(129, 138, 145, 1);
+  --gray700: rgba(52, 64, 83, 1);
+  --gray600: rgba(71, 84, 102, 1);
+  --gray500: rgba(102, 112, 132, 1);
+  --gray300: rgba(207, 212, 220, 1);
+  --blue-dark--100: rgba(209, 224, 255, 1);
+  --gray200: rgba(234, 236, 240, 1);
+  --success50: rgba(235, 253, 242, 1);
+  --gray100: rgba(242, 243, 246, 1);
+  --gray-modern--50: rgba(248, 249, 251, 1);
+  --primary50: rgba(249, 245, 255, 1);
+  --basewhite: rgba(255, 255, 255, 1);
+  --main-colorszen: rgba(210, 214, 220, 1);
+  --alto: rgba(217, 217, 217, 1);
+  --glacial-ice: rgba(232, 232, 232, 1);
+  --concrete: rgba(242, 242, 242, 1);
+  --wild-sand: rgba(244, 244, 244, 1);
+  --cultured-pearl: rgba(245, 245, 245, 1);
+
+  --success700: rgba(2, 121, 71, 1);
+  --eucalyptus: rgba(33, 150, 83, 1);
+
+  --danger-action: #b42318;
+
+  --main-colorsbluetiful: rgba(69, 104, 220, 1);
+  --main-colorsfading-horizon: rgba(72, 33, 118, 1);
+  --lavender: rgba(187, 107, 217, 1);
+
+  --main-colorslobster: rgba(192, 43, 10, 1);
+  --graphic-status-damage: #da2c38;
+  --graphic-status-networking: #f5b700;
+  --graphic-status-missed: #00a1e4;
+  --graphic-status-hardware: #ebebeb;
+  --graphic-status-other: #89fc00;
+  --main-navbar-color: #1e73be;
+
+  --font-size-xs: 8px;
+  --font-size-m2: 16px;
+  --font-size-l2: 20px;
+  --font-size-xs2: 12px;
+  --font-size-xl2: 24px;
+  --font-size-xxl2: 32px;
+
+  --font-family-inter: "Inter";
+  --font-family-open_sans: "Open Sans";
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+input {
+  background: #fff;
+  color: #000;
+  border: none;
+}
+input::placeholder {
+  font-family: "Inter";
+  font-size: 14px;
+  background: #fff;
+  color: #000;
+}
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  color: #535bf2;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
