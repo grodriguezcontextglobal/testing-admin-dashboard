@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css'
 import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes'
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +13,7 @@ import { onResetStaffProfile } from './store/slices/staffDetailSlide';
 import { onResetHelpers } from './store/slices/helperSlice';
 import { onResetStripesInfo } from './store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
-  const App = () => {
+const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
   const dispatch = useDispatch();
@@ -38,14 +38,36 @@ import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
       }
     }
   };
+  const [connectionType, setConnectionType] = useState('');
+
+  useEffect(() => {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    console.log("🚀 ~ useEffect ~ connection:", connection.effectiveType)
+    if (connection) {
+      setConnectionType(connection.effectiveType);
+    }
+  }, []);
+
+  // Function to render the network status message based on connection type
+  const renderNetworkStatusMessage = () => {
+    if (connectionType === 'slow-2g' || connectionType === '2g') {
+      return null;
+    } else {
+      return null;
+    }
+  };
   useEffect(() => {
     const controller = new AbortController()
     dispatchActionBasedOnTokenValidation();
     return () => { controller.abort() }
 
   }, [status, adminToken]);
+
   return (
     <>
+      {
+        renderNetworkStatusMessage()
+      }
       {
         status === "authenticated" && adminToken ?
           <AuthRoutes />
