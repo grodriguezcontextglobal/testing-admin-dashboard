@@ -455,7 +455,7 @@ const Form = () => {
         </Grid>
       </Grid >
 
-      <InputLabel
+      {/* <InputLabel
         style={{
           width: "100%",
           display: "flex",
@@ -515,12 +515,12 @@ const Form = () => {
       {
         displayFormToCreateCategory && (
           <FormDeviceTrackingMethod
-          // selectedItem={selectedItem}
-          // setSelectedItem={setSelectedItem}
-          // listOfItems={filterDataToDisplay()}
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
+          listOfItems={[]}
           />
         )
-      }
+      } */}
       <Grid
         style={{
           width: "100%",

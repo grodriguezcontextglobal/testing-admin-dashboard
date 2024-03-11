@@ -443,18 +443,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
                                     <Button
                                         type="submit"
                                         style={BlueButton}
-                                    // style={{
-                                    //     display: "flex",
-                                    //     padding: "12px 20px",
-                                    //     justifyContent: "center",
-                                    //     alignItems: "center",
-                                    //     gap: "8px",
-                                    //     alignSelf: "stretch",
-                                    //     borderRadius: "8px",
-                                    //     border: "1px solid var(--blue-dark-600, #155EEF)",
-                                    //     background: "var(--blue-dark-600, #155EEF)",
-                                    //     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                                    // }}
+    
                                     >
                                         <Typography
                                             textTransform={"none"}

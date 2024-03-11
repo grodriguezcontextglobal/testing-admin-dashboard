@@ -30,6 +30,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { InputLabelStyle } from "../style/InputLabelStyle";
 import "../style/NewEventInfoSetup.css";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 const Form = () => {
   const { subscription, subscriptionJSON } = useSelector(
     (state) => state.subscription
@@ -254,12 +255,8 @@ const Form = () => {
             }}
           >
             <PhoneInput
-              style={{
-                ...OutlinedInputStyle,
-                margin: "0.1rem 0 1.5rem",
-                padding: "0px 20px",
-                width: "100%"
-              }}
+            style={{ ...AntSelectorStyle, width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
+              // style={AntSelectorStyl}
               id='phone_input_check'
               countrySelectProps={{ unicodeFlags: true }}
               defaultCountry="US"

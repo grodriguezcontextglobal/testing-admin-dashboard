@@ -5,8 +5,7 @@ import {
     OutlinedInput,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { Checkbox, Typography } from "antd";
+import { Checkbox, Typography, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
@@ -15,10 +14,10 @@ import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { clearErrorMessage, onAddErrorMessage, onChecking, onLogin, onLogout } from "../../store/slices/adminSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import '../../styles/global/OutlineInput.css';
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import ForgotPassword from "./ForgotPassword";
-import '../../styles/global/OutlineInput.css';
 import './style/authStyle.css';
 const Login = () => {
     const {
@@ -32,6 +31,13 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient()
+    const [api, contextHolder] = notification.useNotification();
+    const openNotificationWithIcon = (type, msg) => {
+        api[type]({
+            message: msg,
+            duration: 0
+        });
+    };
     const onSubmitLogin = async (data) => {
         dispatch(onChecking());
         try {
@@ -69,24 +75,23 @@ const Login = () => {
 
                 dispatch(clearErrorMessage())
                 queryClient.clear()
+                openNotificationWithIcon('success', 'User logged in.')
                 navigate('/')
             }
 
         } catch (error) {
+            alert(`${error?.response?.data?.msg}`)
             dispatch(onLogout("Incorrect credentials"));
-            dispatch(onAddErrorMessage(error?.respo.data?.msg));
+            dispatch(onAddErrorMessage(error?.response?.data?.msg));
         }
         setValue("email", "");
         setValue("password", "");
         return dispatch(clearErrorMessage());
     }
-    const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-    const isMediumDevice = useMediaQuery(
-        "only screen and (min-width : 769px) and (max-width : 992px)"
-    );
 
     return (
         <>
+
             <Grid
                 container
                 display={"flex"}
@@ -96,6 +101,7 @@ const Login = () => {
                 padding={0}
 
             >
+                {contextHolder}
                 <Grid
                     display={"flex"}
                     flexDirection={'column'}
@@ -112,11 +118,10 @@ const Login = () => {
                     }}
                     item
                     xs={12} sm={12} md={6} lg={6}>
-
                     <Grid display={'flex'} flexDirection={'column'} justifyContent={'center'} alignSelf={'center'} margin={'auto'} item xs={12} sm={12} md={12} lg={12}>
-                        <Typography style={{width:"100%"}}>Welcome</Typography>
-                        <Typography style={{width:"100%"}}>Please enter your email</Typography>
-                        <form onSubmit={handleSubmit(onSubmitLogin)} style={{width:"100%"}}>
+                        <Typography style={{ width: "100%" }}>Welcome</Typography>
+                        <Typography style={{ width: "100%" }}>Please enter your email</Typography>
+                        <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
                             <Grid
                                 marginY={"20px"}
                                 marginX={0}
