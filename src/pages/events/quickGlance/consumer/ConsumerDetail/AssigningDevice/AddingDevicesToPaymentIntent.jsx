@@ -9,7 +9,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
 import _ from 'lodash';
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -37,16 +37,26 @@ const AddingDevicesToPaymentIntent = ({ record }) => {
     } = useForm();
     const queryClient = useQueryClient();
     const deviceInPoolQuery = useQuery({
-        queryKey:['poolInfoQuery'],
-        queryFn:() => devitrakApi.post('/receiver/receiver-pool-list', {
+        queryKey: ['poolInfoQuery'],
+        queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company,
         }),
-        refetchOnMount:false,
-        cacheTime:1000*60*3
+        enable: false,
+        refetchOnMount: false,
+        cacheTime: 1000 * 60 * 3
     })
 
     const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory
+
+    useEffect(() => {
+        const controller = new AbortController()
+        deviceInPoolQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, message) => {
         api[type]({
@@ -191,9 +201,13 @@ const AddingDevicesToPaymentIntent = ({ record }) => {
                             resp.data.receiversAssignedPerUser
                         )
                     );
-                    queryClient.invalidateQueries(["deviceInPoolQuery","poolInfoQuery","listOfDevicesAssigned"]);
-                            const dateString = new Date().toString()
-                            const dateRef = dateString.split(' ')
+                    queryClient.invalidateQueries({ queryKey: ["deviceInPoolQuery"], exact: true });
+                    queryClient.invalidateQueries({ queryKey: ["poolInfoQuery"], exact: true });
+                    queryClient.invalidateQueries({ queryKey: ["listOfDevicesAssigned"], exact: true });
+                    queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"], exact: true });
+                    deviceInPoolQuery.refetch()
+                    const dateString = new Date().toString()
+                    const dateRef = dateString.split(' ')
                     //* check if reach device requested to notify
                     await devitrakApi.post("/nodemailer/assignig-device-notification", {
                         consumer: {
@@ -206,9 +220,9 @@ const AddingDevicesToPaymentIntent = ({ record }) => {
                         },
                         event: event.eventInfoDetail.eventName,
                         company: event.company,
-                        date:dateRef.slice(0,4),
-                        time:dateRef[4],
-                        transaction:  record.paymentIntent,
+                        date: dateRef.slice(0, 4),
+                        time: dateRef[4],
+                        transaction: record.paymentIntent,
                         link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`
                     });
 

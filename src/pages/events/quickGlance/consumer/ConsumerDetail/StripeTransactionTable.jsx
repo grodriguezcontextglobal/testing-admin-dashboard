@@ -1,6 +1,6 @@
 import { SearchOutlined } from "@ant-design/icons";
 import { Grid, Link, Typography } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     Button,
     Input,
@@ -11,9 +11,11 @@ import {
     notification
 } from "antd";
 import _ from "lodash";
+import pkg from 'prop-types';
 import { useEffect, useRef, useState } from "react";
 import Highlighter from "react-highlight-words";
 import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
     onReceiverObjectToReplace,
     onTriggerModalToReplaceReceiver,
@@ -23,18 +25,14 @@ import {
     onAddPaymentIntentDetailSelected,
     onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import { useQuery } from "@tanstack/react-query";
+import '../../../../../styles/global/ant-table.css';
 import Choice from "../lostFee/Choice";
-import '../../../../../styles/global/ant-table.css'
-import pkg from 'prop-types';
+import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
+import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
+import { ReplaceDevice } from "./actions/ReplaceDevice";
+import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
-import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
-import { devitrakApi } from "../../../../../api/devitrakApi";
-import { ReplaceDevice } from "./actions/ReplaceDevice";
-import AddingDeviceToPaymentIntentFromSearchBar from "./AssigningDevice/AddingDeviceToPaymentIntentFromSearchBar";
-import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue }) => {
@@ -62,7 +60,7 @@ const StripeTransactionTable = ({ searchValue }) => {
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, message) => {
         api[type]({
-            message: `${type === "success" ? "" : ""}`,
+            message: `${type === "success" ? type : ""}`,
             description: `${message}`,
             placement: "bottomRight",
         });
@@ -97,6 +95,10 @@ const StripeTransactionTable = ({ searchValue }) => {
             controller.abort()
         }
     }, [])
+
+    const refetchingFn = () => {
+        return deviceAssignedListQuery.refetch()
+    }
 
     const foundAllTransactionsAndDevicesAssigned = () => {
         const assignedDevices = deviceAssignedListQuery?.data?.data?.listOfReceivers
@@ -305,7 +307,8 @@ const StripeTransactionTable = ({ searchValue }) => {
                         const dateString = new Date().toString()
                         const dateRef = dateString.split(' ')
                         const checkInPool = deviceInPoolListQuery.data.receiversInventory.at(-1)
-                        queryClient.invalidateQueries("assignedDeviceListQuery");
+                        queryClient.invalidateQueries('assignedDeviceListQuery', { exact: true });
+                        deviceAssignedListQuery.refetch()
                         const deviceInPoolProfile = {
                             id: checkInPool.id,
                             activity: "No",
@@ -370,7 +373,8 @@ const StripeTransactionTable = ({ searchValue }) => {
                         const dateString = new Date().toString()
                         const dateRef = dateString.split(' ')
                         const devicePoolData = deviceInPoolListQuery.data.receiversInventory.at(-1)
-                        queryClient.invalidateQueries("assignedDeviceListQuery");
+                        queryClient.invalidateQueries('assignedDeviceListQuery', { exact: true });
+                        deviceAssignedListQuery.refetch()
                         const deviceInPoolProfile = {
                             ...devicePoolData,
                             activity: "YES",
@@ -824,8 +828,8 @@ const StripeTransactionTable = ({ searchValue }) => {
                     setOpenCancelingDepositModal={setOpenCancelingDepositModal}
                 />
             )}
-            {openReturnDeviceInBulkModal && <ReturningInBulkMethod openReturnDeviceBulkModal={openReturnDeviceInBulkModal} setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal} record={recordRef.current} />}
-            {triggerModal && <ReplaceDevice />}
+            {openReturnDeviceInBulkModal && <ReturningInBulkMethod openReturnDeviceBulkModal={openReturnDeviceInBulkModal} setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal} record={recordRef.current} refetching={refetchingFn} />}
+            {triggerModal && <ReplaceDevice refetching={refetchingFn} />}
             {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
         </>
     );

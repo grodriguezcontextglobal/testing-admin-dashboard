@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -22,19 +22,19 @@ import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
-export const ReplaceDevice = ({ device }) => {
+export const ReplaceDevice = ({ refetching }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
-  const { paymentIntentDetailSelected, customer } = useSelector(
+  const { paymentIntentSelected, customer } = useSelector(
     (state) => state.stripe
   );
   const { triggerModal, receiverToReplaceObject } = useSelector(
     (state) => state.helper
   );
-  const refDeviceHasRecordInEvent = useRef(null);
-  const refDeviceSetInEvent = useRef(null);
+  // const refDeviceHasRecordInEvent = useRef(null);
+  // const refDeviceSetInEvent = useRef(null);
   const stampTime = `${new Date()}`;
-  const { deviceSetup } = event;
+  // const { deviceSetup } = event;
   const {
     register,
     setValue,
@@ -47,8 +47,7 @@ export const ReplaceDevice = ({ device }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api[type]({
-      message: type,
-      description: msg,
+      message: msg,
     });
   };
   const queryClient = useQueryClient();
@@ -59,23 +58,37 @@ export const ReplaceDevice = ({ device }) => {
       "eventSelected": event.eventInfoDetail.eventName,
       "provider": event.company,
       "device.serialNumber": receiverToReplaceObject.serialNumber,
-      "device.deviceType": receiverToReplaceObject.deviceType
+      "device.deviceType": receiverToReplaceObject.deviceType,
+      paymentIntent: paymentIntentSelected
     }),
+    enable: false,
     refetchOnMount: false,
-    notifyOnChangeProps:['data','dataUpdatedAt']
+    notifyOnChangeProps: ['data', 'dataUpdatedAt']
   })
 
   const deviceInPoolQuery = useQuery({
     queryKey: ["deviceInPoolList"],
     queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
-      "eventSelected": event.eventInfoDetail.eventName,
-      "provider": event.company,
-      "device": receiverToReplaceObject.serialNumber,
-      "type": receiverToReplaceObject.deviceType
+      eventSelected: event.eventInfoDetail.eventName,
+      provider: event.company,
+      device: receiverToReplaceObject.serialNumber,
+      type: receiverToReplaceObject.deviceType
     }),
+    enable: false,
     refetchOnMount: false,
-    notifyOnChangeProps:['data','dataUpdatedAt']
+    notifyOnChangeProps: ['data', 'dataUpdatedAt']
   })
+
+  useEffect(() => {
+    const controller = new AbortController()
+    assignedDeviceInTransactionQuery.refetch()
+    deviceInPoolQuery.refetch()
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
   const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory
   const assignedDeviceInTransaction = assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers
 
@@ -141,8 +154,9 @@ export const ReplaceDevice = ({ device }) => {
       type: receiverToReplaceObject.deviceType
     })
     if (newDeviceToAssignData.data.ok) {
+      const newDeviceInfo = newDeviceToAssignData.data.receiversInventory.at(-1)
       await devitrakApi.patch(
-        `/receiver/receivers-pool-update/${newDeviceToAssignData.data.receiversInventory.at(-1).id}`,
+        `/receiver/receivers-pool-update/${newDeviceInfo.id}`,
         {
           status: "Operational",
           activity: "YES",
@@ -165,6 +179,8 @@ export const ReplaceDevice = ({ device }) => {
         },
       }
     );
+    queryClient.invalidateQueries('assginedDeviceList')
+
   }
 
   const replaceDevice = async (data) => {
@@ -174,7 +190,8 @@ export const ReplaceDevice = ({ device }) => {
     await defectedDevice(data)
     reportEventLog(data);
     handleClearRecord()
-    queryClient.invalidateQueries('assginedDeviceList')
+    queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
+    refetching()
     closeModal();
   };
 

@@ -10,7 +10,7 @@ import { BlueButtonText } from '../../../../../../styles/global/BlueButtonText'
 import { TextFontSize30LineHeight38 } from '../../../../../../styles/global/TextFontSize30LineHeight38'
 import CenteringGrid from '../../../../../../styles/global/CenteringGrid'
 // 
-const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceInBulkModal, record }) => {
+const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceInBulkModal, record, refetching }) => {
     const deviceInTransactionQuery = useQuery({
         queryKey: ['assignedDeviceInTransaction'],
         queryFn: () => devitrakApi.post('/receiver/receiver-assigned-list', {
@@ -62,12 +62,14 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
                 timeStamp: new Date().getTime()
             })
         }
+        queryClient.invalidateQueries('assginedDeviceList', { exact: true });
     }
 
     const returnDeviceInPool = async (props) => {
         const deviceInPoolData = _.groupBy(deviceInPoolQuery.data.data.receiversInventory, 'device')
         if (deviceInPoolData[props].at(-1).id) {
             await devitrakApi.patch(`/receiver/receivers-pool-update/${deviceInPoolData[props].at(-1).id}`, { device: props, activity: "No", status: "Operational" })
+            queryClient.invalidateQueries('assginedDeviceList', { exact: true });
         }
     }
     const handleReturnDevices = async (data) => {
@@ -78,7 +80,8 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
             await returnDevicesInTransaction({ device: String(i).padStart(startingNumber.length, `${startingNumber[0]}`) })
         }
         openNotificationWithIcon('success', 'All devices returned!')
-        queryClient.invalidateQueries(['assignedDeviceInTransaction', 'deviceInTransactionInPool', 'assginedDeviceList', 'assginedDeviceList', "transactionListQuery", "listOfDevicesAssigned"])
+        queryClient.invalidateQueries('assginedDeviceList', { exact: true });
+        refetching()
         return closeModal()
     }
     return (

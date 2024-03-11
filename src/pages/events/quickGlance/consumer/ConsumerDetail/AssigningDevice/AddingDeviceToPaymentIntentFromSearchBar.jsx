@@ -5,7 +5,7 @@ import {
   OutlinedInput,
   Typography
 } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
 import _ from 'lodash';
 import { useRef, useState } from "react";
@@ -43,7 +43,18 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
       devitrakApiAdmin.post("/receiver-assignation", template);
     },
   });
-  const checkDeviceInUseInOtherCustomerInTheSameEventQuery = '' //device in pool
+  const deviceInPoolQuery = useQuery({
+    queryKey: ['poolInfoQuery'],
+    queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+    }),
+    enable: false,
+    refetchOnMount: false,
+    cacheTime: 1000 * 60 * 3
+})
+  const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory//device in pool
+  console.log("🚀 ~ AddingDeviceToPaymentIntentFromSearchBar ~ checkDeviceInUseInOtherCustomerInTheSameEventQuery:", checkDeviceInUseInOtherCustomerInTheSameEventQuery)
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
     api[type]({
@@ -160,7 +171,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
   };
 
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
-    console.log("🚀 ~ handleDevicesAssignedToPaymentIntentInEvent ~ data:", data)
     setSubmittedAction(true)
     if (!retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() || retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1) {
       return openNotificationWithIcon('warning', `Serial number ${serialNumber} is out of valid range for this event, please review and try another serial number.`)
@@ -192,7 +202,11 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
               saveDevicesAssignedListInDataBasedMutation.data
             )
           );
-          queryClient.invalidateQueries("deviceInPoolQuery");
+          queryClient.invalidateQueries({ queryKey: ["deviceInPoolQuery"], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["poolInfoQuery"], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["listOfDevicesAssigned"], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"], exact: true });
+          deviceInPoolQuery.refetch()
           if (paymentIntentDetailSelected.device === 1) {
             const dateString = new Date().toString()
             const dateRef = dateString.split(' ')
@@ -236,6 +250,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
       onSubmit={handleSubmit(handleDevicesAssignedToPaymentIntentInEvent)}
       style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}
     >
+      {contextHolder}
       <Grid
         display={"flex"}
         justifyContent={"space-around"}
