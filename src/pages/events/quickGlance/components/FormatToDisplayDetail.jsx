@@ -21,7 +21,7 @@ const FormatToDisplayDetail = () => {
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {
     const foundAllDevicesGivenInEvent = () => {
       const receiversPoolData = receiversPoolQuery?.data?.data?.receiversInventory
-      if (receiversPoolData.length > 0) return receiversPoolData
+      if (receiversPoolData?.length > 0) return receiversPoolData
       return [];
     };
 

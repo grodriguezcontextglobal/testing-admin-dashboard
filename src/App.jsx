@@ -13,6 +13,7 @@ import { onResetStaffProfile } from './store/slices/staffDetailSlide';
 import { onResetHelpers } from './store/slices/helperSlice';
 import { onResetStripesInfo } from './store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
+import { notification } from 'antd';
 const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
@@ -38,11 +39,18 @@ const App = () => {
       }
     }
   };
+
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (type, msg) => {
+    api[type]({
+      description: msg,
+    });
+  };
+
   const [connectionType, setConnectionType] = useState('');
 
   useEffect(() => {
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    console.log("🚀 ~ useEffect ~ connection:", connection.effectiveType)
     if (connection) {
       setConnectionType(connection.effectiveType);
     }
@@ -51,7 +59,7 @@ const App = () => {
   // Function to render the network status message based on connection type
   const renderNetworkStatusMessage = () => {
     if (connectionType === 'slow-2g' || connectionType === '2g') {
-      return null;
+      return openNotificationWithIcon('warning', 'The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.');
     } else {
       return null;
     }
@@ -68,6 +76,7 @@ const App = () => {
       {
         renderNetworkStatusMessage()
       }
+      {contextHolder}
       {
         status === "authenticated" && adminToken ?
           <AuthRoutes />
