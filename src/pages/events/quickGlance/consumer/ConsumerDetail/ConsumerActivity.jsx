@@ -1,11 +1,14 @@
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import _ from 'lodash';
 import TotalDevicesDistributed from "./ConsumerActivity/TotalDeviceDistributed";
 import TotalRequestedDevice from "./ConsumerActivity/TotalRequestedDevice";
 import TotalReturnedDevice from "./ConsumerActivity/TotalReturnedDevice";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import Loading from "../../../../../components/animation/Loading";
+import { useEffect } from "react";
 const ConsumerActivity
   = () => {
     const { event } = useSelector((state) => state.event);
@@ -13,27 +16,42 @@ const ConsumerActivity
     const stripeTransactionsSavedQuery = useQuery({
       queryKey: ["transactionsList"],
       queryFn: () => devitrakApi.post("/transaction/transaction", { eventSelected: event.eventInfoDetail.eventName, provider: event.company, "consumerInfo.email": customer.email }),
+      enable: false,
       refetchOnMount: false,
-      cacheTime: 1000 * 60 * 3
+      // cacheTime:2*60*1000,
+      notifyOnChangeProps: ['data', 'dataUpdatedAt']
     });
     const receiversAssignedQuery = useQuery({
       queryKey: ["listOfDevicesAssigned"],
       queryFn: () => devitrakApi.post("/receiver/receiver-assigned-list", { eventSelected: event.eventInfoDetail.eventName, provider: event.company, user: customer.email }),
+      enable: false,
       refetchOnMount: false,
-      cacheTime: 1000 * 60 * 3
+      // cacheTime:2*60*1000,
+      notifyOnChangeProps: ['data', 'dataUpdatedAt']
     });
     const deviceAssignedListQuery = useQuery({
       queryKey: ["listOfNoOperatingDevices"],
       queryFn: () => devitrakApi.get("/receiver/list-receiver-returned-issue"),
+      enable: false,
       refetchOnMount: false,
-      cacheTime: 1000 * 60 * 3
+      // cacheTime:2*60*1000,
+      notifyOnChangeProps: ['data', 'dataUpdatedAt']
     });
+    const queryClient = useQueryClient()
+    useEffect(() => {
+      const controller = new AbortController()
+      queryClient.invalidateQueries(['transactionsList', 'listOfDevicesAssigned', 'listOfNoOperatingDevices', 'transactionPerConsumerListQuery', 'assginedDeviceList',])
+      stripeTransactionsSavedQuery.refetch()
+      receiversAssignedQuery.refetch()
+      deviceAssignedListQuery.refetch()
+      return () => {
+        controller.abort()
+      }
+    }, [customer.uid])
 
-    if (stripeTransactionsSavedQuery.isLoading) return <p>Loading...</p>;
+    if (stripeTransactionsSavedQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
     if (
-      stripeTransactionsSavedQuery.data &&
-      deviceAssignedListQuery.data &&
-      receiversAssignedQuery.data
+      stripeTransactionsSavedQuery.data && deviceAssignedListQuery.data && receiversAssignedQuery.data
     ) {
       const totalDevicesRequestedPerConsumer = () => {
         const firstResult = new Set()
@@ -49,7 +67,7 @@ const ConsumerActivity
       const displayAllAssignedDeviceDistributed = () => {
         const firstResult = new Set()
         for (let data of receiversAssignedQuery.data.data.listOfReceivers) {
-           firstResult.add(data.device)
+          firstResult.add(data.device)
         }
         return Array.from(firstResult).length
       };

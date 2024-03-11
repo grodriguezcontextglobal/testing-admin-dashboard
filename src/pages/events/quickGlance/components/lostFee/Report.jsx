@@ -36,7 +36,9 @@ const Report = () => {
         queryFn: () => devitrakApi.post('/cash-report/cash-reports', {
             event: event.eventInfoDetail.eventName,
             company: event.company
-        })
+        }),
+        refetchOnMount: false,
+        notifyOnChangeProps: ['data', 'dataUpdatedAt']
     })
     if (cashReportQuery.data) {
         const sourceReportData = () => {

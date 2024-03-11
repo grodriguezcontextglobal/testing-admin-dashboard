@@ -61,7 +61,8 @@ export const ReplaceDevice = ({ device }) => {
       "device.serialNumber": receiverToReplaceObject.serialNumber,
       "device.deviceType": receiverToReplaceObject.deviceType
     }),
-    refetchOnMount: false
+    refetchOnMount: false,
+    notifyOnChangeProps:['data','dataUpdatedAt']
   })
 
   const deviceInPoolQuery = useQuery({
@@ -72,7 +73,8 @@ export const ReplaceDevice = ({ device }) => {
       "device": receiverToReplaceObject.serialNumber,
       "type": receiverToReplaceObject.deviceType
     }),
-    refetchOnMount: false
+    refetchOnMount: false,
+    notifyOnChangeProps:['data','dataUpdatedAt']
   })
   const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory
   const assignedDeviceInTransaction = assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers

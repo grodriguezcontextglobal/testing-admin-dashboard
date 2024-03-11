@@ -5,8 +5,10 @@ import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInpu
 import { MagnifyIcon } from "../../../../../../components/icons/Icons"
 import { Icon } from "@iconify/react"
 import { useEffect } from "react"
+import { useSelector } from "react-redux"
 const TransactionsDetails = () => {
     const { watch, register, setValue } = useForm()
+    const { customer } = useSelector((state) => state.stripe)
     useEffect(() => {
         const controller = new AbortController()
         const refreshing = async () => {
@@ -19,7 +21,7 @@ const TransactionsDetails = () => {
         return () => {
           controller.abort()
         }
-      }, [])
+      }, [customer.uid])
     return (
         <>
             <Grid

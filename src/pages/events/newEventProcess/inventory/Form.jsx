@@ -19,7 +19,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
+// import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
 import "../../../../styles/global/ant-select.css"
 import { useNavigate } from "react-router-dom";
 import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
@@ -32,8 +32,8 @@ const Form = () => {
   } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { deviceSetup } = useSelector((state) => state.event);
-  const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
-    useState(false);
+  // const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
+  //   useState(false);
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState(deviceSetup);
   const navigate = useNavigate();

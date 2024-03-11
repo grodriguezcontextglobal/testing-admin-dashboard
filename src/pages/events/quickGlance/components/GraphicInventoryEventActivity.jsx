@@ -11,7 +11,9 @@ const GraphicInventoryEventActivity = () => {
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company
-        })
+        }),
+        refetchOnMount: false,
+        notifyOnChangeProps: ['data', 'dataUpdatedAt']
     })
 
     const sortData = () => {

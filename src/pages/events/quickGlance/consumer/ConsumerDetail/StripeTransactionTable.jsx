@@ -11,7 +11,7 @@ import {
     notification
 } from "antd";
 import _ from "lodash";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Highlighter from "react-highlight-words";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -71,7 +71,9 @@ const StripeTransactionTable = ({ searchValue }) => {
     const transactionsQuery = useQuery({
         queryKey: ['transactionPerConsumerListQuery'],
         queryFn: () => devitrakApi.post('/transaction/transaction', { eventSelected: event.eventInfoDetail.eventName, provider: event.company, 'consumerInfo.email': customer.email }),
+        enabled: false,
         refetchOnMount: false,
+        notifyOnChangeProps: ['data', 'dataUpdatedAt'],
         cacheTime: 1000 * 60 * 3
     })
     const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list
@@ -82,9 +84,20 @@ const StripeTransactionTable = ({ searchValue }) => {
             'provider': event.company,
             "eventSelected": event.eventInfoDetail.eventName
         }),
+        enabled: false,
         refetchOnMount: false,
+        notifyOnChangeProps: ['data', 'dataUpdatedAt'],
         cacheTime: 1000 * 60 * 3
     })
+    useEffect(() => {
+        const controller = new AbortController()
+        transactionsQuery.refetch()
+        deviceAssignedListQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
     const foundAllTransactionsAndDevicesAssigned = () => {
         const assignedDevices = deviceAssignedListQuery?.data?.data?.listOfReceivers
         if (assignedDevices?.length > 0) {

@@ -127,10 +127,10 @@ const NavigationBarMain = (props) => {
     const container = window !== undefined ? () => window().document.body : undefined;
 
     return (
-        <Grid container sx={{ display: 'flex', alignItems: "center", justifyContent: "center", backgroundColor: "var(--blue700)" }}>
+        <Grid container sx={{ display: 'flex', alignItems: "center", justifyContent: "center", backgroundColor: "var(--blue700)", margin: 'auto' }}>
             <AppBar style={{ top: '2.5dvh', backgroundColor: "var(--blue700)" }} component="nav">
                 <Toolbar>
-                    <Grid id='grid-container-inside' style={{ ...CenteringGrid, justifyContent: "space-between", backgroundColor: "var(--blue700)" }} item xs={12} sm={12} md={12} lg={11} >
+                    <Grid id='grid-container-inside' style={{ ...CenteringGrid, justifyContent: "space-between", backgroundColor: "var(--blue700)" }} item sm={12} md={12} lg={11}>
                         <Grid item sm={9} md={9} lg={9}>
                             <IconButton
                                 color="inherit"
@@ -181,16 +181,12 @@ const NavigationBarMain = (props) => {
                             </Box>
                         </Grid>
 
-
-                        <Grid item sm={3} md={3} lg={3} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "flex-end", alignItems: 'center' }}>
-                            <Grid item sm={10} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-start" }}>
+                        <Grid item sm={3} md={3} lg={3} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "space-between", alignItems: 'center', margin: 0 }}>
+                            <Grid item sm={10} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}>
                                 <form onSubmit={handleSubmit(handleSearch)}>
                                     <OutlinedInput placeholder="Search"
                                         sx={OutlinedInputStyle}
                                         {...register('searchValue')}
-                                        // name="searchValue"
-                                        // value={searchValue}
-                                        // onChange={(event) => setSearchValue(event.target.value)}
                                         endAdornment={
                                             <>
                                                 <InputAdornment position="end">
@@ -224,7 +220,6 @@ const NavigationBarMain = (props) => {
                                                         }}
                                                         opacity={1}
                                                         type='submit'
-                                                        // onClick={() => handleSearch()}
                                                     />
                                                 </InputAdornment>
                                             </>
@@ -233,38 +228,39 @@ const NavigationBarMain = (props) => {
                                     />
                                 </form>
                             </Grid>
-                            {status === "authenticated" && (
-                                <NavLink
-                                // style={{
-                                //     padding: "0 0 0 15px",
-                                // }}
-                                >
-                                    <Dropdown
-                                        menu={{
-                                            items,
-                                        }}
-                                        trigger={["click"]}
-                                        autoAdjustOverflow
-                                        placement='bottom'
-                                        overlayStyle={{
-                                            position: 'absolute',
-                                            top: `${isSmallDevice ? '13dvh' : isMediumDevice ? '13.5dvh' : isLargeDevice ? '14dvh' : '12dvh'}`
-
-                                        }}
+                            <Grid item sm={2} md={2} lg={2} style={{ ...CenteringGrid, justifyContent: "flex-end", margin: 0 }}>
+                                {status === "authenticated" && (
+                                    <NavLink
+                                    // style={{
+                                    //     padding: "0 0 0 15px",
+                                    // }}
                                     >
-                                        <div className="content-main-navbar-updated">
-                                            <article
-                                                className="nav-item-base-1-main-navbar-updated"
-                                            >
-                                                <div className="content-2-main-navbar-updated">
-                                                    <div className="text-1-main-navbar-updated text-mdsemibold">
-                                                        <p style={{ textTransform: "capitalize", fontSize: "25px" }}><SettingIcon /></p>
-                                                    </div>
-                                                </div>
-                                            </article>
-                                        </div>
+                                        <Dropdown
+                                            menu={{
+                                                items,
+                                            }}
+                                            trigger={["click"]}
+                                            autoAdjustOverflow
+                                            placement='bottom'
+                                            overlayStyle={{
+                                                position: 'absolute',
+                                                top: `${isSmallDevice ? '13dvh' : isMediumDevice ? '13.5dvh' : isLargeDevice ? '14dvh' : '12dvh'}`
 
-                                        {/* {user.data.imageProfile ? (
+                                            }}
+                                        >
+                                            <div className="content-main-navbar-updated">
+                                                <article
+                                                    className="nav-item-base-1-main-navbar-updated"
+                                                >
+                                                    <div className="content-2-main-navbar-updated">
+                                                        <div className="text-1-main-navbar-updated text-mdsemibold">
+                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }}><SettingIcon /></p>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            </div>
+
+                                            {/* {user.data.imageProfile ? (
                                             <Avatar
                                                 src={
                                                     <img
@@ -279,9 +275,11 @@ const NavigationBarMain = (props) => {
                                                 {user.lastName[0]}
                                             </Avatar>
                                         )} */}
-                                    </Dropdown>
-                                </NavLink>
-                            )}
+                                        </Dropdown>
+                                    </NavLink>
+                                )}
+                            </Grid>
+
                         </Grid>
                     </Grid>
                 </Toolbar>

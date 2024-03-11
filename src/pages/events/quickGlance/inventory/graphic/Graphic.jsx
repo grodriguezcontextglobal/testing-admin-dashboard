@@ -17,8 +17,8 @@ const Graphic = () => {
         queryFn: () => devitrakApi.post("/db_item/consulting-item", { company: user.company }),
         refetchOnMount:false,
         cacheTime:1000 * 60 * 15, //fifteenMinutesInMs
-        staleTime:1000 * 60 * 15
-
+        staleTime:1000 * 60 * 15,
+        notifyOnChangeProps:['data','dataUpdatedAt']
     });
 
     const foundAllDevicesGivenInEvent = useCallback(() => {

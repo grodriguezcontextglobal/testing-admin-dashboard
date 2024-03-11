@@ -8,10 +8,14 @@ const FormatToDisplayDetail = () => {
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event.eventInfoDetail.eventName, provider: event.company }),
+    refetchOnMount:false,
+    notifyOnChangeProps:['data','dataUpdatedAt']
   });
   const receiversNoOperatingInPoolQuery = useQuery({
     queryKey: ["listOfNoOperatingDevices"],
     queryFn: () => devitrakApi.post("/receiver/list-receiver-returned-issue", { eventSelected: event.eventInfoDetail.eventName, provider: event.company }),
+    refetchOnMount:false,
+    notifyOnChangeProps:['data','dataUpdatedAt']
   });
 
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {

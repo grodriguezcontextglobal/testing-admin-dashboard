@@ -54,10 +54,14 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
+    refetchOnMount: false,
+    notifyOnChangeProps: ['data', 'dataUpdatedAt']
   });
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event?.eventInfoDetail?.eventName, provider: event.company }),
+    refetchOnMount: false,
+    notifyOnChangeProps: ['data', 'dataUpdatedAt']
   });
   if (eventAttendeesQuery.isLoading) return <div style={{ ...CenteringGrid, width: "100%" }} > <Loading /></ div>
   if (eventAttendeesQuery.data || eventAttendeesQuery.isFetched) {
@@ -328,7 +332,7 @@ const MainPageQuickGlance = () => {
           </Grid>
           <Grid
             padding={`${(isLargeDevice || isExtraLargeDevice) && "8px 8px 0px 0px"
-          }`}
+              }`}
             item
             xs={12}
             sm={12}

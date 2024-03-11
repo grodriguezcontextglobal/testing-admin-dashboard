@@ -7,7 +7,7 @@ import {
     onAddUsersOfEventList,
 } from "../../../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import '../../../../../styles/global/ant-table.css'
 
@@ -18,9 +18,11 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     const dispatch = useDispatch();
     const attendeesQuery = useQuery({
         queryKey: ['consumersList'],
-        queryFn: () => devitrakApi.get('/auth/users')
+        queryFn: () => devitrakApi.get('/auth/users'),
+        refetchOnMount:false,
+        notifyOnChangeProps:['data']
     })
-
+    const queryClient = useQueryClient()
     const handleDataDetailUser = (record) => {
         let userFormatData = {
             uid: record?.key,
@@ -31,6 +33,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
         };
         dispatch(onAddCustomerInfo(userFormatData));
         dispatch(onAddCustomer(userFormatData));
+        queryClient.invalidateQueries(['transactionsList', 'listOfDevicesAssigned', 'listOfNoOperatingDevices'])
         navigate(`/events/event-attendees/${record.entireData.id}/transactions-details`);
     };
     const columns = [
