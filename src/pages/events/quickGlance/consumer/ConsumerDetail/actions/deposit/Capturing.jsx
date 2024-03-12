@@ -17,6 +17,7 @@ import * as yup from "yup";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
+import PropTypes from 'prop-types';
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -26,6 +27,7 @@ const schema = yup
 const Capturing = ({
   openCapturingDepositModal,
   setOpenCapturingDepositModal,
+  refetchingTransactionFn
 }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
@@ -130,9 +132,12 @@ const Capturing = ({
               event.eventInfoDetail.eventName
             )}/${encodeURI(event.company)}/${customer.uid}`
           });
-          queryClient.invalidateQueries('transactionPerConsumerListQuery')
+          queryClient.invalidateQueries({ queryKey: ['transactionPerConsumerListQuery'], exact: true })
+          refetchingTransactionFn()
           openNotificationWithIcon('success', 'Deposit was captured.')
-          closeModal()
+          setTimeout(() => {
+            return closeModal()
+          }, 2500);
         }
       }
     };
@@ -317,3 +322,9 @@ const Capturing = ({
 };
 
 export default Capturing;
+
+Capturing.propTypes = {
+  openCapturingDepositModal: PropTypes.bool,
+  setOpenCapturingDepositModal: PropTypes.bool,
+  refetchingTransactionFn: PropTypes.func,
+}

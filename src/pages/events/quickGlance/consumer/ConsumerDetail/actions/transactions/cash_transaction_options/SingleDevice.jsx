@@ -1,24 +1,22 @@
+import { Button, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Select } from "antd";
+import _ from 'lodash';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
-import { nanoid } from "@reduxjs/toolkit";
-import _ from 'lodash'
-import { Card, Select, Space } from "antd";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { Button, Chip, OutlinedInput, Typography } from "@mui/material";
-import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
-import { CardStyle } from "../../../../../../../../styles/global/CardStyle";
-const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
+import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
+import { nanoid } from "@reduxjs/toolkit";
+const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
     const { register, handleSubmit } = useForm()
     const { user } = useSelector((state) => state.admin);
     const { customer } = useSelector((state) => state.customer);
     const { event } = useSelector((state) => state.event);
     const [deviceSelection, setDeviceSelection] = useState(null);
-    const [noAssigned, setNoAssigned] = useState([])
     const deviceTrackInPoolQuery = useQuery({
         queryKey: ['devicesInPoolListPerEvent'],
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
@@ -26,7 +24,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
             provider: event.company,
             activity: "No"
         }),
-        enabled:false,
+        enabled: false,
         refetchOnMount: false,
         staleTime: Infinity
     })
@@ -115,73 +113,66 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     }
 
     const onSubmitRegister = async (data) => {
-        try {
-            const totalDeviceAssigned = (data.endingNumber - data.startingNumber)+1
-            const id = nanoid(12);
-            const max = 918273645;
-            const transactionGenerated = "pi_" + id;
-            reference.current = transactionGenerated;
-            const stripeResponse = await devitrakApi.post(
-                "/stripe/stripe-transaction-no-regular-user",
-                {
-                    paymentIntent: transactionGenerated,
-                    clientSecret:
-                        totalDeviceAssigned + customer.uid + Math.floor(Math.random() * max),
-                    device: totalDeviceAssigned,
-                    user: customer.uid,
-                    eventSelected: event.eventInfoDetail.eventName,
-                    provider: user.company,
-                }
-            );
-            if (stripeResponse.data) {
-                let deviceInfToStoreParsed = JSON.parse(deviceSelection)
-                let deviceSelectedOption = {
-                    deviceType: deviceInfToStoreParsed.group,
-                    deviceValue: deviceInfToStoreParsed.value,
-                    deviceNeeded: totalDeviceAssigned
-                }
-                const transactionProfile = {
-                    paymentIntent: reference.current,
-                    clientSecret: stripeResponse.data.stripeTransaction.clientSecret ?? "unknown",
-                    device: deviceSelectedOption,
-                    consumerInfo: customer,
-                    provider: event.company,
-                    eventSelected: event.eventInfoDetail.eventName,
-                    date: `${new Date()}`,
-                };
-                for (let index = data.startingNumber; index <= data.endingNumber; index++) {
-                    const serialNumber = String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)
-                    if (checkDeviceAvailability(serialNumber)) {
-                        const createTransactionTemplate = {
-                            device: {
-                                serialNumber: serialNumber,
-                                deviceType: deviceSelectedOption.deviceType,
-                                status: true
-                            },
-                            paymentIntent: reference.current
-                        }
-                        await createReceiverInTransaction(createTransactionTemplate)
-                        await createDevicesInPool(serialNumber)
-                    } else {
-                        let resultingNoAssigned = []
-                        resultingNoAssigned = [...noAssigned, serialNumber]
-                        setNoAssigned(resultingNoAssigned)
+        if (checkDeviceAvailability(data.serialNumber)) {
+            try {
+                const id = nanoid();
+                const max = 918273645;
+                const transactionGenerated = `pi_cash_amount:$${data.amount}_received_by:**${user.email}**&` + id;
+                reference.current = transactionGenerated;
+                const stripeResponse = await devitrakApi.post(
+                    "/stripe/stripe-transaction-no-regular-user",
+                    {
+                        paymentIntent: transactionGenerated,
+                        clientSecret:
+                            1 + customer.uid + Math.floor(Math.random() * max),
+                        device: 1,
+                        user: customer.uid,
+                        eventSelected: event.eventInfoDetail.eventName,
+                        provider: user.company,
                     }
-
+                );
+                if (stripeResponse.data) {
+                    let deviceInfToStoreParsed = JSON.parse(deviceSelection)
+                    let deviceSelectedOption = {
+                        deviceType: deviceInfToStoreParsed.group,
+                        deviceValue: deviceInfToStoreParsed.value,
+                        deviceNeeded: 1
+                    }
+                    const transactionProfile = {
+                        paymentIntent: reference.current,
+                        clientSecret: stripeResponse.data.stripeTransaction.clientSecret ?? "unknown",
+                        device: deviceSelectedOption,
+                        consumerInfo: customer,
+                        provider: event.company,
+                        eventSelected: event.eventInfoDetail.eventName,
+                        date: `${new Date()}`,
+                    };
+                    const createTransactionTemplate = {
+                        device: {
+                            serialNumber: data.serialNumber,
+                            deviceType: deviceSelectedOption.deviceType,
+                            status: true
+                        },
+                        paymentIntent: reference.current
+                    }
+                    await createReceiverInTransaction(createTransactionTemplate)
+                    await createDevicesInPool(data.serialNumber)
+                    await devitrakApi.post("/stripe/save-transaction", transactionProfile);
+                    queryClient.invalidateQueries(["transactionListQuery", "listOfDevicesAssigned"]);
+                    alert("Device assigned successful")
+                    return setTimeout(() => {
+                        closeModal()
+                    }, 2500);
                 }
-
-
-                await devitrakApi.post("/stripe/save-transaction", transactionProfile);
-                queryClient.invalidateQueries(["transactionListQuery", "listOfDevicesAssigned"]);
-                alert("Devices assigned successfully")
-                if (noAssigned.length === 0) return closeModal()
+            } catch (error) {
+                console.log(
+                    "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
+                    error
+                );
+                alert(error);
             }
-        } catch (error) {
-            console.log(
-                "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
-                error
-            );
-            alert(error);
+        } else {
+            return alert("Device in use for other consumer")
         }
     };
     return (
@@ -201,7 +192,8 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                     width: '100%',
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center"
+                    alignItems: "center",
+                    gap: "5px"
                 }}>
                     <Select
                         showSearch
@@ -227,11 +219,20 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                             };
                         })}
                     />
+                    <OutlinedInput disabled={deviceSelection === null} {...register("amount")} autoFocus={true} style={{ ...OutlinedInputStyle }} placeholder="Amount in cash received" fullWidth />
+                </div>
+
+                <div style={{
+                    width: '100%',
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                }}>
                     <Typography
                         textTransform={"none"}
                         color={"var(--gray-900, #101828)"}
                         lineHeight={"26px"}
-                        textAlign={"right"}
+                        textAlign={"left"}
                         fontWeight={400}
                         fontFamily={"Inter"}
                         fontSize={"18px"}
@@ -240,19 +241,10 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                     >
                         Range of serial number for selected item: <br />{subtractRangePerGroupToDisplayItInScreen().min} - {subtractRangePerGroupToDisplayItInScreen().max}
                     </Typography>
-                </div>
-                <div style={{
-                    width: '100%',
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "3px"
-                }}>
-                    <OutlinedInput disabled={deviceSelection === null} {...register("startingNumber")} autoFocus={true} style={OutlinedInputStyle} placeholder="Scan serial number here." fullWidth />
-                    <OutlinedInput disabled={deviceSelection === null} {...register("endingNumber")} autoFocus={true} style={OutlinedInputStyle} placeholder="Scan serial number here." fullWidth /></div>
+                    <OutlinedInput disabled={deviceSelection === null} {...register("serialNumber")} autoFocus={true} style={{ ...OutlinedInputStyle }} placeholder="Scan serial number here." fullWidth /></div>
 
                 <Button
-                   style={{ ...BlueButton, width: "100%" }}
+                    style={{ ...BlueButton, width: "100%" }}
                     type="submit"
                 >
                     <Typography
@@ -263,17 +255,9 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                     </Typography>
                 </Button>
             </form>
-            <div style={{ margin: '1rem 0 0 0', display: `${noAssigned.length === 0 && "none"}` }}>
-                <Card style={CardStyle} title={`Scanned device`} extra={<p style={{ fontSize: "20px", fontWeight: 500 }}><strong>{noAssigned?.length}</strong></p>}>
-                    <Space size={[8, 16]} wrap>
-                        {noAssigned.length > 0 && noAssigned.map(item => (
-                            <Chip onDelete={() => 'handleDeleteElementInList(item)'} key={`${item}`} label={`${item}`} style={{ margin: '0px 2px 0px 0px' }} />
-                        ))}
-                    </Space>
-                </Card>
-            </div>
         </div>
     );
-}
+};
 
-export default Multiple
+
+export default SingleDevice

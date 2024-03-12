@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Divider } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Loading from "../../../components/animation/Loading";
@@ -54,15 +54,26 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
+    enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ['data', 'dataUpdatedAt']
   });
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event?.eventInfoDetail?.eventName, provider: event.company }),
+    enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ['data', 'dataUpdatedAt']
   });
+  useEffect(() => {
+    const controller = new AbortController()
+    eventAttendeesQuery.refetch()
+    receiversPoolQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
   if (eventAttendeesQuery.isLoading) return <div style={{ ...CenteringGrid, width: "100%" }} > <Loading /></ div>
   if (eventAttendeesQuery.data || eventAttendeesQuery.isFetched) {
     const foundAllDevicesGivenInEvent = () => {
@@ -121,7 +132,7 @@ const MainPageQuickGlance = () => {
         >
           {checkStaffRoleToDisplayCashReportInfo() && (
             <Link to="/event/new_subscription">
-              <Button style={BlueButton}>
+              <Button style={{...BlueButton, width:"100%", margin:"0rem auto 1rem"}}>
                 <WhitePlusIcon /><Typography style={BlueButtonText}>
                   Add new event
                 </Typography>
@@ -131,7 +142,7 @@ const MainPageQuickGlance = () => {
           <Button
             disable={!event.active}
             onClick={() => setCreateUserButton(true)}
-            style={{ ...GrayButton, border: "1px solid var(--gray-300, #D0D5DD)" }}
+            style={{ ...GrayButton, border: "1px solid var(--gray-300, #D0D5DD)", width:"100%" }}
           >
             <PlusIcon />
             &nbsp;
@@ -331,12 +342,11 @@ const MainPageQuickGlance = () => {
             <FormatToDisplayDetail />
           </Grid>
           <Grid
-            padding={`${(isLargeDevice || isExtraLargeDevice) && "8px 8px 0px 0px"
-              }`}
+            padding={"8px 8px 8px 0px"}
             item
             xs={12}
             sm={12}
-            md={4}
+            md={6}
             lg={4}
           >
             <GraphicInventoryEventActivity />
@@ -344,18 +354,18 @@ const MainPageQuickGlance = () => {
           <Grid
             item
             xs={12}
-            sm={6}
-            md={2}
+            sm={12}
+            md={6}
             lg={2}
           >
             <InventoryEventValue />
           </Grid>
           <Grid
-            padding={`${(isLargeDevice || isExtraLargeDevice) && "0px 0px 0px 8px"
+            padding={`${(isExtraLargeDevice) && "0px 0px 0px 8px"
               }`}
             item
             xs={12}
-            sm={6}
+            sm={12}
             md={6}
             lg={6}
           >

@@ -59,7 +59,7 @@ const App = () => {
   // Function to render the network status message based on connection type
   const renderNetworkStatusMessage = () => {
     if (connectionType === 'slow-2g' || connectionType === '2g') {
-      return openNotificationWithIcon('warning', 'The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.');
+      return setTimeout(() => openNotificationWithIcon('warning', 'The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.'), 3000);
     } else {
       return null;
     }

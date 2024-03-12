@@ -22,6 +22,7 @@ import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonTex
 import Choice from "../lostFee/Choice";
 import { Replace } from "./Replace";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
+import { useQueryClient } from "@tanstack/react-query";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -35,7 +36,7 @@ const ActionsMainPage = () => {
       description: msg,
     });
   };
-
+  const queryClient = useQueryClient()
   const handleReturnDevice = async () => {
     const respo = await devitrakApi.post('/receiver/receiver-assigned-list', {
       'device.serialNumber': deviceInfoSelected.entireData.device,
@@ -72,6 +73,7 @@ const ActionsMainPage = () => {
           }
         );
         openNotificationWithIcon("success", "Device returned.");
+        queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"], exact: true });
         dispatch(onAddDeviceToDisplayInQuickGlance({
           ...deviceInfoSelected,
           activity: "No",
@@ -265,10 +267,6 @@ const ActionsMainPage = () => {
           )}
         </Card>
       </Grid>
-      {/* {openDeviceModal && <CreateDevice
-        openDeviceModal={openDeviceModal}
-        setOpenDeviceModal={setOpenDeviceModal}
-      />} */}
       {openLostModal && (
         <Choice
           openModal={openLostModal}

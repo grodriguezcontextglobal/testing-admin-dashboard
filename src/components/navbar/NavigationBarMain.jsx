@@ -130,8 +130,8 @@ const NavigationBarMain = (props) => {
         <Grid container sx={{ display: 'flex', alignItems: "center", justifyContent: "center", backgroundColor: "var(--blue700)", margin: 'auto' }}>
             <AppBar style={{ top: '2.5dvh', backgroundColor: "var(--blue700)" }} component="nav">
                 <Toolbar>
-                    <Grid id='grid-container-inside' style={{ ...CenteringGrid, justifyContent: "space-between", backgroundColor: "var(--blue700)" }} item sm={12} md={12} lg={11}>
-                        <Grid item sm={9} md={9} lg={9}>
+                    <Grid id='grid-container-inside' style={{ ...CenteringGrid, justifyContent: "space-between", backgroundColor: "var(--blue700)" }} item sm={11} md={11} lg={11}>
+                        <Grid item sm={9} md={7} lg={8}>
                             <IconButton
                                 color="inherit"
                                 aria-label="open drawer"
@@ -181,8 +181,8 @@ const NavigationBarMain = (props) => {
                             </Box>
                         </Grid>
 
-                        <Grid item sm={3} md={3} lg={3} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "space-between", alignItems: 'center', margin: 0 }}>
-                            <Grid item sm={10} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}>
+                        <Grid item sm={8} md={5} lg={4} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "space-between", alignItems: 'center', margin: 0 }}>
+                            <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}>
                                 <form onSubmit={handleSubmit(handleSearch)}>
                                     <OutlinedInput placeholder="Search"
                                         sx={OutlinedInputStyle}

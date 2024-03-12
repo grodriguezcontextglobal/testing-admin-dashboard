@@ -42,7 +42,7 @@ const AddingDevicesToPaymentIntent = ({ record }) => {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company,
         }),
-        enable: false,
+        enabled: false,
         refetchOnMount: false,
         cacheTime: 1000 * 60 * 3
     })

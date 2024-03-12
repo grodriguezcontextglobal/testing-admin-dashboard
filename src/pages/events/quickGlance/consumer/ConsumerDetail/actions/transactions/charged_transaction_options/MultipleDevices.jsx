@@ -1,7 +1,7 @@
 import { Button, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select, Tooltip } from "antd";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
@@ -27,9 +27,17 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company
         }),
+        enabled:false,
         refetchOnMount: false,
         staleTime: Infinity
     })
+    useEffect(() => {
+        const controller = new AbortController()
+        deviceTrackInPoolQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
     const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceTrackInPoolQuery?.data?.data?.receiversInventory //*device in pool
 
     function closeModal() {
@@ -61,7 +69,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
         const findingRange = new Set()
         for (let i = 0; i < devicesInPool.length; i++) {
             if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
-                if (`${devicesInPool[i]?.activity}`.toLocaleLowerCase() === "no")
+                if (`${devicesInPool[i]?.activity}`.toLowerCase() === "no" && `${devicesInPool[i]?.status}`.toLowerCase() !== "lost")
                     findingRange.add(Number(devicesInPool[i].device))
             }
         }
@@ -79,7 +87,6 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             min: 0
         }
     }, [deviceSelection])
-    subtractRangePerGroupToDisplayItInScreen()
 
     const generatePaymentIntent = async (data) => {
         totalRef.current = data.amount;

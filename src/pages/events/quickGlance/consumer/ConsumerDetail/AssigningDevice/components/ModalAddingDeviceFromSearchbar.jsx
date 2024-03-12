@@ -3,7 +3,7 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Input, Modal, Space, Table } from "antd";
 import _ from 'lodash';
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Highlighter from "react-highlight-words";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
@@ -17,19 +17,30 @@ const ModalAddingDeviceFromSearchbar = () => {
   const searchInput = useRef(null);
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
     useSelector((state) => state.stripe);
-    console.log("🚀 ~ ModalAddingDeviceFromSearchbar ~ paymentIntentDetailSelected:", paymentIntentDetailSelected)
-    console.log("🚀 ~ ModalAddingDeviceFromSearchbar ~ paymentIntentSelected:", paymentIntentSelected)
   const findindAssignedInPaymentIntentQuery = useQuery({
     queryKey: ['assignedDeviceInPaymentIntent'],
     queryFn: () => devitrakApi.post("/receiver/receiver-assigned", {
       'paymentIntent': paymentIntentSelected,
     }),
+    enabled: false,
     refetchOnMount: false,
   })
+
+  useEffect(() => {
+    const controller = new AbortController()
+    findindAssignedInPaymentIntentQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
   const dispatch = useDispatch();
   const { openModalToAssignDevice } = useSelector(
     (state) => state.devicesHandle
   );
+  const refetchingFn = () => {
+    return findindAssignedInPaymentIntentQuery.refetch()
+  }
   const closeModal = () => {
     dispatch(onOpenDeviceAssignmentModalFromSearchPage(false));
   };
@@ -148,8 +159,7 @@ const ModalAddingDeviceFromSearchbar = () => {
   });
   if (findindAssignedInPaymentIntentQuery.data) {
     const deviceAssignedListQuery = findindAssignedInPaymentIntentQuery?.data?.data?.receiver; //*need to get the final result form finding assigned device query
-    console.log("🚀 ~ ModalAddingDeviceFromSearchbar ~ deviceAssignedListQuery:", deviceAssignedListQuery)
-  
+
     const foundTransactionAndDevicesAssigned = () => {
       if (deviceAssignedListQuery?.length) return deviceAssignedListQuery
       return []
@@ -250,7 +260,7 @@ const ModalAddingDeviceFromSearchbar = () => {
               item
               xs={12} sm={12} md={12} lg={12}
             >
-              <AddingDeviceToPaymentIntentFromSearchBar key={'adding-single-device'} />
+              <AddingDeviceToPaymentIntentFromSearchBar refetchingFn={refetchingFn} key={'adding-single-device'} />
 
             </Grid>
           )}

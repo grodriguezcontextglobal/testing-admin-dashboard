@@ -404,12 +404,7 @@ const Registration = () => {
                             </form>
                         </Grid>
                     </Grid>
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '0px',
-                        width: "100%",
-                        textAlign: "left"
-                    }}>
+                    <div style={{position:"absolute", left:"50px", bottom:"25px", width:"100%"}}>
                         <FooterComponent />
                     </div>
                 </Grid>

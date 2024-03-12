@@ -3,7 +3,7 @@ import { Grid, Typography } from "@mui/material";
 const FooterComponent = () => {
   return (
     <Grid display={'flex'} justifyContent={'center'} alignItems={'center'} container>
-      <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs={12} sm={12} md={12} lg={11}>
+      <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} style={{margin:"0 auto 3rem"}} item xs={12} sm={12} md={11} lg={11}>
           <Typography
             textAlign={"left"}
             fontWeight={400}

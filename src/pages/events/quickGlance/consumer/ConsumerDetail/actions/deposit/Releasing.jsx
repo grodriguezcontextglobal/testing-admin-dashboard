@@ -13,10 +13,12 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
+import {PropTypes} from 'prop-types'
 
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
+  refetchingTransactionFn
 }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
@@ -108,9 +110,12 @@ const Releasing = ({
           event.eventInfoDetail.eventName
         )}/${encodeURI(event.company)}/${customer.uid}`
       });
-      queryClient.invalidateQueries('transactionPerConsumerListQuery')
+      queryClient.invalidateQueries({ queryKey: ['transactionPerConsumerListQuery'], exact: true })
+      refetchingTransactionFn()
       openNotificationWithIcon('success', 'Deposit was released.')
-      closeModal()
+      setTimeout(() => {
+        return closeModal()
+      }, 2500);
     }
   };
 
@@ -277,3 +282,9 @@ const Releasing = ({
 };
 
 export default Releasing;
+
+Releasing.propTypes = {
+  openCancelingDepositModal: PropTypes.bool,
+  setOpenCancelingDepositModal: PropTypes.bool,
+  refetchingTransactionFn: PropTypes.func,
+}

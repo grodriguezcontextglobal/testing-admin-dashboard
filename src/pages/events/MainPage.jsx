@@ -54,6 +54,7 @@ const MainPage = () => {
         queryFn: () => devitrakApi.post("/event/event-list", {
             company: user.compay
         }),
+        enabled: false,
         refetchOnMount: false,
         cacheTime: 1000 * 60 * 5,
         staleTime: 1000 * 60 * 15 //fifteenMinutesInMs
@@ -63,6 +64,7 @@ const MainPage = () => {
         queryKey: ["companyAccountStripe"],
         queryFn: () =>
             devitrakApi.get(`/stripe/company-account-stripe/${user.company}`),
+        enabled: false,
         refetchOnMount: false,
         cacheTime: Infinity,
         staleTime: Infinity
@@ -214,7 +216,6 @@ const MainPage = () => {
                 }}
                 container
             >
-                {/* <Grid item xs={12} sm={12} md={12} lg={11} > */}
                 <Grid
                     style={{
                         display: "flex",
@@ -229,6 +230,7 @@ const MainPage = () => {
                         textAlign={"center"}
                         justifyContent={"center"}
                         alignItems={"center"}
+                        margin={'0.5rem auto 0'}
                         gap={1}
                         marginY={2}
                         item
@@ -240,7 +242,7 @@ const MainPage = () => {
                             }}
                             to="/event/new_subscription"
                         >
-                            <Button style={BlueButton}>
+                            <Button style={{...BlueButton, width:"100%"}}>
                                 <WhitePlusIcon /><Typography style={BlueButtonText}>
                                     Add new event
                                 </Typography>

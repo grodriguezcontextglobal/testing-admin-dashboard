@@ -1,19 +1,16 @@
-import { Box, Button, Typography } from "@mui/material";
-import { Divider, Modal } from "antd";
+import { Box, Button } from "@mui/material";
+import { Divider, Modal, Typography } from "antd";
 import { useState } from "react";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
-import Multiple from "./free_transaction_options/Multiple";
-import SingleFreeTransaction from "./free_transaction_options/Single";
+import MultipleDevices from "./cash_transaction_options/MultipleDevices";
+import SingleDevice from "./cash_transaction_options/SingleDevice";
 
-const FreeTransaction = ({
-    createTransactionForNoRegularUser,
-    setCreateTransactionForNoRegularUser,
-}) => {
+const CashTransaction = ({ openCashTransaction, setOpenCashTransaction }) => {
     const [optionToRender, setOptionToRender] = useState(0)
     const closeModal = () => {
-        setCreateTransactionForNoRegularUser(false)
+        setOpenCashTransaction(false)
     }
     const renderTitle = () => {
         return (
@@ -22,14 +19,14 @@ const FreeTransaction = ({
                 marginY={2}
                 style={{ ...TextFontSize30LineHeight38, textWrap: "balance" }}
             >
-                New transaction for free device
+                New transaction with deposit in cash
             </Typography>
         );
     };
     return (
         <Modal
             title={renderTitle()}
-            open={createTransactionForNoRegularUser}
+            open={openCashTransaction}
             onOk={() => closeModal()}
             onCancel={() => closeModal()}
             centered
@@ -67,7 +64,9 @@ const FreeTransaction = ({
                 }
                 </Typography>
                 {
-                    optionToRender === 0 ? <SingleFreeTransaction setCreateTransactionForNoRegularUser={setCreateTransactionForNoRegularUser} /> : <Multiple setCreateTransactionForNoRegularUser={setCreateTransactionForNoRegularUser} />
+                    optionToRender === 0 ?
+                        <SingleDevice setCreateTransactionForNoRegularUser={setOpenCashTransaction} /> :
+                        <MultipleDevices setCreateTransactionForNoRegularUser={setOpenCashTransaction} />
                 }
             </div>
         </Modal>
@@ -75,4 +74,4 @@ const FreeTransaction = ({
 };
 
 
-export default FreeTransaction
+export default CashTransaction

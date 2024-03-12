@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "antd";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -28,7 +28,6 @@ export const Replace = () => {
     const { event } = useSelector((state) => state.event);
     const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
     const { triggerModal } = useSelector((state) => state.helper);
-    const { deviceSetup } = event;
     const {
         register,
         setValue,
@@ -37,7 +36,6 @@ export const Replace = () => {
         formState: { errors },
     } = useForm();
     const dispatch = useDispatch();
-    let serialNumber = watch("serialNumber");
     const queryClient = useQueryClient();
     const deviceInPoolQuery = useQuery({
         queryKey: ['deviceInPool'],
@@ -47,7 +45,10 @@ export const Replace = () => {
             device: deviceInfoSelected.entireData.device,
             type: deviceInfoSelected.entireData.type,
             activity: deviceInfoSelected.entireData.activity
-        })
+        }),
+        enabled: false,
+        refetchOnMount: false,
+        cacheTime: 1000 * 60 * 2
     })
 
     const deviceInTransactionQuery = useQuery({
@@ -58,8 +59,21 @@ export const Replace = () => {
             'device.serialNumber': deviceInfoSelected.entireData.device,
             'device.deviceType': deviceInfoSelected.entireData.type,
             'device.status': true
-        })
+        }),
+        enabled: false,
+        refetchOnMount: false,
+        cacheTime: 1000 * 60 * 2
     })
+
+    useEffect(() => {
+        const controller = new AbortController()
+        deviceInPoolQuery.refetch()
+        deviceInTransactionQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
     function closeModal() {
         setValue("serialNumber", "");
         setValue("reason", "");
@@ -138,12 +152,11 @@ export const Replace = () => {
         await updateNewDeviceInPool(data)
         await updateNewDeviceInTransaction(data)
         await defectedDevice(data)
-        queryClient.invalidateQueries([
-            "assignedDeviceInEvent",
-            "pool",
-            "devicesAssignedPerTransaction",
-            "listOfDevicesInPool",
-        ]);
+        queryClient.invalidateQueries({ queryKey: ['assignedDeviceInEvent'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['pool'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['devicesAssignedPerTransaction'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['listOfDevicesInPool'], exact: true })
         dispatch(onAddDeviceToDisplayInQuickGlance({
             company: [event.eventInfoDetail.eventName, event.company],
             activity: "YES",
@@ -165,95 +178,95 @@ export const Replace = () => {
     };
     return (
 
-            <Modal
-                title={`Receiver to replace: ${deviceInfoSelected?.serialNumber}`}
-                centered
-                open={triggerModal}
-                onOk={() => closeModal()}
-                onCancel={() => closeModal()}
-                footer={[]}
-                maskClosable={false}
+        <Modal
+            title={`Receiver to replace: ${deviceInfoSelected?.serialNumber}`}
+            centered
+            open={triggerModal}
+            onOk={() => closeModal()}
+            onCancel={() => closeModal()}
+            footer={[]}
+            maskClosable={false}
+        >
+            <form
+                style={{
+                    ...CenteringGrid, flexDirection: "column",
+                    width: "100%",
+                }}
+                onSubmit={handleSubmit(replaceDevice)}
             >
-                <form
-                    style={{
-                        ...CenteringGrid, flexDirection: "column",
-                        width: "100%",
-                    }}
-                    onSubmit={handleSubmit(replaceDevice)}
-                >
-                    <Grid container>
-                        <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+                <Grid container>
+                    <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+                        <OutlinedInput
+                            id="outlined-adornment-password"
+                            placeholder="Serial number"
+                            {...register("serialNumber", { required: true })}
+                            style={OutlinedInputStyle}
+                            fullWidth
+                        />
+                        {errors?.serialNumber && (
+                            <Typography>Field required</Typography>
+                        )}
+                    </Grid>
+                    <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+                        {watch("serialNumber") !== "" && (
+                            <Select
+                                {...register("reason", { required: true })}
+                                style={{ ...AntSelectorStyle, width: "100%" }}
+                            >
+                                <MenuItem value="">None</MenuItem>
+                                {menuOptions.map((option) => (
+                                    <MenuItem key={option} value={option}>
+                                        <Typography>{option}</Typography>
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        )}
+                    </Grid>
+                    <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+                        {watch("reason") === "Other" && (
                             <OutlinedInput
-                                id="outlined-adornment-password"
-                                placeholder="Serial number"
-                                {...register("serialNumber", { required: true })}
-                                style={OutlinedInputStyle}
+                                multiline
+                                minRows={5}
+                                style={{ ...OutlinedInputStyle, height: "" }}
+                                type="text"
+                                {...register("otherComment", { required: true })}
+                                placeholder="Add comment..."
                                 fullWidth
                             />
-                            {errors?.serialNumber && (
-                                <Typography>Field required</Typography>
-                            )}
-                        </Grid>
-                        <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
-                            {watch("serialNumber") !== "" && (
-                                <Select
-                                    {...register("reason", { required: true })}
-                                    style={{ ...AntSelectorStyle, width: "100%" }}
-                                >
-                                    <MenuItem value="">None</MenuItem>
-                                    {menuOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            <Typography>{option}</Typography>
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            )}
-                        </Grid>
-                        <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
-                            {watch("reason") === "Other" && (
-                                <OutlinedInput
-                                    multiline
-                                    minRows={5}
-                                    style={{ ...OutlinedInputStyle, height: "" }}
-                                    type="text"
-                                    {...register("otherComment", { required: true })}
-                                    placeholder="Add comment..."
-                                    fullWidth
-                                />
-                            )}
-                        </Grid>
-                        {watch("reason") !== "" && (
-                            <Grid display={"flex"} alignItems={"center"} gap={2} container>
-                                <Button
-                                    disabled={watch("reason") !== ""}
-                                    onClick={closeModal}
-                                    style={{ ...GrayButton, width: "100%" }}
-                                >
-                                    <Typography
-                                        textTransform={"none"}
-                                        style={GrayButtonText}
-                                    >
-                                        Cancel
-                                    </Typography>
-                                </Button>
-
-                                <Button
-                                    disabled={watch("reason") === ""}
-                                    type="submit"
-                                    style={{ ...BlueButton, width: "100%" }}
-                                >
-                                    <Typography
-                                        textTransform={"none"}
-                                        style={BlueButtonText}
-                                    >
-                                        Save
-                                    </Typography>
-                                </Button>
-                            </Grid>
-                        )}{" "}
+                        )}
                     </Grid>
-                </form>
-            </Modal>
+                    {watch("reason") !== "" && (
+                        <Grid display={"flex"} alignItems={"center"} gap={2} container>
+                            <Button
+                                disabled={watch("reason") !== ""}
+                                onClick={closeModal}
+                                style={{ ...GrayButton, width: "100%" }}
+                            >
+                                <Typography
+                                    textTransform={"none"}
+                                    style={GrayButtonText}
+                                >
+                                    Cancel
+                                </Typography>
+                            </Button>
+
+                            <Button
+                                disabled={watch("reason") === ""}
+                                type="submit"
+                                style={{ ...BlueButton, width: "100%" }}
+                            >
+                                <Typography
+                                    textTransform={"none"}
+                                    style={BlueButtonText}
+                                >
+                                    Save
+                                </Typography>
+                            </Button>
+                        </Grid>
+                    )}{" "}
+                </Grid>
+            </form>
+        </Modal>
     );
 };
 

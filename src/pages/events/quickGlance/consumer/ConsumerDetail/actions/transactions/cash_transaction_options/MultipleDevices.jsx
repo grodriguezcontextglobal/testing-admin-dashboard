@@ -12,7 +12,7 @@ import { OutlinedInputStyle } from "../../../../../../../../styles/global/Outlin
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../../../../styles/global/CardStyle";
-const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
+const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
     const { register, handleSubmit } = useForm()
     const { user } = useSelector((state) => state.admin);
     const { customer } = useSelector((state) => state.customer);
@@ -116,10 +116,10 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
 
     const onSubmitRegister = async (data) => {
         try {
-            const totalDeviceAssigned = (data.endingNumber - data.startingNumber)+1
-            const id = nanoid(12);
+            const totalDeviceAssigned = (data.endingNumber - data.startingNumber) + 1
+            const id = nanoid();
             const max = 918273645;
-            const transactionGenerated = "pi_" + id;
+            const transactionGenerated = `pi_cash_amount:$${data.amount}_received_by:**${user.email}**&` + id;
             reference.current = transactionGenerated;
             const stripeResponse = await devitrakApi.post(
                 "/stripe/stripe-transaction-no-regular-user",
@@ -249,10 +249,11 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                     gap: "3px"
                 }}>
                     <OutlinedInput disabled={deviceSelection === null} {...register("startingNumber")} autoFocus={true} style={OutlinedInputStyle} placeholder="Scan serial number here." fullWidth />
-                    <OutlinedInput disabled={deviceSelection === null} {...register("endingNumber")} autoFocus={true} style={OutlinedInputStyle} placeholder="Scan serial number here." fullWidth /></div>
+                    <OutlinedInput disabled={deviceSelection === null} {...register("endingNumber")} autoFocus={true} style={OutlinedInputStyle} placeholder="Scan serial number here." fullWidth />
+                    <OutlinedInput disabled={deviceSelection === null} {...register("amount")} autoFocus={true} style={{ ...OutlinedInputStyle }} placeholder="Amount in cash received" fullWidth /></div>
 
                 <Button
-                   style={{ ...BlueButton, width: "100%" }}
+                    style={{ ...BlueButton, width: "100%" }}
                     type="submit"
                 >
                     <Typography
@@ -276,4 +277,4 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     );
 }
 
-export default Multiple
+export default MultipleDevices

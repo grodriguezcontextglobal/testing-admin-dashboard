@@ -6,18 +6,17 @@ import {
   Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { notification } from "antd";
 import _ from 'lodash';
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi, devitrakApiAdmin } from "../../../../../../api/devitrakApi";
-import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../store/slices/devicesHandleSlice";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
-import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
-const AddingDeviceToPaymentIntentFromSearchBar = () => {
+import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const { paymentIntentDetailSelected, customer } = useSelector(
     (state) => state.stripe
   );
@@ -46,15 +45,16 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
   const deviceInPoolQuery = useQuery({
     queryKey: ['poolInfoQuery'],
     queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+      eventSelected: event.eventInfoDetail.eventName,
+      provider: event.company,
+      activity: "No"
     }),
-    enable: false,
+    enabled: false,
     refetchOnMount: false,
     cacheTime: 1000 * 60 * 3
-})
-  const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory//device in pool
-  console.log("🚀 ~ AddingDeviceToPaymentIntentFromSearchBar ~ checkDeviceInUseInOtherCustomerInTheSameEventQuery:", checkDeviceInUseInOtherCustomerInTheSameEventQuery)
+  })
+
+  const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
     api[type]({
@@ -115,7 +115,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
       );
       if (deviceCheck[serialNumber]) {
         for (let data of deviceCheck[serialNumber]) {
-          if (data.activity === "YES" || data.status === "Lost") {
+          if (String(data.activity).toLowerCase() === "yes" || String(data.status).toLowerCase() === "lost") {
             openNotificationWithIcon(
               "info",
               `device ${serialNumber} is already assigned to other customer`
@@ -207,6 +207,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = () => {
           queryClient.invalidateQueries({ queryKey: ["listOfDevicesAssigned"], exact: true });
           queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"], exact: true });
           deviceInPoolQuery.refetch()
+          refetchingFn()
           if (paymentIntentDetailSelected.device === 1) {
             const dateString = new Date().toString()
             const dateRef = dateString.split(' ')

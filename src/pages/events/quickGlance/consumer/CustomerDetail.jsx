@@ -35,36 +35,36 @@ const CustomerDetail = () => {
   const [loadingStatus, setLoadingStatus] = useState(false)
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const stripeTransactionsSavedQuery = useQuery({
-    queryKey: ["stripeTransactionsList"],
-    queryFn: () => devitrakApi.post("/admin/users", {
-      "eventSelected": event.eventInfoDetail.eventName,
-      "provider": event.company,
-      "user":customer.uid
-    }),
-    enabled:false,
-    refetchOnMount: false,
-    notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  });
+  // const stripeTransactionsSavedQuery = useQuery({
+  //   queryKey: ["stripeTransactionsList"],
+  //   queryFn: () => devitrakApi.post("/admin/users", {
+  //     "eventSelected": event.eventInfoDetail.eventName,
+  //     "provider": event.company,
+  //     "user":customer.uid
+  //   }),
+  //   enabled:false,
+  //   refetchOnMount: false,
+  //   notifyOnChangeProps: ['data', 'dataUpdatedAt']
+  // });
 
-  const striperansactionsSavedQuery = useQuery({
-    queryKey: ["striperansactionsList"],
-    queryFn: () => devitrakApi.post("/admin/users", {
-      "eventSelected": event.eventInfoDetail.eventName,
-      "provider": event.company,
-      "user":customer.uid
-    }),
-    enabled:false,
-    refetchOnMount: false,
-    notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  });
-  useEffect(() => {
-    const controller = new AbortController()
-    stripeTransactionsSavedQuery.refetch();
-    return () => {
-      controller.abort()
-    }
-  }, [customer.uid])
+  // const striperansactionsSavedQuery = useQuery({
+  //   queryKey: ["striperansactionsList"],
+  //   queryFn: () => devitrakApi.post("/admin/users", {
+  //     "eventSelected": event.eventInfoDetail.eventName,
+  //     "provider": event.company,
+  //     "user":customer.uid
+  //   }),
+  //   enabled:false,
+  //   refetchOnMount: false,
+  //   notifyOnChangeProps: ['data', 'dataUpdatedAt']
+  // });
+  // useEffect(() => {
+  //   const controller = new AbortController()
+  //   stripeTransactionsSavedQuery.refetch();
+  //   return () => {
+  //     controller.abort()
+  //   }
+  // }, [customer.uid])
   
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -91,8 +91,8 @@ const CustomerDetail = () => {
       controller.abort()
     }
   }, [])
-  if (stripeTransactionsSavedQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
-  if (stripeTransactionsSavedQuery.data) {
+  // if (stripeTransactionsSavedQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
+  // if (stripeTransactionsSavedQuery.data) {
     const handleBackAction = () => {
       dispatch(onAddNewPaymentIntent([]));
       dispatch(onAddCustomerInfo(undefined));
@@ -321,7 +321,7 @@ const CustomerDetail = () => {
         {/* <ModalToAssignDeviceFromSearch /> */}
       </>
     );
-  }
+  // }
 };
 
 

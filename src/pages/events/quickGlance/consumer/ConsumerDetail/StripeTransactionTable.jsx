@@ -33,6 +33,7 @@ import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue }) => {
@@ -98,6 +99,9 @@ const StripeTransactionTable = ({ searchValue }) => {
 
     const refetchingFn = () => {
         return deviceAssignedListQuery.refetch()
+    }
+    const refetchingTransactionFn = () => {
+        return transactionsQuery.refetch()
     }
 
     const foundAllTransactionsAndDevicesAssigned = () => {
@@ -698,11 +702,11 @@ const StripeTransactionTable = ({ searchValue }) => {
                             handleRecord(record);
                         }}
                     >
-                        <Link
-                            component="button"
+                        <Button
                             underline="none"
                             disabled={!record.active}
                             style={{
+                                ...CenteringGrid,
                                 width: "100%",
                                 border: `${!record.active ? "1px solid var(--blue-dark-600, #ffbbb6)" : "1px solid var(--blue-dark-600, #B42318)"}`,
                                 borderRadius: "8px",
@@ -723,7 +727,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                             >
                                 Release
                             </Typography>
-                        </Link>
+                        </Button>
                     </Popconfirm>}</Grid>
                     <Grid item xs={12} sm={12} md={4} display={'flex'} alignItems={'center'}>
                         {record.paymentIntent?.length > 16 &&
@@ -734,11 +738,11 @@ const StripeTransactionTable = ({ searchValue }) => {
                                     handleRecord(record);
                                 }}
                             >
-                                <Link
-                                    component="button"
+                                <Button
                                     underline="none"
                                     disabled={!record.active}
                                     style={{
+                                        ...CenteringGrid,
                                         width: "100%",
                                         border: `${!record.active ? "1px solid var(--blue-dark-600, #ffbbb6)" : "1px solid var(--blue-dark-600, #B42318)"}`,
                                         borderRadius: "8px",
@@ -759,13 +763,14 @@ const StripeTransactionTable = ({ searchValue }) => {
                                     >
                                         Capture
                                     </Typography>
-                                </Link>
+                                </Button>
                             </Popconfirm>}</Grid>
                     <Grid item xs={12} sm={12} md={4} display={'flex'} alignItems={'center'}>{record.device[0].deviceNeeded > 4 && <Tooltip title="This option is to return bulk of devices">
                         <Button
                             onClick={() => handleReturnDeviceInBulk(record)}
                             underline="none"
                             style={{
+                                ...CenteringGrid,
                                 width: "100%",
                                 border: `${!record.active ? "1px solid var(--blue-dark-600, #ffbbb6)" : "1px solid var(--blue-dark-600, #B42318)"}`,
                                 borderRadius: "8px",
@@ -820,12 +825,14 @@ const StripeTransactionTable = ({ searchValue }) => {
                 <Capturing
                     openCapturingDepositModal={openCapturingDepositModal}
                     setOpenCapturingDepositModal={setOpenCapturingDepositModal}
+                    refetchingTransactionFn={refetchingTransactionFn}
                 />
             )}
             {openCancelingDepositModal && (
                 <Releasing
                     openCancelingDepositModal={openCancelingDepositModal}
                     setOpenCancelingDepositModal={setOpenCancelingDepositModal}
+                    refetchingTransactionFn={refetchingTransactionFn}
                 />
             )}
             {openReturnDeviceInBulkModal && <ReturningInBulkMethod openReturnDeviceBulkModal={openReturnDeviceInBulkModal} setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal} record={recordRef.current} refetching={refetchingFn} />}

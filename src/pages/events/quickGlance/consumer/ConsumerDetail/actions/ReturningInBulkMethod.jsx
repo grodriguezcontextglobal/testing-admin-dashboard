@@ -1,5 +1,5 @@
-import { Button, Grid, OutlinedInput, Typography } from '@mui/material'
-import { Modal, notification } from 'antd'
+import { Grid, OutlinedInput, Typography } from '@mui/material'
+import { Button, Modal, notification } from 'antd'
 import { useForm } from 'react-hook-form'
 import _ from "lodash"
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -9,14 +9,16 @@ import { BlueButton } from '../../../../../../styles/global/BlueButton'
 import { BlueButtonText } from '../../../../../../styles/global/BlueButtonText'
 import { TextFontSize30LineHeight38 } from '../../../../../../styles/global/TextFontSize30LineHeight38'
 import CenteringGrid from '../../../../../../styles/global/CenteringGrid'
-// 
+import { PropTypes } from 'prop-types'
+import { useState } from 'react'
 const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceInBulkModal, record, refetching }) => {
     const deviceInTransactionQuery = useQuery({
         queryKey: ['assignedDeviceInTransaction'],
         queryFn: () => devitrakApi.post('/receiver/receiver-assigned-list', {
             eventSelected: record.eventSelected,
             paymentIntent: record.paymentIntent
-        })
+        }),
+        refetchOnMount: false
     })
     const deviceInPoolQuery = useQuery({
         queryKey: ['deviceInTransactionInPool'],
@@ -25,8 +27,10 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
             provider: record.provider,
             activity: "YES",
             type: record.deviceType
-        })
+        }),
+        refetchOnMount: false
     })
+    const [loadingStatus, setLoadingStatus] = useState(false)
     const { register, handleSubmit } = useForm()
     const queryClient = useQueryClient()
     const [api, contextHolder] = notification.useNotification()
@@ -35,6 +39,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
             message: msg
         });
     };
+
     const closeModal = () => {
         setOpenReturnDeviceInBulkModal(false)
     }
@@ -73,6 +78,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
         }
     }
     const handleReturnDevices = async (data) => {
+        setLoadingStatus(true)
         const startingNumber = data.startingNumber
         const endingNumber = data.endingNumber
         for (let i = startingNumber; i <= endingNumber; i++) {
@@ -82,7 +88,10 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
         openNotificationWithIcon('success', 'All devices returned!')
         queryClient.invalidateQueries('assginedDeviceList', { exact: true });
         refetching()
-        return closeModal()
+        setLoadingStatus(false)
+        setTimeout(() => {
+            return closeModal()
+        }, 2500);
     }
     return (
         <Modal
@@ -105,12 +114,13 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
                     </Grid>
                     <Grid item xs={12} sm={12} md={4} lg={4}>
                         <Button
-                            type="submit"
+                            htmlType='submit'
+                            loading={loadingStatus}
                             style={{ ...BlueButton, width: "100%" }}
                         >
                             <Typography
                                 textTransform={"none"}
-                                style={{ ...BlueButtonText, cursor: "pointer" }}
+                                style={{ ...BlueButtonText, ...CenteringGrid, cursor: "pointer" }}
                             >
                                 Return devices
                             </Typography>
@@ -118,9 +128,15 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
                     </Grid>
                 </Grid>
             </form>
-
         </Modal>
     )
 }
 
 export default ReturningInBulkMethod
+
+ReturningInBulkMethod.propTypes = {
+    openReturnDeviceBulkModal: PropTypes.bool,
+    setOpenReturnDeviceInBulkModal: PropTypes.bool,
+    record: PropTypes.object,
+    refetching: PropTypes.func,
+}

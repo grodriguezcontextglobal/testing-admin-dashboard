@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -43,7 +43,6 @@ export const ReplaceDevice = ({ refetching }) => {
     formState: { errors },
   } = useForm();
   const dispatch = useDispatch();
-  let serialNumber = watch("serialNumber");
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api[type]({
@@ -61,7 +60,7 @@ export const ReplaceDevice = ({ refetching }) => {
       "device.deviceType": receiverToReplaceObject.deviceType,
       paymentIntent: paymentIntentSelected
     }),
-    enable: false,
+    enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ['data', 'dataUpdatedAt']
   })
@@ -74,7 +73,7 @@ export const ReplaceDevice = ({ refetching }) => {
       device: receiverToReplaceObject.serialNumber,
       type: receiverToReplaceObject.deviceType
     }),
-    enable: false,
+    enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ['data', 'dataUpdatedAt']
   })
@@ -179,8 +178,7 @@ export const ReplaceDevice = ({ refetching }) => {
         },
       }
     );
-    queryClient.invalidateQueries('assginedDeviceList')
-
+    queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
   }
 
   const replaceDevice = async (data) => {
@@ -192,6 +190,7 @@ export const ReplaceDevice = ({ refetching }) => {
     handleClearRecord()
     queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
     refetching()
+    openNotificationWithIcon('success', 'Device replaced successfully.')
     closeModal();
   };
 

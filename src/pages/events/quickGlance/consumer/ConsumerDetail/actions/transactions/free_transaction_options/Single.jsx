@@ -2,7 +2,7 @@ import { Button, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select } from "antd";
 import _ from 'lodash';
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
@@ -24,11 +24,21 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             provider: event.company,
             activity: "No"
         }),
+        enabled: false,
         refetchOnMount: false,
         staleTime: Infinity
     })
     const queryClient = useQueryClient()
     const reference = useRef(null)
+
+    useEffect(() => {
+        const controller = new AbortController()
+        deviceTrackInPoolQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
     const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceTrackInPoolQuery?.data?.data?.receiversInventory
     function closeModal() {
         setCreateTransactionForNoRegularUser(false);
@@ -58,7 +68,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
         const findingRange = new Set()
         for (let i = 0; i < devicesInPool.length; i++) {
             if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
-                if (`${devicesInPool[i]?.activity}`.toLocaleLowerCase() === "no")
+                if (`${devicesInPool[i]?.activity}`.toLowerCase() === "no" && `${devicesInPool[i]?.status}`.toLowerCase() !== "lost")
                     findingRange.add(Number(devicesInPool[i].device))
             }
         }
@@ -152,7 +162,9 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
                     await devitrakApi.post("/stripe/save-transaction", transactionProfile);
                     queryClient.invalidateQueries(["transactionListQuery", "listOfDevicesAssigned"]);
                     alert("Device assigned successful")
-                    await closeModal()
+                    return setTimeout(() => {
+                        closeModal()
+                    }, 2500);
                 }
             } catch (error) {
                 console.log(

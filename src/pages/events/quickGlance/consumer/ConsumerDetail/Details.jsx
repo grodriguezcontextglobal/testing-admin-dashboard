@@ -13,6 +13,7 @@ import FreeTransaction from "./actions/transactions/FreeTransaction";
 import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
 import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import { EmailIcon } from "../../../../../components/icons/Icons";
+import CashTransaction from "./actions/transactions/CashTransaction";
 // import "../../Events/quickGlance/FormatEventDetailInfo.css";
 // import { ModalCreateTransactionForNoRegularUser } from "../transactionOptions/ModalCreateTransactionForNoRegularUser";
 // import { ModalPaidTransaction } from "../transactionOptions/ModalPaidTransaction";
@@ -29,10 +30,10 @@ const items = [
         label: "Charge",
         key: "1",
     },
-    // {
-    //   label: "Deposit in Cash",
-    //   key: "2"
-    // }
+    {
+        label: "Cash",
+        key: "2"
+    }
 ];
 
 const FormatAttendeeDetailInfo = () => {
@@ -223,9 +224,9 @@ const FormatAttendeeDetailInfo = () => {
         openSingleEmailNotificationModal={notificationActivation}
         setOpenSingleEmailNotificationModal={setNotificationActivation}
       />} */}
-            {/* {createTransactionInCash &&
-        <ModalCashDepositTransaction openTransactionInCashModal={createTransactionInCash} setOpenTransactionInCashModal={setCreateTransactionInCash} />
-      } */}
+            {createTransactionInCash &&
+                <CashTransaction openCashTransaction={createTransactionInCash} setOpenCashTransaction={setCreateTransactionInCash} />
+            }
         </Grid>
     );
 };
