@@ -5,6 +5,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi"
 import { useQuery } from "@tanstack/react-query"
 import { Icon } from "@iconify/react"
 import { Typography } from "@mui/material"
+import { useEffect } from "react"
 const StaffTable = ({ searching }) => {
   const { event } = useSelector((state) => state.event)
   const staffEventQuery = useQuery({
@@ -12,10 +13,18 @@ const StaffTable = ({ searching }) => {
     queryFn: () => devitrakApi.post('/staff/admin-users', {
       company: event.company
     }),
+    enabled: false,
     refetchOnMount: false,
     staleTime: Infinity,
     cacheTime: 1000 * 60 * 60 //oneHourInMs
   })
+  useEffect(() => {
+    const controller = new AbortController()
+    staffEventQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
   if (staffEventQuery.data) {
     const staffMember = new Map()

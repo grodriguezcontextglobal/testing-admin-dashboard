@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 
 const EndEventButton = () => {
@@ -15,6 +15,8 @@ const EndEventButton = () => {
     const listOfInventoryQuery = useQuery({
         queryKey: ["listOfInventory"],
         queryFn: () => devitrakApi.get("/inventory/list-inventories"),
+        enabled: false,
+        refetchOnMount: false
     });
     const listOfItemsInInventoryQuery = useQuery({
         queryKey: ["listOfItemsInInventory"],
@@ -22,6 +24,8 @@ const EndEventButton = () => {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company
         }),
+        enabled: false,
+        refetchOnMount: false
     });
     const itemsInPoolQuery = useQuery({
         queryKey: ["listOfItemsInInventoryPOST"],
@@ -29,6 +33,8 @@ const EndEventButton = () => {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company
         }),
+        enabled: false,
+        refetchOnMount: false
     });
 
     const eventInventoryQuery = useQuery({
@@ -36,8 +42,31 @@ const EndEventButton = () => {
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company
-        })
+        }),
+        enabled: false,
+        refetchOnMount: false
     })
+
+    const transactionsRecordQuery = useQuery({
+        queryKey: ['transactionList'],
+        queryFn: () => devitrakApi.post('/receiver/receiver-assigned-list', {
+            eventSelected: event.eventInfoDetail.eventName,
+            provider: event.company
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+    useEffect(() => {
+        const controller = new AbortController()
+        listOfInventoryQuery.refetch()
+        listOfItemsInInventoryQuery.refetch()
+        itemsInPoolQuery.refetch()
+        eventInventoryQuery.refetch()
+        transactionsRecordQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
 
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
@@ -178,6 +207,19 @@ const EndEventButton = () => {
             openNotificationWithIcon("error", `${error.message}`)
         }
     }
+    const addingRecordOfActivityInEvent = async () => {
+        try {
+            const groupingInventoryByGroupName = _.groupBy(event.deviceSetup, 'group')
+            const dataToStoreAsRecord = transactionsRecordQuery?.data?.data?.listOfReceivers
+            for (let data of dataToStoreAsRecord) {
+                await devitrakApi.post('/db_record/inserting-record', {
+                    email: data.user, serial_number: data.device.serialNumber, status: `${typeof data.device.status === 'string' ? data.device.status : data.device.status ? "In-Use" : "Returned"}`, activity: `${data.device.activity}`, payment_id: data.paymentIntent, event: data.eventSelected[0], item_group: data.device.deviceType, category_name: groupingInventoryByGroupName[data.device.deviceType].at(-1).category
+                })
+            }
+        } catch (error) {
+            console.log("🚀 ~ addingRecordOfActivityInEvent ~ error:", error)
+        }
+    }
     const updatingItemInDB = async () => {
         if (returningItemsInInventoryAfterEndingEvent().length > 0) {
             for (let data of returningItemsInInventoryAfterEndingEvent()) {
@@ -189,6 +231,7 @@ const EndEventButton = () => {
         }
         await sqlDeviceFinalStatusAtEventFinished()
         await sqlDeviceReturnedToCompanyStock()
+        await addingRecordOfActivityInEvent()
         return await inactiveEventAfterEndIt()
 
     }

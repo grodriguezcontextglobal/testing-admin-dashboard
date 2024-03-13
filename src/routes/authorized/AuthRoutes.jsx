@@ -101,7 +101,9 @@ const AuthRoutes = () => {
                 </Routes>
             </Suspense>
             <Grid container>
-                <FooterComponent />
+                <Grid margin={'0 0 2.5rem'} item xs={11} sm={11} md={12} lg={12}>
+                    <FooterComponent />
+                </Grid>
             </Grid>
         </>
     )

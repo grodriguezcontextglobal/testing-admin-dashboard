@@ -206,8 +206,8 @@ const MainPage = () => {
 
         return (
             <Grid
+            alignSelf={'flex-start'}
                 style={{
-
                     padding: "px",
                     display: "flex",
                     flexDirection: "row",

@@ -25,7 +25,7 @@ import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { PlusIcon, WhitePlusIcon } from "../../../components/icons/Icons";
+import { PlusIcon, WhiteCirclePlusIcon, WhitePlusIcon } from "../../../components/icons/Icons";
 import { Title } from "../../../styles/global/Title";
 import StaffMainPage from "./staff/StaffMainPage";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
@@ -34,11 +34,13 @@ import EndEventButton from "./components/formatEventDetailInfo/EndEventButton";
 import InventoryEventValue from "./components/InventoryEventValue";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
 import Report from "./components/lostFee/Report";
+import EditingStaff from "./staff/components/EditingStaff";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime()
   const { choice, event, company } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(false)
   const [notificationStatus, setNotificationStatus] = useState(today > new Date(event.eventInfoDetail.dateEnd).getTime())
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -132,7 +134,7 @@ const MainPageQuickGlance = () => {
         >
           {checkStaffRoleToDisplayCashReportInfo() && (
             <Link to="/event/new_subscription">
-              <Button style={{...BlueButton, width:"100%", margin:"0rem auto 1rem"}}>
+              <Button style={{ ...BlueButton, width: "100%", margin: "0rem auto 1rem" }}>
                 <WhitePlusIcon /><Typography style={BlueButtonText}>
                   Add new event
                 </Typography>
@@ -142,7 +144,7 @@ const MainPageQuickGlance = () => {
           <Button
             disable={!event.active}
             onClick={() => setCreateUserButton(true)}
-            style={{ ...GrayButton, border: "1px solid var(--gray-300, #D0D5DD)", width:"100%" }}
+            style={{ ...GrayButton, border: "1px solid var(--gray-300, #D0D5DD)", width: "100%" }}
           >
             <PlusIcon />
             &nbsp;
@@ -403,7 +405,7 @@ const MainPageQuickGlance = () => {
           isMediumDevice={isMediumDevice}
         />
         <Divider />
-        <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} margin={'2rem auto 1rem'} xs={12} sm={12} md={12} lg={12}>
+        <Grid display={'flex'} justifyContent={'space-between'} alignItems={'center'} margin={'2rem auto 1rem'} xs={12} sm={12} md={12} lg={12}>
           <Typography style={{ ...TextFontSize20LineHeight30, fontWeight: 500, color: '#000', display: "flex", justifyContent: "flex-start", alignItems: "center" }}>Staff at the event:&nbsp;<div
             style={{
               borderRadius: "16px",
@@ -426,9 +428,10 @@ const MainPageQuickGlance = () => {
               total
             </Typography>
           </div></Typography>
+          <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content" }}><WhiteCirclePlusIcon />&nbsp;<Typography style={BlueButtonText}>Add staff</Typography></Button>
         </Grid>
         <StaffMainPage />
-        {/* </Grid > */}
+        {editingStaff && <EditingStaff editingStaff={editingStaff} setEditingStaff={setEditingStaff} />}
         {
           createUserButton && (
             <CreateNewConsumer

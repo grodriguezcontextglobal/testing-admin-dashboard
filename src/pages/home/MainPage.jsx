@@ -38,6 +38,7 @@ const MainPage = () => {
 
     return (
         <Grid
+        alignSelf={'flex-start'}
             style={{
                 padding: "5px",
                 display: "flex",

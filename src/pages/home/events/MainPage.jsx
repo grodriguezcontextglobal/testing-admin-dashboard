@@ -104,6 +104,7 @@ const MainPage = () => {
                 display={'flex'}
                 justifyContent={"space-between"}
                 alignItems={"center"}
+                alignSelf={'flex-start'}
                 gap={1}
                 item
                 xs={12}
@@ -118,6 +119,7 @@ const MainPage = () => {
                             <Grid
                                 key={event.id}
                                 padding={1}
+                                alignSelf={'flex-start'}
                                 item
                                 xs={12}
                                 sm={12}
