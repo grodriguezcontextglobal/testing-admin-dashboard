@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button, Card, Modal, Popconfirm, Select, Space, notification } from "antd"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { devitrakApi } from "../../../../../api/devitrakApi"
 import { useEffect, useState } from "react"
 import { Grid, OutlinedInput, Typography } from "@mui/material"
@@ -12,12 +12,14 @@ import { BlueButton } from "../../../../../styles/global/BlueButton"
 import GrayButtonText from "../../../../../styles/global/GrayButtonText"
 import { GrayButton } from "../../../../../styles/global/GrayButton"
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
+import { onAddEventData, onAddEventStaff } from "../../../../../store/slices/eventSlice"
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     const { register, handleSubmit } = useForm()
     const [loadingStatus, setLoadingStatus] = useState(false)
     const [roleSelected, setRoleSelected] = useState('')
     const { event } = useSelector((state) => state.event)
+    const dispatch = useDispatch()
     const staffEventQuery = useQuery({
         queryKey: ['staffEvent'],
         queryFn: () => devitrakApi.post('/staff/admin-users', {
@@ -106,20 +108,24 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                 setLoadingStatus(true)
                 if (String(roleSelected).toLowerCase() === "administrator") {
                     const result = [...event.staff.adminUser, data.email]
-                    await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+                    const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                         staff: {
                             adminUser: result,
                             headsetAttendees: event.staff.headsetAttendees
                         }
                     })
+                    dispatch(onAddEventData(response.data.event))
+                    dispatch(onAddEventStaff(response.data.event.staff))
                 } else {
                     const result = [...event.staff.headsetAttendees, data.email]
-                    await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+                    const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                         staff: {
                             adminUser: event.staff.adminUser,
                             headsetAttendees: result
                         }
                     })
+                    dispatch(onAddEventData(response.data.event))
+                    dispatch(onAddEventStaff(response.data.event.staff))
                 }
                 queryClient.invalidateQueries({ queryKey: ['staffEvent'], exact: true })
                 setLoadingStatus(false)

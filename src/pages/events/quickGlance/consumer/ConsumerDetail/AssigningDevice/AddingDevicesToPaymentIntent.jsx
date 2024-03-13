@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-const AddingDevicesToPaymentIntent = ({ record }) => {
+const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     const [submittedAction, setSubmittedAction] = useState(false)
     const { customer } = useSelector(
         (state) => state.stripe
@@ -206,6 +206,7 @@ const AddingDevicesToPaymentIntent = ({ record }) => {
                     queryClient.invalidateQueries({ queryKey: ["listOfDevicesAssigned"], exact: true });
                     queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"], exact: true });
                     deviceInPoolQuery.refetch()
+                    refetchingFn()
                     const dateString = new Date().toString()
                     const dateRef = dateString.split(' ')
                     //* check if reach device requested to notify

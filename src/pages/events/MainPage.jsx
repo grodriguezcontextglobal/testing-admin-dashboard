@@ -16,15 +16,10 @@ import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
     onAddContactInfo,
     onAddDeviceSetup,
-    onAddEventData,
     onAddEventInfoDetail,
     onAddEventStaff,
-    onAddListEventPermitPerAdmin,
-    onAddQRCodeLink,
-    onSelectCompany,
-    onSelectEvent,
+    onAddListEventPermitPerAdmin
 } from "../../store/slices/eventSlice";
-import { onAddSubscription } from "../../store/slices/subscriptionSlice";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";

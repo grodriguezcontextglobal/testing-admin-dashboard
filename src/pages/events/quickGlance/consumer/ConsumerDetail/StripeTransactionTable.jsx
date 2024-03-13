@@ -647,7 +647,7 @@ const StripeTransactionTable = ({ searchValue }) => {
         return (
             <>
                 <div style={{ display: `${checkDevicesInTransaction().length >= rowRecord.device[0].deviceNeeded && "none"}` }}>
-                    {checkDevicesInTransaction().length !== rowRecord.device[0].deviceNeeded && <AddingDevicesToPaymentIntent record={rowRecord} />}
+                    {checkDevicesInTransaction().length !== rowRecord.device[0].deviceNeeded && <AddingDevicesToPaymentIntent refetchingFn={refetchingFn} record={rowRecord} />}
                 </div>
                 {checkDevicesInTransaction()?.length > 0 && (
                     <Table

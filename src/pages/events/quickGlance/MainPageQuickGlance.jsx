@@ -5,35 +5,35 @@ import {
   Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { PlusIcon, WhitePlusIcon } from "../../../components/icons/Icons";
+import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { useMediaQuery } from "@uidotdev/usehooks";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
-import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
-import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
-import { devitrakApi } from "../../../api/devitrakApi";
-import DisplayAllItemsSetInventoryEvent from "./components/DisplayAllItemsSetInventoryEvent";
-import DevicesInformationSection from "./inventory/DevicesInformationSection";
-import CustomerInformationSection from "./consumer/CustomerInformationSection";
-import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { PlusIcon, WhiteCirclePlusIcon, WhitePlusIcon } from "../../../components/icons/Icons";
-import { Title } from "../../../styles/global/Title";
-import StaffMainPage from "./staff/StaffMainPage";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
-import EndEventButton from "./components/formatEventDetailInfo/EndEventButton";
-import InventoryEventValue from "./components/InventoryEventValue";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { Title } from "../../../styles/global/Title";
+import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
+import DisplayAllItemsSetInventoryEvent from "./components/DisplayAllItemsSetInventoryEvent";
+import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
+import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
+import InventoryEventValue from "./components/InventoryEventValue";
+import EndEventButton from "./components/formatEventDetailInfo/EndEventButton";
 import Report from "./components/lostFee/Report";
+import CustomerInformationSection from "./consumer/CustomerInformationSection";
+import DevicesInformationSection from "./inventory/DevicesInformationSection";
+import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime()
@@ -425,10 +425,10 @@ const MainPageQuickGlance = () => {
               color={"var(--blue-dark-700, #004EEB)"}
               padding={"0px 8px"}
             >
-              total
+              {event.staff.adminUser.length + event.staff.headsetAttendees.length} total
             </Typography>
           </div></Typography>
-          <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content" }}><WhiteCirclePlusIcon />&nbsp;<Typography style={BlueButtonText}>Add staff</Typography></Button>
+          <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content", display:"flex", justifyContent:"space-between", alignItems:"center" }}><WhitePlusIcon />&nbsp;<Typography style={BlueButtonText}>Add staff</Typography></Button>
         </Grid>
         <StaffMainPage />
         {editingStaff && <EditingStaff editingStaff={editingStaff} setEditingStaff={setEditingStaff} />}
