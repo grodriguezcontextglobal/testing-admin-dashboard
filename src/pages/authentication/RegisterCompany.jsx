@@ -2,12 +2,13 @@ import { Button, FormLabel, Grid, OutlinedInput, Typography } from "@mui/materia
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { AutoComplete, notification } from "antd";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
-import { onLogin } from "../../store/slices/adminSlice";
+import { onAddErrorMessage, onLogin } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -20,13 +21,13 @@ const RegisterCompany = () => {
         "only screen and (min-width : 769px) and (max-width : 992px)"
     );
     const { user } = useSelector((state) => state.admin)
-    const [phoneNumberCompany, setPhoneNumberCompany] = useState('')
     const [websiteUrl, setWebsiteUrl] = useState('')
     const [industry, setIndustry] = useState('')
     const [loadingStatus, setLoadingStatus] = useState(false)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const { register, handleSubmit } = useForm()
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, title, msg, time) => {
         api[type]({
@@ -39,8 +40,19 @@ const RegisterCompany = () => {
 
     const industryListQuery = useQuery({
         queryKey: ['companyInfoList'],
-        queryFn: () => devitrakApi.post('/db_company/industry')
+        queryFn: () => devitrakApi.post('/db_company/industry'),
+        enabled: false,
+        refetchOnMount: false
     })
+
+    useEffect(() => {
+        const controller = new AbortController()
+        industryListQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
 
     const retrieveIndustryOptions = () => {
         const result = new Set()
@@ -52,11 +64,10 @@ const RegisterCompany = () => {
         }
         return Array.from(result)
     }
-    const onSubmitRegister = async (e) => {
-        e.preventDefault()
-        openNotificationWithIcon('info', "Processing", "We're processing your request", 0)
+
+    const ref = useRef({})
+    const userRegistrationProcess = async () => {
         try {
-            setLoadingStatus(true)
             const newAdminUserTemplate = {
                 name: user.name,
                 lastName: user.lastName,
@@ -65,104 +76,267 @@ const RegisterCompany = () => {
                 company: user.company,
                 question: "What's your company name",
                 answer: String(user.company).toLowerCase(),
-                role: "Administrator"
+                role: "Administrator",
+                super_user: true,
+                online: true
             };
             const resp = await devitrakApi.post(
                 "/admin/new_admin_user",
                 newAdminUserTemplate
             );
-            if (resp.data) {
-                localStorage.setItem("admin-token", resp.data.token);
-                const insertingCompanyInfo = await devitrakApi.post('/db_company/new_company', {
-                    company_name: user.company,
-                    street_address: "unknown",
-                    city_address: "unknown",
-                    state_address: "unknown",
-                    zip_address: "unknown",
-                    phone_number: phoneNumberCompany,
-                    email_company: websiteUrl,
-                    industry: industry
+
+            localStorage.setItem("admin-token", resp.data.token);
+            dispatch(
+                onLogin({
+                    data: resp.data.entire,
+                    uid: resp.data.uid,
+                    name: resp.data.name,
+                    lastName: resp.data.lastName,
+                    email: resp.data.email,
+                    phone: resp.data.phone,
+                    role: resp.data.role,
+                    company: user.company,
+                    token: resp.data.token
                 })
-                if (insertingCompanyInfo.data.ok) {
-                    const companyInfo = await devitrakApi.post('/db_company/consulting-company', {
-                        company_id: insertingCompanyInfo.data.company.insertId
-                    })
-                    const insertingNewMemberInCompany = await devitrakApi.post('/db_staff/new_member', {
-                        first_name: user.name,
-                        last_name: user.lasName,
-                        email: user.email,
-                        phone_number: "000-000-0000",
-                    })
-                    const onlineStatus = await devitrakApiAdmin.patch(`/profile/${resp.data.uid}`, {
-                        online: true
-                    })
-                    if (insertingNewMemberInCompany.data) {
-                        const consultingNewStaffMember = await devitrakApi.post('/db_staff/consulting-member', { staff_id: insertingNewMemberInCompany.data.member.insertId })
-                        if (consultingNewStaffMember.data) {
-                            dispatch(
-                                onLogin({
-                                    data: onlineStatus.data.entire,
-                                    name: resp.data.name,
-                                    lastName: resp.data.lastName,
-                                    uid: resp.data.uid,
-                                    email: resp.data.email,
-                                    role: resp.data.role,
-                                    affiliate: resp.data.affiliate,
-                                    company: resp.data.company,
-                                    sqlInfo: companyInfo.data.result.at(-1),
-                                    sqlMemberInfo: consultingNewStaffMember.data.membe.at(-1),
-                                })
-                            );
-                            queryClient.clear()
-                            const newCompanyAccountTemplate = {
-                                companyName: newAdminUserTemplate.company,
-                                ownerFirstName: newAdminUserTemplate.name,
-                                ownerLastName: newAdminUserTemplate.lastName,
-                                ownerEmail: newAdminUserTemplate.email,
-                            };
-                            const creatingStripeCustomer = await devitrakApi.post(
-                                "/stripe/new-company-account",
-                                newCompanyAccountTemplate
-                            );
-                            if (creatingStripeCustomer.data) {
-                                const insertingStripeCompanyInfo = await devitrakApi.post('/db_stripe/new_stripe', {
-                                    stripe_id: creatingStripeCustomer.data.companyCustomer.stripeID,
-                                    company_id: insertingCompanyInfo.data.company.insertId
-                                })
-                                dispatch(
-                                    onLogin({
-                                        ...user,
-                                        sqlStripe: insertingStripeCompanyInfo.data.stripe.insertId
-                                    })
-                                );
-                                setLoadingStatus(false)
-                                notification.destroy("info")
-                                openNotificationWithIcon(
-                                    "success",
-                                    "Action done",
-                                    "You're set up and ready to start using Devitrak!",
-                                    2.5
-                                );
-                                setTimeout(() => {
-                                    return navigate('/')
-                                }, 5000);
-                                return;
-                            }
-                        }
-                    }
+            )
+            ref.current = {
+                ...ref.current,
+                userRegistration: {
+                    data: resp.data.entire,
+                    uid: resp.data.uid,
+                    name: resp.data.name,
+                    lastName: resp.data.lastName,
+                    email: resp.data.email,
+                    phone: resp.data.phone,
+                    role: resp.data.role,
+                    company: user.company,
+                    token: resp.data.token
                 }
             }
+            return resp.data
+        } catch (error) {
+            return error
+        }
+
+    }
+
+    const createStripeAccount = async () => {
+        const newCompanyAccountTemplate = {
+            companyName: user.company,
+            ownerFirstName: user.name,
+            ownerLastName: user.lastName,
+            ownerEmail: user.email,
+        };
+        const creatingStripeCustomer = await devitrakApi.post(
+            "/stripe/new-company-account",
+            newCompanyAccountTemplate
+        );
+        if (creatingStripeCustomer.data) {
+            ref.current = {
+                ...ref.current,
+                stripeAccount: creatingStripeCustomer.data.companyCustomer.stripeID
+            }
+            return creatingStripeCustomer.data
+        }
+
+    }
+
+    const createCompany = async (props) => {
+        const companyTemplate = {
+            company_name: user.company,
+            address: {
+                street: props.street,
+                city: props.city,
+                state: props.state,
+                postal_code: props.postal_code
+            },
+            phone: {
+                main: props.main_phone,
+                alternative: props.alternative_phone,
+            },
+            owner: {
+                first_name: user.name,
+                last_name: user.lastName,
+                email: user.email
+            },
+            website: websiteUrl,
+            main_email: props.main_email,
+            industry: industry,
+            stripe_customer_id: ref.current.stripeAccount,
+            employees: [{
+                user: user.email,
+                super_user: true,
+                role: "Administrator"
+            }]
+        };
+        const resp = await devitrakApi.post("/company/new", companyTemplate);
+        if (resp.data) {
+            ref.current = {
+                ...ref.current,
+                companyRegistration: resp.data.company
+            }
+            dispatch(
+                onLogin({
+                    companyInfo: resp.data.company
+                })
+            );
+            return resp.data
+        }
+    }
+
+    const insertingUserMemberInSqlDb = async (props) => {
+        const insertingNewMemberInCompany = await devitrakApi.post('/db_staff/new_member', {
+            first_name: user.name,
+            last_name: user.lasName,
+            email: user.email,
+            phone_number: props.main_phone,
+        })
+        if (insertingNewMemberInCompany.data) {
+            ref.current = {
+                ...ref.current,
+                userSQL: insertingNewMemberInCompany.data
+            }
+            console.log(ref.current)
+            return insertingNewMemberInCompany.data
+        }
+    }
+
+    const insertingNewCompanyInSqlDb = async (props) => {
+        const insertingCompanyInfo = await devitrakApi.post('/db_company/new_company', {
+            company_name: user.company,
+            street_address: props.street,
+            city_address: props.city,
+            state_address: props.state,
+            zip_address: props.postal_code,
+            phone_number: props.main_phone,
+            email_company: websiteUrl,
+            industry: industry
+        })
+        if (insertingCompanyInfo.data) {
+            ref.current = {
+                ...ref.current,
+                companySQL: insertingCompanyInfo.data
+            }
+            return insertingCompanyInfo.data
+        }
+    }
+    const insertingStripeAccountInSqlDb = async () => {
+        const insertingStripeCompanyInfo = await devitrakApi.post('/db_stripe/new_stripe', {
+            stripe_id: ref.current.stripeAccount,
+            company_id: ref.current.companySQL.company.insertId
+        })
+        if (insertingStripeCompanyInfo.data) {
+            ref.current = {
+                ...ref.current,
+                stripeSQL: insertingStripeCompanyInfo.data
+            }
+            return insertingStripeCompanyInfo.data
+        }
+    }
+
+    const updatingOnlineStatusUser = async () => {
+        const onlineStatus = await devitrakApiAdmin.patch(`/profile/${ref.current.userRegistration.uid}`, { online: true })
+        if (onlineStatus.data) {
+            dispatch(
+                onLogin({
+                    data: onlineStatus.data.entire,
+                    name: onlineStatus.data.name,
+                    lastName: onlineStatus.data.lastName,
+                    uid: onlineStatus.data.uid,
+                    email: onlineStatus.data.email,
+                    role: onlineStatus.data.role,
+                    phone: onlineStatus.data.phone,
+                    company: onlineStatus.data.company,
+                    token: onlineStatus.data.token,
+                    online: onlineStatus.data.entire.online,
+                })
+            );
+            ref.current = {
+                ...ref.current,
+                userRegistration: {
+                    data: onlineStatus.data.entire,
+                    name: onlineStatus.data.name,
+                    lastName: onlineStatus.data.lastName,
+                    uid: onlineStatus.data.uid,
+                    email: onlineStatus.data.email,
+                    role: onlineStatus.data.role,
+                    phone: onlineStatus.data.phone,
+                    company: onlineStatus.data.company,
+                    token: onlineStatus.data.token,
+                    online: onlineStatus.data.entire.online,
+                }
+            }
+            return onlineStatus
+        }
+    }
+
+    const consultingUserMemberInSqlDb = async () => {
+        const consultingNewStaffMember = await devitrakApi.post('/db_staff/consulting-member', { staff_id: ref.current.userSQL.member.insertId })
+        if (consultingNewStaffMember.data) {
+            dispatch(
+                onLogin({
+                    ...ref.current.userRegistration,
+                    sqlMemberInfo: consultingNewStaffMember.data.member.at(-1),
+                })
+            );
+            return ref.current = {
+                ...ref.current,
+                sqlMemberInfo: consultingNewStaffMember.data.member.at(-1) ?? undefined,
+            }
+        }
+    }
+
+    const consultingCompanyInSqlDb = async () => {
+        const companyInfo = await devitrakApi.post('/db_company/consulting-company', {
+            company_id: ref.current.companySQL.company.insertId
+        })
+        if (companyInfo.data) {
+            dispatch(
+                onLogin({
+                    ...ref.current.userRegistration,
+                    sqlMemberInfo: { ...ref.current.sqlMemberInfo },
+                    sqlInfo: companyInfo.data.company.at(-1) ?? undefined,
+                })
+            );
+            return ref.current = {
+                ...ref.current,
+                sqlMemberInfo: { ...ref.current.sqlMemberInfo },
+                sqlInfo: companyInfo.data.result?.at(-1),
+            }
+        }
+    }
+
+
+    const onSubmitRegister = async (data) => {
+        setLoadingStatus(true)
+        openNotificationWithIcon('info', "Processing", "We're processing your request", 0)
+        try {
+            await createStripeAccount()
+            await createCompany({ ...data })
+            await userRegistrationProcess()
+            await insertingUserMemberInSqlDb(data.main_phone)
+            await insertingNewCompanyInSqlDb(data)
+            await insertingStripeAccountInSqlDb()
+            await updatingOnlineStatusUser()
+            await consultingUserMemberInSqlDb()
+            await consultingCompanyInSqlDb()
+            queryClient.clear()
+            setLoadingStatus(false)
+            return setTimeout(() => {
+                if (loadingStatus === false) return <Navigate to={'/'} replace={true} />
+            }, 5000);
         } catch (error) {
             notification.destroy('info')
             openNotificationWithIcon(
                 "error",
                 "Action failed",
-                "Please try again later.", `${error.response.data.msg}`,
+                "Please try again later.", `${error.response}`,
                 3
             );
+            dispatch(onAddErrorMessage(error))
             setLoadingStatus(false)
             setTimeout(() => {
-                return navigate('/')
+                return navigate('/login')
             }, 2500);
         }
     };
@@ -196,7 +370,7 @@ const RegisterCompany = () => {
                             container
                         > <form
                             className="register-form-container"
-                            onSubmit={onSubmitRegister}
+                            onSubmit={handleSubmit(onSubmitRegister)}
                         >
                                 <Typography
                                     style={{
@@ -220,7 +394,9 @@ const RegisterCompany = () => {
                                 >
                                     To set up a new company please complete the steps below.
                                 </Typography>
-                                <Grid margin={'2rem auto'} item xs={12} sm={12} md={12} lg={12}><InfrmationCard props={user} /></Grid>
+                                <Grid margin={'2rem auto'} item xs={12} sm={12} md={12} lg={12}>
+                                    <InfrmationCard props={user} />
+                                </Grid>
                                 <Grid
                                     marginY={"20px"}
                                     marginX={0}
@@ -229,18 +405,117 @@ const RegisterCompany = () => {
                                     xs={12} sm={12} md={12} lg={12}
                                 >
                                     <FormLabel style={{ marginBottom: "0.5rem" }}>
-                                        Phone number <span style={{ fontWeight: 800 }}>*</span>
+                                        Main phone number <span style={{ fontWeight: 800 }}>*</span>
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('main_phone', { required: true })}
+                                            // value={phoneNumberCompany}
+                                            // onChange={(e) => setPhoneNumberCompany(e.target.value)}
+                                            style={OutlinedInputStyle}
+                                            placeholder=""
+                                            type="text"
+                                            fullWidth
+                                        /></FormLabel>
+
+                                </Grid>
+                                <Grid
+                                    marginY={"20px"}
+                                    marginX={0}
+                                    textAlign={"left"}
+                                    item
+                                    xs={12} sm={12} md={12} lg={12}
+                                >
+                                    <FormLabel style={{ marginBottom: "0.5rem" }}>
+                                        Alternative phone number <span style={{ fontWeight: 800 }}></span>
                                     </FormLabel>
                                     <OutlinedInput
                                         disabled={loadingStatus}
-                                        value={phoneNumberCompany}
-                                        onChange={(e) => setPhoneNumberCompany(e.target.value)}
+                                        {...register('alternative_phone', { required: true })}
+                                        // value={phoneNumberCompany}
+                                        // onChange={(e) => setPhoneNumberCompany(e.target.value)}
                                         style={OutlinedInputStyle}
                                         placeholder=""
                                         type="text"
                                         fullWidth
                                     />
+                                </Grid>
+                                <Grid
+                                    marginY={"20px"}
+                                    marginX={0}
+                                    textAlign={"left"}
+                                    display={'flex'}
+                                    flexDirection={'column'}
+                                    item
+                                    xs={12} sm={12} md={12} lg={12}
+                                >
+                                    <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
+                                        Street <span style={{ fontWeight: 800 }}>*</span>
 
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('street', { required: true })} style={OutlinedInputStyle}
+                                            placeholder=""
+                                            type="text"
+                                            fullWidth
+                                        />
+                                    </FormLabel>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", gap: "5px" }}>
+                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                            City <span style={{ fontWeight: 800 }}>*</span>
+                                            <OutlinedInput
+                                                disabled={loadingStatus}
+                                                {...register('city', { required: true })} style={OutlinedInputStyle}
+                                                placeholder=""
+                                                type="text"
+                                                fullWidth
+                                            />
+                                        </FormLabel>
+
+                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                            State <span style={{ fontWeight: 800 }}>*</span>
+                                            <OutlinedInput
+                                                disabled={loadingStatus}
+                                                {...register('state', { required: true })} style={OutlinedInputStyle}
+                                                placeholder=""
+                                                type="text"
+                                                fullWidth
+                                            />
+                                        </FormLabel>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", gap: "5px" }}>
+                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                            Zip code <span style={{ fontWeight: 800 }}>*</span>
+                                            <OutlinedInput
+                                                disabled={loadingStatus}
+                                                {...register('postal_code', { required: true })} style={OutlinedInputStyle}
+                                                placeholder=""
+                                                type="text"
+                                                fullWidth
+                                            />
+                                        </FormLabel>
+                                        <FormLabel style={{ marginBottom: "0.5rem", borderRadius: "8px", width: "100%" }}>
+                                            Industry <span style={{ fontWeight: 800 }}>*</span>
+                                            <AutoComplete
+                                                className="custom-autocomplete" // Add a custom className here
+                                                disabled={loadingStatus}
+                                                variant="outlined"
+                                                style={{
+                                                    ...AntSelectorStyle,
+                                                    border: "solid 0.3 var(--gray600)",
+                                                    fontFamily: 'Inter',
+                                                    fontSize: "14px",
+                                                    width: "100%"
+                                                }}
+                                                value={industry}
+                                                onChange={(value) => setIndustry(value)}
+                                                options={retrieveIndustryOptions().map(item => { return ({ value: item }) })}
+                                                placeholder="Type your industry area"
+                                                filterOption={(inputValue, option) =>
+                                                    option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                                }
+                                            />
+                                        </FormLabel>
+                                    </div>
                                 </Grid>
                                 <Grid
                                     marginY={"20px"}
@@ -270,22 +545,25 @@ const RegisterCompany = () => {
                                     xs={12}
                                 >
                                     <FormLabel style={{ marginBottom: "0.5rem" }}>
-                                        Industry <span style={{ fontWeight: 800 }}>*</span>
+                                        Email for information <span style={{ fontWeight: 800 }}>*</span>
                                     </FormLabel>
-                                    <AutoComplete
+                                    <OutlinedInput
                                         disabled={loadingStatus}
-                                        variant="outlined"
-                                        style={{
-                                            ...AntSelectorStyle, border: "solid 0.3 var(--gray600)", fontFamily: 'Inter', fontSize: "14px", width: "100%"
-                                        }}
-                                        value={industry}
-                                        onChange={(value) => setIndustry(value)}
-                                        options={retrieveIndustryOptions().map(item => { return ({ value: item }) })}
-                                        placeholder="Type your industry area"
-                                        filterOption={(inputValue, option) =>
-                                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                                        }
+                                        {...register('main_email', { required: true })}
+                                        style={OutlinedInputStyle}
+                                        placeholder=""
+                                        type="text"
+                                        fullWidth
                                     />
+                                </Grid>
+                                <Grid
+                                    marginY={"20px"}
+                                    marginX={0}
+                                    textAlign={"left"}
+                                    item
+                                    xs={12}
+                                >
+
                                 </Grid>
                                 <Grid
                                     marginY={"20px"}
@@ -335,7 +613,7 @@ const RegisterCompany = () => {
                             </form>
                         </Grid>
                     </Grid>
-                    <div style={{position:"absolute", left:"50px", bottom:"25px", width:"100%"}}>
+                    <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
                         <FooterComponent />
                     </div>
                 </Grid>

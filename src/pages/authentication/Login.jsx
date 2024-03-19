@@ -47,7 +47,7 @@ const Login = () => {
             });
             if (respo.data) {
                 localStorage.setItem("admin-token", respo.data.token);
-                await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
+                const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
                     online: true
                 });
                 const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
@@ -59,7 +59,7 @@ const Login = () => {
 
                 dispatch(
                     onLogin({
-                        data: respo.data.entire,
+                        data: { ...respo.data.entire, online: updatingOnlineStatusResponse.data.entire.online, },
                         name: respo.data.name,
                         lastName: respo.data.lastName,
                         uid: respo.data.uid,
@@ -68,6 +68,7 @@ const Login = () => {
                         phone: respo.data.phone,
                         company: respo.data.company,
                         token: respo.data.token,
+                        online: updatingOnlineStatusResponse.data.entire.online,
                         sqlMemberInfo: respoFindMemberInfo.data.member.at(-1) ?? undefined,
                         sqlInfo: companyInfoTable.data.company.at(-1) ?? undefined,
                     })
@@ -243,7 +244,7 @@ const Login = () => {
                         </div>
 
                     </Grid>
-                    <div style={{position:"absolute", left:"50px", bottom:"25px", width:"100%"}}>
+                    <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
                         <FooterComponent />
                     </div>
                 </Grid>

@@ -8,10 +8,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { AutoComplete, notification } from "antd";
+import _ from 'lodash';
 import { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onLogin } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
@@ -19,22 +20,24 @@ import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
+import '../../styles/global/ant-select.css';
 import './style/authStyle.css';
 const Registration = () => {
+    const { user } = useSelector((state) => state.admin)
     const [listCompany, setListCompany] = useState([]);
-    const [companyValue, setCompanyValue] = useState("")
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [password2, setPassword2] = useState('')
+    const [companyValue, setCompanyValue] = useState(user.company)
+    const [firstName, setFirstName] = useState(user.name)
+    const [lastName, setLastName] = useState(user.lastName)
+    const [email, setEmail] = useState(user.email)
+    const [password, setPassword] = useState(user.password)
+    const [password2, setPassword2] = useState(user.password)
     const dispatch = useDispatch();
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const callAPiUserCompany = useCallback(async () => {
-        const resp = await devitrakApi.post("/event/event-list");
+        const resp = await devitrakApi.post("/company/companies");
         if (resp) {
-            return setListCompany(resp.data.list);
+            return setListCompany(resp.data.company);
         }
     }, []);
 
@@ -57,7 +60,7 @@ const Registration = () => {
         let result = new Set();
 
         for (let data of listCompany) {
-            result.add(data.company);
+            result.add(data.company_name);
         }
         return Array.from(result);
     }, [listCompany]);
@@ -78,15 +81,22 @@ const Registration = () => {
         "only screen and (min-width : 769px) and (max-width : 992px)"
     );
 
-    const onSubmitRegister = async () => {
+    const grouping = _.groupBy(listCompany, 'company_name')
+    const onSubmitRegister = async (e) => {
+        e.preventDefault()
         try {
+            console.log('company value', companyValue)
             const newAdminUserTemplate = {
                 name: firstName,
                 lastName: lastName,
                 email: email,
                 password: password,
                 company: companyValue,
+                question: "What's your company name",
+                answer: String(companyValue).toLowerCase(),
                 role: `${matchCompany() ? "Administrator" : "Editor"}`,
+                online: true,
+                super_user: false
             };
             if (matchCompany()) {
                 dispatch(
@@ -110,11 +120,14 @@ const Registration = () => {
                         phone_number: "000-000-0000",
                     })
 
+                    const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
+                        email: email,
+                    })
+                    const updatingEmployeesList = await devitrakApi.patch(`/company/update-company/${grouping[companyValue].at(-1).id}`, {
+                        employees: [{ user: email, super_user: false, role: "Editor", _id: resp.data.uid }, ...grouping[companyValue][0].employees]
+                    })
 
-                    if (companyInfo.data && insertingNewMemberInCompany.data) {
-                        await devitrakApiAdmin.patch(`/profile/${resp.data.uid}`, {
-                            online: true
-                        })
+                    if (companyInfo?.data && insertingNewMemberInCompany.data && updatingEmployeesList.data) {
                         dispatch(
                             onLogin({
                                 data: resp.data.entire,
@@ -125,10 +138,12 @@ const Registration = () => {
                                 role: resp.data.role,
                                 affiliate: resp.data.affiliate,
                                 company: resp.data.company,
-                                sqlInfo: companyInfo.data.result
+                                sqlMemberInfo: respoFindMemberInfo.data.member.at(-1) ?? undefined,
+                                sqlInfo: companyInfo.data.company.at(-1) ?? undefined,
                             })
                         );
                         queryClient.clear()
+                        return <Navigate to={'/'} replace={true} />
                     }
                 }
             }
@@ -136,7 +151,7 @@ const Registration = () => {
         } catch (error) {
             openNotificationWithIcon(
                 "error",
-                "Action was not accepted. Please try again later.", `${error.response.data.msg}`
+                "Action was not accepted. Please try again later.", `${error.response}`
             );
         }
     };
@@ -342,7 +357,7 @@ const Registration = () => {
                                         justifyContent={"space-between"}
                                     >
                                         <AutoComplete
-                                            variant="outlined"
+                                            className="custom-autocomplete"
                                             style={{
                                                 ...AntSelectorStyle, border: "solid 0.3 var(--gray600)", fontFamily: 'Inter', fontSize: "14px", width: "100%"
                                             }}
@@ -387,6 +402,16 @@ const Registration = () => {
                                         Do you have an account already?{" "}
                                         <Link to="/login">
                                             <span
+                                                onClick={() => dispatch(
+                                                    onLogin({
+                                                        name: "",
+                                                        lastName: "",
+                                                        email: "",
+                                                        password: "",
+                                                        company: "",
+                                                        role: "",
+                                                    })
+                                                )}
                                                 style={{
                                                     color: "#004EEB",
                                                     fontSize: "14px",
@@ -404,7 +429,7 @@ const Registration = () => {
                             </form>
                         </Grid>
                     </Grid>
-                    <div style={{position:"absolute", left:"50px", bottom:"25px", width:"100%"}}>
+                    <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
                         <FooterComponent />
                     </div>
                 </Grid>
