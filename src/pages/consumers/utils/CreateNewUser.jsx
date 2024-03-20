@@ -23,6 +23,7 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import "../../../styles/global/ant-select.css"
 const schema = yup
     .object({
         firstName: yup.string().required("first name is required"),
@@ -409,6 +410,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
                                         </Typography>
                                     </InputLabel>
                                     <Select
+                                    className="custom-autocomplete"
                                         displayEmpty
                                         {...register("eventAssignedTo", { required: true })}
                                         aria-invalid={errors.eventAssignedTo}

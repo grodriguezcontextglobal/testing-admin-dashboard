@@ -14,7 +14,7 @@ import { onResetArticleEdited } from '../../store/slices/articleSlide';
 import { onResetCustomer } from '../../store/slices/customerSlice';
 import { onResetDeviceInQuickGlance, onResetDevicesHandle } from '../../store/slices/devicesHandleSlice';
 import { onResetEventInfo } from '../../store/slices/eventSlice';
-import { onResetHelpers } from '../../store/slices/helperSlice';
+import { onResetHelpers, onSwitchingCompany } from '../../store/slices/helperSlice';
 import { onResetResult } from '../../store/slices/searchBarResultSlice';
 import { onResetStaffProfile } from '../../store/slices/staffDetailSlide';
 import { onResetStripesInfo } from '../../store/slices/stripeSlice';
@@ -27,7 +27,7 @@ import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
 //{ title: 'posts', route: '/posts' }
 const drawerWidth = 240;
-const navItems = [{ title: 'home', route: '/' }, { title: 'inventory', route: '/inventory' }, { title: 'events', route: '/events' }, { title: 'consumers', route: '/consumers' }, { title: 'staff', route: '/staff' }];
+const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
 
 const NavigationBarMain = (props) => {
     const { register, handleSubmit } = useForm()
@@ -69,11 +69,16 @@ const NavigationBarMain = (props) => {
         },
         {
             key: "2",
+            label: <Typography onClick={() => dispatch(onSwitchingCompany(true))}>Switch company</Typography>,
+        },
+        {
+            key: "3",
             label: <Typography onClick={() => {
                 logout();
             }}>Logout</Typography>,
             danger: true,
-        },
+        }
+
     ];
 
     const handleDrawerToggle = () => {
@@ -155,28 +160,31 @@ const NavigationBarMain = (props) => {
                                     <DevitrakLogo /><DevitrakName />
                                 </NavLink>
 
-                                {navItems.map((item) => (
-                                    <NavLink
-                                        key={item.title}
-                                        to={`${item.route}`}
+                                {navItems.map((item) => {
+                                    console.log(`${item.title}`, item.permission.some(element => element === user.role))
+                                    if (item.permission.some(element => element === user.role)) {
+                                        return <NavLink
+                                            key={item.title}
+                                            to={`${item.route}`}
 
-                                    >
-                                        <div className="content-main-navbar-updated">
-                                            <article
-                                                className={location.pathname === `${item.route}` ?
-                                                    "nav-item-base-main-navbar-updated" :
-                                                    "nav-item-base-1-main-navbar-updated"
-                                                }
-                                            >
-                                                <div className="content-2-main-navbar-updated">
-                                                    <div className="text-1-main-navbar-updated text-mdsemibold">
-                                                        <p style={{ textTransform: "capitalize" }}>{item.title}</p>
+                                        >
+                                            <div className="content-main-navbar-updated">
+                                                <article
+                                                    className={location.pathname === `${item.route}` ?
+                                                        "nav-item-base-main-navbar-updated" :
+                                                        "nav-item-base-1-main-navbar-updated"
+                                                    }
+                                                >
+                                                    <div className="content-2-main-navbar-updated">
+                                                        <div className="text-1-main-navbar-updated text-mdsemibold">
+                                                            <p style={{ textTransform: "capitalize" }}>{item.title}</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </article>
-                                        </div>
-                                    </NavLink>
-                                ))}
+                                                </article>
+                                            </div>
+                                        </NavLink>
+                                    }
+                                })}
 
                             </Box>
                         </Grid>

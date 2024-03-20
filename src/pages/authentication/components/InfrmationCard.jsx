@@ -1,5 +1,6 @@
 import { Grid, Typography } from "@mui/material"
 import { Card } from "antd"
+import { Link } from "react-router-dom"
 
 const InfrmationCard = ({ props }) => {
     return (
@@ -22,14 +23,14 @@ const InfrmationCard = ({ props }) => {
                     lineHeight='28px'
                     textAlign={'left'}
                 >Main point of contact</Typography>
-                <Typography color='var(--Blue-dark-700, #004EEB)'
+                <Link to="/register"><Typography color='var(--Blue-dark-700, #004EEB)'
                     fontFamily='Inter'
                     fontSize='14px'
                     fontStyle='normal'
                     fontWeight='600'
                     lineHeight='20px'
                     textAlign={'left'}
-                >Edit</Typography>
+                >Edit</Typography></Link>
             </Grid>
             <Grid item xs={12} sm={12} md={12} lg={12}><Typography color='var(--Gray-900, #101828)'
                 fontFamily='Inter'

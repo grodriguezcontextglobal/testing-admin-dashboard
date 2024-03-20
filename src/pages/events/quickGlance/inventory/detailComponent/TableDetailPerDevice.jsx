@@ -61,7 +61,6 @@ const TableDetailPerDevice = ({ searching }) => {
             return [...sortingAssignedDeviceTrack(), ...defectedDevicesList]
         } else {
             const data = [...sortingAssignedDeviceTrack(), ...defectedDevicesList]
-            console.log("🚀 ~ finalResult ~ data:", data)
             return data.filter(element => String(element.user).toLowerCase().includes(String(searching).toLowerCase()) || String(element.eventSelected[0]).toLowerCase().includes(String(searching).toLowerCase()))
         }
     }

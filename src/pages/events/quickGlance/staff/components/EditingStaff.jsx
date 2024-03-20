@@ -84,20 +84,24 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         const removeStaff = async (props) => {
             if (String(props.role).toLowerCase() === "administrator") {
                 const result = event.staff.adminUser.filter(member => member !== props.email)
-                await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+                const responseUpdating = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                     staff: {
                         adminUser: result,
                         headsetAttendees: event.staff.headsetAttendees
                     }
                 })
+                dispatch(onAddEventData(responseUpdating.data.event))
+                dispatch(onAddEventStaff(responseUpdating.data.event.staff))
             } else {
                 const result = event.staff.headsetAttendees.filter(member => member !== props.email)
-                await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+                const responseUpdating = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                     staff: {
                         adminUser: event.staff.adminUser,
                         headsetAttendees: result
                     }
                 })
+                dispatch(onAddEventData(responseUpdating.data.event))
+                dispatch(onAddEventStaff(responseUpdating.data.event.staff))
             }
         }
         const handleChange = (value) => {

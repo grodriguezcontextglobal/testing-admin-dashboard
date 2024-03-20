@@ -11,7 +11,7 @@ import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelec
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
-
+import '../../../../../../../../styles/global/ant-select.css';
 const MultipleDevices = ({ setCreateTransactionPaid }) => {
     const { register, handleSubmit, setValue } = useForm()
     const { customer } = useSelector((state) => state.customer);
@@ -115,6 +115,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1px", width: "100%" }}>
                     <Select
+                    className="custom-autocomplete"
                         showSearch
                         style={{ ...AntSelectorStyle, width: '80%' }}
                         placeholder="Search to Select"

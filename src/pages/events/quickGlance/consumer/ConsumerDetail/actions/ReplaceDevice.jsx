@@ -21,6 +21,7 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import "../../../../../../styles/global/ant-select.css";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const ReplaceDevice = ({ refetching }) => {
   const { user } = useSelector((state) => state.admin);
@@ -229,6 +230,7 @@ export const ReplaceDevice = ({ refetching }) => {
             <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
               {watch("serialNumber") !== "" && (
                 <Select
+                className="custom-autocomplete"
                   {...register("reason", { required: true })}
                   style={{ ...AntSelectorStyle, width: "100%" }}
                 >

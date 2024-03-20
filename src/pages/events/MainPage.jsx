@@ -29,9 +29,8 @@ import CardEventDisplay from "./components/CardEventDisplay";
 import PastEventsTable from "./components/PastEventsTable";
 import BannerMsg from "./utils/BannerMsg";
 const MainPage = () => {
-    const { register, watch } = useForm();
+    const { watch } = useForm();
     const { user } = useSelector((state) => state.admin);
-    const navigate = useNavigate();
     const dispatch = useDispatch();
     // sql database
     // const eventQuery = useQuery({
@@ -47,7 +46,7 @@ const MainPage = () => {
     const eventQuery = useQuery({
         queryKey: ["events"],
         queryFn: () => devitrakApi.post("/event/event-list", {
-            company: user.compay
+            company: user.company
         }),
         enabled: false,
         refetchOnMount: false,
@@ -76,8 +75,8 @@ const MainPage = () => {
                     floor: undefined,
                     phoneNumber: [],
                     merchant: false,
-                    dateBegin: new Date(),
-                    dateEnd: new Date(),
+                    dateBegin: new Date().toString(),
+                    dateEnd: new Date().toString(),
                 })
             );
             dispatch(onAddContactInfo(undefined));
@@ -92,7 +91,7 @@ const MainPage = () => {
         triggerDispatchWhenUserLandingInPage()
         eventQuery.refetch()
         companyAccountStripeQuery.refetch()
-    }, []);
+    }, [user.company]);
 
     if (eventQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
     if (

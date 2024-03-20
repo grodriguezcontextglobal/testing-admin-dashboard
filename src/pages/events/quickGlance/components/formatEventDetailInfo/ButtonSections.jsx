@@ -8,6 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { EmailIcon, PrinterIcon } from "../../../../../components/icons/Icons";
 import EmailNotification from "../../../../../components/notification/email/EmailNotification";
+import SpreadSheet from "../SpreadSheet";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
 
 const ButtonSections = () => {
   const { user } = useSelector((state) => state.admin);
@@ -122,7 +125,7 @@ const ButtonSections = () => {
           display: "flex",
           justifyContent: "center",
           alignSelf: "stretch",
-          padding:"0 0 0px 10px"
+          padding: "0 0 0px 10px"
         }}
       >
         <Grid
@@ -148,24 +151,13 @@ const ButtonSections = () => {
                   <Button
                     disabled
                     onClick={() => item.text === "Download all serial numbers" ? navigate('/page-to-print') : setCustomizedEmailNotificationModal(true)}
-                    style={{
-                      width: "100%",
-                      border: "1px solid var(--gray-300, #D0D5DD)",
-                      borderRadius: "8px",
-                      background: "var(--base-white, #FFF)",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    }}
+                    style={{...GrayButton, width:"100%"}}
                   >
                     {" "}
                     <Typography
                       textTransform={"none"}
                       textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"18px"}
-                      fontStyle={"normal"}
-                      fontWeight={400}
-                      lineHeight={"28px"}
-                      color={"var(--gray-900, #101828)"}
+                      style={GrayButtonText}
                     >
                       {item.icon}
                       &nbsp;{item.text}
@@ -175,6 +167,9 @@ const ButtonSections = () => {
               )
             })
           }
+          <Grid item xs sm md lg>
+            <SpreadSheet />
+          </Grid>
         </Grid>
       </Card>
       {customizedEmailNotificationModal && (

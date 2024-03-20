@@ -1,5 +1,5 @@
-.ant-select-selector {
-  border-radius: 20px;
+.custom-autocomplete .ant-select-selector {
+  border-radius: 8px;
   background-color: #fff;
   color: #000;
   vertical-align: center;

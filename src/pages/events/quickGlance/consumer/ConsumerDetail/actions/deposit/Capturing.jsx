@@ -125,7 +125,7 @@ const Capturing = ({
             amount: data.amount,
             event: event.eventInfoDetail.eventName,
             transaction: paymentIntentDetailSelected.paymentIntent,
-            date: dateRef.slice(0, 4),
+            date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
             time: dateRef[4],
             company: event.company,
             link: `https://app.devitrak.net/authentication/${encodeURI(

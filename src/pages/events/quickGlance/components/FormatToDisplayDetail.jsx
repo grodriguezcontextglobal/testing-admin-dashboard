@@ -30,7 +30,6 @@ const FormatToDisplayDetail = () => {
       // const defectDeviceData = receiversNoOperatingInPoolQuery?.data?.data?.record
       const receiversPoolData = receiversPoolQuery?.data?.data?.receiversInventory
       const groupingByReturnedStatus = _.groupBy(receiversPoolData, 'status')
-      console.log("🚀 ~ foundAllNoOperatingDeviceInEvent ~ groupingByReturnedStatus:", groupingByReturnedStatus)
       let result = []
       for (let data of Object.entries(groupingByReturnedStatus)) {
         if (data[0] !== "Operational"){
@@ -38,10 +37,6 @@ const FormatToDisplayDetail = () => {
         }
       }
       return result.reduce((accu, curr) => accu + curr, 0)
-      // if (defectDeviceData) {
-      //   return defectDeviceData
-      // }
-      // return [];
     };
 
     const foundDevicesOut = () => {

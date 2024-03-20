@@ -53,6 +53,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "vite-plugin-svgr": "^4.2.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz",
     "yup": "^1.2.0"
   },
   "devDependencies": {

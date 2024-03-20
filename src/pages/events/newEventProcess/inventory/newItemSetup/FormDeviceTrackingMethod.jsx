@@ -11,6 +11,7 @@ import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 const options = [{ label: 'Permanent', value: 'Permanent' }, { label: 'Rent', value: 'Rent' }]
+import '../../../../../styles/global/ant-select.css'
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
@@ -636,6 +637,7 @@ const FormDeviceTrackingMethod = ({
           }}
         >
           <Select
+          className="custom-autocomplete"
             showSearch
             style={{
               height: "16.5px",

@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import {PropTypes} from 'prop-types'
+import { PropTypes } from 'prop-types'
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -103,7 +103,7 @@ const Releasing = ({
         amount: amountWithNoDecimal,
         event: event.eventInfoDetail.eventName,
         transaction: paymentIntentDetailSelected.paymentIntent,
-        date: dateRef.slice(0, 4),
+        date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
         time: dateRef[4],
         company: event.company,
         link: `https://app.devitrak.net/authentication/${encodeURI(

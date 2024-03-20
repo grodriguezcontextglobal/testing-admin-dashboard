@@ -83,4 +83,4 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
     />
 
   );
-};
+}

@@ -148,8 +148,8 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     }
   };
 
-  const saveAndUpdateDeviceInPool = () => {
-    devitrakApi.patch(
+  const saveAndUpdateDeviceInPool = async () => {
+    await devitrakApi.patch(
       `/receiver/receivers-pool-update/${retrieveDeviceDataInPoolToUpdateIt().id
       }`,
       {
@@ -173,10 +173,10 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true)
     if (!retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() || retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1) {
-      return openNotificationWithIcon('warning', `Serial number ${serialNumber} is out of valid range for this event, please review and try another serial number.`)
+      return openNotificationWithIcon('warning', `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`)
     }
     const newDeviceObject = {
-      serialNumber: watch("serialNumber"),
+      serialNumber: data.serialNumber,
       deviceType: refDeviceObjectRetrieve.current.at(-1).deviceType,
       status: true,
     };
@@ -222,7 +222,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
               },
               event: event.eventInfoDetail.eventName,
               company: event.company,
-              date: dateRef.slice(0, 4),
+              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
               transaction: paymentIntentDetailSelected.paymentIntent,
               link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`

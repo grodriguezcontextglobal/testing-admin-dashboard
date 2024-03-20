@@ -1,28 +1,26 @@
+import { Icon } from "@iconify/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import {
   Form,
-  Select,
   Popconfirm,
+  Select,
   Table,
   Typography,
   notification,
 } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
-import '../../styles/global/ant-table.css'
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
-import CenteringGrid from "../../styles/global/CenteringGrid";
 import Loading from "../../components/animation/Loading";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
+import CenteringGrid from "../../styles/global/CenteringGrid";
+import '../../styles/global/ant-table.css';
 const EditableCell = ({
   editing,
   dataIndex,
   title,
   inputType,
-  record,
-  index,
   children,
   ...restProps
 }) => {
@@ -80,15 +78,41 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
     queryFn: () => devitrakApi.post("/staff/admin-users", {
       company: user.company
     }),
+    enabled: false,
+    refetchOnMount: false,
+    cacheTime: 6 * 60 * 1000,
+    staleTime: 6 * 60 * 1000
   });
 
+  const companiesEmployees = useQuery({
+    queryKey: ['employeesPerCompanyList'],
+    queryFn: () => devitrakApi.post('/company/search-company', {
+      company_name: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false,
+    cacheTime: 6 * 60 * 1000,
+    staleTime: 6 * 60 * 1000
+  })
+
+  useEffect(() => {
+    const controller = new AbortController()
+    listAdminUsers.refetch()
+    companiesEmployees.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [user.company])
+
   const queryClient = useQueryClient();
+
+
   const openNotification = (props) => {
     api.open({
       message: `${props ? "Updated" : "Upps"}`,
       description: `${props
-          ? "Role has been updated"
-          : "Somethings went wrong, please try later"
+        ? "Role has been updated"
+        : "Somethings went wrong, please try later"
         }`,
       className: "custom-class",
       style: {
@@ -123,6 +147,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       );
       if (respo) {
         queryClient.invalidateQueries("listOfAdminUsers");
+        listAdminUsers.refetch()
         openNotification(true);
         setEditingKey("");
       }
@@ -134,7 +159,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
-    navigate(`/staff/${record.entireData.id}`);
+    return navigate(`/staff/${record.entireData.id}`)
   };
   const columns = [
     {
@@ -154,8 +179,8 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
                 style={{
                   flexDirection: "column",
                   color: `${index === 0
-                      ? "var(--gray-900, #101828)"
-                      : "var(--gray-600, #475467)"
+                    ? "var(--gray-900, #101828)"
+                    : "var(--gray-600, #475467)"
                     }`,
                   fontSize: "14px",
                   fontFamily: "Inter",
@@ -287,7 +312,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
               gap: "10px",
             }}
           >
-            {user.role === 'Administrator' && <Typography.Link
+            {user.role === "Administrator" && <Typography.Link
               disabled={editingKey !== ""}
               onClick={() => edit(record)}
             >
@@ -305,19 +330,34 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
     },
   ];
 
-  if (listAdminUsers.isLoading) return <div style={CenteringGrid}><Loading /></div>
-  if (listAdminUsers.data) {
+  const employeeListRef = useRef([])
+  if (companiesEmployees.isLoading) return <div style={CenteringGrid}><Loading /></div>
+  if (companiesEmployees.data) {
+    const employees = async () => {
+      const result = new Set()
+      const companiesData = companiesEmployees.data.data.company.employees
+      for (let data of companiesData) {
+        const individual = await devitrakApi.post('/staff/admin-users', {
+          email: data.user
+        })
+        if (individual.data) {
+          result.add({ ...individual.data.adminUsers[0], role: data.role, activeInCompany: data.active })
+        }
+      }
+      return employeeListRef.current = Array.from(result)
+    }
+    employees()
     const sortDataAdminUser = () => {
       if (searchAdmin?.length > 0) {
-        const check = listAdminUsers.data.data.adminUsers?.filter(
+        const check = employeeListRef.current.filter(
           (item) =>
-          String(item?.name)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
-          String(item?.lastName)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
-          String(item?.email)?.toLowerCase().includes(searchAdmin.toLowerCase())
+            String(item?.name)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
+            String(item?.lastName)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
+            String(item?.email)?.toLowerCase().includes(searchAdmin.toLowerCase())
         );
         return check;
       }
-      return listAdminUsers.data.data.adminUsers
+      return employeeListRef.current
     }
     const getInfoNeededToBeRenderedInTable = () => {
       let result = [];
@@ -329,7 +369,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
           name: [data.name, data.lastName],
           email: data.email,
           role: data.role,
-          active: data.active,
+          active: data.activeInCompany,
           entireData: data,
           key: data.id,
         };

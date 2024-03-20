@@ -224,7 +224,6 @@ const EventInventoryTable = ({ dataFound }) => {
         dataIndex: 'data',
         key: 'data',
         render: (record) => (
-            console.log('record', record),
             <span style={cellStyle} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
                 <RightNarrowInCircle />
             </span>

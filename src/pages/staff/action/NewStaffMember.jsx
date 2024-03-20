@@ -1,28 +1,29 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import {
   Button,
-  Select,
-  MenuItem,
-  Typography,
   Grid,
-  OutlinedInput,
   InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  Typography,
 } from "@mui/material";
-import { Modal, message } from "antd";
-import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import _ from 'lodash'
+import { Modal, message } from "antd";
+import _ from 'lodash';
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import * as yup from "yup";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
+import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
-import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import { Grouping } from "@tanstack/react-table";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -38,15 +39,11 @@ const schema = yup.object().shape({
     .required("Password is required"),
   password2: yup.string().oneOf([yup.ref("password"), null]),
   role: yup.string().required("Role is required"),
-  question: yup.string().required("One question must be selected"),
-  answer: yup.string().required("Answer is required"),
 });
 
 const roles = ["Administrator", "Approver", "Editor"];
 export const NewStaffMember = ({ modalState, setModalState }) => {
   const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin } = useSelector((state) => state.event);
-  const [assignToEvent, setAssignToEvent] = useState({})
   const {
     register,
     watch,
@@ -56,16 +53,25 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const queryClient = useQueryClient()
   function closeModal() {
     setModalState(false);
   }
-
+const queryClient = useQueryClient()
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
+    enabled: false,
+    refetchOnMount: false
   });
 
+  const companiesQuery = useQuery({
+    queryKey: ['companyListQuery'],
+    queryFn: () => devitrakApi.post('/company/search-company', {
+      company_name: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
   const [messageApi, contextHolder] = message.useMessage();
   const warning = (type, content) => {
     messageApi.open({
@@ -75,33 +81,43 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     });
   };
 
-  const renderListOfEvents = () => {
-    const events = new Set()
-    if (eventsPerAdmin.active) {
-      for (let data of eventsPerAdmin.active) {
-        events.add(data)
-      }
-    }
-    return Array.from(events)
-  }
 
-  const handleChange = (event) => {
-    const selection = {}
-    for (let data of renderListOfEvents()) {
-      if (!selection[data.eventInfoDetail.eventName]) {
-        selection[data.eventInfoDetail.eventName] = data
-      }
+  useEffect(() => {
+    const controller = new AbortController()
+    allStaffSavedQuery.refetch()
+    companiesQuery.refetch()
+    return () => {
+      controller.abort()
     }
-    if (selection[event.target.value]) return setAssignToEvent({ ...selection[event.target.value] });
+  }, [user.company])
 
-  };
   if (allStaffSavedQuery.data) {
     const groupStaffByEmail = _.groupBy(
       allStaffSavedQuery.data.data.adminUsers,
       "email"
     );
+    const companyData = companiesQuery?.data?.data?.company
+    const checkIfNewUserExists = async (props) => {
+      const result = new Set()
+      if (groupStaffByEmail[props.email]) {
+        for (let info of companyData.employees) {
+          if (info.user === user.email) {
+            result.add(info)
+          }
+        }
+        if (Array.from(result).length < 1) {
+          await devitrakApi.patch(`/company/update-company/${companyData.id}`, {
+            employees: [
+              ...companyData.employees,
+              { user: props.email, super_user: false, role: props.role, _id: groupStaffByEmail[props.email][0].id }
+            ]
+          })
+        }
+      }
+    }
+
     const onSubmitRegister = async (data) => {
-      const resp = await devitrakApiAdmin.post("/new_admin_user", {
+      const templateNewUser = {
         name: data.name,
         lastName: data.lastName,
         email: data.email,
@@ -110,21 +126,25 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
         answer: user.company,
         role: data.role,
         company: user.company,
-      });
-      if (resp) {
-        const respUpdateStaffInEvent = await devitrakApi.patch(`/event/edit-event/${assignToEvent.id}`, {
-          staff: {
-            adminUser: [...assignToEvent.staff.adminUser],
-            headsetAttendees: [...assignToEvent.staff.headsetAttendees, data.email]
-          }
-        })
-        if (respUpdateStaffInEvent.data.ok) {
-          warning('success', `${data.name} ${data.lastName} was created and added to event successfully!`)
-          queryClient.invalidateQueries(['staff', 'listOfAdminUsers', 'events'])
-          closeModal();
-        }
-
       }
+      if (groupStaffByEmail[data.email]) {
+        checkIfNewUserExists(data)
+        warning('success', 'staff created successfully')
+        return closeModal()
+      }
+      const resp = await devitrakApiAdmin.post("/new_admin_user", templateNewUser);
+      if (resp) {
+        await devitrakApi.patch(`/company/update-company/${companyData.id}`, {
+          employees: [
+            ...companyData.employees,
+            { user: templateNewUser.email, super_user: false, role: data.role, _id: resp.data.uid }
+          ]
+        })
+        queryClient.invalidateQueries({queryKey: ['listAdminUsers'], exact:true})
+        warning('success', `${data.name} ${data.lastName} was created successfully!`)
+        return closeModal();
+      }
+
     };
     const renderTitle = () => {
       return (
@@ -209,7 +229,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                 fullWidth
               />
               {errors?.email?.message}
-              {groupStaffByEmail[watch("email")] && warning('warning', `${`${watch("email")} already exists!`}`)}
             </Grid>
             {!groupStaffByEmail[watch("email")] && (
               <>
@@ -289,7 +308,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                   </Grid>
                   {errors?.role?.message}
                 </Grid>
-                <Grid
+                {/* <Grid
                   marginY={"20px"}
                   marginX={0}
                   textAlign={"center"}
@@ -313,7 +332,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                     })}
                   </Select>
                   {errors?.answer?.message}
-                </Grid>
+                </Grid> */}
                 <Grid
                   marginY={"20px"}
                   marginX={0}

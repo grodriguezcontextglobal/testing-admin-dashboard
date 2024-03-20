@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Divider } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -29,7 +29,7 @@ const MainPage = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event)
   const searching = watch("searchEvent")
   let counter = 0;
-  const listOfEventsPerAdmin = () => {
+  const listOfEventsPerAdmin = useCallback(() => {
     let activeEvents = [];
     let completedEvents = [];
     if (eventsPerAdmin.active) {
@@ -44,8 +44,9 @@ const MainPage = () => {
       completedEvents = []
     }
     return [...activeEvents, ...completedEvents];
-  };
+  }, [user.company]);
   listOfEventsPerAdmin();
+  console.log("🚀 ~ MainPage ~ listOfEventsPerAdmin():", listOfEventsPerAdmin())
 
   const consumersPerAllowEvents = useMemo(async () => {
     setLoadingState(true)
@@ -75,7 +76,7 @@ const MainPage = () => {
       setLoadingState(false)
       return setResponseData(formattingResponse)
     }
-  }, [listOfEventsPerAdmin().length]);
+  }, [listOfEventsPerAdmin().length, user.company]);
 
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
@@ -111,6 +112,7 @@ const MainPage = () => {
 
   const triggerFunctions = () => {
     getInfoNeededToBeRenderedInTable();
+    return setLoadingState(false)
   };
   setTimeout(() => {
     counter = 1
@@ -122,7 +124,7 @@ const MainPage = () => {
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [user.company])
 
 
   return (

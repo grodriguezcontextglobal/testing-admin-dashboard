@@ -177,6 +177,7 @@ const Form = () => {
           </Typography>
         </InputLabel>
         <Select
+        className="custom-autocomplete"
           showSearch
           placeholder="Search item to add to inventory."
           optionFilterProp="children"

@@ -5,6 +5,7 @@ const helperSlice = createSlice({
   name: "helper",
   initialState: {
     triggerModal: false,
+    switchingCompanyInfo: false,
     receiverToReplaceObject: {},
     receiverIdToUpdateInPool: undefined,
     dataToWheelsOnHomePage: [],
@@ -32,6 +33,9 @@ const helperSlice = createSlice({
       state.receiverIdToUpdateInPool = undefined
       state.dataToWheelsOnHomePage = []
       state.keyValueForDataDisplayInWheel = undefined
+    },
+    onSwitchingCompany:(state, { payload }) => {
+      state.switchingCompanyInfo = payload
     }
   },
 });
@@ -44,7 +48,8 @@ export const {
   onCollectIdToUpdateInPool,
   onAddDataToWheelsOnHomePage,
   onAddKeyValueForWheelsDisplayed,
-  onResetHelpers
+  onResetHelpers,
+  onSwitchingCompany
 } = helperSlice.actions;
 
 export default helperSlice.reducer;

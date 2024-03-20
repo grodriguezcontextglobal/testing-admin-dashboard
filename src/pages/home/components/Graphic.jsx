@@ -12,9 +12,10 @@ const Graphic = () => {
     const itemInInventoryQuery = useQuery({
         queryKey: ["listOfreceiverInPool"],
         queryFn: () => devitrakApi.post("/db_item/consulting-item", { company: user.company }),
-        refetchOnMount:false,
-        cacheTime:1000 * 60 * 15, //fifteenMinutesInMs
-        staleTime:1000 * 60 * 15
+        enabled: false,
+        refetchOnMount: false,
+        cacheTime: 1000 * 60 * 15, //fifteenMinutesInMs
+        staleTime: 1000 * 60 * 15
 
     });
 
@@ -66,10 +67,11 @@ const Graphic = () => {
         foundAllNoOperatingDeviceInEvent()
         foundAllDevicesGivenInEvent()
         lostDeviceInEvent();
+        itemInInventoryQuery.refetch()
         return () => {
             controller.abort()
         }
-    }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading])
+    }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading, user.company])
     const foundDevicesOut = useCallback(() => {
         const check = foundAllDevicesGivenInEvent()['out']
         if (check) return check.length

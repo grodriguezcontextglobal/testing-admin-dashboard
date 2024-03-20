@@ -17,11 +17,11 @@ import {
     Typography,
 } from "@mui/material";
 import { Divider } from "antd";
-import _ from 'lodash';
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import "../../../../styles/global/ant-select.css";
 const schema = yup.object().shape({
     firstName: yup.string(),
     lastName: yup.string(),
@@ -360,7 +360,7 @@ const Form = () => {
                             <InputLabel>Role</InputLabel>
                             <FormControl fullWidth>
                                 <Select
-                                className="ant-select-selector"
+                                    className="custom-autocomplete"
                                     style={{ ...AntSelectorStyle, background: "#fff" }}
                                     {...register("role")}
                                 >

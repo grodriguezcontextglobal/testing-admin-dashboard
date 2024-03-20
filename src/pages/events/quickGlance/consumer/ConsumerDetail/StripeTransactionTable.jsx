@@ -333,7 +333,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                             event: event.eventInfoDetail.eventName,
                             company: event.company,
                             transaction: rowRecord.paymentIntent,
-                            date: dateRef.slice(0, 4),
+                            date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                             time: dateRef[4],
                             link: `https://app.devitrak.net/authentication/${encodeURI(
                                 event.eventInfoDetail.eventName
@@ -399,7 +399,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                             event: event.eventInfoDetail.eventName,
                             company: event.company,
                             transaction: rowRecord.paymentIntent,
-                            date: dateRef.slice(0, 4),
+                            date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                             time: dateRef[4],
                             link: `https://app.devitrak.net/authentication/${encodeURI(
                                 event.eventInfoDetail.eventName

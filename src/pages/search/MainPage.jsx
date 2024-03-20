@@ -47,15 +47,16 @@ const SearchMainPage = () => {
     const transactionsListQuery = useQuery({
         queryKey: ["transactionsList"],
         queryFn: () => devitrakApi.post("/transaction/transaction", { 'paymentIntent': searchParams }),
-        refetchOnMount: false,
-        cacheTime: 1000 * 60 * 2
+        // refetchOnMount: false,
+        // cacheTime: 1000 * 60 * 2
     });
+        console.log("🚀 ~ SearchMainPage ~ transactionsListQuery:", transactionsListQuery?.data?.data)
 
     const deviceInPoolQuery = useQuery({
         queryKey: ["deviceInPool"],
         queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { 'device': searchParams }),
-        refetchOnMount: false,
-        cacheTime: 1000 * 60 * 2
+        // refetchOnMount: false,
+        // cacheTime: 1000 * 60 * 2
     });
 
     const handleConsumerInfo = (props) => {
@@ -123,7 +124,8 @@ const SearchMainPage = () => {
         }
     }
     findingDataInTransactionDB()
-    const transactionSearchActionTakenToRedirectStaffTosSearchValue = () => {
+    
+    const transactionSearchActionTakenToRedirectStaffTosSearchValue = async () => {
         setLoadingStatus(true)
         if (findingDataInTransactionDB()) {
             let userProfile = {
@@ -237,11 +239,12 @@ const SearchMainPage = () => {
             controller.abort()
         }
     }, [searchParams]) //eslint-disable-next-line
+    console.log("🚀 ~ SearchMainPage ~ searchParams:", searchParams)
 
 
     return (
         <>
-            {loadingStatus && <div style={CenteringGrid}><Loading /></div>}
+
             {transactionsListQuery.isLoading && deviceInPoolQuery.isLoading && <div style={CenteringGrid}><Loading /></div>}
             <Grid
                 display={`${transactionsListQuery.isLoading && deviceInPoolQuery.isLoading ? "none" : "flex" || loadingStatus && "none"}`}
@@ -250,7 +253,6 @@ const SearchMainPage = () => {
                 margin={'12dvh auto 1dvh'}
                 container
             >
-
                 <Grid margin={'auto'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} item xs={12} sm={12} md={12} lg={12}>
                     <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs={12} sm={12} md={12} lg={12}>
                         <Typography
@@ -267,7 +269,7 @@ const SearchMainPage = () => {
                     </Grid>
                     <Grid display={'flex'} justifyContent={'flex-end'} alignItems={'center'} item xs={12} sm={12} md={12} lg={12}>
                         <Typography
-                            textTransform={'capitalize'}
+                            textTransform={'none'}
                             fontFamily={"Inter"}
                             fontSize={"14px"}
                             fontStyle={"normal"}
@@ -279,6 +281,7 @@ const SearchMainPage = () => {
                         </Typography>
                     </Grid>
                 </Grid>
+                {loadingStatus && <div style={CenteringGrid}><Loading /></div>}
                 {resultToDisplay.length > 0 ?
                     <Grid
                         style={{
@@ -394,7 +397,7 @@ const SearchMainPage = () => {
                             />
                         }</Grid> :
                     <Grid
-                    display={`${transactionsListQuery.isLoading && deviceInPoolQuery.isLoading ? "none" : "flex" || loadingStatus && "none"}`}
+                        display={`${transactionsListQuery.isLoading && deviceInPoolQuery.isLoading ? "none" : "flex" || loadingStatus && "none"}`}
                         border={"solid 1px var(--blue-dark-600, #e6f4ff)"}
                         borderRadius={"8px"}
                         style={{

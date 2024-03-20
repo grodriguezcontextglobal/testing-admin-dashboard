@@ -8,13 +8,14 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { Avatar, Divider, Select, notification } from "antd";
+import { Avatar, Divider, Select, Tooltip, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { UploadIcon } from "../../../components/icons/Icons";
+import { QuestionIcon, UploadIcon } from "../../../components/icons/Icons";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -25,7 +26,6 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
-import { convertToBase64 } from "../../../components/utils/convertToBase64";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewBulkItems = () => {
     const { user } = useSelector((state) => state.admin);
@@ -74,6 +74,7 @@ const AddNewBulkItems = () => {
                             ownership: valueSelection,
                             serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
                             warehouse: true,
+                            location: data.location,
                             created_at: formatDate(new Date()),
                             updated_at: formatDate(new Date()),
                             company: user.company
@@ -395,6 +396,55 @@ const AddNewBulkItems = () => {
                             lineHeight={"20px"}
                             color={"var(--gray-700, #344054)"}
                         >
+                            Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
+                        </Typography>
+                    </InputLabel>
+                    <Select
+                        showSearch
+                        placeholder="Select a location"
+                        optionFilterProp="children"
+                        onChange={(value) => {
+                            setValueSelection(value)
+                        }}
+                        filterOption={(input, option) => (String(option?.label).toLowerCase() ?? '').includes(String(input).toLowerCase())}
+                        filterSort={(optionA, optionB) =>
+                            (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())
+                        }
+                        options={options}
+                        style={{ margin:"0.5rem 0", width:"100%", height:"2.5rem"}}
+                    />
+                    <OutlinedInput
+                        {...register("locationt", { required: true })}
+                        aria-invalid={errors.location}
+                        style={OutlinedInputStyle}
+                        placeholder={`e.g `}
+                        fullWidth
+                    />
+                    {errors?.descript_item && (
+                        <Typography>{errors.location.type}</Typography>
+                    )}
+                </div>
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        textAlign: "left",
+                    }}
+                >
+                    <InputLabel style={{ width: "100%" }}>
+                        <Typography
+                            textTransform={"none"}
+                            textAlign={"left"}
+                            fontFamily={"Inter"}
+                            fontSize={"14px"}
+                            fontStyle={"normal"}
+                            fontWeight={500}
+                            lineHeight={"20px"}
+                            color={"var(--gray-700, #344054)"}
+                        >
                             Description of the device
                         </Typography>
                     </InputLabel>
@@ -419,6 +469,7 @@ const AddNewBulkItems = () => {
                         <Typography>{errors.descript_item.type}</Typography>
                     )}
                 </div>
+
                 <Grid
                     display={"flex"}
                     flexDirection={"column"}

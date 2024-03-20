@@ -23,12 +23,14 @@ const ItemTable = ({ searchItem }) => {
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () => devitrakApi.post("/db_item/current-inventory", { company_name: user.company }),
+    enabled: false,
     refetchOnMount: false,
     staleTime: Infinity
   });
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
+    enabled: false,
     refetchOnMount: false
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item
@@ -48,10 +50,12 @@ const ItemTable = ({ searchItem }) => {
   useEffect(() => {
     const controller = new AbortController()
     dataStructuringFormat()
+    listItemsQuery.refetch()
+    listImagePerItemQuery.refetch()
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [user.company])
 
   const dataToDisplay = () => {
     if (!searchItem || searchItem === "") {

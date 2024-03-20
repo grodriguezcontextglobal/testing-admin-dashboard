@@ -4,7 +4,14 @@ const adminSlice = createSlice({
   name: "admin",
   initialState: {
     status: "checking", //authenticated, not-authenticated
-    user: undefined,
+    user: {
+      name: undefined,
+      lastName: undefined,
+      email: undefined,
+      password: undefined,
+      company: undefined,
+      role: undefined,
+    },
     errorMessage: undefined,
     companyAccountStripe: undefined,
   },
@@ -21,7 +28,14 @@ const adminSlice = createSlice({
     },
     onLogout: (state) => {
       state.status = "not-authenticated";
-      state.user = undefined;
+      state.user = {
+        name: "",
+        lastName: "",
+        email: "",
+        password: "",
+        company: "",
+        role: "",
+      };
       state.companyAccountStripe = undefined;
     },
     clearErrorMessage: (state) => {

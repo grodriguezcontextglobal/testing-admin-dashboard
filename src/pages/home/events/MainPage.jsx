@@ -6,6 +6,7 @@ import { devitrakApi } from "../../../api/devitrakApi"
 import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice"
 import CardEventDisplay from "../../events/components/CardEventDisplay"
 import BannerMsg from "../../events/utils/BannerMsg"
+import { useEffect } from "react"
 const MainPage = () => {
     const { user } = useSelector((state) => state.admin);
 
@@ -15,10 +16,20 @@ const MainPage = () => {
         queryFn: () => devitrakApi.post("/event/event-list", {
             company: user.company
         }),
+        enabled: false,
         refetchOnMount: false,
         cacheTime: 1000 * 60 * 15, //fifteenMinutesInMs
         staleTime: 1000 * 60 * 15
     });
+
+    useEffect(() => {
+        const controller = new AbortController()
+        eventQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [user.company])
+
     const dataPerCompany = () => {
         const groupOfCompanies = eventQuery?.data?.data?.list
         if (groupOfCompanies) return groupOfCompanies;

@@ -148,8 +148,8 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             return [];
         }
     };
-    const saveAndUpdateDeviceInPool = () => {
-        devitrakApi.patch(
+    const saveAndUpdateDeviceInPool = async () => {
+        await devitrakApi.patch(
             `/receiver/receivers-pool-update/${retrieveDeviceDataInPoolToUpdateIt().id
             }`,
             {
@@ -169,7 +169,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             company: user.company,
         });
     };
-
     const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
         setSubmittedAction(true)
         if (!retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() || retrieveDeviceSetupValueBaseOnTypeOfSerialNumber()?.length < 1) {
@@ -221,7 +220,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
                         },
                         event: event.eventInfoDetail.eventName,
                         company: event.company,
-                        date: dateRef.slice(0, 4),
+                        date: String(dateRef.slice(0,4)).replaceAll(",", " "),
                         time: dateRef[4],
                         transaction: record.paymentIntent,
                         link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`

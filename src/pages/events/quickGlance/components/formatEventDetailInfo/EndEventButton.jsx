@@ -118,6 +118,7 @@ const EndEventButton = () => {
                         category_name: data.category,
                         item_group: data.group,
                         company: event.company,
+                        location: `${user.sqlInfo.city_address}, ${user.sqlInfo.state_address}`
                     })
                 }
             }

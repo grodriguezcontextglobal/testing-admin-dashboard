@@ -57,9 +57,7 @@ const Confirmation = () => {
   }
   if (checkDeviceInUseInOtherCustomerInTheSameEventQuery.data) {
     const usedDevices = checkDeviceInUseInOtherCustomerInTheSameEventQuery.data.data.receiversInventory
-    console.log("🚀 ~ Confirmation ~ usedDevices:", usedDevices)
     const groupingByDevice = _.groupBy(usedDevices, "device");
-    console.log("🚀 ~ Confirmation ~ groupingByDevice:", groupingByDevice)
 
     const formatToDeviceInAssignedReceiverInDocumentInDB = async (props) => {
       let sequency = true
