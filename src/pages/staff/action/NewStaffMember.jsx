@@ -23,7 +23,6 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { Grouping } from "@tanstack/react-table";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
