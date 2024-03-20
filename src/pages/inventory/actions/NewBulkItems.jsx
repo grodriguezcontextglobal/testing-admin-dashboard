@@ -399,7 +399,7 @@ const AddNewBulkItems = () => {
                             Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
                         </Typography>
                     </InputLabel>
-                    <Select
+                    {/* <Select
                         showSearch
                         placeholder="Select a location"
                         optionFilterProp="children"
@@ -412,15 +412,15 @@ const AddNewBulkItems = () => {
                         }
                         options={options}
                         style={{ margin:"0.5rem 0", width:"100%", height:"2.5rem"}}
-                    />
+                    /> */}
                     <OutlinedInput
-                        {...register("locationt", { required: true })}
+                        {...register("location", { required: true })}
                         aria-invalid={errors.location}
                         style={OutlinedInputStyle}
-                        placeholder={`e.g `}
+                        placeholder={`e.g. Washington, DC or location 1880`}
                         fullWidth
                     />
-                    {errors?.descript_item && (
+                    {errors?.location && (
                         <Typography>{errors.location.type}</Typography>
                     )}
                 </div>
