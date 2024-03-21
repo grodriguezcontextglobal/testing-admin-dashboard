@@ -104,6 +104,33 @@ const AddNewBulkItems = () => {
                     }
                 }
             }
+        } else if(data.photo.length < 1){
+            for(let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++){
+                try {
+                     await devitrakApi.post('/db_item/new_item', {
+                        category_name: data.category_name,
+                        item_group: data.item_group,
+                        cost: data.cost,
+                        descript_item: data.descript_item,
+                        ownership: valueSelection,
+                        serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
+                        warehouse: true,
+                        location: data.location,
+                        created_at: formatDate(new Date()),
+                        updated_at: formatDate(new Date()),
+                        company: user.company
+                     })
+                     if(String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber){
+                        openNotificationWithIcon('success', "items were created and stored in database.")
+                        setLoading(false)
+                        setTimeout(() => {
+                            return navigate('/inventory')
+                        }, 3000);
+                     }
+                } catch (error) {
+                    openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
+                }
+            }
         }
     };
     return (
