@@ -5,19 +5,22 @@ import {
   InputAdornment,
   InputLabel,
   OutlinedInput,
+  TextField,
+  Tooltip,
   Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { AutoComplete, Divider, Select, notification } from "antd";
+import { AutoComplete, Avatar, Divider, Select, notification } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { QuestionIcon, UploadIcon } from "../../../components/icons/Icons";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import '../../../styles/global/OutlineInput.css';
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import '../../../styles/global/ant-select.css';
@@ -41,7 +44,7 @@ const AddNewItem = () => {
   const [valueSelection, setValueSelection] = useState(options[0]);
   const [locationSelection, setLocationSelection] = useState('')
   const companiesQuery = useQuery({
-    queryKey: ['companyInformationQuery'],
+    queryKey: ['locationOptionsPerCompany'],
     queryFn: () => devitrakApi.post('/company/search-company', {
       company_name: user.company
     }),
@@ -67,44 +70,90 @@ const AddNewItem = () => {
     }
     return []
   }
+
   const onChange = (value) => {
     return setValueSelection(value);
   };
   const savingNewItem = async (data) => {
     try {
-      const respNewItem = await devitrakApi.post("/db_item/new_item", {
-        category_name: data.category_name,
-        item_group: data.item_group,
-        cost: data.cost,
-        descript_item: data.descript_item,
-        ownership: valueSelection,
-        serial_number: data.serial_number,
-        warehouse: true,
-        created_at: formatDate(new Date()),
-        updated_at: formatDate(new Date()),
-        company: user.company,
-        location: locationSelection
-      });
-      if (respNewItem.data.ok) {
-        setValue("category_name", "");
-        setValue("item_group", "");
-        setValue("cost", "");
-        setValue("descript_item", "");
-        setValue("ownership", "");
-        setValue("serial_number", "")
-
-        setValueSelection(options[0]);
-        openNotificationWithIcon(
-          "success",
-          "New item was created and stored in database."
+      let base64;
+      if (data.photo.length > 0 && data.photo[0].size > 1048576) {
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
         );
-        setTimeout(() => {
-          navigate("/inventory");
-        }, 3000);
+      } else if (data.photo.length > 0) {
+        base64 = await convertToBase64(data.photo[0]);
+        const resp = await devitrakApi.post(`/image/new_image`, {
+          source: base64,
+          category: data.category_name,
+          item_group: data.item_group,
+          company: user.company,
+        });
+        if (resp.data) {
+          const respNewItem = await devitrakApi.post("/db_item/new_item", {
+            category_name: data.category_name,
+            item_group: data.item_group,
+            cost: data.cost,
+            descript_item: data.descript_item,
+            ownership: valueSelection,
+            serial_number: data.serial_number,
+            warehouse: true,
+            created_at: formatDate(new Date()),
+            updated_at: formatDate(new Date()),
+            company: user.company,
+            location: locationSelection
+          });
+          if (respNewItem.data.ok) {
+            setValue("category_name", "");
+            setValue("item_group", "");
+            setValue("cost", "");
+            setValue("descript_item", "");
+            setValue("ownership", "");
+            setValue("serial_number", "")
+
+            setValueSelection(options[0]);
+            openNotificationWithIcon(
+              "success",
+              "New item was created and stored in database."
+            );
+            setTimeout(() => {
+              navigate("/inventory");
+            }, 3000);
+          }
+        }
+      } else if (data.photo.length < 1) {
+        const respNewItem = await devitrakApi.post("/db_item/new_item", {
+          category_name: data.category_name,
+          item_group: data.item_group,
+          cost: data.cost,
+          descript_item: data.descript_item,
+          ownership: valueSelection,
+          serial_number: data.serial_number,
+          warehouse: true,
+          created_at: formatDate(new Date()),
+          updated_at: formatDate(new Date()),
+          company: user.company,
+          location: locationSelection
+        });
+        if (respNewItem.data.ok) {
+          setValue("category_name", "");
+          setValue("item_group", "");
+          setValue("cost", "");
+          setValue("descript_item", "");
+          setValue("ownership", "");
+          setValue("serial_number", "")
+
+          setValueSelection(options[0]);
+          openNotificationWithIcon(
+            "success",
+            "New item was created and stored in database."
+          );
+          setTimeout(() => {
+            navigate("/inventory");
+          }, 3000);
+        }
       }
-
     } catch (error) {
-
       console.log("🚀 ~ file: AddNewItem.jsx:138 ~ savingNewItem ~ error:", error)
       openNotificationWithIcon('error', `${error.message}`)
     }
@@ -404,6 +453,79 @@ const AddNewItem = () => {
             <Typography>{errors.descript_item.type}</Typography>
           )}
         </div>
+        <Grid
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          style={{
+            width: "100%",
+            borderRadius: "12px",
+            border: "1px solid var(--gray-200, #EAECF0)",
+            background: "var(--base-white, #FFF)",
+          }}
+          item
+          xs={12}
+        >
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            item
+            xs={12}
+          >
+            <Avatar
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "6px solid var(--gray-50, #F9FAFB)",
+                background: "6px solid var(--gray-50, #F9FAFB)",
+                borderRadius: "28px",
+              }}
+            > <UploadIcon />
+            </Avatar>
+
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            item
+            xs={12}
+          >
+            <TextField
+              {...register("photo")}
+              id="file-upload"
+              type="file"
+              accept=".jpeg, .png, .jpg"
+              style={{
+                outline: "none",
+                border: "transparent",
+              }}
+            />
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            marginBottom={2}
+            item
+            xs={12}
+          >
+            <Typography
+              color={"var(--gray-600, #475467)"}
+              fontFamily={"Inter"}
+              fontSize={"14px"}
+              fontStyle={"normal"}
+              fontWeight={400}
+              lineHeight={"20px"}
+            >
+              SVG, PNG, JPG or GIF (max. 1MB)
+            </Typography>
+          </Grid>
+        </Grid>
+        <Divider />
         <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
           <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
             <Typography
@@ -431,17 +553,33 @@ const AddNewItem = () => {
               options={options}
             />
           </InputLabel>
-          <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-            <Typography style={{ ...Subtitle, fontWeight: 500 }}>Location</Typography>
-            <AutoComplete
-              className="custom-autocomplete"
-              style={{ width: "100%", height: "2.5rem" }}
-              options={renderLocationOptions()}
-              placeholder="Select a location"
-              filterOption={(inputValue, option) => option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1}
-              onChange={(value) => setLocationSelection(value)}
-            />
+          <div style={{ width: "100%"}}>
+            <InputLabel style={{ width: "100%" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              fontFamily={"Inter"}
+              fontSize={"14px"}
+              fontStyle={"normal"}
+              fontWeight={500}
+              lineHeight={"20px"}
+              color={"var(--gray-700, #344054)"}
+            >
+              Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
+            </Typography>
           </InputLabel>
+          <AutoComplete
+            className="custom-autocomplete"
+            style={{ width: "100%", height: "2.5rem" }}
+            options={renderLocationOptions()}
+            placeholder="Select a location"
+            filterOption={(inputValue, option) =>
+              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+            }
+            onChange={(value) => setLocationSelection(value)}
+          />
+          </div>
+          
         </div>
         <Divider />
         <div
