@@ -29,7 +29,6 @@ import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
 import InventoryEventValue from "./components/InventoryEventValue";
-import EndEventButton from "./components/formatEventDetailInfo/EndEventButton";
 import Report from "./components/lostFee/Report";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
@@ -115,12 +114,12 @@ const MainPageQuickGlance = () => {
       <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container >
         {notificationStatus && event.active && <Grid margin={'0.5rem 0 1rem'} item xs={12} sm={12} md={12} lg={12}>
           <BannerNotificationTemplate
-            setNotificationStatus={setNotificationStatus} title={'Remider from Devitrak!'}
+            setNotificationStatus={setNotificationStatus} title={'Reminder from Devitrak!'}
             body={`Please note that the event is still active, even if the end date has passed. To return any items used during the event to the company's inventory, please click the 'End Event' button`} />
         </Grid>}
-        {notificationStatus && event.active && <Grid margin={'0.5rem 0 1rem'} item xs={12} sm={12} md={12} lg={12}>
+        {/* {notificationStatus && event.active && <Grid margin={'0.5rem 0 1rem'} item xs={12} sm={12} md={12} lg={12}>
           <EndEventButton />
-        </Grid>}
+        </Grid>} */}
         <Grid
           display={`${(isLargeDevice || isExtraLargeDevice) && "none"}`}
           justifyContent={"space-between"}
