@@ -14,13 +14,13 @@ import GrayButtonText from "../../styles/global/GrayButtonText"
 import BannerNotificationTemplate from "../../components/notification/alerts/BannerNotificationTemplate"
 import { useCallback, useEffect, useState } from 'react'
 import { devitrakApi } from "../../api/devitrakApi"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { useQuery } from "@tanstack/react-query"
+import { onAddSubscriptionRecord } from "../../store/slices/subscriptionSlice"
 // import SelectCompanyToView from "./components/selectCompany/SelectCompanyToView"
 const MainPage = () => {
     const [inventory, setInventory] = useState([])
     const [notificationStatus, setNotificationStatus] = useState(inventory.length === 0)
-    // const { switchingCompanyInfo } = useSelector((state) => state.helper)
     const { user } = useSelector((state) => state.admin)
     const companiesCheck = useQuery({
         queryKey: ['companiesList'],
@@ -28,7 +28,7 @@ const MainPage = () => {
         enabled: false,
         refetchOnMount: false
     })
-
+    const dispatch = useDispatch()
     const inventoryQuery = useQuery({
         queryKey: ['itemsList'],
         queryFn: () => devitrakApi.post('/db_item/consulting-item', {
@@ -43,15 +43,33 @@ const MainPage = () => {
         }
     }, [])
 
+    const subscriptionPerCompanyQuery = useQuery({
+        queryKey: ['checkingSubscriptionPerCompanyQuery'],
+        queryFn: () => devitrakApi.post('/subscription/search_subscription', {
+            company: user.company
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+    const checkForActiveSubscriptionPerCompany = useCallback(() => {
+        const checkSubscriptionQuery = subscriptionPerCompanyQuery?.data?.data
+        if (checkSubscriptionQuery?.ok) {
+            dispatch(onAddSubscriptionRecord(checkSubscriptionQuery.subscription))
+        }
+    }, [])
     useEffect(() => {
         const controller = new AbortController()
         totalConsumers()
         inventoryQuery.refetch()
         companiesCheck.refetch()
+        subscriptionPerCompanyQuery.refetch()
+        checkForActiveSubscriptionPerCompany()
         return () => {
             controller.abort()
         }
     }, [notificationStatus, inventory.length, user.company])
+
+
 
     const checkUserAssignedCompanies = () => {
         const result = new Set()
@@ -227,7 +245,7 @@ const MainPage = () => {
 
             </Grid>
             {/* {switchingCompanyInfo && <SelectCompanyToView data={checkUserAssignedCompanies()} />}  */}
-            </>)
+        </>)
 }
 
 export default MainPage
