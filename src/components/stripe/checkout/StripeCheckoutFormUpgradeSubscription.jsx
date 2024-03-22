@@ -6,6 +6,9 @@ import {
 } from "@stripe/react-stripe-js";
 // import "./checkoutStyles.css";
 import { useSelector } from "react-redux";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 export const StripeCheckoutFormUpgradeSubscription = () => {
   const { upgrade } = useSelector((state) => state.subscription)
@@ -102,11 +105,12 @@ export const StripeCheckoutFormUpgradeSubscription = () => {
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
       <button
+      style={{...BlueButton, width:"100%"}}
         className="btn"
         disabled={isLoading || !stripe || !elements}
         id="submit"
       >
-        <span id="button-text">
+        <span style={{...BlueButtonText,  ...CenteringGrid}} id="button-text">
           {isLoading ? (
             <div className="spinner" id="spinner"></div>
           ) : (
