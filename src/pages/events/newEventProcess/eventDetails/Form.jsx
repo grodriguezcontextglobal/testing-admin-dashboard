@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Space, Tag } from "antd";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-clock/dist/Clock.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -22,21 +22,23 @@ import {
   onAddContactInfo,
   onAddEventInfoDetail,
 } from "../../../../store/slices/eventSlice";
-import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
+import { onAddNewSubscription, onAddSubscriptionRecord } from "../../../../store/slices/subscriptionSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import "../../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { InputLabelStyle } from "../style/InputLabelStyle";
 import "../style/NewEventInfoSetup.css";
+import "../../../../styles/global/OutlineInput.css";
+import "../../../../styles/global/ant-select.css"
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { useQuery } from "@tanstack/react-query";
 const Form = () => {
-  const { subscription, subscriptionJSON } = useSelector(
+  const { subscription, subscriptionJSON, subscriptionRecord } = useSelector(
     (state) => state.subscription
   );
   const { eventInfoDetail } = useSelector((state => state.event))
-  const { companyAccountStripe } = useSelector((state) => state.admin);
+  const { companyAccountStripe, user } = useSelector((state) => state.admin);
   const addressSplit = eventInfoDetail?.address?.split(' ')
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -63,17 +65,62 @@ const Form = () => {
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
-  
   const paymentIntentParams = new URLSearchParams(window.location.search).get(
     "payment_intent"
   );
+
+  const subscriptionPerCompanyQuery = useQuery({
+    queryKey: ['checkingSubscriptionPerCompany'],
+    queryFn: () => devitrakApi.post('/subscription/search_subscription', {
+      company: user.company
+    })
+  })
+
+  const subscriptionRecordProcess = useCallback(async () => {
+    const checkSubscriptionFetched = subscriptionPerCompanyQuery?.data?.data
+    if (!checkSubscriptionFetched) {
+      const subscriptionResponse = await devitrakApi.post('/subscription/new_subscription', {
+        company: user.company,
+        record: [{
+          subscription_id: subscriptionRecord[0].subscription_id,
+          active: true,
+          cancel_at: subscriptionRecord[0].cancel_at,
+          subscription_type: subscriptionRecord[0].subscription_type
+        }]
+      })
+      if (subscriptionResponse.data.ok) {
+        dispatch(onAddSubscriptionRecord([{
+          ...subscriptionRecord[0],
+          active: true
+        }, ...subscriptionRecord]))
+      }
+    } else {
+      const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription`, {
+        company: user.company,
+        newSubscriptionData: {
+          company: user.company,
+          record: [{
+            subscription_id: subscriptionRecord[0].subscription_id,
+            active: true,
+            cancel_at: subscriptionRecord[0].cancel_at,
+            subscription_type: subscriptionRecord[0].subscription_type
+          }, ...subscriptionPerCompanyQuery.data.data.subscription.record]
+        }
+      })
+      if (subscriptionResponse.data.ok) {
+        dispatch(onAddSubscriptionRecord([{
+          ...subscriptionRecord[0],
+          active: true
+        }, ...subscriptionRecord]))
+      }
+    }
+  }, [])
 
   const storeSubscriptionJSON = useCallback(async () => {
     if (paymentIntentParams) {
       const respPaymentIntentRetrieved = await devitrakApi.get(
         `/stripe/payment_intents/${paymentIntentParams}`
       );
-
       await devitrakApi.patch(
         `/stripe/updating-subscription/${companyAccountStripe.id}`,
         {
@@ -95,6 +142,7 @@ const Form = () => {
           ],
         }
       );
+
       dispatch(
         onAddCompanyAccountStripe({
           ...companyAccountStripe,
@@ -127,8 +175,20 @@ const Form = () => {
           status: "active",
         })
       );
+
     }
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController()
+    if (paymentIntentParams) {
+      subscriptionRecordProcess()
+      storeSubscriptionJSON()
+    }
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
   const addingPhoneNumber = () => {
     const result = [
@@ -255,8 +315,8 @@ const Form = () => {
             }}
           >
             <PhoneInput
-            style={{ ...AntSelectorStyle, width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
-              // style={AntSelectorStyl}
+              style={{ ...AntSelectorStyle, width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
+              className="custom-autocomplete"
               id='phone_input_check'
               countrySelectProps={{ unicodeFlags: true }}
               defaultCountry="US"
@@ -274,7 +334,7 @@ const Form = () => {
             <Button
               disabled={contactPhoneNumber === ""}
               onClick={() => addingPhoneNumber()}
-              style={{...OutlinedInputStyle, padding: "2.5px 12px", border:"0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem",width:"100%"}}
+              style={{ ...OutlinedInputStyle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
             >
               <Icon icon="material-symbols:add" width={15} />
             </Button>
@@ -344,14 +404,6 @@ const Form = () => {
             gap: "5%",
           }}
         >
-          {/* <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    width:"45%"
-                  }}
-                > */}
           <DatePicker
             id="calender-event"
             autoComplete="checking"
@@ -367,15 +419,6 @@ const Form = () => {
               margin: "0.1rem 0 1.5rem", width: '100%'
             }}
           />
-          {/* </div>
-                <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      width:"45%"
-                    }}
-                > */}
           <DatePicker
             style={{
               ...OutlinedInputStyle,
