@@ -5,6 +5,7 @@ const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
     subscription: [],
+    subscriptionRecord: [],
     upgrade: [],
     subscriptionJSON: undefined,
   },
@@ -26,7 +27,11 @@ const subscriptionSlice = createSlice({
       state.subscription = []
       state.upgrade = []
       state.subscriptionJSON = undefined
-    }
+      state.subscriptionRecord = []
+    }, 
+    onAddSubscriptionRecord: (state, { payload }) => {
+      state.subscriptionRecord = payload
+    },
   },
 });
 
@@ -37,7 +42,8 @@ export const {
   onUpgradeSubscription,
   onRemoveSubscription,
   onAddNewSubscription,
-  onResetSubscriptionInfo
+  onResetSubscriptionInfo,
+  onAddSubscriptionRecord
 } = subscriptionSlice.actions;
 
 export default subscriptionSlice.reducer;
