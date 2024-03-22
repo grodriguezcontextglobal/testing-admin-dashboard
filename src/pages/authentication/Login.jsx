@@ -57,23 +57,25 @@ const Login = () => {
                 const companyInfoTable = await devitrakApi.post("/db_company/consulting-company", {
                     company_name: respo?.data?.company
                 })
-
-                dispatch(
-                    onLogin({
-                        data: { ...respo.data.entire, online: updatingOnlineStatusResponse.data.entire.online, },
-                        name: respo.data.name,
-                        lastName: respo.data.lastName,
-                        uid: respo.data.uid,
-                        email: respo.data.email,
-                        role: respo.data.role,
-                        phone: respo.data.phone,
-                        company: respo.data.company,
-                        token: respo.data.token,
-                        online: updatingOnlineStatusResponse.data.entire.online,
-                        sqlMemberInfo: respoFindMemberInfo.data.member.at(-1) ?? undefined,
-                        sqlInfo: companyInfoTable.data.company.at(-1) ?? undefined,
-                    })
-                );
+                const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
+                    company_id: companyInfoTable.data.company.at(-1).company_id
+                })
+                    dispatch(
+                        onLogin({
+                            data: { ...respo.data.entire, online: updatingOnlineStatusResponse.data.entire.online, },
+                            name: respo.data.name,
+                            lastName: respo.data.lastName,
+                            uid: respo.data.uid,
+                            email: respo.data.email,
+                            role: respo.data.role,
+                            phone: respo.data.phone,
+                            company: respo.data.company,
+                            token: respo.data.token,
+                            online: updatingOnlineStatusResponse.data.entire.online,
+                            sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+                            sqlInfo: { ...companyInfoTable.data.company.at(-1), stripeID: stripeSQL.data.stripe.at(-1) },
+                        })
+                    );
 
                 dispatch(clearErrorMessage())
                 queryClient.clear()
