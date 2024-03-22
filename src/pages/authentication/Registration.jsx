@@ -127,6 +127,9 @@ const Registration = () => {
                         employees: [{ user: email, super_user: false, role: "Editor", _id: resp.data.uid }, ...grouping[companyValue][0].employees]
                     })
 
+                    const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
+                        company_id: companyInfo.data.company.at(-1).company_id
+                    })
                     if (companyInfo?.data && insertingNewMemberInCompany.data && updatingEmployeesList.data) {
                         dispatch(
                             onLogin({
@@ -138,8 +141,8 @@ const Registration = () => {
                                 role: resp.data.role,
                                 affiliate: resp.data.affiliate,
                                 company: resp.data.company,
-                                sqlMemberInfo: respoFindMemberInfo.data.member.at(-1) ?? undefined,
-                                sqlInfo: companyInfo.data.company.at(-1) ?? undefined,
+                                sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+                                sqlInfo: {...companyInfo.data.company.at(-1), stripeIDL: stripeSQL.data.stripe.at(-1)},
                             })
                         );
                         queryClient.clear()

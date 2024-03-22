@@ -303,6 +303,9 @@ const RegisterCompany = () => {
             company_id: ref.current.companySQL.company.insertId
         })
         if (companyInfo.data) {
+            const stripe_db = await devitrakApi.post('/db_stripe/consulting-stripe', {
+                company_id: companyInfo.data.company.at(-1).company_id
+            })
             dispatch(
                 onLogin({
                     ...ref.current.userRegistration,
@@ -313,7 +316,7 @@ const RegisterCompany = () => {
             return ref.current = {
                 ...ref.current,
                 sqlMemberInfo: { ...ref.current.sqlMemberInfo },
-                sqlInfo: companyInfo.data.result?.at(-1),
+                sqlInfo: {...companyInfo.data.result?.at(-1), stripeID: stripe_db.data.stripe.at(-1)},
             }
         }
     }
