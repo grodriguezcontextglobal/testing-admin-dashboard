@@ -11,6 +11,7 @@ import EmailNotification from "../../../../../components/notification/email/Emai
 import SpreadSheet from "../SpreadSheet";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
+import EndEventButton from "./EndEventButton";
 
 const ButtonSections = () => {
   const { user } = useSelector((state) => state.admin);
@@ -146,12 +147,11 @@ const ButtonSections = () => {
                   alignItems={"center"}
                   margin={'0 0 6px 0'}
                   item
-                  xs={12}
+                  xs={12} sm={12} md={12} lg={12}
                 >
                   <Button
-                    disabled
-                    onClick={() => item.text === "Download all serial numbers" ? navigate('/page-to-print') : setCustomizedEmailNotificationModal(true)}
-                    style={{...GrayButton, width:"100%"}}
+                    onClick={() => item.text === "Print All Serial Numbers" ? navigate('/page-to-print') : setCustomizedEmailNotificationModal(true)}
+                    style={{ ...GrayButton, width: "100%" }}
                   >
                     {" "}
                     <Typography
@@ -167,8 +167,11 @@ const ButtonSections = () => {
               )
             })
           }
-          <Grid item xs sm md lg>
+          <Grid item xs={12} sm={12} md={12} lg={12}>
             <SpreadSheet />
+          </Grid>
+          <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}>
+            <EndEventButton />
           </Grid>
         </Grid>
       </Card>
