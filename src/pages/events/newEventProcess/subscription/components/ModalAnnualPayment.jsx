@@ -13,9 +13,7 @@ const ModalAnnualPayment = ({ clientSecret, setClientSecret, total }) => {
   return (
     <Modal
       title="Annual payment method"
-      style={{
-        top: 20,
-      }}
+      centered
       open={openModal}
       onOk={() => closeModal()}
       onCancel={() => closeModal()}
