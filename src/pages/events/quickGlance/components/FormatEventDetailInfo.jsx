@@ -18,7 +18,7 @@ const FormatEventDetailInfo = () => {
         xs={12}
         sm={5}
         md={6}
-        lg={4}
+        lg={3}
       >
         <ContactInformation />
       </Grid>
@@ -31,7 +31,7 @@ const FormatEventDetailInfo = () => {
         xs={12}
         sm={5}
         md={6}
-        lg={4}
+        lg={3}
       >
         <EventDateInformation />
       </Grid>
@@ -43,12 +43,21 @@ const FormatEventDetailInfo = () => {
         item
         xs={12}
         md={12}
-        lg={4}
-      ><Grid display={'flex'} flexDirection={'column'} item xs={12} sm={12} md={12} lg={12}>
-          <ButtonSections />
-          <QRCodeDisplay />
-        </Grid>
-
+        lg={3}
+      ><ButtonSections />
+      </Grid>
+      <Grid
+        display={"flex"}
+        justifyContent={"flex-start"}
+        alignSelf={"flex-start"}
+        margin={`${isSmallDevice && "1rem"}`}
+        item
+        xs={12}
+        sm={5}
+        md={6}
+        lg={3}
+      >
+        <QRCodeDisplay />
       </Grid>
     </Grid>
   );
