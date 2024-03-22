@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Divider } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MagnifyIcon, WhitePlusIcon } from "../../components/icons/Icons";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -18,8 +18,19 @@ import { Title } from "../../styles/global/Title";
 import MainAdminSettingPage from "./MainAdminSettingPage";
 import { NewStaffMember } from "./action/NewStaffMember";
 const MainPage = () => {
-  const { register, watch } = useForm();
+  const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController()
+    setValue('searchAdmin', '.')
+    setTimeout(() => {
+      setValue("searchAdmin", "")
+    }, 1000);
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
   return (
     <>
       <Grid

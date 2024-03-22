@@ -161,7 +161,6 @@ const NavigationBarMain = (props) => {
                                 </NavLink>
 
                                 {navItems.map((item) => {
-                                    console.log(`${item.title}`, item.permission.some(element => element === user.role))
                                     if (item.permission.some(element => element === user.role)) {
                                         return <NavLink
                                             key={item.title}

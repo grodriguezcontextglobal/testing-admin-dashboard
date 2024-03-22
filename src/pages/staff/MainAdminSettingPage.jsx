@@ -80,8 +80,6 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
     }),
     enabled: false,
     refetchOnMount: false,
-    cacheTime: 6 * 60 * 1000,
-    staleTime: 6 * 60 * 1000
   });
 
   const companiesEmployees = useQuery({
@@ -91,8 +89,6 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
     }),
     enabled: false,
     refetchOnMount: false,
-    cacheTime: 6 * 60 * 1000,
-    staleTime: 6 * 60 * 1000
   })
 
   useEffect(() => {
@@ -105,8 +101,6 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
   }, [user.company])
 
   const queryClient = useQueryClient();
-
-
   const openNotification = (props) => {
     api.open({
       message: `${props ? "Updated" : "Upps"}`,
@@ -146,7 +140,14 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
         adminProfile
       );
       if (respo) {
-        queryClient.invalidateQueries("listOfAdminUsers");
+        const employees = companiesEmployees.data.data.company.employees
+        const foundEmployee = employees.findIndex(element => element._id === record.entireData.id)
+        const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
+        await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.id}`, {
+          employees: result
+        })
+        queryClient.invalidateQueries({queryKey: ["listOfAdminUsers"], exact:true});
+        queryClient.invalidateQueries({queryKey:['employeesPerCompanylist'], exact:true})
         listAdminUsers.refetch()
         openNotification(true);
         setEditingKey("");

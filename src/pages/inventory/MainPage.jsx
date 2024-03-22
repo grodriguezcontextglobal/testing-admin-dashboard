@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react";
 import {
   Button,
   Grid,
@@ -6,24 +5,23 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Divider, Select } from "antd";
+import { Divider } from "antd";
+import { nanoid } from "nanoid";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { nanoid } from "nanoid";
-import { onAddEventData, onSelectCompany, onSelectEvent } from "../../store/slices/eventSlice";
-import ItemTable from "./table/ItemTable";
 import { BluePlusIcon, MagnifyIcon, WhiteCirclePlusIcon } from "../../components/icons/Icons";
-import { LightBlueButton } from "../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../styles/global/LightBlueButtonText";
+import { onAddEventData, onSelectCompany, onSelectEvent } from "../../store/slices/eventSlice";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import "../../styles/global/OutlineInput.css"
-import "../../styles/global/ant-select.css"
+import { LightBlueButton } from "../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../styles/global/LightBlueButtonText";
+import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { Title } from "../../styles/global/Title";
+import "../../styles/global/ant-select.css";
+import ItemTable from "./table/ItemTable";
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin)
   const { eventsPerAdmin } = useSelector((state) => state.event)
@@ -121,9 +119,10 @@ const MainPage = () => {
         >
           <Link to="/inventory/new-bulk-items">
             <Button
-              style={BlueButton}
+              style={{ ...BlueButton, margin: 'auto' }}
             >
-              <WhiteCirclePlusIcon />
+              <WhiteCirclePlusIcon style={{height:"21px", margin:"auto"}} />
+              {/* <WhitePlusIcon /> */}
               &nbsp;
               <Typography
                 textTransform={"none"}

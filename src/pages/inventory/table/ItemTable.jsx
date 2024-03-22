@@ -33,15 +33,27 @@ const ItemTable = ({ searchItem }) => {
     enabled: false,
     refetchOnMount: false
   });
+
+  const itemsInInventoryQuery = useQuery({
+    queryKey: ['ItemsInInventoryCheckingQuery'],
+    queryFn: () => devitrakApi.post("/db_item/consulting-item", {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
   const imageSource = listImagePerItemQuery?.data?.data?.item
   const groupingByDeviceType = _.groupBy(imageSource, 'item_group')
   const renderedListItems = listItemsQuery?.data?.data.result
 
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
+    const groupingBySerialNumber = _.groupBy(itemsInInventoryQuery?.data?.data?.items, 'serial_number')
     if (renderedListItems?.length > 0) {
       for (let data of renderedListItems) {
-        resultFormatToDisplay.add({ key: `${data.item_id}-${data.event_name}`, ...data, data: data });
+        if (groupingBySerialNumber[data.serial_number]) {
+          resultFormatToDisplay.add({ key: `${data.item_id}-${data.event_name}`, ...data, data: { ...data, location: groupingBySerialNumber[data.serial_number].at(-1).location }, location: groupingBySerialNumber[data.serial_number].at(-1).location });
+        }
       }
       return Array.from(resultFormatToDisplay);
     }
@@ -52,6 +64,7 @@ const ItemTable = ({ searchItem }) => {
     dataStructuringFormat()
     listItemsQuery.refetch()
     listImagePerItemQuery.refetch()
+    itemsInInventoryQuery.refetch()
     return () => {
       controller.abort()
     }
@@ -66,6 +79,7 @@ const ItemTable = ({ searchItem }) => {
     } else {
       return dataStructuringFormat()?.filter(item =>
         String(item.serial_number).toLowerCase().match(String(searchItem).toLowerCase()) ||
+        String(item.location).toLowerCase().match(String(searchItem).toLowerCase()) ||
         String(item.category_name).toLowerCase().match(String(searchItem).toLowerCase()) ||
         String(item.item_group).toLowerCase().match(String(searchItem).toLowerCase()) ||
         String(item.event_name).toLowerCase().match(String(searchItem).toLowerCase()) ||
@@ -149,9 +163,9 @@ const ItemTable = ({ searchItem }) => {
   }
 
   const dictionary = {
-    'Permanent': "owned",
-    'Rent': "rented",
-    'Sale': 'for sale'
+    'Permanent': "Owned",
+    'Rent': "Leased",
+    'Sale': 'For sale'
   }
   const cellStyle = {
     display: "flex",
@@ -262,16 +276,16 @@ const ItemTable = ({ searchItem }) => {
     )
   }, {
     title: 'Group',
-    dataIndex: 'data',
-    key: 'data',
+    dataIndex: 'category_name',
+    key: 'category_name',
     sorter: {
-      compare: (a, b) => ("" + a.data.warehouse).localeCompare(b.data.warehouse),
+      compare: (a, b) => ("" + a.category_name).localeCompare(b.category_name),
     },
-    render: (data) => (
+    render: (category_name) => (
       <span style={cellStyle}> <Typography
         style={Subtitle}
         textTransform={"capitalize"}
-      >{data.warehouse === 1 ? 'warehouse' : data.event_name}</Typography></span>
+      >{category_name}</Typography></span>
     )
   },
   {
@@ -279,13 +293,13 @@ const ItemTable = ({ searchItem }) => {
     dataIndex: 'data',
     key: 'data',
     sorter: {
-      compare: (a, b) => ("" + a.data.warehouse).localeCompare(b.data.warehouse),
+      compare: (a, b) => ("" + a.data.category_name).localeCompare(b.data.category_name),
     },
     render: (data) => (
       <span style={cellStyle}> <Typography
         style={Subtitle}
         textTransform={"capitalize"}
-      >{data.warehouse === 1 ? 'warehouse' : data.event_name}</Typography></span>
+      >{data.warehouse === 1 ? data.location : data.event_name}</Typography></span>
     )
   },
   {

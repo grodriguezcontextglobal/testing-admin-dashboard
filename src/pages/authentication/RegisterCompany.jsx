@@ -1,11 +1,11 @@
-import { Button, FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
+import { Button, Chip, FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { AutoComplete, notification } from "antd";
+import { AutoComplete, Space, Tooltip, notification } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onAddErrorMessage, onLogin } from "../../store/slices/adminSlice";
@@ -24,6 +24,8 @@ const RegisterCompany = () => {
     const [websiteUrl, setWebsiteUrl] = useState('')
     const [industry, setIndustry] = useState('')
     const [loadingStatus, setLoadingStatus] = useState(false)
+    const [locationList, setLocationList] = useState([])
+    const [newlocation, setNewlocation] = useState('')
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
@@ -64,7 +66,16 @@ const RegisterCompany = () => {
         }
         return Array.from(result)
     }
-
+    const handleAddLocation = async () => {
+        let result = [...locationList, newlocation]
+        await setLocationList(result)
+        await setNewlocation('')
+        return
+    }
+    const handleDeleteLocation = (location) => {
+        const result = locationList.filter(element => element !== location)
+        return setLocationList(result)
+    }
     const ref = useRef({})
     const userRegistrationProcess = async () => {
         try {
@@ -150,6 +161,7 @@ const RegisterCompany = () => {
                 state: props.state,
                 postal_code: props.postal_code
             },
+            location: locationList,
             phone: {
                 main: props.main_phone,
                 alternative: props.alternative_phone,
@@ -308,37 +320,41 @@ const RegisterCompany = () => {
 
 
     const onSubmitRegister = async (data) => {
-        setLoadingStatus(true)
-        openNotificationWithIcon('info', "Processing", "We're processing your request", 0)
-        try {
-            await createStripeAccount()
-            await createCompany({ ...data })
-            await userRegistrationProcess()
-            await insertingUserMemberInSqlDb(data.main_phone)
-            await insertingNewCompanyInSqlDb(data)
-            await insertingStripeAccountInSqlDb()
-            await updatingOnlineStatusUser()
-            await consultingUserMemberInSqlDb()
-            await consultingCompanyInSqlDb()
-            queryClient.clear()
-            setLoadingStatus(false)
-            return setTimeout(() => {
-                if (loadingStatus === false) return <Navigate to={'/'} replace={true} />
-            }, 5000);
-        } catch (error) {
-            notification.destroy('info')
-            openNotificationWithIcon(
-                "error",
-                "Action failed",
-                "Please try again later.", `${error.response}`,
-                3
-            );
-            dispatch(onAddErrorMessage(error))
-            setLoadingStatus(false)
-            setTimeout(() => {
-                return navigate('/login')
-            }, 2500);
+        if (locationList.length < 1) { return alert("Please provide at least one location. Go to locations field, type a location where your inventory will be located and then click button Add, then you can proceed to complete the registration process.") }
+        else {
+            try {
+                setLoadingStatus(true)
+                openNotificationWithIcon('info', "Processing", "We're processing your request", 0)
+                await createStripeAccount()
+                await createCompany({ ...data })
+                await userRegistrationProcess()
+                await insertingUserMemberInSqlDb(data.main_phone)
+                await insertingNewCompanyInSqlDb(data)
+                await insertingStripeAccountInSqlDb()
+                await updatingOnlineStatusUser()
+                await consultingUserMemberInSqlDb()
+                await consultingCompanyInSqlDb()
+                queryClient.clear()
+                setLoadingStatus(false)
+                return setTimeout(() => {
+                    if (loadingStatus === false) return window.location.replace('/')
+                }, 5000);
+            } catch (error) {
+                notification.destroy('info')
+                openNotificationWithIcon(
+                    "error",
+                    "Action failed",
+                    "Please try again later.", `${error.response}`,
+                    3
+                );
+                dispatch(onAddErrorMessage(error))
+                setLoadingStatus(false)
+                setTimeout(() => {
+                    return navigate('/login')
+                }, 2500);
+            }
         }
+
     };
 
     return (
@@ -516,6 +532,29 @@ const RegisterCompany = () => {
                                             />
                                         </FormLabel>
                                     </div>
+                                </Grid>
+                                <Grid marginY={'20px'} marginX={0} textAlign={'left'} item xs={12}>
+                                    <FormLabel style={{ marginBotton: "0.5rem" }}>
+                                        Locations
+                                    </FormLabel>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap:"5px" }}>
+                                        <Tooltip style={{ width: "95%" }} title="Please click button Add to add your location, otherwise, it will not be added.">
+                                            <OutlinedInput name="newLocation" value={newlocation} onChange={(e) => setNewlocation(e.target.value)} style={{ ...OutlinedInputStyle }} fullWidth/>
+                                        </Tooltip>
+                                        <Button onClick={() => handleAddLocation()} style={BlueButton}><Typography style={BlueButtonText}>Add</Typography></Button>
+                                    </div>
+                                </Grid>
+                                <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs>
+                                    <Space size={[8, 16]} wrap>
+                                        {
+                                            locationList.map(location => {
+                                                return (
+                                                    <Chip key={location} label={`${location}`} onDelete={() => handleDeleteLocation(location)} />
+                                                )
+                                            })
+                                        }
+                                    </Space>
+
                                 </Grid>
                                 <Grid
                                     marginY={"20px"}

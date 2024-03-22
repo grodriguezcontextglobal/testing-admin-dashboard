@@ -8,8 +8,8 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { Avatar, Divider, Select, Tooltip, notification } from "antd";
-import { useState } from "react";
+import { AutoComplete, Avatar, Divider, Select, Tooltip, notification } from "antd";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
+import { useQuery } from "@tanstack/react-query";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewBulkItems = () => {
     const { user } = useSelector((state) => state.admin);
@@ -44,7 +45,36 @@ const AddNewBulkItems = () => {
     };
     const [valueSelection, setValueSelection] = useState('');
     const [Loading, setLoading] = useState(false)
+    const [locationSelection, setLocationSelection] = useState('')
+    const companiesQuery = useQuery({
+        queryKey: ['locationOptionsPerCompany'],
+        queryFn: () => devitrakApi.post('/company/search-company', {
+            company_name: user.company
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+    useEffect(() => {
+        const controller = new AbortController()
+        companiesQuery.refetch()
+        return () => {
+            controller.abort()
+        }
+    }, [])
+
+    const renderLocationOptions = () => {
+        if (companiesQuery.data) {
+            const locations = companiesQuery.data.data.company.location
+            const result = new Set()
+            for (let data of locations) {
+                result.add({ value: data })
+            }
+            return Array.from(result)
+        }
+        return []
+    }
     const savingNewItem = async (data) => {
+
         await openNotificationWithIcon(
             "warning",
             "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
@@ -74,12 +104,17 @@ const AddNewBulkItems = () => {
                             ownership: valueSelection,
                             serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
                             warehouse: true,
-                            location: data.location,
+                            location: locationSelection,
                             created_at: formatDate(new Date()),
                             updated_at: formatDate(new Date()),
                             company: user.company
                         });
-
+                        if (!renderLocationOptions().some(element => element.value === locationSelection)) {
+                            let template = [...companiesQuery.data.data.company.location, locationSelection]
+                            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.id}`, {
+                                location: template
+                            })
+                        }
                         if (String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber) {
                             setValue("category_name", "");
                             setValue("item_group", "");
@@ -104,10 +139,10 @@ const AddNewBulkItems = () => {
                     }
                 }
             }
-        } else if(data.photo.length < 1){
-            for(let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++){
+        } else if (data.photo.length < 1) {
+            for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) {
                 try {
-                     await devitrakApi.post('/db_item/new_item', {
+                    await devitrakApi.post('/db_item/new_item', {
                         category_name: data.category_name,
                         item_group: data.item_group,
                         cost: data.cost,
@@ -115,18 +150,24 @@ const AddNewBulkItems = () => {
                         ownership: valueSelection,
                         serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
                         warehouse: true,
-                        location: data.location,
+                        location: locationSelection,
                         created_at: formatDate(new Date()),
                         updated_at: formatDate(new Date()),
                         company: user.company
-                     })
-                     if(String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber){
+                    })
+                    if (!renderLocationOptions().some(element => element.value === locationSelection)) {
+                        let template = [...companiesQuery.data.data.company.location, locationSelection]
+                        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.id}`, {
+                            location: template
+                        })
+                    }
+                    if (String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber) {
                         openNotificationWithIcon('success', "items were created and stored in database.")
                         setLoading(false)
                         setTimeout(() => {
                             return navigate('/inventory')
                         }, 3000);
-                     }
+                    }
                 } catch (error) {
                     openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
                 }
@@ -385,8 +426,8 @@ const AddNewBulkItems = () => {
                                 </Typography>
                                 <Select
                                     showSearch
-                                    className="ant-select-selector"
-                                    style={{ ...AntSelectorStyle, width: "100%" }}
+                                    className="custom-autocomplete"
+                                    style={{ ...AntSelectorStyle, height: "2.4rem", width: "100%" }}
                                     placeholder="Select an option"
                                     optionFilterProp="children"
                                     onChange={(value) => {
@@ -426,30 +467,17 @@ const AddNewBulkItems = () => {
                             Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
                         </Typography>
                     </InputLabel>
-                    {/* <Select
-                        showSearch
+                    <AutoComplete
+                        className="custom-autocomplete"
+                        style={{ width: "100%", height: "2.5rem" }}
+                        options={renderLocationOptions()}
                         placeholder="Select a location"
-                        optionFilterProp="children"
-                        onChange={(value) => {
-                            setValueSelection(value)
-                        }}
-                        filterOption={(input, option) => (String(option?.label).toLowerCase() ?? '').includes(String(input).toLowerCase())}
-                        filterSort={(optionA, optionB) =>
-                            (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())
+                        filterOption={(inputValue, option) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
-                        options={options}
-                        style={{ margin:"0.5rem 0", width:"100%", height:"2.5rem"}}
-                    /> */}
-                    <OutlinedInput
-                        {...register("location", { required: true })}
-                        aria-invalid={errors.location}
-                        style={OutlinedInputStyle}
-                        placeholder={`e.g. Washington, DC or location 1880`}
-                        fullWidth
+                        onChange={(value) => setLocationSelection(value)}
                     />
-                    {errors?.location && (
-                        <Typography>{errors.location.type}</Typography>
-                    )}
+
                 </div>
                 <div
                     style={{

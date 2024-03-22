@@ -7,19 +7,21 @@ import {
   OutlinedInput,
   Typography
 } from "@mui/material";
-import { Divider, Select, notification } from "antd";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AutoComplete, Divider, Select, notification } from "antd";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { formatDate } from "../utils/dateFormat";
-import '../../../styles/global/OutlineInput.css'
-import '../../../styles/global/ant-select.css'
+import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
+import '../../../styles/global/OutlineInput.css';
+import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
+import '../../../styles/global/ant-select.css';
+import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewItem = () => {
   const { user } = useSelector((state) => state.admin);
@@ -37,7 +39,34 @@ const AddNewItem = () => {
     });
   };
   const [valueSelection, setValueSelection] = useState(options[0]);
+  const [locationSelection, setLocationSelection] = useState('')
+  const companiesQuery = useQuery({
+    queryKey: ['companyInformationQuery'],
+    queryFn: () => devitrakApi.post('/company/search-company', {
+      company_name: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
+  useEffect(() => {
+    const controller = new AbortController()
+    companiesQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
+  const renderLocationOptions = () => {
+    if (companiesQuery.data) {
+      const locations = companiesQuery.data.data.company.location
+      const result = new Set()
+      for (let data of locations) {
+        result.add({ value: data })
+      }
+      return Array.from(result)
+    }
+    return []
+  }
   const onChange = (value) => {
     return setValueSelection(value);
   };
@@ -54,7 +83,7 @@ const AddNewItem = () => {
         created_at: formatDate(new Date()),
         updated_at: formatDate(new Date()),
         company: user.company,
-        location:data.location
+        location: locationSelection
       });
       if (respNewItem.data.ok) {
         setValue("category_name", "");
@@ -75,28 +104,19 @@ const AddNewItem = () => {
       }
 
     } catch (error) {
+
       console.log("🚀 ~ file: AddNewItem.jsx:138 ~ savingNewItem ~ error:", error)
       openNotificationWithIcon('error', `${error.message}`)
     }
   };
   return (
     <Grid
-      // margin={'15dvh auto 0'}
       display={"flex"}
       justifyContent={"center"}
       alignItems={"center"}
       container
     >
       {contextHolder}
-      {/* <Grid
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        margin={"auto"}
-        flexWrap={"wrap"}
-        item
-        xs={10}
-      > */}
       <form
         style={{
           width: "100%",
@@ -411,13 +431,17 @@ const AddNewItem = () => {
               options={options}
             />
           </InputLabel>
-          <InputLabel style={{ width: "100%", marginBottom: "6px" }}>
-            <Typography textTransform={'none'} textAlign={'left'} fontFamily={'Inter'} fontSize={'14px'} fontStyle={'normal'} fontWeight={500} lineHeight={'20px'} color={'var(--gary-700)'}>
-              Location
-            </Typography>
-            <OutlinedInput {...register("location", { required: true })} placeholder="e.g. Washington, DC or location 1885" style={{ ...OutlinedInputStyle, width: "100%" }} />
+          <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
+            <Typography style={{ ...Subtitle, fontWeight: 500 }}>Location</Typography>
+            <AutoComplete
+              className="custom-autocomplete"
+              style={{ width: "100%", height: "2.5rem" }}
+              options={renderLocationOptions()}
+              placeholder="Select a location"
+              filterOption={(inputValue, option) => option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1}
+              onChange={(value) => setLocationSelection(value)}
+            />
           </InputLabel>
-
         </div>
         <Divider />
         <div
