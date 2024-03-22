@@ -5,6 +5,8 @@ import { useSelector } from "react-redux";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 const EmailNotification = ({
   customizedEmailNotificationModal,
   setCustomizedEmailNotificationModal,
@@ -73,17 +75,13 @@ const EmailNotification = ({
       {contextHolder}
       <Modal
         title={renderTitle()}
-        style={{
-          top: 20,
-          width: "70%",
-          minHeight: "60dvh",
-        }}
+        centered
         open={customizedEmailNotificationModal}
         onOk={() => closeModal()}
         onCancel={() => closeModal()}
         footer={[]}
         width={1000}
-        maskClosable = {false}
+        maskClosable={false}
       >
         <Grid
           display={"flex"}
@@ -99,7 +97,7 @@ const EmailNotification = ({
             textAlign={"center"}
             marginY={"1rem auto"}
             item
-            xs={10}
+            xs={12} sm={12} md={10} lg={10}
           >
             <Typography
               textTransform={"none"}
@@ -121,7 +119,7 @@ const EmailNotification = ({
             item
             xs={10}
           >
-            <form onSubmit={handleSubmit(handleSubmitEmailNotification)}>
+            <form style={{width:"100%"}} onSubmit={handleSubmit(handleSubmitEmailNotification)}>
               <Grid marginY={"0.5rem"} item xs={12}>
                 <OutlinedInput
                   placeholder="Your email's subject here."
@@ -132,15 +130,14 @@ const EmailNotification = ({
                 {errors.subject && <Typography>{errors.subject}</Typography>}
               </Grid>
               <Grid marginY={"0.5rem"} item xs={12}>
-  
                 <OutlinedInput
-                  rows={4}
+                  minRows={4}
                   multiline
                   fullWidth
                   {...register("message", {
                     required: true,
                   })}
-                  placeholder=" Write your email here."
+                  placeholder="Write your email here."
                   style={{
                     ...OutlinedInputStyle,
                     width: "100%",
@@ -151,7 +148,7 @@ const EmailNotification = ({
                 />
                 {errors.subject && <Typography>{errors.message}</Typography>}
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Button
                   htmlType="submit"
                   style={{
@@ -160,15 +157,7 @@ const EmailNotification = ({
                 >
                   <Typography
                     textTransform={"none"}
-                    style={{
-                      color: "var(--base-white, #FFF",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                      textAlign: "center",
-                      padding: "0px 10px 0px 15px"
-                    }}
+                    style={{...BlueButtonText, ...CenteringGrid}}
                   >Send email</Typography>
                 </Button>
               </Grid>
