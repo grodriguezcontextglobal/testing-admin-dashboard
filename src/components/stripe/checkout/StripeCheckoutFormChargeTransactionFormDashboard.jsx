@@ -6,8 +6,11 @@ import {
 } from "@stripe/react-stripe-js";
 // import "./checkoutStyles.css";
 import { useSelector } from "react-redux";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 
-export const StripeCheckoutFormChargeTransactionFromDashboard = ({total}) => {
+export const StripeCheckoutFormChargeTransactionFromDashboard = ({ total }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState(null);
@@ -102,11 +105,12 @@ export const StripeCheckoutFormChargeTransactionFromDashboard = ({total}) => {
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
       <button
+        style={{ ...BlueButton, width: "100%" }}
         className="btn"
         disabled={isLoading || !stripe || !elements}
         id="submit"
       >
-        <span id="button-text">
+        <span style={{ ...BlueButtonText, ...CenteringGrid }} id="button-text">
           {isLoading ? (
             <div className="spinner" id="spinner"></div>
           ) : (

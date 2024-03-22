@@ -1,19 +1,21 @@
-import { useEffect, useState } from "react";
 import {
   PaymentElement,
-  useStripe,
   useElements,
+  useStripe,
 } from "@stripe/react-stripe-js";
+import { useEffect, useState } from "react";
 // import "./checkoutStyles.css";
 import { useSelector } from "react-redux";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 
-export const StripeCheckoutFormSubscription = ({ total }) => {
+export const StripeCheckoutFormSubscription = () => {
   const { subscription } = useSelector((state) => state.subscription);
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     if (!stripe) {
       return;
@@ -94,7 +96,6 @@ export const StripeCheckoutFormSubscription = ({ total }) => {
     } else {
       setMessage("An unexpected error occurred.");
     }
-
     setIsLoading(false);
   };
 
@@ -102,11 +103,12 @@ export const StripeCheckoutFormSubscription = ({ total }) => {
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
       <button
+        style={{ ...BlueButton, width: "100%" }}
         className="btn"
         disabled={isLoading || !stripe || !elements}
         id="submit"
       >
-        <span id="button-text">
+        <span style={{ ...BlueButtonText, ...CenteringGrid }} id="button-text">
           {isLoading ? (
             <div className="spinner" id="spinner"></div>
           ) : (
