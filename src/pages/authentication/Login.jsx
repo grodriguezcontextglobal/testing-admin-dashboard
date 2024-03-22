@@ -18,7 +18,8 @@ import '../../styles/global/OutlineInput.css';
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import ForgotPassword from "./ForgotPassword";
-import './style/authStyle.css';
+import './style/authStyle.css'
+import { useMediaQuery } from "@uidotdev/usehooks";
 const Login = () => {
     const {
         register,
@@ -89,20 +90,21 @@ const Login = () => {
         setValue("password", "");
         return dispatch(clearErrorMessage());
     }
-
+    const isSmallDevice = useMediaQuery('only screen abd (max-width: 768px)');
+    const isMediumDevice = useMediaQuery('only screen and (min-width: 769px) and (max-width:992px)')
     return (
         <>
-
+            {contextHolder}
             <Grid
                 container
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                margin={0}
-                padding={0}
-
+                // display={"flex"}
+                // justifyContent={"space-between"}
+                // alignItems={"center"}
+                // margin={0}
+                // padding={0}
+                style={{ backgroundColor: "var(--whitebase)", height: "100dvh" }}
             >
-                {contextHolder}
+
                 <Grid
                     display={"flex"}
                     flexDirection={'column'}
@@ -111,7 +113,7 @@ const Login = () => {
                     margin={'auto'}
                     // padding={'0 5rem 0 0'}
                     style={{
-                        background: 'transparent',
+                        // background: 'transparent',
                         display: 'flex',
                         alignItems: "center",
                         justifyContent: "center",
@@ -242,14 +244,13 @@ const Login = () => {
                                 Don&apos;t have an account? <span style={{ cursor: "pointer", color: "#155eef", fontWeight: 700 }}>Sign up</span>
                             </Typography>
                         </div>
-
                     </Grid>
                     <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
                         <FooterComponent />
                     </div>
                 </Grid>
                 <Grid
-                    // display={(isSmallDevice || isMediumDevice) && "none"}
+                    display={(isSmallDevice || isMediumDevice) && "none"}
                     id="section-img-login-component"
                     item
                     md={6} lg={6}
