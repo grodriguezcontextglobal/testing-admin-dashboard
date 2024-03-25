@@ -7,11 +7,9 @@ import { Link } from "react-router-dom"
 import _ from 'lodash'
 
 const CompanyChoiceCard = ({ props }) => {
-  console.log("🚀 ~ CompanyChoiceCard ~ props:", props)
   const { user } = useSelector((state) => state.admin)
   const dispatch = useDispatch()
   const grouping = _.groupBy(props.companyInfo.employees, "user")
-  console.log("🚀 ~ CompanyChoiceCard ~ grouping:", grouping)
   const handleSelect = () => {
     dispatch(onLogin({
       ...user,

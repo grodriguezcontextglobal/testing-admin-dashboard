@@ -11,7 +11,7 @@ import { AutoComplete, notification } from "antd";
 import _ from 'lodash';
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, redirect, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onLogin } from "../../store/slices/adminSlice";
@@ -145,7 +145,8 @@ const Registration = () => {
                             })
                         );
                         queryClient.clear()
-                        return redirect('/', { replace: true })
+                        navigate('/', { replace: true, relative: "path" })
+                        return;
                     }
                 }
             }

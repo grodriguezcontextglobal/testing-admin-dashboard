@@ -56,6 +56,7 @@ const MainPage = () => {
         if (checkSubscriptionQuery?.ok) {
             dispatch(onAddSubscriptionRecord(checkSubscriptionQuery.subscription))
         }
+        return dispatch(onAddSubscriptionRecord([]))
     }, [])
     useEffect(() => {
         const controller = new AbortController()

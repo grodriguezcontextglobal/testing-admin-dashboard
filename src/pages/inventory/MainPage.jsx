@@ -22,11 +22,9 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Title } from "../../styles/global/Title";
 import "../../styles/global/ant-select.css";
 import ItemTable from "./table/ItemTable";
-import AddNewItem from "./actions/AddNewItem";
-import AddNewBulkItems from "./actions/NewBulkItems";
 const MainPage = () => {
-  const [openSingleItemModal, setOpenSingleModal] = useState(false)
-  const [openGroupItemModal, setOpenGroupModal] = useState(false)
+  // const [openSingleItemModal, setOpenSingleModal] = useState(false)
+  // const [openGroupItemModal, setOpenGroupModal] = useState(false)
   const { user } = useSelector((state) => state.admin)
   const { eventsPerAdmin } = useSelector((state) => state.event)
   const { register, watch } = useForm();
@@ -121,9 +119,9 @@ const MainPage = () => {
           md={6}
           lg={6}
         >
-          {/* <Link to="/inventory/new-bulk-items"> */}
+          <Link to="/inventory/new-bulk-items">
           <Button
-            onClick={() => setOpenGroupModal(true)}
+            // onClick={() => setOpenGroupModal(true)}
             style={{ ...BlueButton, width:'fit-content' }}
           >
             <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
@@ -136,11 +134,11 @@ const MainPage = () => {
               Add a group of devices
             </Typography>
           </Button>
-          {/* </Link> */}
-          {/* <Link to="/inventory/new-item"> */}
+          </Link>
+          <Link to="/inventory/new-item">
           <Button
             style={{...LightBlueButton, width:"fit-content"}}
-            onClick={() => setOpenSingleModal(true)}
+            // onClick={() => setOpenSingleModal(true)}
           >
             <BluePlusIcon />
             &nbsp;
@@ -151,7 +149,7 @@ const MainPage = () => {
               Add one device
             </Typography>
           </Button>
-          {/* </Link> */}
+          </Link>
 
         </Grid>
       </Grid>
@@ -205,8 +203,9 @@ const MainPage = () => {
           <ItemTable searchItem={watch("searchItem")} location={deviceSelectedOption} />
         </Grid>
       </Grid>
-      {openSingleItemModal && <AddNewItem openSingleItemModal={openSingleItemModal} setOpenSingleModal={setOpenSingleModal} />}
-      {openGroupItemModal && <AddNewBulkItems openGroupItemModal={openGroupItemModal} setOpenGroupModal={setOpenGroupModal} />}
+      {/* {openSingleItemModal && <AddNewItem openSingleItemModal={openSingleItemModal} setOpenSingleModal={setOpenSingleModal} />}
+      {openGroupItemModal && <AddNewBulkItems openGroupItemModal={openGroupItemModal} setOpenGroupModal={setOpenGroupModal} />} */}
+      
     </Grid>
   );
 };

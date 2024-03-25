@@ -10,7 +10,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
       label: "Owned",
       color: "#6941c6"
     },
-    'Rented': {
+    'Rent': {
       label: "Leased",
       color: "#ef6820"
     },
@@ -102,7 +102,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
             }}
           >
             <Typography
-              color={`${dic[dataFound[0]?.ownership].color}`}
+              color={`${dic[dataFound[0]?.ownership]?.color}`}
               fontSize={"12px"}
               fontFamily={"Inter"}
               fontStyle={"normal"}
@@ -111,8 +111,8 @@ const DeviceDescriptionTags = ({ dataFound }) => {
               textAlign={"center"}
               textTransform={"capitalize"}
             >
-              <Icon icon="tabler:point-filled" rotate={3} color={`${dic[dataFound[0]?.ownership].color}`} />
-              {dic[dataFound[0]?.ownership].label}
+              <Icon icon="tabler:point-filled" rotate={3} color={`${dic[dataFound[0]?.ownership]?.color}`} />
+              {dic[dataFound[0]?.ownership]?.label}
             </Typography>
           </span>
         </Grid>

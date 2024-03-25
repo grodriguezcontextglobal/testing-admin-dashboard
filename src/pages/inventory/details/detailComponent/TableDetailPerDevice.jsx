@@ -1,20 +1,14 @@
 import { Typography } from "@mui/material";
-import { Table, Tooltip } from "antd";
+import { Table } from "antd";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { RightNarrowInCircle } from "../../../../components/icons/Icons";
-import { onAddCustomerInfo } from "../../../../store/slices/customerSlice";
-import { onAddCustomer } from "../../../../store/slices/stripeSlice";
 import '../../../../styles/global/ant-table.css';
 const TableDetailPerDevice = ({ dataFound }) => {
-    const dispatch = useDispatch();
     const navigate = useNavigate();
     const sortingAssignedDeviceTrack = () => {
         const addingKey = new Set()
         for (let data of dataFound) {
-            const jsonToStringForAvoidDuplicates = JSON.stringify({ key: `${data.item_id}*${data.event_name}`, ...data, data:{ ...data} })
+            const jsonToStringForAvoidDuplicates = JSON.stringify({ key: `${data.item_id}*${data.event_name}`, ...data, data: { ...data } })
             addingKey.add(jsonToStringForAvoidDuplicates)
         }
         const finalDatTodisplay = new Set()
@@ -64,7 +58,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
             },
             render: (event_name) => (
                 <span
-                    onClick={() => navigate("/events/event-quickglance")}
+                    onClick={() => navigate(`${event_name ? "/events/event-quickglance" : window.location.reload()}`)}
                     style={{ margin: "auto", cursor: "pointer" }}
                 >
                     <Typography
@@ -74,22 +68,22 @@ const TableDetailPerDevice = ({ dataFound }) => {
                         fontStyle={"normal"}
                         fontWeight={400}
                         lineHeight={"20px"}
-                        color={"var(--blue-dark-600, #155EEF)"}
+                        color={"var(--blue-dark-600)"}
                     >
-                        {event_name ?? "Warehouse"}
+                        {event_name ?? 'Warehouse'}
                     </Typography>
                 </span>
             ),
         },
         {
             title: "Location",
-            dataIndex: "state_address",
+            dataIndex: "data",
             align: "left",
             sorter: {
                 compare: (a, b) =>
                     ("" + a.state_address).localeCompare(b.state_address),
             },
-            render: (state_address) => (
+            render: (data) => (
                 <span
                     onClick={() => navigate("/events/event-quickglance")}
                     style={{ margin: "auto", cursor: "pointer" }}
@@ -103,7 +97,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
                         lineHeight={"20px"}
                         color={"var(--blue-dark-600, #155EEF)"}
                     >
-                        {state_address ?? "warehouse"}
+                        {data.warehouse === 1 ? data.location : data.event_name}
                     </Typography>
                 </span>
             ),
@@ -130,7 +124,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
                         lineHeight={"20px"}
                         color={"var(--blue-dark-600, #155EEF)"}
                     >
-                        {ownership}
+                        {ownership === "Rent" ? "Leased" : ownership}
                     </Typography>
                 </span>
             ),
@@ -168,7 +162,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         //         <span style={{ margin: "auto" }} onClick={() => navigate(`/inventory/event-inventory?event_id=${record.event_id}`)}>
         //             <Tooltip title="Click to display inventory of event.">
         //                <Typography
-                       
+
         //                 textTransform={"none"}
         //                 fontSize={"14px"}
         //                 fontFamily={"Inter"}
@@ -179,7 +173,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         //                 <RightNarrowInCircle />
         //             </Typography> 
         //             </Tooltip>
-                    
+
         //         </span>
         //     ),
         // },

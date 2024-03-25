@@ -1,44 +1,57 @@
-import { Grid, Typography } from "@mui/material"
-import TableCategories from "./category_components/TableCategories";
-import { useState, useCallback, useEffect } from "react";
-import { devitrakApi } from "../../../api/devitrakApi";
+import { Grid, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import TableCategories from "./category_components/TableCategories";
 
 const CategoryInventory = () => {
     const { user } = useSelector((state) => state.admin)
     const [totalCategories, setTotalCategories] = useState(0)
-    const totalConsumers = useCallback(async () => {
-        const response = await devitrakApi.post('db_item/consulting-item', {
+
+    const totalConsumers = useQuery({
+        queryKey: ['consultingCategoriesPerCompany'],
+        queryFn: () => devitrakApi.post('db_item/consulting-item', {
             company: user.company
-        })
-        if (response.data.ok) {
-            sortingDataFetched(response.data.items)
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+
+    // useCallback(async () => {
+    //     const response = await 
+    //     if (response.data.ok) {
+    //         sortingDataFetched(response.data.items)
+    //     }
+    // }, [])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        totalConsumers.refetch()
+        if (totalConsumers.data) {
+            const totalFetched = totalConsumers.data.data.items
+            const sortingDataFetched = () => {
+                const result = {}
+                for (let data of totalFetched) {
+                    if (!result[data.category_name]) {
+                        result[data.category_name] = 1
+                    } else {
+                        result[data.category_name]++
+                    }
+                }
+                const final = new Set()
+                for (let [key] of Object.entries(result)) {
+                    final.add(key)
+                }
+                return setTotalCategories(Array.from(final).length)
+            }
+            sortingDataFetched()
+        }
+        return () => {
+            controller.abort()
         }
     }, [])
-    
-useEffect(() => {
-  const controller = new AbortController()
-  totalConsumers()
-  return () => {
-    controller.abort()
-  }
-}, [])
 
-    const sortingDataFetched = (props) => {
-        const result = {}
-        for (let data of props) {
-            if (!result[data.category_name]) {
-                result[data.category_name] = 1
-            } else {
-                result[data.category_name]++
-            }
-        }
-        const final = new Set()
-        for (let [key] of Object.entries(result)) {
-            final.add(key)
-        }
-        return setTotalCategories(Array.from(final).length)
-    }
 
     return (
         <Grid

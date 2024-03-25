@@ -5,7 +5,7 @@ import { AutoComplete, Space, Tooltip, notification } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, redirect, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onAddErrorMessage, onLogin, onLogout } from "../../store/slices/adminSlice";
@@ -339,7 +339,8 @@ const RegisterCompany = () => {
                 await consultingCompanyInSqlDb()
                 queryClient.clear()
                 setLoadingStatus(false)
-                return redirect('/', { status: 201 })
+                navigate('/', { replace: true, relative: 'path', })
+                return;
             } catch (error) {
                 notification.destroy('info')
                 openNotificationWithIcon(
@@ -359,7 +360,7 @@ const RegisterCompany = () => {
     };
 
     return (
-        <div style={{height:"100dvh"}}>
+        <div style={{ height: "100dvh" }}>
             {contextHolder}
             <Grid
                 style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
@@ -383,7 +384,7 @@ const RegisterCompany = () => {
                         <Grid
                             marginX={0}
                             className="register-container"
-                            style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}`, height:"100dvh", margin:"5dvh auto 0" }}
+                            style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}`, height: "100dvh", margin: "5dvh auto 0" }}
                             container
                         > <form
                             className="register-form-container"
@@ -636,7 +637,7 @@ const RegisterCompany = () => {
                                         Do you have an account already?{" "}
                                         <Link to="/login">
                                             <span
-                                            onClick={() => dispatch(onLogout())}
+                                                onClick={() => dispatch(onLogout())}
                                                 style={{
                                                     color: "#004EEB",
                                                     fontSize: "14px",
