@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   Grid,
   InputLabel,
   MenuItem,
@@ -10,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, message } from "antd";
+import { Modal, message, Button } from "antd";
 import _ from 'lodash';
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -55,7 +54,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   function closeModal() {
     setModalState(false);
   }
-const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
@@ -97,6 +96,7 @@ const queryClient = useQueryClient()
     );
     const companyData = companiesQuery?.data?.data?.company
     const checkIfNewUserExists = async (props) => {
+      console.log("🚀 ~ checkIfNewUserExists ~ props:", props)
       const result = new Set()
       if (groupStaffByEmail[props.email]) {
         for (let info of companyData.employees) {
@@ -116,6 +116,7 @@ const queryClient = useQueryClient()
     }
 
     const onSubmitRegister = async (data) => {
+      console.log("🚀 ~ onSubmitRegister ~ data:", data)
       const templateNewUser = {
         name: data.name,
         lastName: data.lastName,
@@ -126,20 +127,23 @@ const queryClient = useQueryClient()
         role: data.role,
         company: user.company,
       }
+      console.log("🚀 ~ onSubmitRegister ~ templateNewUser:", templateNewUser)
       if (groupStaffByEmail[data.email]) {
+        console.log("🚀 ~ onSubmitRegister ~ groupStaffByEmail[data.email]:", groupStaffByEmail[data.email])
+      
         checkIfNewUserExists(data)
-        warning('success', 'staff created successfully')
+        warning('success', `${data.name} ${data.lastName} was created successfully!`)
         return closeModal()
       }
       const resp = await devitrakApiAdmin.post("/new_admin_user", templateNewUser);
-      if (resp) {
+      if (resp.data.ok) {
         await devitrakApi.patch(`/company/update-company/${companyData.id}`, {
           employees: [
             ...companyData.employees,
             { user: templateNewUser.email, super_user: false, role: data.role, _id: resp.data.uid }
           ]
         })
-        queryClient.invalidateQueries({queryKey: ['listAdminUsers'], exact:true})
+        queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
         warning('success', `${data.name} ${data.lastName} was created successfully!`)
         return closeModal();
       }
@@ -272,105 +276,80 @@ const queryClient = useQueryClient()
                   />
                   {errors?.password2 && <p>Password must match</p>}
                 </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"center"}
-                  item
-                  xs={12}
-                >
-                  <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
-                    Role
-                  </InputLabel>
-                  <Grid
-                    item
-                    xs={12}
-                    display={"flex"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Select
-                      {...register("role")}
-                      displayEmpty
-                      fullWidth
-                      style={AntSelectorStyle}
-                    // placeholder="Select a role"
-                    >
-                      {roles.map((company) => {
-                        return (
-                          <MenuItem key={company} value={company}>
-                            {company}
-                          </MenuItem>
-                        );
-                      })}
-                    </Select>
-                  </Grid>
-                  {errors?.role?.message}
-                </Grid>
-                {/* <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"center"}
-                  item
-                  xs={12}
-                >
-                  <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
-                    Assigning new staff to an event
-                  </InputLabel>
-                  <Select
-                    value={assignToEvent?.eventInfoDetail?.eventName}
-                    onChange={handleChange}
-                    style={AntSelectorStyle}
-                    fullWidth>
-                    {renderListOfEvents()?.map(option => {
-                      return (
-                        <MenuItem key={option.eventInfoDetail.eventName} value={option.eventInfoDetail.eventName}>
-                          {option.eventInfoDetail.eventName}
-                        </MenuItem>
-                      )
-                    })}
-                  </Select>
-                  {errors?.answer?.message}
-                </Grid> */}
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"center"}
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  gap={1}
-                  item
-                  xs={12} sm={12} md={12} lg={12}
-                >
-                  <Button
-                    onClick={closeModal}
-                    style={{ ...GrayButton, width: "100%" }}
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      style={GrayButtonText}
-                    >
-                      Cancel
-                    </Typography>
-                  </Button>
-                  <Button
-                    style={{ ...BlueButton, width: "100%" }}
-                    type="submit"
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      style={BlueButtonText}
-                    >
-                      Save
-                    </Typography>
-                  </Button>
-                </Grid>
               </>
             )}
-          </form>
-          {/* </Grid> */}
-        </Modal>
+            <Grid
+              marginY={"20px"}
+              marginX={0}
+              textAlign={"center"}
+              item
+              xs={12}
+            >
+              <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
+                Role
+              </InputLabel>
+              <Grid
+                item
+                xs={12}
+                display={"flex"}
+                alignItems={"center"}
+                justifyContent={"space-between"}
+              >
+                <Select
+                  {...register("role")}
+                  displayEmpty
+                  fullWidth
+                  style={AntSelectorStyle}
+                >
+                  {roles.map((company) => {
+                    return (
+                      <MenuItem key={company} value={company}>
+                        {company}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </Grid>
+              {errors?.role?.message}
+            </Grid>
+
+            <Grid
+              marginY={"20px"}
+              marginX={0}
+              textAlign={"center"}
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              gap={1}
+              item
+              xs={12} sm={12} md={12} lg={12}
+            >
+              <Button
+                onClick={closeModal}
+                style={{ ...GrayButton, width: "100%" }}
+                htmlType="reset"
+              >
+                <Typography
+                  textTransform={"none"}
+                  style={GrayButtonText}
+                >
+                  Cancel
+                </Typography>
+              </Button>
+              <Button
+                style={{ ...BlueButton, width: "100%" }}
+                htmlType="submit"
+              >
+                <Typography
+                  textTransform={"none"}
+                  style={BlueButtonText}
+                >
+                  Save
+                </Typography>
+              </Button>
+            </Grid>
+        </form>
+      </Modal >
       </>
     );
   }

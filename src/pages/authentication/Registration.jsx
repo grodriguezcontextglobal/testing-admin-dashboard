@@ -11,7 +11,7 @@ import { AutoComplete, notification } from "antd";
 import _ from 'lodash';
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, redirect, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onLogin } from "../../store/slices/adminSlice";
@@ -85,7 +85,6 @@ const Registration = () => {
     const onSubmitRegister = async (e) => {
         e.preventDefault()
         try {
-            console.log('company value', companyValue)
             const newAdminUserTemplate = {
                 name: firstName,
                 lastName: lastName,
@@ -142,11 +141,11 @@ const Registration = () => {
                                 affiliate: resp.data.affiliate,
                                 company: resp.data.company,
                                 sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
-                                sqlInfo: {...companyInfo.data.company.at(-1), stripeIDL: stripeSQL.data.stripe.at(-1)},
+                                sqlInfo: { ...companyInfo.data.company.at(-1), stripeIDL: stripeSQL.data.stripe.at(-1) },
                             })
                         );
                         queryClient.clear()
-                        return <Navigate to={'/'} replace={true} />
+                        return redirect('/', { replace: true })
                     }
                 }
             }

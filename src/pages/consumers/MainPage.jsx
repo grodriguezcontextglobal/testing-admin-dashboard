@@ -22,7 +22,7 @@ import { MagnifyIcon } from "../../components/icons/Icons";
 
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false)
-  const [createUserButton, setCreateUserButton] = useState(false);
+  // const [createUserButton, setCreateUserButton] = useState(false);
   const [responseData, setResponseData] = useState([])
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -46,7 +46,6 @@ const MainPage = () => {
     return [...activeEvents, ...completedEvents];
   }, [user.company]);
   listOfEventsPerAdmin();
-  console.log("🚀 ~ MainPage ~ listOfEventsPerAdmin():", listOfEventsPerAdmin())
 
   const consumersPerAllowEvents = useMemo(async () => {
     setLoadingState(true)
@@ -171,7 +170,7 @@ const MainPage = () => {
           xs={6}
         >
           <Button
-            onClick={() => setCreateUserButton(true)}
+            // onClick={() => setCreateUserButton(true)}
             style={BlueButton}
           >
             <Icon

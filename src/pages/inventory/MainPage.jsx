@@ -22,7 +22,11 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Title } from "../../styles/global/Title";
 import "../../styles/global/ant-select.css";
 import ItemTable from "./table/ItemTable";
+import AddNewItem from "./actions/AddNewItem";
+import AddNewBulkItems from "./actions/NewBulkItems";
 const MainPage = () => {
+  const [openSingleItemModal, setOpenSingleModal] = useState(false)
+  const [openGroupItemModal, setOpenGroupModal] = useState(false)
   const { user } = useSelector((state) => state.admin)
   const { eventsPerAdmin } = useSelector((state) => state.event)
   const { register, watch } = useForm();
@@ -117,35 +121,37 @@ const MainPage = () => {
           md={6}
           lg={6}
         >
-          <Link to="/inventory/new-bulk-items">
-            <Button
-              style={{ ...BlueButton, margin: 'auto' }}
+          {/* <Link to="/inventory/new-bulk-items"> */}
+          <Button
+            onClick={() => setOpenGroupModal(true)}
+            style={{ ...BlueButton, width:'fit-content' }}
+          >
+            <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+            {/* <WhitePlusIcon /> */}
+            &nbsp;
+            <Typography
+              textTransform={"none"}
+              style={BlueButtonText}
             >
-              <WhiteCirclePlusIcon style={{height:"21px", margin:"auto"}} />
-              {/* <WhitePlusIcon /> */}
-              &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
-              >
-                Add a group of devices
-              </Typography>
-            </Button>
-          </Link>
-          <Link to="/inventory/new-item">
-            <Button
-              style={LightBlueButton}
+              Add a group of devices
+            </Typography>
+          </Button>
+          {/* </Link> */}
+          {/* <Link to="/inventory/new-item"> */}
+          <Button
+            style={{...LightBlueButton, width:"fit-content"}}
+            onClick={() => setOpenSingleModal(true)}
+          >
+            <BluePlusIcon />
+            &nbsp;
+            <Typography
+              textTransform={"none"}
+              style={LightBlueButtonText}
             >
-              <BluePlusIcon />
-              &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={LightBlueButtonText}
-              >
-                Add one device
-              </Typography>
-            </Button>
-          </Link>
+              Add one device
+            </Typography>
+          </Button>
+          {/* </Link> */}
 
         </Grid>
       </Grid>
@@ -199,7 +205,8 @@ const MainPage = () => {
           <ItemTable searchItem={watch("searchItem")} location={deviceSelectedOption} />
         </Grid>
       </Grid>
-      {/* </Grid> */}
+      {openSingleItemModal && <AddNewItem openSingleItemModal={openSingleItemModal} setOpenSingleModal={setOpenSingleModal} />}
+      {openGroupItemModal && <AddNewBulkItems openGroupItemModal={openGroupItemModal} setOpenGroupModal={setOpenGroupModal} />}
     </Grid>
   );
 };

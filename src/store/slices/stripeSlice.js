@@ -9,7 +9,8 @@ const stripeSlice = createSlice({
     paymentIntentSelected: undefined,
     paymentIntentDetailSelected: [],
     paymentIntentReceiversAssigned: undefined,
-    updatePaymentMethodInSubscription: null
+    updatePaymentMethodInSubscription: null,
+    
   },
   reducers: {
     onAddNewPaymentIntent: (state, { payload }) => {
@@ -50,5 +51,6 @@ export const {
   onAddDevicesAssignedInPaymentIntent,
   onAddCustomer,
   onResetStripesInfo,
-  onAddNewPaymentMethodInSubscription
+  onAddNewPaymentMethodInSubscription,
+
 } = stripeSlice.actions;

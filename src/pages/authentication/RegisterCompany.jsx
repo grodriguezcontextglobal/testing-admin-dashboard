@@ -5,10 +5,10 @@ import { AutoComplete, Space, Tooltip, notification } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, redirect, useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
-import { onAddErrorMessage, onLogin } from "../../store/slices/adminSlice";
+import { onAddErrorMessage, onLogin, onLogout } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -316,7 +316,7 @@ const RegisterCompany = () => {
             return ref.current = {
                 ...ref.current,
                 sqlMemberInfo: { ...ref.current.sqlMemberInfo },
-                sqlInfo: {...companyInfo.data.result?.at(-1), stripeID: stripe_db.data.stripe.at(-1)},
+                sqlInfo: { ...companyInfo.data.result?.at(-1), stripeID: stripe_db.data.stripe.at(-1) },
             }
         }
     }
@@ -339,9 +339,7 @@ const RegisterCompany = () => {
                 await consultingCompanyInSqlDb()
                 queryClient.clear()
                 setLoadingStatus(false)
-                return setTimeout(() => {
-                    if (loadingStatus === false) return window.location.replace('/')
-                }, 5000);
+                return redirect('/', { status: 201 })
             } catch (error) {
                 notification.destroy('info')
                 openNotificationWithIcon(
@@ -361,7 +359,7 @@ const RegisterCompany = () => {
     };
 
     return (
-        <>
+        <div style={{height:"100dvh"}}>
             {contextHolder}
             <Grid
                 style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
@@ -385,7 +383,7 @@ const RegisterCompany = () => {
                         <Grid
                             marginX={0}
                             className="register-container"
-                            style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}` }}
+                            style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}`, height:"100dvh", margin:"5dvh auto 0" }}
                             container
                         > <form
                             className="register-form-container"
@@ -540,9 +538,9 @@ const RegisterCompany = () => {
                                     <FormLabel style={{ marginBotton: "0.5rem" }}>
                                         Locations
                                     </FormLabel>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap:"5px" }}>
-                                        <Tooltip style={{ width: "95%" }} title="Please click button Add to add your location, otherwise, it will not be added.">
-                                            <OutlinedInput name="newLocation" value={newlocation} onChange={(e) => setNewlocation(e.target.value)} style={{ ...OutlinedInputStyle }} fullWidth/>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "5px" }}>
+                                        <Tooltip style={{ width: "95%" }} title="Please click the 'Add' button to include your location. Otherwise, it will not be added.">
+                                            <OutlinedInput name="newLocation" value={newlocation} onChange={(e) => setNewlocation(e.target.value)} style={{ ...OutlinedInputStyle }} fullWidth />
                                         </Tooltip>
                                         <Button onClick={() => handleAddLocation()} style={BlueButton}><Typography style={BlueButtonText}>Add</Typography></Button>
                                     </div>
@@ -638,6 +636,7 @@ const RegisterCompany = () => {
                                         Do you have an account already?{" "}
                                         <Link to="/login">
                                             <span
+                                            onClick={() => dispatch(onLogout())}
                                                 style={{
                                                     color: "#004EEB",
                                                     fontSize: "14px",
@@ -666,7 +665,7 @@ const RegisterCompany = () => {
                     xs={6} sm={6}
                 ></Grid>
             </Grid>{" "}
-        </>
+        </div>
     );
 };
 export default RegisterCompany

@@ -1,10 +1,9 @@
-import { Button, Grid, Typography } from "@mui/material"
-import StepsLine from "./components/StepsLine"
-import { Outlet, useNavigate } from "react-router-dom"
+import { Grid, Typography } from "@mui/material"
+import { Outlet } from "react-router-dom"
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38"
+import StepsLine from "./components/StepsLine"
 
 const MainPage = () => {
-    const navigate = useNavigate()
     return (
         <Grid
             container

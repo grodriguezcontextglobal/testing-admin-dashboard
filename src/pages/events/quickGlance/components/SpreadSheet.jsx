@@ -32,7 +32,7 @@ const SpreadSheet = () => {
             <Tooltip title="Under construction">
                 <button disabled style={{ ...GrayButton, width: "100%" }}><Typography textTransform={"none"}
                     textAlign={"left"}
-                    style={{ ...GrayButtonText, margin: "auto" }}><XLSXIcon /> Export device/transaction record (<span style={{ textDecoration: "underline" }}>xlsx format</span>)</Typography></button>
+                    style={{ ...GrayButtonText, margin: "auto" }}><XLSXIcon /> Export record (<span style={{ textDecoration: "underline" }}>xlsx format</span>)</Typography></button>
             </Tooltip>
 
         </div >

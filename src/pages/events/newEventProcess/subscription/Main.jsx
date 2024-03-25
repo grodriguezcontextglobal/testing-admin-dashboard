@@ -1,38 +1,91 @@
-import { useState } from "react";
-// import "../../style/component/subscription/subscriptionPage.css";
 import { Box, Grid, Tab, Tabs, Typography } from "@mui/material";
-import { Divider } from "antd";
-// import "./Subscription.css";
+import { useQuery } from "@tanstack/react-query";
+import { Divider, message } from "antd";
+import _ from 'lodash';
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate, useNavigate } from "react-router-dom";
-import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { onAddNewSubscription, onAddSubscriptionRecord } from "../../../../store/slices/subscriptionSlice";
+import DescriptionFormat from "./components/DescriptionFormat";
+import ModalAnnualPayment from "./components/ModalAnnualPayment";
+import ModalMonthlyPayment from "./components/ModalMonthlyPayment";
 import OptionSubscriptionTitle from "./components/OptionSubscriptionTitle";
 import PricingTable from "./table/PricingTable";
-import DescriptionFormat from "./components/DescriptionFormat";
-// import ModalMonthlyPayment from "./components/ModalMonthlyPayment";
-// import ModalAnnualPayment from "./components/ModalAnnualPayment";
 const Main = () => {
-  const { companyAccountStripe } = useSelector((state) => state.admin);
+  const { user } = useSelector((state) => state.admin);
+  const { subscriptionRecord } = useSelector((state) => state.subscription)
   const [value, setValue] = useState(0);
-  // const [clientSecret, setClientSecret] = useState(null);
+  const [clientSecret, setClientSecret] = useState(null);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const element = element => element.status === "active"
-  if (companyAccountStripe?.subscriptionHistory.some(element)) {
-    return <Navigate to={'/create-event-page/event-detail'} replace />
+  const checkEventsPerCompany = useQuery({
+    queryKey: ['eventsPerCompany'],
+    queryFn: () => devitrakApi.post('/event/event-list', {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
+  useEffect(() => {
+    const controller = new AbortController()
+    checkEventsPerCompany.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  const [messageApi, contextHolder] = message.useMessage();
+  const success = () => {
+    messageApi.open({
+      type: 'info',
+      content: 'Company has an active subscription. Process to create a new event.',
+    });
+  };
+  const eventsList = checkEventsPerCompany?.data?.data?.list
+  const groupingByActiveSubscription = _.groupBy(subscriptionRecord.record, 'active')
+  if (groupingByActiveSubscription[true]) {
+    success()
+    setTimeout(() => {
+      navigate('/create-event-page/event-detail', { replace: true })
+    }, 2000)
+    return <div>{ contextHolder }</div>
   } else {
     const handleSubmitEventPayment = async (props) => {
       if (props !== "00") {
-        const resp = await devitrakApi.post("/stripe/create-subscriptions", {
-          stripeCustomerID: companyAccountStripe.stripeID,
-          items: [{ price: props }],
-        });
-        if (resp.data.ok) {
-          dispatch(onAddNewSubscription(resp.data.data));
-          // setClientSecret(resp.data.clientSecret);
+        if (value === 0) {
+          const resp = await devitrakApi.post("/stripe/create-subscriptions", {
+            stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
+            items: [{ price: props }],
+          });
+          if (resp.data.ok) {
+            dispatch(onAddNewSubscription(resp.data.data));
+            setClientSecret(resp.data.clientSecret);
+            dispatch(onAddSubscriptionRecord([{
+              subscription_id: resp.data.subscriptionId,
+              active: false,
+              cancel_at: resp.data.data.cancel_at,
+              subscription_type: "Monthly"
+            }, ...subscriptionRecord]))
+          }
+        } else {
+          const resp = await devitrakApi.post("/stripe/create-payment-intent-subscription", {
+            customerEmail: user.email,
+            total: props,
+          });
+          if (resp.data.ok) {
+            dispatch(onAddNewSubscription(resp.data.data));
+            setClientSecret(resp.data.clientSecret);
+            dispatch(onAddSubscriptionRecord([{
+              subscription_id: undefined,
+              active: false,
+              cancel_at: undefined,
+              subscription_type: undefined
+            }, ...subscriptionRecord]))
+          }
         }
+
       } else {
         return navigate("/create-event-page/event-detail");
       }
@@ -160,6 +213,7 @@ const Main = () => {
             </Box>
             <OptionSubscriptionTitle />
             <PricingTable
+              eventsList={eventsList}
               handleSubmitEventPayment={handleSubmitEventPayment}
               value={value}
               setValue={setValue}
@@ -170,20 +224,20 @@ const Main = () => {
             <DescriptionFormat />
           </Grid>
         </Grid>
-        {/* {clientSecret?.length > 0 &&
-            (value === 0 ? (
-              <ModalMonthlyPayment
-                setClientSecret={setClientSecret}
-                clientSecret={clientSecret}
-                total={total}
-              />
-            ) : (
-              <ModalAnnualPayment
-                setClientSecret={setClientSecret}
-                clientSecret={clientSecret}
-                total={total}
-              />
-            ))} */}
+        {clientSecret?.length > 0 &&
+          (value === 0 ? (
+            <ModalMonthlyPayment
+              setClientSecret={setClientSecret}
+              clientSecret={clientSecret}
+              total={total}
+            />
+          ) : (
+            <ModalAnnualPayment
+              setClientSecret={setClientSecret}
+              clientSecret={clientSecret}
+              total={total}
+            />
+          ))}
       </div>
     );
   }

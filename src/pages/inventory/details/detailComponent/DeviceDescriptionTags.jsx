@@ -4,6 +4,21 @@ import { Card } from "antd";
 import { CardStyle } from "../../../../styles/global/CardStyle";
 
 const DeviceDescriptionTags = ({ dataFound }) => {
+
+  const dic = {
+    'Permanent': {
+      label: "Owned",
+      color: "#6941c6"
+    },
+    'Rented': {
+      label: "Leased",
+      color: "#ef6820"
+    },
+    'Sale': {
+      label: "For sale",
+      color: "#ef6820"
+    }
+  }
   return (
     <Grid
       padding={"0px 0px 0px 10px"}
@@ -32,46 +47,46 @@ const DeviceDescriptionTags = ({ dataFound }) => {
           item
           xs={12}
         >
-            <span
-              style={{
-                borderRadius: "16px",
-                justifyContent: "center",
-                display: "flex",
-                padding: "2px 8px",
-                alignItems: "center",
-                mixBlendMode: "multiply",
-                background: `${dataFound[0]?.warehouse === 0
-                  ? "var(--orange-dark-50, #FFF4ED)"
-                  : "var(--success-50, #ECFDF3)"
-                  }`,
-                width: "fit-content",
-                marginBottom: "5px",
-              }}
+          <span
+            style={{
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              mixBlendMode: "multiply",
+              background: `${dataFound[0]?.warehouse === 0
+                ? "var(--orange-dark-50, #FFF4ED)"
+                : "var(--success-50, #ECFDF3)"
+                }`,
+              width: "fit-content",
+              marginBottom: "5px",
+            }}
+          >
+            <Typography
+              color={`${dataFound[0]?.warehouse === 0
+                ? "var(--orange-700, #B93815)"
+                : "var(--success-700, #027A48)"
+                }`}
+              fontSize={"12px"}
+              fontFamily={"Inter"}
+              fontStyle={"normal"}
+              fontWeight={500}
+              lineHeight={"18px"}
+              textAlign={"center"}
+              textTransform={"capitalize"}
             >
-              <Typography
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
                 color={`${dataFound[0]?.warehouse === 0
-                  ? "var(--orange-700, #B93815)"
-                  : "var(--success-700, #027A48)"
+                  ? "#EF6820"
+                  : "#12B76A"
                   }`}
-                fontSize={"12px"}
-                fontFamily={"Inter"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"18px"}
-                textAlign={"center"}
-                textTransform={"capitalize"}
-              >
-                <Icon
-                  icon="tabler:point-filled"
-                  rotate={3}
-                  color={`${dataFound[0]?.warehouse === 0
-                    ? "#EF6820"
-                    : "#12B76A"
-                    }`}
-                />
-                {dataFound[0]?.warehouse === 0 ? "In Use" : "In Stock"}
-              </Typography>
-            </span>
+              />
+              {dataFound[0]?.warehouse === 0 ? "In Use" : "In Stock"}
+            </Typography>
+          </span>
           <br />
           <span
             style={{
@@ -87,7 +102,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
             }}
           >
             <Typography
-              color={`${dataFound[0]?.warehouse === 0 ? "var(--Primary-700, #6941C6)" : "#EF6820"}`}
+              color={`${dic[dataFound[0]?.ownership].color}`}
               fontSize={"12px"}
               fontFamily={"Inter"}
               fontStyle={"normal"}
@@ -96,8 +111,8 @@ const DeviceDescriptionTags = ({ dataFound }) => {
               textAlign={"center"}
               textTransform={"capitalize"}
             >
-              <Icon icon="tabler:point-filled" rotate={3} color={`${dataFound[0]?.warehouse === 0 ? "#6941C6" : "#EF6820"}`} />
-              {dataFound[0]?.warehouse === 0 ? "Rented" : "Warehouse"}
+              <Icon icon="tabler:point-filled" rotate={3} color={`${dic[dataFound[0]?.ownership].color}`} />
+              {dic[dataFound[0]?.ownership].label}
             </Typography>
           </span>
         </Grid>
