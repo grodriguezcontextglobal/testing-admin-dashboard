@@ -10,7 +10,6 @@ const PricingTable = ({
   setTotal,
   eventsList
 }) => {
-  console.log("🚀 ~ eventsList:", eventsList)
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotification = (msg, dsc) => {
@@ -29,7 +28,17 @@ const PricingTable = ({
       controller.abort()
     }
   }, [])
-
+  const stripeKeyCheck = String(import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY).split("_")[1]
+  const dicList = {
+    live: {
+      month: ['price_1OyVdkJAluu3aB96iZmrsxZX', 'price_1OyVeKJAluu3aB96I0rZi4VP'],
+      year: ['price_1OyVeTJAluu3aB96YpTSN6iM', 'price_1OyVelJAluu3aB96MswKnJCg']
+    },
+    test: {
+      month: ['price_1NzOBaJAluu3aB96XWZfQrBt', 'price_1O6xsWJAluu3aB96sZsWjLGl'],
+      year: ['price_1O6xtmJAluu3aB96Rbzx7UGg', 'price_1O6xuIJAluu3aB96AcmN6vtH']
+    }
+  }
   return (
     <Grid marginBottom={5} container>
       {contextHolder}
@@ -189,7 +198,7 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? "price_1OyVdkJAluu3aB96iZmrsxZX" : "36000"}`); //*price_1O6xtmJAluu3aB96Rbzx7UGg annually
+              handleSubmitEventPayment(`${value === 0 ? dicList[stripeKeyCheck].month[0] : dicList[stripeKeyCheck].year[0]}`);
               setTotal(`${value === 0 ? "30" : "360"}`);
               dispatch(
                 onAddSubscription({
@@ -284,7 +293,7 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? "price_1OyVeKJAluu3aB96I0rZi4VP" : "72000"}`); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
+              handleSubmitEventPayment(`${value === 0 ? dicList[stripeKeyCheck].month[1] : dicList[stripeKeyCheck].year[1]}`); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
               setTotal(`${value === 0 ? "60" : "720"}`);
               dispatch(
                 onAddSubscription({

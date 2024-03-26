@@ -54,10 +54,11 @@ const Main = () => {
   } else {
     const handleSubmitEventPayment = async (props) => {
       if (props !== "00") {
-        if (value === 0) {
+        // if (value === 0) {
           const resp = await devitrakApi.post("/stripe/create-subscriptions", {
             stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
             items: [{ price: props }],
+            period: value > 0 ? 'year' : 'month'
           });
           if (resp.data.ok) {
             dispatch(onAddNewSubscription(resp.data.data));
@@ -66,26 +67,25 @@ const Main = () => {
               subscription_id: resp.data.subscriptionId,
               active: false,
               cancel_at: resp.data.data.cancel_at,
-              subscription_type: "Monthly"
+              subscription_type: value > 0 ? "Monthly" : "Yearly"
             }, ...subscriptionRecord]))
           }
-        } else {
-          const resp = await devitrakApi.post("/stripe/create-payment-intent-subscription", {
-            customerEmail: user.email,
-            total: props,
-          });
-          if (resp.data.ok) {
-            dispatch(onAddNewSubscription(resp.data.data));
-            setClientSecret(resp.data.clientSecret);
-            dispatch(onAddSubscriptionRecord([{
-              subscription_id: undefined,
-              active: false,
-              cancel_at: undefined,
-              subscription_type: undefined
-            }, ...subscriptionRecord]))
-          }
-        }
-
+        // } else {
+        //   const resp = await devitrakApi.post("/stripe/create-payment-intent-subscription", {
+        //     customerEmail: user.email,
+        //     total: props,
+        //   });
+        //   if (resp.data.ok) {
+        //     dispatch(onAddNewSubscription(resp.data.data));
+        //     setClientSecret(resp.data.clientSecret);
+        //     dispatch(onAddSubscriptionRecord([{
+        //       subscription_id: undefined,
+        //       active: false,
+        //       cancel_at: undefined,
+        //       subscription_type: undefined
+        //     }, ...subscriptionRecord]))
+        //   }
+        // }
       } else {
         return navigate("/create-event-page/event-detail");
       }
