@@ -10,6 +10,7 @@ const PricingTable = ({
   setTotal,
   eventsList
 }) => {
+  console.log("🚀 ~ eventsList:", eventsList)
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotification = (msg, dsc) => {
@@ -21,14 +22,14 @@ const PricingTable = ({
   };
   useEffect(() => {
     const controller = new AbortController()
-  if(eventsList?.length > 1) {
-    return openNotification("Upgrade to Access More Events", "Your access to the free tier has been disabled due to reaching the event limit. Upgrade your subscription to unlock more events and enjoy enhanced features.")
-  }
+    if (eventsList?.length > 0) {
+      openNotification("Upgrade to Access More Events", "Your access to the free tier has been disabled due to reaching the event limit. Upgrade your subscription to unlock more events and enjoy enhanced features.")
+    }
     return () => {
       controller.abort()
     }
   }, [])
-  
+
   return (
     <Grid marginBottom={5} container>
       {contextHolder}
@@ -86,7 +87,7 @@ const PricingTable = ({
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
           </Typography>
           <Button
-            disabled={eventsList?.length > 1}
+            disabled={eventsList?.length > 0}
             style={{
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
@@ -118,7 +119,7 @@ const PricingTable = ({
               Get started
             </Typography>
           </Button>
-          <Button>
+          <Button disabled>
             <Typography
               textTransform={"none"}
               style={{
@@ -188,7 +189,7 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? "price_1NzOBaJAluu3aB96XWZfQrBt" : "36000"}`); //*price_1O6xtmJAluu3aB96Rbzx7UGg annually
+              handleSubmitEventPayment(`${value === 0 ? "price_1OyVdkJAluu3aB96iZmrsxZX" : "36000"}`); //*price_1O6xtmJAluu3aB96Rbzx7UGg annually
               setTotal(`${value === 0 ? "30" : "360"}`);
               dispatch(
                 onAddSubscription({
@@ -283,7 +284,7 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? "price_1O6xsWJAluu3aB96sZsWjLGl" : "72000"}`); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
+              handleSubmitEventPayment(`${value === 0 ? "price_1OyVeKJAluu3aB96I0rZi4VP" : "72000"}`); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
               setTotal(`${value === 0 ? "60" : "720"}`);
               dispatch(
                 onAddSubscription({

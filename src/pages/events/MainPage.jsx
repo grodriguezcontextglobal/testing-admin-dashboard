@@ -32,17 +32,6 @@ const MainPage = () => {
     const { watch } = useForm();
     const { user } = useSelector((state) => state.admin);
     const dispatch = useDispatch();
-    // sql database
-    // const eventQuery = useQuery({
-    //     queryKey: ["events"],
-    //     queryFn: () => devitrakApi.post("/db_event/events_company", {
-    //         company: user.sqlInfo.company_id
-    //     }),
-    //     refetchOnMount: false,
-    //     cacheTime: 1000 * 60 * 5,
-    //     staleTime: 1000 * 60 * 15 //fifteenMinutesInMs
-    // });
-
     const eventQuery = useQuery({
         queryKey: ["events"],
         queryFn: () => devitrakApi.post("/event/event-list", {
@@ -191,7 +180,7 @@ const MainPage = () => {
                 const currentDate = new Date();
                 const begin = new Date(`${data.eventInfoDetail.dateBegin}`)
                 let ending = new Date(`${data.eventInfoDetail.dateEnd}`)
-                if (currentDate < begin || currentDate >= begin && currentDate <= ending) {
+                if ((data.active && currentDate < begin ) || (data.active && currentDate >= begin && currentDate <= ending)) {
                     result.add({ key: data.id, ...data })
                 }
             }
@@ -200,7 +189,7 @@ const MainPage = () => {
 
         return (
             <Grid
-            alignSelf={'flex-start'}
+                alignSelf={'flex-start'}
                 style={{
                     padding: "px",
                     display: "flex",
@@ -236,7 +225,7 @@ const MainPage = () => {
                             }}
                             to="/event/new_subscription"
                         >
-                            <Button style={{...BlueButton, width:"100%"}}>
+                            <Button style={{ ...BlueButton, width: "100%" }}>
                                 <WhitePlusIcon /><Typography style={BlueButtonText}>
                                     Add new event
                                 </Typography>
