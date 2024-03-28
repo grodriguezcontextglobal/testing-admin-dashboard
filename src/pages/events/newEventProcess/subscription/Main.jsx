@@ -56,11 +56,28 @@ const Main = () => {
       }
     }
     a.current = Array.from(checkRecord)
-    const respon = await devitrakApi.patch('/subscription/update-subscription', {
+    const recordStored = (props) => {
+      if (Array.from(props).length > 0) {
+        return Array.from(props)
+      }
+      const result = new Set()
+      const original = searchingExistingSubscriptionRecord.current.record
+      for (let data of original) {
+        result.add({
+          subscription_id: data.id,
+          cancel_at: data.cancel_at,
+          created_at: data.created,
+          subscription_type: data.items.data[0].plan.interval,
+          active: data.status === 'active' ? true : false
+        })
+      }
+      return Array.from(result)
+    }
+    await devitrakApi.patch(`/subscription/update-subscription/${searchingExistingSubscriptionRecord.current.id}`, {
       company: user.company,
       newSubscriptionData: {
         company: user.company,
-        record: Array.from(checkRecord)
+        record: recordStored(Array.from(checkRecord))
       }
     })
     return dispatch(onAddSubscriptionRecord(Array.from(checkRecord)))
