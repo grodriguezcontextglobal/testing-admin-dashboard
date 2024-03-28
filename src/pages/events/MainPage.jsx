@@ -122,7 +122,7 @@ const MainPage = () => {
                 const activeAndAdminMember = group_by_active.true?.filter(
                     (adminMember) =>
                         adminMember.staff?.adminUser?.find(
-                            (member) => member === user.email
+                            (member) => member.email === user.email
                         )
                 );
                 if (activeAndAdminMember) {
@@ -133,7 +133,7 @@ const MainPage = () => {
                 const activeAndHeadsetAttendeesMember = group_by_active.true?.filter(
                     (adminMember) =>
                         adminMember.staff.headsetAttendees?.find(
-                            (member) => member === user?.email
+                            (member) => member.email === user?.email
                         )
                 );
                 if (activeAndHeadsetAttendeesMember) {
@@ -144,7 +144,7 @@ const MainPage = () => {
                 const activeEventAndMembers = [...checking];
 
                 const inactiveButAdmin = group_by_active.false?.filter((adminMember) =>
-                    adminMember.staff.adminUser?.find((member) => member === user.email)
+                    adminMember.staff.adminUser?.find((member) => member.email === user.email)
                 );
 
                 dispatch(
@@ -180,13 +180,12 @@ const MainPage = () => {
                 const currentDate = new Date();
                 const begin = new Date(`${data.eventInfoDetail.dateBegin}`)
                 let ending = new Date(`${data.eventInfoDetail.dateEnd}`)
-                if ((data.active && currentDate < begin ) || (data.active && currentDate >= begin && currentDate <= ending)) {
+                if ((data.active && currentDate < begin) || (data.active && currentDate >= begin && currentDate <= ending)) {
                     result.add({ key: data.id, ...data })
                 }
             }
             return Array.from(result)
         }
-
         return (
             <Grid
                 alignSelf={'flex-start'}
