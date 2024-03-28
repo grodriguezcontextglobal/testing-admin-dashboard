@@ -2,12 +2,12 @@ import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Popconfirm, notification } from "antd";
 import _ from 'lodash';
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { formatDate } from "../../../../../components/utils/dateFormat";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { useCallback, useEffect } from "react";
-import { formatDate } from "../../../../../components/utils/dateFormat";
 
 const EndEventButton = () => {
     const { user } = useSelector((state) => state.admin);
@@ -93,7 +93,6 @@ const EndEventButton = () => {
     };
     findInventoryStored();
 
-
     const findItemsInPoolEvent = () => {
         const listOfItemsInPoolQuery = itemsInPoolQuery?.data?.data?.receiversInventory
         if (listOfItemsInPoolQuery?.length > 0) {
@@ -103,7 +102,7 @@ const EndEventButton = () => {
     };
     findItemsInPoolEvent();
 
-    const sqlDeviceReturnedToCompanyStock = useCallback(async () => {
+    const sqlDeviceReturnedToCompanyStock = async () => {
         const response = await eventInventoryQuery?.data?.data?.receiversInventory
         const groupingByDevice = _.groupBy(response, 'device')
         const deviceList = event.deviceSetup
@@ -111,21 +110,20 @@ const EndEventButton = () => {
             for (let i = data.startingNumber; i <= data.endingNumber; i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
                 if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
                     await devitrakApi.post('/db_event/returning-item', {
-                        warehouse: true,
+                        warehouse: 1,
                         status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
                         update_at: formatDate(new Date()),
                         serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
                         category_name: data.category,
                         item_group: data.group,
                         company: event.company,
-                        location: `${user.sqlInfo.city_address}, ${user.sqlInfo.state_address}`
                     })
                 }
             }
         }
-    }, [])
+    }
 
-    const sqlDeviceFinalStatusAtEventFinished = useCallback(async () => {
+    const sqlDeviceFinalStatusAtEventFinished = async () => {
         const response = await eventInventoryQuery?.data?.data?.receiversInventory
         const groupingByDevice = _.groupBy(response, 'device')
         const deviceList = event.deviceSetup
@@ -142,7 +140,7 @@ const EndEventButton = () => {
                 }
             }
         }
-    }, [])
+    }
 
     const groupingItemsByCompany = _.groupBy(
         listOfItemsInInventoryQuery?.data?.data?.listOfItems,
@@ -160,7 +158,6 @@ const EndEventButton = () => {
         return [];
     };
     itemsPerCompany();
-
     const checkItemsInUseToUpdateInventory = () => {
         const result = {}
         for (let data of findItemsInPoolEvent()) {
@@ -175,7 +172,6 @@ const EndEventButton = () => {
         return Object.entries(result)
     }
     checkItemsInUseToUpdateInventory()
-
     const returningItemsInInventoryAfterEndingEvent = () => {
         const totalResult = new Set()
         for (let device of event.deviceSetup) {
@@ -259,7 +255,8 @@ const EndEventButton = () => {
                 >
                     <Popconfirm title="Are you sure? This action can not be reversed." onConfirm={() => updatingItemInDB()}>
                         <Button
-                            style={{ ...BlueButton, width: "100%" }}
+                            // disabled={!event.active}
+                            style={{ ...BlueButton, width: "100%", background: `${event.active ? 'var(--blue-dark-600)' : 'var(--disabled-blue-button)'}` }}
                         >
                             <Typography
                                 textTransform={"none"}
