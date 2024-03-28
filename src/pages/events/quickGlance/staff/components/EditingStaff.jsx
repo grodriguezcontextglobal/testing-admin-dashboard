@@ -13,6 +13,7 @@ import GrayButtonText from "../../../../../styles/global/GrayButtonText"
 import { GrayButton } from "../../../../../styles/global/GrayButton"
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
 import { onAddEventData, onAddEventStaff } from "../../../../../store/slices/eventSlice"
+import _ from 'lodash';
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     const { register, handleSubmit } = useForm()
@@ -22,9 +23,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     const dispatch = useDispatch()
     const staffEventQuery = useQuery({
         queryKey: ['staffEvent'],
-        queryFn: () => devitrakApi.post('/staff/admin-users', {
-            company: event.company
-        }),
+        queryFn: () => devitrakApi.get('/staff/admin-users'),
         enabled: false,
         refetchOnMount: false,
         staleTime: Infinity,
@@ -46,37 +45,32 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         });
     };
     if (staffEventQuery.data) {
-        const staffMember = new Map()
-        const organizeStaff = () => {
-            const membersCompany = staffEventQuery.data.data.adminUsers
-            for (let data of membersCompany) {
-                staffMember.set(data.email, data)
-            }
-        }
-        organizeStaff()
-        const dataFoundToRender = () => {
-            const result = new Set()
-            const admins = event.staff.adminUser
-            const assistants = event.staff.headsetAttendees
-            if (admins) {
-                for (let data of admins) {
-                    if (staffMember.has(data)) {
-                        const member = staffMember.get(data)
-                        result.add({ ...member, name: `${member.name} ${member.lastName}`, role: "Administrator" })
-                    }
-
-                }
-            }
-            if (assistants) {
-                for (let data of assistants) {
-                    if (staffMember.has(data)) {
-                        const member = staffMember.get(data)
-                        result.add({ ...member, name: `${member.name} ${member.lastName}`, role: "Assistant" })
+        const employee = staffEventQuery.data.data.adminUsers
+        const groupingEmployees = _.groupBy(employee, 'email')
+        const result = new Map()
+        const mergeStaffInEvent2 = async () => {
+            for (let data of event.staff.adminUser) {
+                if (groupingEmployees[data.email]) {
+                    if (!result.has(data.email)) {
+                        result.set(data.email, { name: `${groupingEmployees[data.email].at(-1).name} ${groupingEmployees[data.email].at(-1).lastName}`, role: "Administrator", online: groupingEmployees[data.email].at(-1).online, email: groupingEmployees[data.email].at(-1).email, id: groupingEmployees[data.email].at(-1).id })
                     }
                 }
+                if (!result.has(data.email)) {
+                    result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Assistant", online: false, email: data.email })
+                }
             }
-            return Array.from(result)
+            for (let data of event.staff.headsetAttendees) {
+                if (groupingEmployees[data.email]) {
+                    if (!result.has(data.email)) {
+                        result.set(data.email, { name: `${groupingEmployees[data.email].at(-1).name} ${groupingEmployees[data.email].at(-1).lastName}`, role: "Assistant", online: groupingEmployees[data.email].at(-1).online, email: groupingEmployees[data.email].at(-1).email, id: groupingEmployees[data.email].at(-1).id })
+                    }
+                }
+                if (!result.has(data.email)) {
+                    result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Assistant", online: false, email: data.email })
+                }
+            }
         }
+        mergeStaffInEvent2()
         const closeModal = () => {
             return setEditingStaff(false)
         }
@@ -93,7 +87,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                 dispatch(onAddEventData(responseUpdating.data.event))
                 dispatch(onAddEventStaff(responseUpdating.data.event.staff))
             } else {
-                const result = event.staff.headsetAttendees.filter(member => member !== props.email)
+                const result = event.staff.headsetAttendees.filter(member => member.email !== props.email)
                 const responseUpdating = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                     staff: {
                         adminUser: event.staff.adminUser,
@@ -111,7 +105,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
             try {
                 setLoadingStatus(true)
                 if (String(roleSelected).toLowerCase() === "administrator") {
-                    const result = [...event.staff.adminUser, data.email]
+                    const result = [...event.staff.adminUser, { firstName: data.name, lastName: data.lastName, email: data.email }]
                     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                         staff: {
                             adminUser: result,
@@ -121,7 +115,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     dispatch(onAddEventData(response.data.event))
                     dispatch(onAddEventStaff(response.data.event.staff))
                 } else {
-                    const result = [...event.staff.headsetAttendees, data.email]
+                    const result = [...event.staff.headsetAttendees, { firstName: data.name, lastName: data.lastName, email: data.email }]
                     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
                         staff: {
                             adminUser: event.staff.adminUser,
@@ -161,7 +155,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                                 alignItems: "center",
                                 gap: "10px"
                             }} onSubmit={handleSubmit(handleNewStaffMember)}>
-                                <OutlinedInput {...register('email')} style={{ ...OutlinedInputStyle, width: "70%", gap: "5px" }} />
+                                <OutlinedInput placeholder="Email" {...register('email')} style={{ ...OutlinedInputStyle, width: "100%" }} />
+                                <OutlinedInput placeholder="First name" style={{ ...OutlinedInputStyle, width: "100%" }} {...register('name', { required: true })} />
+                                <OutlinedInput placeholder="Last name" style={{ ...OutlinedInputStyle, width: "100%" }} {...register('lastName', { required: true })} />
                                 <Select style={{ ...AntSelectorStyle, width: "100%" }} onChange={handleChange}
                                     options={[
                                         {
@@ -179,7 +175,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                         <Grid item xs={12} sm={12} md={12} lg={12}>
                             <Space size={[8, 16]} wrap>
                                 {
-                                    dataFoundToRender().map(member => {
+                                    [...result.values()].map(member => {
+                                        console.log('member', member)
                                         return (
                                             <Card title={member.role} key={member.id} extra={[
                                                 <Popconfirm title="Are you sure you want to remove this member from event?" key={member.id} onConfirm={() => removeStaff(member)}>
