@@ -68,7 +68,7 @@ const ReviewAndSubmitEvent = () => {
       for (let data of staff.headsetAttendees) {
         const respo = await devitrakApi.post('/db_staff/consulting-member', {
           email: data.email
-        })
+        }) 
         if (respo.data.member.length > 0) {
 
           await devitrakApi.post('/db_event/event_staff', {
@@ -85,7 +85,7 @@ const ReviewAndSubmitEvent = () => {
           })
           await devitrakApi.post('/db_event/event_staff', {
             event_id: newEventId,
-            staff_id: newMember.data.member.at(-1).staff_id,
+            staff_id: newMember.data.member.insertId,
             role: data.role
           })
         }
@@ -148,8 +148,8 @@ const ReviewAndSubmitEvent = () => {
     return Array.from(result)
   }
   const staffDetail = () => {
-    const admin = staff.adminUser?.map((member) => member.email);
-    const headset = staff.headsetAttendees?.map((member) => member.email);
+    const admin = staff.adminUser?.map((member) => member);
+    const headset = staff.headsetAttendees?.map((member) => member);
     const profileStaffList = {
       adminUser: admin ? admin : [],
       headsetAttendees: headset ? headset : [],
@@ -218,7 +218,6 @@ const ReviewAndSubmitEvent = () => {
       openNotificationWithIcon('success', 'Event information created.')
       return navigate("/events");
     } catch (error) {
-      console.log("🚀 ~ processOfCreatingInformationOfNewEvent ~ error:", error)
       setLoadingStatus(false)
       setButtonDisable(false)
     }
