@@ -43,7 +43,7 @@ const Main = () => {
   const checkSubscriptionInStripe = useCallback(async () => {
     const reference = searchingExistingSubscriptionRecord.current.record
     const checkRecord = new Set()
-    if (reference.length > 0) {
+    if (reference?.length > 0) {
       for (let index = 0; index < reference.length; index++) {
         const check = await devitrakApi.get(`/subscription/subscriptions/${reference[index].subscription_id}`)
         checkRecord.add({

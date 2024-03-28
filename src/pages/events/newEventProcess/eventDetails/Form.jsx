@@ -32,7 +32,6 @@ import "../style/NewEventInfoSetup.css";
 import "../../../../styles/global/OutlineInput.css";
 import "../../../../styles/global/ant-select.css"
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { useQuery } from "@tanstack/react-query";
 const Form = () => {
   const { subscription, subscriptionJSON, subscriptionRecord } = useSelector(
     (state) => state.subscription
