@@ -293,7 +293,7 @@ const ItemTable = ({ searchItem }) => {
     dataIndex: 'data',
     key: 'data',
     sorter: {
-      compare: (a, b) => ("" + a.data.category_name).localeCompare(b.data.category_name),
+      compare: (a, b) => ("" + a.data.location).localeCompare(b.data.location),
     },
     render: (data) => (
       <span style={cellStyle}> <Typography
