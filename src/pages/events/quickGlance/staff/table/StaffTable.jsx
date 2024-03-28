@@ -6,13 +6,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Icon } from "@iconify/react"
 import { Typography } from "@mui/material"
 import { useEffect } from "react"
+import _ from 'lodash'
 const StaffTable = ({ searching }) => {
   const { event } = useSelector((state) => state.event)
   const staffEventQuery = useQuery({
     queryKey: ['staffEvent'],
-    queryFn: () => devitrakApi.post('/staff/admin-users', {
-      company: event.company
-    }),
+    queryFn: () => devitrakApi.get('/staff/admin-users'),
     enabled: false,
     refetchOnMount: false,
     staleTime: Infinity,
@@ -27,47 +26,40 @@ const StaffTable = ({ searching }) => {
   }, [])
 
   if (staffEventQuery.data) {
-    const staffMember = new Map()
-    const organizeStaff = () => {
-      const membersCompany = staffEventQuery.data.data.adminUsers
-      for (let data of membersCompany) {
-        staffMember.set(data.email, data)
-      }
-    }
-    organizeStaff()
-    const dataFoundToRender = () => {
-      const result = new Set()
-      const admins = event.staff.adminUser
-      const assistants = event.staff.headsetAttendees
-      if (admins) {
-        for (let data of admins) {
-          if (staffMember.has(data)) {
-            const member = staffMember.get(data)
-            result.add({ ...member, name: `${member.name} ${member.lastName}`, role: "Administrator" })
-          }
-
-        }
-      }
-      if (assistants) {
-        for (let data of assistants) {
-          if (staffMember.has(data)) {
-            const member = staffMember.get(data)
-            result.add({ ...member, name: `${member.name} ${member.lastName}`, role: "Assistant" })
+    const employees = staffEventQuery.data.data.adminUsers
+    const groupingEmployees = _.groupBy(employees, 'email')
+    const result = new Map()
+    const mergeStaffInEvent2 = async () => {
+      for (let data of event.staff.adminUser) {
+        if (groupingEmployees[data.email]) {
+          if (!result.has(data.email)) {
+            result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Administrator", online: groupingEmployees[data.email].at(-1).online, email: data.email })
           }
         }
+        if (!result.has(data.email)) {
+          result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Administrator", online: false, email: data.email })
+        }
       }
-      return Array.from(result)
+      for (let data of event.staff.headsetAttendees) {
+        if (groupingEmployees[data.email]) {
+          if (!result.has(data.email)) {
+            result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Assistant", online: groupingEmployees[data.email].at(-1).online, email: data.email })
+          }
+        }
+        if (!result.has(data.email)) {
+          result.set(data.email, { name: `${data.firstName} ${data.lastName}`, role: "Assistant", online: false, email: data.email })
+        }
+      }
     }
-
+    mergeStaffInEvent2()
     const dataToRender = () => {
       if (!searching || String(searching).length < 1) {
-        return dataFoundToRender()
+        return [...result.values()]
       } else {
-        const responding = dataFoundToRender().filter(staff => String(staff.name).toLowerCase().includes(String(searching).toLowerCase()) || String(staff.email).toLowerCase().includes(String(searching).toLowerCase()))
+        const responding = [...result.values()].filter(staff => String(staff.name).toLowerCase().includes(String(searching).toLowerCase()) || String(staff.email).toLowerCase().includes(String(searching).toLowerCase()))
         return responding
       }
     }
-
     const columns = [{
       title: 'Name',
       dataIndex: 'name',
