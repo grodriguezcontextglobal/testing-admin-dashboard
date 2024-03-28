@@ -100,7 +100,7 @@ const NavigationBarMain = (props) => {
             <Divider />
             <List>
                 {navItems.map((item) => (
-                    <ListItem key={item} disablePadding>
+                    <ListItem key={`${item.title}-${item.route}`} disablePadding>
                         <ListItemButton sx={{ textAlign: 'center' }}>
                             <NavLink
                                 key={item.title}
