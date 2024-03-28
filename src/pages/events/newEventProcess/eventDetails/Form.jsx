@@ -70,16 +70,20 @@ const Form = () => {
 
   const subscriptionRecordProcess = useCallback(async () => {
     const recordTemplate = subscriptionRecord.splice(0, 1, { ...subscriptionRecord[0], active: true })
-    const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription`, {
-      company: user.company,
-      newSubscriptionData: {
+    const searchSubscription = await devitrakApi.post('/subscription/search_subscription', { company: user.company })
+    if (searchSubscription.data.ok) {
+      const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription/${searchSubscription.data.subscription.id}`, {
         company: user.company,
-        record: recordTemplate
+        newSubscriptionData: {
+          company: user.company,
+          record: recordTemplate
+        }
+      })
+      if (subscriptionResponse.data.ok) {
+        return dispatch(onAddSubscriptionRecord(subscriptionResponse.data.subscription.record))
       }
-    })
-    if (subscriptionResponse.data.ok) {
-      return dispatch(onAddSubscriptionRecord(subscriptionResponse.data.subscription.record))
     }
+
   }, [])
 
   const storeSubscriptionJSON = useCallback(async () => {
