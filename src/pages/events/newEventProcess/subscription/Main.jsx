@@ -2,7 +2,7 @@ import { Box, Grid, Tab, Tabs, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message } from "antd";
 import _ from 'lodash';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -28,12 +28,42 @@ const Main = () => {
     enabled: false,
     refetchOnMount: false
   })
-  useEffect(() => {
-    const controller = new AbortController()
-    checkEventsPerCompany.refetch()
-    return () => {
-      controller.abort()
+  let searchingExistingSubscriptionRecord = useRef([])
+  const checkExistingCompanyRecord = useCallback(async () => {
+    const check = await devitrakApi.post('/subscription/search_subscription', {
+      company: user.company
+    })
+    if (check.data.ok) {
+      const result = await check.data.subscription
+      return searchingExistingSubscriptionRecord.current = result
     }
+  }, [])
+  checkExistingCompanyRecord()
+  const a = useRef([])
+  const checkSubscriptionInStripe = useCallback(async () => {
+    const reference = searchingExistingSubscriptionRecord.current.record
+    const checkRecord = new Set()
+    if (reference.length > 0) {
+      for (let index = 0; index < reference.length; index++) {
+        const check = await devitrakApi.get(`/subscription/subscriptions/${reference[index].subscription_id}`)
+        checkRecord.add({
+          subscription_id: check.data.subscriptions.id,
+          active: check.data.subscriptions.status === 'active' ? true : false,
+          cancel_at: check.data.subscriptions.cancel_at,
+          created_at: check.data.subscriptions.created,
+          subscription_type: check.data.subscriptions.items.data[0].plan.interval
+        })
+      }
+    }
+    a.current = Array.from(checkRecord)
+    await devitrakApi.patch('/subscription/update-subscription', {
+      company: user.company,
+      newSubscriptionData: {
+        company: user.company,
+        record: Array.from(checkRecord)
+      }
+    })
+    return dispatch(onAddSubscriptionRecord(Array.from(checkRecord)))
   }, [])
 
   const [messageApi, contextHolder] = message.useMessage();
@@ -44,48 +74,75 @@ const Main = () => {
     });
   };
   const eventsList = checkEventsPerCompany?.data?.data?.list
-  const groupingByActiveSubscription = _.groupBy(subscriptionRecord.record, 'active')
-  if (groupingByActiveSubscription[true]) {
+  const checkSubscriptionRecordAfterCheckInStripe = useCallback(() => {
+    const groupingByActiveSubscription = _.groupBy(a.current, 'active')
+    return groupingByActiveSubscription
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    checkEventsPerCompany.refetch()
+    checkSubscriptionInStripe()
+    checkSubscriptionRecordAfterCheckInStripe()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+
+  if (checkSubscriptionRecordAfterCheckInStripe()[true]) {
     success()
     setTimeout(() => {
       navigate('/create-event-page/event-detail', { replace: true })
-    }, 2000)
-    return <div>{ contextHolder }</div>
+    }, 4000)
+    return <div>{contextHolder}</div>
   } else {
     const handleSubmitEventPayment = async (props) => {
       if (props !== "00") {
-        // if (value === 0) {
-          const resp = await devitrakApi.post("/stripe/create-subscriptions", {
-            stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
-            items: [{ price: props }],
-            period: value > 0 ? 'year' : 'month'
-          });
-          if (resp.data.ok) {
-            dispatch(onAddNewSubscription(resp.data.data));
-            setClientSecret(resp.data.clientSecret);
+        const resp = await devitrakApi.post("/stripe/create-subscriptions", {
+          stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
+          items: [{ price: props }],
+          period: value > 0 ? 'year' : 'month'
+        });
+        if (resp.data.ok) {
+          if (searchingExistingSubscriptionRecord.current.length > 0) {
+            const recordTemplate = subscriptionRecord.splice(0, 1, {
+              subscription_id: resp.data.subscription.id,
+              active: false,
+              cancel_at: resp.data.subscription.cancel_at,
+              created_at: resp.data.subscription.created,
+              subscription_type: value > 0 ? 'year' : 'month'
+            })
+            const updateResponse = await devitrakApi.patch('/subscription/update-subscription', {
+              company: user.company,
+              newSubscriptionData: {
+                company: user.company,
+                record: recordTemplate
+              }
+            })
+            dispatch(onAddSubscriptionRecord(updateResponse.data.subscription.record))
+          } else {
+            await devitrakApi.post('/subscription/new_subscription', {
+              company: user.company,
+              record: [{
+                subscription_id: resp.data.data.id,
+                active: false,
+                cancel_at: resp.data.data.cancel_at,
+                created_at: resp.data.data.created,
+                subscription_type: value > 0 ? 'year' : 'month'
+              }]
+            })
             dispatch(onAddSubscriptionRecord([{
               subscription_id: resp.data.subscriptionId,
               active: false,
               cancel_at: resp.data.data.cancel_at,
-              subscription_type: value > 0 ? "Monthly" : "Yearly"
+              subscription_type: value > 0 ? "year" : "month",
+              created_at: resp.data.created
             }, ...subscriptionRecord]))
           }
-        // } else {
-        //   const resp = await devitrakApi.post("/stripe/create-payment-intent-subscription", {
-        //     customerEmail: user.email,
-        //     total: props,
-        //   });
-        //   if (resp.data.ok) {
-        //     dispatch(onAddNewSubscription(resp.data.data));
-        //     setClientSecret(resp.data.clientSecret);
-        //     dispatch(onAddSubscriptionRecord([{
-        //       subscription_id: undefined,
-        //       active: false,
-        //       cancel_at: undefined,
-        //       subscription_type: undefined
-        //     }, ...subscriptionRecord]))
-        //   }
-        // }
+          dispatch(onAddNewSubscription(resp.data.data));
+          setClientSecret(resp.data.clientSecret);
+        }
       } else {
         return navigate("/create-event-page/event-detail");
       }
