@@ -27,7 +27,7 @@ const PricingTable = ({
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [eventsList])
   const stripeKeyCheck = String(import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY).split("_")[1]
   const dicList = {
     live: {
