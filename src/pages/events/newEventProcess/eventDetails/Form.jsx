@@ -6,7 +6,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Space, Tag } from "antd";
+import { Space, Tag, Tooltip } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-clock/dist/Clock.css";
 import DatePicker from "react-datepicker";
@@ -69,50 +69,17 @@ const Form = () => {
     "payment_intent"
   );
 
-  const subscriptionPerCompanyQuery = useQuery({
-    queryKey: ['checkingSubscriptionPerCompany'],
-    queryFn: () => devitrakApi.post('/subscription/search_subscription', {
-      company: user.company
-    })
-  })
-
   const subscriptionRecordProcess = useCallback(async () => {
-    const checkSubscriptionFetched = subscriptionPerCompanyQuery?.data?.data
-    if (!checkSubscriptionFetched) {
-      const subscriptionResponse = await devitrakApi.post('/subscription/new_subscription', {
+    const recordTemplate = subscriptionRecord.splice(0, 1, { ...subscriptionRecord[0], active: true })
+    const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription`, {
+      company: user.company,
+      newSubscriptionData: {
         company: user.company,
-        record: [{
-          subscription_id: subscriptionRecord[0].subscription_id,
-          active: true,
-          cancel_at: subscriptionRecord[0].cancel_at,
-          subscription_type: subscriptionRecord[0].subscription_type
-        }]
-      })
-      if (subscriptionResponse.data.ok) {
-        dispatch(onAddSubscriptionRecord([{
-          ...subscriptionRecord[0],
-          active: true
-        }, ...subscriptionRecord]))
+        record: recordTemplate
       }
-    } else {
-      const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription`, {
-        company: user.company,
-        newSubscriptionData: {
-          company: user.company,
-          record: [{
-            subscription_id: subscriptionRecord[0].subscription_id,
-            active: true,
-            cancel_at: subscriptionRecord[0].cancel_at,
-            subscription_type: subscriptionRecord[0].subscription_type
-          }, ...subscriptionPerCompanyQuery.data.data.subscription.record]
-        }
-      })
-      if (subscriptionResponse.data.ok) {
-        dispatch(onAddSubscriptionRecord([{
-          ...subscriptionRecord[0],
-          active: true
-        }, ...subscriptionRecord]))
-      }
+    })
+    if (subscriptionResponse.data.ok) {
+      return dispatch(onAddSubscriptionRecord(subscriptionResponse.data.subscription.record))
     }
   }, [])
 
@@ -121,6 +88,7 @@ const Form = () => {
       const respPaymentIntentRetrieved = await devitrakApi.get(
         `/stripe/payment_intents/${paymentIntentParams}`
       );
+      await subscriptionRecordProcess()
       await devitrakApi.patch(
         `/stripe/updating-subscription/${companyAccountStripe.id}`,
         {
@@ -182,7 +150,6 @@ const Form = () => {
   useEffect(() => {
     const controller = new AbortController()
     if (paymentIntentParams) {
-      subscriptionRecordProcess()
       storeSubscriptionJSON()
     }
     return () => {
@@ -314,16 +281,19 @@ const Form = () => {
               width: "100%",
             }}
           >
-            <PhoneInput
-              style={{ ...AntSelectorStyle, width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
-              className="custom-autocomplete"
-              id='phone_input_check'
-              countrySelectProps={{ unicodeFlags: true }}
-              defaultCountry="US"
-              placeholder="(555) 000-0000"
-              value={contactPhoneNumber}
-              onChange={setContactPhoneNumber}
-            />
+            <Tooltip title="Please click the 'Plus' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
+              <PhoneInput
+                style={{ ...AntSelectorStyle, fontFamily: "Inter", width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
+                className="custom-autocomplete"
+                id='phone_input_check'
+                countrySelectProps={{ unicodeFlags: true }}
+                defaultCountry="US"
+                placeholder="(555) 000-0000"
+                value={contactPhoneNumber}
+                onChange={setContactPhoneNumber}
+              />
+            </Tooltip>
+
           </div>
           <div
             style={{
