@@ -56,7 +56,7 @@ const Main = () => {
       }
     }
     a.current = Array.from(checkRecord)
-    await devitrakApi.patch('/subscription/update-subscription', {
+    const respon = await devitrakApi.patch('/subscription/update-subscription', {
       company: user.company,
       newSubscriptionData: {
         company: user.company,
@@ -64,7 +64,7 @@ const Main = () => {
       }
     })
     return dispatch(onAddSubscriptionRecord(Array.from(checkRecord)))
-  }, [])
+  }, [searchingExistingSubscriptionRecord.current.length])
 
   const [messageApi, contextHolder] = message.useMessage();
   const success = () => {
