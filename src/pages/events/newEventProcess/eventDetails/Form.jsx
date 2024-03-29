@@ -22,22 +22,22 @@ import {
   onAddContactInfo,
   onAddEventInfoDetail,
 } from "../../../../store/slices/eventSlice";
-import { onAddNewSubscription, onAddSubscriptionRecord } from "../../../../store/slices/subscriptionSlice";
+import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import "../../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import "../../../../styles/global/ant-select.css";
 import { InputLabelStyle } from "../style/InputLabelStyle";
 import "../style/NewEventInfoSetup.css";
-import "../../../../styles/global/OutlineInput.css";
-import "../../../../styles/global/ant-select.css"
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 const Form = () => {
-  const { subscription, subscriptionJSON, subscriptionRecord } = useSelector(
+  const { subscription, subscriptionJSON } = useSelector(
     (state) => state.subscription
   );
   const { eventInfoDetail } = useSelector((state => state.event))
-  const { companyAccountStripe, user } = useSelector((state) => state.admin);
+  const { companyAccountStripe } = useSelector((state) => state.admin);
   const addressSplit = eventInfoDetail?.address?.split(' ')
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -68,30 +68,30 @@ const Form = () => {
     "payment_intent"
   );
 
-  const subscriptionRecordProcess = useCallback(async () => {
-    const recordTemplate = subscriptionRecord.splice(0, 1, { ...subscriptionRecord[0], active: true })
-    const searchSubscription = await devitrakApi.post('/subscription/search_subscription', { company: user.company })
-    if (searchSubscription.data.ok) {
-      const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription/${searchSubscription.data.subscription.id}`, {
-        company: user.company,
-        newSubscriptionData: {
-          company: user.company,
-          record: recordTemplate
-        }
-      })
-      if (subscriptionResponse.data.ok) {
-        return dispatch(onAddSubscriptionRecord(subscriptionResponse.data.subscription.record))
-      }
-    }
+  // const subscriptionRecordProcess = useCallback(async () => {
+  //   const recordTemplate = subscriptionRecord.splice(0, 1, { ...subscriptionRecord[0], active: true })
+  //   const searchSubscription = await devitrakApi.patch(`/subscription/search_subscription/${}`, { company: user.company })
+  //   if (searchSubscription.data.ok) {
+  //     const subscriptionResponse = await devitrakApi.patch(`/subscription/update-subscription/${searchSubscription.data.subscription.id}`, {
+  //       company: user.company,
+  //       newSubscriptionData: {
+  //         company: user.company,
+  //         record: recordTemplate
+  //       }
+  //     })
+  //     if (subscriptionResponse.data.ok) {
+  //       return dispatch(onAddSubscriptionRecord(subscriptionResponse.data.subscription.record))
+  //     }
+  //   }
 
-  }, [])
+  // }, [])
 
   const storeSubscriptionJSON = useCallback(async () => {
     if (paymentIntentParams) {
       const respPaymentIntentRetrieved = await devitrakApi.get(
         `/stripe/payment_intents/${paymentIntentParams}`
       );
-      await subscriptionRecordProcess()
+      // await subscriptionRecordProcess()
       await devitrakApi.patch(
         `/stripe/updating-subscription/${companyAccountStripe.id}`,
         {
@@ -199,16 +199,8 @@ const Form = () => {
     navigate("/create-event-page/staff-detail");
   };
   const checkSubscription = useMemo(() => {
-    // if (subscription.id !== 1) 
-    return false;
-
-    // await devitrakApi.patch(
-    //   `/stripe/updating-subscription/${companyAccountStripe.id}`,
-    //   {
-    //     companyAccountStripe.subscriptionHistory.at(-1).status: 'active'
-    //   }
-    // );
-    // return true;
+    if (subscription.id !== 1) return false;
+    return true;
   }, [subscription.id]);
 
   return (
