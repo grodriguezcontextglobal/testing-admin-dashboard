@@ -51,26 +51,26 @@ const MainPage = () => {
         enabled: false,
         refetchOnMount: false
     })
+
     const checkForActiveSubscriptionPerCompany = useCallback(() => {
         const checkSubscriptionQuery = subscriptionPerCompanyQuery?.data?.data
         if (checkSubscriptionQuery?.ok) {
-            dispatch(onAddSubscriptionRecord(checkSubscriptionQuery.subscription))
+            return dispatch(onAddSubscriptionRecord(checkSubscriptionQuery.subscription))
         }
         return dispatch(onAddSubscriptionRecord([]))
-    }, [])
+    }, [subscriptionPerCompanyQuery.data])
+    checkForActiveSubscriptionPerCompany()
     useEffect(() => {
         const controller = new AbortController()
         totalConsumers()
         inventoryQuery.refetch()
         companiesCheck.refetch()
         subscriptionPerCompanyQuery.refetch()
-        checkForActiveSubscriptionPerCompany()
+
         return () => {
             controller.abort()
         }
     }, [notificationStatus, inventory.length, user.company])
-
-
 
     const checkUserAssignedCompanies = () => {
         const result = new Set()
