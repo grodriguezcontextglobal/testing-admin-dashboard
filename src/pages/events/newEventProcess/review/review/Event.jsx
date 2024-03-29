@@ -29,7 +29,7 @@ const Event = () => {
         alignItems={"center"}
         gap={2}
         item
-        xs={10}
+        xs={12}
       >
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Typography
