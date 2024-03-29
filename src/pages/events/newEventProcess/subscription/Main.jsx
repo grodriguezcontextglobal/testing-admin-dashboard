@@ -14,7 +14,6 @@ import OptionSubscriptionTitle from "./components/OptionSubscriptionTitle";
 import PricingTable from "./table/PricingTable";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
-  const { subscriptionRecord } = useSelector((state) => state.subscription)
   const [value, setValue] = useState(0);
   const [clientSecret, setClientSecret] = useState(null);
   const [total, setTotal] = useState(0);
@@ -39,7 +38,23 @@ const Main = () => {
     }
   }, [])
   checkExistingCompanyRecord()
-  const a = useRef([])
+
+  const recordStored = (props) => {
+    if (props.length > 0) {
+      return props
+    } else {
+      const result = new Set()
+      const original = searchingExistingSubscriptionRecord.current.record
+      if (original) {
+        for (let data of original) {
+          result.add({
+            active: data.status === 'active' ? true : false
+          })
+        }
+        return Array.from(result)
+      }
+    }
+  }
   const checkSubscriptionInStripe = useCallback(async () => {
     const reference = searchingExistingSubscriptionRecord.current.record
     const checkRecord = new Set()
@@ -55,34 +70,15 @@ const Main = () => {
         })
       }
     }
-    a.current = Array.from(checkRecord)
-    const recordStored = (props) => {
-      if (Array.from(props).length > 0) {
-        return Array.from(props)
-      }
-      const result = new Set()
-      const original = searchingExistingSubscriptionRecord.current.record
-      for (let data of original) {
-        result.add({
-          subscription_id: data.id,
-          cancel_at: data.cancel_at,
-          created_at: data.created,
-          subscription_type: data.items.data[0].plan.interval,
-          active: data.status === 'active' ? true : false
-        })
-      }
-      return Array.from(result)
-    }
     await devitrakApi.patch(`/subscription/update-subscription/${searchingExistingSubscriptionRecord.current.id}`, {
-      company: user.company,
       newSubscriptionData: {
         company: user.company,
         record: recordStored(Array.from(checkRecord))
       }
     })
-    return dispatch(onAddSubscriptionRecord(Array.from(checkRecord)))
-  }, [searchingExistingSubscriptionRecord.current.length])
-
+    return dispatch(onAddSubscriptionRecord(recordStored(Array.from(checkRecord))))
+  }, [searchingExistingSubscriptionRecord.current.length, user.company])
+  checkSubscriptionInStripe()
   const [messageApi, contextHolder] = message.useMessage();
   const success = () => {
     messageApi.open({
@@ -92,26 +88,26 @@ const Main = () => {
   };
   const eventsList = checkEventsPerCompany?.data?.data?.list
   const checkSubscriptionRecordAfterCheckInStripe = useCallback(() => {
-    const groupingByActiveSubscription = _.groupBy(a.current, 'active')
+    const groupingByActiveSubscription = _.groupBy(searchingExistingSubscriptionRecord.current.record, 'active')
     return groupingByActiveSubscription
-  }, [])
+  }, [searchingExistingSubscriptionRecord.current.length])
+  checkSubscriptionRecordAfterCheckInStripe()
 
   useEffect(() => {
     const controller = new AbortController()
     checkEventsPerCompany.refetch()
-    checkSubscriptionInStripe()
-    checkSubscriptionRecordAfterCheckInStripe()
+
     return () => {
       controller.abort()
     }
   }, [])
 
-
-  if (checkSubscriptionRecordAfterCheckInStripe()[true]) {
+  const sequencyActions = async () => {
     success()
-    setTimeout(() => {
-      navigate('/create-event-page/event-detail', { replace: true })
-    }, 4000)
+    await setTimeout(() => navigate('/create-event-page/event-detail', { replace: true }), 4000)
+  }
+  if (checkSubscriptionRecordAfterCheckInStripe()[true]) {
+    sequencyActions()
     return <div>{contextHolder}</div>
   } else {
     const handleSubmitEventPayment = async (props) => {
@@ -122,22 +118,24 @@ const Main = () => {
           period: value > 0 ? 'year' : 'month'
         });
         if (resp.data.ok) {
-          if (searchingExistingSubscriptionRecord.current.length > 0) {
-            const recordTemplate = subscriptionRecord.splice(0, 1, {
-              subscription_id: resp.data.subscription.id,
+          if (searchingExistingSubscriptionRecord.current.company) {
+            const recordTemplate = {
+              subscription_id: resp.data.data.id,
               active: false,
-              cancel_at: resp.data.subscription.cancel_at,
-              created_at: resp.data.subscription.created,
+              cancel_at: resp.data.data.cancel_at,
+              created_at: resp.data.data.created,
               subscription_type: value > 0 ? 'year' : 'month'
-            })
-            const updateResponse = await devitrakApi.patch('/subscription/update-subscription', {
-              company: user.company,
+            }
+            const updateResponse = await devitrakApi.patch(`/subscription/update-subscription/${searchingExistingSubscriptionRecord.current.id}`, {
               newSubscriptionData: {
                 company: user.company,
-                record: recordTemplate
+                record: [recordTemplate, ...searchingExistingSubscriptionRecord.current.record]
               }
             })
             dispatch(onAddSubscriptionRecord(updateResponse.data.subscription.record))
+            dispatch(onAddNewSubscription(resp.data.data));
+            setClientSecret(resp.data.clientSecret);
+            return;
           } else {
             await devitrakApi.post('/subscription/new_subscription', {
               company: user.company,
@@ -155,10 +153,11 @@ const Main = () => {
               cancel_at: resp.data.data.cancel_at,
               subscription_type: value > 0 ? "year" : "month",
               created_at: resp.data.created
-            }, ...subscriptionRecord]))
+            }]))
+            dispatch(onAddNewSubscription(resp.data.data))
+            setClientSecret(resp.data.clientSecret)
+            return;
           }
-          dispatch(onAddNewSubscription(resp.data.data));
-          setClientSecret(resp.data.clientSecret);
         }
       } else {
         return navigate("/create-event-page/event-detail");
