@@ -5,6 +5,7 @@ import Loading from "../../components/animation/Loading";
 import ResetPassword from "../../pages/authentication/ResetPassword";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import RegisterCompany from "../../pages/authentication/RegisterCompany";
+import InvitationLanding from "../../pages/authentication/InvitationLanding";
 
 
 const NoAuthRoutes = () => {
@@ -18,6 +19,7 @@ const NoAuthRoutes = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/register/company-setup" element={<RegisterCompany />} />
+                <Route path="/invitation" element={<InvitationLanding />} />
                 <Route path="/*" element={<Navigate to="/login" replace />} />
             </Routes>
         </Suspense>

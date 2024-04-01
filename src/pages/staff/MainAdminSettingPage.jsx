@@ -336,13 +336,13 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
   if (companiesEmployees.data) {
     const employees = async () => {
       const result = new Set()
-      const companiesData = companiesEmployees.data.data.company.employees
+      const companiesData = companiesEmployees.data.data.company[0].employees
       for (let data of companiesData) {
         const individual = await devitrakApi.post('/staff/admin-users', {
           email: data.user
         })
         if (individual.data) {
-          result.add({ ...individual.data.adminUsers[0], role: data.role, activeInCompany: data.active })
+          result.add({ ...individual.data.adminUsers[0], role: data.role, activeInCompany: data.active, companyData: companiesEmployees.data.data.company[0] })
         }
       }
       return employeeListRef.current = Array.from(result)

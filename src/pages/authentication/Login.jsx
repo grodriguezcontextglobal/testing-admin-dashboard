@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox, Typography, notification } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,12 +14,14 @@ import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { clearErrorMessage, onAddErrorMessage, onChecking, onLogin, onLogout } from "../../store/slices/adminSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import '../../styles/global/OutlineInput.css';
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import ForgotPassword from "./ForgotPassword";
-import './style/authStyle.css'
 import { useMediaQuery } from "@uidotdev/usehooks";
+import './style/authStyle.css'
+import '../../styles/global/OutlineInput.css';
+import ModalMultipleCompanies from "./multipleCompanies/Modal";
+import { ErrorIcon, SuccessIcon, WarningIcon } from "../../components/icons/Icons";
 const Login = () => {
     const {
         register,
@@ -29,62 +31,106 @@ const Login = () => {
     } = useForm();
     const [updatePasswordModalState, setUpdatePasswordModalState] =
         useState(false);
+    const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false)
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient()
+    const iconDic = {
+        success: <SuccessIcon />,
+        error: <ErrorIcon />,
+        warning: <WarningIcon />
+    }
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
-            message: msg,
-            duration: 0
+        notification.open({
+            message: (
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ marginRight: '8px' }} >{iconDic[type]}</span> {/* Adjust icon spacing */}
+                    {msg}
+                </div>
+            ),
+            duration: 0,
         });
     };
+    const dataPassed = useRef([])
+    const loginIntoOneCompanyAccount = async ({ props }) => {
+        const respo = await devitrakApiAdmin.post("/login", {
+            email: props.email,
+            password: props.password,
+        });
+        if (respo.data) {
+            localStorage.setItem("admin-token", respo.data.token);
+            const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
+                online: true
+            });
+            const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
+                email: props.email,
+            })
+            const companyInfoTable = await devitrakApi.post("/db_company/consulting-company", {
+                company_name: props.company_name
+            })
+            const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
+                company_id: companyInfoTable.data.company.at(-1).company_id
+            })
+            dispatch(
+                onLogin({
+                    data: { ...respo.data.entire, online: updatingOnlineStatusResponse.data.entire.online, },
+                    name: respo.data.name,
+                    lastName: respo.data.lastName,
+                    uid: respo.data.uid,
+                    email: respo.data.email,
+                    role: respo.data.role,
+                    phone: respo.data.phone,
+                    company: props.company_name,
+                    token: respo.data.token,
+                    online: updatingOnlineStatusResponse.data.entire.online,
+                    sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+                    sqlInfo: { ...companyInfoTable.data.company.at(-1), stripeID: stripeSQL.data.stripe.at(-1) },
+                })
+            );
+
+            dispatch(clearErrorMessage())
+            queryClient.clear()
+            openNotificationWithIcon('success', 'User logged in.')
+            navigate('/')
+        }
+
+    }
     const onSubmitLogin = async (data) => {
         dispatch(onChecking());
         try {
-            const respo = await devitrakApiAdmin.post("/login", {
-                email: data.email,
-                password: data.password,
-            });
-            if (respo.data) {
-                localStorage.setItem("admin-token", respo.data.token);
-                const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
-                    online: true
-                });
-                const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
-                    email: data.email,
-                })
-                const companyInfoTable = await devitrakApi.post("/db_company/consulting-company", {
-                    company_name: respo?.data?.company
-                })
-                const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
-                    company_id: companyInfoTable.data.company.at(-1).company_id
-                })
-                    dispatch(
-                        onLogin({
-                            data: { ...respo.data.entire, online: updatingOnlineStatusResponse.data.entire.online, },
-                            name: respo.data.name,
-                            lastName: respo.data.lastName,
-                            uid: respo.data.uid,
-                            email: respo.data.email,
-                            role: respo.data.role,
-                            phone: respo.data.phone,
-                            company: respo.data.company,
-                            token: respo.data.token,
-                            online: updatingOnlineStatusResponse.data.entire.online,
-                            sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
-                            sqlInfo: { ...companyInfoTable.data.company.at(-1), stripeID: stripeSQL.data.stripe.at(-1) },
-                        })
-                    );
-
-                dispatch(clearErrorMessage())
-                queryClient.clear()
-                openNotificationWithIcon('success', 'User logged in.')
-                navigate('/')
+            const checkCompanyUserSet = await devitrakApi.post('/company/search-company', { "employees.user": data.email })
+            if (checkCompanyUserSet.data) {
+                const result = new Set()
+                const userFoundInCompany = checkCompanyUserSet.data.company
+                for (let item of userFoundInCompany) {
+                    const userInfo = item.employees.some(element => element.user === data.email && element.active)
+                    if (userInfo) {
+                        result.add(item.company_name)
+                    }
+                }
+                const infoFound = Array.from(result)
+                setOpenMultipleCompanies(infoFound.length > 1)
+                if (infoFound.length === 0) return openNotificationWithIcon('error', 'We could not find an active status in any company where you were assigned.')
+                if (infoFound.length === 1) {
+                    await loginIntoOneCompanyAccount({
+                        props: {
+                            email: data.email,
+                            password: data.password,
+                            company_name: infoFound[0]
+                        }
+                    })
+                }
+                if (infoFound.length > 1) {
+                    return dataPassed.current = {
+                        ...data,
+                        companyInfo: infoFound
+                    }
+                }
             }
 
         } catch (error) {
-            alert(`${error?.response?.data?.msg}`)
+            alert(`${error}`)
             dispatch(onLogout("Incorrect credentials"));
             dispatch(onAddErrorMessage(error?.response?.data?.msg));
         }
@@ -99,11 +145,6 @@ const Login = () => {
             {contextHolder}
             <Grid
                 container
-                // display={"flex"}
-                // justifyContent={"space-between"}
-                // alignItems={"center"}
-                // margin={0}
-                // padding={0}
                 style={{ backgroundColor: "var(--whitebase)", height: "100dvh" }}
             >
 
@@ -113,9 +154,7 @@ const Login = () => {
                     justifyContent={"flex-start"}
                     alignItems={"center"}
                     margin={'auto'}
-                    // padding={'0 5rem 0 0'}
                     style={{
-                        // background: 'transparent',
                         display: 'flex',
                         alignItems: "center",
                         justifyContent: "center",
@@ -258,6 +297,7 @@ const Login = () => {
                     md={6} lg={6}
                 ></Grid>
             </Grid>
+            {openMultipleCompanies && <ModalMultipleCompanies data={dataPassed.current} openMultipleCompanies={true} setOpenMultipleCompanies={setOpenMultipleCompanies} />}
             {updatePasswordModalState && <ForgotPassword
                 open={updatePasswordModalState}
                 close={setUpdatePasswordModalState}

@@ -5,10 +5,8 @@ import {
     OutlinedInput,
     Typography
 } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { AutoComplete, notification } from "antd";
-import _ from 'lodash';
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -33,7 +31,7 @@ const Registration = () => {
     const [password2, setPassword2] = useState(user.password)
     const dispatch = useDispatch();
     const navigate = useNavigate()
-    const queryClient = useQueryClient()
+    // const queryClient = useQueryClient()
     const callAPiUserCompany = useCallback(async () => {
         const resp = await devitrakApi.post("/company/companies");
         if (resp) {
@@ -81,7 +79,7 @@ const Registration = () => {
         "only screen and (min-width : 769px) and (max-width : 992px)"
     );
 
-    const grouping = _.groupBy(listCompany, 'company_name')
+    // const grouping = _.groupBy(listCompany, 'company_name')
     const onSubmitRegister = async (e) => {
         e.preventDefault()
         try {
@@ -93,7 +91,8 @@ const Registration = () => {
                 company: companyValue,
                 question: "What's your company name",
                 answer: String(companyValue).toLowerCase(),
-                role: `${matchCompany() ? "Administrator" : "Editor"}`,
+                role: "Administrator",
+                // role: `${matchCompany() ? "Administrator" : "Editor"}`,
                 online: true,
                 super_user: false
             };
@@ -102,54 +101,58 @@ const Registration = () => {
                     onLogin(newAdminUserTemplate)
                 );
                 navigate('/register/company-setup')
-            } else {
-                const resp = await devitrakApi.post(
-                    "/admin/new_admin_user",
-                    newAdminUserTemplate
-                );
-                if (resp.data) {
-                    localStorage.setItem("admin-token", resp.data.token);
-                    const companyInfo = await devitrakApi.post('/db_company/consulting-company', {
-                        company_name: companyValue
-                    })
-                    const insertingNewMemberInCompany = await devitrakApi.post('/db_staff/new_member', {
-                        first_name: firstName,
-                        last_name: lastName,
-                        email: email,
-                        phone_number: "000-000-0000",
-                    })
-
-                    const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
-                        email: email,
-                    })
-                    const updatingEmployeesList = await devitrakApi.patch(`/company/update-company/${grouping[companyValue].at(-1).id}`, {
-                        employees: [{ user: email, super_user: false, role: "Editor", _id: resp.data.uid }, ...grouping[companyValue][0].employees]
-                    })
-
-                    const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
-                        company_id: companyInfo.data.company.at(-1).company_id
-                    })
-                    if (companyInfo?.data && insertingNewMemberInCompany.data && updatingEmployeesList.data) {
-                        dispatch(
-                            onLogin({
-                                data: resp.data.entire,
-                                name: resp.data.name,
-                                lastName: resp.data.lastName,
-                                uid: resp.data.uid,
-                                email: resp.data.email,
-                                role: resp.data.role,
-                                affiliate: resp.data.affiliate,
-                                company: resp.data.company,
-                                sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
-                                sqlInfo: { ...companyInfo.data.company.at(-1), stripeIDL: stripeSQL.data.stripe.at(-1) },
-                            })
-                        );
-                        queryClient.clear()
-                        navigate('/', { replace: true, relative: "path" })
-                        return;
-                    }
-                }
             }
+            else {
+                return openNotificationWithIcon('info', 'Company is already registered in our record. Please contact with company administrator to get access permission.')
+            }
+            // else {
+            //     const resp = await devitrakApi.post(
+            //         "/admin/new_admin_user",
+            //         newAdminUserTemplate
+            //     );
+            //     if (resp.data) {
+            //         localStorage.setItem("admin-token", resp.data.token);
+            //         const companyInfo = await devitrakApi.post('/db_company/consulting-company', {
+            //             company_name: companyValue
+            //         })
+            //         const insertingNewMemberInCompany = await devitrakApi.post('/db_staff/new_member', {
+            //             first_name: firstName,
+            //             last_name: lastName,
+            //             email: email,
+            //             phone_number: "000-000-0000",
+            //         })
+
+            //         const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
+            //             email: email,
+            //         })
+            //         const updatingEmployeesList = await devitrakApi.patch(`/company/update-company/${grouping[companyValue].at(-1).id}`, {
+            //             employees: [{ user: email, super_user: false, role: "Editor", _id: resp.data.uid }, ...grouping[companyValue][0].employees]
+            //         })
+
+            //         const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
+            //             company_id: companyInfo.data.company.at(-1).company_id
+            //         })
+            //         if (companyInfo?.data && insertingNewMemberInCompany.data && updatingEmployeesList.data) {
+            //             dispatch(
+            //                 onLogin({
+            //                     data: resp.data.entire,
+            //                     name: resp.data.name,
+            //                     lastName: resp.data.lastName,
+            //                     uid: resp.data.uid,
+            //                     email: resp.data.email,
+            //                     role: resp.data.role,
+            //                     affiliate: resp.data.affiliate,
+            //                     company: resp.data.company,
+            //                     sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+            //                     sqlInfo: { ...companyInfo.data.company.at(-1), stripeIDL: stripeSQL.data.stripe.at(-1) },
+            //                 })
+            //             );
+            //             queryClient.clear()
+            //             navigate('/', { replace: true, relative: "path" })
+            //             return;
+            //         }
+            //     }
+            // }
 
         } catch (error) {
             openNotificationWithIcon(
@@ -238,7 +241,6 @@ const Registration = () => {
                                         Email <span style={{ fontWeight: 800 }}>*</span>
                                     </FormLabel>
                                     <OutlinedInput
-                                        // {...register("email", { required: true, minLength: 6 })}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         style={OutlinedInputStyle}
@@ -246,7 +248,6 @@ const Registration = () => {
                                         type="email"
                                         fullWidth
                                     />
-                                    {/* {errors?.email?.message} */}
                                     <FormLabel style={{ marginBottom: "0.5rem" }}>
                                         <Typography style={Subtitle}> You need to enter a company email if you are creating a new company.</Typography>
                                     </FormLabel>
@@ -262,7 +263,6 @@ const Registration = () => {
                                         Password <span style={{ fontWeight: 800 }}>*</span>
                                     </FormLabel>
                                     <OutlinedInput
-                                        // {...register("password", { required: true, minLength: 6 })}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         style={OutlinedInputStyle}
@@ -270,7 +270,6 @@ const Registration = () => {
                                         type="password"
                                         fullWidth
                                     />
-                                    {/* {errors?.password?.message} */}
                                 </Grid>
                                 <Grid
                                     marginY={"20px"}

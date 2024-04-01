@@ -9,13 +9,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, message, Button } from "antd";
-import _ from 'lodash';
+import { Button, Modal, message } from "antd";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
-import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
+import { devitrakApi } from "../../../api/devitrakApi";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -30,12 +29,6 @@ const schema = yup.object().shape({
     .string()
     .email("Email format is not valid")
     .required("Email is required"),
-  password: yup
-    .string()
-    .min(6)
-    .max(20)
-    .required("Password is required"),
-  password2: yup.string().oneOf([yup.ref("password"), null]),
   role: yup.string().required("Role is required"),
 });
 
@@ -44,7 +37,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   const { user } = useSelector((state) => state.admin);
   const {
     register,
-    watch,
     setValue,
     handleSubmit,
     formState: { errors },
@@ -78,8 +70,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
       onClose: () => setValue("email", ""),
     });
   };
-
-
   useEffect(() => {
     const controller = new AbortController()
     allStaffSavedQuery.refetch()
@@ -90,64 +80,25 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   }, [user.company])
 
   if (allStaffSavedQuery.data) {
-    const groupStaffByEmail = _.groupBy(
-      allStaffSavedQuery.data.data.adminUsers,
-      "email"
-    );
-    const companyData = companiesQuery?.data?.data?.company
-    const checkIfNewUserExists = async (props) => {
-      console.log("🚀 ~ checkIfNewUserExists ~ props:", props)
-      const result = new Set()
-      if (groupStaffByEmail[props.email]) {
-        for (let info of companyData.employees) {
-          if (info.user === user.email) {
-            result.add(info)
-          }
-        }
-        if (Array.from(result).length < 1) {
-          await devitrakApi.patch(`/company/update-company/${companyData.id}`, {
-            employees: [
-              ...companyData.employees,
-              { user: props.email, super_user: false, role: props.role, _id: groupStaffByEmail[props.email][0].id }
-            ]
-          })
-        }
-      }
-    }
-
     const onSubmitRegister = async (data) => {
-      console.log("🚀 ~ onSubmitRegister ~ data:", data)
       const templateNewUser = {
         name: data.name,
         lastName: data.lastName,
         email: data.email,
-        password: data.password,
         question: "company name",
         answer: user.company,
         role: data.role,
         company: user.company,
       }
-      console.log("🚀 ~ onSubmitRegister ~ templateNewUser:", templateNewUser)
-      if (groupStaffByEmail[data.email]) {
-        console.log("🚀 ~ onSubmitRegister ~ groupStaffByEmail[data.email]:", groupStaffByEmail[data.email])
-      
-        checkIfNewUserExists(data)
-        warning('success', `${data.name} ${data.lastName} was created successfully!`)
-        return closeModal()
-      }
-      const resp = await devitrakApiAdmin.post("/new_admin_user", templateNewUser);
-      if (resp.data.ok) {
-        await devitrakApi.patch(`/company/update-company/${companyData.id}`, {
-          employees: [
-            ...companyData.employees,
-            { user: templateNewUser.email, super_user: false, role: data.role, _id: resp.data.uid }
-          ]
-        })
-        queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
-        warning('success', `${data.name} ${data.lastName} was created successfully!`)
-        return closeModal();
-      }
-
+      await devitrakApi.post('/nodemailer/new_invitation', {
+        consumer:  templateNewUser.email,
+        subject: "Invitation",
+        company: user.company,
+        link: `http://localhost:5173/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
+      })
+      queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
+      warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
+      return closeModal();
     };
     const renderTitle = () => {
       return (
@@ -233,51 +184,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               />
               {errors?.email?.message}
             </Grid>
-            {!groupStaffByEmail[watch("email")] && (
-              <>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"center"}
-                  item
-                  xs={12}
-                >
-                  <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
-                    Password
-                  </InputLabel>
-                  <OutlinedInput
-                    {...register("password", {
-                      required: true,
-                      minLength: 6,
-                    })}
-                    style={OutlinedInputStyle}
-                    placeholder="Type password"
-                    type="password"
-                    fullWidth
-                  />
-                  {errors?.password?.message}
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"center"}
-                  item
-                  xs={12}
-                >
-                  <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
-                    Repeat password
-                  </InputLabel>
-                  <OutlinedInput
-                    {...register("password2")}
-                    style={OutlinedInputStyle}
-                    placeholder="Repeat password"
-                    type="password"
-                    fullWidth
-                  />
-                  {errors?.password2 && <p>Password must match</p>}
-                </Grid>
-              </>
-            )}
             <Grid
               marginY={"20px"}
               marginX={0}
@@ -348,8 +254,8 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                 </Typography>
               </Button>
             </Grid>
-        </form>
-      </Modal >
+          </form>
+        </Modal >
       </>
     );
   }

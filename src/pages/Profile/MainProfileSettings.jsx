@@ -15,7 +15,8 @@ const MainProfileSettings = () => {
       label: "Password",
       route: "password",
       permission: ['Administrator', 'Approver', 'Editor']
-    }, {
+    }, 
+    {
       label: "Billing",
       route: "billing",
       permission: ["Administrator"]
