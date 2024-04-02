@@ -55,7 +55,7 @@ const NavigationBarMain = (props) => {
         dispatch(onResetSubscriptionInfo())
         localStorage.setItem('admin-token', '')
         dispatch(onLogout());
-        return window.location.reload()
+        return;
     };
 
     const items = [

@@ -79,7 +79,7 @@ const Login = () => {
                     lastName: respo.data.lastName,
                     uid: respo.data.uid,
                     email: respo.data.email,
-                    role: respo.data.role,
+                    role: props.role,
                     phone: respo.data.phone,
                     company: props.company_name,
                     token: respo.data.token,
@@ -104,9 +104,9 @@ const Login = () => {
                 const result = new Set()
                 const userFoundInCompany = checkCompanyUserSet.data.company
                 for (let item of userFoundInCompany) {
-                    const userInfo = item.employees.some(element => element.user === data.email && element.active)
-                    if (userInfo) {
-                        result.add(item.company_name)
+                    const userInfo = item.employees.filter(element => element.user === data.email && element.active)
+                    if (Array.isArray(userInfo)) {
+                        result.add({company: item.company_name, role: userInfo[0].role})
                     }
                 }
                 const infoFound = Array.from(result)
@@ -117,7 +117,8 @@ const Login = () => {
                         props: {
                             email: data.email,
                             password: data.password,
-                            company_name: infoFound[0]
+                            company_name: infoFound[0].company,
+                            role:infoFound[0].role
                         }
                     })
                 }

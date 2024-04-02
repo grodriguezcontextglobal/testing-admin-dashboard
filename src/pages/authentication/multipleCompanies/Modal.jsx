@@ -1,12 +1,11 @@
 import { Grid, Typography } from "@mui/material"
-import { Button, Modal, Space, notification } from "antd"
-import renderingTitle from "../../../components/general/renderingTitle"
-import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi"
-import { useDispatch } from "react-redux"
-import { clearErrorMessage, onLogin } from "../../../store/slices/adminSlice"
-import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
-import CardSelection from "./CardSelection"
+import { Button, Modal, Space, notification } from "antd"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi"
+import renderingTitle from "../../../components/general/renderingTitle"
+import { clearErrorMessage, onLogin } from "../../../store/slices/adminSlice"
 import { BlueButton } from "../../../styles/global/BlueButton"
 import { BlueButtonText } from "../../../styles/global/BlueButtonText"
 
@@ -25,6 +24,7 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
     };
     const queryClient = useQueryClient()
     const loginIntoOneCompanyAccount = async (props) => {
+        console.log("🚀 ~ loginIntoOneCompanyAccount ~ props:", props)
         const respo = await devitrakApiAdmin.post("/login", {
             email: data.email,
             password: data.password,
@@ -38,7 +38,7 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
                 email: data.email,
             })
             const companyInfoTable = await devitrakApi.post("/db_company/consulting-company", {
-                company_name: props
+                company_name: props.company
             })
             const stripeSQL = await devitrakApi.post('/db_stripe/consulting-stripe', {
                 company_id: companyInfoTable.data.company.at(-1).company_id
@@ -50,9 +50,9 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
                     lastName: respo.data.lastName,
                     uid: respo.data.uid,
                     email: respo.data.email,
-                    role: respo.data.role,
+                    role: props.role,
                     phone: respo.data.phone,
-                    company: props,
+                    company: props.company,
                     token: respo.data.token,
                     online: updatingOnlineStatusResponse.data.entire.online,
                     sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
@@ -82,8 +82,8 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
                     {
                         data.companyInfo.map(item => {
                             return (
-                                <Button key={item} style={{...BlueButton, height:"auto"}} onClick={() => loginIntoOneCompanyAccount(item)}>
-                                    <Typography style={BlueButtonText}>{item}</Typography>
+                                <Button key={item.company} style={{...BlueButton, height:"auto"}} onClick={() => loginIntoOneCompanyAccount(item)}>
+                                    <Typography style={BlueButtonText}>{item.company}</Typography>
                                 </Button>
                             )
                         })
