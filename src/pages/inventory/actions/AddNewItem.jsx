@@ -62,7 +62,7 @@ const AddNewItem = () => {
 
   const renderLocationOptions = () => {
     if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company.location
+      const locations = companiesQuery.data.data.company?.at(-1).location ?? []
       const result = new Set()
       for (let data of locations) {
         result.add({ value: data })

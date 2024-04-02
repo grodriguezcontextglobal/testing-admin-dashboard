@@ -44,7 +44,7 @@ const AddNewBulkItems = () => {
         });
     };
     const [valueSelection, setValueSelection] = useState('');
-    const [Loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [locationSelection, setLocationSelection] = useState('')
     const companiesQuery = useQuery({
         queryKey: ['locationOptionsPerCompany'],
@@ -64,7 +64,7 @@ const AddNewBulkItems = () => {
 
     const renderLocationOptions = () => {
         if (companiesQuery.data) {
-            const locations = companiesQuery.data.data.company.location
+            const locations = companiesQuery.data.data.company?.at(-1).location ?? []
             const result = new Set()
             for (let data of locations) {
                 result.add({ value: data })
@@ -110,8 +110,8 @@ const AddNewBulkItems = () => {
                             company: user.company
                         });
                         if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-                            let template = [...companiesQuery.data.data.company.location, locationSelection]
-                            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.id}`, {
+                            let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
+                            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
                                 location: template
                             })
                         }
@@ -155,8 +155,8 @@ const AddNewBulkItems = () => {
                         company: user.company
                     })
                     if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-                        let template = [...companiesQuery.data.data.company.location, locationSelection]
-                        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.id}`, {
+                        let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
+                        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
                             location: template
                         })
                     }
@@ -174,9 +174,6 @@ const AddNewBulkItems = () => {
             }
         }
     };
-    // const closeModal = () => {
-    //     return setOpenGroupModal(false)
-    // }
     const renderTitle = () => {
         return (<>
             <InputLabel
@@ -211,7 +208,6 @@ const AddNewBulkItems = () => {
         )
     }
     return (
-        // <Modal title={renderTitle()} width={1000} style={{ position: "absolute", top: "11dv", left: "0", right: "0" }} open={openGroupItemModal} onCancel={() => closeModal()} footer={[]}>
         <Grid
             display={"flex"}
             justifyContent={"center"}
@@ -238,7 +234,6 @@ const AddNewBulkItems = () => {
                 onSubmit={handleSubmit(savingNewItem)}
                 className="form"
             >
-
                 <div
                     style={{
                         width: "100%",
@@ -728,6 +723,7 @@ const AddNewBulkItems = () => {
                         }}>
                         <Link to="/inventory">
                             <Button
+                                disabled={loading}
                                 style={{ ...GrayButton, width: "100%" }}
                             >
                                 <Icon
@@ -751,7 +747,7 @@ const AddNewBulkItems = () => {
                             width: "50%",
                         }}
                     ><Button
-                        disabled={Loading}
+                        disabled={loading}
                         type="submit"
                         style={{
                             ...BlueButton, width: "100%",
