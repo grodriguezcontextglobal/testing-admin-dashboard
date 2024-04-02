@@ -105,8 +105,8 @@ const Login = () => {
                 const userFoundInCompany = checkCompanyUserSet.data.company
                 for (let item of userFoundInCompany) {
                     const userInfo = item.employees.filter(element => element.user === data.email && element.active)
-                    if (Array.isArray(userInfo)) {
-                        result.add({company: item.company_name, role: userInfo[0].role})
+                    if (Array.isArray(userInfo) && userInfo.length > 0) {
+                        result.add({ company: item.company_name, role: userInfo[0].role })
                     }
                 }
                 const infoFound = Array.from(result)
@@ -118,7 +118,7 @@ const Login = () => {
                             email: data.email,
                             password: data.password,
                             company_name: infoFound[0].company,
-                            role:infoFound[0].role
+                            role: infoFound[0].role
                         }
                     })
                 }
