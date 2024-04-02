@@ -6,14 +6,13 @@ import {
     Typography
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { AutoComplete, notification } from "antd";
+import { notification } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { onLogin } from "../../store/slices/adminSlice";
-import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -358,7 +357,20 @@ const Registration = () => {
                                         alignItems={"center"}
                                         justifyContent={"space-between"}
                                     >
-                                        <AutoComplete
+                                        <OutlinedInput
+                                        type="text"
+                                        // {...register("lastName")}
+                                        value={companyValue}
+                                        onChange={(e) => setCompanyValue(e.target.value)}
+                                        // aria-invalid={errors.lastName}
+                                        style={{
+                                            ...OutlinedInputStyle,
+                                            // border: `${errors.lastName && "solid 1px #004EEB"}`,
+                                        }}
+                                        placeholder="Enter your company name"
+                                        fullWidth
+                                    />
+                                        {/* <AutoComplete
                                             className="custom-autocomplete"
                                             style={{
                                                 ...AntSelectorStyle, border: "solid 0.3 var(--gray600)", fontFamily: 'Inter', fontSize: "14px", width: "100%"
@@ -370,7 +382,7 @@ const Registration = () => {
                                             filterOption={(inputValue, option) =>
                                                 option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                                             }
-                                        />
+                                        /> */}
                                     </Grid>
                                 </Grid>
                                 <Grid
