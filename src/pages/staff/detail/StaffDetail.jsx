@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, Divider, Popconfirm, Table, message } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -17,13 +17,13 @@ import { onAddStaffProfile, onResetStaffProfile } from "../../../store/slices/st
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 // import EditProfileModal from "./EditProfileModal";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import Loading from "../../../components/animation/Loading";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
-  const [editProfile, setEditProfile] = useState(false);
+  // const [editProfile, setEditProfile] = useState(false);
   const dispatch = useDispatch();
   const { register, watch } = useForm();
   const eventQuery = useQuery({
@@ -659,7 +659,7 @@ const StaffDetail = () => {
                   >
                     <Button
                       style={BlueButton}
-                      onClick={() => setEditProfile(true)}
+                      // onClick={() => setEditProfile(true)}
                     >
                       {profile.email === user.email ? <Typography
                         textTransform={"none"}
