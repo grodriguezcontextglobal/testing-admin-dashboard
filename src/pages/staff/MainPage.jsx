@@ -25,7 +25,7 @@ const MainPage = () => {
     setValue('searchAdmin', '.')
     setTimeout(() => {
       setValue("searchAdmin", "")
-    }, 1000);
+    }, 900);
     return () => {
       controller.abort()
     }
