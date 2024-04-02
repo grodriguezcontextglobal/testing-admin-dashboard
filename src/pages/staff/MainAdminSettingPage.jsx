@@ -11,7 +11,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -130,28 +130,28 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
   const save = async (record) => {
     try {
       const row = await form.validateFields();
-      const { entireData } = record;
-      const adminProfile = {
-        ...entireData,
-        role: row.role,
-      };
-      const respo = await devitrakApiAdmin.patch(
-        `/profile/${adminProfile.id}`,
-        adminProfile
-      );
-      if (respo) {
-        const employees = companiesEmployees.data.data.company.employees
-        const foundEmployee = employees.findIndex(element => element._id === record.entireData.id)
-        const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
-        await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.id}`, {
-          employees: result
-        })
-        queryClient.invalidateQueries({queryKey: ["listOfAdminUsers"], exact:true});
-        queryClient.invalidateQueries({queryKey:['employeesPerCompanylist'], exact:true})
-        listAdminUsers.refetch()
-        openNotification(true);
-        setEditingKey("");
-      }
+      // const { entireData } = record;
+      // const adminProfile = {
+      //   ...entireData,
+      //   role: row.role,
+      // };
+      // const respo = await devitrakApiAdmin.patch(
+      //   `/profile/${adminProfile.id}`,
+      //   adminProfile
+      // );
+      // if (respo) {
+      const employees = companiesEmployees.data.data.company[0].employees
+      const foundEmployee = employees.findIndex(element => element.user === record.email)
+      const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
+      await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.at(-1).id}`, {
+        employees: result
+      })
+      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ['employeesPerCompanyList'], exact: true })
+      listAdminUsers.refetch()
+      openNotification(true);
+      setEditingKey("");
+      // }
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
       openNotification(false);
