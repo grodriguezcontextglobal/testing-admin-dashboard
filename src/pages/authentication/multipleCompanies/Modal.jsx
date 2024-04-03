@@ -9,7 +9,7 @@ import { clearErrorMessage, onLogin } from "../../../store/slices/adminSlice"
 import { BlueButton } from "../../../styles/global/BlueButton"
 import { BlueButtonText } from "../../../styles/global/BlueButtonText"
 
-const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanies, data }) => {
+const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanies, data:dataPassed }) => {
     const closeModal = () => {
         return setOpenMultipleCompanies(false)
     }
@@ -24,18 +24,18 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
     };
     const queryClient = useQueryClient()
     const loginIntoOneCompanyAccount = async (props) => {
-        console.log("🚀 ~ loginIntoOneCompanyAccount ~ props:", props)
         const respo = await devitrakApiAdmin.post("/login", {
-            email: data.email,
-            password: data.password,
+            email: dataPassed.email,
+            password: dataPassed.password,
         });
         if (respo.data) {
+            console.log("🚀 ~ loginIntoOneCompanyAccount ~ respo.data:", respo.data)
             localStorage.setItem("admin-token", respo.data.token);
             const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
                 online: true
             });
             const respoFindMemberInfo = await devitrakApi.post("/db_staff/consulting-member", {
-                email: data.email,
+                email: dataPassed.email,
             })
             const companyInfoTable = await devitrakApi.post("/db_company/consulting-company", {
                 company_name: props.company
@@ -80,7 +80,7 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
             <Grid container>
                 <Space size={[8, 16]} wrap>
                     {
-                        data.companyInfo.map(item => {
+                        dataPassed?.companyInfo?.map(item => {
                             return (
                                 <Button key={item.company} style={{...BlueButton, height:"auto"}} onClick={() => loginIntoOneCompanyAccount(item)}>
                                     <Typography style={BlueButtonText}>{item.company}</Typography>
