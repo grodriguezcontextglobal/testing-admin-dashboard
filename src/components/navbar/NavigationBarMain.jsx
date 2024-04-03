@@ -2,7 +2,7 @@ import { Icon } from '@iconify/react';
 import { AppBar, Box, Divider, Drawer, Grid, IconButton, InputAdornment, List, ListItem, ListItemButton, OutlinedInput, Toolbar, Typography } from '@mui/material';
 import { useRef, useState } from 'react';
 // import { PropTypes } from 'prop-types'
-import { useMediaQuery } from '@uidotdev/usehooks';
+import { useMediaQuery, useWindowScroll } from '@uidotdev/usehooks';
 import { Dropdown } from 'antd';
 import pkg from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,6 +30,7 @@ const drawerWidth = 240;
 const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
 
 const NavigationBarMain = (props) => {
+    const [{ x, y }, scrollTo] = useWindowScroll()
     const { register, handleSubmit } = useForm()
     const { window } = props;
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -255,13 +256,13 @@ const NavigationBarMain = (props) => {
 
                                             }}
                                         >
-                                            <div className="content-main-navbar-updated">
+                                            <div onClick={() => scrollTo({ left: 0, top: 0, behavior: 'smooth' })} className="content-main-navbar-updated" >
                                                 <article
                                                     className="nav-item-base-1-main-navbar-updated"
                                                 >
                                                     <div className="content-2-main-navbar-updated">
                                                         <div className="text-1-main-navbar-updated text-mdsemibold">
-                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }}><SettingIcon /></p>
+                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }} onClick={() => Window} ><SettingIcon /></p>
                                                         </div>
                                                     </div>
                                                 </article>
