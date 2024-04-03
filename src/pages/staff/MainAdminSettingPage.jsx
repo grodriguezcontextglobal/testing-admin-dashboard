@@ -66,7 +66,7 @@ const EditableCell = ({
     </td>
   );
 };
-const MainAdminSettingPage = ({ searchAdmin }) => {
+const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState("");
   const [api, contextHolder] = notification.useNotification();
@@ -98,7 +98,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
     return () => {
       controller.abort()
     }
-  }, [user.company])
+  }, [user.company, modalState])
 
   const queryClient = useQueryClient();
   const openNotification = (props) => {
@@ -223,12 +223,12 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
             display: "flex",
             padding: "2px 8px",
             alignItems: "center",
-            background: `${!active ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
             width: "fit-content",
           }}
         >
           <Typography
-            color={`${!active ? "#d31717" : "var(--success-700, #027A48)"}`}
+            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
             fontSize={"12px"}
             fontFamily={"Inter"}
             fontStyle={"normal"}
@@ -240,9 +240,9 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
             <Icon
               icon="tabler:point-filled"
               rotate={3}
-              color={`${!active ? "#d31717" : "#12B76A"}`}
+              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
             />
-            {active ? "Active" : "Inactive"}
+            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
           </Typography>
         </span>
       ),
@@ -319,12 +319,12 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
             >
               <Icon icon="fluent:edit-16-regular" width={25} />
             </Typography.Link>}
-            <Typography.Link
+            {record.active !== "Pending" && <Typography.Link
               disabled={editingKey !== ""}
               onClick={() => handleDetailStaff(record)}
             >
               <Icon icon="bxs:user-detail" width={30} />
-            </Typography.Link>
+            </Typography.Link>}
           </div>
         );
       },
@@ -338,16 +338,20 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       const result = new Set()
       const companiesData = companiesEmployees.data.data.company[0].employees
       for (let data of companiesData) {
+        console.log("🚀 ~ employees ~ data:", data)
         const individual = await devitrakApi.post('/staff/admin-users', {
           email: data.user
         })
         if (individual.data) {
-          result.add({ ...individual.data.adminUsers[0], role: data.role, activeInCompany: data.active, companyData: companiesEmployees.data.data.company[0] })
+          result.add({ ...data, email: data.user, status: data.status === "Pending" ? data.status : data.active, adminUserInfo: individual.data.adminUsers[0], companyData: companiesEmployees.data.data.company[0] })
+        } else {
+          result.add({ ...data, status: data.status === "Pending" ? data.status : data.active, companyData: companiesEmployees.data.data.company[0], adminUserInfo: null })
         }
       }
       return employeeListRef.current = Array.from(result)
     }
     employees()
+
     const sortDataAdminUser = () => {
       if (searchAdmin?.length > 0) {
         const check = employeeListRef.current.filter(
@@ -367,12 +371,12 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       let mapTemplate = {};
       for (let data of sortDataAdminUser()) {
         mapTemplate = {
-          name: [data.name, data.lastName],
+          name: [data.firstName, data.lastName],
           email: data.email,
           role: data.role,
-          active: data.activeInCompany,
+          active: data.status,
           entireData: data,
-          key: data.id,
+          key: data.email,
         };
         result.splice(index, notElementToDelete, mapTemplate);
         index--;
