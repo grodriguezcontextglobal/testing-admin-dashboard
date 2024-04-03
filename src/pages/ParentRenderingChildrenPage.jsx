@@ -1,10 +1,9 @@
 import { Grid } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { useSelector } from "react-redux"
 import { Outlet } from "react-router-dom"
 import { devitrakApi } from "../api/devitrakApi"
-import OnlineUserBanner from "../components/general/OnlineUserBanner"
 import SelectCompanyToView from "./home/components/selectCompany/SelectCompanyToView"
 // import OnlineUserBanner from "../components/general/OnlineUserBanner"
 
@@ -25,7 +24,6 @@ const ParentRenderingChildrenPage = () => {
         }
     }, [])
 
-    const bannerRef = useRef()
     const checkUserAssignedCompanies = () => {
         const result = new Set()
         if (companiesCheck.data) {
@@ -44,7 +42,6 @@ const ParentRenderingChildrenPage = () => {
     return (
         <Grid display={'flex'} justifyContent={'center'} alignItems={'center'} container>
             <Grid alignSelf={'flex-start'} style={{ minHeight: "80dvh" }} margin={'12.5dvh 0 1dvh'} item xs={11} sm={11} md={11} lg={11} >
-                <span style={{ position: 'relative', top: "0.5dvh" }} ref={bannerRef}><OnlineUserBanner /></span>
                 <Outlet />
                 {
                     switchingCompanyInfo && <SelectCompanyToView data={checkUserAssignedCompanies()} />
