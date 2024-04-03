@@ -32,7 +32,7 @@ const RegisterCompany = () => {
     const { register, handleSubmit } = useForm()
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, title, msg, time) => {
-        api[type]({
+        api.open({
             message: title,
             description: msg,
             duration: time,
@@ -172,11 +172,14 @@ const RegisterCompany = () => {
                 email: user.email
             },
             website: websiteUrl,
-            main_email: props.main_email,
+            main_email: user.email,
             industry: industry,
             stripe_customer_id: ref.current.stripeAccount,
             employees: [{
                 user: user.email,
+                firstName: user.name,
+                lastName: user.lastName,
+                status:'confirmed',
                 super_user: true,
                 role: "Administrator"
             }]
@@ -208,7 +211,6 @@ const RegisterCompany = () => {
                 ...ref.current,
                 userSQL: insertingNewMemberInCompany.data
             }
-            console.log(ref.current)
             return insertingNewMemberInCompany.data
         }
     }
@@ -339,8 +341,7 @@ const RegisterCompany = () => {
                 await consultingCompanyInSqlDb()
                 queryClient.clear()
                 setLoadingStatus(false)
-                navigate('/', { replace: true, relative: 'path', })
-                return;
+                return navigate('/', { replace: true, relative: 'path', })
             } catch (error) {
                 notification.destroy('info')
                 openNotificationWithIcon(
@@ -360,10 +361,13 @@ const RegisterCompany = () => {
     };
 
     return (
-        <div style={{ height: "100dvh" }}>
+        <>
             {contextHolder}
             <Grid
-                style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
+                style={{
+                    backgroundColor: "var(--basewhite)",
+                    // height: "100dvh" 
+                }}
                 container
             >
                 <Grid item xs={12} sm={12} md={6} lg={6}>
@@ -377,14 +381,18 @@ const RegisterCompany = () => {
                         paddingBottom={0}
                         style={{
                             overflow: "auto",
-                            height: "90dvh",
+                            // height: "90dvh",
                         }}
                     >
 
                         <Grid
                             marginX={0}
                             className="register-container"
-                            style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}`, height: "100dvh", margin: "5dvh auto 0" }}
+                            style={{
+                                padding: `${isSmallDevice ? "1rem" : "0 2rem"}`,
+                                // height: "100dvh", 
+                                margin: "4dvh auto 0"
+                            }}
                             container
                         > <form
                             className="register-form-container"
@@ -466,6 +474,7 @@ const RegisterCompany = () => {
                                     item
                                     xs={12} sm={12} md={12} lg={12}
                                 >
+
                                     <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
                                         Street <span style={{ fontWeight: 800 }}>*</span>
 
@@ -477,66 +486,73 @@ const RegisterCompany = () => {
                                             fullWidth
                                         />
                                     </FormLabel>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", gap: "5px" }}>
-                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                                            City <span style={{ fontWeight: 800 }}>*</span>
-                                            <OutlinedInput
-                                                disabled={loadingStatus}
-                                                {...register('city', { required: true })} style={OutlinedInputStyle}
-                                                placeholder=""
-                                                type="text"
-                                                fullWidth
-                                            />
-                                        </FormLabel>
 
-                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                                            State <span style={{ fontWeight: 800 }}>*</span>
-                                            <OutlinedInput
-                                                disabled={loadingStatus}
-                                                {...register('state', { required: true })} style={OutlinedInputStyle}
-                                                placeholder=""
-                                                type="text"
-                                                fullWidth
-                                            />
-                                        </FormLabel>
-                                    </div>
-                                    <div style={{ display: "flex", justifyContent: "space-between", gap: "5px" }}>
-                                        <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                                            Zip code <span style={{ fontWeight: 800 }}>*</span>
-                                            <OutlinedInput
-                                                disabled={loadingStatus}
-                                                {...register('postal_code', { required: true })} style={OutlinedInputStyle}
-                                                placeholder=""
-                                                type="text"
-                                                fullWidth
-                                            />
-                                        </FormLabel>
-                                        <FormLabel style={{ marginBottom: "0.5rem", borderRadius: "8px", width: "100%" }}>
-                                            Industry <span style={{ fontWeight: 800 }}>*</span>
-                                            <AutoComplete
-                                                className="custom-autocomplete" // Add a custom className here
-                                                disabled={loadingStatus}
-                                                variant="outlined"
-                                                style={{
-                                                    ...AntSelectorStyle,
-                                                    border: "solid 0.3 var(--gray600)",
-                                                    fontFamily: 'Inter',
-                                                    fontSize: "14px",
-                                                    width: "100%"
-                                                }}
-                                                value={industry}
-                                                onChange={(value) => setIndustry(value)}
-                                                options={retrieveIndustryOptions().map(item => { return ({ value: item }) })}
-                                                placeholder="Type your industry area"
-                                                filterOption={(inputValue, option) =>
-                                                    option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                                                }
-                                            />
-                                        </FormLabel>
-                                    </div>
+
                                 </Grid>
+                                <Grid marginY={'20px'} marginX={0} textAlign={'left'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} gap={1} item xs={12} sm={12} md={12} lg={12}> <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                    City <span style={{ fontWeight: 800 }}>*</span>
+                                    <OutlinedInput
+                                        disabled={loadingStatus}
+                                        {...register('city', { required: true })} style={OutlinedInputStyle}
+                                        placeholder=""
+                                        type="text"
+                                        fullWidth
+                                    />
+                                </FormLabel>
+
+                                    <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                        State <span style={{ fontWeight: 800 }}>*</span>
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('state', { required: true })} style={OutlinedInputStyle}
+                                            placeholder=""
+                                            type="text"
+                                            fullWidth
+                                        />
+                                    </FormLabel>
+                                </Grid>
+                                {/* <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", gap: "5px" }}>
+                                   
+                                </div> */}
+                                <Grid marginY={'20px'} marginX={0} textAlign={'left'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} gap={1} xs={12} sm={12} md={12} lg={12}>
+                                    <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                                        Zip code <span style={{ fontWeight: 800 }}>*</span>
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('postal_code', { required: true })} style={OutlinedInputStyle}
+                                            placeholder=""
+                                            type="text"
+                                            fullWidth
+                                        />
+                                    </FormLabel>
+                                    <FormLabel style={{ marginBottom: "0.5rem", borderRadius: "8px", width: "100%" }}>
+                                        Industry <span style={{ fontWeight: 800 }}>*</span>
+                                        <AutoComplete
+                                            className="custom-autocomplete" // Add a custom className here
+                                            disabled={loadingStatus}
+                                            variant="outlined"
+                                            style={{
+                                                ...AntSelectorStyle,
+                                                border: "solid 0.3 var(--gray600)",
+                                                fontFamily: 'Inter',
+                                                fontSize: "14px",
+                                                width: "100%"
+                                            }}
+                                            value={industry}
+                                            onChange={(value) => setIndustry(value)}
+                                            options={retrieveIndustryOptions().map(item => { return ({ value: item }) })}
+                                            placeholder="Type your industry area"
+                                            filterOption={(inputValue, option) =>
+                                                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                            }
+                                        />
+                                    </FormLabel>
+                                </Grid>
+                                {/* <div style={{ display: "flex", justifyContent: "space-between", gap: "5px" }}>
+                                    
+                                </div>  */}
                                 <Grid marginY={'20px'} marginX={0} textAlign={'left'} item xs={12}>
-                                    <FormLabel style={{ marginBotton: "0.5rem" }}>
+                                    <FormLabel style={{ marginBottom: "0.5rem" }}>
                                         Locations
                                     </FormLabel>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "5px" }}>
@@ -546,7 +562,7 @@ const RegisterCompany = () => {
                                         <Button onClick={() => handleAddLocation()} style={BlueButton}><Typography style={BlueButtonText}>Add</Typography></Button>
                                     </div>
                                 </Grid>
-                                <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs>
+                                <Grid marginY={'20px'} display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs>
                                     <Space size={[8, 16]} wrap>
                                         {
                                             locationList.map(location => {
@@ -556,10 +572,8 @@ const RegisterCompany = () => {
                                             })
                                         }
                                     </Space>
-
                                 </Grid>
                                 <Grid
-                                    marginY={"20px"}
                                     marginX={0}
                                     textAlign={"left"}
                                     item
@@ -577,34 +591,6 @@ const RegisterCompany = () => {
                                         type="text"
                                         fullWidth
                                     />
-                                </Grid>
-                                <Grid
-                                    marginY={"20px"}
-                                    marginX={0}
-                                    textAlign={"left"}
-                                    item
-                                    xs={12}
-                                >
-                                    <FormLabel style={{ marginBottom: "0.5rem" }}>
-                                        Email for information <span style={{ fontWeight: 800 }}>*</span>
-                                    </FormLabel>
-                                    <OutlinedInput
-                                        disabled={loadingStatus}
-                                        {...register('main_email', { required: true })}
-                                        style={OutlinedInputStyle}
-                                        placeholder=""
-                                        type="text"
-                                        fullWidth
-                                    />
-                                </Grid>
-                                <Grid
-                                    marginY={"20px"}
-                                    marginX={0}
-                                    textAlign={"left"}
-                                    item
-                                    xs={12}
-                                >
-
                                 </Grid>
                                 <Grid
                                     marginY={"20px"}
@@ -652,12 +638,12 @@ const RegisterCompany = () => {
                                         </Link>
                                     </Typography>
                                 </Grid>
+                                <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", width: "100%", margin:"0 0 0px -20px", }}>
+                                    <FooterComponent  />
+                                </div>
                             </form>
                         </Grid>
                     </Grid>
-                    <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
-                        <FooterComponent />
-                    </div>
                 </Grid>
                 <Grid
                     display={(isSmallDevice || isMediumDevice) && "none"}
@@ -666,7 +652,7 @@ const RegisterCompany = () => {
                     xs={6} sm={6}
                 ></Grid>
             </Grid>{" "}
-        </div>
+        </>
     );
 };
 export default RegisterCompany

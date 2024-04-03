@@ -42,7 +42,7 @@ const Login = () => {
     }
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        notification.open({
+        api.open({
             message: (
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ marginRight: '8px' }} >{iconDic[type]}</span> {/* Adjust icon spacing */}
