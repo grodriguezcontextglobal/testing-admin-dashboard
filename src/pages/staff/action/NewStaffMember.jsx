@@ -47,6 +47,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     setModalState(false);
   }
   const queryClient = useQueryClient()
+
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
@@ -90,15 +91,31 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
         role: data.role,
         company: user.company,
       }
+      await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company[0].id}`, {
+        employees: [
+          ...companiesQuery.data.data.company[0].employees,
+          {
+            user: templateNewUser.email,
+            firstName: templateNewUser.name,
+            lastName: templateNewUser.lastName,
+            status: "Pending",
+            super_user: false,
+            role: templateNewUser.role
+          }
+        ]
+      })
+      
       await devitrakApi.post('/nodemailer/new_invitation', {
-        consumer:  templateNewUser.email,
+        consumer: templateNewUser.email,
         subject: "Invitation",
         company: user.company,
-        link: `https://admin-testing-dev.netlify.app/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
+        link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
       })
       queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
+      queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
+      // queryClient.resetQueries({queryKey:['listOfAdminUsers'], exact: true })
       warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
-      return closeModal();
+      return await closeModal();
     };
     const renderTitle = () => {
       return (
