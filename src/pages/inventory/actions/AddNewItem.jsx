@@ -27,6 +27,7 @@ import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewItem = () => {
+  const [selectedItem, setSelectedItem] = useState('')
   const [loadingStatus, setLoadingStatus] = useState(false)
   const { user } = useSelector((state) => state.admin);
   const {
@@ -52,13 +53,32 @@ const AddNewItem = () => {
     enabled: false,
     refetchOnMount: false
   })
+  const itemsInInventoryQuery = useQuery({
+    queryKey: ['ItemsInInventoryCheckingQuery'],
+    queryFn: () => devitrakApi.post("/db_item/consulting-item", {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
   useEffect(() => {
     const controller = new AbortController()
     companiesQuery.refetch()
+    itemsInInventoryQuery.refetch()
     return () => {
       controller.abort()
     }
   }, [])
+  const retrieveItemOptions = () => {
+    const result = new Set()
+    if (itemsInInventoryQuery.data) {
+      const itemsOptions = itemsInInventoryQuery.data.data.items
+      for (let data of itemsOptions) {
+        result.add(data.item_group)
+      }
+    }
+    return Array.from(result)
+  }
 
   const renderLocationOptions = () => {
     if (companiesQuery.data) {
@@ -75,6 +95,29 @@ const AddNewItem = () => {
   const onChange = (value) => {
     return setValueSelection(value);
   };
+  const retrieveItemDataSelected = () => {
+    const result = new Map()
+    if (itemsInInventoryQuery.data) {
+      const industryData = itemsInInventoryQuery.data.data.items
+      for (let data of industryData) {
+        result.set(data.item_group, data)
+      }
+    }
+    return result
+  }
+  useEffect(() => {
+    const controller = new AbortController()
+    if (retrieveItemDataSelected().has(selectedItem)) {
+      const dataToRetrieve = retrieveItemDataSelected().get(selectedItem)
+      setValue('category_name', `${dataToRetrieve.category_name}`)
+      setValue('cost', `${dataToRetrieve.cost}`)
+      setValue('descript_item', `${dataToRetrieve.descript_item}`)
+    }
+
+    return () => {
+      controller.abort()
+    }
+  }, [selectedItem])
   const savingNewItem = async (data) => {
     setLoadingStatus(true)
     try {
@@ -89,13 +132,13 @@ const AddNewItem = () => {
         const resp = await devitrakApi.post(`/image/new_image`, {
           source: base64,
           category: data.category_name,
-          item_group: data.item_group,
+          item_group: selectedItem,
           company: user.company,
         });
         if (resp.data) {
           const respNewItem = await devitrakApi.post("/db_item/new_item", {
             category_name: data.category_name,
-            item_group: data.item_group,
+            item_group: selectedItem,
             cost: data.cost,
             descript_item: data.descript_item,
             ownership: valueSelection,
@@ -128,7 +171,7 @@ const AddNewItem = () => {
       } else if (data.photo.length < 1) {
         const respNewItem = await devitrakApi.post("/db_item/new_item", {
           category_name: data.category_name,
-          item_group: data.item_group,
+          item_group: selectedItem,
           cost: data.cost,
           descript_item: data.descript_item,
           ownership: valueSelection,
@@ -292,7 +335,7 @@ const AddNewItem = () => {
               width: "50%",
             }}
           >
-            <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 textTransform={"none"}
                 textAlign={"left"}
@@ -303,39 +346,28 @@ const AddNewItem = () => {
                 lineHeight={"20px"}
                 color={"var(--gray-700, #344054)"}
               >
-                Group
+                Device name
               </Typography>
             </InputLabel>
-            <OutlinedInput
-              {...register("item_group")}
-              aria-invalid={errors.item_group}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Laptop"
-              fullWidth
-            />
-            {errors?.item_group && (
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.item_group.type}
-              </Typography>
-            )}
-            <div
+            <AutoComplete
+              className="custom-autocomplete" // Add a custom className here
+              variant="outlined"
               style={{
-                textAlign: "left",
-                width: "50%",
+                ...AntSelectorStyle,
+                border: "solid 0.3 var(--gray600)",
+                fontFamily: 'Inter',
+                fontSize: "14px",
+                width: "100%"
               }}
-            >
-            </div>
+
+              value={selectedItem}
+              onChange={(value) => setSelectedItem(value)}
+              options={retrieveItemOptions().map(item => { return ({ value: item }) })}
+              placeholder="Type the name of the device"
+              filterOption={(inputValue, option) =>
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+            />
           </div>
         </div>
         <div

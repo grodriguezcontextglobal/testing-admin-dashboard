@@ -29,6 +29,7 @@ import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewBulkItems = () => {
+    const [selectedItem, setSelectedItem] = useState('')
     const { user } = useSelector((state) => state.admin);
     const {
         register,
@@ -54,14 +55,33 @@ const AddNewBulkItems = () => {
         enabled: false,
         refetchOnMount: false
     })
+    const itemsInInventoryQuery = useQuery({
+        queryKey: ['ItemsInInventoryCheckingQuery'],
+        queryFn: () => devitrakApi.post("/db_item/consulting-item", {
+            company: user.company
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
     useEffect(() => {
+        console.log("🚀 ~ AddNewBulkItems ~ itemsInInventoryQuery:", itemsInInventoryQuery?.data)
         const controller = new AbortController()
         companiesQuery.refetch()
+        itemsInInventoryQuery.refetch()
         return () => {
             controller.abort()
         }
     }, [])
-
+    const retrieveItemOptions = () => {
+        const result = new Set()
+        if (itemsInInventoryQuery.data) {
+            const itemsOptions = itemsInInventoryQuery.data.data.items
+            for (let data of itemsOptions) {
+                result.add(data.item_group)
+            }
+        }
+        return Array.from(result)
+    }
     const renderLocationOptions = () => {
         if (companiesQuery.data) {
             const locations = companiesQuery.data.data.company?.at(-1).location ?? []
@@ -73,6 +93,30 @@ const AddNewBulkItems = () => {
         }
         return []
     }
+    const retrieveItemDataSelected = () => {
+        const result = new Map()
+        if (itemsInInventoryQuery.data) {
+            const industryData = itemsInInventoryQuery.data.data.items
+            for (let data of industryData) {
+                result.set(data.item_group, data)
+            }
+        }
+        return result
+    }
+    useEffect(() => {
+        const controller = new AbortController()
+        if (retrieveItemDataSelected().has(selectedItem)) {
+            const dataToRetrieve = retrieveItemDataSelected().get(selectedItem)
+            setValue('category_name', `${dataToRetrieve.category_name}`)
+            setValue('cost', `${dataToRetrieve.cost}`)
+            setValue('descript_item', `${dataToRetrieve.descript_item}`)
+        }
+
+        return () => {
+            controller.abort()
+        }
+    }, [selectedItem])
+
     const savingNewItem = async (data) => {
         await openNotificationWithIcon(
             "warning",
@@ -90,7 +134,7 @@ const AddNewBulkItems = () => {
             const resp = await devitrakApi.post(`/image/new_image`, {
                 source: base64,
                 category: data.category_name,
-                item_group: data.item_group,
+                item_group: selectedItem,
                 company: user.company,
             });
             if (resp.data) {
@@ -98,7 +142,7 @@ const AddNewBulkItems = () => {
                     try {
                         await devitrakApi.post("/db_item/new_item", {
                             category_name: data.category_name,
-                            item_group: data.item_group,
+                            item_group: selectedItem,
                             cost: data.cost,
                             descript_item: data.descript_item,
                             ownership: valueSelection,
@@ -143,7 +187,7 @@ const AddNewBulkItems = () => {
                 try {
                     await devitrakApi.post('/db_item/new_item', {
                         category_name: data.category_name,
-                        item_group: data.item_group,
+                        item_group: selectedItem,
                         cost: data.cost,
                         descript_item: data.descript_item,
                         ownership: valueSelection,
@@ -312,17 +356,36 @@ const AddNewBulkItems = () => {
                                 lineHeight={"20px"}
                                 color={"var(--gray-700, #344054)"}
                             >
-                                Group
+                                Device name
                             </Typography>
                         </InputLabel>
-                        <OutlinedInput
+                        <AutoComplete
+                            className="custom-autocomplete" // Add a custom className here
+                            variant="outlined"
+                            style={{
+                                ...AntSelectorStyle,
+                                border: "solid 0.3 var(--gray600)",
+                                fontFamily: 'Inter',
+                                fontSize: "14px",
+                                width: "100%"
+                            }}
+                            
+                            value={selectedItem}
+                            onChange={(value) => setSelectedItem(value)}
+                            options={retrieveItemOptions().map(item => { return ({ value: item }) })}
+                            placeholder="Type the name of the device"
+                            filterOption={(inputValue, option) =>
+                                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                        />
+                        {/* <OutlinedInput
                             {...register("item_group")}
                             aria-invalid={errors.item_group}
                             style={OutlinedInputStyle}
                             placeholder="e.g. Laptop"
                             fullWidth
-                        />
-                        {errors?.item_group && (
+                        /> */}
+                        {/* {errors?.item_group && (
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
@@ -337,8 +400,9 @@ const AddNewBulkItems = () => {
                             >
                                 {errors.item_group.type}
                             </Typography>
-                        )}
+                        )} */}
                         <div
+                        
                             style={{
                                 textAlign: "left",
                                 width: "50%",
@@ -449,6 +513,105 @@ const AddNewBulkItems = () => {
                                 />
                             </InputLabel>
                         </div>
+                    </div>
+                </div>
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        textAlign: "left",
+                        gap: "10px",
+                    }}
+                >
+                    <div
+                        style={{
+                            textAlign: "left",
+                            width: "50%",
+                        }}
+                    >
+                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={500}
+                                lineHeight={"20px"}
+                                color={"var(--gray-700, #344054)"}
+                            >
+                                From starting number
+                            </Typography>
+                        </InputLabel>
+                        <OutlinedInput
+                            {...register("startingNumber")}
+                            aria-invalid={errors.startingNumber}
+                            style={OutlinedInputStyle}
+                            placeholder="e.g. 0001"
+                            fullWidth
+                        />
+                        {errors?.startingNumber && (
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={400}
+                                lineHeight={"20px"}
+                                color={"red"}
+                                width={"100%"}
+                                padding={"0.5rem 0"}
+                            >
+                                {errors.startingNumber.type}
+                            </Typography>
+                        )}
+                    </div>
+                    <div
+                        style={{
+                            textAlign: "left",
+                            width: "50%",
+                        }}
+                    >
+                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={500}
+                                lineHeight={"20px"}
+                                color={"var(--gray-700, #344054)"}
+                            >
+                                To ending number
+                            </Typography>
+                        </InputLabel>
+                        <OutlinedInput
+                            {...register("endingNumber")}
+                            aria-invalid={errors.endingNumber}
+                            style={OutlinedInputStyle}
+                            placeholder="e.g. 1000"
+                            fullWidth
+                        />
+                        {errors?.endingNumber && (
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={400}
+                                lineHeight={"20px"}
+                                color={"red"}
+                                width={"100%"}
+                                padding={"0.5rem 0"}
+                            >
+                                {errors.endingNumber.type}
+                            </Typography>
+                        )}
                     </div>
                 </div>
                 <div
@@ -607,105 +770,7 @@ const AddNewBulkItems = () => {
                     </Grid>
                 </Grid>
                 <Divider />
-                <div
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                        textAlign: "left",
-                        gap: "10px",
-                    }}
-                >
-                    <div
-                        style={{
-                            textAlign: "left",
-                            width: "50%",
-                        }}
-                    >
-                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
-                            >
-                                From starting number
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            {...register("startingNumber")}
-                            aria-invalid={errors.startingNumber}
-                            style={OutlinedInputStyle}
-                            placeholder="e.g. 0001"
-                            fullWidth
-                        />
-                        {errors?.startingNumber && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.startingNumber.type}
-                            </Typography>
-                        )}
-                    </div>
-                    <div
-                        style={{
-                            textAlign: "left",
-                            width: "50%",
-                        }}
-                    >
-                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
-                            >
-                                To ending number
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            {...register("endingNumber")}
-                            aria-invalid={errors.endingNumber}
-                            style={OutlinedInputStyle}
-                            placeholder="e.g. 1000"
-                            fullWidth
-                        />
-                        {errors?.endingNumber && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.endingNumber.type}
-                            </Typography>
-                        )}
-                    </div>
-                </div>
+
                 <div
                     style={{
                         width: "100%",
