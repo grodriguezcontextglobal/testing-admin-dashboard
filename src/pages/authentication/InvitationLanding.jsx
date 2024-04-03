@@ -83,7 +83,6 @@ const InvitationLanding = () => {
     const newUser = useRef(null)
     if (allStaffSavedQuery.data && companiesQuery.data) {
         const hostCompanyInfo = companiesQuery.data.data.company.at(-1)
-        console.log("🚀 ~ InvitationLanding ~ hostCompanyInfo:", hostCompanyInfo)
         const checkIfUserExistsInOtherCompany = () => {
             if (allStaffSavedQuery.data.data.adminUsers && allStaffSavedQuery.data.data.adminUsers.length > 0) {
                 setValue("password", displayMaskedPassword(allStaffSavedQuery.data.data.adminUsers.at(-1).password))
@@ -109,11 +108,13 @@ const InvitationLanding = () => {
                 }]
             });
             if (resp.data.ok) {
+                const findInvitedStaff = hostCompanyInfo.employees.findIndex(element => element.user === email)
+                const employeesInCompany = [...hostCompanyInfo.employees]
+                employeesInCompany[findInvitedStaff] = {
+                    ...employeesInCompany[findInvitedStaff], status: true
+                }
                 await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
-                    employees: [
-                        ...hostCompanyInfo.employees,
-                        { user: email, super_user: false, role: role }
-                    ]
+                    employees: employeesInCompany
                 })
             }
         }
@@ -136,11 +137,13 @@ const InvitationLanding = () => {
             }
             const resp = await devitrakApi.post("/admin/new_admin_user", templateNewUser);
             if (resp.data.ok) {
+                const findInvitedStaff = hostCompanyInfo.employees.findIndex(element => element.user === email)
+                const employeesInCompany = [...hostCompanyInfo.employees]
+                employeesInCompany[findInvitedStaff] = {
+                    ...employeesInCompany[findInvitedStaff], status: true
+                }
                 await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
-                    employees: [
-                        ...hostCompanyInfo.employees,
-                        { user: email, super_user: false, role: role }
-                    ]
+                    employees: employeesInCompany
                 })
             }
         }
