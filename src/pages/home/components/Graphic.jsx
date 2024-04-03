@@ -71,7 +71,7 @@ const Graphic = () => {
         return () => {
             controller.abort()
         }
-    }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading, user.company])
+    }, [])
     const foundDevicesOut = useCallback(() => {
         const check = foundAllDevicesGivenInEvent()['out']
         if (check) return check.length

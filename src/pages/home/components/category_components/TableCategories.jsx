@@ -25,25 +25,27 @@ const TableCategories = () => {
     //     }
     // }, [])
 
+    const dataFetched = consumersQuery?.data?.data?.items
+    const sortingDataFetched = () => {
+        const result = {}
+        if (dataFetched) {
+            for (let data of dataFetched) {
+                if (!result[data.category_name]) {
+                    result[data.category_name] = 1
+                } else {
+                    result[data.category_name]++
+                }
+            }
+            return setDevice(result)
+        }
+
+    }
+
 
     useEffect(() => {
         const controller = new AbortController()
         consumersQuery.refetch()
-        if (consumersQuery.data) {
-            const dataFetched = consumersQuery.data.data.items
-            const sortingDataFetched = () => {
-                const result = {}
-                for (let data of dataFetched) {
-                    if (!result[data.category_name]) {
-                        result[data.category_name] = 1
-                    } else {
-                        result[data.category_name]++
-                    }
-                }
-                return setDevice(result)
-            }
-            sortingDataFetched()
-        }
+        sortingDataFetched()
         return () => {
             controller.abort()
         }
