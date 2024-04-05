@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Card, Divider, Popconfirm, Table, message } from "antd";
+import { Divider, Popconfirm, Table, message } from "antd";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -173,7 +173,7 @@ const StaffDetail = () => {
         });
         if (respoCompany.data.ok) {
           dispatch(onAddStaffProfile({ ...profile, active: !profile.status, status: !profile.status, companyData: respoCompany.data.company }));
-          return warning('success', `Staff member is ${!profile.active ? 'active': 'inactive'}. Staff member ${!profile.active ? 'now has':'does not have'} access to log in to the company account.`);
+          return warning('success', `Staff member is ${!profile.active ? 'active' : 'inactive'}. Staff member ${!profile.active ? 'now has' : 'does not have'} access to log in to the company account.`);
         }
       } catch (error) {
         console.log("🚀 ~ activeOrDesactiveStaffMemberInCompany ~ error:", error);
@@ -353,7 +353,7 @@ const StaffDetail = () => {
             item
             xs={12}
           >
-            <Grid
+            {/* <Grid
               padding={"0px"}
               display={"flex"}
               justifyContent={"flex-start"}
@@ -362,8 +362,8 @@ const StaffDetail = () => {
               alignSelf={"stretch"}
               item
               xs={4}
-            >
-              <Card
+            > */}
+            {/* <Card
                 id="card-contact-person"
                 style={{
                   borderRadius: "12px",
@@ -372,136 +372,137 @@ const StaffDetail = () => {
                   boxShadow: "none",
                   textAlign: "left",
                 }}
+              > */}
+            <Grid
+              display={"flex"}
+              justifyContent={"space-around"}
+              alignItems={"center"}
+              container
+            >
+              <Grid
+                display={"flex"}
+                justifyContent={"flex-start"}
+                textAlign={"center"}
+                alignSelf={"stretch"}
+                alignItems={"center"}
+                item
+                xs={12}
               >
-                <Grid
-                  display={"flex"}
-                  justifyContent={"space-around"}
-                  alignItems={"center"}
-                  container
+                <span
+                  style={{
+                    borderRadius: "16px",
+                    justifyContent: "flex-start",
+                    display: "flex",
+                    padding: "2px 8px",
+                    alignItems: "center",
+                    mixBlendMode: "multiply",
+                    background: "var(--orange-dark-50, #FFF4ED)",
+                    width: "fit-content",
+                    marginBottom: "5px",
+                  }}
                 >
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    textAlign={"center"}
-                    alignSelf={"stretch"}
-                    alignItems={"center"}
-                    item
-                    xs={12}
+                  <Typography
+                    color={
+                      dataToRenderInTable().some(
+                        (item) => item.status
+                      )
+                        ? "var(--primary-700, #6941C6)"
+                        : "var(--orange-700, #B93815)"
+                    }
+                    fontSize={"12px"}
+                    fontFamily={"Inter"}
+                    fontStyle={"normal"}
+                    fontWeight={500}
+                    lineHeight={"18px"}
+                    textAlign={"left"}
+                    textTransform={"capitalize"}
                   >
-                    <span
-                      style={{
-                        borderRadius: "16px",
-                        justifyContent: "flex-start",
-                        display: "flex",
-                        padding: "2px 8px",
-                        alignItems: "center",
-                        mixBlendMode: "multiply",
-                        background: "var(--orange-dark-50, #FFF4ED)",
-                        width: "fit-content",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      <Typography
-                        color={
-                          dataToRenderInTable().some(
-                            (item) => item.status
-                          )
-                            ? "var(--primary-700, #6941C6)"
-                            : "var(--orange-700, #B93815)"
-                        }
-                        fontSize={"12px"}
-                        fontFamily={"Inter"}
-                        fontStyle={"normal"}
-                        fontWeight={500}
-                        lineHeight={"18px"}
-                        textAlign={"left"}
-                        textTransform={"capitalize"}
-                      >
-                        <Icon
-                          icon="tabler:point-filled"
-                          rotate={3}
-                          color={
-                            dataToRenderInTable().some(
-                              (item) => item.status
-                            )
-                              ? "var(--primary-700, #6941C6)"
-                              : "#EF6820"
-                          }
-                        />
-                        {dataToRenderInTable().some(
+                    <Icon
+                      icon="tabler:point-filled"
+                      rotate={3}
+                      color={
+                        dataToRenderInTable().some(
                           (item) => item.status
                         )
-                          ? "Active at event"
-                          : "No active event"}
-                      </Typography>
-                    </span>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    textAlign={"left"}
-                    alignItems={"center"}
-                    item
-                    xs={12}
-                  >
-                    <Typography
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"18px"}
-                      fontStyle={"normal"}
-                      fontWeight={400}
-                      lineHeight={"28px"}
-                      color={"var(--gray-900, #101828)"}
-                    >
-                      Name
-                    </Typography>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"left"}
-                    textAlign={"left"}
-                    alignItems={"center"}
-                    item
-                    xs={12}
-                  >
-                    <Typography
-                      textAlign={"left"}
-                      paddingTop={"8px"}
-                      fontFamily={"Inter"}
-                      fontSize={"38px"}
-                      fontStyle={"normal"}
-                      fontWeight={600}
-                      lineHeight={"38px"}
-                      color={"var(--gray-900, #101828)"}
-                    >
-                      {profile?.firstName} {profile?.lastName}
-                    </Typography>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"left"}
-                    textAlign={"left"}
-                    alignItems={"center"}
-                    item
-                    xs={12}
-                  >
-                    <Typography
-                      textTransform={"capitalize"}
-                      textAlign={"left"}
-                      paddingTop={"8px"}
-                      fontFamily={"Inter"}
-                      fontSize={"18px"}
-                      fontStyle={"normal"}
-                      fontWeight={600}
-                      lineHeight={"28px"}
-                      color={"var(--gray-900, #101828)"}
-                    >
-                      {profile?.role}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Card>
+                          ? "var(--primary-700, #6941C6)"
+                          : "#EF6820"
+                      }
+                    />
+                    {dataToRenderInTable().some(
+                      (item) => item.status
+                    )
+                      ? "Active at event"
+                      : "No active event"}
+                  </Typography>
+                </span>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={"flex-start"}
+                textAlign={"left"}
+                alignItems={"center"}
+                alignSelf={'start'}
+                item
+                xs={12}
+              >
+                <Typography
+                  textAlign={"left"}
+                  fontFamily={"Inter"}
+                  fontSize={"18px"}
+                  fontStyle={"normal"}
+                  fontWeight={400}
+                  lineHeight={"28px"}
+                  color={"var(--gray-900, #101828)"}
+                >
+                  Name
+                </Typography>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={"left"}
+                textAlign={"left"}
+                alignItems={"center"}
+                item
+                xs={12}
+              >
+                <Typography
+                  textAlign={"left"}
+                  paddingTop={"8px"}
+                  fontFamily={"Inter"}
+                  fontSize={"38px"}
+                  fontStyle={"normal"}
+                  fontWeight={600}
+                  lineHeight={"38px"}
+                  color={"var(--gray-900, #101828)"}
+                >
+                  {profile?.firstName} {profile?.lastName}
+                </Typography>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={"left"}
+                textAlign={"left"}
+                alignItems={"center"}
+                item
+                xs={12}
+              >
+                <Typography
+                  textTransform={"capitalize"}
+                  textAlign={"left"}
+                  paddingTop={"8px"}
+                  fontFamily={"Inter"}
+                  fontSize={"18px"}
+                  fontStyle={"normal"}
+                  fontWeight={600}
+                  lineHeight={"28px"}
+                  color={"var(--gray-900, #101828)"}
+                >
+                  {profile?.role}
+                </Typography>
+              </Grid>
             </Grid>
+            {/* </Card> */}
+            {/* </Grid>
             <Grid
               paddingLeft={"10px"}
               paddingTop={"0px"}
@@ -512,8 +513,8 @@ const StaffDetail = () => {
               alignSelf={"stretch"}
               item
               xs={4}
-            >
-              <Card
+            > */}
+            {/* <Card
                 id="card-contact-person"
                 style={{
                   borderRadius: "12px",
@@ -522,90 +523,90 @@ const StaffDetail = () => {
                   boxShadow: "none",
                   textAlign: "left",
                 }}
+              > */}
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
+              textAlign={"center"}
+              // flexDirection={"column"}
+              alignSelf={"start"}
+              alignItems={"center"}
+              item
+              xs={12}
+            >
+              <Grid
+                display={"flex"}
+                justifyContent={"space-around"}
+                alignItems={"center"}
+                container
               >
                 <Grid
                   display={"flex"}
                   justifyContent={"flex-start"}
-                  textAlign={"center"}
-                  // flexDirection={"column"}
-                  alignSelf={"stretch"}
+                  textAlign={"left"}
                   alignItems={"center"}
                   item
                   xs={12}
                 >
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"space-around"}
-                    alignItems={"center"}
-                    container
+                  <Typography
+                    textAlign={"left"}
+                    fontFamily={"Inter"}
+                    fontSize={"18px"}
+                    fontStyle={"normal"}
+                    fontWeight={400}
+                    lineHeight={"28px"}
+                    color={"var(--gray-900, #101828)"}
                   >
-                    <Grid
-                      display={"flex"}
-                      justifyContent={"flex-start"}
-                      textAlign={"left"}
-                      alignItems={"center"}
-                      item
-                      xs={12}
-                    >
-                      <Typography
-                        textAlign={"left"}
-                        fontFamily={"Inter"}
-                        fontSize={"18px"}
-                        fontStyle={"normal"}
-                        fontWeight={400}
-                        lineHeight={"28px"}
-                        color={"var(--gray-900, #101828)"}
-                      >
-                        Contact
-                      </Typography>
-                    </Grid>
-                    <Grid
-                      display={"flex"}
-                      justifyContent={"left"}
-                      textAlign={"left"}
-                      alignItems={"center"}
-                      item
-                      xs={12}
-                    >
-                      <Typography
-                        textAlign={"left"}
-                        paddingTop={"8px"}
-                        fontFamily={"Inter"}
-                        fontSize={"38px"}
-                        fontStyle={"normal"}
-                        fontWeight={600}
-                        lineHeight={"38px"}
-                        color={"var(--gray-900, #101828)"}
-                      >
-                        {profile.phone ? profile.phone : "+1-000-000-0000"}
-                      </Typography>
-                    </Grid>
-                    <Grid
-                      display={"flex"}
-                      justifyContent={"left"}
-                      textAlign={"left"}
-                      alignItems={"center"}
-                      item
-                      xs={12}
-                    >
-                      <Typography
-                        textTransform={"none"}
-                        textAlign={"left"}
-                        paddingTop={"8px"}
-                        fontFamily={"Inter"}
-                        fontSize={"16px"}
-                        fontStyle={"normal"}
-                        fontWeight={400}
-                        lineHeight={"24px"}
-                        color={"var(--gray-900, #101828)"}
-                      >
-                        {profile?.email}
-                      </Typography>
-                    </Grid>
-                  </Grid>
+                    Contact
+                  </Typography>
                 </Grid>
-              </Card>
+                <Grid
+                  display={"flex"}
+                  justifyContent={"left"}
+                  textAlign={"left"}
+                  alignItems={"center"}
+                  item
+                  xs={12}
+                >
+                  <Typography
+                    textAlign={"left"}
+                    paddingTop={"8px"}
+                    fontFamily={"Inter"}
+                    fontSize={"38px"}
+                    fontStyle={"normal"}
+                    fontWeight={600}
+                    lineHeight={"38px"}
+                    color={"var(--gray-900, #101828)"}
+                  >
+                    {profile.adminUserInfo.phone ? profile.adminUserInfo.phone : "+1-000-000-0000"}
+                  </Typography>
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  justifyContent={"left"}
+                  textAlign={"left"}
+                  alignItems={"center"}
+                  item
+                  xs={12}
+                >
+                  <Typography
+                    textTransform={"none"}
+                    textAlign={"left"}
+                    paddingTop={"8px"}
+                    fontFamily={"Inter"}
+                    fontSize={"16px"}
+                    fontStyle={"normal"}
+                    fontWeight={400}
+                    lineHeight={"24px"}
+                    color={"var(--gray-900, #101828)"}
+                  >
+                    {profile?.email}
+                  </Typography>
+                </Grid>
+              </Grid>
             </Grid>
+            {/* </Card> */}
+            {/* </Grid>
             <Grid
               padding={"0px"}
               display={"flex"}
@@ -615,8 +616,8 @@ const StaffDetail = () => {
               alignSelf={"stretch"}
               item
               xs={4}
-            >
-              <Card
+            > */}
+            {/* <Card
                 id="card-contact-person"
                 style={{
                   borderRadius: "12px",
@@ -625,37 +626,38 @@ const StaffDetail = () => {
                   boxShadow: "none",
                   textAlign: "right",
                 }}
+              > */}
+            <Grid
+              container
+              direction="row"
+              justifyContent="flex-end"
+              alignItems="flex-start"
+              alignSelf={'start'}
+            >
+              <Grid
+                display={"flex"}
+                justifyContent="flex-end"
+                alignItems="flex-start"
+                gap={1}
+                item
+                xs={12}
               >
-                <Grid
-                  container
-                  direction="row"
-                  justifyContent="flex-end"
-                  alignItems="flex-start"
-                >
-                  <Grid
-                    display={"flex"}
-                    justifyContent="flex-end"
-                    alignItems="flex-start"
-                    gap={1}
-                    item
-                    xs={12}
-                  >
-                    {user.role === "Administrator" && <Button style={BlueButton}>
+                {user.role === "Administrator" && <Button style={BlueButton}>
 
-                      <Popconfirm title={`Do you want to ${profile.active ? "remove" : "grant"} access to this staff member?`} onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
-                        <Typography
-                          textTransform={"none"}
-                          style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
-                        >
-                          {profile.status ? "Inactive" : "Active"}
-                        </Typography>
-                      </Popconfirm>
+                  <Popconfirm title={`Do you want to ${profile.active ? "remove" : "grant"} access to this staff member?`} onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
+                    <Typography
+                      textTransform={"none"}
+                      style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
+                    >
+                      {profile.status ? "Inactive" : "Active"}
+                    </Typography>
+                  </Popconfirm>
 
-                    </Button>}
-                  </Grid>
-                </Grid>
-              </Card>
+                </Button>}
+              </Grid>
             </Grid>
+            {/* </Card> */}
+            {/* </Grid> */}
           </Grid>
           <Divider />
           <Grid
