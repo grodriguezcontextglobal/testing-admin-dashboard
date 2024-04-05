@@ -18,11 +18,13 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  console.log("🚀 ~ Body ~ user:", user)
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
+      phone: user.phone ?? "000-000-0000",
       role: user.role,
     },
   });
@@ -73,6 +75,7 @@ const Body = () => {
         name: data.name,
         lastName: data.lastName,
         email: data.email,
+        phone: data.phone,
         imageProfile: base64,
       });
       if (resp) {
@@ -83,11 +86,13 @@ const Body = () => {
             name: data.name,
             lastName: data.lastName,
             email: data.email,
+            phone: data.phone,
             data: {
               ...dataUser,
               name: data.name,
               lastName: data.lastName,
               email: data.email,
+              phone: data.phone,
               imageProfile: base64,
             },
           })
@@ -99,6 +104,7 @@ const Body = () => {
         name: data.name,
         lastName: data.lastName,
         email: data.email,
+        phone: data.phone,
       });
       if (resp) {
         const dataUser = user.data
@@ -108,11 +114,13 @@ const Body = () => {
             name: data.name,
             lastName: data.lastName,
             email: data.email,
+            phone: data.phone,
             data: {
               ...dataUser,
               name: data.name,
               lastName: data.lastName,
               email: data.email,
+              phone: data.phone,
             },
           })
         );
@@ -188,8 +196,9 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
-                style={OutlinedInputStyle}
+                style={{ ...OutlinedInputStyle }}
                 {...register("name", { required: true })}
+                fullWidth
               />
             </Grid>
             <Grid
@@ -204,10 +213,55 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
-                style={OutlinedInputStyle}
+                style={{ ...OutlinedInputStyle }}
                 {...register("lastName", { required: true })}
+                fullWidth
               />
             </Grid>
+          </Grid>
+          <Divider />
+          <Grid
+            display={"flex"}
+            flexDirection={"column"}
+            alignSelf={"stretch"}
+            marginY={0}
+            item
+            xs={4}
+            sm={4}
+            md={4}
+          >
+            <InputLabel style={{ width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                style={{
+                  color: "#344054",
+                  textAlign: "left",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "Inter",
+                  lineHeight: "20px",
+                }}
+              >
+                Phone number
+              </Typography>
+            </InputLabel>
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            marginY={0}
+            gap={2}
+            item
+            xs={6}
+            sm={6}
+            md={6}
+          >
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle }}
+              {...register("phone", { required: true })}
+              fullWidth
+            />
           </Grid>
           <Divider />
           <Grid
@@ -442,7 +496,7 @@ const Body = () => {
             sm={6}
             md={6}
           >
-            <OutlinedInput disabled style={{...OutlinedInputStyle}} {...register("role")} fullWidth/>
+            <OutlinedInput disabled style={{ ...OutlinedInputStyle }} {...register("role")} fullWidth />
           </Grid>
           <Divider />
           <Grid
