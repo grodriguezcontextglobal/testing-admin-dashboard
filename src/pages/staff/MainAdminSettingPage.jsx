@@ -98,7 +98,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort()
     }
-  }, [user.company, modalState])
+  }, [user.company, modalState, editingKey])
 
   const queryClient = useQueryClient();
   const openNotification = (props) => {
@@ -133,14 +133,17 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       const employees = companiesEmployees.data.data.company[0].employees
       const foundEmployee = employees.findIndex(element => element.user === record.email)
       const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
-      await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.at(-1).id}`, {
+      const respoUpdateRoleStaffInCompany = await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.at(-1).id}`, {
         employees: result
       })
-      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ['employeesPerCompanyList'], exact: true })
-      listAdminUsers.refetch()
-      openNotification(true);
-      setEditingKey("");
+      if (respoUpdateRoleStaffInCompany.data.ok) {
+        queryClient.invalidateQueries('listOfAdminUsers')
+        queryClient.invalidateQueries('employeesPerCompanyList')
+        listAdminUsers.refetch()
+        companiesEmployees.refetch()
+        setEditingKey("")
+        openNotification(true)
+      }
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
       openNotification(false);
@@ -344,9 +347,9 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       if (searchAdmin?.length > 0) {
         const check = employeeListRef.current.filter(
           (item) =>
-            String(item?.name)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
-            String(item?.lastName)?.toLowerCase().includes(searchAdmin.toLowerCase()) ||
-            String(item?.email)?.toLowerCase().includes(searchAdmin.toLowerCase())
+            String(item?.name)?.toLowerCase().includes(`${searchAdmin}`.toLowerCase()) ||
+            String(item?.lastName)?.toLowerCase().includes(`${searchAdmin}`.toLowerCase()) ||
+            String(item?.email)?.toLowerCase().includes(`${searchAdmin}`.toLowerCase())
         );
         return check;
       }
@@ -361,6 +364,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
         mapTemplate = {
           name: [data.firstName, data.lastName],
           email: data.email,
+          phone: data.phone,
           role: data.role,
           active: data.status,
           entireData: data,
