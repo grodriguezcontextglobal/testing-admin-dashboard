@@ -130,16 +130,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const save = async (record) => {
     try {
       const row = await form.validateFields();
-      // const { entireData } = record;
-      // const adminProfile = {
-      //   ...entireData,
-      //   role: row.role,
-      // };
-      // const respo = await devitrakApiAdmin.patch(
-      //   `/profile/${adminProfile.id}`,
-      //   adminProfile
-      // );
-      // if (respo) {
       const employees = companiesEmployees.data.data.company[0].employees
       const foundEmployee = employees.findIndex(element => element.user === record.email)
       const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
@@ -151,7 +141,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       listAdminUsers.refetch()
       openNotification(true);
       setEditingKey("");
-      // }
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
       openNotification(false);
@@ -160,7 +149,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
-    return navigate(`/staff/${record.entireData.id}`)
+    return navigate(`/staff/${record.entireData.adminUserInfo.id}`)
   };
   const columns = [
     {
@@ -313,7 +302,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
               gap: "10px",
             }}
           >
-            {user.role === "Administrator" && <Typography.Link
+            {record.active !== "Pending" && user.role === "Administrator" && <Typography.Link
               disabled={editingKey !== ""}
               onClick={() => edit(record)}
             >
@@ -338,7 +327,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       const result = new Set()
       const companiesData = companiesEmployees.data.data.company[0].employees
       for (let data of companiesData) {
-        console.log("🚀 ~ employees ~ data:", data)
         const individual = await devitrakApi.post('/staff/admin-users', {
           email: data.user
         })
