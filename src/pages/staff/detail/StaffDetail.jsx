@@ -6,24 +6,22 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, Divider, Popconfirm, Table, message } from "antd";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Loading from "../../../components/animation/Loading";
 import { onAddStaffProfile, onResetStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-// import EditProfileModal from "./EditProfileModal";
-import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
-  // const [editProfile, setEditProfile] = useState(false);
   const dispatch = useDispatch();
   const { register, watch } = useForm();
   const eventQuery = useQuery({
@@ -32,7 +30,6 @@ const StaffDetail = () => {
     enabled: false,
     refetchOnMount: false,
   });
-  const queryClient = useQueryClient()
   const [messageApi, contextHolder] = message.useMessage();
   const warning = (type, content) => {
     messageApi.open({
@@ -162,31 +159,28 @@ const StaffDetail = () => {
       try {
         const employeesInCompany = [...profile.companyData.employees]; // Create a deep copy
         const foundUserIndex = employeesInCompany.findIndex(element => element.user === profile.email);
-    
+
         if (foundUserIndex === -1) {
           return warning('error', 'User not found in the list of employees.');
         }
-    
+
         employeesInCompany[foundUserIndex] = {
           ...employeesInCompany[foundUserIndex], // Copy existing employee object
-          active: !profile.activeInCompany, // Toggle active status
+          active: !profile.status, // Toggle active status
         };
-    
         const respoCompany = await devitrakApi.patch(`/company/update-company/${profile.companyData.id}`, {
           employees: employeesInCompany,
         });
-    
         if (respoCompany.data.ok) {
-          dispatch(onAddStaffProfile({ ...profile, activeInCompany: !profile.activeInCompany, companyData: respoCompany.data.company }));
-          queryClient.resetQueries();
-          return warning('success', `Staff member is ${!profile.activeInCompany ? 'inactive' : 'active'}. Staff member ${!profile.activeInCompany ? 'does not have' : 'now has'} access to log in to the company account.`);
+          dispatch(onAddStaffProfile({ ...profile, active: !profile.status, status: !profile.status, companyData: respoCompany.data.company }));
+          return warning('success', `Staff member is ${!profile.active ? 'active': 'inactive'}. Staff member ${!profile.active ? 'now has':'does not have'} access to log in to the company account.`);
         }
       } catch (error) {
         console.log("🚀 ~ activeOrDesactiveStaffMemberInCompany ~ error:", error);
         warning('error', 'Something went wrong. Please try again later.');
       }
     };
-    
+
     const dataPerCompany = () => {
       if (watch("searchEvent")?.length > 0) {
         const check = eventQuery?.data?.data?.list?.filter(
@@ -284,22 +278,12 @@ const StaffDetail = () => {
               <Button
                 style={{
                   width: "fit-content",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  borderRadius: "8px",
-                  background: "var(--blue-dark-600, #155EEF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                  ...BlueButton
                 }}
-              // onClick={() => setOpenDeviceModal(true)}
               >
                 <Typography
                   textTransform={"none"}
-                  style={{
-                    color: "var(--base-white, #FFF",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
-                  }}
+                  style={BlueButtonText}
                 >
                   <Icon
                     icon="ic:baseline-plus"
@@ -353,7 +337,7 @@ const StaffDetail = () => {
                   color={"var(--gray-900, #101828)"}
                 >
                   <Icon icon="mingcute:right-line" />
-                  {profile?.name}, {profile?.lastName}
+                  {profile.firstName}, {profile?.lastName}
                 </Typography>
               </Grid>
             </Grid>
@@ -420,7 +404,7 @@ const StaffDetail = () => {
                       <Typography
                         color={
                           dataToRenderInTable().some(
-                            (item) => item.status === true
+                            (item) => item.status
                           )
                             ? "var(--primary-700, #6941C6)"
                             : "var(--orange-700, #B93815)"
@@ -438,14 +422,14 @@ const StaffDetail = () => {
                           rotate={3}
                           color={
                             dataToRenderInTable().some(
-                              (item) => item.status === true
+                              (item) => item.status
                             )
                               ? "var(--primary-700, #6941C6)"
                               : "#EF6820"
                           }
                         />
                         {dataToRenderInTable().some(
-                          (item) => item.status === true
+                          (item) => item.status
                         )
                           ? "Active at event"
                           : "No active event"}
@@ -490,7 +474,7 @@ const StaffDetail = () => {
                       lineHeight={"38px"}
                       color={"var(--gray-900, #101828)"}
                     >
-                      {profile?.name} {profile?.lastName}
+                      {profile?.firstName} {profile?.lastName}
                     </Typography>
                   </Grid>
                   <Grid
@@ -650,33 +634,24 @@ const StaffDetail = () => {
                 >
                   <Grid
                     display={"flex"}
-                    // direction="row"
                     justifyContent="flex-end"
                     alignItems="flex-start"
                     gap={1}
                     item
                     xs={12}
                   >
-                    <Button
-                      style={BlueButton}
-                      // onClick={() => setEditProfile(true)}
-                    >
-                      {profile.email === user.email ? <Typography
-                        textTransform={"none"}
-                        style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
-                      >
-                        Edit
-                      </Typography> :
-                        <Popconfirm title="Do you want to remove access to this staff member?" onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
-                          <Typography
-                            textTransform={"none"}
-                            style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
-                          >
-                            {profile.activeInCompany ? "Inactive" : "Active"}
-                          </Typography></Popconfirm>}
+                    {user.role === "Administrator" && <Button style={BlueButton}>
 
+                      <Popconfirm title={`Do you want to ${profile.active ? "remove" : "grant"} access to this staff member?`} onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
+                        <Typography
+                          textTransform={"none"}
+                          style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
+                        >
+                          {profile.status ? "Inactive" : "Active"}
+                        </Typography>
+                      </Popconfirm>
 
-                    </Button>
+                    </Button>}
                   </Grid>
                 </Grid>
               </Card>
@@ -737,14 +712,7 @@ const StaffDetail = () => {
               />
             </Grid>
           </Grid>
-
         </Grid>
-        {/* {editProfile && (
-          <EditProfileModal
-            editProfile={editProfile}
-            setEditProfile={setEditProfile}
-          />
-        )} */}
       </>
     );
   }
