@@ -44,7 +44,7 @@ const UpdateEventContactInfo = ({
   };
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: msg,
     });
   };
@@ -244,7 +244,7 @@ const UpdateEventContactInfo = ({
               }}
             >
               <PhoneInput
-                style={{...OutlinedInputStyle, padding: "2.5px 12px", border:"0.3px solid var(--gray300)", margin: "0.1rem auto 1rem",width:"100%"}}
+                style={{ ...OutlinedInputStyle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1rem", width: "100%" }}
                 countrySelectProps={{ unicodeFlags: true }}
                 defaultCountry="US"
                 placeholder="(555) 000-0000"
@@ -310,7 +310,7 @@ const UpdateEventContactInfo = ({
               );
             })}
           </Space>
-          <Button htmlType="submit" style={{ ...BlueButton,...CenteringGrid, width: "100%" }}>
+          <Button htmlType="submit" style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
             <Typography style={BlueButtonText}>Update</Typography>
           </Button>
         </form>
