@@ -42,7 +42,7 @@ const App = () => {
 
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       description: msg,
     });
   };
