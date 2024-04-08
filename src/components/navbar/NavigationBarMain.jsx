@@ -25,7 +25,6 @@ import { DevitrakLogo, DevitrakName, SettingIcon } from '../icons/Icons';
 import './style/style.css';
 import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
-//{ title: 'posts', route: '/posts' }
 const drawerWidth = 240;
 const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
 
@@ -189,60 +188,56 @@ const NavigationBarMain = (props) => {
                             </Box>
                         </Grid>
 
-                        <Grid item sm={8} md={5} lg={4} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "space-between", alignItems: 'center', margin: 0 }}>
-                            <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}>
-                                <form onSubmit={handleSubmit(handleSearch)}>
-                                    <OutlinedInput placeholder="Search"
-                                        sx={OutlinedInputStyle}
-                                        {...register('searchValue')}
-                                        endAdornment={
-                                            <>
-                                                <InputAdornment position="end">
-                                                    <Icon
-                                                        cursor={"pointer"}
-                                                        icon="ic:baseline-delete-forever"
-                                                        color="#1e73be"
-                                                        width="25"
-                                                        height="25"
-                                                        opacity={`${searchValue?.length > 0 ? 1 : 0}`}
-                                                        display={`${searchValue?.length > 0 ? "auto" : "none"
-                                                            }`}
-                                                        onClick={() => {
-                                                            setSearchValue("");
-                                                            dispatch(onResetResult());
-                                                            ref.current = undefined;
-                                                        }}
-                                                    />
-                                                </InputAdornment>
-                                                <InputAdornment position="end">
-                                                    {" "}
-                                                    <Icon
-                                                        icon="entypo:magnifying-glass"
-                                                        rotate={1}
-                                                        width="25"
-                                                        cursor={"pointer"}
-                                                        style={{
-                                                            display: "flex",
-                                                            justifyContent: "center",
-                                                            alignItems: "center",
-                                                        }}
-                                                        opacity={1}
-                                                        type='submit'
-                                                    />
-                                                </InputAdornment>
-                                            </>
-                                        }
-                                        fullWidth
-                                    />
-                                </form>
-                            </Grid>
+                        <Grid item sm={8} md={5} lg={4} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "flex-end", alignItems: 'center', margin: 0 }}>
+                            {/* <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}> */}
+                            <form onSubmit={handleSubmit(handleSearch)} style={{ margin: `${isSmallDevice ? '0 5px 0 0' : isMediumDevice ? '0 -5px 0 0' : isLargeDevice ? '0 -5px 0 0' : '0 -10px 0 0'}` }}>
+                                <OutlinedInput placeholder="Search"
+                                    sx={OutlinedInputStyle}
+                                    {...register('searchValue')}
+                                    endAdornment={
+                                        <>
+                                            <InputAdornment position="end">
+                                                <Icon
+                                                    cursor={"pointer"}
+                                                    icon="ic:baseline-delete-forever"
+                                                    color="#1e73be"
+                                                    width="25"
+                                                    height="25"
+                                                    opacity={`${searchValue?.length > 0 ? 1 : 0}`}
+                                                    display={`${searchValue?.length > 0 ? "auto" : "none"
+                                                        }`}
+                                                    onClick={() => {
+                                                        setSearchValue("");
+                                                        dispatch(onResetResult());
+                                                        ref.current = undefined;
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                            <InputAdornment position="end">
+                                                {" "}
+                                                <Icon
+                                                    icon="entypo:magnifying-glass"
+                                                    rotate={1}
+                                                    width="25"
+                                                    cursor={"pointer"}
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                    }}
+                                                    opacity={1}
+                                                    type='submit'
+                                                />
+                                            </InputAdornment>
+                                        </>
+                                    }
+                                    fullWidth
+                                />
+                            </form>
+                            {/* </Grid> */}
                             <Grid item sm={2} md={2} lg={2} style={{ ...CenteringGrid, justifyContent: "flex-end", margin: 0 }}>
                                 {status === "authenticated" && (
-                                    <NavLink
-                                    // style={{
-                                    //     padding: "0 0 0 15px",
-                                    // }}
-                                    >
+                                    <NavLink>
                                         <Dropdown
                                             menu={{
                                                 items,
@@ -262,32 +257,15 @@ const NavigationBarMain = (props) => {
                                                 >
                                                     <div className="content-2-main-navbar-updated">
                                                         <div className="text-1-main-navbar-updated text-mdsemibold">
-                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }} onClick={() => Window} ><SettingIcon /></p>
+                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }} ><SettingIcon /></p>
                                                         </div>
                                                     </div>
                                                 </article>
                                             </div>
-
-                                            {/* {user.data.imageProfile ? (
-                                            <Avatar
-                                                src={
-                                                    <img
-                                                        src={user.data.imageProfile}
-                                                        alt="profile"
-                                                    />
-                                                }
-                                            />
-                                        ) : (
-                                            <Avatar>
-                                                {user.name[0]}
-                                                {user.lastName[0]}
-                                            </Avatar>
-                                        )} */}
                                         </Dropdown>
                                     </NavLink>
                                 )}
                             </Grid>
-
                         </Grid>
                     </Grid>
                 </Toolbar>
