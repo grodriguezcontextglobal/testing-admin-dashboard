@@ -5,6 +5,7 @@ import {
     OutlinedInput,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "@uidotdev/usehooks";
 import { Checkbox, Typography, notification } from "antd";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,14 +15,12 @@ import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { clearErrorMessage, onAddErrorMessage, onChecking, onLogin, onLogout } from "../../store/slices/adminSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import '../../styles/global/OutlineInput.css';
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import ForgotPassword from "./ForgotPassword";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import './style/authStyle.css'
-import '../../styles/global/OutlineInput.css';
 import ModalMultipleCompanies from "./multipleCompanies/Modal";
-import { ErrorIcon, SuccessIcon, WarningIcon } from "../../components/icons/Icons";
+import './style/authStyle.css';
 const Login = () => {
     const {
         register,
@@ -35,17 +34,16 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient()
-    const iconDic = {
-        success: <SuccessIcon />,
-        error: <ErrorIcon />,
-        warning: <WarningIcon />
-    }
+    // const iconDic = {
+    //     success: <SuccessIcon />,
+    //     error: <ErrorIcon />,
+    //     warning: <WarningIcon />
+    // }
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
         api.open({
             message: (
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ marginRight: '8px' }} >{iconDic[type]}</span> {/* Adjust icon spacing */}
                     {msg}
                 </div>
             ),
@@ -131,7 +129,7 @@ const Login = () => {
             }
 
         } catch (error) {
-            alert(`${error}`)
+            openNotificationWithIcon('error', `${error.response.data.msg}`)
             dispatch(onLogout("Incorrect credentials"));
             dispatch(onAddErrorMessage(error?.response?.data?.msg));
         }
