@@ -70,7 +70,7 @@ const EndEventButton = () => {
 
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg,
         });
     };

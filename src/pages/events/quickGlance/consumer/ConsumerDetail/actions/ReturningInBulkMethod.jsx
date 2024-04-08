@@ -35,7 +35,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
     const queryClient = useQueryClient()
     const [api, contextHolder] = notification.useNotification()
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg
         });
     };

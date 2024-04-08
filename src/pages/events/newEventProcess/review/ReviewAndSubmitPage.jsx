@@ -26,7 +26,7 @@ const ReviewAndSubmitEvent = () => {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       // message: type,
       description: msg,
       duration: 0,
@@ -68,7 +68,7 @@ const ReviewAndSubmitEvent = () => {
       for (let data of staff.headsetAttendees) {
         const respo = await devitrakApi.post('/db_staff/consulting-member', {
           email: data.email
-        }) 
+        })
         if (respo.data.member.length > 0) {
 
           await devitrakApi.post('/db_event/event_staff', {

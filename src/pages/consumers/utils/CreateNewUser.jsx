@@ -54,7 +54,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
         ? [...eventsPerAdmin.active, ...eventsPerAdmin.completed]
         : [];
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: type,
             description: msg,
         });
@@ -384,7 +384,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
                                                 padding: "0px 20px",
                                                 width: "90%",
                                                 boxShadow: 'rgba(16, 24, 40, 0.05) 1px 1px 2px',
-                                                border:'solid 0.1px rgba(16,24,40,0.2)'
+                                                border: 'solid 0.1px rgba(16,24,40,0.2)'
                                             }}
                                             id='phone_input_check'
                                             countrySelectProps={{ unicodeFlags: true }}
@@ -410,7 +410,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
                                         </Typography>
                                     </InputLabel>
                                     <Select
-                                    className="custom-autocomplete"
+                                        className="custom-autocomplete"
                                         displayEmpty
                                         {...register("eventAssignedTo", { required: true })}
                                         aria-invalid={errors.eventAssignedTo}
@@ -445,7 +445,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
                                     <Button
                                         type="submit"
                                         style={BlueButton}
-    
+
                                     >
                                         <Typography
                                             textTransform={"none"}

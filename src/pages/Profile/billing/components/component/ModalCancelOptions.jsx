@@ -36,7 +36,7 @@ const ModalCancelOptions = ({
   };
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api[type]({
+    api.open({
       message: msg,
       description: dscpt,
     });
@@ -52,15 +52,15 @@ const ModalCancelOptions = ({
     for (let data of priceOptions) {
       if (
         data[
-          companyAccountStripe?.subscriptionHistory?.at(-1)?.latest_invoice
-            ?.total
+        companyAccountStripe?.subscriptionHistory?.at(-1)?.latest_invoice
+          ?.total
         ]
       ) {
         return (priceRefToPass.current =
           data[
-            companyAccountStripe?.subscriptionHistory?.at(
-              -1
-            )?.latest_invoice?.total
+          companyAccountStripe?.subscriptionHistory?.at(
+            -1
+          )?.latest_invoice?.total
           ]);
       }
     }
@@ -152,7 +152,7 @@ const ModalCancelOptions = ({
         onOk={() => closeModal()}
         onCancel={() => closeModal()}
         footer={[]}
-        maskClosable = {false}
+        maskClosable={false}
       >
         <Grid container>
           <Grid

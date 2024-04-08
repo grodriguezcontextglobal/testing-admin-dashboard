@@ -46,7 +46,7 @@ export const ReplaceDevice = ({ refetching }) => {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: msg,
     });
   };
@@ -230,7 +230,7 @@ export const ReplaceDevice = ({ refetching }) => {
             <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
               {watch("serialNumber") !== "" && (
                 <Select
-                className="custom-autocomplete"
+                  className="custom-autocomplete"
                   {...register("reason", { required: true })}
                   style={{ ...AntSelectorStyle, width: "100%" }}
                 >

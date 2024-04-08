@@ -57,7 +57,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
-    api[type]({
+    api.open({
       message: `${type}`,
       description: `${message}`,
       placement: "bottomRight",

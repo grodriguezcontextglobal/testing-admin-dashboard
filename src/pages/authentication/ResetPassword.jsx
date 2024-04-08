@@ -34,7 +34,7 @@ const ResetPassword = () => {
     const navigate = useNavigate();
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, message, description) => {
-        api[type]({
+        api.open({
             message: message,
             description: description,
         });

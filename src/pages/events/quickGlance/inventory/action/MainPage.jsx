@@ -31,7 +31,7 @@ const ActionsMainPage = () => {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: type,
       description: msg,
     });

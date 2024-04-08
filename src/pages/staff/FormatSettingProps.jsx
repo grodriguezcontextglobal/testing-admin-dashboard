@@ -41,7 +41,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
 
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, content) => {
-    api[type]({
+    api.open({
       message: content.title,
       description: content.description,
     });
@@ -80,7 +80,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
             key="edit"
           />,
           <Popconfirm
-          key={props.email}
+            key={props.email}
             placement="bottomLeft"
             title="Are you sure?"
             description="This admin user will be deleted permanently"

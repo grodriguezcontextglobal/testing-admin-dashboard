@@ -40,7 +40,7 @@ const Registration = () => {
 
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, title, msg) => {
-        api[type]({
+        api.open({
             message: title,
             description: msg,
         });
@@ -358,18 +358,18 @@ const Registration = () => {
                                         justifyContent={"space-between"}
                                     >
                                         <OutlinedInput
-                                        type="text"
-                                        // {...register("lastName")}
-                                        value={companyValue}
-                                        onChange={(e) => setCompanyValue(e.target.value)}
-                                        // aria-invalid={errors.lastName}
-                                        style={{
-                                            ...OutlinedInputStyle,
-                                            // border: `${errors.lastName && "solid 1px #004EEB"}`,
-                                        }}
-                                        placeholder="Enter your company name"
-                                        fullWidth
-                                    />
+                                            type="text"
+                                            // {...register("lastName")}
+                                            value={companyValue}
+                                            onChange={(e) => setCompanyValue(e.target.value)}
+                                            // aria-invalid={errors.lastName}
+                                            style={{
+                                                ...OutlinedInputStyle,
+                                                // border: `${errors.lastName && "solid 1px #004EEB"}`,
+                                            }}
+                                            placeholder="Enter your company name"
+                                            fullWidth
+                                        />
                                         {/* <AutoComplete
                                             className="custom-autocomplete"
                                             style={{

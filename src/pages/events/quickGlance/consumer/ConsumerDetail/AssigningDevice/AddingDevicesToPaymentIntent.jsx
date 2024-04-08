@@ -59,7 +59,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
 
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, message) => {
-        api[type]({
+        api.open({
             message: `${type}`,
             description: `${message}`,
             placement: "bottomRight",
@@ -220,7 +220,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
                         },
                         event: event.eventInfoDetail.eventName,
                         company: event.company,
-                        date: String(dateRef.slice(0,4)).replaceAll(",", " "),
+                        date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                         time: dateRef[4],
                         transaction: record.paymentIntent,
                         link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`

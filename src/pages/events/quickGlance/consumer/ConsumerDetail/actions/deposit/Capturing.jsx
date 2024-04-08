@@ -31,7 +31,7 @@ const Capturing = ({
 }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
-    api[type]({
+    api.open({
       message: title,
       duration: 0
     });

@@ -60,7 +60,7 @@ const StripeTransactionTable = ({ searchValue }) => {
     const dispatch = useDispatch();
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, message) => {
-        api[type]({
+        api.open({
             message: `${type === "success" ? type : ""}`,
             description: `${message}`,
             placement: "bottomRight",
