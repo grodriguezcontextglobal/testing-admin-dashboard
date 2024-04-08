@@ -29,7 +29,7 @@ const EmailNotification = ({
   renderListOfEmailsOfConsumersPerEvent();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api[type]({
+    api.open({
       message: msg,
       description: dscpt,
     });
@@ -119,7 +119,7 @@ const EmailNotification = ({
             item
             xs={10}
           >
-            <form style={{width:"100%"}} onSubmit={handleSubmit(handleSubmitEmailNotification)}>
+            <form style={{ width: "100%" }} onSubmit={handleSubmit(handleSubmitEmailNotification)}>
               <Grid marginY={"0.5rem"} item xs={12}>
                 <OutlinedInput
                   placeholder="Your email's subject here."
@@ -157,7 +157,7 @@ const EmailNotification = ({
                 >
                   <Typography
                     textTransform={"none"}
-                    style={{...BlueButtonText, ...CenteringGrid}}
+                    style={{ ...BlueButtonText, ...CenteringGrid }}
                   >Send email</Typography>
                 </Button>
               </Grid>
