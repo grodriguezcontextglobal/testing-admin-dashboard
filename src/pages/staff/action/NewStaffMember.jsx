@@ -109,7 +109,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
         consumer: templateNewUser.email,
         subject: "Invitation",
         company: user.company,
-        link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
+        link: `https://admin-testing-dev.netlify.app/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
       })
       queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
       queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
