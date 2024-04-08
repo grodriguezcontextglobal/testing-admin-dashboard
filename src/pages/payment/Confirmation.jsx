@@ -35,7 +35,7 @@ const Confirmation = () => {
     mutationFn: (template) => devitrakApi.post('/receiver/receiver-assignation', template)
   })
   const updateDeviceInPoolMutation = useMutation({
-    mutationFn: (template) => devitrakApi.patch(`/receiver/receivers-pool-update/${template.id}`, { activity: "YES", status:"Operational" })
+    mutationFn: (template) => devitrakApi.patch(`/receiver/receivers-pool-update/${template.id}`, { activity: "YES", status: "Operational" })
   })
   const payment_intent = new URLSearchParams(window.location.search).get(
     "payment_intent"
@@ -46,7 +46,7 @@ const Confirmation = () => {
   );
   const [api, contextHolder] = notification.useNotification();
   const openNotification = (type, mess, descript) => {
-    api[type]({
+    api.open({
       message: mess,
       description: descript,
       duration: 0,
