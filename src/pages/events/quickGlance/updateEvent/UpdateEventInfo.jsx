@@ -56,7 +56,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
 
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: msg,
     });
   };
@@ -363,7 +363,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
               alignItems: "center",
               textAlign: "left",
               gap: "10px",
-              margin:"0 0 0.5rem"
+              margin: "0 0 0.5rem"
             }}
           >
             <div
@@ -441,7 +441,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
               />
             </div>
           </div>
-          <Button htmlType="submit" loading={loading} style={{ ...BlueButton,...CenteringGrid, width: "100%" }}>
+          <Button htmlType="submit" loading={loading} style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
             <Typography style={BlueButtonText}>Update</Typography>
           </Button>
         </form>
