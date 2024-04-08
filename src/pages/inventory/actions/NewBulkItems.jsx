@@ -30,6 +30,7 @@ import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewBulkItems = () => {
     const [selectedItem, setSelectedItem] = useState('')
+    const [taxableLocation, setTaxableLocation] = useState('')
     const { user } = useSelector((state) => state.admin);
     const {
         register,
@@ -40,7 +41,7 @@ const AddNewBulkItems = () => {
     const navigate = useNavigate();
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg,
         });
     };
@@ -64,7 +65,6 @@ const AddNewBulkItems = () => {
         refetchOnMount: false
     })
     useEffect(() => {
-        console.log("🚀 ~ AddNewBulkItems ~ itemsInInventoryQuery:", itemsInInventoryQuery?.data)
         const controller = new AbortController()
         companiesQuery.refetch()
         itemsInInventoryQuery.refetch()
@@ -103,13 +103,17 @@ const AddNewBulkItems = () => {
         }
         return result
     }
+
     useEffect(() => {
         const controller = new AbortController()
         if (retrieveItemDataSelected().has(selectedItem)) {
             const dataToRetrieve = retrieveItemDataSelected().get(selectedItem)
             setValue('category_name', `${dataToRetrieve.category_name}`)
             setValue('cost', `${dataToRetrieve.cost}`)
+            setValue('brand', `${dataToRetrieve.brand}`)
             setValue('descript_item', `${dataToRetrieve.descript_item}`)
+            setLocationSelection(`${dataToRetrieve.location}`)
+            setTaxableLocation(`${dataToRetrieve.main_warehouse}`)
         }
 
         return () => {
@@ -144,11 +148,14 @@ const AddNewBulkItems = () => {
                             category_name: data.category_name,
                             item_group: selectedItem,
                             cost: data.cost,
+                            brand: data.brand,
                             descript_item: data.descript_item,
                             ownership: valueSelection,
                             serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
                             warehouse: true,
+                            main_warehouse: taxableLocation,
                             location: locationSelection,
+                            current_location: locationSelection,
                             created_at: formatDate(new Date()),
                             updated_at: formatDate(new Date()),
                             company: user.company
@@ -163,6 +170,7 @@ const AddNewBulkItems = () => {
                             setValue("category_name", "");
                             setValue("item_group", "");
                             setValue("cost", "");
+                            setValue("brand", "");
                             setValue("descript_item", "");
                             setValue("ownership", "");
                             setValue("serial_number", "")
@@ -189,11 +197,14 @@ const AddNewBulkItems = () => {
                         category_name: data.category_name,
                         item_group: selectedItem,
                         cost: data.cost,
+                        brand: data.brand,
                         descript_item: data.descript_item,
                         ownership: valueSelection,
                         serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
                         warehouse: true,
+                        main_warehouse: taxableLocation,
                         location: locationSelection,
+                        current_location: locationSelection,
                         created_at: formatDate(new Date()),
                         updated_at: formatDate(new Date()),
                         company: user.company
@@ -369,7 +380,7 @@ const AddNewBulkItems = () => {
                                 fontSize: "14px",
                                 width: "100%"
                             }}
-                            
+
                             value={selectedItem}
                             onChange={(value) => setSelectedItem(value)}
                             options={retrieveItemOptions().map(item => { return ({ value: item }) })}
@@ -378,14 +389,55 @@ const AddNewBulkItems = () => {
                                 option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                             }
                         />
-                        {/* <OutlinedInput
-                            {...register("item_group")}
-                            aria-invalid={errors.item_group}
+
+                        <div
+
+                            style={{
+                                textAlign: "left",
+                                width: "50%",
+                            }}
+                        >
+                        </div>
+                    </div>
+                </div>
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        textAlign: "left",
+                        gap: "10px",
+                    }}
+                >
+                    <div
+                        style={{
+                            textAlign: "left",
+                            width: "50%",
+                        }}
+                    >
+                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={500}
+                                lineHeight={"20px"}
+                                color={"var(--gray-700, #344054)"}
+                            >
+                                Brand
+                            </Typography>
+                        </InputLabel>
+                        <OutlinedInput
+                            {...register("brand")}
+                            aria-invalid={errors.brand}
                             style={OutlinedInputStyle}
-                            placeholder="e.g. Laptop"
+                            placeholder="e.g. Apple"
                             fullWidth
-                        /> */}
-                        {/* {errors?.item_group && (
+                        />
+                        {errors?.brand && (
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
@@ -398,17 +450,41 @@ const AddNewBulkItems = () => {
                                 width={"100%"}
                                 padding={"0.5rem 0"}
                             >
-                                {errors.item_group.type}
+                                {errors.brand.type}
                             </Typography>
-                        )} */}
-                        <div
-                        
-                            style={{
-                                textAlign: "left",
-                                width: "50%",
-                            }}
-                        >
-                        </div>
+                        )}
+                    </div>
+                    <div
+                        style={{
+                            textAlign: "left",
+                            width: "50%",
+                        }}
+                    >
+                        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Typography
+                                textTransform={"none"}
+                                textAlign={"left"}
+                                fontFamily={"Inter"}
+                                fontSize={"14px"}
+                                fontStyle={"normal"}
+                                fontWeight={500}
+                                lineHeight={"20px"}
+                                color={"var(--gray-700, #344054)"}
+                            >
+                                <Tooltip title="Address where tax deduction for equipment will be applied.">Taxable location <QuestionIcon /></Tooltip>
+                            </Typography>
+                        </InputLabel>
+                        <AutoComplete
+                            className="custom-autocomplete"
+                            style={{ width: "100%", height: "2.5rem" }}
+                            options={renderLocationOptions()}
+                            value={taxableLocation}
+                            placeholder="Select a location"
+                            filterOption={(inputValue, option) =>
+                                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                            onChange={(value) => setTaxableLocation(value)}
+                        />
                     </div>
                 </div>
                 <div
@@ -640,6 +716,7 @@ const AddNewBulkItems = () => {
                     </InputLabel>
                     <AutoComplete
                         className="custom-autocomplete"
+                        value={locationSelection}
                         style={{ width: "100%", height: "2.5rem" }}
                         options={renderLocationOptions()}
                         placeholder="Select a location"
