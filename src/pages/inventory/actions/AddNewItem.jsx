@@ -28,6 +28,7 @@ import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewItem = () => {
   const [selectedItem, setSelectedItem] = useState('')
+  const [taxableLocation, setTaxableLocation] = useState('')
   const [loadingStatus, setLoadingStatus] = useState(false)
   const { user } = useSelector((state) => state.admin);
   const {
@@ -39,7 +40,7 @@ const AddNewItem = () => {
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: msg,
     });
   };
@@ -111,7 +112,10 @@ const AddNewItem = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(selectedItem)
       setValue('category_name', `${dataToRetrieve.category_name}`)
       setValue('cost', `${dataToRetrieve.cost}`)
+      setValue('brand', `${dataToRetrieve.brand}`)
       setValue('descript_item', `${dataToRetrieve.descript_item}`)
+      setLocationSelection(`${dataToRetrieve.location}`)
+      setTaxableLocation(`${dataToRetrieve.main_warehouse}`)
     }
 
     return () => {
@@ -140,19 +144,23 @@ const AddNewItem = () => {
             category_name: data.category_name,
             item_group: selectedItem,
             cost: data.cost,
+            brand: data.brand,
             descript_item: data.descript_item,
             ownership: valueSelection,
             serial_number: data.serial_number,
             warehouse: true,
+            main_warehouse: taxableLocation,
             created_at: formatDate(new Date()),
             updated_at: formatDate(new Date()),
             company: user.company,
-            location: locationSelection
+            location: locationSelection,
+            current_location: locationSelection
           });
           if (respNewItem.data.ok) {
             setValue("category_name", "");
             setValue("item_group", "");
             setValue("cost", "");
+            setValue("brand", "");
             setValue("descript_item", "");
             setValue("ownership", "");
             setValue("serial_number", "")
@@ -173,19 +181,23 @@ const AddNewItem = () => {
           category_name: data.category_name,
           item_group: selectedItem,
           cost: data.cost,
+          brand: data.brand,
           descript_item: data.descript_item,
           ownership: valueSelection,
           serial_number: data.serial_number,
           warehouse: true,
+          main_warehouse: taxableLocation,
           created_at: formatDate(new Date()),
           updated_at: formatDate(new Date()),
           company: user.company,
-          location: locationSelection
+          location: locationSelection,
+          current_location: locationSelection
         });
         if (respNewItem.data.ok) {
           setValue("category_name", "");
           setValue("item_group", "");
           setValue("cost", "");
+          setValue("brand", "");
           setValue("descript_item", "");
           setValue("ownership", "");
           setValue("serial_number", "")
@@ -241,7 +253,6 @@ const AddNewItem = () => {
     )
   }
   return (
-    // <Modal title={renderTitle()} open={openSingleItemModal} onCancel={() => closeModal()} style={{ position: "absolute", top: "11dvh", left: "0", right: "0", }} width={1000} footer={[]}>
     <Grid
       display={"flex"}
       justifyContent={"center"}
@@ -367,6 +378,93 @@ const AddNewItem = () => {
               filterOption={(inputValue, option) =>
                 option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
               }
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
+          }}
+        >
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                fontFamily={"Inter"}
+                fontSize={"14px"}
+                fontStyle={"normal"}
+                fontWeight={500}
+                lineHeight={"20px"}
+                color={"var(--gray-700, #344054)"}
+              >
+                Brand
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              {...register("brand")}
+              aria-invalid={errors.brand}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Apple"
+              fullWidth
+            />
+            {errors?.brand && (
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                fontFamily={"Inter"}
+                fontSize={"14px"}
+                fontStyle={"normal"}
+                fontWeight={400}
+                lineHeight={"20px"}
+                color={"red"}
+                width={"100%"}
+                padding={"0.5rem 0"}
+              >
+                {errors.brand.type}
+              </Typography>
+            )}
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                fontFamily={"Inter"}
+                fontSize={"14px"}
+                fontStyle={"normal"}
+                fontWeight={500}
+                lineHeight={"20px"}
+                color={"var(--gray-700, #344054)"}
+              >
+                <Tooltip title="Address where tax deduction for equipment will be applied.">Taxable location <QuestionIcon /></Tooltip>
+              </Typography>
+            </InputLabel>
+            <AutoComplete
+              className="custom-autocomplete"
+              style={{ width: "100%", height: "2.5rem" }}
+              options={renderLocationOptions()}
+              value={taxableLocation}
+              placeholder="Select a location"
+              filterOption={(inputValue, option) =>
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              onChange={(value) => setTaxableLocation(value)}
             />
           </div>
         </div>
@@ -623,6 +721,7 @@ const AddNewItem = () => {
               style={{ width: "100%", height: "2.5rem" }}
               options={renderLocationOptions()}
               placeholder="Select a location"
+              value={locationSelection}
               filterOption={(inputValue, option) =>
                 option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
               }
@@ -718,9 +817,7 @@ const AddNewItem = () => {
             </Button></div>
         </div>
       </form>
-      {/* </Grid> */}
     </Grid >
-    // </Modal>
 
   );
 };
