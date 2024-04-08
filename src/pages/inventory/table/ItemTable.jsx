@@ -2,18 +2,18 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
+import _ from 'lodash';
 import pkg from 'prop-types';
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import _ from 'lodash';
 import { GeneralDeviceIcon, RefreshIcon, RightNarrowInCircle } from "../../../components/icons/Icons";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-table.css';
-import { useEffect } from "react";
 const { PropTypes } = pkg;
 
 const ItemTable = ({ searchItem }) => {
@@ -45,14 +45,13 @@ const ItemTable = ({ searchItem }) => {
   const imageSource = listImagePerItemQuery?.data?.data?.item
   const groupingByDeviceType = _.groupBy(imageSource, 'item_group')
   const renderedListItems = listItemsQuery?.data?.data.result
-
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = _.groupBy(itemsInInventoryQuery?.data?.data?.items, 'serial_number')
     if (renderedListItems?.length > 0) {
       for (let data of renderedListItems) {
         if (groupingBySerialNumber[data.serial_number]) {
-          resultFormatToDisplay.add({ key: `${data.item_id}-${data.event_name}`, ...data, data: { ...data, location: groupingBySerialNumber[data.serial_number].at(-1).location }, location: groupingBySerialNumber[data.serial_number].at(-1).location });
+          resultFormatToDisplay.add({ key: `${data.item_id}-${data.event_name}`, ...data, data: { ...data, location: groupingBySerialNumber[data.serial_number].at(-1).location, ...groupingBySerialNumber[data.serial_number].at(-1) }, location: groupingBySerialNumber[data.serial_number].at(-1).location });
         }
       }
       return Array.from(resultFormatToDisplay);
@@ -173,7 +172,7 @@ const ItemTable = ({ searchItem }) => {
     alignItems: "center"
   }
   const columns = [{
-    title: 'Device type',
+    title: 'Device category',
     dataIndex: 'data',
     key: 'data',
     sorter: {
@@ -183,8 +182,22 @@ const ItemTable = ({ searchItem }) => {
       <span style={cellStyle}><Avatar size={'80px'} src={groupingByDeviceType[record.item_group] ? groupingByDeviceType[record.item_group][0].source : `${<GeneralDeviceIcon />}`}></Avatar>&nbsp; <Typography
         style={Subtitle}
         textTransform={"capitalize"}
-      >{record.item_group}<br />
+      >
         {record.category_name}</Typography></span>
+    )
+  },
+  {
+    title: 'Device name',
+    dataIndex: 'item_group',
+    key: 'item_group',
+    sorter: {
+      compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
+    },
+    render: (item_group) => (
+      <span style={cellStyle}> <Typography
+        style={Subtitle}
+        textTransform={"capitalize"}
+      >{item_group}</Typography></span>
     )
   },
   {
@@ -274,18 +287,19 @@ const ItemTable = ({ searchItem }) => {
         </Typography>
       </span>
     )
-  }, {
-    title: 'Group',
-    dataIndex: 'category_name',
-    key: 'category_name',
+  },
+  {
+    title: 'Taxable address',
+    dataIndex: 'data',
+    key: 'data',
     sorter: {
-      compare: (a, b) => ("" + a.category_name).localeCompare(b.category_name),
+      compare: (a, b) => ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
     },
-    render: (category_name) => (
+    render: (data) => (
       <span style={cellStyle}> <Typography
         style={Subtitle}
         textTransform={"capitalize"}
-      >{category_name}</Typography></span>
+      >{data.warehouse === 1 ? data.main_warehouse : data.event_name}</Typography></span>
     )
   },
   {
@@ -347,9 +361,16 @@ const ItemTable = ({ searchItem }) => {
           </Typography>
         </Button>
       </Grid>
-      <Table pagination={{
-        position: ['bottomCenter'],
-      }} style={{ width: "100%" }} columns={columns} dataSource={dataToDisplay()} className="table-ant-customized" />
+      <Table
+        pagination={{
+          position: ['bottomCenter'],
+          pageSizeOptions: [10, 20, 30, 50, 100],
+          total: dataToDisplay().length,
+          defaultPageSize: 10,
+          defaultCurrent: 1
+        }}
+        style={{ width: "100%" }} columns={columns} dataSource={dataToDisplay()}
+        className="table-ant-customized" />
       <Divider />
       {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && displayWelcomeMessage()}
     </Grid>
