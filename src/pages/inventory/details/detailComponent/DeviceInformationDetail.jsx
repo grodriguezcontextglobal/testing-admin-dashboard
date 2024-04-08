@@ -53,6 +53,18 @@ const DeviceInformationDetail = ({ dataFound }) => {
                 lineHeight={"28px"}
                 color={"var(--gray-900, #101828)"}
               >
+                {dataFound[0]?.category_name}
+              </Typography>
+              <br />
+              <Typography
+                textAlign={"left"}
+                fontFamily={"Inter"}
+                fontSize={"18px"}
+                fontStyle={"normal"}
+                fontWeight={400}
+                lineHeight={"28px"}
+                color={"var(--gray-900, #101828)"}
+              >
                 {dataFound[0]?.company}
               </Typography>
             </Typography>
