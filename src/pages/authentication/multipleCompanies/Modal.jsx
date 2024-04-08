@@ -9,7 +9,7 @@ import { clearErrorMessage, onLogin } from "../../../store/slices/adminSlice"
 import { BlueButton } from "../../../styles/global/BlueButton"
 import { BlueButtonText } from "../../../styles/global/BlueButtonText"
 
-const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanies, data:dataPassed }) => {
+const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanies, data: dataPassed }) => {
     const closeModal = () => {
         return setOpenMultipleCompanies(false)
     }
@@ -17,7 +17,7 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
     const navigate = useNavigate()
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg,
             duration: 0
         });
@@ -82,7 +82,7 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
                     {
                         dataPassed?.companyInfo?.map(item => {
                             return (
-                                <Button key={item.company} style={{...BlueButton, height:"auto"}} onClick={() => loginIntoOneCompanyAccount(item)}>
+                                <Button key={item.company} style={{ ...BlueButton, height: "auto" }} onClick={() => loginIntoOneCompanyAccount(item)}>
                                     <Typography style={BlueButtonText}>{item.company}</Typography>
                                 </Button>
                             )
