@@ -81,7 +81,7 @@ const PastEventsTable = ({ events }) => {
                     ("" + a.eventInfoDetail.eventName).localeCompare(b.eventInfoDetail.eventName),
             },
             render: (eventInfoDetail) => (
-                <span>
+                <span style={{fontFamily:"Inter",}}>
                     <Avatar src={eventInfoDetail.logo ?? eventInfoDetail.eventName.split(' ')[0]}></Avatar>&nbsp;
                     {eventInfoDetail.eventName}
                 </span>
@@ -96,7 +96,23 @@ const PastEventsTable = ({ events }) => {
                     ("" + a.active).localeCompare(b.active),
             },
             render: (active) => (
-                <span>{active ? "Active" : "Closed"}</span>
+                <span style={{
+                    borderRadius: "16px",
+                    justifyContent: "center",
+                    display: "flex",
+                    padding: "2px 8px",
+                    alignItems: "center",
+                    background: `${active === 0
+                        ? "#ffe4b5"
+                        : "#ffb5b5"
+                        }`,
+                    width: "fit-content",
+                    fontFamily:"Inter",
+                    // color: `${active === 0
+                    //     ? "#2E90FA"
+                    //     : "#12B76A"
+                    //     }`
+                }}>{active ? "Active" : "Closed"}</span>
             )
         },
         {
@@ -110,7 +126,7 @@ const PastEventsTable = ({ events }) => {
             render: (eventInfoDetail) => {
                 const ending = new Date(eventInfoDetail.dateEnd).toString().split(' ')
                 const begining = new Date(eventInfoDetail.dateBegin).toString().split(' ')
-                return <span>{begining[1]} {begining[2]}-{ending[2]}</span>
+                return <span style={{fontFamily:"Inter"}}>{begining[1]} {begining[2]}-{ending[2]}</span>
             }
         },
         {
@@ -123,7 +139,7 @@ const PastEventsTable = ({ events }) => {
             },
             render: (eventInfoDetail) => {
                 const date = new Date(eventInfoDetail.dateBegin).getFullYear()
-                return <span>{date}</span>
+                return <span style={{fontFamily:"Inter"}}>{date}</span>
             }
         },
         {
