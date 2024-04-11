@@ -128,9 +128,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                 queryClient.invalidateQueries({ queryKey: ['staffEvent'], exact: true })
                 setLoadingStatus(false)
                 openNotificationWithIcon('success', 'Staff member added to event.')
-                setTimeout(() => {
-                    closeModal()
-                }, 2500);
+                await closeModal()
             } catch (error) {
                 console.log("🚀 ~ handleNewStaffMember ~ error:", error)
                 setLoadingStatus(false)

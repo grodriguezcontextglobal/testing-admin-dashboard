@@ -65,14 +65,17 @@ const UpdateEventContactInfo = ({
       openNotificationWithIcon("success", "Contact information updated");
       dispatch(onAddEventData({ ...event, contactInfo: contactProfile }));
       dispatch(onAddContactInfo(contactProfile));
-      return setTimeout(() => {
+      setTimeout(() => {
         setLoading(false);
-        closeModal();
+
       }, 2500);
+      
+      await closeModal();
     }
-    return setTimeout(() => {
+    setTimeout(() => {
       setLoading(false);
     }, 2500);
+
   };
   const renderTitle = () => {
     return (
@@ -310,7 +313,7 @@ const UpdateEventContactInfo = ({
               );
             })}
           </Space>
-          <Button htmlType="submit" style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
+          <Button loading={loading} htmlType="submit" style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
             <Typography style={BlueButtonText}>Update</Typography>
           </Button>
         </form>

@@ -81,7 +81,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
       }
     );
     if (respUpdateEventInfoDetail.data.ok) {
-      return setTimeout(() => {
+      setTimeout(() => {
         setLoading(false);
         reset({});
         dispatch(onAddEventData({ ...event, eventInfoDetail: eventInfoProfile }));
@@ -92,12 +92,14 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
         );
         closeModal();
       }, 2500);
+      
     }
-    return setTimeout(() => {
+    setTimeout(() => {
       setLoading(false);
       reset({});
       closeModal();
     }, 2500);
+    
   };
   const renderTitle = () => {
     return (

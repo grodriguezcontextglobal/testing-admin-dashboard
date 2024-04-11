@@ -194,7 +194,7 @@ const EditItemModal = ({ dataFound, openEditItemModal, setOpenEditItemModal }) =
                         setValueSelection(options[0]);
                         openNotificationWithIcon(
                             "success",
-                            "New item was created and stored in database."
+                            "Update was done and stored in database successfully."
                         );
                         setTimeout(() => {
                             setLoadingStatus(false)
@@ -232,7 +232,7 @@ const EditItemModal = ({ dataFound, openEditItemModal, setOpenEditItemModal }) =
                     setValueSelection(options[0]);
                     openNotificationWithIcon(
                         "success",
-                        "New item was created and stored in database."
+                        "Update was done and stored in database successfully."
                     );
                     setTimeout(() => {
                         setLoadingStatus(false)

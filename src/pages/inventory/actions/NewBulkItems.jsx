@@ -180,9 +180,7 @@ const AddNewBulkItems = () => {
                                 "items were created and stored in database."
                             );
                             setLoading(false)
-                            setTimeout(() => {
-                                navigate("/inventory");
-                            }, 3000);
+                            await navigate("/inventory");
                         }
                     } catch (error) {
                         openNotificationWithIcon('error', `${error.message}`)
@@ -218,9 +216,7 @@ const AddNewBulkItems = () => {
                     if (String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber) {
                         openNotificationWithIcon('success', "items were created and stored in database.")
                         setLoading(false)
-                        setTimeout(() => {
-                            return navigate('/inventory')
-                        }, 3000);
+                        await navigate("/inventory");
                     }
                 } catch (error) {
                     openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)

@@ -170,10 +170,7 @@ const AddNewItem = () => {
               "success",
               "New item was created and stored in database."
             );
-            setTimeout(() => {
-              setLoadingStatus(false)
-              navigate("/inventory");
-            }, 3000);
+            await navigate("/inventory");
           }
         }
       } else if (data.photo.length < 1) {
@@ -207,10 +204,7 @@ const AddNewItem = () => {
             "success",
             "New item was created and stored in database."
           );
-          setTimeout(() => {
-            setLoadingStatus(false)
-            navigate("/inventory");
-          }, 3000);
+          await navigate("/inventory");
         }
       }
     } catch (error) {

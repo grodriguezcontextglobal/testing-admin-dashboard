@@ -24,7 +24,7 @@ const EditItem = ({ openEditItemModal, setOpenEditItemModal, item }) => {
     });
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg,
         });
     };
@@ -60,9 +60,7 @@ const EditItem = ({ openEditItemModal, setOpenEditItemModal, item }) => {
                     "Item was edited and stored in database."
                 );
                 queryClient.invalidateQueries('listOfItems')
-                setTimeout(() => {
-                    closeModal();
-                }, 2000);
+                await closeModal();
             }
 
         } catch (error) {
