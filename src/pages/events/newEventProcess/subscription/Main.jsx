@@ -12,6 +12,8 @@ import ModalAnnualPayment from "./components/ModalAnnualPayment";
 import ModalMonthlyPayment from "./components/ModalMonthlyPayment";
 import OptionSubscriptionTitle from "./components/OptionSubscriptionTitle";
 import PricingTable from "./table/PricingTable";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import Loading from "../../../../components/animation/Loading";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
   const [value, setValue] = useState(0);
@@ -103,12 +105,18 @@ const Main = () => {
   }, [])
 
   const sequencyActions = async () => {
-    success()
-    await setTimeout(() => navigate('/create-event-page/event-detail', { replace: true }), 4000)
+    await success()
+    await navigate('/create-event-page/event-detail', { replace: true })
+    return;
   }
   if (checkSubscriptionRecordAfterCheckInStripe()[true]) {
     sequencyActions()
-    return <div>{contextHolder}</div>
+    return (
+      <div style={CenteringGrid} onClick={success()}>
+        {contextHolder}
+        <Loading />
+      </div>
+    )
   } else {
     const handleSubmitEventPayment = async (props) => {
       if (props !== "00") {
