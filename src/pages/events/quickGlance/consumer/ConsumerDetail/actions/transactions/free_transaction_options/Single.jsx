@@ -22,7 +22,6 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company,
-            activity: "No"
         }),
         enabled: false,
         refetchOnMount: false,
@@ -162,9 +161,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
                     await devitrakApi.post("/stripe/save-transaction", transactionProfile);
                     queryClient.invalidateQueries(["transactionListQuery", "listOfDevicesAssigned"]);
                     alert("Device assigned successful")
-                    return setTimeout(() => {
-                        closeModal()
-                    }, 2500);
+                    await closeModal()
                 }
             } catch (error) {
                 console.log(

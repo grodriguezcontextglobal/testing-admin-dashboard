@@ -24,7 +24,6 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company,
-            activity: "No"
         }),
         enabled:false,
         refetchOnMount: false,

@@ -22,7 +22,6 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: event.eventInfoDetail.eventName,
             provider: event.company,
-            activity: "No"
         }),
         enabled: false,
         refetchOnMount: false,
@@ -66,7 +65,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
         const findingRange = new Set()
         for (let i = 0; i < devicesInPool.length; i++) {
             if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
-                if (`${devicesInPool[i]?.activity}`.toLowerCase() === "no" && `${devicesInPool[i]?.status}`.toLowerCase() !== "lost")
+                if (`${devicesInPool[i]?.activity}`.toLowerCase() === "no" || `${devicesInPool[i]?.status}`.toLowerCase() !== "lost")
                     findingRange.add(Number(devicesInPool[i].device))
             }
         }
@@ -160,9 +159,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
                     await devitrakApi.post("/stripe/save-transaction", transactionProfile);
                     queryClient.invalidateQueries(["transactionListQuery", "listOfDevicesAssigned"]);
                     alert("Device assigned successful")
-                    return setTimeout(() => {
-                        closeModal()
-                    }, 2500);
+                    closeModal()
                 }
             } catch (error) {
                 console.log(
