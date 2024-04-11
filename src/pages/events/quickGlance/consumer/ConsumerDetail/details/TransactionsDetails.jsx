@@ -12,16 +12,14 @@ const TransactionsDetails = () => {
     useEffect(() => {
         const controller = new AbortController()
         const refreshing = async () => {
-          await setValue('searchEvent', '.')
-          setTimeout(() => {
-            setValue('searchEvent', '')
-          }, 200)
+            await setValue('searchEvent', '.')
+            await setValue('searchEvent', '')
         }
         refreshing()
         return () => {
-          controller.abort()
+            controller.abort()
         }
-      }, [customer.uid])
+    }, [customer.uid])
     return (
         <>
             <Grid
