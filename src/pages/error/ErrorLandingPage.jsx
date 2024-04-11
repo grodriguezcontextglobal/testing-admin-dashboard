@@ -14,7 +14,7 @@ const ErrorLandingPage = () => {
                 type: 'loading',
                 content: 'redirecting...',
                 duration: 2
-            }); 
+            });
             await messageApi.open({
                 key,
                 type: 'success',
@@ -22,7 +22,7 @@ const ErrorLandingPage = () => {
                 duration: 1,
             });
             navigate('/')
-        },1000);
+        }, 1000);
     };
     openMessage()
     return (
@@ -30,7 +30,7 @@ const ErrorLandingPage = () => {
             {contextHolder}
             <Grid container style={CenteringGrid}>
                 <Grid item xs={10} sm={10} md={10} lg={10} style={CenteringGrid}>
-                    <Typography style={{...Title, backgroundColor:"var(--blue700)", color:"var(--basewhite)", textDecoration:"underline", borderRadius:"5px"}}>Page not found, We&apos;re redirecting you to home page.</Typography>
+                    <Typography style={{ ...Title, backgroundColor: "var(--blue700)", color: "var(--basewhite)", textDecoration: "underline", borderRadius: "5px" }}>Page not found, We&apos;re redirecting you to home page.</Typography>
                 </Grid>
             </Grid>
         </>

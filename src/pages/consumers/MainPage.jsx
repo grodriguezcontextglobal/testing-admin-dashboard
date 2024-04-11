@@ -116,7 +116,6 @@ const MainPage = () => {
   setTimeout(() => {
     counter = 1
   }, 2000)
-
   useEffect(() => {
     const controller = new AbortController()
     triggerFunctions()

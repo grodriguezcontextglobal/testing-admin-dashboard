@@ -341,20 +341,21 @@ const RegisterCompany = () => {
                 await consultingCompanyInSqlDb()
                 queryClient.clear()
                 setLoadingStatus(false)
-                return navigate('/', { replace: true, relative: 'path', })
+                openNotificationWithIcon('success', 'Account created.', 'Your new account was created.', 3) 
+                // navigate('/', { replace: true, relative: 'path', })
             } catch (error) {
                 notification.destroy('info')
                 openNotificationWithIcon(
                     "error",
                     "Action failed",
-                    "Please try again later.", `${error.response}`,
+                    `Please try again later. ${error.response}`,
                     3
                 );
                 dispatch(onAddErrorMessage(error))
                 setLoadingStatus(false)
                 setTimeout(() => {
                     return navigate('/login')
-                }, 2500);
+                }, 2500)
             }
         }
 

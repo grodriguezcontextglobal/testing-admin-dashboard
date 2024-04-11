@@ -74,10 +74,7 @@ const ForgotPassword = ({ open, close }) => {
       });
       if (resp.data.ok) {
         openNotificationWithIcon("success", "Email was sent to email address.");
-        setTimeout(() => {
-          handleClose();
-        }, 2500);
-
+        await handleClose();
       }
     } else {
       openNotificationWithIcon("error", "Email was not found!");
