@@ -89,9 +89,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
         queryClient.invalidateQueries('assginedDeviceList', { exact: true });
         refetching()
         setLoadingStatus(false)
-        setTimeout(() => {
-            return closeModal()
-        }, 2500);
+        await closeModal()
     }
     return (
         <Modal

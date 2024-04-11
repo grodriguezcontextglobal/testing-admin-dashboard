@@ -113,9 +113,7 @@ const Releasing = ({
       queryClient.invalidateQueries({ queryKey: ['transactionPerConsumerListQuery'], exact: true })
       refetchingTransactionFn()
       openNotificationWithIcon('success', 'Deposit was released.')
-      setTimeout(() => {
-        return closeModal()
-      }, 2500);
+      await closeModal()
     }
   };
 

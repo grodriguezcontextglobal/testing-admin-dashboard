@@ -138,6 +138,7 @@ const Capturing = ({
           setTimeout(() => {
             return closeModal()
           }, 2500);
+          
         }
       }
     };
