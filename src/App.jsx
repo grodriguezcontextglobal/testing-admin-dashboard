@@ -1,19 +1,20 @@
-import { useEffect, useState } from 'react';
-import './App.css'
-import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes'
-import { useDispatch, useSelector } from 'react-redux';
+import { notification } from 'antd';
 import { jwtDecode } from 'jwt-decode';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { redirect } from 'react-router-dom';
+import './App.css';
 import AuthRoutes from './routes/authorized/AuthRoutes';
+import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes';
 import { onLogout } from './store/slices/adminSlice';
 import { onResetArticleEdited } from './store/slices/articleSlide';
 import { onResetCustomer } from './store/slices/customerSlice';
 import { onResetDeviceInQuickGlance, onResetDevicesHandle } from './store/slices/devicesHandleSlice';
 import { onResetEventInfo } from './store/slices/eventSlice';
-import { onResetStaffProfile } from './store/slices/staffDetailSlide';
 import { onResetHelpers } from './store/slices/helperSlice';
+import { onResetStaffProfile } from './store/slices/staffDetailSlide';
 import { onResetStripesInfo } from './store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
-import { notification } from 'antd';
 const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
@@ -35,13 +36,15 @@ const App = () => {
         dispatch(onResetSubscriptionInfo());
         localStorage.setItem("admin-token", "");
         dispatch(onLogout());
-        return alert("Session has expired. Please sign in again.");
+        openNotificationWithIcon("Session has expired. Please sign in again.");
+        localStorage.setItem('admin-token',)
+        throw redirect('/login', { status: 302 })
       }
     }
   };
 
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
+  const openNotificationWithIcon = (msg) => {
     api.open({
       description: msg,
     });
@@ -59,7 +62,7 @@ const App = () => {
   // Function to render the network status message based on connection type
   const renderNetworkStatusMessage = () => {
     if (connectionType === 'slow-2g' || connectionType === '2g') {
-      return setTimeout(() => openNotificationWithIcon('warning', 'The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.'), 3000);
+      setTimeout(() => openNotificationWithIcon('The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.'), 3000);
     } else {
       return null;
     }
