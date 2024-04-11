@@ -5,31 +5,11 @@ import { RightNarrowInCircle } from "../../../../../components/icons/Icons";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useSelector } from "react-redux";
-const columns = [
-    {
-        title: 'Name',
-        dataIndex: 'consumer',
-        key: 'consumer',
-    },
-    {
-        title: 'Amount',
-        dataIndex: 'amount',
-        key: 'amount',
-        render: (amount) => (
-            <Typography>${Number(amount).toLocaleString('en-US')}</Typography>
-        )
-    },
-    {
-        title: '',
-        dataIndex: 'entireData',
-        key: 'action',
-        width: "5%",
-        render: () => (
-            <span><RightNarrowInCircle /></span>
-        )
-    },
-];
+import ReportDetailModal from "./ReportDetailModal";
+import { useState } from "react";
 const Report = () => {
+    const [dataInfo, setDataInfo] = useState([])
+    const [openLostReportDetail, setOpenLostReportModal] = useState(false)
     const { event } = useSelector((state) => state.event)
     const cashReportQuery = useQuery({
         queryKey: ['cashReportListPerCompany'],
@@ -40,6 +20,35 @@ const Report = () => {
         refetchOnMount: false,
         notifyOnChangeProps: ['data', 'dataUpdatedAt']
     })
+    function handleDetail(props) {
+        setOpenLostReportModal(true)
+        return setDataInfo(props)
+    }
+    const columns = [
+        {
+            title: 'Name',
+            dataIndex: 'consumer',
+            key: 'consumer',
+        },
+        {
+            title: 'Amount',
+            dataIndex: 'amount',
+            key: 'amount',
+            render: (amount) => (
+                <Typography>${Number(amount).toLocaleString('en-US')}</Typography>
+            )
+        },
+        {
+            title: '',
+            dataIndex: 'entireData',
+            key: 'action',
+            width: "5%",
+            render: (entireData) => (
+                <span onClick={() => handleDetail(entireData)}><RightNarrowInCircle /></span>
+            )
+        },
+    ];
+
     if (cashReportQuery.data) {
         const sourceReportData = () => {
             const result = new Set()
@@ -83,6 +92,9 @@ const Report = () => {
                         position: 'bottomCenter',
                     }} />
                 </Grid>
+                {openLostReportDetail &&
+                    <ReportDetailModal setOpenLostReportModal={setOpenLostReportModal} openLostReportDetail={openLostReportDetail} dataInfo={dataInfo} />
+                }
             </Grid>
         )
 
