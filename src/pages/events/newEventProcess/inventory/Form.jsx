@@ -28,6 +28,7 @@ const Form = () => {
     register,
     watch,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -82,12 +83,17 @@ const Form = () => {
       }
     }
   }
-
+  const removeItemSelected = (item) => {
+    const filter = selectedItem.filter((_, index) => index !== item);
+    dispatch(onAddDeviceSetup(filter));
+    return setSelectedItem(filter);
+  };
   const handleAddingNewItemToInventoryEvent = (data) => {
     const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: `${data.endingNumber - (data.startingNumber - 1)}` }]
     setSelectedItem(resulting)
-    setValueItemSelected('startingNumber', '')
-    setValueItemSelected('endingNumber', '')
+    // setValueItemSelected({})
+    setValue('startingNumber', '')
+    setValue('endingNumber', '')
     return;
   }
 
@@ -177,7 +183,7 @@ const Form = () => {
           </Typography>
         </InputLabel>
         <Select
-        className="custom-autocomplete"
+          className="custom-autocomplete"
           showSearch
           placeholder="Search item to add to inventory."
           optionFilterProp="children"
@@ -440,8 +446,8 @@ const Form = () => {
                       background: "var(--base-white, #FFF)",
                       margin: "5px",
                     }}
-                  // onClose={() => removeItemSelected(index)}
-                  // key={`${item._id}${index}`}
+                    onClose={() => removeItemSelected(index)}
+                    key={`${item._id}${index}`}
                   >
                     &nbsp;{item.item_group}
                     {"      "}&nbsp;Qty: {item.quantity}
@@ -645,7 +651,7 @@ style={{
 </span> */}
 // const [api, contextHolder] = notification.useNotification();
 // const openNotificationWithIcon = (type, msg) => {
-//   api[type]({
+//   api.open({
 //     message: msg,
 //   });
 // };
