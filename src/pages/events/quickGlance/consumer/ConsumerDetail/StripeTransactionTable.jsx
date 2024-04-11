@@ -34,6 +34,8 @@ import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue }) => {
@@ -73,7 +75,6 @@ const StripeTransactionTable = ({ searchValue }) => {
         enabled: false,
         refetchOnMount: false,
         notifyOnChangeProps: ['data', 'dataUpdatedAt'],
-        cacheTime: 1000 * 60 * 3
     })
     const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list
     const deviceAssignedListQuery = useQuery({
@@ -263,6 +264,7 @@ const StripeTransactionTable = ({ searchValue }) => {
             onFilterDropdownOpenChange: (visible) => {
                 if (visible) {
                     setTimeout(() => searchInput.current?.select(), 100);
+
                 }
             },
             render: (text) =>
@@ -608,7 +610,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                                 </Typography>
                             </Link>
                         )}
-                        {record.status === true && event.staff.adminUser.some(element => element === user.email) && (
+                        {record.status === true && event.staff.adminUser.some(element => element.email === user.email) && (
                             <Popconfirm
                                 title="Are you sure it is lost?"
                                 onConfirm={() => handleLostSingleDevice(record)}
@@ -669,12 +671,13 @@ const StripeTransactionTable = ({ searchValue }) => {
             dataIndex: "paymentIntent",
             key: "paymentIntent",
             responsive: ["md", "lg"],
-            render: (_, record) => (<span>{new Date(`${record.date}`).toUTCString()}</span>)
+            render: (_, record) => (<span style={Subtitle}>{new Date(`${record.date}`).toUTCString()}</span>)
         },
         {
             title: "Transaction ID",
             dataIndex: "paymentIntent",
             key: "paymentIntent",
+            render: (paymentIntent) => (<span style={Subtitle}>{paymentIntent}</span>)
         },
         {
             title: "Status",
@@ -682,7 +685,7 @@ const StripeTransactionTable = ({ searchValue }) => {
             key: "device",
             responsive: ["lg"],
             render: (_, record) => (
-                <span><Typography>{record.device[0].deviceNeeded} {record.device[0].deviceNeeded > 1 ? "devices" : "device"}</Typography></span>
+                <span style={Subtitle}> <Typography style={Subtitle}>{record.device[0].deviceNeeded} {record.device[0].deviceNeeded > 1 ? "devices" : "device"}</Typography></span>
             )
         },
         {
@@ -717,13 +720,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                         >
                             <Typography
                                 textTransform={"none"}
-                                textAlign={"center"}
-                                fontWeight={400}
-                                fontSize={"16px"}
-                                fontFamily={"Inter"}
-                                lineHeight={"24px"}
-                                color={"#fff"}
-                                style={{ cursor: "pointer" }}
+                                style={{ ...BlueButtonText, cursor: "pointer", color: "#fff" }}
                             >
                                 Release
                             </Typography>
@@ -753,19 +750,14 @@ const StripeTransactionTable = ({ searchValue }) => {
                                 >
                                     <Typography
                                         textTransform={"none"}
-                                        textAlign={"center"}
-                                        fontWeight={400}
-                                        fontSize={"16px"}
-                                        fontFamily={"Inter"}
-                                        lineHeight={"24px"}
-                                        color={"#fff"}
-                                        style={{ cursor: "pointer" }}
+                                        style={{ ...BlueButtonText, cursor: "pointer", color: "#fff" }}
                                     >
                                         Capture
                                     </Typography>
                                 </Button>
                             </Popconfirm>}</Grid>
-                    <Grid item xs={12} sm={12} md={4} display={'flex'} alignItems={'center'}>{record.device[0].deviceNeeded > 4 && <Tooltip title="This option is to return bulk of devices">
+                    <Grid item xs={12} sm={12} md={4} display={'flex'} alignItems={'center'}>
+                        {record.device[0].deviceNeeded > 4 && <Tooltip title="This option is to return bulk of devices">
                         <Button
                             onClick={() => handleReturnDeviceInBulk(record)}
                             underline="none"
@@ -781,13 +773,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                         >
                             <Typography
                                 textTransform={"none"}
-                                textAlign={"center"}
-                                fontWeight={400}
-                                fontSize={"16px"}
-                                fontFamily={"Inter"}
-                                lineHeight={"24px"}
-                                color={"#fff"}
-                                style={{ cursor: "pointer" }}
+                                style={{ ...BlueButtonText, cursor: "pointer", color: "#fff" }}
                             >
                                 Bulk
                             </Typography>
