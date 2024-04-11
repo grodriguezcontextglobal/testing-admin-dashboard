@@ -25,14 +25,10 @@ const ReviewAndSubmitEvent = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
+  const openNotificationWithIcon = (msg) => {
     api.open({
-      // message: type,
       description: msg,
       duration: 0,
-      icon: (
-        <Loading />
-      ),
     });
   };
 
@@ -209,17 +205,19 @@ const ReviewAndSubmitEvent = () => {
 
   const processOfCreatingInformationOfNewEvent = async () => {
     try {
-      openNotificationWithIcon('warning', 'Your request is being processed. When it is done, you will be redirected to event page.')
+      openNotificationWithIcon('Your request is being processed. When it is done, you will be redirected to event page.')
       setLoadingStatus(true)
       setButtonDisable(true)
       await createEvent()
       setLoadingStatus(false)
       setButtonDisable(false)
-      openNotificationWithIcon('success', 'Event information created.')
+      openNotificationWithIcon('Event information created.')
       return navigate("/events");
     } catch (error) {
+      openNotificationWithIcon(`${error.message}`)
       setLoadingStatus(false)
       setButtonDisable(false)
+      setTimeout(() => api.destroy(), 4000)
     }
   }
   return (
