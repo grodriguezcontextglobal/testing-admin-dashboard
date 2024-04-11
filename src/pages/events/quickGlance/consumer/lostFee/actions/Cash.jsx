@@ -111,7 +111,7 @@ const Cash = () => {
         status: "Lost",
         user: customer?.email,
         admin: user?.email,
-        timeStamp: new Date().getTime()
+        timeStamp: Date.now()
       };
       await devitrakApi.post(
         "/receiver/receiver-returned-issue",
