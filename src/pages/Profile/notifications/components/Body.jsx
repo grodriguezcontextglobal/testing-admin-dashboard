@@ -31,7 +31,7 @@ const Body = () => {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type) => {
-    api[type]({
+    api.open({
       message: "Information updated",
     });
   };

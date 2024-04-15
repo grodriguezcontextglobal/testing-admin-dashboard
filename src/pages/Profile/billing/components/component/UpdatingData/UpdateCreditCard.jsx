@@ -17,7 +17,7 @@ const UpdateCreditCard = ({
   const [api, contextHolder] = notification.useNotification();
   const dispatch = useDispatch();
   const openNotificationWithIcon = (type, msg, dsct) => {
-    return api[type]({
+    return api.open({
       message: msg,
       description: dsct,
     });
@@ -194,7 +194,7 @@ const UpdateCreditCard = ({
         onOk={() => closeModal()}
         onCancel={() => closeModal()}
         footer={[]}
-        maskClosable = {false}
+        maskClosable={false}
       >
         <Grid
           display={"flex"}

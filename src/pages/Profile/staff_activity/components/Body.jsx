@@ -44,7 +44,7 @@ const Body = ({ sortData }) => {
             >
               <List.Item.Meta
                 avatar={<Avatar src={<IconListTable />} />}
-                title={<Typography>{item.actionTaken}</Typography>}
+                title={<Typography>{item?.actionTaken}</Typography>}
                 description={new Date(`${item.time}`).toUTCString()}
               />
             </List.Item>

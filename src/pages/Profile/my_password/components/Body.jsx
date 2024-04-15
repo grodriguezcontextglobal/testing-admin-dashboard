@@ -33,7 +33,7 @@ const Body = () => {
   });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
+    api.open({
       message: msg,
     });
   };
@@ -151,7 +151,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
-                style={{...OutlinedInputStyle}}
+                style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("current_password", {
                   required: true,
@@ -201,7 +201,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
-                style={{...OutlinedInputStyle}}
+                style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("password1", {
                   required: true,
@@ -249,7 +249,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
-                style={{...OutlinedInputStyle}}
+                style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("password2", {
                   required: true,
