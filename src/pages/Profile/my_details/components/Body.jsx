@@ -18,7 +18,6 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
-  console.log("🚀 ~ Body ~ user:", user)
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: user.name,
@@ -30,8 +29,8 @@ const Body = () => {
   });
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type) => {
-    api[type]({
+  const openNotificationWithIcon = () => {
+    api.open({
       message: 'Information updated',
     });
   };
@@ -97,7 +96,7 @@ const Body = () => {
             },
           })
         );
-        openNotificationWithIcon('success')
+        openNotificationWithIcon()
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
