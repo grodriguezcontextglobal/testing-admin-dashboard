@@ -27,7 +27,7 @@ const Header = () => {
   const sortData = useCallback(() => {
     if (activityLogQuery.data) {
       const groupingCompany = _.groupBy(
-        activityLogQuery.data.data.activity,
+        activityLogQuery?.data?.data?.activity,
         "company"
       );
       if (
@@ -80,7 +80,7 @@ const Header = () => {
     options.add({ name: "All", email: "All" });
     if (staffQuery.data) {
       const groupingCompany = _.groupBy(
-        staffQuery.data.data.adminUsers,
+        staffQuery?.data?.data?.adminUsers,
         "company"
       );
       for (let data of groupingCompany[user.company]) {
@@ -219,8 +219,8 @@ const Header = () => {
                 }}
                 options={userFilterOptions().map((option) => {
                   return {
-                    label: option.name,
-                    value: option.email,
+                    label: option?.name,
+                    value: option?.email,
                   };
                 })}
               />
