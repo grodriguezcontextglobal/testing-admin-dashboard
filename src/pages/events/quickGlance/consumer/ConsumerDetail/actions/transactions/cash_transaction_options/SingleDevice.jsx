@@ -108,7 +108,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
 
     const createDevicesInPool = async (props) => {
         const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device")
-        await devitrakApi.patch(`/receiver/receivers-pool-update/${grouping[props].at(-1).id}`, { activity: "YES" })
+        await devitrakApi.patch(`/receiver/receivers-pool-update/${grouping[props].at(-1).id}`, { activity: "YES", status: "Operational" })
     }
 
     const onSubmitRegister = async (data) => {

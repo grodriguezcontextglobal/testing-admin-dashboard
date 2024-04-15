@@ -145,7 +145,7 @@ const ConfirmationPaymentPage = () => {
             const groupingByDevice = _.groupBy(checkIfDeviceIsInUsed(), "device")
             for (let data of deviceSelectionPaidTransaction) {
                 if (groupingByDevice[data.serialNumber]) {
-                    await devitrakApi.patch(`/receiver/receivers-pool-update/${groupingByDevice[data.serialNumber].at(-1).id}`, { activity: "YES" })
+                    await devitrakApi.patch(`/receiver/receivers-pool-update/${groupingByDevice[data.serialNumber].at(-1).id}`, { activity: "YES", status: "Operational" })
                 }
             }
         }
