@@ -39,18 +39,14 @@ const MainPage = () => {
         }),
         enabled: false,
         refetchOnMount: false,
-        cacheTime: 1000 * 60 * 5,
-        staleTime: 1000 * 60 * 15 //fifteenMinutesInMs
-
     });
     const companyAccountStripeQuery = useQuery({
-        queryKey: ["companyAccountStripe"],
+        queryKey: ["stripe_company_account"],
         queryFn: () =>
-            devitrakApi.get(`/stripe/company-account-stripe/${user.company}`),
-        enabled: false,
+            devitrakApi.post(`/stripe/company-account-stripe`, {
+                company: user.company
+            }),
         refetchOnMount: false,
-        cacheTime: Infinity,
-        staleTime: Infinity
     });
 
     useEffect(() => {
@@ -79,25 +75,14 @@ const MainPage = () => {
         };
         triggerDispatchWhenUserLandingInPage()
         eventQuery.refetch()
-        companyAccountStripeQuery.refetch()
+        // companyAccountStripeQuery.refetch()
     }, [user.company]);
 
     if (eventQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
     if (
         (eventQuery.data
-            || eventQuery.isRefetching) &&
-        companyAccountStripeQuery.data
+            || eventQuery.isRefetching)
     ) {
-        const addCompanyStripeInfo = () => {
-            if (companyAccountStripeQuery.data.data.companyAccountStripeFound)
-                dispatch(
-                    onAddCompanyAccountStripe(
-                        companyAccountStripeQuery.data.data.companyAccountStripeFound
-                    )
-                );
-        };
-        addCompanyStripeInfo();
-
         const dataPerCompany = () => {
             if (watch("searchEvent")?.length > 0) {
                 const check = eventQuery?.data?.data?.list?.filter(
@@ -206,7 +191,6 @@ const MainPage = () => {
                     }}
                     container
                 >
-
                     <Grid
                         sx={{ display: { xs: 'flex', sm: 'flex', md: 'none', lg: "none" } }}
                         textAlign={"center"}
@@ -224,7 +208,7 @@ const MainPage = () => {
                             }}
                             to="/event/new_subscription"
                         >
-                            <Button style={{ ...BlueButton, width: "100%" }}>
+                            <Button onClick={() => dispatch(dispatch(onAddCompanyAccountStripe(companyAccountStripeQuery.data.data.companyAccountStripeFound)))} style={{ ...BlueButton, width: "100%" }}>
                                 <WhitePlusIcon /><Typography style={BlueButtonText}>
                                     Add new event
                                 </Typography>
@@ -245,7 +229,9 @@ const MainPage = () => {
                         </Typography>
                         <Link to={"/event/new_subscription"}>
                             {" "}
-                            <Button style={BlueButton}>
+                            <Button onClick={() =>
+                                dispatch(dispatch(onAddCompanyAccountStripe(companyAccountStripeQuery.data.data.companyAccountStripeFound)))}
+                                style={BlueButton}>
                                 <WhitePlusIcon />
                                 <Typography style={BlueButtonText}>
                                     Add new event
@@ -329,7 +315,6 @@ const MainPage = () => {
                         <PastEventsTable events={renderingDataBasedOnStaffAndActiveEvent()} />
                     </Grid>
                 </Grid>
-                {/* </Grid> */}
             </Grid >
         );
     }
