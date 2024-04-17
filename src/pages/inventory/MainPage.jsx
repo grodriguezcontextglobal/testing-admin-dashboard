@@ -11,7 +11,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { BluePlusIcon, MagnifyIcon, WhiteCirclePlusIcon } from "../../components/icons/Icons";
+import { BluePlusIcon, EditIcon, MagnifyIcon, WhiteCirclePlusIcon } from "../../components/icons/Icons";
 import { onAddEventData, onSelectCompany, onSelectEvent } from "../../store/slices/eventSlice";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -119,38 +119,49 @@ const MainPage = () => {
           md={6}
           lg={6}
         >
-          <Link to="/inventory/new-bulk-items">
-          <Button
-            // onClick={() => setOpenGroupModal(true)}
-            style={{ ...BlueButton, width:'fit-content' }}
-          >
-            <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-            {/* <WhitePlusIcon /> */}
-            &nbsp;
-            <Typography
-              textTransform={"none"}
-              style={BlueButtonText}
+
+          <Link to="/inventory/edit-group">
+            <Button
+              style={{ ...LightBlueButton, width: "fit-content" }}
             >
-              Add a group of devices
-            </Typography>
-          </Button>
+              <EditIcon style={{color:"#fff"}} />
+              &nbsp;
+              <Typography
+                textTransform={"none"}
+                style={LightBlueButtonText}
+              >
+                Update a group of device
+              </Typography>
+            </Button>
+          </Link>
+          <Link to="/inventory/new-bulk-items">
+            <Button
+              style={{ ...BlueButton, width: 'fit-content' }}
+            >
+              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+              &nbsp;
+              <Typography
+                textTransform={"none"}
+                style={BlueButtonText}
+              >
+                Add a group of devices
+              </Typography>
+            </Button>
           </Link>
           <Link to="/inventory/new-item">
-          <Button
-            style={{...LightBlueButton, width:"fit-content"}}
-            // onClick={() => setOpenSingleModal(true)}
-          >
-            <BluePlusIcon />
-            &nbsp;
-            <Typography
-              textTransform={"none"}
-              style={LightBlueButtonText}
+            <Button
+              style={{ ...LightBlueButton, width: "fit-content" }}
             >
-              Add one device
-            </Typography>
-          </Button>
+              <BluePlusIcon />
+              &nbsp;
+              <Typography
+                textTransform={"none"}
+                style={LightBlueButtonText}
+              >
+                Add one device
+              </Typography>
+            </Button>
           </Link>
-
         </Grid>
       </Grid>
       <Grid
@@ -203,9 +214,6 @@ const MainPage = () => {
           <ItemTable searchItem={watch("searchItem")} location={deviceSelectedOption} />
         </Grid>
       </Grid>
-      {/* {openSingleItemModal && <AddNewItem openSingleItemModal={openSingleItemModal} setOpenSingleModal={setOpenSingleModal} />}
-      {openGroupItemModal && <AddNewBulkItems openGroupItemModal={openGroupItemModal} setOpenGroupModal={setOpenGroupModal} />} */}
-      
     </Grid>
   );
 };
