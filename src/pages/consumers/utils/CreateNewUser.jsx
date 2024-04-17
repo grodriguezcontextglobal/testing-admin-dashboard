@@ -50,9 +50,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
     const { user } = useSelector((state) => state.admin);
     const { eventsPerAdmin } = useSelector((state) => state.event);
     const [api, contextHolder] = notification.useNotification();
-    const listOfAvailableEventsPerAdmin = eventsPerAdmin
-        ? [...eventsPerAdmin.active, ...eventsPerAdmin.completed]
-        : [];
+    const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active] ?? [];
     const openNotificationWithIcon = (type, msg) => {
         api.open({
             message: type,
