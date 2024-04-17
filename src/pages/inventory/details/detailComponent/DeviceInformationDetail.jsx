@@ -1,78 +1,112 @@
 import { Grid, Typography } from "@mui/material";
-import { Card } from "antd";
+import { Card, Avatar } from "antd";
 import { CardStyle } from "../../../../styles/global/CardStyle";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import { useSelector } from "react-redux";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import Loading from "../../../../components/animation/Loading";
 
 const DeviceInformationDetail = ({ dataFound }) => {
-  return (
-    <Grid
-      padding={"0px"}
-      display={"flex"}
-      justifyContent={"flex-start"}
-      textAlign={"left"}
-      alignItems={"flex-start"}
-      alignSelf={"stretch"}
-      item
-      xs={12}
-      sm={12}
-      md={12}
-    >
-      <Card
-        style={CardStyle}
+  const { user } = useSelector((state) => state.admin)
+  const listImagePerItemQuery = useQuery({
+    queryKey: ["imagePerItem"],
+    queryFn: () => devitrakApi.post("/image/images", {
+      company: user.company,
+      category: dataFound[0]?.category_name,
+      item_group: dataFound[0]?.item_group
+    }),
+    enabled: false,
+    refetchOnMount: false
+  });
+  useEffect(() => {
+    const controller = new AbortController()
+    listImagePerItemQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [dataFound[0]?.category_name, dataFound[0]?.item_group])
+  if (listImagePerItemQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
+  if (listImagePerItemQuery.data) {
+    console.log("🚀 ~ DeviceInformationDetail ~ listImagePerItemQuery.data:", listImagePerItemQuery.data)
+    return (
+      <Grid
+        padding={"0px"}
+        display={"flex"}
+        justifyContent={"flex-start"}
+        textAlign={"left"}
+        alignItems={"flex-start"}
+        alignSelf={"stretch"}
+        item
+        xs={12}
+        sm={12}
+        md={12}
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          container
+        <Card
+          style={CardStyle}
         >
           <Grid
             display={"flex"}
-            justifyContent={"flex-start"}
-            textAlign={"left"}
+            justifyContent={"space-around"}
             alignItems={"center"}
-            item
-            xs={12}
+            container
           >
-            <Typography
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
               textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"18px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"28px"}
-              color={"var(--gray-900, #101828)"}
+              alignItems={"center"}
+              item
+              xs={12}
             >
-              {dataFound[0]?.item_group}
-              <br />
+              <div style={{ alignSelf: "stretch", margin: "0 20px 0 0", width: "110px" }}>
+                <Avatar style={{ width: "100px", height: "100px" }}>
+                  {listImagePerItemQuery.data.data.item.length > 0 && <img style={{ objectFit:"cover", width:"65%", height:"85%" }} src={`${listImagePerItemQuery.data.data.item.length > 0 && listImagePerItemQuery.data.data.item[0]?.source}`} alt='item_image' width={250} height={360} />}
+                </Avatar>
+              </div>
               <Typography
                 textAlign={"left"}
                 fontFamily={"Inter"}
                 fontSize={"18px"}
                 fontStyle={"normal"}
-                fontWeight={400}
+                fontWeight={600}
                 lineHeight={"28px"}
                 color={"var(--gray-900, #101828)"}
               >
-                {dataFound[0]?.category_name}
+                {dataFound[0]?.item_group}
+                <br />
+                <Typography
+                  textAlign={"left"}
+                  fontFamily={"Inter"}
+                  fontSize={"18px"}
+                  fontStyle={"normal"}
+                  fontWeight={400}
+                  lineHeight={"28px"}
+                  color={"var(--gray-900, #101828)"}
+                >
+                  {dataFound[0]?.category_name}
+                </Typography>
+                <br />
+                <Typography
+                  textAlign={"left"}
+                  fontFamily={"Inter"}
+                  fontSize={"18px"}
+                  fontStyle={"normal"}
+                  fontWeight={400}
+                  lineHeight={"28px"}
+                  color={"var(--gray-900, #101828)"}
+                >
+                  {dataFound[0]?.company}
+                </Typography>
               </Typography>
-              <br />
-              <Typography
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"18px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
-              >
-                {dataFound[0]?.company}
-              </Typography>
-            </Typography>
+            </Grid>
           </Grid>
-        </Grid>
-      </Card>
-    </Grid>
-  );
+        </Card>
+      </Grid>
+    );
+
+  }
 };
 
 export default DeviceInformationDetail;
