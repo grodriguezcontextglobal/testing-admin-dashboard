@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
 import _ from 'lodash';
 import pkg from 'prop-types';
@@ -8,10 +8,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { GeneralDeviceIcon, RefreshIcon, RightNarrowInCircle } from "../../../components/icons/Icons";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { GeneralDeviceIcon, RightNarrowInCircle } from "../../../components/icons/Icons";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-table.css';
 const { PropTypes } = pkg;
@@ -19,7 +16,6 @@ const { PropTypes } = pkg;
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.admin);
-  const queryClient = useQueryClient()
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () => devitrakApi.post("/db_item/current-inventory", { company_name: user.company }),
@@ -299,7 +295,7 @@ const ItemTable = ({ searchItem }) => {
       <span style={cellStyle}> <Typography
         style={Subtitle}
         textTransform={"capitalize"}
-      >{data.warehouse === 1 ? data.main_warehouse : data.event_name}</Typography></span>
+      >{data.main_warehouse}</Typography></span>
     )
   },
   {
@@ -353,13 +349,39 @@ const ItemTable = ({ searchItem }) => {
     )
   }]
   return (
-    <Grid container spacing={1}>
-      <Grid display={'flex'} justifyContent={'flex-end'} alignItems={'center'} margin={'0.3rem'} item xs={12} sm={12} md={12} lg={12}>
-        <Button onClick={() => queryClient.invalidateQueries(['listOfItemsInStock', 'imagePerItemList'])} style={BlueButton}>
-          <Typography style={{ ...BlueButtonText, ...CenteringGrid }}>
-            <RefreshIcon />&nbsp;Refresh
-          </Typography>
-        </Button>
+    <Grid margin={'15px 0 0 0'} padding={0} container>
+      <Grid
+        border={"1px solid var(--gray-200, #eaecf0)"}
+        borderRadius={"12px 12px 0 0"}
+        display={"flex"}
+        justifyContent={'space-between'}
+        alignItems={"center"}
+        marginBottom={-1}
+        paddingBottom={-1}
+        item
+        xs={12}
+      >
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          marginRight: "5px",
+          padding:"0 0 0 0"
+        }}>
+          <Button style={{ display: "flex", alignItems: "center" }} onClick={() => { listImagePerItemQuery.refetch(); listItemsQuery.refetch(); itemsInInventoryQuery.refetch() }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              fontWeight={500}
+              fontSize={"12px"}
+              fontFamily={"Inter"}
+              lineHeight={"28px"}
+              color={"var(--blue-dark-700, #004EEB)"}
+              padding={"0px"}
+            >
+              <Icon icon="jam:refresh" /> Refresh
+            </Typography>
+          </Button>
+        </div>
       </Grid>
       <Table
         pagination={{
