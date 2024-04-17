@@ -23,6 +23,8 @@ import CreditCard from "../../pages/events/quickGlance/consumer/lostFee/actions/
 import ParentRenderingChildrenPage from "../../pages/ParentRenderingChildrenPage";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import StaffDetail from "../../pages/staff/detail/StaffDetail";
+import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
+import EditGroup from "../../pages/inventory/actions/EditGroup";
 // import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
 const AuthRoutes = () => {
     const Home = lazy(() => import("../../pages/home/MainPage"))
@@ -81,6 +83,7 @@ const AuthRoutes = () => {
                         <Route path="/inventory/:id" element={<InventoryDetail />} />
                         <Route path="/inventory/event-inventory" element={<InventoryEvent />} />
                         <Route path="/inventory/new-item" element={<AddNewItem />} />
+                        <Route path="/inventory/edit-group" element={<EditGroup />} />
                         <Route path="/inventory/new-bulk-items" element={<AddNewBulkItems />} />
                         <Route path="/inventory/inventory-in-use" element={<InventoryInUsePage />} />
                         <Route path="/consumers" element={<ConsumersMainPage />} />
@@ -91,7 +94,7 @@ const AuthRoutes = () => {
                             <Route path="my_details" element={<MyDetailsMainPage />} />
                             <Route path="password" element={<PasswordMainPage />} />
                             <Route path="notifications" element={<NotificationsMainPage />} />
-                            {/* <Route path="billing" element={<BillingMainPage />} /> */}
+                            <Route path="billing" element={<BillingMainPage />} />
                             <Route path="staff-activity" element={<StaffActivityMainPage />} />
                         </Route>
                         <Route path="search-result-page" element={<SearchResultPage />} />
