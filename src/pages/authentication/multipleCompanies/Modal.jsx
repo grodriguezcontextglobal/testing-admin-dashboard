@@ -29,7 +29,6 @@ const ModalMultipleCompanies = ({ openMultipleCompanies, setOpenMultipleCompanie
             password: dataPassed.password,
         });
         if (respo.data) {
-            console.log("🚀 ~ loginIntoOneCompanyAccount ~ respo.data:", respo.data)
             localStorage.setItem("admin-token", respo.data.token);
             const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
                 online: true
