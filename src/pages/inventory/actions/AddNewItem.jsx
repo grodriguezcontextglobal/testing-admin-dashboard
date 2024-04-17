@@ -27,8 +27,11 @@ import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewItem = () => {
+  console.log(options.map(option => option.value))
   const [selectedItem, setSelectedItem] = useState('')
   const [taxableLocation, setTaxableLocation] = useState('')
+  const [valueSelection, setValueSelection] = useState('');
+  const [locationSelection, setLocationSelection] = useState('')
   const [loadingStatus, setLoadingStatus] = useState(false)
   const { user } = useSelector((state) => state.admin);
   const {
@@ -44,8 +47,6 @@ const AddNewItem = () => {
       message: msg,
     });
   };
-  const [valueSelection, setValueSelection] = useState(options[0]);
-  const [locationSelection, setLocationSelection] = useState('')
   const companiesQuery = useQuery({
     queryKey: ['locationOptionsPerCompany'],
     queryFn: () => devitrakApi.post('/company/search-company', {
@@ -123,7 +124,9 @@ const AddNewItem = () => {
     }
   }, [selectedItem])
   const savingNewItem = async (data) => {
-    setLoadingStatus(true)
+    if (selectedItem === "") return openNotificationWithIcon("warning", "A group of item must be provided.");
+    if (taxableLocation === "") return openNotificationWithIcon("warning", "A taxable location must be provided.");
+    if (valueSelection === "") return openNotificationWithIcon("warning", "Ownership status must be provided.");
     try {
       let base64;
       if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -132,6 +135,7 @@ const AddNewItem = () => {
           "Image is bigger than allow. Please resize the image or select a new one."
         );
       } else if (data.photo.length > 0) {
+        setLoadingStatus(true)
         base64 = await convertToBase64(data.photo[0]);
         const resp = await devitrakApi.post(`/image/new_image`, {
           source: base64,
@@ -174,6 +178,7 @@ const AddNewItem = () => {
           }
         }
       } else if (data.photo.length < 1) {
+        setLoadingStatus(true)
         const respNewItem = await devitrakApi.post("/db_item/new_item", {
           category_name: data.category_name,
           item_group: selectedItem,
@@ -213,9 +218,6 @@ const AddNewItem = () => {
     }
   };
 
-  // const closeModal = () => {
-  //   return setOpenSingleModal(false)
-  // }
   const renderTitle = () => {
     return (<>
       <InputLabel
@@ -304,6 +306,7 @@ const AddNewItem = () => {
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("category_name")}
               aria-invalid={errors.category_name}
               style={OutlinedInputStyle}
@@ -406,6 +409,7 @@ const AddNewItem = () => {
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("brand")}
               aria-invalid={errors.brand}
               style={OutlinedInputStyle}
@@ -493,6 +497,7 @@ const AddNewItem = () => {
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("cost", { required: true })}
               aria-invalid={errors.cost}
               style={OutlinedInputStyle}
@@ -540,6 +545,7 @@ const AddNewItem = () => {
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("serial_number", { required: true })}
               aria-invalid={errors.serial_number}
               style={OutlinedInputStyle}
@@ -576,6 +582,7 @@ const AddNewItem = () => {
             </Typography>
           </InputLabel>
           <OutlinedInput
+            required
             multiline
             minRows={5}
             {...register("descript_item", { required: true })}

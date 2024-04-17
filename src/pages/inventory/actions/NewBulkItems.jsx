@@ -31,6 +31,7 @@ const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewBulkItems = () => {
     const [selectedItem, setSelectedItem] = useState('')
     const [taxableLocation, setTaxableLocation] = useState('')
+    const [valueSelection, setValueSelection] = useState('');
     const { user } = useSelector((state) => state.admin);
     const {
         register,
@@ -45,7 +46,6 @@ const AddNewBulkItems = () => {
             message: msg,
         });
     };
-    const [valueSelection, setValueSelection] = useState('');
     const [loading, setLoading] = useState(false)
     const [locationSelection, setLocationSelection] = useState('')
     const companiesQuery = useQuery({
@@ -122,18 +122,21 @@ const AddNewBulkItems = () => {
     }, [selectedItem])
 
     const savingNewItem = async (data) => {
-        await openNotificationWithIcon(
-            "warning",
-            "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
-        );
-        setLoading(true)
         let base64;
+        if (selectedItem === "") return openNotificationWithIcon("warning","A group of item must be provided.");
+        if (taxableLocation === "") return openNotificationWithIcon("warning","A taxable location must be provided.");
+        if (valueSelection === "") return openNotificationWithIcon("warning","Ownership status must be provided.");
         if (data.photo.length > 0 && data.photo[0].size > 1048576) {
             setLoading(false)
             return alert(
                 "Image is bigger than allow. Please resize the image or select a new one."
             );
         } else if (data.photo.length > 0) {
+            openNotificationWithIcon(
+                "warning",
+                "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+            );
+            setLoading(true)
             base64 = await convertToBase64(data.photo[0]);
             const resp = await devitrakApi.post(`/image/new_image`, {
                 source: base64,
@@ -189,6 +192,11 @@ const AddNewBulkItems = () => {
                 }
             }
         } else if (data.photo.length < 1) {
+            openNotificationWithIcon(
+                "warning",
+                "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+            );
+            setLoading(true)
             for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) {
                 try {
                     await devitrakApi.post('/db_item/new_item', {
@@ -316,6 +324,7 @@ const AddNewBulkItems = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            required
                             {...register("category_name")}
                             aria-invalid={errors.category_name}
                             style={OutlinedInputStyle}
@@ -427,6 +436,7 @@ const AddNewBulkItems = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            required
                             {...register("brand")}
                             aria-invalid={errors.brand}
                             style={OutlinedInputStyle}
@@ -514,6 +524,7 @@ const AddNewBulkItems = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            required
                             {...register("cost", { required: true })}
                             aria-invalid={errors.cost}
                             style={OutlinedInputStyle}
@@ -618,6 +629,7 @@ const AddNewBulkItems = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            required
                             {...register("startingNumber")}
                             aria-invalid={errors.startingNumber}
                             style={OutlinedInputStyle}
@@ -662,6 +674,7 @@ const AddNewBulkItems = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            required
                             {...register("endingNumber")}
                             aria-invalid={errors.endingNumber}
                             style={OutlinedInputStyle}
@@ -748,6 +761,7 @@ const AddNewBulkItems = () => {
                         </Typography>
                     </InputLabel>
                     <OutlinedInput
+                        required
                         multiline
                         minRows={5}
                         {...register("descript_item", { required: true })}
