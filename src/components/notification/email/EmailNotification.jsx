@@ -12,6 +12,7 @@ const EmailNotification = ({
   setCustomizedEmailNotificationModal,
 }) => {
   const { consumersOfEvent } = useSelector((state) => state.customer);
+  const { event } = useSelector((state) => state.event);
   const {
     register,
     handleSubmit,
@@ -54,6 +55,8 @@ const EmailNotification = ({
       consumersList: renderListOfEmailsOfConsumersPerEvent(),
       subject: data.subject,
       message: data.message,
+      eventSelected: event.eventInfoDetail.eventName,
+      company: event.company
     };
     const resp = await devitrakApi.post(
       "/nodemailer/customized-notification",
@@ -124,26 +127,26 @@ const EmailNotification = ({
                 <OutlinedInput
                   placeholder="Your email's subject here."
                   fullWidth
+                  required
+                  aria-required
                   style={OutlinedInputStyle}
-                  {...register("subject", { required: true, maxLength: 600 })}
+                  {...register("subject")}
                 />
                 {errors.subject && <Typography>{errors.subject}</Typography>}
               </Grid>
               <Grid marginY={"0.5rem"} item xs={12}>
-                <OutlinedInput
-                  minRows={4}
-                  multiline
-                  fullWidth
-                  {...register("message", {
-                    required: true,
-                  })}
-                  placeholder="Write your email here."
+                <textarea
+                  {...register("message")}
+                  required
+                  aria-required
+                  placeholder=" Write your email here."
                   style={{
                     ...OutlinedInputStyle,
                     width: "100%",
                     padding: "5px",
                     overflow: "hidden",
                     textWrap: "balance",
+                    border: "0.1px solid #d3d3d3"
                   }}
                 />
                 {errors.subject && <Typography>{errors.message}</Typography>}
