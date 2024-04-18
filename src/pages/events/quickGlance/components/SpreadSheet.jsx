@@ -166,12 +166,13 @@ const SpreadSheet = () => {
 
         // Sheet2 config (Details)
         const headers2 = [
-            'Device - Serial number',
-            'Device - Device type',
+
             'User - First name',
             'User - Last name',
             'User - Email',
             'User - Phone number',
+            'Device - Serial number',
+            'Device - Device type',
             'Status',
             'Event',
             'Date - Assigned device',
@@ -179,12 +180,13 @@ const SpreadSheet = () => {
 
         // Convert data to worksheet format for Sheet2 (all data in detail)
         const wsDataDetail = [headers2, ...data.map(item => [
-            item.device.serialNumber,
-            item.device.deviceType,
+            
             item.userInfo.name,
             item.userInfo.lastName,
             item.user,
             item.userInfo.phoneNumber,
+            item.device.serialNumber,
+            item.device.deviceType,
             item.active ? "in-Use" : "in-Stock",
             item.eventSelected.join(', '), // Convert array to comma-separated string
             Date(item.timeStamp).toString()
@@ -196,9 +198,7 @@ const SpreadSheet = () => {
         // Set cell styles for Sheet1
         wsSheet2['!cols'] = [{ width: 25 }, { width: 25 }, { width: 30 }, { width: 25 }, { width: 30 }, { width: 25 }, { width: 30 }, { width: 25 }, { width: 30 }];
 
-
-        utils.book_append_sheet(wb, wsSheet2, 'Details');
-
+        utils.book_append_sheet(wb, wsSheet2, 'Details')
         const headers3 = [
             'Device',
             'Device type',
