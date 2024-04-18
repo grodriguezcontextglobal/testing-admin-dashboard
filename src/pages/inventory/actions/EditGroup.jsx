@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Select, Tooltip, notification } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -42,6 +42,7 @@ const EditGroup = () => {
         formState: { errors },
     } = useForm();
     const navigate = useNavigate();
+    const submitRef = useRef()
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
         api.open({
@@ -127,7 +128,29 @@ const EditGroup = () => {
         }
     }, [selectedItem])
 
+    const getMinAndMax = useCallback(() => {
+        if (groupData.length > 0) {
+            const serialNumbers = new Set()
+            for (let data of groupData) {
+                serialNumbers.add(Number(data.serial_number))
+            }
+            const data = Array.from(serialNumbers)
+            const min = Math.min(...data)
+            const max = Math.max(...data)
+            return {
+                min: String(min).padStart(groupData[0].serial_number.length, `${groupData[0].serial_number[0]}`),
+                max: String(max).padStart(groupData[0].serial_number.length, `${groupData[0].serial_number[0]}`)
+            }
+        }
+        return {
+            min: 0,
+            max: 0
+        }
+    }, [selectedItem, groupData.length])
+    getMinAndMax()
     const savingNewItem = async (data) => {
+        console.log("🚀 ~ savingNewItem ~ data:", { ...data, item_group: selectedItem, ownership: valueSelection, main_warehouse: taxableLocation, location: locationSelection, company: user.company })
+        submitRef.current = { ...data, item_group: selectedItem, ownership: valueSelection, main_warehouse: taxableLocation, location: locationSelection, company: user.company }
         let base64;
         if (selectedItem === "") return openNotificationWithIcon("warning", "A group of item must be provided.");
         if (taxableLocation === "") return openNotificationWithIcon("warning", "A taxable location must be provided.");
@@ -151,33 +174,33 @@ const EditGroup = () => {
                 company: user.company,
             });
             if (resp.data) {
-                for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) {
+                for (let i = Number(submitRef.current.startingNumber); i <= Number(submitRef.current.endingNumber); i++) {
                     try {
-                        const itemFoundInDB = groupData.find(element => element.serial_number === String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`))
+                        const itemFoundInDB = groupData.find(element => element.serial_number === String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`))
                         await devitrakApi.post("/db_item/edit-item", {
                             item_id: itemFoundInDB.item_id,
-                            category_name: data.category_name,
-                            item_group: selectedItem,
-                            cost: data.cost,
-                            brand: data.brand,
-                            descript_item: data.descript_item,
-                            ownership: valueSelection,
+                            category_name: submitRef.current.category_name,
+                            item_group: submitRef.current.item_group,
+                            cost: submitRef.current.cost,
+                            brand: submitRef.current.brand,
+                            descript_item: submitRef.current.descript_item,
+                            ownership: submitRef.current.ownership,
                             status: itemFoundInDB.status,
-                            serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
-                            warehouse: true,
-                            main_warehouse: taxableLocation,
-                            location: locationSelection,
-                            current_location: locationSelection,
+                            serial_number: String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`),
+                            warehouse: itemFoundInDB.warehouse,
+                            main_warehouse: submitRef.current.main_warehouse,
+                            location: submitRef.current.location,
+                            current_location: submitRef.current.location,
                             updated_at: formatDate(new Date()),
                             company: user.company
                         });
-                        if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-                            let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
+                        if (!renderLocationOptions().some(element => element.value === submitRef.current.location)) {
+                            let template = [...companiesQuery.data.data.company.at(-1).location, submitRef.current.location]
                             await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
                                 location: template
                             })
                         }
-                        if (String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber) {
+                        if (String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`) === submitRef.current.endingNumber) {
                             setValue("category_name", "");
                             setValue("item_group", "");
                             setValue("cost", "");
@@ -205,42 +228,51 @@ const EditGroup = () => {
                 "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
             );
             setLoading(true)
-            for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) {
+            for (let i = Number(submitRef.current.startingNumber); i <= Number(submitRef.current.endingNumber); i++) {
                 try {
-                    const itemFoundInDB = groupData.find(element => element.serial_number === String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`))
-                    await devitrakApi.post("/db_item/edit-item",
-                        {
-                            item_id: itemFoundInDB.item_id,
-                            category_name: data.category_name,
-                            item_group: selectedItem,
-                            cost: data.cost,
-                            brand: data.brand,
-                            descript_item: data.descript_item,
-                            ownership: valueSelection,
-                            status: itemFoundInDB.status,
-                            serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
-                            warehouse: true,
-                            main_warehouse: taxableLocation,
-                            location: locationSelection,
-                            current_location: locationSelection,
-                            updated_at: formatDate(new Date()),
-                            company: user.company
-                        })
-
-                    if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-                        let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
-                        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
+                    const itemFoundInDB = groupData.find(element => element.serial_number === String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`))
+                    await devitrakApi.post("/db_item/edit-item", {
+                        item_id: itemFoundInDB.item_id,
+                        category_name: submitRef.current.category_name,
+                        item_group: submitRef.current.item_group,
+                        cost: submitRef.current.cost,
+                        brand: submitRef.current.brand,
+                        descript_item: submitRef.current.descript_item,
+                        ownership: submitRef.current.ownership,
+                        status: itemFoundInDB.status,
+                        serial_number: String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`),
+                        warehouse: itemFoundInDB.warehouse,
+                        main_warehouse: submitRef.current.main_warehouse,
+                        location: submitRef.current.location,
+                        current_location: submitRef.current.location,
+                        updated_at: formatDate(new Date()),
+                        company: user.company
+                    });
+                    if (!renderLocationOptions().some(element => element.value === submitRef.current.location)) {
+                        let template = [...companiesQuery.data.data.company.at(-1).location, submitRef.current.location]
+                        await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
                             location: template
                         })
                     }
-                    if (String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`) === data.endingNumber) {
-                        openNotificationWithIcon('success', "items were updated in the records of the company.")
+                    if (String(i).padStart(submitRef.current.startingNumber.length, `${submitRef.current.startingNumber[0]}`) === submitRef.current.endingNumber) {
+                        setValue("category_name", "");
+                        setValue("item_group", "");
+                        setValue("cost", "");
+                        setValue("brand", "");
+                        setValue("descript_item", "");
+                        setValue("ownership", "");
+                        setValue("serial_number", "")
+                        setValueSelection(options[0]);
+                        openNotificationWithIcon(
+                            "success",
+                            "items were created and stored in database."
+                        );
                         setLoading(false)
                         await navigate("/inventory");
                     }
                 } catch (error) {
                     console.log("🚀 ~ savingNewItem ~ error:", error)
-                    openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
+                    // openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
                     setLoading(false)
                 }
             }
@@ -646,25 +678,9 @@ const EditGroup = () => {
                             {...register("startingNumber")}
                             aria-invalid={errors.startingNumber}
                             style={OutlinedInputStyle}
-                            placeholder="e.g. 0001"
+                            placeholder={`Series min for ${selectedItem} ${getMinAndMax().min}`}
                             fullWidth
                         />
-                        {errors?.startingNumber && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.startingNumber.type}
-                            </Typography>
-                        )}
                     </div>
                     <div
                         style={{
@@ -691,7 +707,7 @@ const EditGroup = () => {
                             {...register("endingNumber")}
                             aria-invalid={errors.endingNumber}
                             style={OutlinedInputStyle}
-                            placeholder="e.g. 1000"
+                            placeholder={`Series max of ${selectedItem} ${getMinAndMax().max}`}
                             fullWidth
                         />
                         {errors?.endingNumber && (
