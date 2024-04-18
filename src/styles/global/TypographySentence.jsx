@@ -1,4 +1,3 @@
-
 const TypographySentence = {
     textAlign: "left",
     fontWeight: 400,

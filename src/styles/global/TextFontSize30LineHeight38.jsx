@@ -1,6 +1,6 @@
 export const TextFontSize30LineHeight38 = {
     fontFamily: "Inter",
-    fontSize: "30px",
+    fontSize: "1.5625vw",
     fontStyle: "normal",
     fontWeight: 600,
     lineHeight: "38px",
