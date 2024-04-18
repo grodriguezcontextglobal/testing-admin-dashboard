@@ -4,21 +4,21 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Card, Dropdown } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { BlueButton } from "../../../../../styles/global/BlueButton"
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText"
-import CenteringGrid from "../../../../../styles/global/CenteringGrid"
-import { CardStyle } from "../../../../../styles/global/CardStyle";
-import ConsumerDetails from "./details/ConsumerDetails";
-import FreeTransaction from "./actions/transactions/FreeTransaction";
-import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
-import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import { EmailIcon } from "../../../../../components/icons/Icons";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { CardStyle } from "../../../../../styles/global/CardStyle";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
 import CashTransaction from "./actions/transactions/CashTransaction";
+import ChargedTransaction from "./actions/transactions/ChargedTransaction";
+import FreeTransaction from "./actions/transactions/FreeTransaction";
+import ConsumerDetails from "./details/ConsumerDetails";
+import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 // import "../../Events/quickGlance/FormatEventDetailInfo.css";
 // import { ModalCreateTransactionForNoRegularUser } from "../transactionOptions/ModalCreateTransactionForNoRegularUser";
 // import { ModalPaidTransaction } from "../transactionOptions/ModalPaidTransaction";
 // import { ModalPaidTransactionChargeOption } from "../transactionOptions/ModalPaidTransactionChargeOption";
-// import SingleEmailNotification from "../../Notification/SingleEmailNotification";
 // import ModalCashDepositTransaction from "../transactionOptions/ModalCashDepositTransaction";
 
 const items = [
@@ -220,10 +220,10 @@ const FormatAttendeeDetailInfo = () => {
                 createTransactionChargeOption={createTransactionChargeOption}
                 setCreateTransactionChargeOption={setCreateTransactionChargeOption}
             />}
-            {/* {notificationActivation && <SingleEmailNotification
-        openSingleEmailNotificationModal={notificationActivation}
-        setOpenSingleEmailNotificationModal={setNotificationActivation}
-      />} */}
+            {notificationActivation && <SingleEmailNotification
+                customizedEmailNotificationModal={notificationActivation}
+                setCustomizedEmailNotificationModal={setNotificationActivation}
+            />}
             {createTransactionInCash &&
                 <CashTransaction openCashTransaction={createTransactionInCash} setOpenCashTransaction={setCreateTransactionInCash} />
             }
