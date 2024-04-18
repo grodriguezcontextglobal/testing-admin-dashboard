@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Table } from "antd";
+import { Avatar, Button, Divider, Space, Table } from "antd";
 import _ from 'lodash';
 import pkg from 'prop-types';
 import { useEffect } from "react";
@@ -11,6 +11,9 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { GeneralDeviceIcon, RightNarrowInCircle } from "../../../components/icons/Icons";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-table.css';
+import CardRendered from "../utils/CardRendered";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import CardLocations from "../utils/CardLocations";
 const { PropTypes } = pkg;
 
 const ItemTable = ({ searchItem }) => {
@@ -65,6 +68,34 @@ const ItemTable = ({ searchItem }) => {
     }
   }, [user.company])
 
+  const listOfGroups = () => {
+    const result = new Set()
+    if (itemsInInventoryQuery.data) {
+      for (let data of itemsInInventoryQuery.data.data.items) {
+        result.add(data.item_group)
+      }
+    }
+    return Array.from(result)
+  }
+
+  const listOfLocations = () => {
+    const totalPerLocation = new Map()
+    if (itemsInInventoryQuery.data) {
+      for (let data of itemsInInventoryQuery.data.data.items) {
+        if (totalPerLocation.has(data.location)) {
+          totalPerLocation.set(data.location, totalPerLocation.get(data.location) + 1)
+        } else {
+          totalPerLocation.set(data.location, 1)
+        }
+      }
+    }
+    const result = new Set()
+    for (let [key, value] of totalPerLocation) {
+      result.add({ key, value })
+    }
+
+    return Array.from(result)
+  }
   const dataToDisplay = () => {
     if (!searchItem || searchItem === "") {
       if (dataStructuringFormat().length > 0) {
@@ -365,7 +396,7 @@ const ItemTable = ({ searchItem }) => {
           display: "flex",
           alignItems: "center",
           marginRight: "5px",
-          padding:"0 0 0 0"
+          padding: "0 0 0 0"
         }}>
           <Button style={{ display: "flex", alignItems: "center" }} onClick={() => { listImagePerItemQuery.refetch(); listItemsQuery.refetch(); itemsInInventoryQuery.refetch() }}>
             <Typography
@@ -393,7 +424,53 @@ const ItemTable = ({ searchItem }) => {
         }}
         style={{ width: "100%" }} columns={columns} dataSource={dataToDisplay()}
         className="table-ant-customized" />
-      <Divider />
+
+      <Grid
+        display={"flex"}
+        flexDirection={'column'}
+        justifyContent={'flex-start'}
+        alignItems={"center"}
+        margin={'20px 0 20px 0'}
+        item
+        xs={12}
+      >
+        <Typography textAlign={'left'} style={{ ...TextFontsize18LineHeight28, width: "100%" }}>
+          Locations
+        </Typography>
+        <Divider />
+        <Grid container>
+          {
+            listOfLocations().map(item => {
+              return (
+                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <CardLocations title={item.key} props={`${item.value} total devices`} optional={null} /></Grid>
+              )
+            })
+          }
+        </Grid>
+      </Grid>
+      <Grid
+        display={"flex"}
+        flexDirection={'column'}
+        justifyContent={'flex-start'}
+        alignItems={"center"}
+        margin={'20px 0 0 0'}
+        item
+        xs={12}
+      >
+        <Typography textAlign={'left'} style={{ ...TextFontsize18LineHeight28, width: "100%" }}>
+          Groups
+        </Typography>
+        <Divider />
+        <Grid container>
+          {
+            listOfGroups().map(item => {
+              return (
+                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <CardRendered title={'Group'} props={item} optional={null} /></Grid>
+              )
+            })
+          }
+        </Grid>
+      </Grid>
       {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && displayWelcomeMessage()}
     </Grid>
   );

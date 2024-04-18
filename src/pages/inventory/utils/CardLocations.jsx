@@ -2,8 +2,9 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
-const CardRendered = ({ props, title, optional }) => {
+const CardLocations = ({ props, title, optional }) => {
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
     const isMediumDevice = useMediaQuery(
         "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -18,10 +19,11 @@ const CardRendered = ({ props, title, optional }) => {
                 : "10px 10px 10px 0"
                 }`}
             item
-            xs={12}
+            xs={12} sm={12} md={12} lg={12}
         >
             <Card
                 style={{
+                    width: "100%",
                     borderRadius: "12px",
                     border: "1px solid var(--gray-200, #EAECF0)",
                     background: "var(--base-white, #FFF)",
@@ -40,17 +42,10 @@ const CardRendered = ({ props, title, optional }) => {
                         justifyContent={"space-between"}
                         alignItems={"center"}
                         item
-                        xs={12}
+                        xs={12} sm={12} md={12} lg={12}
                     >
                         <Typography
-                            textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={500}
-                            lineHeight={"20px"}
-                            color={"var(--gray-600, #475467)"}
-                            
+                            style={TextFontSize30LineHeight38}
                         >
                             {title}
                         </Typography>
@@ -102,19 +97,16 @@ const CardRendered = ({ props, title, optional }) => {
                         justifyContent={"flex-start"}
                         alignItems={"center"}
                         item
-                        xs={12}
+                        xs={12} sm={12} md={12} lg={12}
                     >
                         <Typography
-                            paddingTop={"8px"}
+                            textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
                             fontFamily={"Inter"}
-                            fontSize={"1.5625vw"}
+                            fontSize={"14px"}
                             fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"38px"}
-                            color={"var(--gray-900, #101828)"}
-                            style={{
-                                textOverflow: "ellipsis"
-                            }}
+                            fontWeight={500}
+                            lineHeight={"20px"}
+                            color={"var(--gray-600, #475467)"}
                         >
                             {props}
                         </Typography>
@@ -125,4 +117,4 @@ const CardRendered = ({ props, title, optional }) => {
     );
 };
 
-export default CardRendered
+export default CardLocations
