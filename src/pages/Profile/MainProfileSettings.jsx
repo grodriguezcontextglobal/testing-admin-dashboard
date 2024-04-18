@@ -16,11 +16,11 @@ const MainProfileSettings = () => {
       route: "password",
       permission: ['Administrator', 'Approver', 'Editor']
     }, 
-    {
-      label: "Billing",
-      route: "billing",
-      permission: ["Administrator"]
-    },
+    // {
+    //   label: "Billing",
+    //   route: "billing",
+    //   permission: ["Administrator"]
+    // },
     {
       label: "Notifications",
       route: "notifications",

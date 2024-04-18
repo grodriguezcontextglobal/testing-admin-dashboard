@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import "./Body.css";
-import InvoiceTables from "./component/InvoiceTables";
+// import InvoiceTables from "./component/InvoiceTables";
 import PlanSubscriptionDetails from "./component/PlanSubscriptionDetails";
 import PaymentMethodDetails from "./component/PaymentMethodDetails";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -226,7 +226,7 @@ const Body = () => {
             sm={12}
             md={6}
           >
-            <PaymentMethodDetails />
+            {/* <PaymentMethodDetails /> */}
           </Grid>
           <Divider />
           <Grid
@@ -328,7 +328,7 @@ const Body = () => {
             sm={12}
             md={12}
           >
-            <InvoiceTables />
+            {/* <InvoiceTables /> */}
           </Grid>
           {/* </Grid> */}
         </Grid>{" "}

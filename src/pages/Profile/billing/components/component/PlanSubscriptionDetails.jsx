@@ -1,107 +1,59 @@
-import { Icon } from "@iconify/react";
 import { Chip, Grid, Typography } from "@mui/material";
-import { Card, Progress, notification } from "antd";
-import { useCallback, useState } from "react";
+import { Card, Progress } from "antd";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import UpdatingSubscription from "../payment/UpdatingSubscription";
+// import UpdatingSubscription from "../payment/UpdatingSubscription";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import ModalCancelOptions from "./ModalCancelOptions";
-
+import _ from 'lodash';
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 const PlanSubscriptionDetails = () => {
   const [openCancelOptionsModal, setOpenCancelOptionsModal] = useState(false);
   const [updatingSubscriptionModal, setUpdatingSubscriptionModal] =
     useState(false);
-  const { companyAccountStripe } = useSelector((state) => state.admin);
-  let planTitle;
+  const [details, setDetails] = useState([])
+  const [subscriptionDetailFetched, setSubscriptionDetailFetched] = useState(null)
+  const { subscriptionRecord } = useSelector((state) => state.subscription);
+  const retrieveSubscriptionPerCompany = async () => {
+    if (subscriptionRecord.company) {
+      const responseSubs = await devitrakApi.post(`/subscription/search_subscription`, { company: subscriptionRecord.company })
+      return setSubscriptionDetailFetched(responseSubs.data.subscription)
+    }
+  }
+  retrieveSubscriptionPerCompany()
+  const renderActiveSubscriptionDetail = useCallback(async () => {
+    if (!subscriptionDetailFetched) {
+      const groupingActive = _.groupBy(subscriptionRecord.record, 'active')
+      const active = groupingActive[true]
+      if (active) {
+        const response = await devitrakApi.get(`/subscription/subscriptions/${active[0].subscription_id}`)
+        if (response.data.ok) {
+          return setDetails(response.data.subscriptions)
+        }
+      }
+    }
+  }, [subscriptionRecord.company, details])
 
-  const [api, contextHolder] = notification.useNotification();
+  useEffect(() => {
+    const controller = new AbortController()
+    retrieveSubscriptionPerCompany()
+    renderActiveSubscriptionDetail()
+    return () => {
+      controller.abort()
+    }
+  }, [subscriptionRecord?.record])
+
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isLargeDevice = useMediaQuery(
     "only screen and (min-width : 993px) and (max-width : 1200px)"
   );
-  // const openNotificationWithIcon = (type, msg, dscpt) => {
-  //   api[type]({
-  //     message: msg,
-  //     description: dscpt,
-  //   });
-  // };
-
-  // const [open, setOpen] = useState(false);
-  // const [confirmLoading, setConfirmLoading] = useState(false);
-  // const showPopconfirm = () => {
-  //   setOpen(true);
-  // };
-  // const handleOk = async () => {
-  //   setConfirmLoading(true);
-  //   const subscriptionExposedId =
-  //     companyAccountStripe.subscriptionHistory.at(-1).subscription;
-  //   try {
-  //     const respCancel = await devitrakApi.delete(
-  //       `/stripe/subscriptions/${subscriptionExposedId}`,
-  //       { subscriptionID: subscriptionExposedId }
-  //     );
-  //     if (respCancel.data.ok) {
-  //       await devitrakApi.patch(
-  //         `/stripe/updating-subscription/${
-  //           companyAccountStripe.subscriptionHistory.at(-1).id
-  //         }`,
-  //         {
-  //           subscriptionHistory: [
-  //             ...companyAccountStripe.subscriptionHistory,
-  //             {
-  //               ...companyAccountStripe.subscriptionHistory.at(-1),
-  //               status: "canceled",
-  //             },
-  //           ],
-  //         }
-  //       );
-  //       openNotificationWithIcon(
-  //         "success",
-  //         "Subscription cancelled.",
-  //         "Subscription will be active until its due date."
-  //       );
-  //       setOpen(false);
-  //       setConfirmLoading(false);
-  //     }
-  //   } catch (error) {
-  //     openNotificationWithIcon(
-  //       "error",
-  //       "Something went wrong!",
-  //       "Please try later."
-  //     );
-  //     setOpen(false);
-  //     setConfirmLoading(false);
-  //   }
-  // };
-
-  const renderPlanTitle = useCallback(() => {
-    if (companyAccountStripe) {
-      switch (
-        companyAccountStripe?.subscriptionHistory?.at(-1)?.paymentIntent?.amount
-      ) {
-        case "0000":
-          planTitle = "Basic";
-          break;
-        case 3000:
-          planTitle = "Business";
-          break;
-        case 6000:
-          planTitle = "Enterprise";
-          break;
-        case 36000:
-          planTitle = "Business";
-          break;
-        case 72000:
-          planTitle = "Enterprise";
-          break;
-        default:
-          planTitle = "No";
-          break;
-      }
+  const renderPlan = (amount) => {
+    const dic = {
+      3000: 'Business',
+      6000: "Enterprises",
+      32000: 'Business',
+      72000: 'Enterprise'
     }
-  }, []);
-
-  const renderPlan = (props) => {
     return (
       <Typography
         width={"fit-content"}
@@ -113,13 +65,13 @@ const PlanSubscriptionDetails = () => {
         lineHeight={"20px"}
         color="var(--primary-700, #6941C6)"
       >
-        {props}
+        {amount ? dic[amount] : 'Unknown'}
       </Typography>
     );
   };
+
   return (
     <>
-      {contextHolder}
       <Grid
         key={``}
         padding={"8px 0px 8px 8px"}
@@ -151,35 +103,17 @@ const PlanSubscriptionDetails = () => {
             >
               <div onClick={() => setOpenCancelOptionsModal(true)}>
                 <Typography
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={600}
-                  lineHeight={"20px"}
-                  color="#fd5656"
-                  padding={"16px 24px"}
+                  style={{ ...Subtitle, padding: "16px 24px", color: "#fd5656" }}
                 >
-                  Cancel plan &nbsp;
-                  <Icon icon="ic:outline-cancel" width={25} height={25} />
+                  Cancel plan
                 </Typography>
               </div>
 
               <Typography
                 onClick={() => setUpdatingSubscriptionModal(true)}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"20px"}
-                color="#004EEB"
-                padding={"16px 24px"}
+                style={{ ...Subtitle, color: "#004EEB", padding: "16px 24px" }}
               >
-                Upgrade plan &nbsp;
-                <Icon
-                  icon="eva:diagonal-arrow-right-up-fill"
-                  width={25}
-                  height={25}
-                />
+                Upgrade plan
               </Typography>
             </Grid>,
           ]}
@@ -236,29 +170,24 @@ const PlanSubscriptionDetails = () => {
                       fontSize={"18px"}
                       noWrap={true}
                     >
-                      {planTitle} plan{" "}
+                      {renderPlan(details?.plan?.amount)} plan{" "}
                     </Typography>
                   </Grid>
-                  {planTitle !== "No" && (
-                    <Grid item xs={6}>
-                      <Chip
-                        size="small"
-                        variant="elevated"
-                        label={renderPlan(
-                          companyAccountStripe?.subscriptionHistory?.at(-1)
-                            ?.latest_invoice?.lines?.data[0]?.plan?.interval
-                        )}
-                        style={{
-                          width: "fit-content",
-                          borderRadius: "16px",
-                          background: "var(--primary-50, #F9F5FF)",
-                          mixBlendMode: "multiply",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      />
-                    </Grid>
-                  )}
+                  <Grid item xs={6}>
+                    <Chip
+                      size="small"
+                      variant="elevated"
+                      label={details?.plan?.interval}
+                      style={{
+                        width: "fit-content",
+                        borderRadius: "16px",
+                        background: "var(--primary-50, #F9F5FF)",
+                        mixBlendMode: "multiply",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    />
+                  </Grid>
                 </Grid>
 
                 <Typography
@@ -300,9 +229,7 @@ const PlanSubscriptionDetails = () => {
                 noWrap={true}
               >
                 $
-                {companyAccountStripe?.subscriptionHistory
-                  ?.at(-1)
-                  ?.paymentIntent?.amount?.toString()
+                {details?.plan?.amount?.toString()
                   ?.slice(0, -2)}
               </Typography>
               <Typography
@@ -316,10 +243,7 @@ const PlanSubscriptionDetails = () => {
                 noWrap={true}
               >
                 per &nbsp;
-                {
-                  companyAccountStripe?.subscriptionHistory?.at(-1)
-                    ?.latest_invoice?.lines?.data[0]?.plan?.interval
-                }
+                {details?.plan?.interval}
               </Typography>
             </Grid>
             <Grid
@@ -337,7 +261,7 @@ const PlanSubscriptionDetails = () => {
           </Grid>
         </Card>
       </Grid>
-      {updatingSubscriptionModal && (
+      {/* {updatingSubscriptionModal && (
         <UpdatingSubscription
           updatingSubscriptionModal={updatingSubscriptionModal}
           setUpdatingSubscriptionModal={setUpdatingSubscriptionModal}
@@ -348,7 +272,7 @@ const PlanSubscriptionDetails = () => {
           openCancelOptionsModal={openCancelOptionsModal}
           setOpenCancelOptionsModal={setOpenCancelOptionsModal}
         />
-      )}
+      )} */}
     </>
   );
 };

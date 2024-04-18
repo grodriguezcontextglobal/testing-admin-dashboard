@@ -9,7 +9,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 const InvoiceTables = () => {
   const { companyAccountStripe } = useSelector((state) => state.admin);
   const [listOfInvoices, setListOfInvoices] = useState([]);
-  const generateInvoicesHistoryPerSUbscription = useCallback(async () => {
+  const generateInvoicesHistoryPerSubscription = useCallback(async () => {
     if (companyAccountStripe) {
       if (companyAccountStripe?.subscriptionHistory.length > 0) {
         const respInvoicesList = await devitrakApi.get("/stripe/invoices", {
@@ -22,10 +22,7 @@ const InvoiceTables = () => {
       }
     }
   }, []);
-  const encapsulateFnOnceAtTime = useMemo(
-    () => generateInvoicesHistoryPerSUbscription() ?? listOfInvoices,
-    []
-  );
+
   const structuringDataToDisplayIntable = useMemo(() => {
     const resultPerIteration = new Set();
     if (listOfInvoices.length > 0) {
