@@ -29,7 +29,6 @@ const DeviceInformationDetail = ({ dataFound }) => {
   }, [dataFound[0]?.category_name, dataFound[0]?.item_group])
   if (listImagePerItemQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
   if (listImagePerItemQuery.data) {
-    console.log("🚀 ~ DeviceInformationDetail ~ listImagePerItemQuery.data:", listImagePerItemQuery.data)
     return (
       <Grid
         padding={"0px"}
