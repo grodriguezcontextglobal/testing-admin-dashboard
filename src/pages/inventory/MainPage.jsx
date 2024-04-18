@@ -23,56 +23,54 @@ import { Title } from "../../styles/global/Title";
 import "../../styles/global/ant-select.css";
 import ItemTable from "./table/ItemTable";
 const MainPage = () => {
-  // const [openSingleItemModal, setOpenSingleModal] = useState(false)
-  // const [openGroupItemModal, setOpenGroupModal] = useState(false)
   const { user } = useSelector((state) => state.admin)
   const { eventsPerAdmin } = useSelector((state) => state.event)
   const { register, watch } = useForm();
-  const [deviceSelectedOption, setDeviceSelectedOption] = useState({ eventName: "Warehouse" })
-  const dispatch = useDispatch()
-  const renderEventsPerAdmin = () => {
-    const events = new Set()
-    if (eventsPerAdmin.active) {
-      for (let data of eventsPerAdmin.active) {
-        events.add(data)
-      }
-    }
-    if (eventsPerAdmin.completed) {
-      for (let data of eventsPerAdmin.completed) {
-        events.add(data)
-      }
-    }
-    return Array.from(events)
-  }
-  const renderEventsOptions = () => {
-    const events = new Set()
-    events.add({ key: nanoid(5), label: "Warehouse", value: "{\"eventName\":\"Warehouse\"}" })
-    for (let data of renderEventsPerAdmin()) {
-      events.add({ key: nanoid(5), label: data.eventInfoDetail.eventName, value: JSON.stringify(data) })
-    }
-    return Array.from(events)
-  }
-  const items = renderEventsOptions()?.map(option => option)
-  const onChange = (value) => {
-    const valueSelected = JSON.parse(value)
-    setDeviceSelectedOption(valueSelected)
-    if (valueSelected.eventName !== "Warehouse") {
-      dispatch(
-        onSelectEvent(valueSelected.eventInfoDetail.eventName)
-      );
-      dispatch(onSelectCompany(valueSelected.company));
-      dispatch(onAddEventData(valueSelected));
-    }
-  };
-  const onSearch = (value) => {
-    const valueSelected = JSON.parse(value)
-    setDeviceSelectedOption(valueSelected)
+  // const [deviceSelectedOption, setDeviceSelectedOption] = useState({ eventName: "Warehouse" })
+  // const dispatch = useDispatch()
+  // const renderEventsPerAdmin = () => {
+  //   const events = new Set()
+  //   if (eventsPerAdmin.active) {
+  //     for (let data of eventsPerAdmin.active) {
+  //       events.add(data)
+  //     }
+  //   }
+  //   if (eventsPerAdmin.completed) {
+  //     for (let data of eventsPerAdmin.completed) {
+  //       events.add(data)
+  //     }
+  //   }
+  //   return Array.from(events)
+  // }
+  // const renderEventsOptions = () => {
+  //   const events = new Set()
+  //   events.add({ key: nanoid(5), label: "Warehouse", value: "{\"eventName\":\"Warehouse\"}" })
+  //   for (let data of renderEventsPerAdmin()) {
+  //     events.add({ key: nanoid(5), label: data.eventInfoDetail.eventName, value: JSON.stringify(data) })
+  //   }
+  //   return Array.from(events)
+  // }
+  // const items = renderEventsOptions()?.map(option => option)
+  // const onChange = (value) => {
+  //   const valueSelected = JSON.parse(value)
+  //   setDeviceSelectedOption(valueSelected)
+  //   if (valueSelected.eventName !== "Warehouse") {
+  //     dispatch(
+  //       onSelectEvent(valueSelected.eventInfoDetail.eventName)
+  //     );
+  //     dispatch(onSelectCompany(valueSelected.company));
+  //     dispatch(onAddEventData(valueSelected));
+  //   }
+  // };
+  // const onSearch = (value) => {
+  //   const valueSelected = JSON.parse(value)
+  //   setDeviceSelectedOption(valueSelected)
 
-  };
+  // };
 
-  // Filter `option.label` match the user type `input`
-  const filterOption = (input, option) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+  // // Filter `option.label` match the user type `input`
+  // const filterOption = (input, option) =>
+  //   (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
   return (
     <Grid
       style={{
@@ -211,7 +209,7 @@ const MainPage = () => {
           item
           xs={12}
         >
-          <ItemTable searchItem={watch("searchItem")} location={deviceSelectedOption} />
+          <ItemTable searchItem={watch("searchItem")} />
         </Grid>
       </Grid>
     </Grid>
