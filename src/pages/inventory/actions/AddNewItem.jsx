@@ -27,7 +27,6 @@ import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
 const AddNewItem = () => {
-  console.log(options.map(option => option.value))
   const [selectedItem, setSelectedItem] = useState('')
   const [taxableLocation, setTaxableLocation] = useState('')
   const [valueSelection, setValueSelection] = useState('');
