@@ -3,7 +3,6 @@ import { useWindowScroll } from "@uidotdev/usehooks"
 import { Button, Card } from "antd"
 import { useState } from "react"
 import { CardStyle } from "../../../../../styles/global/CardStyle"
-import CenteringGrid from "../../../../../styles/global/CenteringGrid"
 import { DangerButton } from "../../../../../styles/global/DangerButton"
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText"
 import DeleteItemModal from "../components/DeleteItemModal"
@@ -43,7 +42,7 @@ const DeleteItem = ({ dataFound }) => {
                         xs={12}
                     >
                         <Button onClick={() => { scrollTo({ left: 0, top: '50dv', behavior: 'smooth' }); setOpenDeleteItemModal(true) }} style={{ ...DangerButton, border: "none" }}>
-                            <span style={{ CenteringGrid, alignSelf: 'stretch ' }}></span>&nbsp;<Typography style={DangerButtonText}>Delete</Typography>
+                            <Typography style={DangerButtonText}>Delete</Typography>
                         </Button>
                     </Grid>
                 </Grid>
