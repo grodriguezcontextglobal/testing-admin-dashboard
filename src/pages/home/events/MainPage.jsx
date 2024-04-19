@@ -18,8 +18,6 @@ const MainPage = () => {
         }),
         enabled: false,
         refetchOnMount: false,
-        cacheTime: 1000 * 60 * 15, //fifteenMinutesInMs
-        staleTime: 1000 * 60 * 15
     });
 
     useEffect(() => {
@@ -39,63 +37,52 @@ const MainPage = () => {
     if (eventQuery.data) {
         const renderingDataBasedOnStaffAndActiveEvent = () => {
             let checking = []
-            if (dataPerCompany()) {
+            if (dataPerCompany()?.length > 0) {
                 const group_by_active = _.groupBy(dataPerCompany(), "active");
-                const activeAndAdminMember = group_by_active.true?.filter(
-                    (adminMember) =>
-                        adminMember.staff?.adminUser?.find(
-                            (member) => member === user.email
-                        )
-                );
-                if (activeAndAdminMember) {
-                    checking = [...checking, ...activeAndAdminMember]
-                } else {
-                    checking = [...checking]
-                }
-                const activeAndHeadsetAttendeesMember = group_by_active.true?.filter(
-                    (adminMember) =>
-                        adminMember.staff.headsetAttendees?.find(
-                            (member) => member === user?.email
-                        )
-                );
-                if (activeAndHeadsetAttendeesMember) {
-                    checking = [...checking, ...activeAndHeadsetAttendeesMember]
-                } else {
-                    checking = [...checking]
+                if (group_by_active[true]) {
+                    const activeAndAdminMember = group_by_active.true?.filter(
+                        (adminMember) =>
+                            adminMember.staff?.adminUser?.find(
+                                (member) => member.email === user.email
+                            )
+                    );
+                    if (activeAndAdminMember) {
+                        checking = [...checking, ...activeAndAdminMember]
+                    } else {
+                        checking = [...checking]
+                    }
+
+                    const activeAndHeadsetAttendeesMember = group_by_active.true?.filter(
+                        (adminMember) =>
+                            adminMember.staff.headsetAttendees?.find(
+                                (member) => member.email === user?.email
+                            )
+                    );
+                    if (activeAndHeadsetAttendeesMember) {
+                        checking = [...checking, ...activeAndHeadsetAttendeesMember]
+                    } else {
+                        checking = [...checking]
+                    }
                 }
                 const activeEventAndMembers = [...checking];
 
-                const inactiveButAdmin = group_by_active.false?.filter((adminMember) =>
-                    adminMember.staff.adminUser?.find((member) => member === user.email)
-                );
+                if (group_by_active[false]) {
+                    const inactiveButAdmin = group_by_active.false?.filter((adminMember) =>
+                        adminMember.staff.adminUser?.find((member) => member.email === user.email)
+                    );
 
-                dispatch(
-                    onAddListEventPermitPerAdmin({
-                        active: activeEventAndMembers,
-                        completed: inactiveButAdmin,
-                    })
-                );
-                if (activeEventAndMembers && inactiveButAdmin) {
-                    const noDuplicated = new Set()
-                    for (let data of [...activeEventAndMembers, ...inactiveButAdmin]) {
-                        const jsonToString = JSON.stringify(data)
-                        if (!noDuplicated.has(jsonToString)) {
-                            noDuplicated.add(jsonToString)
-                        }
-                    }
-                    const depuratedResult = new Set()
-                    for (let data of Array.from(noDuplicated)) {
-                        const parsing = JSON.parse(data)
-                        depuratedResult.add(parsing)
-                    }
-                    return Array.from(depuratedResult)
+                    dispatch(
+                        onAddListEventPermitPerAdmin({
+                            active: activeEventAndMembers,
+                            completed: inactiveButAdmin,
+                        })
+                    );
                 }
-                if (activeEventAndMembers && !inactiveButAdmin) return activeEventAndMembers;
-                if (!activeAndAdminMember && inactiveButAdmin) return inactiveButAdmin;
-                if (!activeAndAdminMember && !inactiveButAdmin) return [];
+                return activeEventAndMembers;
             }
         };
         renderingDataBasedOnStaffAndActiveEvent();
+        console.log("🚀 ~ MainPage ~ renderingDataBasedOnStaffAndActiveEvent():", renderingDataBasedOnStaffAndActiveEvent())
 
         const dataToBeRenderedInUpcomingSection = () => {
             const result = new Set()
@@ -145,7 +132,6 @@ const MainPage = () => {
             </Grid>
         )
     }
-
 }
 
 export default MainPage
