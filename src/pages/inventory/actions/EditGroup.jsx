@@ -149,7 +149,6 @@ const EditGroup = () => {
     }, [selectedItem, groupData.length])
     getMinAndMax()
     const savingNewItem = async (data) => {
-        console.log("🚀 ~ savingNewItem ~ data:", { ...data, item_group: selectedItem, ownership: valueSelection, main_warehouse: taxableLocation, location: locationSelection, company: user.company })
         submitRef.current = { ...data, item_group: selectedItem, ownership: valueSelection, main_warehouse: taxableLocation, location: locationSelection, company: user.company }
         let base64;
         if (selectedItem === "") return openNotificationWithIcon("warning", "A group of item must be provided.");
@@ -196,7 +195,7 @@ const EditGroup = () => {
                         });
                         if (!renderLocationOptions().some(element => element.value === submitRef.current.location)) {
                             let template = [...companiesQuery.data.data.company.at(-1).location, submitRef.current.location]
-                            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
+                            await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
                                 location: template
                             })
                         }
@@ -250,7 +249,7 @@ const EditGroup = () => {
                     });
                     if (!renderLocationOptions().some(element => element.value === submitRef.current.location)) {
                         let template = [...companiesQuery.data.data.company.at(-1).location, submitRef.current.location]
-                        await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
+                        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
                             location: template
                         })
                     }
@@ -369,6 +368,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            disabled={loading}
                             required
                             {...register("category_name")}
                             aria-invalid={errors.category_name}
@@ -421,6 +421,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <AutoComplete
+                            disabled={loading}
                             className="custom-autocomplete" // Add a custom className here
                             variant="outlined"
                             style={{
@@ -481,6 +482,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            disabled={loading}
                             required
                             {...register("brand")}
                             aria-invalid={errors.brand}
@@ -526,6 +528,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <AutoComplete
+                            disabled={loading}
                             className="custom-autocomplete"
                             style={{ width: "100%", height: "2.5rem" }}
                             options={renderLocationOptions()}
@@ -569,6 +572,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            disabled={loading}
                             required
                             {...register("cost", { required: true })}
                             aria-invalid={errors.cost}
@@ -625,6 +629,7 @@ const EditGroup = () => {
                                     Ownership status of items
                                 </Typography>
                                 <Select
+                                    disabled={loading}
                                     showSearch
                                     className="custom-autocomplete"
                                     style={{ ...AntSelectorStyle, height: "2.4rem", width: "100%" }}
@@ -674,6 +679,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            disabled={loading}
                             required
                             {...register("startingNumber")}
                             aria-invalid={errors.startingNumber}
@@ -703,6 +709,7 @@ const EditGroup = () => {
                             </Typography>
                         </InputLabel>
                         <OutlinedInput
+                            disabled={loading}
                             required
                             {...register("endingNumber")}
                             aria-invalid={errors.endingNumber}
@@ -753,6 +760,7 @@ const EditGroup = () => {
                         </Typography>
                     </InputLabel>
                     <AutoComplete
+                        disabled={loading}
                         className="custom-autocomplete"
                         value={locationSelection}
                         style={{ width: "100%", height: "2.5rem" }}
@@ -790,6 +798,7 @@ const EditGroup = () => {
                         </Typography>
                     </InputLabel>
                     <OutlinedInput
+                        disabled={loading}
                         required
                         multiline
                         minRows={5}
