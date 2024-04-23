@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Space, Table } from "antd";
+import { Avatar, Button, Divider, Table } from "antd";
 import _ from 'lodash';
 import pkg from 'prop-types';
 import { useEffect } from "react";
@@ -104,17 +104,18 @@ const ItemTable = ({ searchItem }) => {
       return []
     } else {
       return dataStructuringFormat()?.filter(item =>
-        String(item.serial_number).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.location).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.category_name).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.item_group).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.event_name).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.state_address).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.street_address).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.city_address).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.ownership).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.cost).toLowerCase().match(String(searchItem).toLowerCase()) ||
-        String(item.descript_item).toLowerCase().match(String(searchItem).toLowerCase()))
+        String(item.serial_number).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.location).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.category_name).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.item_group).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.event_name).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.state_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.street_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.city_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.ownership).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.cost).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.brand).toLowerCase().includes(String(searchItem).toLowerCase()) ||
+        String(item.descript_item).toLowerCase().includes(String(searchItem).toLowerCase()))
     }
   };
   const displayWelcomeMessage = () => {
@@ -374,9 +375,9 @@ const ItemTable = ({ searchItem }) => {
     dataIndex: 'data',
     key: 'data',
     render: (record) => (
-      <span style={cellStyle} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
+      <button style={{...cellStyle, backgroundColor:"transparent", border:"none"}} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
         <RightNarrowInCircle />
-      </span>
+      </button>
     )
   }]
   return (
