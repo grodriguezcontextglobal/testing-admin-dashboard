@@ -8,6 +8,7 @@ import {
     TextField,
     Typography
 } from "@mui/material";
+import _ from 'lodash';
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Select, Tooltip, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -25,6 +26,7 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-select.css';
 import { formatDate } from "../utils/dateFormat";
 const options = [{ value: 'Permanent' }, { value: 'Rent' }, { value: 'Sale' }]
@@ -44,6 +46,8 @@ const AddNewBulkItems = () => {
     const openNotificationWithIcon = (type, msg) => {
         api.open({
             message: msg,
+            placement: "bottomRight",
+            duration: 10
         });
     };
     const [loading, setLoading] = useState(false)
@@ -122,10 +126,24 @@ const AddNewBulkItems = () => {
     }, [selectedItem])
 
     const savingNewItem = async (data) => {
+        const dataDevices = itemsInInventoryQuery.data.data.items
+        const groupingByDeviceType = _.groupBy(dataDevices, "item_group")
+        let checkExistingDevice = []
         let base64;
-        if (selectedItem === "") return openNotificationWithIcon("warning","A group of item must be provided.");
-        if (taxableLocation === "") return openNotificationWithIcon("warning","A taxable location must be provided.");
-        if (valueSelection === "") return openNotificationWithIcon("warning","Ownership status must be provided.");
+        if (selectedItem === "") return openNotificationWithIcon("warning", "A group of item must be provided.");
+        if (taxableLocation === "") return openNotificationWithIcon("warning", "A taxable location must be provided.");
+        if (valueSelection === "") return openNotificationWithIcon("warning", "Ownership status must be provided.");
+        for (let index = Number(data.startingNumber); index < Number(data.endingNumber); index++) {
+            if (groupingByDeviceType[selectedItem]) {
+                const dataRef = _.groupBy(groupingByDeviceType[selectedItem], "serial_number")
+                if (dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
+                    checkExistingDevice = [...checkExistingDevice, ...dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]]
+                }
+            }
+        }
+        if (checkExistingDevice.length > 0) {
+            return openNotificationWithIcon("warning", `Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.`)
+        }
         if (data.photo.length > 0 && data.photo[0].size > 1048576) {
             setLoading(false)
             return alert(
@@ -285,7 +303,6 @@ const AddNewBulkItems = () => {
                     padding: "24px",
                     flexDirection: "column",
                     gap: "24px",
-                    // alignSelf: "stretch",
                     borderRadius: "8px",
                     border: "1px solid var(--gray-300, #D0D5DD)",
                     background: "var(--gray-100, #F2F4F7)",
@@ -313,12 +330,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 Category
                             </Typography>
@@ -331,22 +343,6 @@ const AddNewBulkItems = () => {
                             placeholder="e.g. Electronic"
                             fullWidth
                         />
-                        {errors?.category_name && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.category_name.type}
-                            </Typography>
-                        )}
                         <div
                             style={{
                                 textAlign: "left",
@@ -365,12 +361,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 Device name
                             </Typography>
@@ -425,12 +416,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 Brand
                             </Typography>
@@ -443,22 +429,6 @@ const AddNewBulkItems = () => {
                             placeholder="e.g. Apple"
                             fullWidth
                         />
-                        {errors?.brand && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.brand.type}
-                            </Typography>
-                        )}
                     </div>
                     <div
                         style={{
@@ -470,12 +440,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 <Tooltip title="Address where tax deduction for equipment will be applied.">Taxable location <QuestionIcon /></Tooltip>
                             </Typography>
@@ -513,12 +478,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 Cost of replace device
                             </Typography>
@@ -534,12 +494,7 @@ const AddNewBulkItems = () => {
                                     <Typography
                                         textTransform={"none"}
                                         textAlign={"left"}
-                                        fontFamily={"Inter"}
-                                        fontSize={"14px"}
-                                        fontStyle={"normal"}
-                                        fontWeight={400}
-                                        lineHeight={"20px"}
-                                        color={"var(--gray-700, #344054)"}
+                                        style={{ ...Subtitle, fontWeight: 400 }}
                                     >
                                         $
                                     </Typography>
@@ -547,9 +502,6 @@ const AddNewBulkItems = () => {
                             }
                             fullWidth
                         />
-                        {errors?.cost && (
-                            <Typography>{errors.cost.type}</Typography>
-                        )}
                     </div>
                     <div
                         style={{
@@ -570,12 +522,7 @@ const AddNewBulkItems = () => {
                                 <Typography
                                     textTransform={"none"}
                                     textAlign={"left"}
-                                    fontFamily={"Inter"}
-                                    fontSize={"14px"}
-                                    fontStyle={"normal"}
-                                    fontWeight={500}
-                                    lineHeight={"20px"}
-                                    color={"var(--gray-700, #344054)"}
+                                    style={{ ...Subtitle, fontWeight: 500 }}
                                 >
                                     Ownership status of items
                                 </Typography>
@@ -618,12 +565,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 From starting number
                             </Typography>
@@ -636,22 +578,6 @@ const AddNewBulkItems = () => {
                             placeholder="e.g. 0001"
                             fullWidth
                         />
-                        {errors?.startingNumber && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.startingNumber.type}
-                            </Typography>
-                        )}
                     </div>
                     <div
                         style={{
@@ -663,12 +589,7 @@ const AddNewBulkItems = () => {
                             <Typography
                                 textTransform={"none"}
                                 textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={500}
-                                lineHeight={"20px"}
-                                color={"var(--gray-700, #344054)"}
+                                style={{ ...Subtitle, fontWeight: 500 }}
                             >
                                 To ending number
                             </Typography>
@@ -681,22 +602,6 @@ const AddNewBulkItems = () => {
                             placeholder="e.g. 1000"
                             fullWidth
                         />
-                        {errors?.endingNumber && (
-                            <Typography
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontFamily={"Inter"}
-                                fontSize={"14px"}
-                                fontStyle={"normal"}
-                                fontWeight={400}
-                                lineHeight={"20px"}
-                                color={"red"}
-                                width={"100%"}
-                                padding={"0.5rem 0"}
-                            >
-                                {errors.endingNumber.type}
-                            </Typography>
-                        )}
                     </div>
                 </div>
                 <div
@@ -713,12 +618,7 @@ const AddNewBulkItems = () => {
                         <Typography
                             textTransform={"none"}
                             textAlign={"left"}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={500}
-                            lineHeight={"20px"}
-                            color={"var(--gray-700, #344054)"}
+                            style={{ ...Subtitle, fontWeight: 500 }}
                         >
                             Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
                         </Typography>
@@ -750,12 +650,7 @@ const AddNewBulkItems = () => {
                         <Typography
                             textTransform={"none"}
                             textAlign={"left"}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={500}
-                            lineHeight={"20px"}
-                            color={"var(--gray-700, #344054)"}
+                            style={{ ...Subtitle, fontWeight: 500 }}
                         >
                             Description of the device
                         </Typography>
@@ -778,9 +673,6 @@ const AddNewBulkItems = () => {
                         }}
                         placeholder="Please provide a brief description of the new device to be added."
                     />
-                    {errors?.descript_item && (
-                        <Typography>{errors.descript_item.type}</Typography>
-                    )}
                 </div>
 
                 <Grid
@@ -793,7 +685,6 @@ const AddNewBulkItems = () => {
                         borderRadius: "12px",
                         border: "1px solid var(--gray-200, #EAECF0)",
                         background: "var(--base-white, #FFF)",
-                        // boxShadow: "0px 1px 2px rgba(16,24,40,0.05)",
                     }}
                     item
                     xs={12}
@@ -802,11 +693,14 @@ const AddNewBulkItems = () => {
                         display={"flex"}
                         justifyContent={"center"}
                         alignItems={"center"}
+                        marginY={2}
                         item
                         xs={12}
                     >
                         <Avatar
                             style={{
+                                width: "3rem",
+                                height: "auto",
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: "center",
@@ -845,12 +739,7 @@ const AddNewBulkItems = () => {
                         xs={12}
                     >
                         <Typography
-                            color={"var(--gray-600, #475467)"}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"20px"}
+                            style={Subtitle}
                         >
                             SVG, PNG, JPG or GIF (max. 1MB)
                         </Typography>
@@ -922,7 +811,6 @@ const AddNewBulkItems = () => {
                 </div>
             </form>
         </Grid>
-        // </Modal>
     );
 };
 export default AddNewBulkItems;

@@ -9,6 +9,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
+import _ from 'lodash';
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Select, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -123,9 +124,17 @@ const AddNewItem = () => {
     }
   }, [selectedItem])
   const savingNewItem = async (data) => {
+    const dataDevices = itemsInInventoryQuery.data.data.items
+    const groupingByDeviceType = _.groupBy(dataDevices, "item_group")
     if (selectedItem === "") return openNotificationWithIcon("warning", "A group of item must be provided.");
     if (taxableLocation === "") return openNotificationWithIcon("warning", "A taxable location must be provided.");
     if (valueSelection === "") return openNotificationWithIcon("warning", "Ownership status must be provided.");
+    if (groupingByDeviceType[selectedItem]) {
+      const dataRef = _.groupBy(groupingByDeviceType[selectedItem], 'serial_number')
+      if(dataRef[data.serial_number].length>0){
+        return openNotificationWithIcon("warning", "Device serial number already exists in company records.");
+      }
+    }
     try {
       let base64;
       if (data.photo.length > 0 && data.photo[0].size > 1048576) {
