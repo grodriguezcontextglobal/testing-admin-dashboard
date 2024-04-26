@@ -552,7 +552,7 @@ const Assignment = () => {
                                     ...OutlinedInputStyle,
                                     width: "100%",
                                 }}
-                                placeholder={`Selected category min value: ${substractingRangesSelectedItem()?.min}`}
+                                placeholder={`Selected category serial numbers start: ${substractingRangesSelectedItem()?.min} end: ${substractingRangesSelectedItem()?.max}`}
                                 fullWidth
                             />
                         </Grid>
