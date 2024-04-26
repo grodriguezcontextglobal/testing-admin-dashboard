@@ -167,7 +167,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     dispatch(onAddEventData(eventListQuery.data.list[0]));
     dispatch(onAddSubscription(eventListQuery.data.list[0].subscription));
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
-    navigate(`/events/event-quickglance/${customer.uid ?? customer.id}`);
+    navigate(`/events/event-attendees/${customer.uid ?? customer.id}/transactions-details`);
   };
   const columns = [
     {
