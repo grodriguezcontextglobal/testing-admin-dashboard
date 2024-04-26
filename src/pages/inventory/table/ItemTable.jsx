@@ -24,7 +24,6 @@ const ItemTable = ({ searchItem }) => {
     queryFn: () => devitrakApi.post("/db_item/current-inventory", { company_name: user.company }),
     enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity
   });
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
@@ -118,6 +117,7 @@ const ItemTable = ({ searchItem }) => {
         String(item.descript_item).toLowerCase().includes(String(searchItem).toLowerCase()))
     }
   };
+
   const displayWelcomeMessage = () => {
     return <Grid
       display={"flex"}
@@ -207,11 +207,21 @@ const ItemTable = ({ searchItem }) => {
       compare: (a, b) => ("" + a.data.item_group).localeCompare(b.data.item_group),
     },
     render: (record) => (
-      <span style={cellStyle}><Avatar size={'80px'} src={groupingByDeviceType[record.item_group] ? groupingByDeviceType[record.item_group][0].source : `${<GeneralDeviceIcon />}`}></Avatar>&nbsp; <Typography
-        style={Subtitle}
-        textTransform={"capitalize"}
-      >
-        {record.category_name}</Typography></span>
+      <span style={cellStyle}>
+        <Avatar size={'80px'} style={{ borderRadius: "8px", background: "transparent" }}>
+          {groupingByDeviceType[record.item_group] ? <img
+            src={groupingByDeviceType[record.item_group][0].source}
+            alt={`${record.item_group}-${record.serial_number}`}
+            style={{ width: "100%", height: "auto" }}
+          /> :
+            <Avatar size={'80px'}><GeneralDeviceIcon /></Avatar>}
+        </Avatar>
+        {/*  */}
+        &nbsp; <Typography
+          style={{ ...Subtitle, cellStyle }}
+          textTransform={"capitalize"}
+        >
+          {record.category_name}</Typography></span>
     )
   },
   {
@@ -238,6 +248,7 @@ const ItemTable = ({ searchItem }) => {
     render: (warehouse) => (
       <span
         style={{
+          ...cellStyle,
           borderRadius: "16px",
           justifyContent: "center",
           display: "flex",
@@ -283,6 +294,7 @@ const ItemTable = ({ searchItem }) => {
     render: (ownership) => (
       <span
         style={{
+          ...cellStyle,
           borderRadius: "16px",
           justifyContent: "center",
           display: "flex",
@@ -375,7 +387,7 @@ const ItemTable = ({ searchItem }) => {
     dataIndex: 'data',
     key: 'data',
     render: (record) => (
-      <button style={{...cellStyle, backgroundColor:"transparent", border:"none"}} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
+      <button style={{ ...cellStyle, backgroundColor: "transparent", border: "none" }} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
         <RightNarrowInCircle />
       </button>
     )
