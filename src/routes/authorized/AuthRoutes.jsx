@@ -25,6 +25,10 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import StaffDetail from "../../pages/staff/detail/StaffDetail";
 import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
 import EditGroup from "../../pages/inventory/actions/EditGroup";
+import TableStaffDetail from "../../pages/staff/detail/components/TableStaffDetail";
+// import EquipmentStaffDetail from "../../pages/staff/detail/components/EquipmentStaffDetail";
+import Assignment from "../../pages/staff/detail/components/equipment_components/Assignment";
+import ListEquipment from "../../pages/staff/detail/components/equipment_components/ListEquipment";
 // import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
 const AuthRoutes = () => {
     const Home = lazy(() => import("../../pages/home/MainPage"))
@@ -89,7 +93,14 @@ const AuthRoutes = () => {
                         <Route path="/consumers" element={<ConsumersMainPage />} />
                         <Route path="/consumers/:id" element={<ConsumerDetail />} />
                         <Route path="/staff" element={<Staff />} />
-                        <Route path="/staff/:id" element={<StaffDetail />} />
+                        <Route path="/staff/:id" element={<StaffDetail />} >
+                            <Route path="events" element={<TableStaffDetail />} />
+                            <Route path="equipment" element={<ListEquipment />} />
+                            <Route path="assignment" element={<Assignment />} />
+                                {/* <Route path="assignment" element={<Assignment />} />
+                                <Route path="list-equipment" element={<ListEquipment />} /> */}
+                            {/* </Route> */}
+                        </Route>
                         <Route path="/profile" element={<MainProfileSetting />}>
                             <Route path="my_details" element={<MyDetailsMainPage />} />
                             <Route path="password" element={<PasswordMainPage />} />

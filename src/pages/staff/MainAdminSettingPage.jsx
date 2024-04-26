@@ -152,7 +152,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
-    return navigate(`/staff/${record.entireData.adminUserInfo.id}`)
+    return navigate(`/staff/${record.entireData.adminUserInfo.id}/events`)
   };
   const columns = [
     {

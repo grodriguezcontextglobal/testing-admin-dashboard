@@ -1,723 +1,82 @@
-import { Icon } from "@iconify/react";
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { Divider, Popconfirm, Table, message } from "antd";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
-import { onAddStaffProfile, onResetStaffProfile } from "../../../store/slices/staffDetailSlide";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { Grid, Typography } from "@mui/material";
+import { NavLink, Outlet } from "react-router-dom";
+import HeaderStaffDetail from "./components/HeaderStaffDetal";
 
 const StaffDetail = () => {
-  const { profile } = useSelector((state) => state.staffDetail);
-  const { user } = useSelector((state) => state.admin);
-  const dispatch = useDispatch();
-  const { register, watch } = useForm();
-  const eventQuery = useQuery({
-    queryKey: ["events"],
-    queryFn: () => devitrakApi.post("/event/event-list", { company: user.company }),
-    enabled: false,
-    refetchOnMount: false,
-  });
-  const [messageApi, contextHolder] = message.useMessage();
-  const warning = (type, content) => {
-    messageApi.open({
-      type: type,
-      content: content,
-    });
-  };
-
-  useEffect(() => {
-    const controller = new AbortController()
-    eventQuery.refetch()
-    return () => {
-      controller.abort()
-    }
-  }, [profile.activeInCompany])
-
-  const columns = [
+  const tabOptions = [
     {
-      title: "Event",
-      dataIndex: "event",
-      align: "left",
-      sorter: {
-        compare: (a, b) => ("" + a.event).localeCompare(b.event),
-      },
-      render: (event) => (
-        <span key={`${event}`}>
-          <div
-            key={`${event}`}
-            style={{
-              flexDirection: "column",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
-            <Typography textTransform={"capitalize"}>{event}</Typography>
-          </div>
-        </span>
-      ),
+      label: "Events",
+      route: "events",
+      permission: ["Administrator", "Editor"]
     },
     {
-      title: "Role",
-      dataIndex: "role",
-      width: "25%",
-      responsive: ["lg"],
-
-      sorter: {
-        compare: (a, b) => ("" + a.role).localeCompare(b.role),
-      },
-      render: (role) => (
-        <span
-          style={{
-            alignItems: "center",
-            background: `${role !== "Damaged" ? "var(--blue-50, #EFF8FF)" : "#ffefef"
-              }`,
-            borderRadius: "16px",
-            display: "flex",
-            justifyContent: "center",
-            padding: "2px 8px",
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
-            textTransform={"capitalize"}
-          >
-            {role}
-          </Typography>
-        </span>
-      ),
+      label: "Devices",
+      route: "equipment",
+      permission: ["Administrator"]
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      width: "25%",
-      sorter: {
-        compare: (a, b) => ("" + a.status).localeCompare(b.status),
-      },
-      render: (status) => (
-        <span
-          style={{
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${status
-              ? "var(--primary-50, #F9F5FF)"
-              : "var(--success-50, #ECFDF3)"
-              }`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${status
-              ? "var(--primary-700, #6941C6)"
-              : "var(--success-700, #027A48)"
-              }`}
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${status ? "var(--primary-700, #6941C6)" : "#12B76A"}`}
-            />
-            {status ? "Active" : "Completed"}
-          </Typography>
-        </span>
-      ),
+      label: "Equipment",
+      route: "assignment",
+      permission: ["Administrator"]
     },
-  ];
-
-  if (eventQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
-  if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
-    const activeOrDesactiveStaffMemberInCompany = async () => {
-      try {
-        const employeesInCompany = [...profile.companyData.employees]; // Create a deep copy
-        const foundUserIndex = employeesInCompany.findIndex(element => element.user === profile.email);
-
-        if (foundUserIndex === -1) {
-          return warning('error', 'User not found in the list of employees.');
-        }
-
-        employeesInCompany[foundUserIndex] = {
-          ...employeesInCompany[foundUserIndex], // Copy existing employee object
-          active: !profile.status, // Toggle active status
-        };
-        const respoCompany = await devitrakApi.patch(`/company/update-company/${profile.companyData.id}`, {
-          employees: employeesInCompany,
-        });
-        if (respoCompany.data.ok) {
-          dispatch(onAddStaffProfile({ ...profile, active: !profile.status, status: !profile.status, companyData: respoCompany.data.company }));
-          return warning('success', `Staff member is ${!profile.active ? 'active' : 'inactive'}. Staff member ${!profile.active ? 'now has' : 'does not have'} access to log in to the company account.`);
-        }
-      } catch (error) {
-        console.log("🚀 ~ activeOrDesactiveStaffMemberInCompany ~ error:", error);
-        warning('error', 'Something went wrong. Please try again later.');
-      }
-    };
-
-    const dataPerCompany = () => {
-      if (watch("searchEvent")?.length > 0) {
-        const check = eventQuery?.data?.data?.list?.filter(
-          (item) =>
-            item?.eventInfoDetail?.eventName
-              ?.toLowerCase()
-              .includes(watch("searchEvent").toLowerCase())
-        );
-        return check;
-      }
-      const groupOfCompanies = eventQuery?.data?.data?.list
-      return groupOfCompanies;
-    };
-    dataPerCompany();
-
-    const sortData = () => {
-      let result = [];
-      let index = 0;
-      if (dataPerCompany()) {
-        for (let data of dataPerCompany()) {
-          if (data.staff.adminUser?.some((item) => item === profile.email)) {
-            result.splice(index, 0, { ...data, role: "Administrator" });
-            index++;
-          } else if (
-            data.staff.headsetAttendees?.some((item) => item === profile.email)
-          ) {
-            result.splice(index, 0, { ...data, role: "Coordinator" });
-            index++;
-          }
-        }
-      }
-      return result;
-    };
-    sortData();
-    const dataToRenderInTable = () => {
-      let tableData = [];
-      let index = 0;
-      for (let data of sortData()) {
-        tableData.splice(index, 0, {
-          event: data.eventInfoDetail.eventName,
-          status: data.active,
-          role: data.role,
-          entireData: data,
-        });
-      }
-      return tableData;
-    };
-    dataToRenderInTable();
-
-    return (
-      <>
-        {contextHolder}
-        <Grid
-          style={{
-            padding: "5px",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-          container
-        >
-          <Grid
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-          >
-            <Grid item xs={6}>
-              <Typography
-                textTransform={"none"}
-                style={{
-                  color: "var(--gray-900, #101828)",
-                  lineHeight: "38px",
-                }}
-                textAlign={"left"}
-                fontWeight={600}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-              >
-                Staff
-              </Typography>
-            </Grid>
-            <Grid
-              textAlign={"right"}
-              display={"flex"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-              gap={1}
-              item
-              xs={6}
-            >
-              <Button
-                style={{
-                  width: "fit-content",
-                  ...BlueButton
-                }}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
-                  <Icon
-                    icon="ic:baseline-plus"
-                    color="var(--base-white, #FFF"
-                    width={20}
-                    height={20}
-                  />{" "}
-                  Add new staff
-                </Typography>
-              </Button>
-            </Grid>
-          </Grid>
-          <Grid
-            style={{
-              paddingTop: "0px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-          >
-            <Grid marginY={0} item xs={8}>
-              <Grid
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Link to="/staff">
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    fontWeight={600}
-                    fontSize={"18px"}
-                    fontFamily={"Inter"}
-                    lineHeight={"28px"}
-                    color={"var(--blue-dark-600, #155EEF)"}
-                    onClick={() => dispatch(onResetStaffProfile())}
-                  >
-                    All staff
-                  </Typography>
-                </Link>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontWeight={600}
-                  fontSize={"18px"}
-                  fontFamily={"Inter"}
-                  lineHeight={"28px"}
-                  color={"var(--gray-900, #101828)"}
-                >
-                  <Icon icon="mingcute:right-line" />
-                  {profile.firstName}, {profile?.lastName}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Grid textAlign={"right"} item xs={4}></Grid>
-          </Grid>
-          <Divider />
-          <Grid
-            display={"flex"}
-            justifyContent={"left"}
-            textAlign={"left"}
-            alignItems={"center"}
-            height={"10rem"}
-            item
-            xs={12}
-          >
-            {/* <Grid
-              padding={"0px"}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              textAlign={"left"}
-              alignItems={"flex-start"}
-              alignSelf={"stretch"}
-              item
-              xs={4}
-            > */}
-            {/* <Card
-                id="card-contact-person"
-                style={{
-                  borderRadius: "12px",
-                  border: "none",
-                  background: "transparent",
-                  boxShadow: "none",
-                  textAlign: "left",
-                }}
-              > */}
-            <Grid
-              display={"flex"}
-              justifyContent={"space-around"}
-              alignItems={"center"}
-              container
-            >
-              <Grid
-                display={"flex"}
-                justifyContent={"flex-start"}
-                textAlign={"center"}
-                alignSelf={"stretch"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <span
-                  style={{
-                    borderRadius: "16px",
-                    justifyContent: "flex-start",
-                    display: "flex",
-                    padding: "2px 8px",
-                    alignItems: "center",
-                    mixBlendMode: "multiply",
-                    background: "var(--orange-dark-50, #FFF4ED)",
-                    width: "fit-content",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <Typography
-                    color={
-                      dataToRenderInTable().some(
-                        (item) => item.status
-                      )
-                        ? "var(--primary-700, #6941C6)"
-                        : "var(--orange-700, #B93815)"
-                    }
-                    fontSize={"12px"}
-                    fontFamily={"Inter"}
-                    fontStyle={"normal"}
-                    fontWeight={500}
-                    lineHeight={"18px"}
-                    textAlign={"left"}
-                    textTransform={"capitalize"}
-                  >
-                    <Icon
-                      icon="tabler:point-filled"
-                      rotate={3}
-                      color={
-                        dataToRenderInTable().some(
-                          (item) => item.status
-                        )
-                          ? "var(--primary-700, #6941C6)"
-                          : "#EF6820"
-                      }
-                    />
-                    {dataToRenderInTable().some(
-                      (item) => item.status
-                    )
-                      ? "Active at event"
-                      : "No active event"}
-                  </Typography>
-                </span>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"flex-start"}
-                textAlign={"left"}
-                alignItems={"center"}
-                alignSelf={'start'}
-                item
-                xs={12}
-              >
-                <Typography
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"18px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"28px"}
-                  color={"var(--gray-900, #101828)"}
-                >
-                  Name
-                </Typography>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"left"}
-                textAlign={"left"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Typography
-                  textAlign={"left"}
-                  paddingTop={"8px"}
-                  fontFamily={"Inter"}
-                  fontSize={"38px"}
-                  fontStyle={"normal"}
-                  fontWeight={600}
-                  lineHeight={"38px"}
-                  color={"var(--gray-900, #101828)"}
-                >
-                  {profile?.firstName} {profile?.lastName}
-                </Typography>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"left"}
-                textAlign={"left"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Typography
-                  textTransform={"capitalize"}
-                  textAlign={"left"}
-                  paddingTop={"8px"}
-                  fontFamily={"Inter"}
-                  fontSize={"18px"}
-                  fontStyle={"normal"}
-                  fontWeight={600}
-                  lineHeight={"28px"}
-                  color={"var(--gray-900, #101828)"}
-                >
-                  {profile?.role}
-                </Typography>
-              </Grid>
-            </Grid>
-            {/* </Card> */}
-            {/* </Grid>
-            <Grid
-              paddingLeft={"10px"}
-              paddingTop={"0px"}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              textAlign={"center"}
-              alignItems={"center"}
-              alignSelf={"stretch"}
-              item
-              xs={4}
-            > */}
-            {/* <Card
-                id="card-contact-person"
-                style={{
-                  borderRadius: "12px",
-                  border: "none",
-                  background: "transparent",
-                  boxShadow: "none",
-                  textAlign: "left",
-                }}
-              > */}
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              textAlign={"center"}
-              // flexDirection={"column"}
-              alignSelf={"start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Grid
-                display={"flex"}
-                justifyContent={"space-around"}
-                alignItems={"center"}
-                container
-              >
-                <Grid
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                  textAlign={"left"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
-                  <Typography
-                    textAlign={"left"}
-                    fontFamily={"Inter"}
-                    fontSize={"18px"}
-                    fontStyle={"normal"}
-                    fontWeight={400}
-                    lineHeight={"28px"}
-                    color={"var(--gray-900, #101828)"}
-                  >
-                    Contact
-                  </Typography>
-                </Grid>
-                <Grid
-                  display={"flex"}
-                  justifyContent={"left"}
-                  textAlign={"left"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
-                  <Typography
-                    textAlign={"left"}
-                    paddingTop={"8px"}
-                    fontFamily={"Inter"}
-                    fontSize={"38px"}
-                    fontStyle={"normal"}
-                    fontWeight={600}
-                    lineHeight={"38px"}
-                    color={"var(--gray-900, #101828)"}
-                  >
-                    {profile.adminUserInfo.phone ? profile.adminUserInfo.phone : "+1-000-000-0000"}
-                  </Typography>
-                </Grid>
-                <Grid
-                  display={"flex"}
-                  justifyContent={"left"}
-                  textAlign={"left"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    paddingTop={"8px"}
-                    fontFamily={"Inter"}
-                    fontSize={"16px"}
-                    fontStyle={"normal"}
-                    fontWeight={400}
-                    lineHeight={"24px"}
-                    color={"var(--gray-900, #101828)"}
-                  >
-                    {profile?.email}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            {/* </Card> */}
-            {/* </Grid>
-            <Grid
-              padding={"0px"}
-              display={"flex"}
-              justifyContent={"flex-end"}
-              textAlign={"left"}
-              alignItems={"flex-start"}
-              alignSelf={"stretch"}
-              item
-              xs={4}
-            > */}
-            {/* <Card
-                id="card-contact-person"
-                style={{
-                  borderRadius: "12px",
-                  border: "none",
-                  background: "transparent",
-                  boxShadow: "none",
-                  textAlign: "right",
-                }}
-              > */}
-            <Grid
-              container
-              direction="row"
-              justifyContent="flex-end"
-              alignItems="flex-start"
-              alignSelf={'start'}
-            >
-              <Grid
-                display={"flex"}
-                justifyContent="flex-end"
-                alignItems="flex-start"
-                gap={1}
-                item
-                xs={12}
-              >
-                {user.role === "Administrator" && <Button style={BlueButton}>
-
-                  <Popconfirm title={`Do you want to ${profile.active ? "remove" : "grant"} access to this staff member?`} onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
+  ]
+  return (
+    <>
+      <HeaderStaffDetail />
+      <Grid
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+        marginY={3}
+        container
+      >
+        <Grid marginY={0} item xs={12} sm={12} md={6}>
+          <nav style={{ display: "flex" }}>
+            {
+              tabOptions.map(option => {
+                return (
+                  <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
+                    return {
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      padding: "1px 4px 3px",
+                      gap: "8px",
+                      borderBottom: isActive ?
+                        "none" : "solid 0.1px var(--gray300)",
+                      borderTop: isActive ?
+                        "solid 0.1px var(--gray300)" : "none",
+                      borderRight: isActive ?
+                        "solid 0.1px var(--gray300)" : "none",
+                      borderLeft: isActive ?
+                        "solid 0.1px var(--gray300)" : "none",
+                      borderRadius: "8px 8px 0 0"
+                    };
+                  }}>
                     <Typography
-                      textTransform={"none"}
-                      style={{ ...BlueButtonText, width: "fit-content", margin: "auto" }}
+                      color={`${location.pathname === `/profile/${option.route}`
+                        ? "#004EEB"
+                        : "#667085"
+                        }`}
+                      fontFamily={"Inter"}
+                      fontSize={"14px"}
+                      fontWeight={600}
+                      lineHeight={"20px"}
                     >
-                      {profile.status ? "Inactive" : "Active"}
+                      {option.label}
                     </Typography>
-                  </Popconfirm>
-
-                </Button>}
-              </Grid>
-            </Grid>
-            {/* </Card> */}
-            {/* </Grid> */}
-          </Grid>
-          <Divider />
-          <Grid
-            marginY={3}
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            gap={1}
-            container
-          >
-            <Grid textAlign={"right"} item xs></Grid>
-            <Grid justifyContent={"right"} alignItems={"center"} item xs={3}>
-              <OutlinedInput
-                {...register("searchEvent")}
-                style={{
-                  borderRadius: "12px",
-                  color: "#344054",
-                  height: "5dvh",
-                }}
-                fullWidth
-                placeholder="Search events here"
-                startAdornment={
-                  <InputAdornment position="start">
-                    <Icon
-                      icon="radix-icons:magnifying-glass"
-                      color="#344054"
-                      width={20}
-                      height={19}
-                    />
-                  </InputAdornment>
-                }
-              />
-            </Grid>
-          </Grid>
-          <Grid container>
-            <Grid
-              display={"flex"}
-              justifyContent={"center"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Table
-                sticky
-                size="large"
-                columns={columns}
-                dataSource={
-                  dataToRenderInTable() ? dataToRenderInTable() : []
-                }
-                pagination={{
-                  position: ["bottomCenter"],
-                }}
-                className="table-ant-customized"
-              />
-            </Grid>
-          </Grid>
+                  </NavLink>
+                )
+              })
+            }
+          </nav>
         </Grid>
-      </>
-    );
-  }
+      </Grid>
+      <Outlet />
+    </>
+  )
 };
 
 export default StaffDetail;

@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Modal, message } from "antd";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
@@ -34,6 +34,7 @@ const schema = yup.object().shape({
 
 const roles = ["Administrator", "Approver", "Editor"];
 export const NewStaffMember = ({ modalState, setModalState }) => {
+  const [loadingStatus, setLoadingStatus] = useState(false)
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -82,40 +83,48 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
 
   if (allStaffSavedQuery.data) {
     const onSubmitRegister = async (data) => {
-      const templateNewUser = {
-        name: data.name,
-        lastName: data.lastName,
-        email: data.email,
-        question: "company name",
-        answer: user.company,
-        role: data.role,
-        company: user.company,
+      try {
+        setLoadingStatus(true)
+        const templateNewUser = {
+          name: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          question: "company name",
+          answer: user.company,
+          role: data.role,
+          company: user.company,
+        }
+        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company[0].id}`, {
+          employees: [
+            ...companiesQuery.data.data.company[0].employees,
+            {
+              user: templateNewUser.email,
+              firstName: templateNewUser.name,
+              lastName: templateNewUser.lastName,
+              status: "Pending",
+              super_user: false,
+              role: templateNewUser.role
+            }
+          ]
+        })
+
+        await devitrakApi.post('/nodemailer/new_invitation', {
+          consumer: templateNewUser.email,
+          subject: "Invitation",
+          company: user.company,
+          link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
+        })
+        queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
+        warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
+        await setTimeout(() => {
+          return closeModal()
+        }, 3500);
+      } catch (error) {
+        warning('error', 'Please try later. If error persists, please contact administrator.')
+        setLoadingStatus(false)
       }
-      await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company[0].id}`, {
-        employees: [
-          ...companiesQuery.data.data.company[0].employees,
-          {
-            user: templateNewUser.email,
-            firstName: templateNewUser.name,
-            lastName: templateNewUser.lastName,
-            status: "Pending",
-            super_user: false,
-            role: templateNewUser.role
-          }
-        ]
-      })
-      
-      await devitrakApi.post('/nodemailer/new_invitation', {
-        consumer: templateNewUser.email,
-        subject: "Invitation",
-        company: user.company,
-        link: `https://admin-testing-dev.netlify.app/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
-      })
-      queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
-      queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
-      // queryClient.resetQueries({queryKey:['listOfAdminUsers'], exact: true })
-      warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
-      return await closeModal();
+
     };
     const renderTitle = () => {
       return (
@@ -248,6 +257,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               xs={12} sm={12} md={12} lg={12}
             >
               <Button
+                disabled={loadingStatus}
                 onClick={closeModal}
                 style={{ ...GrayButton, width: "100%" }}
                 htmlType="reset"
@@ -260,6 +270,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                 </Typography>
               </Button>
               <Button
+                disabled={loadingStatus}
                 style={{ ...BlueButton, width: "100%" }}
                 htmlType="submit"
               >
