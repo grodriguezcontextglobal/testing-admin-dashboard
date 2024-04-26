@@ -58,11 +58,26 @@ const Form = () => {
   }
   const optionsToRenderInSelector = () => {
     const result = new Set()
-    for (let [key_, value] of groupingItemByCategoriesToRenderThemInSelector()) {
+    for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
       result.add(value)
     }
-    return Array.from(result)
+    const checkLocation = new Map()
+    for (let data of Array.from(result)) {
+      for (let item of data) {
+        if (!checkLocation.has(`${item.category_name}-${item.item_group}-${item.location}`)) {
+          checkLocation.set(`${item.category_name}-${item.item_group}-${item.location}`, [item])
+        } else {
+          checkLocation.set(`${item.category_name}-${item.item_group}-${item.location}`, [...checkLocation.get(`${item.category_name}-${item.item_group}-${item.location}`), item])
+        }
+      }
+    }
+    let finalResultAfterSortValueByLocation = []
+    for (const [, value] of checkLocation) {
+      finalResultAfterSortValueByLocation = [...finalResultAfterSortValueByLocation, value]
+    }
+    return finalResultAfterSortValueByLocation
   }
+
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
     setValueItemSelected(optionRendering);
@@ -191,9 +206,10 @@ const Form = () => {
           onChange={onChange}
           options={optionsToRenderInSelector().map((item) => {
             return {
-              label: <Typography textTransform={'capitaliize'} style={{ ...Subtitle, display: "flex", justifyContent: "space-between", alignitems: "center" }}>
+              label: <Typography textTransform={'capitalize'} style={{ ...Subtitle, display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                 <span><span style={{ fontWeight: 700 }}>{item[0].category_name}</span> {item[0].item_group}</span>
-                <span>Available: {item.length}</span>
+                <span style={{ textAlign: "left" }}>Location: <span style={{ fontWeight: 700 }}>{item[0].location}</span></span>
+                <span>Total available: {item.length}</span>
               </Typography>, //renderOptionAsNeededFormat(JSON.stringify(option))
               value: JSON.stringify(item),
             };
