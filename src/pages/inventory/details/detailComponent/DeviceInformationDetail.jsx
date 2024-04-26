@@ -60,9 +60,9 @@ const DeviceInformationDetail = ({ dataFound }) => {
               xs={12}
             >
               <div style={{ alignSelf: "stretch", margin: "0 20px 0 0", width: "110px" }}>
-                <Avatar style={{ width: "100px", height: "100px" }}>
+                <div style={{ width: "100px", height: "100px" }}>
                   {listImagePerItemQuery.data.data.item.length > 0 && <img style={{ objectFit:"cover", width:"65%", height:"85%" }} src={`${listImagePerItemQuery.data.data.item.length > 0 && listImagePerItemQuery.data.data.item[0]?.source}`} alt='item_image' width={250} height={360} />}
-                </Avatar>
+                </div>
               </div>
               <Typography
                 textAlign={"left"}
