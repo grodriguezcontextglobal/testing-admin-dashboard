@@ -107,7 +107,7 @@ const CardRendered = ({ props, title, optional }) => {
                         <Typography
                             paddingTop={"8px"}
                             fontFamily={"Inter"}
-                            fontSize={"1.5625vw"}
+                            fontSize={"1.367vw"}
                             fontStyle={"normal"}
                             fontWeight={600}
                             lineHeight={"38px"}
