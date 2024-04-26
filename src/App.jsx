@@ -19,6 +19,12 @@ const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
   const dispatch = useDispatch();
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (msg) => {
+    api.open({
+      description: msg,
+    });
+  };
   const dispatchActionBasedOnTokenValidation = () => {
     if (adminToken) {
       const validateToken = jwtDecode(adminToken);
@@ -37,18 +43,11 @@ const App = () => {
         localStorage.setItem("admin-token", "");
         dispatch(onLogout());
         openNotificationWithIcon("Session has expired. Please sign in again.");
-        localStorage.setItem('admin-token',)
-        throw redirect('/login', { status: 302 })
+        redirect('/login', { status: 302 })
       }
     }
   };
 
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      description: msg,
-    });
-  };
 
   const [connectionType, setConnectionType] = useState('');
 
