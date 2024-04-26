@@ -9,9 +9,9 @@ import { MagnifyIcon } from "../../../../components/icons/Icons";
 import { Title } from "../../../../styles/global/Title";
 
 const CustomerInformationSection = () => {
-  const { register, watch} = useForm();
+  const { register, watch } = useForm();
   const queryClient = useQueryClient()
- 
+
   return (
     <>
       <Grid
@@ -21,7 +21,7 @@ const CustomerInformationSection = () => {
         gap={1}
         container
       >
-       <Grid
+        <Grid
           display={'flex'}
           justifyContent={'flex-start'}
           alignItems={"center"}
@@ -49,7 +49,7 @@ const CustomerInformationSection = () => {
         </Grid>
       </Grid>
       <Grid
-        marginY={3}
+        marginY={5}
         display={"flex"}
         justifyContent={"flex-start"}
         alignItems={"center"}
