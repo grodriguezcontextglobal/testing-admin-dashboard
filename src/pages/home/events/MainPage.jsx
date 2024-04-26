@@ -82,21 +82,21 @@ const MainPage = () => {
             }
         };
         renderingDataBasedOnStaffAndActiveEvent();
-        console.log("🚀 ~ MainPage ~ renderingDataBasedOnStaffAndActiveEvent():", renderingDataBasedOnStaffAndActiveEvent())
 
         const dataToBeRenderedInUpcomingSection = () => {
             const result = new Set()
-            for (let data of renderingDataBasedOnStaffAndActiveEvent()) {
-                const currentDate = new Date();
-                const begin = new Date(`${data.eventInfoDetail.dateBegin}`)
-                let ending = new Date(`${data.eventInfoDetail.dateEnd}`)
-                if (currentDate < begin || currentDate >= begin && currentDate <= ending) {
-                    result.add({ key: data.id, ...data })
+            if (renderingDataBasedOnStaffAndActiveEvent()?.length > 0) {
+                for (let data of renderingDataBasedOnStaffAndActiveEvent()) {
+                    const currentDate = new Date();
+                    const begin = new Date(`${data.eventInfoDetail.dateBegin}`)
+                    let ending = new Date(`${data.eventInfoDetail.dateEnd}`)
+                    if (currentDate < begin || currentDate >= begin && currentDate <= ending) {
+                        result.add({ key: data.id, ...data })
+                    }
                 }
             }
             return Array.from(result)
         }
-
         return (
             <Grid textAlign={"right"}
                 display={'flex'}
