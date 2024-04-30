@@ -22,7 +22,7 @@ const CardSearchStaffFound = ({ props, fn }) => {
       <div style={{ width: "100%", textAlign: "left" }}>
         <Avatar style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>
           {
-            props.other.imageProfile ?
+            props.other ?
               <img src={props?.other?.imageProfile} alt={`${props?.other?.imageProfile}`} style={{ objectFit: "cover", objectPosition: "center", height: "auto", width: "70%" }} /> :
               props.name[0]}{props.lastName[0]
           }
