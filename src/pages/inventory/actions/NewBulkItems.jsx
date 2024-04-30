@@ -109,7 +109,7 @@ const AddNewBulkItems = () => {
     }
 
     useEffect(() => {
-        const controller = new AbortController()
+        const controller = new AbortController() 
         if (retrieveItemDataSelected().has(selectedItem)) {
             const dataToRetrieve = retrieveItemDataSelected().get(selectedItem)
             setValue('category_name', `${dataToRetrieve.category_name}`)
@@ -663,7 +663,7 @@ const AddNewBulkItems = () => {
                         aria-invalid={errors.descript_item}
                         style={{
                             borderRadius: "12px",
-                            border: `${errors.descript_item && "solid 1px #004EEB"}`,
+                            // border: `${errors.descript_item && "solid 1px #004EEB"}`,
                             margin: "0.1rem auto 1rem",
                             display: "flex",
                             width: "100%",
