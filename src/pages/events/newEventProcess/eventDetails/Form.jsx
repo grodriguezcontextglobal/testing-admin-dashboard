@@ -23,15 +23,17 @@ import {
   onAddEventInfoDetail,
 } from "../../../../store/slices/eventSlice";
 import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+// import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import "../../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
-import "../../../../styles/global/ant-select.css";
 import { InputLabelStyle } from "../style/InputLabelStyle";
+import "../../../../styles/global/OutlineInput.css";
+import "../../../../styles/global/ant-select.css";
+import "../../../../styles/global/reactInput.css";
 import "../style/NewEventInfoSetup.css";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 const Form = () => {
   const { subscription, subscriptionJSON } = useSelector(
     (state) => state.subscription
@@ -58,8 +60,9 @@ const Form = () => {
       zipCode: addressSplit?.at(-1)
     }
   });
-  const [begin, setBegin] = useState(eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date());
-  const [end, setEnd] = useState(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date());
+  const [begin, setBegin] = useState(eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date().toUTCString());
+  console.log("🚀 ~ Form ~ begin:", begin)
+  const [end, setEnd] = useState(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(`${begin}`).toUTCString());
   const [contactPhoneNumber, setContactPhoneNumber] = useState('');
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
@@ -253,7 +256,7 @@ const Form = () => {
           <Typography
             style={InputLabelStyle}
           >
-            Phone number
+            Event contact Phone number
           </Typography>
         </InputLabel>
         <div
@@ -274,12 +277,12 @@ const Form = () => {
               alignItems: "center",
               textAlign: "left",
               width: "100%",
+              alignSelf:"flex-start"
             }}
           >
-            <Tooltip title="Please click the 'Plus' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
+            <Tooltip title="Please click the '+ Add' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
               <PhoneInput
-                style={{ ...AntSelectorStyle, fontFamily: "Inter", width: "100%", margin: "0.0rem 0 1.5rem", padding: "0px 20px" }}
-                className="custom-autocomplete"
+                className="container-phone input-phone"
                 id='phone_input_check'
                 countrySelectProps={{ unicodeFlags: true }}
                 defaultCountry="US"
@@ -299,9 +302,9 @@ const Form = () => {
             <Button
               disabled={contactPhoneNumber === ""}
               onClick={() => addingPhoneNumber()}
-              style={{ ...OutlinedInputStyle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
+              style={{ ...OutlinedInputStyle, ...Subtitle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
             >
-              <Icon icon="material-symbols:add" width={15} />
+              <Icon icon="material-symbols:add" width={15} />&nbsp;<Typography style={Subtitle}>Add</Typography>
             </Button>
           </div>
         </div>
@@ -349,7 +352,7 @@ const Form = () => {
           style={{
             width: "100%",
             textAlign: "left",
-            marginBottom: "1rem",
+            marginBottom: "0.5rem"
           }}
         >
           <Typography
@@ -392,16 +395,16 @@ const Form = () => {
             id="calender-event"
             showTimeSelect
             dateFormat="Pp"
-            openToDate={begin}
-            startDate={begin}
-            minDate={begin}
+            openToDate={new Date(begin)}
+            startDate={new Date(begin)}
+            minDate={new Date(begin)}
             minTime={
               end.getDate() === begin.getDate()
                 ? begin
                 : new Date().setHours(0, 0, 0)
             }
             maxTime={new Date().setHours(23, 59, 59)}
-            selected={end}
+            selected={new Date(end)}
             onChange={(date) => setEnd(date)}
             placeholderText="Event close date"
           />
