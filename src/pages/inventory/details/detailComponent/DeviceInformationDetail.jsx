@@ -1,12 +1,12 @@
 import { Grid, Typography } from "@mui/material";
-import { Card, Avatar } from "antd";
-import { CardStyle } from "../../../../styles/global/CardStyle";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
+import { Card } from "antd";
 import { useEffect } from "react";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import { CardStyle } from "../../../../styles/global/CardStyle";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 
 const DeviceInformationDetail = ({ dataFound }) => {
   const { user } = useSelector((state) => state.admin)
@@ -61,7 +61,7 @@ const DeviceInformationDetail = ({ dataFound }) => {
             >
               <div style={{ alignSelf: "stretch", margin: "0 20px 0 0", width: "110px" }}>
                 <div style={{ width: "100px", height: "100px" }}>
-                  {listImagePerItemQuery.data.data.item.length > 0 && <img style={{ objectFit:"cover", width:"65%", height:"85%" }} src={`${listImagePerItemQuery.data.data.item.length > 0 && listImagePerItemQuery.data.data.item[0]?.source}`} alt='item_image' width={250} height={360} />}
+                  {listImagePerItemQuery.data.data.item.length > 0 && <img style={{ objectFit:"contain", width:"65%", height:"85%" }} src={`${listImagePerItemQuery.data.data.item.length > 0 && listImagePerItemQuery.data.data.item[0]?.source}`} alt='item_image' width={250} height={360} />}
                 </div>
               </div>
               <Typography
