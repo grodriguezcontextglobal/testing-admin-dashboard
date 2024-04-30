@@ -99,7 +99,7 @@ const SearchStaff = ({ searchParams }) => {
         <Grid item xs={12} sm={12} md={8} lg={8}>
           <Grid key={'searching-staff-page'} container gap={1}>
             {sortAndRenderFoundData()?.length > 0 && staffMembersInfoQuery.data ?
-              sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}> <CardSearchStaffFound props={{ name: item.firstName, lastName: item.lastName, email: item.user, phoneNumber: "", data: item, other: checkStaffInfo()[`${item?.user}`].at(-1) }} fn={handleDetailStaff} /></Grid>)
+              sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}> <CardSearchStaffFound props={{ name: item.firstName, lastName: item.lastName, email: item.user, phoneNumber: "", data: item, other: checkStaffInfo()[`${item?.user}`]}} fn={handleDetailStaff} /></Grid>)
               : <NoDataFound />}
           </Grid>
         </Grid>
