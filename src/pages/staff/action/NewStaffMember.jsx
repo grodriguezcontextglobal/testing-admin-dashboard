@@ -116,6 +116,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
         })
         queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
         queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
+        queryClient.invalidateQueries({ queryKey: ['employeesPerCompanyList'], exact: true })
         warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
         await setTimeout(() => {
           return closeModal()

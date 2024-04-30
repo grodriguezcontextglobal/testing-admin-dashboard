@@ -654,7 +654,7 @@ const Assignment = () => {
                 lg={12}
             >
                 <Button
-                    onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/equipment/list-equipment`)}
+                    onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/equipment`)}
                     style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
                 >
                     <Typography

@@ -20,6 +20,7 @@ import { NewStaffMember } from "./action/NewStaffMember";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
+
   useEffect(() => {
     const controller = new AbortController()
     setValue('searchAdmin', '.')

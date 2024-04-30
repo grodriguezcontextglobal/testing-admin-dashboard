@@ -33,13 +33,20 @@ const ModalReturnDeviceFromStaff = ({ openReturnDeviceStaffModal, setOpenReturnD
     }
 
     const updateLeaseInfo = async () => {
-        const initialDate = formatDate(new Date(deviceInfo.subscription_initial_date))
+        const initialDate = formatDate(new Date(deviceInfo.subscription_initial_date));
+        const returnedDate = formatDate(new Date());
         const response = await devitrakApi.post('/db_lease/update-lease-info', {
-            subscription_returned_date: formatDate(new Date()), staff_admin_id: deviceInfo.staff_admin_id, company_id: deviceInfo.company_id, subscription_current_in_use: 0, staff_member_id: deviceInfo.staff_member_id, device_id: deviceInfo.item_id_info.item_id, active: 0, subscription_initial_date: initialDate
-        })
-        console.log("🚀 ~ updateLeaseInfo ~ response:", response)
-        if(response.data) return closeModal()
-    }
+            subscription_returned_date: returnedDate,
+            staff_admin_id: deviceInfo.staff_admin_id,
+            company_id: deviceInfo.company_id,
+            subscription_current_in_use: 0,
+            staff_member_id: deviceInfo.staff_member_id,
+            device_id: deviceInfo.item_id_info.item_id,
+            active: 0,
+            subscription_initial_date: initialDate
+        });
+        if (response.data && response.data.ok) return closeModal();
+    };
 
     const closeModal = () => {
         return setOpenReturnDeviceStaffModal(false);

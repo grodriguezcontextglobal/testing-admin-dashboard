@@ -16,6 +16,7 @@ import Loading from "../../components/animation/Loading";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import '../../styles/global/ant-table.css';
+import { Button, Grid } from "@mui/material";
 const EditableCell = ({
   editing,
   dataIndex,
@@ -98,7 +99,8 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort()
     }
-  }, [user.company, modalState, editingKey])
+  }, [user.company, modalState, editingKey])  // eslint-disable-next-line react-hooks/exhaustive-deps
+
 
   const queryClient = useQueryClient();
   const openNotification = (props) => {
@@ -130,7 +132,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const save = async (record) => {
     try {
       const row = await form.validateFields();
-      const employees = companiesEmployees.data.data.company[0].employees
+      const employees = companiesEmployees?.data?.data?.company[0]?.employees
       const foundEmployee = employees.findIndex(element => element.user === record.email)
       const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
       const respoUpdateRoleStaffInCompany = await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.at(-1).id}`, {
@@ -328,7 +330,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   if (companiesEmployees.data) {
     const employees = async () => {
       const result = new Set()
-      const companiesData = companiesEmployees.data.data.company[0].employees
+      const companiesData = companiesEmployees?.data?.data?.company[0].employees
       for (let data of companiesData) {
         const individual = await devitrakApi.post('/staff/admin-users', {
           email: data.user
@@ -391,7 +393,46 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       };
     });
     return (
-      <>
+      <Grid margin={'15px 0 0 0'} padding={0} container>
+        <Grid
+          border={"1px solid var(--gray-200, #eaecf0)"}
+          borderRadius={"12px 12px 0 0"}
+          display={"flex"}
+          justifyContent={'space-between'}
+          alignItems={"center"}
+          marginBottom={-1}
+          paddingBottom={-1}
+          item
+          xs={12}
+        >
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            marginRight: "5px",
+            padding: "0 0 0 0"
+          }}>
+            <Button style={{ display: "flex", alignItems: "center" }} onClick={() => {
+              listAdminUsers.refetch();
+              companiesEmployees.refetch()
+            }}>
+              <p
+                style={{
+                  textTransform: "none",
+                  textAlign: "left",
+                  fontWeight: 500,
+                  fontSize: "12px",
+                  fontFamily: "Inter",
+                  lineHeight: "28px",
+                  color: "var(--blue-dark-700, #004EEB)",
+                  padding: "0px",
+                }}
+              >
+                <Icon icon="jam:refresh" /> Refresh
+              </p>
+            </Button>
+          </div>
+        </Grid>
+
         {contextHolder}
         <Form form={form} component={false}>
           <Table
@@ -400,6 +441,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
                 cell: EditableCell,
               },
             }}
+            style={{ width: "100%" }}
             dataSource={getInfoNeededToBeRenderedInTable()}
             columns={mergedColumns}
             rowClassName="editable-row"
@@ -408,8 +450,9 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             }}
             className="table-ant-customized"
           />
+
         </Form>{" "}
-      </>
+      </Grid>
     );
   }
 };
