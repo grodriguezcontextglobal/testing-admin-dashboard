@@ -8,7 +8,6 @@ import {
     Button,
     Chip,
     FormControl,
-    FormHelperText,
     Grid,
     InputLabel,
     MenuItem,
@@ -35,8 +34,7 @@ const Form = () => {
         register,
         setValue,
         watch,
-        handleSubmit,
-        formState: { errors },
+        handleSubmit
     } = useForm({ resolver: yupResolver(schema) });
     const [adminStaff, setAdminStaff] = useState(staff.adminUser ?? [])
     const [headsetAttendeesStaff, setHeadsetAttendeesStaff] = useState(staff.headsetAttendees ?? [])
@@ -76,6 +74,14 @@ const Form = () => {
         }
         return 0;
     };
+    const checkAssistantsSpots = () => {
+        if (headsetAttendeesStaff?.length > 0) {
+            if (headsetAttendeesStaff) return headsetAttendeesStaff.length;
+            return 0;
+        }
+        return 0;
+    };
+
 
     const handleDeleteMember = (props) => {
         const updateAdminMemberList = adminStaff?.filter(
@@ -141,6 +147,186 @@ const Form = () => {
                 item
                 xs={12}
             >
+                <form
+                    style={{
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        textAlign: "left",
+                    }}
+                    onSubmit={handleSubmit(handleEventInfo)}
+                    className="form"
+                >
+                    <Grid
+                        display={"flex"}
+                        flexDirection={"column"}
+                        alignItems={"flex-start"}
+                        alignSelf={"stretch"}
+                        gap={"24px"}
+                        style={{
+                            borderRadius: "8px",
+                            border: "1px solid var(--gray-300, #D0D5DD)",
+                            background: "var(--gray-100, #F2F4F7)",
+                            padding: "24px",
+                        }}
+                        item
+                        xs={12}
+                    >
+                        <Grid
+                            display={"flex"}
+                            justifyContent={"space-between"}
+                            alignItems={"flex-start"}
+                            alignSelf={"stretch"}
+                            gap={"24px"}
+                            item
+                            xs={12}
+                        >
+                            <Grid item xs={6}>
+                                <InputLabel fullWidth>First Name</InputLabel>
+                                <OutlinedInput
+                                    
+                                    {...register("firstName")}
+                                    style={OutlinedInputStyle}
+                                    placeholder="First name"
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <InputLabel fullWidth>Last Name</InputLabel>
+                                <OutlinedInput
+                                    
+                                    {...register("lastName")}
+                                    style={OutlinedInputStyle}
+                                    placeholder="Last name"
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
+                        <Grid
+                            display={"flex"}
+                            justifyContent={"center"}
+                            alignItems={"flex-start"}
+                            alignSelf={"stretch"}
+                            gap={"24px"}
+                            item
+                            xs={12}
+                        >
+                            <Grid item xs={12}>
+                                <InputLabel fullWidth>Email</InputLabel>
+                                <OutlinedInput
+                                    
+                                    {...register("email")}
+                                    style={OutlinedInputStyle}
+                                    type="email"
+                                    placeholder="Email"
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
+                        <Grid
+                            display={"flex"}
+                            justifyContent={"center"}
+                            alignItems={"flex-start"}
+                            alignSelf={"stretch"}
+                            gap={"24px"}
+                            item
+                            xs={12}
+                        >
+                            <Grid item xs={12}>
+                                <InputLabel>Role</InputLabel>
+                                <FormControl fullWidth>
+                                    <Select
+                                        className="custom-autocomplete"
+                                        style={{ ...AntSelectorStyle, background: "#fff" }}
+                                        {...register("role")}
+                                    >
+                                        <MenuItem
+                                            defaultChecked
+                                            defaultValue={"Select role"}
+                                            disabled
+                                        >
+                                            <Typography>Select role</Typography>
+                                        </MenuItem>
+                                        {checkAdminSpots() === subscription?.adminUser ? null : (
+                                            <MenuItem value={"Administrator"}>
+                                                <Typography>Administrator</Typography>
+                                            </MenuItem>
+                                        )}
+                                        <MenuItem value={"HeadsetAttendees"}>
+                                            <Typography>Assistant</Typography>
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        </Grid>
+
+                    </Grid>
+                    <Button
+                        onClick={(e) => addNewMember(e)}
+                        style={{
+                            display: "flex",
+                            padding: "12px 20px",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "8px",
+                            alignSelf: "stretch",
+                            borderRadius: "8px",
+                            border: "1px solid var(--blue-dark-50, #EFF4FF)",
+                            background: "var(--blue-dark-50, #EFF4FF)",
+                            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                            width: "100%",
+                            margin: "3dvh 0"
+                        }}
+                    >
+                        <Icon
+                            icon="ic:baseline-plus"
+                            color={"var(--blue-dark-800, #0040C1)"}
+                            width={20}
+                            height={20}
+                        />
+                        &nbsp;
+                        <Typography
+                            textTransform={"none"}
+                            fontFamily={"Inter"}
+                            fontSize={"14px"}
+                            fontStyle={"normal"}
+                            fontWeight={600}
+                            lineHeight={"20px"}
+                            color={"var(--blue-dark-800, #0040C1)"}
+                        >
+                            Save and add more staff
+                        </Typography>
+
+                    </Button>                            <Button
+                        type="submit"
+                        style={{
+                            display: "flex",
+                            padding: "12px 20px",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "8px",
+                            alignSelf: "stretch",
+                            borderRadius: "8px",
+                            border: "1px solid var(--blue-dark-600, #155EEF)",
+                            background: "var(--blue-dark-600, #155EEF)",
+                            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                            width: "100%"
+                        }}
+                    >
+                        <Typography
+                            textTransform={"none"}
+                            fontFamily={"Inter"}
+                            fontSize={"16px"}
+                            fontStyle={"normal"}
+                            fontWeight={600}
+                            lineHeight={"24px"}
+                            color={"var(--base-white, #FFF)"}
+                        >
+                            Save and continue
+                        </Typography>
+                    </Button>
+                </form>
+
                 <Grid
                     display={"flex"}
                     flexDirection={"column"}
@@ -209,11 +395,12 @@ const Form = () => {
                             textAlign: "left",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "flex-start",
+                            justifyContent: "space-between",
                             width: "100%",
                         }}
                     >
-                        Assistant staff
+                        Assistant staff&nbsp;<Typography>
+                            Assistant spots {checkAssistantsSpots()}</Typography>
                     </InputLabel>
                     {headsetAttendeesStaff?.map((member) => {
                         return (
@@ -226,246 +413,6 @@ const Form = () => {
                     })}
                 </Grid>
             </Grid>
-            <form
-                style={{
-                    width: "100%",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    textAlign: "left",
-                }}
-                onSubmit={handleSubmit(handleEventInfo)}
-                className="form"
-            >
-                <Grid
-                    display={"flex"}
-                    flexDirection={"column"}
-                    alignItems={"flex-start"}
-                    alignSelf={"stretch"}
-                    gap={"24px"}
-                    style={{
-                        borderRadius: "8px",
-                        border: "1px solid var(--gray-300, #D0D5DD)",
-                        background: "var(--gray-100, #F2F4F7)",
-                        padding: "24px",
-                    }}
-                    item
-                    xs={12}
-                >
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"space-between"}
-                        alignItems={"flex-start"}
-                        alignSelf={"stretch"}
-                        gap={"24px"}
-                        item
-                        xs={12}
-                    >
-                        <Grid item xs={6}>
-                            <InputLabel fullWidth>First Name</InputLabel>
-                            <OutlinedInput
-                                {...register("firstName")}
-                                style={OutlinedInputStyle}
-                                placeholder="First name"
-                                fullWidth
-                            />
-                            {errors.firstName && (
-                                <FormHelperText>
-                                    <Typography
-                                        textTransform={"none"}
-                                        textAlign={"left"}
-                                        fontFamily={"Inter"}
-                                        fontSize={"14px"}
-                                        fontStyle={"normal"}
-                                        fontWeight={500}
-                                        lineHeight={"20px"}
-                                        color={"red"}
-                                    >
-                                        {errors.firstName.message}
-                                    </Typography>
-                                </FormHelperText>
-                            )}
-                        </Grid>
-                        <Grid item xs={6}>
-                            <InputLabel fullWidth>Last Name</InputLabel>
-                            <OutlinedInput
-                                {...register("lastName")}
-                                style={OutlinedInputStyle}
-                                placeholder="Last name"
-                                fullWidth
-                            />
-                            {errors.lastName && (
-                                <FormHelperText>
-                                    <Typography
-                                        textTransform={"none"}
-                                        textAlign={"left"}
-                                        fontFamily={"Inter"}
-                                        fontSize={"14px"}
-                                        fontStyle={"normal"}
-                                        fontWeight={500}
-                                        lineHeight={"20px"}
-                                        color={"red"}
-                                    >
-                                        {errors.lastName.message}
-                                    </Typography>
-                                </FormHelperText>
-                            )}
-                        </Grid>
-                    </Grid>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"flex-start"}
-                        alignSelf={"stretch"}
-                        gap={"24px"}
-                        item
-                        xs={12}
-                    >
-                        <Grid item xs={12}>
-                            <InputLabel fullWidth>Email</InputLabel>
-                            <OutlinedInput
-                                {...register("email")}
-                                style={OutlinedInputStyle}
-                                type="email"
-                                placeholder="Email"
-                                fullWidth
-                            />
-                            {errors.email && (
-                                <FormHelperText>
-                                    <Typography
-                                        textTransform={"none"}
-                                        textAlign={"left"}
-                                        fontFamily={"Inter"}
-                                        fontSize={"14px"}
-                                        fontStyle={"normal"}
-                                        fontWeight={500}
-                                        lineHeight={"20px"}
-                                        color={"red"}
-                                    >
-                                        {errors.email.message}
-                                    </Typography>
-                                </FormHelperText>
-                            )}
-                        </Grid>
-                    </Grid>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"flex-start"}
-                        alignSelf={"stretch"}
-                        gap={"24px"}
-                        item
-                        xs={12}
-                    >
-                        <Grid item xs={12}>
-                            <InputLabel>Role</InputLabel>
-                            <FormControl fullWidth>
-                                <Select
-                                    className="custom-autocomplete"
-                                    style={{ ...AntSelectorStyle, background: "#fff" }}
-                                    {...register("role")}
-                                >
-                                    <MenuItem
-                                        defaultChecked
-                                        defaultValue={"Select role"}
-                                        disabled
-                                    >
-                                        <Typography>Select role</Typography>
-                                    </MenuItem>
-                                    {checkAdminSpots() === subscription?.adminUser ? null : (
-                                        <MenuItem value={"Administrator"}>
-                                            <Typography>Administrator</Typography>
-                                        </MenuItem>
-                                    )}
-                                    <MenuItem value={"HeadsetAttendees"}>
-                                        <Typography>Assistant</Typography>
-                                    </MenuItem>
-                                </Select>
-                            </FormControl>
-                            {errors.role && (
-                                <FormHelperText>
-                                    <Typography
-                                        textTransform={"none"}
-                                        textAlign={"left"}
-                                        fontFamily={"Inter"}
-                                        fontSize={"14px"}
-                                        fontStyle={"normal"}
-                                        fontWeight={500}
-                                        lineHeight={"20px"}
-                                        color={"red"}
-                                    >
-                                        {errors.role.message}
-                                    </Typography>
-                                </FormHelperText>
-                            )}
-                        </Grid>
-                    </Grid>
-
-                </Grid>
-                <Button
-                    onClick={(e) => addNewMember(e)}
-                    style={{
-                        display: "flex",
-                        padding: "12px 20px",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "8px",
-                        alignSelf: "stretch",
-                        borderRadius: "8px",
-                        border: "1px solid var(--blue-dark-50, #EFF4FF)",
-                        background: "var(--blue-dark-50, #EFF4FF)",
-                        boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                        width: "100%",
-                        margin: "3dvh 0"
-                    }}
-                >
-                    <Icon
-                        icon="ic:baseline-plus"
-                        color={"var(--blue-dark-800, #0040C1)"}
-                        width={20}
-                        height={20}
-                    />
-                    &nbsp;
-                    <Typography
-                        textTransform={"none"}
-                        fontFamily={"Inter"}
-                        fontSize={"14px"}
-                        fontStyle={"normal"}
-                        fontWeight={600}
-                        lineHeight={"20px"}
-                        color={"var(--blue-dark-800, #0040C1)"}
-                    >
-                        Save and add more staff
-                    </Typography>
-
-                </Button>                            <Button
-                    type="submit"
-                    style={{
-                        display: "flex",
-                        padding: "12px 20px",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "8px",
-                        alignSelf: "stretch",
-                        borderRadius: "8px",
-                        border: "1px solid var(--blue-dark-600, #155EEF)",
-                        background: "var(--blue-dark-600, #155EEF)",
-                        boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                        width: "100%"
-                    }}
-                >
-                    <Typography
-                        textTransform={"none"}
-                        fontFamily={"Inter"}
-                        fontSize={"16px"}
-                        fontStyle={"normal"}
-                        fontWeight={600}
-                        lineHeight={"24px"}
-                        color={"var(--base-white, #FFF)"}
-                    >
-                        Save and continue
-                    </Typography>
-                </Button>
-            </form>
         </Grid>
 
     );
