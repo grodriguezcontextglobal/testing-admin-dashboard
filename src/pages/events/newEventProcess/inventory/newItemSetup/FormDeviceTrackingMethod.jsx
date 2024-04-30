@@ -1,434 +1,639 @@
+import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Button,
+  Grid,
   InputAdornment,
   InputLabel,
   OutlinedInput,
+  TextField,
   Typography,
 } from "@mui/material";
-import { nanoid } from "@reduxjs/toolkit";
-import { Divider, Select, Switch, Tooltip } from "antd";
-import { useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AutoComplete, Avatar, Divider, Tooltip } from "antd";
+import _ from 'lodash';
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-const options = [{ label: 'Permanent', value: 'Permanent' }, { label: 'Rent', value: 'Rent' }]
-import '../../../../../styles/global/ant-select.css'
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import { QuestionIcon, UploadIcon } from "../../../../../components/icons/Icons";
+import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
+import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import '../../../../../styles/global/ant-select.css';
+import { formatDate } from "../../../../inventory/utils/dateFormat";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
   setSelectedItem,
-  listOfItems,
+  setDisplayFormToCreateCategory,
+  existingData
 }) => {
+  console.log("🚀 ~ selectedItem:", selectedItem)
+  const [taxableLocation, setTaxableLocation] = useState('')
+  const [choose, setChoose] = useState([])
   const { user } = useSelector((state) => state.admin);
-  const displayCategoryPill = useRef(false);
-  const displayGroupPill = useRef(false);
-  const [consumerUses, setConsumerUses] = useState(true);
-  const [valueSelection, setValueSelection] = useState(options[0]);
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm();
-  const key = useRef(nanoid(10));
-  const onChange = (value) => {
-    return setValueSelection(value);
-  };
-  const handleEventInfo = (data) => {
-    if (String(data.startingNumber).length !== String(data.endingNumber).length) return alert(
-      `The length of starting number and ending number does not match. Please verify the serial numbers. ${data.startingNumber} - ${data.endingNumber}`
-    );
+  const [loading, setLoading] = useState(false)
+  const [locationSelection, setLocationSelection] = useState('')
 
-    setSelectedItem([
-      ...selectedItem,
-      {
-        key: key.current,
-        category: data.newCategory,
-        group: data.newGroup,
-        value: data.deviceValue,
-        description: data.deviceDescription,
-        ownership: "Permanent", //valueSelection,
+  const companiesQuery = useQuery({
+    queryKey: ['locationOptionsPerCompany'],
+    queryFn: () => devitrakApi.post('/company/search-company', {
+      company_name: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
+  const itemsInInventoryQuery = useQuery({
+    queryKey: ['ItemsInInventoryCheckingQuery'],
+    queryFn: () => devitrakApi.post("/db_item/consulting-item", {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
+  useEffect(() => {
+    const controller = new AbortController()
+    companiesQuery.refetch()
+    itemsInInventoryQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  const retrieveItemOptions = () => {
+    const result = new Set()
+    if (existingData) {
+      for (let [, value] of existingData) {
+        result.add(value.item_group)
+      }
+    }
+    return Array.from(result)
+  }
+  const renderLocationOptions = () => {
+    if (companiesQuery.data) {
+      const locations = companiesQuery?.data?.data?.company?.at(-1)?.location ?? []
+      const result = new Set()
+      for (let data of locations) {
+        result.add({ value: data })
+      }
+      return Array.from(result)
+    }
+    return []
+  }
+  const retrieveItemDataSelected = () => {
+    const result = new Map()
+    if (itemsInInventoryQuery.data) {
+      const industryData = itemsInInventoryQuery?.data?.data?.items
+      for (let data of industryData) {
+        result.set(data.item_group, data)
+      }
+    }
+    return result
+  }
+
+  useEffect(() => {
+    const controller = new AbortController()
+    if (retrieveItemDataSelected().has(choose)) {
+      const dataToRetrieve = retrieveItemDataSelected().get(choose)
+      setValue('category_name', `${dataToRetrieve.category_name}`)
+      setValue('cost', `${dataToRetrieve.cost}`)
+      setValue('brand', `${dataToRetrieve.brand}`)
+      setValue('descript_item', `${dataToRetrieve.descript_item}`)
+      setLocationSelection(`${dataToRetrieve.location}`)
+      setTaxableLocation(`${dataToRetrieve.main_warehouse}`)
+    }
+
+    return () => {
+      controller.abort()
+    }
+  }, [choose])
+
+  const savingNewItem = async (data) => {
+    const dataDevices = itemsInInventoryQuery.data.data.items
+    const groupingByDeviceType = _.groupBy(dataDevices, "item_group")
+    let checkExistingDevice = []
+    let base64;
+    if (choose === "") return alert("A group of item must be provided.");
+    if (taxableLocation === "") return alert("A taxable location must be provided.");
+    for (let index = Number(data.startingNumber); index < Number(data.endingNumber); index++) {
+      if (groupingByDeviceType[choose]) {
+        const dataRef = _.groupBy(groupingByDeviceType[choose], "serial_number")
+        if (dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
+          checkExistingDevice = [...checkExistingDevice, ...dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]]
+        }
+      }
+    }
+    if (checkExistingDevice.length > 0) {
+      return alert("Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.")
+    }
+    if (data.photo.length > 0 && data.photo[0].size > 1048576) {
+      setLoading(false)
+      return alert(
+        "Image is bigger than allow. Please resize the image or select a new one."
+      );
+    } else if (data.photo.length > 0) {
+      setLoading(true)
+      base64 = await convertToBase64(data.photo[0]);
+      const resp = await devitrakApi.post(`/image/new_image`, {
+        source: base64,
+        category: data.category_name,
+        item_group: choose,
         company: user.company,
-        quantity: data.quantity,
-        startingNumber: data.startingNumber,
-        endingNumber: data.endingNumber,
-        createdBy: user.email,
-        dateCreated: `${new Date()}`,
-        consumerUses: consumerUses,
-        resume: `${data.newCategory} ${data.newGroup} ${data.deviceValue} ${data.quantity
-          } ${data.deviceDescription} ${valueSelection} use:${consumerUses ? "for external use only" : "for internal use only"} ${new Date()} ${user.email} ${key.current}`,
-        reference: 0,
-      },
+      });
+      if (resp.data) {
+        try {
+          const resulting = [...selectedItem, {
+            category_name: data.category_name,
+            item_group: choose,
+            cost: data.cost,
+            brand: data.brand,
+            descript_item: data.descript_item,
+            ownership: "Rent",
+            startingNumber: data.startingNumber,
+            endingNumber: data.endingNumber,
+            main_warehouse: taxableLocation,
+            location: locationSelection,
+            current_location: locationSelection,
+            created_at: formatDate(new Date()),
+            updated_at: formatDate(new Date()),
+            company: user.company, quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
+            existing: false
 
-    ]);
-    setValue("newCategory", "");
-    setValue("deviceDescription", "");
-    setValue("newGroup", "");
-    setValue("quantity", "");
-    setValue("deviceValue", "");
-    setValue("endingNumber", "");
-    setValue("startingNumber", "");
-    setValueSelection(options[0])
-    setConsumerUses(true)
-    key.current = nanoid(10)
+          }]
+          setSelectedItem(resulting)
+          setLoading(false)
+          if (!renderLocationOptions().some(element => element.value === locationSelection)) {
+            let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
+            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
+              location: template
+            })
+          }
+          setValue("category_name", "");
+          setValue("item_group", "");
+          setValue("cost", "");
+          setValue("brand", "");
+          setValue("descript_item", "");
+          setValue("ownership", "");
+          setValue("startingNumber", "")
+          setValue("endingNumber", "")
+          setLoading(false)
+          setDisplayFormToCreateCategory(false)
+        } catch (error) {
+          setLoading(false)
+        }
+      }
+    } else if (data.photo.length < 1) {
+      setLoading(true)
+      try {
+        const resulting = [...selectedItem, {
+          category_name: data.category_name,
+          item_group: choose,
+          cost: data.cost,
+          brand: data.brand,
+          descript_item: data.descript_item,
+          ownership: "Rent",
+          startingNumber: data.startingNumber,
+          endingNumber: data.endingNumber,
+          main_warehouse: taxableLocation,
+          location: locationSelection,
+          current_location: locationSelection,
+          created_at: formatDate(new Date()),
+          updated_at: formatDate(new Date()),
+          company: user.company, quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
+          existing: false
+
+        }]
+        if (!renderLocationOptions().some(element => element.value === locationSelection)) {
+          let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
+          await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
+            location: template
+          })
+        }
+        setSelectedItem(resulting)
+        setLoading(false)
+        setDisplayFormToCreateCategory(false)
+      } catch (error) {
+        setLoading(false)
+      }
+      // }
+    }
   };
-
-  const categoryFound = useMemo(() => {
-    if (watch("newCategory") !== "") {
-      const result = new Set();
-      for (let data of listOfItems) {
-        result.add(data.category);
-      }
-      const finalResult = Array.from(result).find(
-        (element) =>
-          `${element}`.toLocaleLowerCase() ===
-          `${watch("newCategory")}`.toLocaleLowerCase()
-      );
-      if (finalResult) {
-        displayCategoryPill.current = true;
-        return finalResult;
-      }
-      return null;
-    }
-  }, [watch("newCategory"), listOfItems, watch]);
-
-  const groupFound = useMemo(() => {
-    if (watch("newGroup") !== "") {
-      const result = new Set();
-      for (let data of listOfItems) {
-        result.add(data.group);
-      }
-      const finalResult = Array.from(result).find(
-        (element) =>
-          `${element}`.toLowerCase() ===
-          `${watch("newGroup")}`.toLocaleLowerCase()
-      );
-      if (finalResult) {
-        displayGroupPill.current = true;
-        return finalResult;
-      }
-      return null;
-    }
-  }, [watch("newGroup"), listOfItems, watch]);
-
-  return (
-    <form
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        textAlign: "left",
-        display: "flex",
-        padding: "24px",
-        flexDirection: "column",
-        gap: "24px",
-        alignSelf: "stretch",
-        borderRadius: "8px",
-        border: "1px solid var(--gray-300, #D0D5DD)",
-        background: "var(--gray-100, #F2F4F7)",
-      }}
-      onSubmit={handleSubmit(handleEventInfo)}
-      className="form"
-    >
+  const renderTitle = () => {
+    return (<>
       <InputLabel
         id="eventName"
         style={{ marginBottom: "0.2rem", width: "100%" }}
       >
         <Typography
+          textAlign={'left'}
           textTransform={"none"}
-          textAlign={"left"}
-          fontFamily={"Inter"}
-          fontSize={"20px"}
-          fontStyle={"normal"}
-          fontWeight={600}
-          lineHeight={"30px"}
-          color={"var(--gray-600, #475467)"}
+          style={TextFontSize20LineHeight30}
+          color={"var(--gray600, #475467)"}
         >
-          New category details
+          Add a group of devices
         </Typography>
       </InputLabel>
-      <Typography
-        textTransform={"none"}
-        textAlign={"left"}
-        fontFamily={"Inter"}
-        fontSize={"14px"}
-        fontStyle={"normal"}
-        fontWeight={400}
-        lineHeight={"20px"}
-        color={"var(--gray-600, #475467)"}
+      <InputLabel
+        id="eventName"
+        style={{ marginBottom: "0.2rem", width: "100%" }}
       >
-        Devices serial numbers can be created by inputting a serial number base
-        to define the category of device, and then a range from one number to
-        another, depending on your inventory.
-      </Typography>
-      <div
+        <Typography
+          textAlign={'left'}
+          textTransform={"none"}
+          style={{ ...TextFontSize20LineHeight30, textWrap: "pretty" }}
+          color={"var(--gray600, #475467)"}
+        >
+          Devices serial numbers can be created by inputting a serial number base
+          to define the category of device, and then a range from one number to
+          another, depending on your inventory.
+        </Typography>
+      </InputLabel>
+    </>
+    )
+  }
+  return (
+    <Grid
+      display={"flex"}
+      justifyContent={"center"}
+      alignItems={"center"}
+      container
+    >
+      {renderTitle()}
+      <form
         style={{
           width: "100%",
-          display: "flex",
           justifyContent: "flex-start",
           alignItems: "center",
           textAlign: "left",
-          gap: "10px",
+          display: "flex",
+          padding: "24px",
+          flexDirection: "column",
+          gap: "24px",
+          borderRadius: "8px",
+          border: "1px solid var(--gray300, #D0D5DD)",
+          background: "var(--gray100, #F2F4F7)",
         }}
+        onSubmit={handleSubmit(savingNewItem)}
+        className="form"
       >
         <div
           style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
             textAlign: "left",
-            width: "50%",
+            gap: "10px",
           }}
         >
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              New category
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            {...register("newCategory")}
-            aria-invalid={errors.newCategory}
-            style={{
-              borderRadius: "12px",
-              border: `${errors.newCategory && "solid 1px #004EEB"}`,
-              margin: "0.1rem auto 1rem",
-              width: "100%",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-            placeholder="e.g. Electronic"
-            fullWidth
-          />
-          {errors?.newCategory && (
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
-              color={"red"}
-              width={"100%"}
-              padding={"0.5rem 0"}
-            >
-              {errors.newCategory.type}
-            </Typography>
-          )}
           <div
             style={{
               textAlign: "left",
               width: "50%",
             }}
           >
-            {watch("newCategory") !== "" && displayCategoryPill.current && (
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
-                style={{
-                  background: "#D1E0FF",
-                  cursor: "pointer",
-                  display: `${displayCategoryPill === null && "none"}`,
-                }}
-                border={"solid 1px #D1E0FF"}
-                borderRadius={"12px"}
-                marginY={1}
-                padding={1}
-                color={"var(--gray-700, #344054)"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={"500"}
-                lineHeight={"20px"}
-                onClick={() => {
-                  setValue("newCategory", `${categoryFound}`);
-                  displayCategoryPill.current = false;
-                }}
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
-                {categoryFound}
+                Category
               </Typography>
-            )}
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("category_name")}
+              aria-invalid={errors.category_name}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Electronic"
+              fullWidth
+            />
+            <div
+              style={{
+                textAlign: "left",
+                width: "50%",
+              }}
+            >
+            </div>
           </div>
-        </div>
-        <div
-          style={{
-            textAlign: "left",
-            width: "50%",
-          }}
-        >
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              New group
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            {...register("newGroup")}
-            aria-invalid={errors.newGroup}
-            style={{
-              borderRadius: "12px",
-              border: `${errors.newGroup && "solid 1px #004EEB"}`,
-              margin: "0.1rem auto 1rem",
-              width: "100%",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-            placeholder="e.g. Laptop"
-            fullWidth
-          />
-          {errors?.newGroup && (
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
-              color={"red"}
-              width={"100%"}
-              padding={"0.5rem 0"}
-            >
-              {errors.newGroup.type}
-            </Typography>
-          )}
           <div
             style={{
               textAlign: "left",
               width: "50%",
             }}
           >
-            {watch("newGroup") !== "" && displayGroupPill.current && (
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
-                style={{
-                  background: "#D1E0FF",
-                  cursor: "pointer",
-                  display: `${displayGroupPill.current && "none"}`,
-                }}
-                border={"solid 1px #D1E0FF"}
-                borderRadius={"12px"}
-                marginY={1}
-                padding={1}
-                color={"var(--gray-700, #344054)"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={"500"}
-                lineHeight={"20px"}
-                onClick={() => {
-                  setValue("newGroup", `${groupFound}`);
-                  displayGroupPill.current = false;
-                }}
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
-                {groupFound}
+                Device name
               </Typography>
-            )}
+            </InputLabel>
+            <AutoComplete
+              className="custom-autocomplete" // Add a custom className here
+              variant="outlined"
+              style={{
+                ...AntSelectorStyle,
+                border: "solid 0.3 var(--gray600)",
+                fontFamily: 'Inter',
+                fontSize: "14px",
+                width: "100%"
+              }}
+
+              value={choose}
+              onChange={(value) => setChoose(value)}
+              options={retrieveItemOptions().map(item => { return ({ value: item }) })}
+              placeholder="Type the name of the device"
+              filterOption={(inputValue, option) =>
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+            />
+
+            <div
+
+              style={{
+                textAlign: "left",
+                width: "50%",
+              }}
+            >
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          gap: "10px",
-        }}
-      >
         <div
           style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
             textAlign: "left",
-            width: "50%",
+            gap: "10px",
           }}
         >
-          <InputLabel style={{ width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              Value of each device
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            {...register("deviceValue", { required: true })}
-            aria-invalid={errors.deviceValue}
+          <div
             style={{
-              borderRadius: "12px",
-              border: `${errors.deviceValue && "solid 1px #004EEB"}`,
-              margin: "0.1rem auto 1rem",
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Brand
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("brand")}
+              aria-invalid={errors.brand}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Apple"
+              fullWidth
+            />
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                <Tooltip title="Address where tax deduction for equipment will be applied.">Taxable location <QuestionIcon /></Tooltip>
+              </Typography>
+            </InputLabel>
+            <AutoComplete
+              className="custom-autocomplete"
+              style={{ width: "100%", height: "2.5rem" }}
+              options={renderLocationOptions()}
+              value={taxableLocation}
+              placeholder="Select a location"
+              filterOption={(inputValue, option) =>
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              onChange={(value) => setTaxableLocation(value)}
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
+          }}
+        >
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Cost of replace device
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("cost", { required: true })}
+              aria-invalid={errors.cost}
+              style={OutlinedInputStyle}
+              placeholder="e.g. $200"
+              startAdornment={
+                <InputAdornment position="start">
+                  <Typography
+                    textTransform={"none"}
+                    textAlign={"left"}
+                    style={{ ...Subtitle, fontWeight: 400 }}
+                  >
+                    $
+                  </Typography>
+                </InputAdornment>
+              }
+              fullWidth
+            />
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
               display: "flex",
-              width: "100%",
-              justifyContent: "flex-start",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+              justifyContent: "space-between",
+              alignItems: "center"
             }}
-            placeholder="e.g. $200"
-            startAdornment={
-              <InputAdornment position="start">
+          >
+            <div style={{
+              textAlign: "left",
+              width: "100%",
+              display: "flex",
+              alignSelf: "flex-start",
+            }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                 >
-                  $
+                  Ownership status of items <Tooltip title="Device added from this option would be set as rented Device."><strong><QuestionIcon /></strong></Tooltip>
                 </Typography>
-              </InputAdornment>
-            }
-          />
-          {errors?.deviceValue && (
-            <Typography>{errors.deviceValue.type}</Typography>
-          )}
+                <OutlinedInput
+                  disabled
+                  style={OutlinedInputStyle}
+                  readOnly
+                  value={'Rent'}
+                  fullWidth
+                />
+              </InputLabel>
+            </div>
+          </div>
         </div>
         <div
           style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
             textAlign: "left",
-            width: "50%",
+            gap: "10px",
+          }}
+        >
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                From starting number
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("startingNumber")}
+              aria-invalid={errors.startingNumber}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 0001"
+              fullWidth
+            />
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                To ending number
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("endingNumber")}
+              aria-invalid={errors.endingNumber}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 1000"
+              fullWidth
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
           }}
         >
           <InputLabel style={{ width: "100%" }}>
             <Typography
               textTransform={"none"}
               textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
+              style={{ ...Subtitle, fontWeight: 500 }}
             >
-              Quantity
+              Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
+            </Typography>
+          </InputLabel>
+          <AutoComplete
+            className="custom-autocomplete"
+            value={locationSelection}
+            style={{ width: "100%", height: "2.5rem" }}
+            options={renderLocationOptions()}
+            placeholder="Select a location"
+            filterOption={(inputValue, option) =>
+              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+            }
+            onChange={(value) => setLocationSelection(value)}
+          />
+
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+          }}
+        >
+          <InputLabel style={{ width: "100%" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              style={{ ...Subtitle, fontWeight: 500 }}
+            >
+              Description of the device
             </Typography>
           </InputLabel>
           <OutlinedInput
-            {...register("quantity", { required: true })}
-            aria-invalid={errors.deviceQuantity}
+            required
+            multiline
+            minRows={5}
+            {...register("descript_item", { required: true })}
+            aria-invalid={errors.descript_item}
             style={{
               borderRadius: "12px",
-              border: `${errors.deviceQuantity && "solid 1px #004EEB"}`,
+              // border: `${errors.descript_item && "solid 1px #004EEB"}`,
               margin: "0.1rem auto 1rem",
               display: "flex",
               width: "100%",
@@ -436,257 +641,146 @@ const FormDeviceTrackingMethod = ({
               background: "var(--base-white, #FFF)",
               boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
             }}
-            placeholder="e.g. 300"
+            placeholder="Please provide a brief description of the new device to be added."
           />
-          {errors?.deviceQuantity && (
-            <Typography>{errors.deviceQuantity.type}</Typography>
-          )}
         </div>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-        }}
-      >
-        <InputLabel style={{ width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"14px"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"20px"}
-            color={"var(--gray-700, #344054)"}
-          >
-            Description of the device
-          </Typography>
-        </InputLabel>
-        <OutlinedInput
-          multiline
-          minRows={5}
-          {...register("deviceDescription", { required: true })}
-          aria-invalid={errors.deviceDescription}
+
+        <Grid
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"center"}
+          alignItems={"center"}
           style={{
-            borderRadius: "12px",
-            border: `${errors.deviceDescription && "solid 1px #004EEB"}`,
-            margin: "0.1rem auto 1rem",
-            display: "flex",
             width: "100%",
-            justifyContent: "flex-start",
+            borderRadius: "12px",
+            border: "1px solid var(--gray200, #EAECF0)",
             background: "var(--base-white, #FFF)",
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
           }}
-          placeholder="Please provide a brief description of the new device to be added."
-        />
-        {errors?.deviceDescription && (
-          <Typography>{errors.deviceDescription.type}</Typography>
-        )}
-      </div>
-      <Divider />
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          gap: "10px",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "left",
-            width: "50%",
-          }}
+          item
+          xs={12}
         >
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              From starting number
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            {...register("startingNumber")}
-            aria-invalid={errors.startingNumber}
-            style={{
-              borderRadius: "12px",
-              border: `${errors.startingNumber && "solid 1px #004EEB"}`,
-              margin: "0.1rem auto 1rem",
-              width: "100%",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-            placeholder="e.g. 0001"
-            fullWidth
-          />
-          {errors?.startingNumber && (
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
-              color={"red"}
-              width={"100%"}
-              padding={"0.5rem 0"}
-            >
-              {errors.startingNumber.type}
-            </Typography>
-          )}
-        </div>
-        <div
-          style={{
-            textAlign: "left",
-            width: "50%",
-          }}
-        >
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              To ending number
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            {...register("endingNumber")}
-            aria-invalid={errors.endingNumber}
-            style={{
-              borderRadius: "12px",
-              border: `${errors.endingNumber && "solid 1px #004EEB"}`,
-              margin: "0.1rem auto 1rem",
-              width: "100%",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-            placeholder="e.g. 1000"
-            fullWidth
-          />
-          {errors?.endingNumber && (
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
-              color={"red"}
-              width={"100%"}
-              padding={"0.5rem 0"}
-            >
-              {errors.endingNumber.type}
-            </Typography>
-          )}
-        </div>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          gap: "10px",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "left",
-            width: "50%",
-          }}
-        >
-          <Tooltip title={`${consumerUses ? "" : "You've checked this item for internal use."}`} color={'#ff0000'}>
-            <Switch
-              checkedChildren="Consumers"
-              unCheckedChildren="Internal use"
-              defaultChecked
-              onChange={() => setConsumerUses(!consumerUses)}
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            marginY={2}
+            item
+            xs={12}
+          >
+            <Avatar
               style={{
-                background: `${consumerUses ? "#1677ff" : "#ff0000"}`
+                width: "3rem",
+                height: "auto",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "6px solid var(--gray50, #F9FAFB)",
+                background: "6px solid var(--gray50, #F9FAFB)",
+                borderRadius: "28px",
+              }}
+            > <UploadIcon />
+            </Avatar>
+
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            item
+            xs={12}
+          >
+            <TextField
+              {...register("photo")}
+              id="file-upload"
+              type="file"
+              accept=".jpeg, .png, .jpg"
+              style={{
+                outline: "none",
+                border: "transparent",
               }}
             />
-          </Tooltip>
-        </div>
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            marginBottom={2}
+            item
+            xs={12}
+          >
+            <Typography
+              style={Subtitle}
+            >
+              SVG, PNG, JPG or GIF (max. 1MB)
+            </Typography>
+          </Grid>
+        </Grid>
+        <Divider />
+
         <div
           style={{
-            textAlign: "right",
-            width: "50%",
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
           }}
         >
-          <Select
-          className="custom-autocomplete"
-            showSearch
+          <div
             style={{
-              height: "16.5px",
-              display: "flex",
-              alignItems: "center"
+              textAlign: "left",
+              width: "50%",
+            }}>
+            <Button
+              disabled={loading}
+              onClick={() => setDisplayFormToCreateCategory(false)}
+              style={{ ...GrayButton, width: "100%" }}
+            >
+              <Icon
+                icon="ri:arrow-go-back-line"
+                color="#344054"
+                width={20}
+                height={20}
+              />
+              &nbsp;
+              <Typography
+                textTransform={"none"}
+                style={GrayButtonText}
+              >
+                Go back
+              </Typography>
+            </Button>
+          </div>
+          <div
+            style={{
+              textAlign: "right",
+              width: "50%",
             }}
-            placeholder="Select an option"
-            optionFilterProp="children"
-            onChange={onChange}
-            filterOption={(input, option) => (option?.label ?? '').includes(input)}
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.label ?? '').toLowerCase())
-            }
-            options={options}
-          />
+          ><Button
+            disabled={loading}
+            type="submit"
+            style={{
+              ...BlueButton, width: "100%",
+            }}
+          >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF)"
+                width={20}
+                height={20}
+              />
+              &nbsp;
+              <Typography
+                textTransform={"none"}
+                style={BlueButtonText}
+              >
+                Save new item
+              </Typography>
+            </Button></div>
         </div>
-      </div>
-
-
-      <Button
-        type="submit"
-        style={{
-          display: "flex",
-          padding: "12px 20px",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "8px",
-          alignSelf: "stretch",
-          border: "1px solid var(--gray-300, #D0D5DD)",
-          borderRadius: "8px",
-          background: "var(--base-white, #FFF)",
-          boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-          margin: "1.5dvh 0",
-        }}
-      >
-        <Typography
-          textTransform={"none"}
-          style={{
-            color: "#344054",
-            fontSize: "14px",
-            fontWeight: "600",
-            fontFamily: "Inter",
-            lineHeight: "20px",
-          }}
-        >
-          Add item
-        </Typography>
-      </Button>
-    </form>
+      </form>
+    </Grid>
   );
 };
 
