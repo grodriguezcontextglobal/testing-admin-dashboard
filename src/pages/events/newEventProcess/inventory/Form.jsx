@@ -19,10 +19,10 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-// import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
 import "../../../../styles/global/ant-select.css"
 import { useNavigate } from "react-router-dom";
 import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
+import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
 const Form = () => {
   const {
     register,
@@ -33,8 +33,8 @@ const Form = () => {
   } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { deviceSetup } = useSelector((state) => state.event);
-  // const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
-  //   useState(false);
+  const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
+    useState(false);
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState(deviceSetup);
   const navigate = useNavigate();
@@ -104,9 +104,8 @@ const Form = () => {
     return setSelectedItem(filter);
   };
   const handleAddingNewItemToInventoryEvent = (data) => {
-    const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: `${data.endingNumber - (data.startingNumber - 1)}` }]
+    const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: `${data.endingNumber - (data.startingNumber - 1)}`, existing: true }]
     setSelectedItem(resulting)
-    // setValueItemSelected({})
     setValue('startingNumber', '')
     setValue('endingNumber', '')
     return;
@@ -162,8 +161,8 @@ const Form = () => {
       <Grid
         style={{
           borderRadius: "8px",
-          border: "1px solid var(--gray-300, #D0D5DD)",
-          background: "var(--gray-100, #F2F4F7)",
+          border: "1px solid var(--gray300, #D0D5DD)",
+          background: "var(--gray100, #F2F4F7)",
           padding: "24px",
           width: "100%",
         }} item xs={12} sm={12} md={12} lg={12}>
@@ -244,12 +243,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                 >
                   From starting number
                 </Typography>
@@ -266,22 +260,6 @@ const Form = () => {
                 placeholder={`Selected category min value: ${substractingRangesSelectedItem()?.min}`}
                 fullWidth
               />
-              {errors?.startingNumber && (
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                  color={"red"}
-                  width={"100%"}
-                  padding={"0.5rem 0"}
-                >
-                  {errors.startingNumber.type}
-                </Typography>
-              )}
             </Grid>
             <Grid item xs={6} sm={6} md={6} lg={6}>
               <InputLabel
@@ -290,12 +268,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                 >
                   To ending number
                 </Typography>
@@ -311,22 +284,6 @@ const Form = () => {
                 placeholder={`Selected category max value: ${substractingRangesSelectedItem()?.max}`}
                 fullWidth
               />
-              {errors?.endingNumber && (
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                  color={"red"}
-                  width={"100%"}
-                  padding={"0.5rem 0"}
-                >
-                  {errors.endingNumber.type}
-                </Typography>
-              )}
             </Grid>
           </Grid>
           <Grid
@@ -349,12 +306,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                 >
                   Quantity
                 </Typography>
@@ -372,11 +324,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   color={"red"}
                   width={"100%"}
                   padding={"0.5rem 0"}
@@ -392,11 +340,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   color={"transparent"}
                 >
                   Quantity
@@ -424,12 +368,7 @@ const Form = () => {
             <Typography
               textTransform={"none"}
               textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
+              style={{ ...Subtitle, fontWeight: 500 }}
             >
               Groups selected
             </Typography>
@@ -478,7 +417,7 @@ const Form = () => {
         </Grid>
       </Grid >
 
-      {/* <InputLabel
+      <InputLabel
         style={{
           width: "100%",
           display: "flex",
@@ -489,12 +428,8 @@ const Form = () => {
       >
         <Typography
           textTransform="none"
-          fontFamily="Inter"
-          fontSize="20px"
-          fontStyle="normal"
-          fontWeight={600}
-          lineHeight="30px"
-          color="var(--gray-600, #475467)"
+          style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
+          color="var(--gray600)"
         >
           Generate a new category or group of devices
         </Typography>
@@ -519,31 +454,34 @@ const Form = () => {
         If you haven&apos;t added the devices you&apos;re taking to this event into the inventory, create a new category of devices for this event; or create a new group within an existing category. Then you can enter a range of serial numbers starting with a serial number base, to register the new devices in your inventory.
       </Typography>
 
-      <Button
-        onClick={() =>
-          setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-        }
-        style={{
-          ...LightBlueButton, width: "fit-content", margin: "1rem auto"
-        }}
-      >
-        <PlusIcon /> <Typography
-          textTransform="none"
-          style={LightBlueButtonText}
+      <Tooltip title="Section in construction">
+        <Button
+          // disabled
+          onClick={() =>
+            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+          }
+          style={{
+            ...LightBlueButton, width: "fit-content", margin: "1rem auto"
+          }}
         >
-          Create a new category or group
-        </Typography>
-      </Button>
-
+          <PlusIcon /> <Typography
+            textTransform="none"
+            style={LightBlueButtonText}
+          >
+            Create a new category or group
+          </Typography>
+        </Button>
+      </Tooltip>
       {
         displayFormToCreateCategory && (
           <FormDeviceTrackingMethod
-          selectedItem={selectedItem}
-          setSelectedItem={setSelectedItem}
-          listOfItems={[]}
+            existingData={optionsToRenderInSelector()}
+            selectedItem={selectedItem}
+            setSelectedItem={setSelectedItem}
+            setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
           />
         )
-      } */}
+      }
       <Grid
         style={{
           width: "100%",
@@ -560,7 +498,7 @@ const Form = () => {
         lg={12}
       >
         <Button
-          onClick={() => navigate("/create-event-page/review-submit")}
+        onClick={() => navigate("/create-event-page/review-submit")}
           style={{
             display: "flex",
             padding: "12px 20px",
@@ -617,211 +555,7 @@ const Form = () => {
         </Button>
       </Grid>
     </Grid >
-
   );
-  // }
 };
 
 export default Form;
-
-{/* <span
-style={{
-  width: "100%",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "flex-start",
-  alignItems: "center",
-}}
->
-<InputLabel
-  style={{
-    width: "100%",
-    textAlign: "left",
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  }}
->
-  <Typography
-    textAlign={"left"}
-    style={{
-      width: "100%",
-      display: "flex",
-      justifyContent: "flex-start",
-      alignItems: "center",
-    }}
-  >
-    Select quantity:{" "}
-  </Typography>
-</InputLabel>
-<OutlinedInput
-  {...register("quantity", { required: true })}
-  type="text"
-  style={{
-    ...OutlinedInputStyle,
-    width: "100%",
-  }}
-  placeholder="Qty"
-  fullWidth
-/>
-</span> */}
-// const [api, contextHolder] = notification.useNotification();
-// const openNotificationWithIcon = (type, msg) => {
-//   api.open({
-//     message: msg,
-//   });
-// };
-
-// const storingDeviceAssignToEvent = useMemo(
-//   () => dispatch(onAddDeviceSetup(selectedItem)),
-//   []
-// );
-
-// const renderOptionAsNeededFormat = (props) => {
-//   const optionRendering = JSON.parse(props);
-//   return (
-//     <span
-//       style={{
-//         display: "flex",
-//         justifyContent: "space-between",
-//         alignItems: "center",
-//         width: "100%",
-//       }}
-//     >
-//       <div
-//         style={{
-//           display: "flex",
-//           justifyContent: "space-between",
-//           alignItems: "center",
-//         }}
-//       >
-//         <Typography
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             fontFamily: "Inter",
-//             fontSize: "16px",
-//             fontStyle: "normal",
-//             fontWeight: 500,
-//             lineHeight: "24px" /* 150% */,
-//             color: "var(--gray-900, #101828)",
-//           }}
-//         >
-//           {optionRendering.category_name ?? "Unknown"}
-//         </Typography>{" "}
-//         &nbsp;
-//         <span
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             fontFamily: "Inter",
-//             fontSize: "16px",
-//             fontStyle: "normal",
-//             fontWeight: 400,
-//             lineHeight: "24px" /* 150% */,
-//             color: "var(--gray-600, #475467)",
-//           }}
-//         >
-//           {optionRendering.item_group}
-//         </span>
-//       </div>
-//       <div>Available: {optionRendering.serial_number}</div>
-//     </span>
-//   );
-// };
-
-// const updateQuantityInventoryPerItem = useMemo(() => {
-//   const carry = {}
-//   for (let data of selectedItem) {
-//     if (data._id) {
-//       if (!carry[data._id]) {
-//         carry[data._id] = { quantity: Number(data.quantity), current: Number(data.reference) }
-//       } else {
-//         carry[data._id].quantity += Number(data.quantity)
-//       }
-//     }
-//   }
-//   return itemToUpdateInDBRef.current = [carry]
-// }, [selectedItem])
-
-// const handleAddingNewItemToInventoryEvent = (data) => {
-//   if (Number(data.quantity) > Number(valueItemSelected.quantity)) {
-//     return openNotificationWithIcon(
-//       "error",
-//       `quantity selected is bigger than available in stock. (availability: ${valueItemSelected.quantity})`
-//     );
-//   }
-//   if (String(data.startingNumber).length !== String(data.endingNumber).length) return openNotificationWithIcon(
-//     "error",
-//     `The length of starting number and ending number does not match. Please verify the serial numbers. ${data.startingNumber} - ${data.endingNumber}`
-//   );
-
-//   setSelectedItem([
-//     ...selectedItem,
-//     {
-//       ...valueItemSelected,
-//       key: key.current,
-//       quantity: data.quantity,
-//       startingNumber: data.startingNumber,
-//       endingNumber: data.endingNumber,
-//       reference: valueItemSelected.quantity,
-//       consumerUses: consumerUses
-//     },
-//   ]);
-//   setValue("quantity", "");
-//   setValue("startingNumber", "");
-//   setValue("endingNumber", "");
-// };
-// const onSearch = (value) => {
-//   return value[0];
-// };
-
-// // Filter `option.label` match the user type `input`
-// const filterOption = (input, option) => {
-//   return (JSON.parse(option.value).resume ?? "")
-//     .toLowerCase()
-//     .match(input.toLowerCase());
-// };
-// const removeItemSelected = (item) => {
-//   const filter = selectedItem.filter((_, index) => index !== item);
-//   dispatch(onAddDeviceSetup(filter));
-//   return setSelectedItem(filter);
-// };
-// if (itemQuery.data) {
-//   const filterDataToDisplay = () => {
-//     const groupingByCompany = itemQuery.data.data.items
-//     if (groupingByCompany.length > 0) {
-//       const returnAccurateItems = new Set()
-//       for (let data of groupingByCompany) {
-//         if (data.ownership !== "Sale") {
-//           returnAccurateItems.add(data)
-//         }
-//       }
-//       return Array.from(returnAccurateItems) /*groupingByCompany[user.company];*/
-//     }
-//     return [];
-//   };
-//   const displayGroupOptionsPerCompany = () => {
-//     const result = new Map();
-//     for (let data of filterDataToDisplay()) {
-//       if (!result.has(data.item_group)) {
-//         result.set(data.item_group, [data]);
-//       } else {
-//         result.set(data.item_group, [data, ...result.get(data.item_group)]);
-//       }
-
-//     }
-//     return result;
-//   };
-//   const handleNextStepEventSetup = (e) => {
-//     e.preventDefault();
-//     dispatch(onAddDeviceSetup(selectedItem));
-//     dispatch(
-//       onAddExistingDevicesInDBToBeUpdatedInDBAfterBeingSelectedInEvent([
-//         ...itemToUpdateInDBRef.current,
-//       ])
-//     );
-//     navigate("/create-event-page/review-submit");
-//   };
