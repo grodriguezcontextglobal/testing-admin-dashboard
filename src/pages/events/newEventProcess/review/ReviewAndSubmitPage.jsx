@@ -11,13 +11,15 @@ import Device from "./review/Device";
 import Event from "./review/Event";
 import Staff from "./review/Staff";
 import { nanoid } from "@reduxjs/toolkit";
+import { formatDate } from "../../../inventory/utils/dateFormat";
+import "./blurring.css"
 const ReviewAndSubmitEvent = () => {
   const { subscription } = useSelector((state) => state.subscription);
   const {
     eventInfoDetail,
     staff,
     deviceSetup,
-    contactInfo,
+    contactInfo, 
   } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false)
@@ -203,11 +205,42 @@ const ReviewAndSubmitEvent = () => {
     return;
   }
 
+  const checkAndCreateNewDevicesInSqlDB = async () => {
+    if (deviceSetup.some(element => element.existing === false)) {
+      const check = await 'there is devices to be created in db'
+      for (let data of deviceSetup) {
+        if (!data.existing) {
+          for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) {
+            await devitrakApi.post("/db_item/new_item", {
+              category_name: data.category_name,
+              item_group: data.item_group,
+              cost: data.cost,
+              brand: data.brand,
+              descript_item: data.descript_item,
+              ownership: data.ownership,
+              serial_number: String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`),
+              warehouse: true,
+              main_warehouse: data.main_warehouse,
+              location: data.location,
+              current_location: data.location,
+              created_at: formatDate(new Date()),
+              updated_at: formatDate(new Date()),
+              company: data.company
+            });
+          }
+        }
+      }
+      return check
+    } else {
+      return;
+    }
+  }
   const processOfCreatingInformationOfNewEvent = async () => {
     try {
       openNotificationWithIcon('Your request is being processed. When it is done, you will be redirected to event page.')
       setLoadingStatus(true)
       setButtonDisable(true)
+      await checkAndCreateNewDevicesInSqlDB()
       await createEvent()
       setLoadingStatus(false)
       setButtonDisable(false)
@@ -235,6 +268,7 @@ const ReviewAndSubmitEvent = () => {
         flexDirection={"column"}
         justifyContent={"flex-start"}
         alignItems={"stretch"}
+        className={`${loadingStatus ? "blur-container" : ""}`}
         gap={2}
         item
         xs={12} sm={12} md={12} lg={12}

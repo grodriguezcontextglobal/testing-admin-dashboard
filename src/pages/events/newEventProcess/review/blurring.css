@@ -1,0 +1,4 @@
+.blur-container {
+    backdrop-filter: blur(10px);
+    transition: backdrop-filter 0.3s;
+  }
