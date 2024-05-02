@@ -2,7 +2,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Input, Modal, Space, Table } from "antd";
-import _ from 'lodash';
+// import _ from 'lodash';
 import { useEffect, useRef, useState } from "react";
 import Highlighter from "react-highlight-words";
 import { useDispatch, useSelector } from "react-redux";

@@ -121,7 +121,6 @@ const DeleteItemModal = ({ dataFound, openDeleteItemModal, setOpenDeleteItemModa
                             "/nodemailer/internal-single-email-notification",
                             emailNotificationProfile
                         );
-                        console.log('notification rsp', respNotif)
                     }
                 }
                 openNotificationWithIcon('success', 'Device was deleted.')

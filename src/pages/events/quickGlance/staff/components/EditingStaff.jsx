@@ -174,7 +174,6 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                             <Space size={[8, 16]} wrap>
                                 {
                                     [...result.values()].map(member => {
-                                        console.log('member', member)
                                         return (
                                             <Card title={member.role} key={member.id} extra={[
                                                 <Popconfirm title="Are you sure you want to remove this member from event?" key={member.id} onConfirm={() => removeStaff(member)}>

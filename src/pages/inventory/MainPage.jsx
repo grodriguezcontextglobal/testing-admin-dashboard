@@ -9,7 +9,7 @@ import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { BluePlusIcon, EditIcon, MagnifyIcon, WhiteCirclePlusIcon } from "../../components/icons/Icons";
+import { BluePlusIcon, MagnifyIcon, WhiteCirclePlusIcon } from "../../components/icons/Icons";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { LightBlueButton } from "../../styles/global/LightBlueButton";
@@ -69,7 +69,6 @@ const MainPage = () => {
           md={6}
           lg={6}
         >
-
           <Link to="/inventory/edit-group">
             <Button
               style={{ ...LightBlueButton, width: "fit-content" }}

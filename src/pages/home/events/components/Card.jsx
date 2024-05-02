@@ -16,9 +16,7 @@ const Card = ({ props, checkStatus, checkActiveEvent, quickGlance }) => {
         boxShadow:
             "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
     }}
-    // cover={
 
-    // }
     actions={[
         <Grid
             key={`grid-card-home-action-footer-${props.id}`}
