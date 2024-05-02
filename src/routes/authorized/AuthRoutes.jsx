@@ -26,10 +26,10 @@ import StaffDetail from "../../pages/staff/detail/StaffDetail";
 import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
 import EditGroup from "../../pages/inventory/actions/EditGroup";
 import TableStaffDetail from "../../pages/staff/detail/components/TableStaffDetail";
-// import EquipmentStaffDetail from "../../pages/staff/detail/components/EquipmentStaffDetail";
 import Assignment from "../../pages/staff/detail/components/equipment_components/Assignment";
 import ListEquipment from "../../pages/staff/detail/components/equipment_components/ListEquipment";
-// import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
+import MainPage from "../../pages/inventory/details/LocationDetail/MainPage";
+import MainPageGrouping from "../../pages/inventory/details/GroupDetail/MainPage";
 const AuthRoutes = () => {
     const Home = lazy(() => import("../../pages/home/MainPage"))
     const SearchResultPage = lazy(() => import("../../pages/search/MainPage"))
@@ -84,6 +84,8 @@ const AuthRoutes = () => {
                         </Route>
                         <Route path="/device-quick-glance" element={<DeviceDetail />} />
                         <Route path="/inventory" element={<Inventory />} />
+                        <Route path="/inventory/location" element={<MainPage />} />
+                        <Route path="/inventory/group" element={<MainPageGrouping />} />
                         <Route path="/inventory/:id" element={<InventoryDetail />} />
                         <Route path="/inventory/event-inventory" element={<InventoryEvent />} />
                         <Route path="/inventory/new-item" element={<AddNewItem />} />
@@ -97,9 +99,6 @@ const AuthRoutes = () => {
                             <Route path="events" element={<TableStaffDetail />} />
                             <Route path="equipment" element={<ListEquipment />} />
                             <Route path="assignment" element={<Assignment />} />
-                                {/* <Route path="assignment" element={<Assignment />} />
-                                <Route path="list-equipment" element={<ListEquipment />} /> */}
-                            {/* </Route> */}
                         </Route>
                         <Route path="/profile" element={<MainProfileSetting />}>
                             <Route path="my_details" element={<MyDetailsMainPage />} />
