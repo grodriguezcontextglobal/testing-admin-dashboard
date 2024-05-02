@@ -23,7 +23,6 @@ import {
   onAddEventInfoDetail,
 } from "../../../../store/slices/eventSlice";
 import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
-// import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -60,9 +59,8 @@ const Form = () => {
       zipCode: addressSplit?.at(-1)
     }
   });
-  const [begin, setBegin] = useState(eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date().toUTCString());
-  console.log("🚀 ~ Form ~ begin:", begin)
-  const [end, setEnd] = useState(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(`${begin}`).toUTCString());
+  const [begin, setBegin] = useState(eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date());
+  const [end, setEnd] = useState(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date());
   const [contactPhoneNumber, setContactPhoneNumber] = useState('');
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
@@ -162,6 +160,10 @@ const Form = () => {
       controller.abort()
     }
   }, [])
+
+  useEffect(() => {
+      setEnd(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(begin))
+  }, [begin]);
 
   const addingPhoneNumber = () => {
     const result = [
@@ -277,7 +279,7 @@ const Form = () => {
               alignItems: "center",
               textAlign: "left",
               width: "100%",
-              alignSelf:"flex-start"
+              alignSelf: "flex-start"
             }}
           >
             <Tooltip title="Please click the '+ Add' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
