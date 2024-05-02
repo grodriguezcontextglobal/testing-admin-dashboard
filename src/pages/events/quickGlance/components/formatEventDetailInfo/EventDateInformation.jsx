@@ -6,6 +6,8 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import { Icon } from "@iconify/react";
 import displayMonth from "./displayMonth";
 import UpdateEventInfo from "../../updateEvent/UpdateEventInfo";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const EventDateInformation = () => {
     const [openUpdateEventModal, setOpenUpdateEventModal] = useState(false);
@@ -115,43 +117,26 @@ const EventDateInformation = () => {
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"30px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"38px"}
-                            color={"var(--gray-900, #101828)"}
-                            display={"flex"}
-                            alignItems={"center"}
+                            style={TextFontSize30LineHeight38}
                         >
                             {displayMonth(`${event?.eventInfoDetail?.dateBegin}`)}
                         </Typography>
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"30px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"38px"}
-                            color={"var(--gray-900, #101828)"}
+                            style={TextFontSize30LineHeight38}
                             display={"flex"}
                             alignItems={"center"}
                         >
                             &nbsp;
                             {new Date(`${event?.eventInfoDetail?.dateBegin}`).getDate()}{" "}
                             &nbsp;-&nbsp;
-                            {new Date(`${event?.eventInfoDetail?.dateEnd}`).getDate()}
+                            {displayMonth(`${event?.eventInfoDetail?.dateEnd}`) !== displayMonth(`${event?.eventInfoDetail?.dateBegin}`) && displayMonth(`${event?.eventInfoDetail?.dateEnd}`)} {new Date(`${event?.eventInfoDetail?.dateEnd}`).getDate()}
                         </Typography>
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"30px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"38px"}
-                            color={"var(--gray-900, #101828)"}
+                            style={TextFontSize30LineHeight38}
                         ></Typography>
                     </Grid>
                     <Grid
@@ -165,12 +150,7 @@ const EventDateInformation = () => {
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
+                            style={Subtitle}
                         >
                             {`${hourBeginTime}:${minutesBeginTime}`}
                             {new Date(`${event?.eventInfoDetail?.dateBegin}`).getHours() < 12
@@ -181,12 +161,7 @@ const EventDateInformation = () => {
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
+                            style={Subtitle}
                         >
                             {`${hourEndTime}:${minutesEndTime}`}
                             {new Date(`${event?.eventInfoDetail?.dateEnd}`).getHours() < 12
@@ -196,12 +171,7 @@ const EventDateInformation = () => {
                         <Typography
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
+                            style={Subtitle}
                         >
                             (
                             {`${new Date(
@@ -237,45 +207,33 @@ const EventDateInformation = () => {
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle, fontWeight: 600
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
                             fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
+
                         >
                             {event?.eventInfoDetail?.building}
                         </Typography>
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
                         >
                             {addressSplitting().address}
                         </Typography>
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle,
+                                textTransform: "capitalize"
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
                         >
                             {addressSplitting().cityAndState}, {addressSplitting().zip}
                         </Typography>{" "}

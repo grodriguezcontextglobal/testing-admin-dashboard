@@ -2,24 +2,26 @@ import { useState } from "react";
 import { Grid, Typography } from "@mui/material";
 import { Card, Tooltip } from "antd";
 import { useSelector } from "react-redux";
-// import "../FormatEventDetailInfo.css";
 import { Icon } from "@iconify/react";
 import UpdateEventContactInfo from "../../updateEvent/UpdateEventContactInfo";
-// import UpdateEventContactInfo from "./updateEvent/UpdateEventContactInfo";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const ContactInformation = () => {
     const { event } = useSelector((state) => state.event);
     const [openUpdateEventModal, setOpenUpdateEventModal] = useState(false);
+    const styling = {
+        textAlign: "left",
+        fontFamily: "Inter",
+        fontSize: "18px",
+        fontStyle: "normal",
+        fontWeight: 600,
+        lineHeight: "28px",
+        color: "var(--gray-900, #101828)",
+    }
     const renderTitle = () => {
         return (
             <Typography
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"18px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
+                style={styling}
             >
                 Point of contact
             </Typography>
@@ -65,24 +67,6 @@ const ContactInformation = () => {
                         border: 'none'
                     }
                 }}
-            // headStyle={{
-            //     borderBottom: "transparent",
-
-            //     display: "flex",
-            //     justifyContent: "space-between",
-            //     alignItems: "center",
-            //     padding: "0 24px 0 0",
-            //     background: "var(--main-background-color)",
-            // }}
-            // bodystyle={{
-            //     borderRadius: "12px",
-            //     border: "none",
-            //     background: "var(--main-background-color)",
-            //     boxShadow: "none",
-            //     textAlign: "left",
-            //     width: "100%",
-            //     padding: 0
-            // }}
             >
                 <Grid
                     display={"flex"}
@@ -99,14 +83,7 @@ const ContactInformation = () => {
                         xs={12}
                     >
                         <Typography
-                            textAlign={"left"}
-                            paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"18px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"28px"}
-                            color={"var(--gray-900, #101828)"}
+                            style={{ ...styling, fontWeight: 400 }}
                         >
                             {event?.contactInfo?.name}
                         </Typography>
@@ -123,45 +100,35 @@ const ContactInformation = () => {
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle,
+                                fontWeight:600
+                                
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
+
                         >
                             Contact
                         </Typography>
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle,
+                                fontWeight:400
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
                         >
                             {event?.contactInfo?.email}
                         </Typography>
                         <Typography
                             style={{
                                 width: "100%",
+                                ...Subtitle,
+                                fontWeight:400
                             }}
                             textAlign={"left"}
                             paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"16px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"24px"}
-                            color={"var(--gray-600, #475467)"}
                         >
                             {event?.contactInfo?.phone?.map((item) => {
                                 return <span key={item}>m: {item}<br /></span>;
