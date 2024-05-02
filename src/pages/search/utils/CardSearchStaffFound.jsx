@@ -1,10 +1,12 @@
+import { Typography } from '@mui/material'
 import { Avatar, Card } from 'antd'
+import { Subtitle } from '../../../styles/global/Subtitle'
 const CardSearchStaffFound = ({ props, fn }) => {
   return (
     <Card onClick={() => fn(props)} style={{
       borderRadius: '12px',
       border: '1px solid #D0D5DD',
-      background: '#FFF',
+      backgroundColor: '#FFF',
       boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.05)',
       display: 'flex',
       padding: '5px',
@@ -19,14 +21,17 @@ const CardSearchStaffFound = ({ props, fn }) => {
         }
       }}
     >
-      <div style={{ width: "100%", textAlign: "left" }}>
-        <Avatar style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>
+      <div style={{ width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Avatar src={props?.other?.imageProfile} style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>
           {
-            props.other ?
-              <img src={props?.other?.imageProfile} alt={`${props?.other?.imageProfile}`} style={{ objectFit: "cover", objectPosition: "center", height: "auto", width: "70%" }} /> :
-              props.name[0]}{props.lastName[0]
+            !props.other &&
+            // <img src={props?.other?.imageProfile} alt={`${props?.other?.imageProfile}`} style={{ objectFit: "cover", objectPosition: "center", height: "auto", width: "100%", backgroundColor:"transparent" }} /> :
+            props.name[0]}{props.lastName[0]
           }
         </Avatar>
+        <Typography style={{...Subtitle, display:`${props.status !== "Confirmed" ? "flex" :"none"}`, color:"red", textDecoration:"underline"}}>
+          {props.status}
+        </Typography>
       </div>
       <div style={{
         width: "100%",
