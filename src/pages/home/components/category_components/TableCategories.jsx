@@ -40,21 +40,26 @@ const TableCategories = () => {
         }
 
     }
-
-
     useEffect(() => {
         const controller = new AbortController()
         consumersQuery.refetch()
-        sortingDataFetched()
         return () => {
             controller.abort()
         }
     }, [])
+    useEffect(() => {
+        const controller = new AbortController()
+        sortingDataFetched()
+        return () => {
+            controller.abort()
+        }
+    }, [consumersQuery.data])
+
     if (consumersQuery.data) {
         const formattingData = () => {
             const result = new Set()
             for (let [key, value] of Object.entries(device)) {
-                result.add({ category: key, total: value })
+                result.add({ key: key, category: key, total: value })
             }
             const final = Array.from(result)
             return final
@@ -64,12 +69,10 @@ const TableCategories = () => {
             {
                 title: 'Name',
                 dataIndex: 'category',
-                key: 'category'
             },
             {
                 title: 'Total device',
                 dataIndex: 'total',
-                key: 'total',
             },
         ]
         return (
