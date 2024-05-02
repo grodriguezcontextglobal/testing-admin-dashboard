@@ -7,7 +7,8 @@ import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 // import CardSearchFound from "../utils/CardSearchFound";
 import NoDataFound from "../utils/NoDataFound";
-import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
 const SearchPosts = ({ searchParams, }) => {
   const { user } = useSelector((state) => state.admin)
@@ -49,9 +50,9 @@ const SearchPosts = ({ searchParams, }) => {
 
     return (
       <Grid container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center" }} item xs={12} sm={12} md={4} lg={4}>
-          <Typography style={{ width: "100%", textAlign: "left" }}>Search posts </Typography><br />
-          <Typography style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
+        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center",alignSelf:"flex-start" }} item xs={12} sm={12} md={4} lg={4}>
+          <Typography style={{ ...TextFontSize30LineHeight38, fontSize: "36px", lineHeight: "44px", fontWeight: 600, width: "100%", textAlign: "left" }}>Search posts </Typography><br />
+          <Typography style={{ ...TextFontSize20LineHeight30, width: "100%", textAlign: "left" }}>
             All posts matching the search keywords.
           </Typography>
         </Grid>

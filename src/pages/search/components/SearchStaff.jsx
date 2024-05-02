@@ -8,15 +8,17 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardSearchStaffFound from "../utils/CardSearchStaffFound";
 import NoDataFound from "../utils/NoDataFound";
+import { notification } from "antd";
 const SearchStaff = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin)
   const staffMembersQuery = useQuery({
-    queryKey: ["listOfStaffMembers"],
+    queryKey: ["employeesPerCompany"],
     queryFn: () => devitrakApi.post("/company/search-company", {
-      company: user.company
+      company_name: user.company
     }),
     enabled: false,
     refetchOnMount: false,
@@ -31,6 +33,13 @@ const SearchStaff = ({ searchParams }) => {
   });
   const dispatch = useDispatch()
   const navigate = useNavigate()
+
+  const [api, contextHolder] = notification.useNotification();
+  const openNotification = (title) => {
+    api.open({
+      message: title
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController()
@@ -67,31 +76,28 @@ const SearchStaff = ({ searchParams }) => {
       controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
-
-  // const resultLength = useCallback(() => {
-  //   let result = []
-  //   if (sortAndRenderFoundData().length > 0) {
-  //     result = [...countingResult, ...sortAndRenderFoundData()]
-  //     return setCountingResult(result)
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [String(searchParams).length])
-  // resultLength()
+  }, [searchParams, staffMembersQuery.data])
 
   const handleDetailStaff = async (record) => {
-    const template = { ...record.data, adminUserInfo: record.other, companyData: staffMembersQuery.data.data.company.at(-1) }
+    const template = {
+      ...record.data, ...record.other,
+      adminUserInfo: record.other,
+      companyData: staffMembersQuery.data.data.company.at(-1)
+    }
+    if (record.status === "Pending") {
+      return openNotification('Staff member has not confirmed invitation yet.')
+    }
     dispatch(onAddStaffProfile(template));
-    return navigate(`/staff/${record._id}`)
+    return navigate(`/staff/${record._id}/events`)
   };
-
   if (staffMembersQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
   if (staffMembersQuery.data) {
     return (
       <Grid key={'searching-staff-container'} container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center" }} item xs={12} sm={12} md={4} lg={4}>
-          <Typography style={{ width: "100%", textAlign: "left" }}>Search staff </Typography><br />
-          <Typography style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
+        {contextHolder}
+        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", alignSelf: "flex-start" }} item xs={12} sm={12} md={4} lg={4}>
+          <Typography style={{ ...TextFontSize30LineHeight38, fontSize: "36px", lineHeight: "44px", fontWeight: 600, width: "100%", textAlign: "left" }}>Search staff </Typography><br />
+          <Typography style={{ ...TextFontSize20LineHeight30, width: "100%", textAlign: "left" }}>
             All staff matching the search keywords.
           </Typography>
         </Grid>
@@ -99,14 +105,13 @@ const SearchStaff = ({ searchParams }) => {
         <Grid item xs={12} sm={12} md={8} lg={8}>
           <Grid key={'searching-staff-page'} container gap={1}>
             {sortAndRenderFoundData()?.length > 0 && staffMembersInfoQuery.data ?
-              sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}> <CardSearchStaffFound props={{ name: item.firstName, lastName: item.lastName, email: item.user, phoneNumber: "", data: item, other: checkStaffInfo()[`${item?.user}`]}} fn={handleDetailStaff} /></Grid>)
+              sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}> <CardSearchStaffFound props={{ name: item.firstName, lastName: item.lastName, email: item.user, phoneNumber: "", data: item, other: checkStaffInfo()[`${item?.user}`]?.at(-1), status: item.status }} fn={handleDetailStaff} /></Grid>)
               : <NoDataFound />}
           </Grid>
         </Grid>
       </Grid>
     )
   }
-
 }
 
 export default SearchStaff

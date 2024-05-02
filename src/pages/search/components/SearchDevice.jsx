@@ -3,17 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import CardDeviceFound from "../utils/CardDeviceFound";
-import NoDataFound from "../utils/NoDataFound";
-import { useNavigate } from "react-router-dom";
-import { onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
-import { onAddCustomer, onAddPaymentIntentDetailSelected, onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../store/slices/devicesHandleSlice";
+import { onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
+import { onAddCustomer, onAddPaymentIntentDetailSelected, onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import CardDeviceFound from "../utils/CardDeviceFound";
+import NoDataFound from "../utils/NoDataFound";
 const SearchDevice = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin)
   const staffMembersQuery = useQuery({
@@ -62,13 +63,14 @@ const SearchDevice = ({ searchParams }) => {
       return grouping
     }
   }
+
   useEffect(() => {
     const controller = new AbortController()
     sortAndRenderFoundData()
     return () => {
       controller.abort()
     }
-  }, [searchParams])
+  }, [searchParams, staffMembersQuery.data])
 
   const handleDeviceSearch = async (record) => {
     const respTransaction = await devitrakApi.post('/transaction/transaction', {
@@ -102,9 +104,10 @@ const SearchDevice = ({ searchParams }) => {
   if (staffMembersQuery.data) {
     return (
       <Grid container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center" }} item xs={12} sm={12} md={4} lg={4}>
-          <Typography style={{ width: "100%", textAlign: "left" }}>Search Device </Typography><br />
-          <Typography style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
+        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center",alignSelf:"flex-start" }} item xs={12} sm={12} md={4} lg={4}>
+          
+          <Typography style={{ ...TextFontSize30LineHeight38, fontSize: "36px", lineHeight: "44px", fontWeight: 600, width: "100%", textAlign: "left" }}>Search Device </Typography><br />
+          <Typography style={{ ...TextFontSize20LineHeight30, width: "100%", textAlign: "left" }}>
             All devices matching the search keywords.
           </Typography>
         </Grid>

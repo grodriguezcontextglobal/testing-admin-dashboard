@@ -10,7 +10,8 @@ import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../store/slices
 import { onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
 import { onAddCustomer, onAddPaymentIntentDetailSelected, onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import NoDataFound from "../utils/NoDataFound";
 const SearchTransaction = ({ searchParams }) => {
   const [loading, setLoading] = useState(false)
@@ -88,10 +89,10 @@ const SearchTransaction = ({ searchParams }) => {
   if (staffMembersQuery.data) {
     if (String(searchParams).length >= 15 && String(searchParams).startsWith('pi_')) return handleTransactionSearch()
     return (
-      <Grid key={'searching-staff-container'} container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center" }} item xs={12} sm={12} md={4} lg={4}>
-          <Typography style={{ width: "100%", textAlign: "left" }}>Search transaction </Typography><br />
-          <Typography style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
+      <Grid key={'searching-staff-container'} container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", alignSelf:"flex-start" }}>
+        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", alignSelf:"flex-start"  }} item xs={12} sm={12} md={4} lg={4}>
+          <Typography style={{ ...TextFontSize30LineHeight38, fontSize: "36px", lineHeight: "44px", fontWeight: 600, width: "100%", textAlign: "left" }}>Search transaction </Typography><br />
+          <Typography style={{ ...TextFontSize20LineHeight30, width: "100%", textAlign: "left" }}>
             All transaction matching the search keywords.
           </Typography>
         </Grid>
