@@ -14,6 +14,7 @@ import '../../../styles/global/ant-table.css';
 import CardRendered from "../utils/CardRendered";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import CardLocations from "../utils/CardLocations";
+import DownloadingXlslFile from "../actions/DownloadXlsx";
 const { PropTypes } = pkg;
 
 const ItemTable = ({ searchItem }) => {
@@ -25,6 +26,7 @@ const ItemTable = ({ searchItem }) => {
     enabled: false,
     refetchOnMount: false,
   });
+
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
@@ -411,7 +413,7 @@ const ItemTable = ({ searchItem }) => {
           marginRight: "5px",
           padding: "0 0 0 0"
         }}>
-          <Button style={{ display: "flex", alignItems: "center" }} onClick={() => { listImagePerItemQuery.refetch(); listItemsQuery.refetch(); itemsInInventoryQuery.refetch() }}>
+          <Button style={{ display: "flex", alignItems: "center", borderTop: "transparent", borderLeft: "transparent", borderBottom: "transparent", borderRadius: "8px 8px 0 0" }} onClick={() => { listImagePerItemQuery.refetch(); listItemsQuery.refetch(); itemsInInventoryQuery.refetch() }}>
             <Typography
               textTransform={"none"}
               textAlign={"left"}
@@ -425,6 +427,14 @@ const ItemTable = ({ searchItem }) => {
               <Icon icon="jam:refresh" /> Refresh
             </Typography>
           </Button>
+        </div>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          marginRight: "5px",
+          padding: "0 0 0 0"
+        }}>
+          <DownloadingXlslFile props={dataToDisplay()} />
         </div>
       </Grid>
       <Table
@@ -455,7 +465,7 @@ const ItemTable = ({ searchItem }) => {
           {
             listOfLocations().map(item => {
               return (
-                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <CardLocations title={item.key} props={`${item.value} total devices`} optional={null} /></Grid>
+                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <Link to={`/inventory/location?${decodeURI(item.key)}`}><CardLocations title={item.key} props={`${item.value} total devices`} optional={null} /></Link></Grid>
               )
             })
           }
@@ -478,7 +488,7 @@ const ItemTable = ({ searchItem }) => {
           {
             listOfGroups().map(item => {
               return (
-                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <CardRendered title={'Group'} props={item} optional={null} /></Grid>
+                <Grid key={item} item xs={12} sm={12} md={4} lg={4} ><Link to={`/inventory/group?${item}`}><CardRendered title={'Group'} props={item} optional={null} /></Link></Grid>
               )
             })
           }
