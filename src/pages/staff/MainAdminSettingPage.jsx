@@ -1,79 +1,26 @@
 import { Icon } from "@iconify/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Grid } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import {
+  Avatar,
   Form,
-  Popconfirm,
-  Select,
   Table,
-  Typography,
-  notification,
+  Typography
 } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import '../../styles/global/ant-table.css';
-import { Button, Grid } from "@mui/material";
-const EditableCell = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  children,
-  ...restProps
-}) => {
-  const inputNode =
-    inputType === "text" ? (
-      <Select
-        options={[
-          {
-            value: "Administrator",
-            label: "Administrator",
-          },
-          {
-            value: "Approver",
-            label: "Approver",
-          },
-          {
-            value: "Editor",
-            label: "Editor",
-          },
-        ]}
-      />
-    ) : null;
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{
-            margin: 0,
-          }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-};
 const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const [form] = Form.useForm();
-  const [editingKey, setEditingKey] = useState("");
-  const [api, contextHolder] = notification.useNotification();
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation()
   const listAdminUsers = useQuery({
     queryKey: ["listOfAdminUsers"],
     queryFn: () => devitrakApi.post("/staff/admin-users", {
@@ -92,70 +39,44 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     refetchOnMount: false,
   })
 
+  const eventQuery = useQuery({
+    queryKey: ["events"],
+    queryFn: () => devitrakApi.post("/event/event-list", {
+        company: user.company,
+        active: true
+    }),
+    enabled: false,
+    refetchOnMount: false,
+});
+
+    console.log("🚀 ~ MainAdminSettingPage ~ eventQuery:", eventQuery)
+
   useEffect(() => {
     const controller = new AbortController()
     listAdminUsers.refetch()
     companiesEmployees.refetch()
+    eventQuery.refetch()
     return () => {
       controller.abort()
     }
-  }, [user.company, modalState, editingKey])  // eslint-disable-next-line react-hooks/exhaustive-deps
-
-
-  const queryClient = useQueryClient();
-  const openNotification = (props) => {
-    api.open({
-      message: `${props ? "Updated" : "Upps"}`,
-      description: `${props
-        ? "Role has been updated"
-        : "Somethings went wrong, please try later"
-        }`,
-      className: "custom-class",
-      style: {
-        width: 300,
-      },
-    });
-  };
-
-  const isEditing = (record) => record.key === editingKey;
-  const edit = (record) => {
-    const { entireData } = record;
-    form.setFieldsValue({
-      role: "",
-      ...entireData,
-    });
-    setEditingKey(record.key);
-  };
-  const cancel = () => {
-    setEditingKey("");
-  };
-  const save = async (record) => {
-    try {
-      const row = await form.validateFields();
-      const employees = companiesEmployees?.data?.data?.company[0]?.employees
-      const foundEmployee = employees.findIndex(element => element.user === record.email)
-      const result = employees.toSpliced(foundEmployee, 1, { ...employees[foundEmployee], role: row.role })
-      const respoUpdateRoleStaffInCompany = await devitrakApi.patch(`/company/update-company/${companiesEmployees?.data?.data?.company?.at(-1).id}`, {
-        employees: result
-      })
-      if (respoUpdateRoleStaffInCompany.data.ok) {
-        queryClient.invalidateQueries('listOfAdminUsers')
-        queryClient.invalidateQueries('employeesPerCompanyList')
-        listAdminUsers.refetch()
-        companiesEmployees.refetch()
-        setEditingKey("")
-        openNotification(true)
-      }
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
-      openNotification(false);
-    }
-  };
+  }, [location.key, user.company, modalState])  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
     return navigate(`/staff/${record.entireData.adminUserInfo.id}/events`)
   };
+
+  const styling = {
+    fontSize: "12px",
+    fontFamily: "Inter",
+    fontStyle: "normal",
+    fontWeight: 400,
+    lineHeight: "18px",
+    textAlign: "left",
+    textTransform: "capitalize",
+    justifyContent: "flex-start",
+    color: "var(--gray-600, #475467)"
+  }
   const columns = [
     {
       title: "Name",
@@ -165,43 +86,57 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       sorter: {
         compare: (a, b) => ("" + a.name).localeCompare(b.name),
       },
-      render: (name) => (
-        <span key={`${name}`}>
-          {name.map((detail, index) => {
-            return (
-              <div
-                key={`render-name-row-${index}`}
+      render: (name, record) => {
+        const initials = String(name).split(" ")
+        return (
+          <span key={`${name}`} style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignSelf: "flex-start" }}>
+            <Avatar src={record.entireData.adminUserInfo.imageProfile}>{initials.map(initial => initial[0])}</Avatar>&nbsp;
+            <div style={{
+              width: "70%",
+              flexDirection: "column",
+              justifyContent: "flex-start"
+            }}>
+              <Typography
                 style={{
-                  flexDirection: "column",
-                  color: `${index === 0
-                    ? "var(--gray-900, #101828)"
-                    : "var(--gray-600, #475467)"
-                    }`,
+                  justifyContent: "flex-start",
+                  color: "var(--gray900, #101828)",
                   fontSize: "14px",
                   fontFamily: "Inter",
                   lineHeight: "20px",
-                  fontWeight: `${index === 0 ? "500" : null}`,
+                  fontWeight: 500,
                 }}
               >
-                <Typography
-                  fontSize={"12px"}
-                  fontFamily={"Inter"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"18px"}
-                  textAlign={"center"}
-                  textTransform={"capitalize"}
-                >
-                  {detail}
-                </Typography>
-              </div>
-            );
-          })}
-        </span>
+                {name}
+              </Typography>
+              <Typography
+                style={styling}
+              >
+                {record.entireData.adminUserInfo.phone ?? '+1-000-000-0000'}
+              </Typography>
+            </div>
+          </span >
+        )
+      },
+    },
+    {
+      title: "Role",
+      dataIndex: "role",
+      width: "10%",
+      responsive: ['lg'],
+      editable: true,
+      sorter: {
+        compare: (a, b) => ("" + a.role).localeCompare(b.role),
+      },
+      render: (role) => (
+        <Typography
+          style={styling}
+        >
+          {role}
+        </Typography>
       ),
     },
     {
-      title: "Status",
+      title: "At event",
       dataIndex: "active",
       width: "10%",
       responsive: ['lg'],
@@ -223,13 +158,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
         >
           <Typography
             color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
-            textTransform={"capitalize"}
+            style={styling}
           >
             <Icon
               icon="tabler:point-filled"
@@ -242,26 +171,73 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       ),
     },
     {
-      title: "Role",
-      dataIndex: "role",
+      title: "Devices",
+      dataIndex: "active",
       width: "10%",
       responsive: ['lg'],
       editable: true,
       sorter: {
-        compare: (a, b) => ("" + a.role).localeCompare(b.role),
+        compare: (a, b) => ("" + a.active).localeCompare(b.active),
       },
-      render: (role) => (
-        <Typography
-          fontSize={"12px"}
-          fontFamily={"Inter"}
-          fontStyle={"normal"}
-          fontWeight={500}
-          lineHeight={"18px"}
-          textAlign={"center"}
-          textTransform={"capitalize"}
+      render: (active) => (
+        <span
+          style={{
+            borderRadius: "16px",
+            justifyContent: "center",
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+            width: "fit-content",
+          }}
         >
-          {role}
-        </Typography>
+          <Typography
+            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
+            style={styling}
+          >
+            <Icon
+              icon="tabler:point-filled"
+              rotate={3}
+              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
+            />
+            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
+          </Typography>
+        </span>
+      ),
+    },
+    {
+      title: "Event status",
+      dataIndex: "active",
+      width: "10%",
+      responsive: ['lg'],
+      editable: true,
+      sorter: {
+        compare: (a, b) => ("" + a.active).localeCompare(b.active),
+      },
+      render: (active) => (
+        <span
+          style={{
+            borderRadius: "16px",
+            justifyContent: "center",
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+            width: "fit-content",
+          }}
+        >
+          <Typography
+            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
+            style={styling}
+          >
+            <Icon
+              icon="tabler:point-filled"
+              rotate={3}
+              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
+            />
+            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
+          </Typography>
+        </span>
       ),
     },
     {
@@ -279,74 +255,50 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       align: "center",
       width: "5%",
       render: (_, record) => {
-        const editable = isEditing(record);
-        return editable ? (
-          <span>
-            <Typography.Link
-              onClick={() => save(record)}
-              style={{
-                marginRight: 8,
-              }}
-            >
-              <Icon icon="tabler:check" width={25} />
-            </Typography.Link>
-            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-              <Icon
-                icon="material-symbols:cancel-outline"
-                width={25}
-                color="#ee1515"
-              />
-            </Popconfirm>
-          </span>
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "10px",
-            }}
-          >
-            {record.active !== "Pending" && user.role === "Administrator" && <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => edit(record)}
-            >
-              <Icon icon="fluent:edit-16-regular" width={25} />
-            </Typography.Link>}
-            {record.active !== "Pending" && <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => handleDetailStaff(record)}
-            >
-              <Icon icon="bxs:user-detail" width={30} />
-            </Typography.Link>}
-          </div>
-        );
+        return (
+          <>
+            {
+              record.active !== "Pending" && <Typography.Link
+                // disabled={editingKey !== ""}
+                onClick={() => handleDetailStaff(record)}
+              >
+                <Icon icon="bxs:user-detail" width={30} />
+              </Typography.Link>
+            }
+          </>
+        )
       },
     },
   ];
-
   const employeeListRef = useRef([])
+
+  const employees = async () => {
+    const result = new Set()
+    const companiesData = companiesEmployees?.data?.data?.company[0]?.employees
+    for (let data of companiesData) {
+      const individual = await devitrakApi.post('/staff/admin-users', {
+        email: data.user
+      })
+      if (individual.data) {
+        result.add({ ...data, email: data.user, status: data.status === "Pending" ? data.status : data.active, adminUserInfo: individual.data.adminUsers[0], companyData: companiesEmployees.data.data.company[0] })
+      } else {
+        result.add({ ...data, status: data.status === "Pending" ? data.status : data.active, companyData: companiesEmployees.data.data.company[0], adminUserInfo: null })
+      }
+    }
+    return employeeListRef.current = Array.from(result)
+  }
+  useEffect(() => {
+    const controller = new AbortController()
+    employees()
+    return () => {
+      controller.abort()
+    }
+  }, [location.key, companiesEmployees.data, searchAdmin])  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   if (companiesEmployees.isLoading) return <div style={CenteringGrid}><Loading /></div>
   if (companiesEmployees.data) {
-    const employees = async () => {
-      const result = new Set()
-      const companiesData = companiesEmployees?.data?.data?.company[0].employees
-      for (let data of companiesData) {
-        const individual = await devitrakApi.post('/staff/admin-users', {
-          email: data.user
-        })
-        if (individual.data) {
-          result.add({ ...data, email: data.user, status: data.status === "Pending" ? data.status : data.active, adminUserInfo: individual.data.adminUsers[0], companyData: companiesEmployees.data.data.company[0] })
-        } else {
-          result.add({ ...data, status: data.status === "Pending" ? data.status : data.active, companyData: companiesEmployees.data.data.company[0], adminUserInfo: null })
-        }
-      }
-      return employeeListRef.current = Array.from(result)
-    }
-    employees()
-
     const sortDataAdminUser = () => {
-      if (searchAdmin?.length > 0) {
+      if (String(searchAdmin)?.length > 0) {
         const check = employeeListRef.current.filter(
           (item) =>
             String(item?.name)?.toLowerCase().includes(`${searchAdmin}`.toLowerCase()) ||
@@ -364,7 +316,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       let mapTemplate = {};
       for (let data of sortDataAdminUser()) {
         mapTemplate = {
-          name: [data.firstName, data.lastName],
+          name: `${data.firstName} ${data.lastName}`,
           email: data.email,
           phone: data.phone,
           role: data.role,
@@ -377,21 +329,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       }
       return result;
     };
-    const mergedColumns = columns.map((col) => {
-      if (!col.editable) {
-        return col;
-      }
-      return {
-        ...col,
-        onCell: (record) => ({
-          record,
-          inputType: col.dataIndex === "role" ? "text" : null,
-          dataIndex: col.dataIndex,
-          title: col.title,
-          editing: isEditing(record),
-        }),
-      };
-    });
     return (
       <Grid margin={'15px 0 0 0'} padding={0} container>
         <Grid
@@ -432,22 +369,12 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             </Button>
           </div>
         </Grid>
-
-        {contextHolder}
         <Form form={form} component={false}>
           <Table
-            components={{
-              body: {
-                cell: EditableCell,
-              },
-            }}
             style={{ width: "100%" }}
             dataSource={getInfoNeededToBeRenderedInTable()}
-            columns={mergedColumns}
+            columns={columns}
             rowClassName="editable-row"
-            pagination={{
-              onChange: cancel,
-            }}
             className="table-ant-customized"
           />
 
