@@ -67,16 +67,28 @@ const FormatQuickGlanceCardGraphRender = ({
           boxShadow:
             "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
         }}
-        headStyle={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+        styles={{
+          body:{
+            padding: "10px 10px 0px 10px",
+            height: "19.5rem",  
+          },
+          header:{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }
         }}
-        bodyStyle={{
-          padding: "10px 10px 0px 10px",
-          height: "19.5rem",
-        }}
+        // headStyle={{
+        //   width: "100%",
+        //   display: "flex",
+        //   justifyContent: "space-between",
+        //   alignItems: "center",
+        // }}
+        // bodyStyle={{
+        //   padding: "10px 10px 0px 10px",
+        //   height: "19.5rem",
+        // }}
         actions={[
           <Typography
             key={"render-total-device-activity"}
