@@ -15,6 +15,11 @@ import "./Body.css";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -123,7 +128,7 @@ const Body = () => {
             },
           })
         );
-        openNotificationWithIcon('success')
+        openNotificationWithIcon()
       }
     }
   };
@@ -159,14 +164,7 @@ const Body = () => {
             <InputLabel style={{ width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Name
               </Typography>
@@ -232,14 +230,7 @@ const Body = () => {
             <InputLabel style={{ width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Phone number
               </Typography>
@@ -276,14 +267,7 @@ const Body = () => {
             <InputLabel style={{ width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Email address
               </Typography>
@@ -319,15 +303,7 @@ const Body = () => {
           >
             <InputLabel style={{ width: "100%" }}>
               <Typography
-                textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Your photo
               </Typography>
@@ -444,14 +420,7 @@ const Body = () => {
                 xs={12}
               >
                 <Typography
-                  color={"var(--gray-600, #475467)"}
-                  /* Text sm/Semibold */
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                >
+                  style={{ ...Subtitle, fontWeight: 400 }}>
                   SVG, PNG, JPG or GIF (max. 1MB)
                 </Typography>
               </Grid>
@@ -471,14 +440,7 @@ const Body = () => {
             <InputLabel style={{ width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Role
               </Typography>
@@ -511,14 +473,7 @@ const Body = () => {
             <InputLabel style={{ width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{
-                  color: "#344054",
-                  textAlign: "left",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Events
               </Typography>
@@ -575,46 +530,22 @@ const Body = () => {
           md={12}
         >
           <Button
-            style={{
-              width: "fit-content",
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              borderRadius: "8px",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
+            style={{ ...GrayButton, width: "fit-content" }}
           >
             <Typography
               textTransform={"none"}
-              style={{
-                color: "#344054",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
+              style={GrayButtonText}
             >
               Cancel
             </Typography>
           </Button>
           <Button
             type="submit"
-            style={{
-              width: "fit-content",
-              border: "1px solid var(--blue-dark-600, #155EEF)",
-              borderRadius: "8px",
-              background: "var(--blue-dark-600, #155EEF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05",
-            }}
+            style={{ ...BlueButton, width: "fit-content" }}
           >
             <Typography
               textTransform={"none"}
-              style={{
-                color: "var(--base-white, #FFF",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
+              style={BlueButtonText}
             >
               Save
             </Typography>
