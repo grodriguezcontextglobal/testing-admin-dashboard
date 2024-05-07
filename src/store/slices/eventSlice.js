@@ -16,8 +16,8 @@ const eventSlice = createSlice({
         floor: undefined,
         phoneNumber: [],
         merchant: false,
-        dateBegin: new Date(),
-        dateEnd: new Date(),
+        dateBegin: new Date().toUTCString(),
+        dateEnd: new Date().toUTCString(),
       },
       staff: {
         adminUser: [],
@@ -32,9 +32,9 @@ const eventSlice = createSlice({
       floor: undefined,
       phoneNumber: [],
       merchant: false,
-      dateBegin: new Date(),
-      dateEnd: new Date(),
-    },
+      dateBegin: new Date().toUTCString(),
+      dateEnd: new Date().toUTCString(),
+  },
     staff: {
       adminUser: [],
       headsetAttendees: [],
