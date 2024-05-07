@@ -82,7 +82,6 @@ const CardEventDisplay = ({ props }) => {
                     alignItems={"center"}
                     textAlign={"right"}
                 >
-
                     <Grid
                         display={"flex"}
                         justifyContent={"flex-start"}
@@ -186,7 +185,6 @@ const CardEventDisplay = ({ props }) => {
                                 {displayMonth(props.eventInfoDetail.dateBegin)} {substractingDateBeginInfo()[2]}-{substractingDateEndInfo()[2]} &nbsp;{convertMilitaryToRegularTime(new Date(`${props.eventInfoDetail.dateBegin}`).toString())}-{convertMilitaryToRegularTime(new Date(`${props.eventInfoDetail.dateEnd}`).toString())}&nbsp; ({substractingDateBeginInfo()[4]}-{substractingDateEndInfo()[4]})
                             </div>
                         </div>
-
                     </Typography>
                 </Grid>
             </Grid>

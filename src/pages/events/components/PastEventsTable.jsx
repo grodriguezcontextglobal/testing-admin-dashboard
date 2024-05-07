@@ -96,7 +96,6 @@ const PastEventsTable = ({ events }) => {
                     ("" + a.active).localeCompare(b.active),
             },
             render: (active) => (
-                console.log("active", active),
                 <span style={{
                     borderRadius: "16px",
                     justifyContent: "center",

@@ -7,6 +7,8 @@ import { Icon } from "@iconify/react"
 import { Typography } from "@mui/material"
 import { useEffect } from "react"
 import _ from 'lodash'
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+
 const StaffTable = ({ searching }) => {
   const { event } = useSelector((state) => state.event)
   const staffEventQuery = useQuery({
@@ -90,14 +92,9 @@ const StaffTable = ({ searching }) => {
               ? "var(--success-700, #027A48)"
               : "var(--blue-700, #175CD3)"
               }`}
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
+
             textTransform={"capitalize"}
-            style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}
+            style={{ ...Subtitle, fontWeight: 500, display: "flex", justifyContent: "flex-start", alignItems: "center" }}
           >
             <Icon
               icon="tabler:point-filled"
@@ -131,7 +128,6 @@ const StaffTable = ({ searching }) => {
       }} className="table-ant-customized" columns={columns} dataSource={dataToRender()} />
     )
   }
-
 }
 
 export default StaffTable
