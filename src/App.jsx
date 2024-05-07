@@ -2,7 +2,7 @@ import { notification } from 'antd';
 import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { redirect } from 'react-router-dom';
+import { redirect, useLocation } from 'react-router-dom';
 import './App.css';
 import AuthRoutes from './routes/authorized/AuthRoutes';
 import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes';
@@ -19,32 +19,37 @@ const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
   const dispatch = useDispatch();
+  const location = useLocation()
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg) => {
     api.open({
       description: msg,
     });
   };
+
+  const isTokenValid = (token) => {
+    if (token) {
+      const decodedToken = jwtDecode(token)
+      return new Date().getTime() < decodedToken.exp * 1000
+    }
+    return false
+  }
+  
   const dispatchActionBasedOnTokenValidation = () => {
-    if (adminToken) {
-      const validateToken = jwtDecode(adminToken);
-      if (
-        new Date().getTime() < validateToken.exp
-      ) {
-        dispatch(onResetArticleEdited());
-        dispatch(onResetCustomer());
-        dispatch(onResetDevicesHandle());
-        dispatch(onResetDeviceInQuickGlance());
-        dispatch(onResetEventInfo());
-        dispatch(onResetStaffProfile());
-        dispatch(onResetHelpers());
-        dispatch(onResetStripesInfo());
-        dispatch(onResetSubscriptionInfo());
-        localStorage.setItem("admin-token", "");
-        dispatch(onLogout());
-        openNotificationWithIcon("Session has expired. Please sign in again.");
-        redirect('/login', { status: 302 })
-      }
+    if (adminToken && !isTokenValid(adminToken)) {
+      dispatch(onResetArticleEdited());
+      dispatch(onResetCustomer());
+      dispatch(onResetDevicesHandle());
+      dispatch(onResetDeviceInQuickGlance());
+      dispatch(onResetEventInfo());
+      dispatch(onResetStaffProfile());
+      dispatch(onResetHelpers());
+      dispatch(onResetStripesInfo());
+      dispatch(onResetSubscriptionInfo());
+      localStorage.setItem("admin-token", "");
+      dispatch(onLogout());
+      openNotificationWithIcon("Session has expired. Please sign in again.");
+      redirect('/login', { status: 302 })
     }
   };
 
@@ -71,7 +76,7 @@ const App = () => {
     dispatchActionBasedOnTokenValidation();
     return () => { controller.abort() }
 
-  }, [status, adminToken]);
+  }, [status, adminToken, location.pathname]);
 
   return (
     <>
