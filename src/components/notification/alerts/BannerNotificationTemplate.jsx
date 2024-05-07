@@ -6,11 +6,14 @@ import { Subtitle } from "../../../styles/global/Subtitle"
 import { BorderedCloseIcon, CloseIcon, InformationIcon } from "../../icons/Icons"
 import CenteringGrid from "../../../styles/global/CenteringGrid"
 
-const BannerNotificationTemplate = ({setNotificationStatus, title, body}) => {
+const BannerNotificationTemplate = ({ setNotificationStatus, title, body }) => {
     return (
         <Card
-            style={{ ...CardStyle, ...CenteringGrid, padding: "5px 16px", border: "1px solid var(--gray-200)", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", background: "var(--basewhite)" }}
-            bodyStyle={{ ...CenteringGrid, padding: 0 }}>
+            style={{ ...CardStyle, ...CenteringGrid, padding: "5px 16px", border: "1px solid var(--gray-200)", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", background: "var(--basewhite)" }} styles={{
+                body: { ...CenteringGrid, padding: 0 }
+            }}
+        // bodyStyle={{ ...CenteringGrid, padding: 0 }}
+        >
             <Grid container>
                 <Grid style={{ ...CenteringGrid }} container>
                     <div style={{ fontSize: "25px", display: "flex", alignItems: "center", justifyContent: "flex-end", width: "fit-content", padding: "15px 5px 0 0", alignSelf: "flex-start" }}><InformationIcon /></div>
