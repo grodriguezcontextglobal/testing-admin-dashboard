@@ -20,9 +20,14 @@ const DeviceInformationDetail = () => {
       <Card
         id="checking"
         style={{ ...CardStyle }}
-        bodyStyle={{
-          padding: "24px 24px 24px 0"
+        styles={{
+          body:{
+            padding: "24px 24px 24px 0"
+          }
         }}
+        // bodyStyle={{
+        //   padding: "24px 24px 24px 0"
+        // }}
       >
         <Grid
           display={"flex"}

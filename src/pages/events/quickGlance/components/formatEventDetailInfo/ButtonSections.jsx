@@ -122,12 +122,20 @@ const ButtonSections = () => {
           width: "100%",
           padding: 0
         }}
-        bodyStyle={{
-          display: "flex",
-          justifyContent: "center",
-          alignSelf: "stretch",
-          padding: "0 0 0px 10px"
+        styles={{
+          body:{
+            display: "flex",
+            justifyContent: "center",
+            alignSelf: "stretch",
+            padding: "0 0 0px 10px"
+          }
         }}
+        // bodyStyle={{
+        //   display: "flex",
+        //   justifyContent: "center",
+        //   alignSelf: "stretch",
+        //   padding: "0 0 0px 10px"
+        // }}
       >
         <Grid
           display={"flex"}

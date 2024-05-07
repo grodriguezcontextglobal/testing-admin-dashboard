@@ -109,9 +109,14 @@ const FormatAttendeeDetailInfo = () => {
                 <Card
                     id="card-contact-person"
                     style={CardStyle}
-                    bodyStyle={{
-                        padding: "24px 0 24px 24px "
+                    styles={{
+                        body:{
+                            padding: "24px 0 24px 24px "
+                        }
                     }}
+                    // bodyStyle={{
+                    //     padding: "24px 0 24px 24px "
+                    // }}
                 >
                     <Grid
                         display={"flex"}

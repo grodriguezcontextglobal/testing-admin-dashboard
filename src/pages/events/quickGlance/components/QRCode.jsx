@@ -1,8 +1,8 @@
 import { Grid, Typography } from "@mui/material";
 import { Button, Card } from "antd";
-import { useSelector } from "react-redux";
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { QRCode } from "react-qrcode-logo";
+import { useSelector } from "react-redux";
 import DevitrakLogoWhiteBg from '../../../../assets/qrcode-maskable_icon_x48.png';
 import { DownloadIcon } from "../../../../components/icons/Icons";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
@@ -48,12 +48,20 @@ const QRCodeDisplay = () => {
                     boxShadow:
                         "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
                 }}
-                headStyle={{
-                    borderBottom: "none",
+                styles={{
+                    header:{
+                        borderBottom: "none",
+                    },
+                    body:{
+                        padding: "0px 24px",
+                    }
                 }}
-                bodyStyle={{
-                    padding: "0px 24px",
-                }}
+                // headStyle={{
+                //     borderBottom: "none",
+                // }}
+                // bodyStyle={{
+                //     padding: "0px 24px",
+                // }}
                 actions={[
                     <Grid
                         key={"button-view-report-event-quick-glance"}

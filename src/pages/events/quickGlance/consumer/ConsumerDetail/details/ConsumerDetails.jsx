@@ -7,9 +7,14 @@ const ConsumerDetails = ({ props }) => {
         <Card
             //   id="card-contact-person"
             style={CardStyle}
-            bodyStyle={{
-                padding: "24px 24px 24px 0"
+            styles={{
+                body:{
+                    padding: "24px 24px 24px 0" 
+                }
             }}
+            // bodyStyle={{
+            //     padding: "24px 24px 24px 0"
+            // }}
         >
             <Grid
                 display={"flex"}
