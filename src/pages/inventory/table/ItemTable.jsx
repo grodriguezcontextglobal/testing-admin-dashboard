@@ -352,10 +352,12 @@ const ItemTable = ({ searchItem }) => {
       compare: (a, b) => ("" + a.data.location).localeCompare(b.data.location),
     },
     render: (data) => (
-      <span style={cellStyle}> <Typography
-        style={Subtitle}
+      <span style={cellStyle}> 
+      <Typography
+        style={{...Subtitle, textOverflow:"ellipsis"}}
         textTransform={"capitalize"}
-      >{data.warehouse === 1 ? data.location : data.event_name}</Typography></span>
+      >{data.warehouse === 1 ? data.location : data.event_name}
+      </Typography></span>
     )
   },
   {
