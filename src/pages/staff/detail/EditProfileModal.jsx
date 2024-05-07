@@ -5,7 +5,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Button, Modal } from "antd";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../apis/devitrakApi";
@@ -348,7 +348,7 @@ const EditProfileModal = ({ editProfile, setEditProfile }) => {
                   lineHeight: "20px",
                 }}
               >
-                Assign user's image (size max 1MB)
+                Assign user&apos;s image (size max 1MB)
               </Typography>
             </InputLabel>
             <img

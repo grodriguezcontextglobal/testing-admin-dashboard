@@ -1,6 +1,6 @@
 import { Button, Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Select, Space, Tag, notification } from "antd";
+import { Modal, Select, Space, Tag, notification } from "antd";
 import _ from 'lodash';
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,7 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import "../../../../../styles/global/ant-select.css";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import Loading from "../../../../../components/animation/Loading";
 const Assignment = () => {
     const {
         register,
@@ -211,7 +212,7 @@ const Assignment = () => {
             await addDeviceToEvent([{
                 item_group: deviceInfo[0].item_group, category_name: deviceInfo[0].category_name, min_serial_number: deviceInfo.at(-1).serial_number, max_serial_number: deviceInfo[0].serial_number
             }])
-            await navigate(`/staff/${profile.adminUserInfo._id}/equipment`)
+            await navigate(`/staff/${profile.adminUserInfo._id}/main`)
 
         }
         openNotificationWithIcon("Equipment assigned to staff member.")
@@ -297,384 +298,390 @@ const Assignment = () => {
             await option3({ groupingType: groupingType, template: template })
         }
     }
+    const closeModal = () => {
+        return navigate(`/staff/${profile.adminUserInfo.id}/main`);
+    };
     return (
-        <Grid
-            container
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            marginY={2}
-            key={"settingUp-deviceList-event"}
-        >
-            {contextHolder}
-            <Typography
-                textTransform="none"
-                textAlign="justify"
-                fontFamily="Inter"
-                fontSize="14px"
-                fontStyle="normal"
-                fontWeight={400}
-                lineHeight="20px"
-                color="var(--gray-600, #475467)"
-                margin={'0.2rem auto 0.5rem'}
-                style={{
-                    wordWrap: "break-word",
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                }}
-            >
-                You can select groups of devices from existing inventory in your database and assign to this event. When assigning, you can choose the whole group of devices, or only a range of serial numbers per group. You will see the groups selected as small tags below.
-            </Typography>
-            <Grid
-                style={{
-                    borderRadius: "8px",
-                    border: "1px solid var(--gray-300, #D0D5DD)",
-                    background: "var(--gray-100, #F2F4F7)",
-                    padding: "24px",
-                    width: "100%",
-                }} item xs={12} sm={12} md={12} lg={12}>
-                <InputLabel
-                    style={{ marginBottom: "0.5rem", width: "100%" }}
-                >
-                    <Typography
-                        style={Subtitle}
-                    >
-                        Location
-                    </Typography>
-                </InputLabel>
-                <div style={{ ...CenteringGrid, justifyContent: "space-between", margin: '0 0 20px 0', gap: "1rem" }}>
-                    <div style={{ width: "50%" }}>
-                        <InputLabel
-                            style={{ marginBottom: "0.2rem", width: "100%" }}
+        <>
+            {
+                (itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading)
+                    ? <div style={CenteringGrid}><Loading /></div> 
+                    : <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]}>
+                        <Grid
+                            container
+                            display={"flex"}
+                            justifyContent={"center"}
+                            alignItems={"center"}
+                            marginY={2}
+                            key={"settingUp-deviceList-event"}
                         >
+                            {contextHolder}
                             <Typography
-                                style={Subtitle}
-                            >
-                                Street
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            {...register('street')}
-                            disabled={loadingStatus}
-                            style={{
-                                ...OutlinedInputStyle,
-                                width: "100%",
-                            }}
-                            fullWidth
-                        /></div>
-                    <div style={{ width: "50%" }}>
-                        <InputLabel
-                            style={{ marginBottom: "0.2rem", width: "100%" }}
-                        >
-                            <Typography
-                                style={Subtitle}
-                            >
-                                City
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            disabled={loadingStatus}
-                            {...register('city')}
-                            style={{
-                                ...OutlinedInputStyle,
-                                width: "100%",
-                            }}
-                            fullWidth
-                        /></div>
-                </div>
-                <div style={{ ...CenteringGrid, justifyContent: "space-between", margin: '0 0 20px 0', gap: "1rem" }}>
-                    <div style={{ width: "50%" }}>
-                        <InputLabel
-                            style={{ marginBottom: "0.2rem", width: "100%" }}
-                        >
-                            <Typography
-                                style={Subtitle}
-                            >
-                                State
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            {...register('state')}
-                            disabled={loadingStatus}
-                            style={{
-                                ...OutlinedInputStyle,
-                                width: "100%",
-                            }}
-                            fullWidth
-                        /></div>
-                    <div style={{ width: "50%" }}>
-                        <InputLabel
-                            style={{ marginBottom: "0.2rem", width: "100%" }}
-                        >
-                            <Typography
-                                style={Subtitle}
-                            >
-                                Zip
-                            </Typography>
-                        </InputLabel>
-                        <OutlinedInput
-                            disabled={loadingStatus}
-                            {...register('zip')}
-                            style={{
-                                ...OutlinedInputStyle,
-                                width: "100%",
-                            }}
-                            fullWidth
-                        /></div>
-                </div>
-
-
-                <InputLabel
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                    }}
-                >
-                    <Typography
-                        textTransform="none"
-                        style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
-                    >
-                        Device
-                    </Typography>
-                </InputLabel>
-
-                <form
-                    onSubmit={handleSubmit(handleAddingNewItemToInventoryEvent)}
-                    style={{
-                        width: "100%",
-                    }}
-                >
-
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"space-between"}
-                        alignItems={"center"}
-                        marginY={2}
-                        gap={2}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={12}
-                        lg={12}
-                    >
-                        <Grid style={{ alignSelf: "baseline" }} item xs={6} sm={6} md={6} lg={6}>
-                            <InputLabel
+                                textTransform="none"
+                                margin={'0.2rem auto 0.5rem'}
                                 style={{
+                                    ...Subtitle,
+                                    wordWrap: "break-word",
                                     width: "100%",
                                     display: "flex",
                                     justifyContent: "flex-start",
                                     alignItems: "center",
                                 }}
                             >
-                                <Typography
-                                    textTransform="none"
-                                    style={{ ...TextFontSize20LineHeight30, fontWeight: 600, fontSize: "14px", color: "#000" }}
-                                >
-                                    Select from existing category
-                                </Typography>
-                            </InputLabel>
-                            <Select
-                                className="custom-autocomplete"
-                                showSearch
-                                placeholder="Search item to add to inventory."
-                                optionFilterProp="children"
-                                style={{ ...AntSelectorStyle, width: "100%" }}
-                                onChange={onChange}
-                                options={optionsToRenderInSelector().map((item) => {
-                                    return {
-                                        label:
-                                            <Typography textTransform={'capitalize'} style={{ ...Subtitle, display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                                                <span><span style={{ fontWeight: 700 }}>{item[0].category_name}</span> {item[0].item_group}</span>
-                                                <span style={{ textAlign: "left" }}>Location: <span style={{ fontWeight: 700 }}>{item[0].location}</span></span>
-                                                <span>Total available: {item.length}</span>
-                                            </Typography>, //renderOptionAsNeededFormat(JSON.stringify(option))
-                                        value: JSON.stringify(item),
-                                    };
-                                })}
-                            />
-                        </Grid>
-                        <Grid item xs={6} sm={6} md={6} lg={6}>
-                            <InputLabel
-                                style={{ marginBottom: "0.2rem", width: "100%" }}
-                            >
-                                <Typography
-                                    style={Subtitle}
-                                >
-                                    Quantity
-                                </Typography>
-                            </InputLabel>
-                            <OutlinedInput
-                                disabled={loadingStatus}
-                                required
-                                {...register('quantity')}
+                                You can select groups of devices from existing inventory in your database and assign to this event. When assigning, you can choose the whole group of devices, or only a range of serial numbers per group. You will see the groups selected as small tags below.
+                            </Typography>
+                            <Grid
                                 style={{
-                                    ...OutlinedInputStyle,
+                                    borderRadius: "8px",
+                                    border: "1px solid var(--gray-300, #D0D5DD)",
+                                    background: "var(--gray-100, #F2F4F7)",
+                                    padding: "24px",
                                     width: "100%",
-                                }}
-                                placeholder='e.g. 0'
-                                fullWidth
-                            />
-                        </Grid>
-
-                    </Grid>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"space-between"}
-                        alignItems={"center"}
-                        marginY={2}
-                        gap={2}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={12}
-                        lg={12}
-                    >
-
-                        <Grid item xs={6} sm={6} md={6} lg={6}>
-                            <InputLabel
-                                style={{ marginBottom: "0.2rem", width: "100%" }}
-                            >
-                                <Typography
-                                    style={Subtitle}
+                                }} item xs={12} sm={12} md={12} lg={12}>
+                                <InputLabel
+                                    style={{ marginBottom: "0.5rem", width: "100%" }}
                                 >
-                                    Start serial number
-                                </Typography>
-                            </InputLabel>
-                            <OutlinedInput
-                                disabled={loadingStatus}
-                                required
-                                {...register('startingNumber')}
-                                style={{
-                                    ...OutlinedInputStyle,
-                                    width: "100%",
-                                }}
-                                placeholder={`Selected category serial numbers start: ${substractingRangesSelectedItem()?.min} end: ${substractingRangesSelectedItem()?.max}`}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item xs={6} sm={6} md={6} lg={6}>
-                            <InputLabel
-                                style={{ marginBottom: "0.2rem", width: "100%" }}
-                            >
-                                <Typography
-                                    style={{ ...Subtitle, color: "transparent" }}
-                                >
-                                    Quantity
-                                </Typography>
-                            </InputLabel>
-                            <Button
-                                type="submit"
-                                style={{ ...LightBlueButton, ...CenteringGrid, width: "100%", }}
-                            >
-                                <PlusIcon /><Typography
-                                    textTransform="none"
-                                    style={{ ...LightBlueButtonText, border: "transparent" }}
-                                >
-                                    Add item
-                                </Typography>
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </form>
+                                    <Typography
+                                        style={Subtitle}
+                                    >
+                                        Location where device is going to be used.
+                                    </Typography>
+                                </InputLabel>
+                                <div style={{ ...CenteringGrid, justifyContent: "space-between", margin: '0 0 20px 0', gap: "1rem" }}>
+                                    <div style={{ width: "50%" }}>
+                                        <InputLabel
+                                            style={{ marginBottom: "0.2rem", width: "100%" }}
+                                        >
+                                            <Typography
+                                                style={Subtitle}
+                                            >
+                                                Street
+                                            </Typography>
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            {...register('street')}
+                                            disabled={loadingStatus}
+                                            style={{
+                                                ...OutlinedInputStyle,
+                                                width: "100%",
+                                            }}
+                                            fullWidth
+                                        /></div>
+                                    <div style={{ width: "50%" }}>
+                                        <InputLabel
+                                            style={{ marginBottom: "0.2rem", width: "100%" }}
+                                        >
+                                            <Typography
+                                                style={Subtitle}
+                                            >
+                                                City
+                                            </Typography>
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('city')}
+                                            style={{
+                                                ...OutlinedInputStyle,
+                                                width: "100%",
+                                            }}
+                                            fullWidth
+                                        /></div>
+                                </div>
+                                <div style={{ ...CenteringGrid, justifyContent: "space-between", margin: '0 0 20px 0', gap: "1rem" }}>
+                                    <div style={{ width: "50%" }}>
+                                        <InputLabel
+                                            style={{ marginBottom: "0.2rem", width: "100%" }}
+                                        >
+                                            <Typography
+                                                style={Subtitle}
+                                            >
+                                                State
+                                            </Typography>
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            {...register('state')}
+                                            disabled={loadingStatus}
+                                            style={{
+                                                ...OutlinedInputStyle,
+                                                width: "100%",
+                                            }}
+                                            fullWidth
+                                        /></div>
+                                    <div style={{ width: "50%" }}>
+                                        <InputLabel
+                                            style={{ marginBottom: "0.2rem", width: "100%" }}
+                                        >
+                                            <Typography
+                                                style={Subtitle}
+                                            >
+                                                Zip
+                                            </Typography>
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            disabled={loadingStatus}
+                                            {...register('zip')}
+                                            style={{
+                                                ...OutlinedInputStyle,
+                                                width: "100%",
+                                            }}
+                                            fullWidth
+                                        /></div>
+                                </div>
 
-                <Grid item xs={12}>
-                    <InputLabel
-                        style={{ marginBottom: "0.2rem", width: "100%" }}
-                    >
-                        <Typography
-                            textTransform={"none"}
-                            textAlign={"left"}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={500}
-                            lineHeight={"20px"}
-                            color={"var(--gray-700, #344054)"}
-                        >
-                            Groups selected
-                        </Typography>
-                    </InputLabel>
-                    <Space
-                        style={{
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                        }}
-                        size={[0, "small"]}
-                        wrap
-                    >
-                        {selectedItem.map((item, index) => {
-                            return (
-                                <Tag
-                                    bordered={false}
-                                    closable
-                                    icon={<CheckIcon />}
+
+                                <InputLabel
                                     style={{
+                                        width: "100%",
                                         display: "flex",
-                                        padding: "2px 4px 2px 5px",
-                                        justifyContent: "space-between",
+                                        justifyContent: "flex-start",
                                         alignItems: "center",
-                                        gap: "3px",
-                                        borderRadius: "6px",
-                                        border: "1px solid var(--gray-300, #D0D5DD)",
-                                        background: "var(--base-white, #FFF)",
-                                        margin: "5px",
                                     }}
-                                    onClose={() => removeItemSelected(index)}
-                                    key={`${item._id}${index}`}
                                 >
-                                    &nbsp;{item.item_group}
-                                    {"      "}&nbsp;Qty: {item.quantity}
-                                    <br />
-                                    {item.startingNumber} - {item.endingNumber}
-                                </Tag>
-                            );
-                        })}
-                    </Space>
-                </Grid>
-            </Grid >
-            <Grid
-                style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                }}
-                marginY={"0.5rem"}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-            >
-                <Button
-                    onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/equipment`)}
-                    style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
-                >
-                    <Typography
-                        style={GrayButtonText}
-                    >
-                        Go back
-                    </Typography>
-                </Button>
-                <Button
-                    onClick={() => assignDeviceToStaffMember()}
-                    style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-                >
-                    <Typography
-                        style={BlueButtonText}
-                    >
-                        Assign equipment
-                    </Typography>
-                </Button>
-            </Grid>
-        </Grid >
+                                    <Typography
+                                        textTransform="none"
+                                        style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
+                                    >
+                                        Device
+                                    </Typography>
+                                </InputLabel>
+
+                                <form
+                                    onSubmit={handleSubmit(handleAddingNewItemToInventoryEvent)}
+                                    style={{
+                                        width: "100%",
+                                    }}
+                                >
+
+                                    <Grid
+                                        display={"flex"}
+                                        justifyContent={"space-between"}
+                                        alignItems={"center"}
+                                        marginY={2}
+                                        gap={2}
+                                        item
+                                        xs={12}
+                                        sm={12}
+                                        md={12}
+                                        lg={12}
+                                    >
+                                        <Grid style={{ alignSelf: "baseline" }} item xs={6} sm={6} md={6} lg={6}>
+                                            <InputLabel
+                                                style={{
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "flex-start",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <Typography
+                                                    textTransform="none"
+                                                    style={{ ...TextFontSize20LineHeight30, fontWeight: 600, fontSize: "14px", color: "#000" }}
+                                                >
+                                                    Select from existing category
+                                                </Typography>
+                                            </InputLabel>
+                                            <Select
+                                                className="custom-autocomplete"
+                                                showSearch
+                                                placeholder="Search item to add to inventory."
+                                                optionFilterProp="children"
+                                                style={{ ...AntSelectorStyle, width: "100%" }}
+                                                onChange={onChange}
+                                                options={optionsToRenderInSelector().map((item) => {
+                                                    return {
+                                                        label:
+                                                            <Typography textTransform={'capitalize'} style={{ ...Subtitle, display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                                                                <span><span style={{ fontWeight: 700 }}>{item[0].category_name}</span> {item[0].item_group}</span>
+                                                                <span style={{ textAlign: "left" }}>Location: <span style={{ fontWeight: 700 }}>{item[0].location}</span></span>
+                                                                <span>Total available: {item.length}</span>
+                                                            </Typography>, //renderOptionAsNeededFormat(JSON.stringify(option))
+                                                        value: JSON.stringify(item),
+                                                    };
+                                                })}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={6} md={6} lg={6}>
+                                            <InputLabel
+                                                style={{ marginBottom: "0.2rem", width: "100%" }}
+                                            >
+                                                <Typography
+                                                    style={Subtitle}
+                                                >
+                                                    Quantity
+                                                </Typography>
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                disabled={loadingStatus}
+                                                required
+                                                {...register('quantity')}
+                                                style={{
+                                                    ...OutlinedInputStyle,
+                                                    width: "100%",
+                                                }}
+                                                placeholder='e.g. 0'
+                                                fullWidth
+                                            />
+                                        </Grid>
+
+                                    </Grid>
+                                    <Grid
+                                        display={"flex"}
+                                        justifyContent={"space-between"}
+                                        alignItems={"center"}
+                                        marginY={2}
+                                        gap={2}
+                                        item
+                                        xs={12}
+                                        sm={12}
+                                        md={12}
+                                        lg={12}
+                                    >
+
+                                        <Grid item xs={6} sm={6} md={6} lg={6}>
+                                            <InputLabel
+                                                style={{ marginBottom: "0.2rem", width: "100%" }}
+                                            >
+                                                <Typography
+                                                    style={Subtitle}
+                                                >
+                                                    Start serial number
+                                                </Typography>
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                disabled={loadingStatus}
+                                                required
+                                                {...register('startingNumber')}
+                                                style={{
+                                                    ...OutlinedInputStyle,
+                                                    width: "100%",
+                                                }}
+                                                placeholder={`Selected category serial numbers start: ${substractingRangesSelectedItem()?.min} end: ${substractingRangesSelectedItem()?.max}`}
+                                                fullWidth
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={6} md={6} lg={6}>
+                                            <InputLabel
+                                                style={{ marginBottom: "0.2rem", width: "100%" }}
+                                            >
+                                                <Typography
+                                                    style={{ ...Subtitle, color: "transparent" }}
+                                                >
+                                                    Quantity
+                                                </Typography>
+                                            </InputLabel>
+                                            <Button
+                                                type="submit"
+                                                style={{ ...LightBlueButton, ...CenteringGrid, width: "100%", }}
+                                            >
+                                                <PlusIcon /><Typography
+                                                    textTransform="none"
+                                                    style={{ ...LightBlueButtonText, border: "transparent" }}
+                                                >
+                                                    Add item
+                                                </Typography>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </form>
+
+                                <Grid item xs={12}>
+                                    <InputLabel
+                                        style={{ marginBottom: "0.2rem", width: "100%" }}
+                                    >
+                                        <Typography
+                                            textTransform={"none"}
+                                            textAlign={"left"}
+                                            fontFamily={"Inter"}
+                                            fontSize={"14px"}
+                                            fontStyle={"normal"}
+                                            fontWeight={500}
+                                            lineHeight={"20px"}
+                                            color={"var(--gray-700, #344054)"}
+                                        >
+                                            Groups selected
+                                        </Typography>
+                                    </InputLabel>
+                                    <Space
+                                        style={{
+                                            width: "100%",
+                                            display: "flex",
+                                            justifyContent: "flex-start",
+                                            alignItems: "center",
+                                        }}
+                                        size={[0, "small"]}
+                                        wrap
+                                    >
+                                        {selectedItem.map((item, index) => {
+                                            return (
+                                                <Tag
+                                                    bordered={false}
+                                                    closable
+                                                    icon={<CheckIcon />}
+                                                    style={{
+                                                        display: "flex",
+                                                        padding: "2px 4px 2px 5px",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        gap: "3px",
+                                                        borderRadius: "6px",
+                                                        border: "1px solid var(--gray-300, #D0D5DD)",
+                                                        background: "var(--base-white, #FFF)",
+                                                        margin: "5px",
+                                                    }}
+                                                    onClose={() => removeItemSelected(index)}
+                                                    key={`${item._id}${index}`}
+                                                >
+                                                    &nbsp;{item.item_group}
+                                                    {"      "}&nbsp;Qty: {item.quantity}
+                                                    <br />
+                                                    {item.startingNumber} - {item.endingNumber}
+                                                </Tag>
+                                            );
+                                        })}
+                                    </Space>
+                                </Grid>
+                            </Grid >
+                            <Grid
+                                style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                }}
+                                marginY={"0.5rem"}
+                                item
+                                xs={12}
+                                sm={12}
+                                md={12}
+                                lg={12}
+                            >
+                                <Button
+                                    onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
+                                    style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
+                                >
+                                    <Typography
+                                        style={GrayButtonText}
+                                    >
+                                        Go back
+                                    </Typography>
+                                </Button>
+                                <Button
+                                    onClick={() => assignDeviceToStaffMember()}
+                                    style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+                                >
+                                    <Typography
+                                        style={BlueButtonText}
+                                    >
+                                        Assign equipment
+                                    </Typography>
+                                </Button>
+                            </Grid>
+                        </Grid >
+                    </Modal>
+            }
+        </>
+
     );
 };
 

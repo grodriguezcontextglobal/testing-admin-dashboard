@@ -3,7 +3,6 @@ import { Button, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import {
   Avatar,
-  Form,
   Table,
   Typography
 } from "antd";
@@ -16,7 +15,6 @@ import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import '../../styles/global/ant-table.css';
 const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
-  const [form] = Form.useForm();
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -42,14 +40,12 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const eventQuery = useQuery({
     queryKey: ["events"],
     queryFn: () => devitrakApi.post("/event/event-list", {
-        company: user.company,
-        active: true
+      company: user.company,
+      active: true
     }),
     enabled: false,
     refetchOnMount: false,
-});
-
-    console.log("🚀 ~ MainAdminSettingPage ~ eventQuery:", eventQuery)
+  });
 
   useEffect(() => {
     const controller = new AbortController()
@@ -63,7 +59,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
-    return navigate(`/staff/${record.entireData.adminUserInfo.id}/events`)
+    return navigate(`/staff/${record.entireData.adminUserInfo.id}/main`)
   };
 
   const styling = {
@@ -329,6 +325,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       }
       return result;
     };
+
     return (
       <Grid margin={'15px 0 0 0'} padding={0} container>
         <Grid
@@ -369,7 +366,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             </Button>
           </div>
         </Grid>
-        <Form form={form} component={false}>
           <Table
             style={{ width: "100%" }}
             dataSource={getInfoNeededToBeRenderedInTable()}
@@ -378,7 +374,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             className="table-ant-customized"
           />
 
-        </Form>{" "}
       </Grid>
     );
   }

@@ -1,23 +1,21 @@
 import { Icon } from "@iconify/react";
 import {
     Grid,
-    InputAdornment,
-    OutlinedInput,
     Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Table } from "antd";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import ListEquipment from "./equipment_components/ListEquipment";
 
 const TableStaffDetail = () => {
     const { profile } = useSelector((state) => state.staffDetail);
     const { user } = useSelector((state) => state.admin);
-    const { register, watch } = useForm();
     const eventQuery = useQuery({
         queryKey: ["events"],
         queryFn: () => devitrakApi.post("/event/event-list", { company: user.company }),
@@ -142,15 +140,6 @@ const TableStaffDetail = () => {
     if (eventQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
     if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
         const dataPerCompany = () => {
-            if (watch("searchEvent")?.length > 0) {
-                const check = eventQuery?.data?.data?.list?.filter(
-                    (item) =>
-                        item?.eventInfoDetail?.eventName
-                            ?.toLowerCase()
-                            .includes(watch("searchEvent").toLowerCase())
-                );
-                return check;
-            }
             const groupOfCompanies = eventQuery?.data?.data?.list
             return groupOfCompanies;
         };
@@ -161,11 +150,11 @@ const TableStaffDetail = () => {
             let index = 0;
             if (dataPerCompany()) {
                 for (let data of dataPerCompany()) {
-                    if (data.staff.adminUser?.some((item) => item === profile.email)) {
+                    if (data.staff.adminUser?.some((item) => item.email === profile.email)) {
                         result.splice(index, 0, { ...data, role: "Administrator" });
                         index++;
                     } else if (
-                        data.staff.headsetAttendees?.some((item) => item === profile.email)
+                        data.staff.headsetAttendees?.some((item) => item.email === profile.email)
                     ) {
                         result.splice(index, 0, { ...data, role: "Coordinator" });
                         index++;
@@ -201,60 +190,33 @@ const TableStaffDetail = () => {
                 }}
                 container
             >
-
-                <Grid
-                    marginY={3}
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    gap={1}
-                    container
-                >
-                    <Grid textAlign={"right"} item xs></Grid>
-                    <Grid justifyContent={"right"} alignItems={"center"} item xs={3}>
-                        <OutlinedInput
-                            {...register("searchEvent")}
-                            style={{
-                                borderRadius: "12px",
-                                color: "#344054",
-                                height: "5dvh",
-                            }}
-                            fullWidth
-                            placeholder="Search events here"
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <Icon
-                                        icon="radix-icons:magnifying-glass"
-                                        color="#344054"
-                                        width={20}
-                                        height={19}
-                                    />
-                                </InputAdornment>
-                            }
-                        />
-                    </Grid>
+                <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} margin={'2rem auto 1rem'} xs={12} sm={12} md={12} lg={12}>
+                    <Typography style={{ ...TextFontSize20LineHeight30, fontWeight: 500, color: '#000', display: "flex", justifyContent: "flex-start", alignItems: "center" }}>Devices assigned:&nbsp;</Typography>
                 </Grid>
-                <Grid container>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        item
-                        xs={12}
-                    >
-                        <Table
-                            sticky
-                            size="large"
-                            columns={columns}
-                            dataSource={
-                                dataToRenderInTable() ? dataToRenderInTable() : []
-                            }
-                            pagination={{
-                                position: ["bottomCenter"],
-                            }}
-                            className="table-ant-customized"
-                        />
-                    </Grid>
+                <ListEquipment />
+                <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} margin={'2rem auto 1rem'} xs={12} sm={12} md={12} lg={12}>
+                    <Typography style={{ ...TextFontSize20LineHeight30, fontWeight: 500, color: '#000', display: "flex", justifyContent: "flex-start", alignItems: "center" }}>Events assigned:&nbsp;</Typography>
+                </Grid>
+                <Grid
+                    display={"flex"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    item
+                    xs={12}
+                >
+                    <Table
+                        sticky
+                        size="large"
+                        columns={columns}
+                        style={{ width: "100%" }}
+                        dataSource={
+                            dataToRenderInTable() ? dataToRenderInTable() : []
+                        }
+                        pagination={{
+                            position: ["bottomCenter"],
+                        }}
+                        className="table-ant-customized"
+                    />
                 </Grid>
             </Grid>
         );

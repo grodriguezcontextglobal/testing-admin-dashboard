@@ -1,28 +1,62 @@
 import { Grid, Typography } from "@mui/material";
 import { NavLink, Outlet } from "react-router-dom";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
-
+import { ChangeRoleStaffIcon, RectanglePlusIcon, UpdateIcon, UpdatePasswordIcon, WhiteCalendarIcon } from "../../../components/icons/Icons";
+import { Divider } from "antd";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { LightBlueButton } from "../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
+import { GrayButton } from "../../../styles/global/GrayButton";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { useSelector } from "react-redux";
 const StaffDetail = () => {
+  const { profile } = useSelector((state) => state.staffDetail);
+  const { user } = useSelector((state) => state.admin);
+
   const tabOptions = [
     {
-      label: "Events",
-      route: "events",
-      permission: ["Administrator", "Editor"]
-    },
-    {
-      label: "Devices",
-      route: "equipment",
-      permission: ["Administrator"]
-    },
-    {
-      label: "Equipment",
+      label: "Assign devices",
       route: "assignment",
-      permission: ["Administrator"]
+      permission: ["Administrator"],
+      disabled: false
+    },
+    {
+      label: "Assign to event",
+      route: "assign-staff-events",
+      permission: ["Administrator"],
+      disabled: false
+    },
+    {
+      label: "Update contact info",
+      route: "update-contact-info",
+      permission: ["Administrator", "Approver", "Editor"],
+      disabled: user.email !== profile.email
+    },
+    {
+      label: "Change role",
+      route: "update-role-company",
+      permission: ["Administrator"],
+      disabled: false
+    },
+    {
+      label: "Send password reset email",
+      route: "reset-password-link",
+      permission: ["Administrator", "Approver", "Editor"],
+      disabled: false
     },
   ]
+  const dicIcons = {
+    "Assign devices": <RectanglePlusIcon />,
+    "Assign to event": <WhiteCalendarIcon />,
+    "Update contact info": <UpdateIcon />,
+    "Change role": <ChangeRoleStaffIcon />,
+    "Send password reset email": <UpdatePasswordIcon />,
+  }
   return (
     <>
       <HeaderStaffDetail />
+      <Divider />
       <Grid
         style={{
           display: "flex",
@@ -32,46 +66,45 @@ const StaffDetail = () => {
         marginY={3}
         container
       >
-        <Grid marginY={0} item xs={12} sm={12} md={6}>
-          <nav style={{ display: "flex" }}>
+        <Grid marginY={0} item xs={12} sm={12} md={12}>
+          <nav style={{ display: "flex", width: "100%", gap: "24px" }}>
             {
-              tabOptions.map(option => {
+              tabOptions.map((option, index) => {
+                if (index === 0) {
+                  return (
+                    <NavLink key={option.label} to={`${option.route}`} style={{ ...BlueButton, display: `${option.permission.some(element => element === user.role) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10x 16px", gap: "8px" }}>
+                      <Typography
+                        style={{ ...BlueButtonText, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
+                      >
+                        {dicIcons[option.label]}&nbsp;{option.label}
+                      </Typography>
+                    </NavLink>
+                  )
+                } else if (index === 1) {
+                  return (
+                    <NavLink key={option.label} to={`${option.route}`} style={LightBlueButton}>
+                      <Typography
+                        style={{ ...LightBlueButtonText, display: `${option.permission.some(element => element === user.role) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
+                      >
+                        {dicIcons[option.label]}&nbsp;{option.label}
+                      </Typography>
+                    </NavLink>
+                  )
+                }
+
                 return (
-                  <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
-                    return {
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      padding: "1px 4px 3px",
-                      gap: "8px",
-                      borderBottom: isActive ?
-                        "none" : "solid 0.1px var(--gray300)",
-                      borderTop: isActive ?
-                        "solid 0.1px var(--gray300)" : "none",
-                      borderRight: isActive ?
-                        "solid 0.1px var(--gray300)" : "none",
-                      borderLeft: isActive ?
-                        "solid 0.1px var(--gray300)" : "none",
-                      borderRadius: "8px 8px 0 0"
-                    };
-                  }}>
+                  <NavLink key={option.label} to={`${option.route}`} style={{ ...GrayButton, display: `${index === 2 && (user.email !== profile.user) ? "none" : "flex"}`, justifyContent: "space-between", alignItems: "center", padding: "10x 16px", gap: "8px" }}>
                     <Typography
-                      color={`${location.pathname === `/profile/${option.route}`
-                        ? "#004EEB"
-                        : "#667085"
-                        }`}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontWeight={600}
-                      lineHeight={"20px"}
+                      style={{ ...GrayButtonText, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
                     >
-                      {option.label}
+                      {dicIcons[option.label]}&nbsp;{option.label}
                     </Typography>
                   </NavLink>
                 )
               })
             }
           </nav>
+          <Divider />
         </Grid>
       </Grid>
       <Outlet />

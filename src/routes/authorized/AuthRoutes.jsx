@@ -1,35 +1,38 @@
-import { lazy, Suspense, useRef } from "react";
-import { Routes, Route } from "react-router";
-import Loading from "../../components/animation/Loading";
 import { Grid } from "@mui/material";
-import NavigationBarMain from "../../components/navbar/NavigationBarMain";
+import { lazy, Suspense, useRef } from "react";
+import { Route, Routes } from "react-router";
+import Loading from "../../components/animation/Loading";
+import FooterComponent from "../../components/general/FooterComponent";
 import UpperBanner from "../../components/general/UpperBanner";
-import { default as FormEventDetail } from '../../pages/events/newEventProcess/eventDetails/Form'
-import { default as FormStaffDetail } from '../../pages/events/newEventProcess/staff/Form'
-import { default as FormDeviceDetail } from '../../pages/events/newEventProcess/inventory/Form'
+import NavigationBarMain from "../../components/navbar/NavigationBarMain";
+import { default as FormEventDetail } from '../../pages/events/newEventProcess/eventDetails/Form';
+import { default as FormDeviceDetail } from '../../pages/events/newEventProcess/inventory/Form';
 import ReviewAndSubmitEvent from "../../pages/events/newEventProcess/review/ReviewAndSubmitPage";
+import { default as FormStaffDetail } from '../../pages/events/newEventProcess/staff/Form';
+import TransactionsDetails from "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails";
+import Cash from "../../pages/events/quickGlance/consumer/lostFee/actions/Cash";
+import CreditCard from "../../pages/events/quickGlance/consumer/lostFee/actions/CreditCard";
 import AddNewItem from "../../pages/inventory/actions/AddNewItem";
+import EditGroup from "../../pages/inventory/actions/EditGroup";
 import AddNewBulkItems from "../../pages/inventory/actions/NewBulkItems";
+import MainPageGrouping from "../../pages/inventory/details/GroupDetail/MainPage";
+import MainPage from "../../pages/inventory/details/LocationDetail/MainPage";
 import { default as InventoryInUsePage } from "../../pages/inventory/InventoryInUse/MainPage";
+import ParentRenderingChildrenPage from "../../pages/ParentRenderingChildrenPage";
+import Confirmation from "../../pages/payment/Confirmation";
+import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
 import MyDetailsMainPage from "../../pages/Profile/my_details/MyDetailsMainPage";
 import PasswordMainPage from "../../pages/Profile/my_password/PasswordMainPage";
 import NotificationsMainPage from "../../pages/Profile/notifications/NotificationsMainPage";
 import StaffActivityMainPage from "../../pages/Profile/staff_activity/StaffActivityMainPage";
-import FooterComponent from "../../components/general/FooterComponent";
-import Confirmation from "../../pages/payment/Confirmation";
-import TransactionsDetails from "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails";
-import Cash from "../../pages/events/quickGlance/consumer/lostFee/actions/Cash";
-import CreditCard from "../../pages/events/quickGlance/consumer/lostFee/actions/CreditCard";
-import ParentRenderingChildrenPage from "../../pages/ParentRenderingChildrenPage";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import StaffDetail from "../../pages/staff/detail/StaffDetail";
-import BillingMainPage from "../../pages/Profile/billing/BillingMainPage";
-import EditGroup from "../../pages/inventory/actions/EditGroup";
-import TableStaffDetail from "../../pages/staff/detail/components/TableStaffDetail";
 import Assignment from "../../pages/staff/detail/components/equipment_components/Assignment";
-import ListEquipment from "../../pages/staff/detail/components/equipment_components/ListEquipment";
-import MainPage from "../../pages/inventory/details/LocationDetail/MainPage";
-import MainPageGrouping from "../../pages/inventory/details/GroupDetail/MainPage";
+import UpdateContactInfo from "../../pages/staff/detail/components/equipment_components/UpdateContactInfo";
+import TableStaffDetail from "../../pages/staff/detail/components/TableStaffDetail";
+import StaffDetail from "../../pages/staff/detail/StaffDetail";
+import CenteringGrid from "../../styles/global/CenteringGrid";
+import ForgetPasswordLinkFromStaffPage from "../../pages/staff/detail/components/equipment_components/ResetPasswordLink";
+import UpdateRoleInCompany from "../../pages/staff/detail/components/equipment_components/UpdateRoleInCompany";
+import AssignStaffMemberToEvent from "../../pages/staff/detail/components/AssignStaffMemberToEvent";
 const AuthRoutes = () => {
     const Home = lazy(() => import("../../pages/home/MainPage"))
     const SearchResultPage = lazy(() => import("../../pages/search/MainPage"))
@@ -96,9 +99,12 @@ const AuthRoutes = () => {
                         <Route path="/consumers/:id" element={<ConsumerDetail />} />
                         <Route path="/staff" element={<Staff />} />
                         <Route path="/staff/:id" element={<StaffDetail />} >
-                            <Route path="events" element={<TableStaffDetail />} />
-                            <Route path="equipment" element={<ListEquipment />} />
-                            <Route path="assignment" element={<Assignment />} />
+                            <Route key={'/staff/:id/main'} path="main" element={<TableStaffDetail />} />
+                            <Route key={'/staff/:id/update-contact-info'} path="update-contact-info" element={<UpdateContactInfo />} />
+                            <Route key={'/staff/:id/reset-password-link'} path="reset-password-link" element={<ForgetPasswordLinkFromStaffPage />} />
+                            <Route key={'/staff/:id/assignment'} path="assignment" element={<Assignment />} />
+                            <Route key={'/staff/:id/update-role-company'} path="update-role-company" element={<UpdateRoleInCompany />} />
+                            <Route key={'/staff/:id/assign-staff-events'} path="assign-staff-events" element={<AssignStaffMemberToEvent />} />
                         </Route>
                         <Route path="/profile" element={<MainProfileSetting />}>
                             <Route path="my_details" element={<MyDetailsMainPage />} />
