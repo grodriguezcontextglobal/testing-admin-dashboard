@@ -13,7 +13,7 @@ const displayMonth = (props) => {
         '10': 'November',
         '11': 'December',
     };
-console.log('month[props]', month[props])
+    return month[props]
 }
 
 export default displayMonth
