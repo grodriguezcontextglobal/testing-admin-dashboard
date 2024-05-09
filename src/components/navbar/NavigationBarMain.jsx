@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { useMediaQuery, useWindowScroll } from '@uidotdev/usehooks';
 import { Dropdown } from 'antd';
 import pkg from 'prop-types';
+import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { devitrakApi } from '../../api/devitrakApi';
@@ -21,9 +22,8 @@ import { onResetStripesInfo } from '../../store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from '../../store/slices/subscriptionSlice';
 import CenteringGrid from '../../styles/global/CenteringGrid';
 import { OutlinedInputStyle } from '../../styles/global/OutlinedInputStyle';
-import { DevitrakLogo, DevitrakName, SettingIcon } from '../icons/Icons';
+import { SettingIcon } from '../icons/Icons';
 import './style/style.css';
-import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
@@ -152,13 +152,13 @@ const NavigationBarMain = (props) => {
                             </IconButton>
 
                             <Box sx={{ display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex' }, justifyContent: "flex-start", alignItems: "center" }}>
-                                <NavLink
+                                {/* <NavLink
                                     key={'devitrakName'}
                                     to={`/`}
                                     style={{ margin: "0 3px 0 0" }}
                                 >
                                     <DevitrakLogo /><DevitrakName />
-                                </NavLink>
+                                </NavLink> */}
 
                                 {navItems.map((item) => {
                                     if (item.permission.some(element => element === user.role)) {
