@@ -2,7 +2,7 @@ import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "antd";
 import _ from 'lodash';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -22,7 +22,11 @@ const ButtonSections = () => {
   ] = useState(false);
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
-    queryFn: () => devitrakApi.get("/inventory/list-inventories"),
+    queryFn: () => devitrakApi.get("/inventory/list-inventories", {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
   });
   const listOfItemsInInventoryQuery = useQuery({
     queryKey: ["listOfItemsInInventory"],
@@ -40,14 +44,26 @@ const ButtonSections = () => {
   });
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const controller = new AbortController()
+    listOfInventoryQuery.refetch()
+    listOfItemsInInventoryQuery.refetch()
+    ItemsInPoolQuery.refetch()
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
   const options = [{
     icon: <PrinterIcon />,
     text: 'Print All Serial Numbers',
-    condition: true
+    disableStatus: true,
+    fn: () => navigate('/page-to-print')
   }, {
     icon: <EmailIcon />,
     text: 'Email Notifications to Attendees',
-    condition: true
+    disableStatus: false,
+    fn: () => setCustomizedEmailNotificationModal(true)
   }];
 
 
@@ -123,19 +139,19 @@ const ButtonSections = () => {
           padding: 0
         }}
         styles={{
-          body:{
+          body: {
             display: "flex",
             justifyContent: "center",
             alignSelf: "stretch",
             padding: "0 0 0px 10px"
           }
         }}
-        // bodyStyle={{
-        //   display: "flex",
-        //   justifyContent: "center",
-        //   alignSelf: "stretch",
-        //   padding: "0 0 0px 10px"
-        // }}
+      // bodyStyle={{
+      //   display: "flex",
+      //   justifyContent: "center",
+      //   alignSelf: "stretch",
+      //   padding: "0 0 0px 10px"
+      // }}
       >
         <Grid
           display={"flex"}
@@ -158,16 +174,17 @@ const ButtonSections = () => {
                   xs={12} sm={12} md={12} lg={12}
                 >
                   <Button
-                    onClick={() => item.text === "Print All Serial Numbers" ? navigate('/page-to-print') : setCustomizedEmailNotificationModal(true)}
+                    disabled={item.disableStatus}
+                    onClick={() => item.fn()}
                     style={{ ...GrayButton, width: "100%" }}
                   >
                     {" "}
                     <Typography
                       textTransform={"none"}
                       textAlign={"left"}
-                      style={GrayButtonText}
+                      style={item.disableStatus ? {...GrayButtonText, color:""} : GrayButtonText}
                     >
-                      {item.icon}
+                      {!item.disableStatus && item.icon}
                       &nbsp;{item.text}
                     </Typography>
                   </Button>
