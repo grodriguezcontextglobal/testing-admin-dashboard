@@ -427,7 +427,7 @@ const MainPageQuickGlance = () => {
               {event.staff.adminUser.length + event.staff.headsetAttendees.length} total
             </Typography>
           </div></Typography>
-          <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content", display:"flex", justifyContent:"space-between", alignItems:"center" }}><WhitePlusIcon />&nbsp;<Typography style={BlueButtonText}>Add staff</Typography></Button>
+          <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content", display: "flex", justifyContent: "space-between", alignItems: "center" }}><Typography style={BlueButtonText}>Update staff</Typography></Button>
         </Grid>
         <StaffMainPage />
         {editingStaff && <EditingStaff editingStaff={editingStaff} setEditingStaff={setEditingStaff} />}
