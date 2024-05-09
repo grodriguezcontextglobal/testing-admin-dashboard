@@ -2,7 +2,7 @@ import { notification } from 'antd';
 import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { redirect, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './App.css';
 import AuthRoutes from './routes/authorized/AuthRoutes';
 import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes';
@@ -15,6 +15,7 @@ import { onResetHelpers } from './store/slices/helperSlice';
 import { onResetStaffProfile } from './store/slices/staffDetailSlide';
 import { onResetStripesInfo } from './store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
+
 const App = () => {
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem('admin-token')
@@ -49,7 +50,7 @@ const App = () => {
       localStorage.setItem("admin-token", "");
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
-      redirect('/login', { status: 302 })
+      return window.location.reload()
     }
   };
 
