@@ -5,29 +5,27 @@ import {
   Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, Popconfirm, Avatar } from "antd";
+import { Avatar, Divider, Popconfirm } from "antd";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import { PointFilled, WhitePlusIcon } from "../../../../components/icons/Icons";
 import { onAddStaffProfile, onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { PointFilled, WhitePlusIcon } from "../../../../components/icons/Icons";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 
 const HeaderStaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const { watch } = useForm();
   const eventQuery = useQuery({
-    queryKey: ["events"],
-    queryFn: () => devitrakApi.post("/event/event-list", { company: user.company }),
+    queryKey: ["events-header-section"],
+    queryFn: () => devitrakApi.post("/event/event-list", { company: user.company, active: true }),
     enabled: false,
     refetchOnMount: false,
   });
@@ -62,55 +60,18 @@ const HeaderStaffDetail = () => {
       }
     };
 
-    const dataPerCompany = () => {
-      if (watch("searchEvent")?.length > 0) {
-        const check = eventQuery?.data?.data?.list?.filter(
-          (item) =>
-            item?.eventInfoDetail?.eventName
-              ?.toLowerCase()
-              .includes(watch("searchEvent").toLowerCase())
-        );
-        return check;
-      }
-      const groupOfCompanies = eventQuery?.data?.data?.list
-      return groupOfCompanies;
-    };
-    dataPerCompany();
-
-    const sortData = () => {
-      let result = [];
-      let index = 0;
-      if (dataPerCompany()) {
-        for (let data of dataPerCompany()) {
-          if (data.staff.adminUser?.some((item) => item === profile.email)) {
-            result.splice(index, 0, { ...data, role: "Administrator" });
-            index++;
-          } else if (
-            data.staff.headsetAttendees?.some((item) => item === profile.email)
-          ) {
-            result.splice(index, 0, { ...data, role: "Coordinator" });
-            index++;
-          }
+    const filterActiveEventsPerStaffMember = () => {
+      const data = eventQuery.data.data.list
+      const findingEvent = new Set()
+      for (let item of data) {
+        const staffMembers = [...item.staff.adminUser, ...item.staff.headsetAttendees]
+        if (staffMembers.some(element => element.email === profile.email)) {
+          findingEvent.add({ eventName: item.eventInfoDetail.eventName, startingDate: item.eventInfoDetail.dateBegin })
         }
       }
-      return result;
-    };
-    sortData();
-    const dataToRenderInTable = () => {
-      let tableData = [];
-      let index = 0;
-      for (let data of sortData()) {
-        tableData.splice(index, 0, {
-          event: data.eventInfoDetail.eventName,
-          status: data.active,
-          role: data.role,
-          entireData: data,
-        });
-      }
-      return tableData;
-    };
-    dataToRenderInTable();
-
+      const sortedResultValue = Array.from(findingEvent)
+      return sortedResultValue.sort((a, b) => a.startingDate - b.startingDate)
+    }
     return (
       <Grid
         style={{
@@ -330,9 +291,7 @@ const HeaderStaffDetail = () => {
                 >
                   <Typography
                     color={
-                      dataToRenderInTable().some(
-                        (item) => item.status
-                      )
+                      filterActiveEventsPerStaffMember().length > 0
                         ? "var(--primary-700, #6941C6)"
                         : "var(--orange-700, #B93815)"
                     }
@@ -348,18 +307,14 @@ const HeaderStaffDetail = () => {
                       icon="tabler:point-filled"
                       rotate={3}
                       color={
-                        dataToRenderInTable().some(
-                          (item) => item.status
-                        )
+                        filterActiveEventsPerStaffMember().length > 0
                           ? "var(--primary-700, #6941C6)"
                           : "#EF6820"
                       }
                     />
-                    {dataToRenderInTable().some(
-                      (item) => item.status
-                    )
-                      ? "Active at event"
+                    {filterActiveEventsPerStaffMember().length > 0 ? filterActiveEventsPerStaffMember().at(-1).eventName
                       : "No active event"}
+                    {/* */}
                   </Typography>
                 </span>
               </div>
