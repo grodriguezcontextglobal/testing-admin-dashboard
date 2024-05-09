@@ -6,9 +6,10 @@ import { useSelector } from "react-redux";
 import DevitrakLogoWhiteBg from '../../../../assets/qrcode-maskable_icon_x48.png';
 import { DownloadIcon } from "../../../../components/icons/Icons";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 const QRCodeDisplay = () => {
     const { qrCodeLink } = useSelector((state) => state.event);
-    const [valueQRCode] = useState(qrCodeLink);
+    const [valueQRCode] = useState(String(qrCodeLink));
     const downloadQRCode = () => {
         const canvas = document.getElementById("myqrcode")?.querySelector("canvas");
         const pngUrl = canvas
@@ -25,12 +26,7 @@ const QRCodeDisplay = () => {
     const renderTitle = () => {
         return (
             <Typography
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-600, #475467)"}
+                style={{ ...Subtitle, fontWeight: 500 }}
             >
                 Event QR code
             </Typography>
@@ -49,19 +45,13 @@ const QRCodeDisplay = () => {
                         "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
                 }}
                 styles={{
-                    header:{
+                    header: {
                         borderBottom: "none",
                     },
-                    body:{
+                    body: {
                         padding: "0px 24px",
                     }
                 }}
-                // headStyle={{
-                //     borderBottom: "none",
-                // }}
-                // bodyStyle={{
-                //     padding: "0px 24px",
-                // }}
                 actions={[
                     <Grid
                         key={"button-view-report-event-quick-glance"}
@@ -75,7 +65,6 @@ const QRCodeDisplay = () => {
                         <Button
                             style={{
                                 width: "fit-content",
-                                // borderRadius: "8px",
                                 border: "transparent",
                                 outline: "transparent",
                                 background: "none",
@@ -125,7 +114,7 @@ const QRCodeDisplay = () => {
                         <QRCode
                             value={valueQRCode}
                             ecLevel="Q"
-                            qrStyle="squares"
+                            qrStyle="fluid"
                             size={120}
                             quietZone={10}
                             bgColor="#fff"
@@ -133,7 +122,7 @@ const QRCodeDisplay = () => {
                             logoImage={DevitrakLogoWhiteBg}
                             logoHeight={30}
                             logoWidth={30}
-                            logoPadding={1}
+                            logoPadding={3}
                         />
                         <div style={{
                             height: "auto",
