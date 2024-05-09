@@ -162,8 +162,8 @@ const Form = () => {
   }, [])
 
   useEffect(() => {
-      setEnd(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(begin))
-  }, [begin]);
+    setEnd(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(begin))
+  }, [begin, eventInfoDetail.dateBegin]);
 
   const addingPhoneNumber = () => {
     const result = [
@@ -238,6 +238,7 @@ const Form = () => {
           </Typography>
         </InputLabel>
         <OutlinedInput
+          required
           id="eventName"
           {...register("eventName", { required: true, maxLength: 50 })}
           aria-invalid={errors.eventName}
@@ -249,11 +250,6 @@ const Form = () => {
           }}
           placeholder="Event name"
         />
-        <div style={{ width: "100%" }}>
-          {errors?.eventName && (
-            <Typography>{errors.eventName.type === "maxLength" ? "Name length must be less than 50 characters" : "Field is required"}</Typography>
-          )}
-        </div>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Typography
             style={InputLabelStyle}
@@ -286,6 +282,7 @@ const Form = () => {
               <PhoneInput
                 className="container-phone input-phone"
                 id='phone_input_check'
+                style={{ boxShadow: 'rgba(16, 24, 40, 0.05) 1px 1px 2px' }}
                 countrySelectProps={{ unicodeFlags: true }}
                 defaultCountry="US"
                 placeholder="(555) 000-0000"
@@ -298,7 +295,7 @@ const Form = () => {
           <div
             style={{
               textAlign: "left",
-              width: "10%",
+              width: "50%",
             }}
           >
             <Button
@@ -306,7 +303,8 @@ const Form = () => {
               onClick={() => addingPhoneNumber()}
               style={{ ...OutlinedInputStyle, ...Subtitle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
             >
-              <Icon icon="material-symbols:add" width={15} />&nbsp;<Typography style={Subtitle}>Add</Typography>
+              {/* <Icon icon="material-symbols:add" width={15} />&nbsp; */}
+              <Typography style={{ ...Subtitle, fontWeight: 600, }}>Add</Typography>
             </Button>
           </div>
         </div>
@@ -442,6 +440,7 @@ const Form = () => {
           </Typography>
         </InputLabel>
         <OutlinedInput
+          required
           {...register("street", { required: true })}
           aria-invalid={errors.street}
           style={{
@@ -453,26 +452,15 @@ const Form = () => {
           placeholder="Street name"
           fullWidth
         />
-        <div style={{ width: "100%" }}>
-          {errors?.street && (
-            <Typography>This field is required</Typography>
-          )}
-        </div>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Typography
             textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"14px"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"20px"}
-            color={"var(--gray-700, #344054)"}
-          >
+            style={{ ...Subtitle, fontWeight: 500 }}          >
             Venue name
           </Typography>
         </InputLabel>
         <OutlinedInput
+          required
           {...register("conferenceRoom", { required: true })}
           aria-invalid={errors.conferenceRoom}
           style={{
@@ -484,26 +472,16 @@ const Form = () => {
           placeholder="Suite number or conference room"
           fullWidth
         />
-        <div style={{ width: "100%" }}>
-          {errors?.conferenceRoom && (
-            <Typography>This field is required</Typography>
-          )}
-        </div>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Typography
             textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"14px"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"20px"}
-            color={"var(--gray-700, #344054)"}
+            style={{ ...Subtitle, fontWeight: 500 }}
           >
             City
           </Typography>
         </InputLabel>
         <OutlinedInput
+          required
           {...register("city", { required: true })}
           aria-invalid={errors.city}
           style={{
@@ -540,18 +518,13 @@ const Form = () => {
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 State
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("state", { required: true })}
               aria-invalid={errors.state}
               style={{
@@ -578,18 +551,13 @@ const Form = () => {
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 Zip code
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("zipCode", { required: true })}
               aria-invalid={errors.zipCode}
               style={{
@@ -662,11 +630,7 @@ const Form = () => {
                 justifyContent={"space-around"}
                 alignItems={"center"}
                 textTransform={"capitalize"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"20px"}
+                style={{ ...Subtitle, fontWeight: 600 }}
                 color={`${merchant ? "#fff" : "#8f8f8f"}`}
                 onClick={() => setMerchant(true)}
               >
