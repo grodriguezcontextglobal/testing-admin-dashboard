@@ -162,8 +162,21 @@ const Login = () => {
                     item
                     xs={12} sm={12} md={6} lg={6}>
                     <Grid display={'flex'} flexDirection={'column'} justifyContent={'center'} alignSelf={'center'} margin={'auto'} item xs={12} sm={12} md={12} lg={12}>
-                        <Typography style={{ width: "100%" }}>Welcome</Typography>
-                        <Typography style={{ width: "100%" }}>Please enter your email</Typography>
+                        <Typography style={{
+                            color: "var(--gray900, #101828)",
+                            fontSize: "30px",
+                            fontFamily: "Inter",
+                            fontWeight: "600",
+                            lineHeight: "38px",
+                            marginBottom: "1rem",
+                            width: "100%"
+                        }}>Welcome</Typography>
+                        <Typography style={{
+                            width: "100%", color: "var(--gray-500, #667085)",
+                            fontSize: "16px",
+                            fontFamily: "Inter",
+                            lineHeight: "24px",
+                        }}>Please enter your email</Typography>
                         <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
                             <Grid
                                 marginY={"20px"}

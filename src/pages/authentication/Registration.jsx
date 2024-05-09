@@ -216,7 +216,8 @@ const Registration = () => {
                                             marginBottom: "1rem",
                                         }}
                                     >
-                                        Welcome to devitrak App
+                                        {/* Welcome to devitrak App */}
+                                        Welcome
                                     </Typography>
                                     <Typography
                                         style={{
