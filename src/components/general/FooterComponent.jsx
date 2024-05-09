@@ -13,7 +13,7 @@ const FooterComponent = () => {
             lineHeight={"20px"}
             color={"var(--gray-600, #475467)"}
           >
-            © Devitrak 2023
+            {/* © Trackinvice */}
           </Typography>
       </Grid>
     </Grid>
