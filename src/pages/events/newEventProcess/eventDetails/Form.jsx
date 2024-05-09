@@ -33,6 +33,7 @@ import "../../../../styles/global/ant-select.css";
 import "../../../../styles/global/reactInput.css";
 import "../style/NewEventInfoSetup.css";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import CenteringGrid from "../../../../styles/global/CenteringGrid"
 const Form = () => {
   const { subscription, subscriptionJSON } = useSelector(
     (state) => state.subscription
@@ -278,7 +279,7 @@ const Form = () => {
               alignSelf: "flex-start"
             }}
           >
-            <Tooltip title="Please click the '+ Add' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
+            <Tooltip title="Please click the 'Add phone number' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
               <PhoneInput
                 className="container-phone input-phone"
                 id='phone_input_check'
@@ -294,6 +295,8 @@ const Form = () => {
           </div>
           <div
             style={{
+              ...CenteringGrid,
+              height: "2.5rem",
               textAlign: "left",
               width: "50%",
             }}
@@ -301,10 +304,10 @@ const Form = () => {
             <Button
               disabled={contactPhoneNumber === ""}
               onClick={() => addingPhoneNumber()}
-              style={{ ...OutlinedInputStyle, ...Subtitle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
+              style={{ ...CenteringGrid, ...BlueButton, height: "2.5rem", padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
             >
               {/* <Icon icon="material-symbols:add" width={15} />&nbsp; */}
-              <Typography style={{ ...Subtitle, fontWeight: 600, }}>Add</Typography>
+              <Typography style={{ ...BlueButtonText, ...CenteringGrid, fontWeight: 600, }}>Add phone number</Typography>
             </Button>
           </div>
         </div>

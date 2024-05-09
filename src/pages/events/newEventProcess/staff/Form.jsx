@@ -172,58 +172,7 @@ const Form = () => {
                         item
                         xs={12}
                     >
-                        <Grid
-                            display={"flex"}
-                            justifyContent={"space-between"}
-                            alignItems={"flex-start"}
-                            alignSelf={"stretch"}
-                            gap={"24px"}
-                            item
-                            xs={12}
-                        >
-                            <Grid item xs={6}>
-                                <InputLabel fullWidth>First Name</InputLabel>
-                                <OutlinedInput
-                                    
-                                    {...register("firstName")}
-                                    style={OutlinedInputStyle}
-                                    placeholder="First name"
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <InputLabel fullWidth>Last Name</InputLabel>
-                                <OutlinedInput
-                                    
-                                    {...register("lastName")}
-                                    style={OutlinedInputStyle}
-                                    placeholder="Last name"
-                                    fullWidth
-                                />
-                            </Grid>
-                        </Grid>
-                        <Grid
-                            display={"flex"}
-                            justifyContent={"center"}
-                            alignItems={"flex-start"}
-                            alignSelf={"stretch"}
-                            gap={"24px"}
-                            item
-                            xs={12}
-                        >
-                            <Grid item xs={12}>
-                                <InputLabel fullWidth>Email</InputLabel>
-                                <OutlinedInput
-                                    
-                                    {...register("email")}
-                                    style={OutlinedInputStyle}
-                                    type="email"
-                                    placeholder="Email"
-                                    fullWidth
-                                />
-                            </Grid>
-                        </Grid>
-                        <Grid
+                                                <Grid
                             display={"flex"}
                             justifyContent={"center"}
                             alignItems={"flex-start"}
@@ -259,7 +208,57 @@ const Form = () => {
                                 </FormControl>
                             </Grid>
                         </Grid>
+                        <Grid
+                            display={"flex"}
+                            justifyContent={"space-between"}
+                            alignItems={"flex-start"}
+                            alignSelf={"stretch"}
+                            gap={"24px"}
+                            item
+                            xs={12}
+                        >
+                            <Grid item xs={6}>
+                                <InputLabel fullWidth>First Name</InputLabel>
+                                <OutlinedInput
 
+                                    {...register("firstName")}
+                                    style={OutlinedInputStyle}
+                                    placeholder="First name"
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <InputLabel fullWidth>Last Name</InputLabel>
+                                <OutlinedInput
+
+                                    {...register("lastName")}
+                                    style={OutlinedInputStyle}
+                                    placeholder="Last name"
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
+                        <Grid
+                            display={"flex"}
+                            justifyContent={"center"}
+                            alignItems={"flex-start"}
+                            alignSelf={"stretch"}
+                            gap={"24px"}
+                            item
+                            xs={12}
+                        >
+                            <Grid item xs={12}>
+                                <InputLabel fullWidth>Email</InputLabel>
+                                <OutlinedInput
+
+                                    {...register("email")}
+                                    style={OutlinedInputStyle}
+                                    type="email"
+                                    placeholder="Email"
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
                     </Grid>
                     <Button
                         onClick={(e) => addNewMember(e)}
@@ -297,7 +296,8 @@ const Form = () => {
                             Save and add more staff
                         </Typography>
 
-                    </Button>                            <Button
+                    </Button>                            
+                    <Button
                         type="submit"
                         style={{
                             display: "flex",
