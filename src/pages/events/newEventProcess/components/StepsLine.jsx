@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/material";
 import { Button, Steps } from "antd";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 
 const StepsLine = () => {
   const pathCheck = useLocation()
@@ -16,25 +17,25 @@ const StepsLine = () => {
       title: "Event details",
       description: "Name, location, and details about the event",
       previous: null,
-      current: "create-event-page/event-detail"
+      current: "create-event-page/event-detail",
     },
     {
       title: "Staff details",
       description: "Your representatives at the event",
       previous: '/create-event-page/event-detail',
-      current: "create-event-page/staff-detail"
+      current: "create-event-page/staff-detail",
     },
     {
       title: "Devices details",
       description: "The devices you will track at the event",
       previous: '/create-event-page/staff-detail',
-      current: "create-event-page/device-detail"
+      current: "create-event-page/device-detail",
     },
     {
       title: "Review",
       description: "Final review to create the event",
       previous: '/create-event-page/device-detail',
-      current: "create-event-page/review-submit"
+      current: "create-event-page/review-submit",
     },
   ];
 
@@ -66,12 +67,21 @@ const StepsLine = () => {
     return ref[pathCheck.pathname]
   }, [pathCheck.pathname])
 
+  const onChange = (value) => {
+    if(value < current){
+      setCurrent(value);
+      return navigate(`/${step[value].current}`)
+    }
+   return null;
+  };
+
   return (
     <Box>
       <Steps
         direction="vertical"
         percent={progression()}
         current={currentPath}
+        onChange={onChange}
         items={items}
       />
       {current > 0 && (
@@ -95,12 +105,7 @@ const StepsLine = () => {
 
           <Typography
             textTransform={"none"}
-            fontFamily={"Inter"}
-            fontSize={"14px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"20px"}
-            color={"var(--gray-700, #344054)"}
+            style={{ ...Subtitle, fontWeight: 600 }}
           >
             Previous step
           </Typography>
