@@ -319,7 +319,7 @@ const ReviewAndSubmitEvent = () => {
             lineHeight={"24px"}
             color={`${buttonDisable ? "var(--blue-dark-600, #155EEF)" : "var(--base-white, #FFF)"}`}
           >
-            Create event
+            Create and save
           </Typography>
         </Button>
       </Grid>
