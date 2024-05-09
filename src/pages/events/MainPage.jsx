@@ -169,7 +169,8 @@ const MainPage = () => {
                     result.add({ key: data.id, ...data })
                 }
             }
-            return Array.from(result)
+            const sortedResult = Array.from(result)
+            return sortedResult.sort((a, b) => a.eventInfoDetail.dateBegin - b.eventInfoDetail.dateBegin)
         }
         return (
             <Grid
@@ -252,7 +253,7 @@ const MainPage = () => {
                         <Typography
                             style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
                         >
-                            Upcoming
+                           Scheduled events
                         </Typography>
                         <Typography
                             style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
