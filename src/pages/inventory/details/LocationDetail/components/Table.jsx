@@ -5,14 +5,15 @@ import { Avatar, Button, Table } from "antd";
 import _ from 'lodash';
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { GeneralDeviceIcon } from "../../../../../components/icons/Icons";
+import { GeneralDeviceIcon, RightNarrowInCircle } from "../../../../../components/icons/Icons";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
     const location = useLocation()
     const { user } = useSelector((state) => state.admin);
+    const navigate = useNavigate()
     const listItemsQuery = useQuery({
         queryKey: ["currentStateDevicePerLocation"],
         queryFn: () => devitrakApi.post("/db_item/current-inventory", { company_name: user.company, location: decodeURI(location.search.slice(1)) }),
@@ -298,7 +299,17 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
                 textTransform={"capitalize"}
             >${cost}</Typography></span>
         )
-    }
+    },
+    {
+        title: '',
+        dataIndex: 'data',
+        key: 'data',
+        render: (record) => (
+          <button style={{ ...cellStyle, backgroundColor: "transparent", border: "none" }} onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
+            <RightNarrowInCircle />
+          </button>
+        )
+      }
     ]
     return (
         <Grid margin={'15px 0 0 0'} padding={0} container>
