@@ -3,8 +3,10 @@ import { Button, Steps } from "antd";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { useSelector } from "react-redux";
 
 const StepsLine = () => {
+  const { eventInfoDetail, staff } = useSelector((state) => state.event)
   const pathCheck = useLocation()
   const [current, setCurrent] = useState(0)
   const navigate = useNavigate()
@@ -68,11 +70,12 @@ const StepsLine = () => {
   }, [pathCheck.pathname])
 
   const onChange = (value) => {
-    if(value < current){
-      setCurrent(value);
-      return navigate(`/${step[value].current}`)
+    setCurrent(value);
+    if (value === 3) {
+      if (eventInfoDetail.eventName && staff.adminUser.length > 0) return navigate(`/${step[value].current}`)
+      return null;
     }
-   return null;
+    return navigate(`/${step[value].current}`)
   };
 
   return (
