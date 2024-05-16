@@ -1,19 +1,21 @@
 import { Grid, Typography } from "@mui/material"
+import { useMediaQuery } from "@uidotdev/usehooks"
 import { Avatar, Card, Tooltip } from "antd"
-import { PointFilled, RightBlueNarrow } from "../../../components/icons/Icons"
-import CenteringGrid from "../../../styles/global/CenteringGrid"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
+import { devitrakApi } from "../../../api/devitrakApi"
+import { PointFilled, RightBlueNarrow } from "../../../components/icons/Icons"
 import { onAddEventData, onAddQRCodeLink, onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice"
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice"
-import { checkStatus } from "../utils/checkStatus"
+import { CardStyle } from "../../../styles/global/CardStyle"
+import CenteringGrid from "../../../styles/global/CenteringGrid"
 import { Subtitle } from "../../../styles/global/Subtitle"
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38"
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth"
+import WeekdayDifference from "../utils/DateDifference"
+import { checkStatus } from "../utils/checkStatus"
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform"
-import { devitrakApi } from "../../../api/devitrakApi"
-import { CardStyle } from "../../../styles/global/CardStyle"
-import { useMediaQuery } from "@uidotdev/usehooks"
+import { useEffect, useState } from "react"
 
 const CardEventDisplay = ({ props }) => {
     const dispatch = useDispatch()
@@ -29,6 +31,7 @@ const CardEventDisplay = ({ props }) => {
         const date = new Date(`${props.eventInfoDetail.dateBegin}`).toString().split(' ')
         return date
     }
+    console.log("🚀 ~ substractingDateBeginInfo ~ substractingDateBeginInfo:", props.staff.adminUser)
     const substractingDateEndInfo = () => {
         const date = new Date(`${props.eventInfoDetail.dateEnd}`).toString().split(' ')
         return date
@@ -67,11 +70,42 @@ const CardEventDisplay = ({ props }) => {
         );
         navigate("/events/event-quickglance");
     };
+    const [weekdayCount, setWeekdayCount] = useState(null);
+
+    const handleWeekdayCountCalculated = (count) => {
+        return setWeekdayCount(count);
+    };
+
+    const reminderEventBegins = async () => {
+        const adminMembers = props.staff.adminUser;
+        for (let member of adminMembers) {
+            await devitrakApi.post('/nodemailer/events-begin-reminder', {
+                staff: member.email,
+                subject: "Event begin reminder",
+                daysToEvent: weekdayCount,
+                event: props.eventInfoDetail.eventName,
+                message: `Please ensure that the serial number range of each device is assigned before the event starts. If all serial numbers have already been assigned, please disregard this message.`
+            });
+        }
+    };
+
+    useEffect(() => {
+        const controller = new AbortController()
+        if (weekdayCount !== null) {
+            if (weekdayCount > 0 && weekdayCount <= 10) {
+                reminderEventBegins();
+                return setWeekdayCount(null)
+            }
+        }
+        return () => {
+            controller.abort()
+        }
+    }, []);
     return (
         <Card
             id="card-event-status"
             key={`card-event-status-pending-active-upcoming-${props.eventInfoDetail.dateEnd}`}
-            style={{ ...CardStyle, border: "1px solid var(--gray-200)", boxShadow:"0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",background: "var(--basewhite)",}}
+            style={{ ...CardStyle, border: "1px solid var(--gray-200)", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", background: "var(--basewhite)", }}
             actions={[
                 <Grid
                     key={`grid-card-home-action-footer-${props.id}`}
@@ -82,6 +116,7 @@ const CardEventDisplay = ({ props }) => {
                     alignItems={"center"}
                     textAlign={"right"}
                 >
+
                     <Grid
                         display={"flex"}
                         justifyContent={"flex-start"}
@@ -188,6 +223,7 @@ const CardEventDisplay = ({ props }) => {
                     </Typography>
                 </Grid>
             </Grid>
+            {<WeekdayDifference dateBegin={`${props.eventInfoDetail.dateBegin}`} onWeekdayCountCalculated={handleWeekdayCountCalculated} />}
         </Card>)
 }
 
