@@ -10,11 +10,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { GeneralDeviceIcon, RightNarrowInCircle } from "../../../components/icons/Icons";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import '../../../styles/global/ant-table.css';
-import CardRendered from "../utils/CardRendered";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import CardLocations from "../utils/CardLocations";
+import '../../../styles/global/ant-table.css';
 import DownloadingXlslFile from "../actions/DownloadXlsx";
+import '../style/details.css';
+import CardLocations from "../utils/CardLocations";
+import CardRendered from "../utils/CardRendered";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 const { PropTypes } = pkg;
 
 const ItemTable = ({ searchItem }) => {
@@ -79,6 +81,26 @@ const ItemTable = ({ searchItem }) => {
     return Array.from(result)
   }
 
+  const listOfCategory = () => {
+    const result = new Set()
+    if (itemsInInventoryQuery.data) {
+      for (let data of itemsInInventoryQuery.data.data.items) {
+        result.add(data.category_name)
+      }
+    }
+    return Array.from(result)
+  }
+
+  const listOfBrands = () => {
+    const result = new Set()
+    if (itemsInInventoryQuery.data) {
+      for (let data of itemsInInventoryQuery.data.data.items) {
+        result.add(data.brand)
+      }
+    }
+    return Array.from(result)
+  }
+
   const listOfLocations = () => {
     const totalPerLocation = new Map()
     if (itemsInInventoryQuery.data) {
@@ -129,35 +151,31 @@ const ItemTable = ({ searchItem }) => {
       container
     >
       <Grid margin={'auto'} display={'flex'} flexDirection={'column'} alignSelf={'stretch'} gap={'40px'} alignItems={'center'} item xs={10}>
-        <Typography
-          fontFamily={"Inter"}
-          fontSize={"36px"}
-          fontStyle={"normal"}
-          fontWeight={600}
-          lineHeight={"44px"}
-          color="var(--Gray-900, #101828)"
-          padding={"16px 24px"}
-          letterSpacing={"-0.72px"}
+        <p
+          style={{
+            fontFamily: "Inter",
+            fontSize: "36px",
+            fontStyle: "normal",
+            fontWeight: 600,
+            lineHeight: "44px",
+            color: "var(--Gray-900, #101828)",
+            padding: "16px 24px",
+            letterSpacing: "-0.72px",
+          }}
+
         >
           Add devices to inventory
-        </Typography>
-        <Typography
-          fontFamily={"Inter"}
-          fontSize={"20px"}
-          fontStyle={"normal"}
-          fontWeight={400}
-          lineHeight={"30px"}
-          color="var(--Gray-600, #475467)"
-          alignSelf={'stretch'}
-          textAlign={'center'}
-          padding={"0 5px"}
-          style={{ textWrap: "balance" }}
+        </p>
+        <p
+          style={{ ...TextFontSize20LineHeight30, textWrap: "balance", fontWeight: 400, textAlign: "center", padding: "0 5px", alignSelf: "stretch" }}
+        // fontWeight={400}
+        // color="var(--Gray-600, #475467)"
         >
           Add new devices to your inventory and assign categories and groups for easier management. Devices in your inventory can be assigned to staff or consumers permanently or temporarily. You can also mark devices with different statuses for condition and location. Include a device value to track deposits and fees.
-        </Typography>
+        </p>
         <Link to={"/inventory/new-item"}>
           {" "}
-          <Button
+          <button
             style={{
               width: "fit-content",
               border: "1px solid var(--blue-dark-600, #155EEF)",
@@ -185,7 +203,7 @@ const ItemTable = ({ searchItem }) => {
             >
               Add new item
             </Typography>
-          </Button>
+          </button>
         </Link>
       </Grid>
     </Grid>
@@ -263,13 +281,14 @@ const ItemTable = ({ searchItem }) => {
           width: "fit-content",
         }}
       >
-        <Typography
-          color={`${warehouse === 0
-            ? "var(--blue-700, #175CD3)"
-            : "var(--success-700, #027A48)"
-            }`}
-          style={Subtitle}
-          textTransform={"capitalize"}
+        <p
+          style={{
+            ...Subtitle, color: `${warehouse === 0
+              ? "var(--blue-700, #175CD3)"
+              : "var(--success-700, #027A48)"
+              }`, textTransform: "capitalize"
+          }}
+
         >
           <Icon
             icon="tabler:point-filled"
@@ -282,7 +301,7 @@ const ItemTable = ({ searchItem }) => {
           {warehouse === 0
             ? "In Use"
             : "In Stock"}
-        </Typography>
+        </p>
       </span>
     )
   },
@@ -352,12 +371,12 @@ const ItemTable = ({ searchItem }) => {
       compare: (a, b) => ("" + a.data.location).localeCompare(b.data.location),
     },
     render: (data) => (
-      <span style={cellStyle}> 
-      <Typography
-        style={{...Subtitle, textOverflow:"ellipsis"}}
-        textTransform={"capitalize"}
-      >{data.warehouse === 1 ? data.location : data.event_name}
-      </Typography></span>
+      <span style={cellStyle}>
+        <Typography
+          style={{ ...Subtitle, textOverflow: "ellipsis" }}
+          textTransform={"capitalize"}
+        >{data.warehouse === 1 ? data.location : data.event_name}
+        </Typography></span>
     )
   },
   {
@@ -455,24 +474,30 @@ const ItemTable = ({ searchItem }) => {
         flexDirection={'column'}
         justifyContent={'flex-start'}
         alignItems={"center"}
-        margin={'20px 0 20px 0'}
+        margin={'20px 0 0 0'}
         item
         xs={12}
       >
-        <Typography textAlign={'left'} style={{ ...TextFontsize18LineHeight28, width: "100%" }}>
-          Locations
-        </Typography>
-        <Divider />
-        <Grid container>
-          {
-            listOfLocations().map(item => {
-              return (
-                <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <Link to={`/inventory/location?${decodeURI(item.key)}`}><CardLocations title={item.key} props={`${item.value} total devices`} optional={null} /></Link></Grid>
-              )
-            })
-          }
-        </Grid>
+        <details style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }} open>
+          <summary>
+            <p style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign: 'left', cursor: "pointer" }}>
+              Locations
+            </p>
+
+          </summary>
+          <Divider />
+          <Grid container>
+            {
+              listOfLocations().map(item => {
+                return (
+                  <Grid key={item} item xs={12} sm={12} md={4} lg={4} > <Link to={`/inventory/location?${decodeURI(item.key)}`}><CardLocations title={item.key} props={`${item.value} total devices`} optional={null} /></Link></Grid>
+                )
+              })
+            }
+          </Grid>
+        </details>
       </Grid>
+      <Divider />
       <Grid
         display={"flex"}
         flexDirection={'column'}
@@ -482,22 +507,84 @@ const ItemTable = ({ searchItem }) => {
         item
         xs={12}
       >
-        <Typography textAlign={'left'} style={{ ...TextFontsize18LineHeight28, width: "100%" }}>
-          Groups
-        </Typography>
-        <Divider />
-        <Grid container>
-          {
-            listOfGroups().map(item => {
-              return (
-                <Grid key={item} item xs={12} sm={12} md={4} lg={4} ><Link to={`/inventory/group?${item}`}><CardRendered title={'Group'} props={item} optional={null} /></Link></Grid>
-              )
-            })
-          }
-        </Grid>
+        <details style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }} open>
+          <summary>
+            <p style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign: "left", cursor: "pointer" }}>
+              Category
+            </p>
+          </summary>
+          <Divider />
+          <Grid container>
+            {
+              listOfCategory().map(item => {
+                return (
+                  <Grid key={item} item xs={12} sm={12} md={4} lg={4} ><Link to={`/inventory/category_name?${item}`}><CardRendered title={'Category'} props={item} optional={null} /></Link></Grid>
+                )
+              })
+            }
+          </Grid>
+        </details>
       </Grid>
+      <Divider />
+      <Grid
+        display={"flex"}
+        flexDirection={'column'}
+        justifyContent={'flex-start'}
+        alignItems={"center"}
+        margin={'20px 0 0 0'}
+        item
+        xs={12}
+      >
+        <details style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+          <summary style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign: 'left', cursor: "pointer" }}>
+              Groups
+            </p>
+          </summary>
+          <Divider />
+          <Grid container>
+            {
+              listOfGroups().map(item => {
+                return (
+                  <Grid key={item} item xs={12} sm={12} md={4} lg={4} ><Link to={`/inventory/group?${item}`}><CardRendered title={'Group'} props={item} optional={null} /></Link></Grid>
+                )
+              })
+            }
+          </Grid>
+        </details>
+      </Grid>
+      <Divider />
+      <Grid
+        display={"flex"}
+        flexDirection={'column'}
+        justifyContent={'flex-start'}
+        alignItems={"center"}
+        margin={'20px 0 0 0'}
+        item
+        xs={12}
+      >
+        <details style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <summary>
+            <p style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign: 'left', cursor: "pointer" }}>
+              Brands
+            </p>
+          </summary>
+          <Divider />
+          <Grid container>
+            {
+              listOfBrands().map(item => {
+                return (
+                  <Grid key={item} item xs={12} sm={12} md={4} lg={4} ><Link to={`/inventory/brand?${item}`}><CardRendered title={'Brand'} props={item} optional={null} /></Link></Grid>
+                )
+              })
+            }
+          </Grid>
+        </details>
+      </Grid >
+      <Divider />
       {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && displayWelcomeMessage()}
-    </Grid>
+    </Grid >
   );
 
 };

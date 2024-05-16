@@ -6,6 +6,7 @@ import { MagnifyIcon } from "../../../../../../components/icons/Icons"
 import { Icon } from "@iconify/react"
 import { useEffect } from "react"
 import { useSelector } from "react-redux"
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28"
 const TransactionsDetails = () => {
     const { watch, register, setValue } = useForm()
     const { customer } = useSelector((state) => state.stripe)
@@ -20,6 +21,7 @@ const TransactionsDetails = () => {
             controller.abort()
         }
     }, [customer.uid])
+
     return (
         <>
             <Grid
@@ -79,25 +81,11 @@ const TransactionsDetails = () => {
                 >
                     <Typography
                         textTransform={"none"}
-                        textAlign={"left"}
-                        fontWeight={600}
-                        fontSize={"18px"}
-                        fontFamily={"Inter"}
-                        lineHeight={"28px"}
-                        color={"var(--gray-900, #101828)"}
+                        style={TextFontsize18LineHeight28}
                         padding={"24px"}
                     >
                         Transactions
                     </Typography>
-                    <div
-                        style={{
-                            borderRadius: "16px",
-                            background: "var(--blue-dark-50, #EFF4FF)",
-                            mixBlendMode: "multiply",
-                            width: "fit-content",
-                            height: "fit-content",
-                        }}
-                    ></div>
                 </Grid>
                 <Grid item xs={12}>
                     <StripeTransactionTable

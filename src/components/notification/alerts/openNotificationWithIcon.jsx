@@ -3,7 +3,7 @@ import { notification } from "antd";
 const Notification2Parameters = (type, msg) => {
     const [api, contextHolder] = notification.useNotification();
     const openNotificationWithIcon = (type, msg) => {
-        api[type]({
+        api.open({
             message: msg,
         });
     }

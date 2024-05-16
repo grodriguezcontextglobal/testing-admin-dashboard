@@ -10,7 +10,7 @@ import SearchStaff from "./components/SearchStaff";
 import SearchTransaction from "./components/SearchTransaction";
 
 const SearchMainPage = () => {
-    const [countingResult, setCountingResult] = useState([])
+    const [countingResult, setCountingResult] = useState([0])
     const [filterOptions, setFilterOptions] = useState({
         'View All': 1, 'Consumers': 0, 'Staff': 0, 'Devices': 0, 'Posts': 0, 'Events': 0
     })
@@ -29,12 +29,8 @@ const SearchMainPage = () => {
 
     const sumOfResultDisplayed = () => {
         const initialValue = 0
-        // let result = []
-        // for (let data of countingResult) {
-        //     result = [...result, data.length]
-        // }
-        // console.log(result)
-        return initialValue
+        const count = countingResult.reduce((accu, curr) => accu + curr, initialValue)
+        return count
     }
     return (
         <Grid

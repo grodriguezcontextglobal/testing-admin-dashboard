@@ -56,6 +56,26 @@ const EndEventButton = () => {
         enabled: false,
         refetchOnMount: false
     })
+
+    const sqlDBCompanyStockQuery = useQuery({
+        queryKey: ['allDevicesOutOfCompanyStock'],
+        queryFn: () => devitrakApi.post('/db_item/consulting-item', {
+            company: user.company,
+            warehouse: false
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+    const sqlDBInventoryEventQuery = useQuery({
+        queryKey: ['allInventoryOfSpecificEvent'],
+        queryFn: () => devitrakApi.post(`/db_event/event-inventory/${event.sql.event_id}`, {
+            company: user.company,
+            warehouse: false
+        }),
+        enabled: false,
+        refetchOnMount: false
+    })
+
     useEffect(() => {
         const controller = new AbortController()
         listOfInventoryQuery.refetch()
@@ -63,6 +83,8 @@ const EndEventButton = () => {
         itemsInPoolQuery.refetch()
         eventInventoryQuery.refetch()
         transactionsRecordQuery.refetch()
+        sqlDBCompanyStockQuery.refetch()
+        sqlDBInventoryEventQuery.refetch()
         return () => {
             controller.abort()
         }
@@ -101,45 +123,60 @@ const EndEventButton = () => {
         return [];
     };
     findItemsInPoolEvent();
-
     const sqlDeviceReturnedToCompanyStock = async () => {
-        const response = await eventInventoryQuery?.data?.data?.receiversInventory
-        const groupingByDevice = _.groupBy(response, 'device')
-        const deviceList = event.deviceSetup
-        for (let data of deviceList) {
-            for (let i = data.startingNumber; i <= data.endingNumber; i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
-                if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
-                    await devitrakApi.post('/db_event/returning-item', {
-                        warehouse: 1,
-                        status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-                        update_at: formatDate(new Date()),
-                        serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
-                        category_name: data.category,
-                        item_group: data.group,
-                        company: event.company,
-                    })
-                }
+        const listOfDevicesInEvent = await eventInventoryQuery?.data?.data?.receiversInventory;
+        const groupingDevicesFromNoSQL = _.groupBy(listOfDevicesInEvent, 'device')
+        const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result
+        for (let data of allInventoryOfEvent) {
+            if (groupingDevicesFromNoSQL[data.serial_number]) {
+                await devitrakApi.post('/db_event/returning-item', {
+                    warehouse: 1,
+                    status: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
+                    update_at: formatDate(new Date()),
+                    serial_number: data.serial_number,
+                    category_name: data.category_name,
+                    item_group: data.item_group,
+                    company: event.company,
+                })
+            } else {
+                await devitrakApi.post('/db_event/returning-item', {
+                    warehouse: 1,
+                    status: data.status,
+                    update_at: formatDate(new Date()),
+                    serial_number: data.serial_number,
+                    category_name: data.category_name,
+                    item_group: data.item_group,
+                    company: event.company,
+                })
             }
         }
     }
 
     const sqlDeviceFinalStatusAtEventFinished = async () => {
-        const response = await eventInventoryQuery?.data?.data?.receiversInventory
-        const groupingByDevice = _.groupBy(response, 'device')
-        const deviceList = event.deviceSetup
-        for (let data of deviceList) {
-            for (let i = data.startingNumber; i <= data.endingNumber; i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
-                if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
-                    await devitrakApi.post('/db_event/device-final-status', {
-                        status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-                        condition: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-                        updated_at: formatDate(new Date()),
-                        serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
-                        event_id: event.sql.event_id,
-                    })
-                }
+        const listOfDevicesInEvent = await eventInventoryQuery?.data?.data?.receiversInventory;
+        const groupingDevicesFromNoSQL = _.groupBy(listOfDevicesInEvent, 'device')
+        const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result
+        for (let data of allInventoryOfEvent) {
+            if (groupingDevicesFromNoSQL[data.serial_number]) {
+                await devitrakApi.post('/db_event/device-final-status', {
+                    status: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
+                    condition: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
+                    updated_at: formatDate(new Date()),
+                    serial_number: data.serial_number,
+                    event_id: event.sql.event_id,
+                })
+            } else {
+                await devitrakApi.post('/db_event/device-final-status', {
+                    status: data.status,
+                    condition: data.condition,
+                    updated_at: formatDate(new Date()),
+                    serial_number: data.serial_number,
+                    event_id: event.sql.event_id,
+                })
+
             }
         }
+
     }
 
     const groupingItemsByCompany = _.groupBy(
@@ -200,7 +237,6 @@ const EndEventButton = () => {
             if (resp.data.ok) return openNotificationWithIcon("success", "Event is closed. Inventory is updated!")
 
         } catch (error) {
-            console.log("🚀 ~ file: EndEventButton.jsx:140 ~ inactiveEventAfterEndIt ~ error:", error)
             openNotificationWithIcon("error", `${error.message}`)
         }
     }
@@ -210,7 +246,14 @@ const EndEventButton = () => {
             const dataToStoreAsRecord = transactionsRecordQuery?.data?.data?.listOfReceivers
             for (let data of dataToStoreAsRecord) {
                 await devitrakApi.post('/db_record/inserting-record', {
-                    email: data.user, serial_number: data.device.serialNumber, status: `${typeof data.device.status === 'string' ? data.device.status : data.device.status ? "In-Use" : "Returned"}`, activity: `${data.device.activity}`, payment_id: data.paymentIntent, event: data.eventSelected[0], item_group: data.device.deviceType, category_name: groupingInventoryByGroupName[data.device.deviceType].at(-1).category
+                    email: data.user,
+                    serial_number: data.device.serialNumber,
+                    status: `${typeof data.device.status === 'string' ? data.device.status : data.device.status ? "In-Use" : "Returned"}`,
+                    activity: `${data.device.status ? "YES" : "No"}`,
+                    payment_id: data.paymentIntent,
+                    event: event.eventInfoDetail.eventName,
+                    item_group: data.device.deviceType,
+                    category_name: groupingInventoryByGroupName[data.device.deviceType].at(-1).category
                 })
             }
         } catch (error) {
@@ -253,9 +296,8 @@ const EndEventButton = () => {
                     md={12}
                     lg={12}
                 >
-                    <Popconfirm title="Are you sure? This action can not be reversed." onConfirm={() => updatingItemInDB()}>
+                    <Popconfirm disabled={!event.active} title="Are you sure? This action can not be reversed." onConfirm={() => updatingItemInDB()}>
                         <Button
-                            // disabled={!event.active}
                             style={{ ...BlueButton, width: "100%", background: `${event.active ? 'var(--blue-dark-600)' : 'var(--disabled-blue-button)'}` }}
                         >
                             <Typography
@@ -273,3 +315,41 @@ const EndEventButton = () => {
 };
 
 export default EndEventButton;
+
+// const response = await eventInventoryQuery?.data?.data?.receiversInventory
+// const groupingByDevice = _.groupBy(response, 'device')
+// const deviceList = event.deviceSetup
+// for (let data of deviceList) {
+//     for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
+//         if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
+//             await devitrakApi.post('/db_event/returning-item', {
+//                 warehouse: 1,
+//                 status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
+//                 update_at: formatDate(new Date()),
+//                 serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
+//                 category_name: data.category,
+//                 item_group: data.group,
+//                 company: event.company,
+//             })
+//         }
+//     }
+// }
+
+
+// const response = await eventInventoryQuery?.data?.data?.receiversInventory
+// const groupingByDevice = _.groupBy(response, 'device')
+// const deviceList = event.deviceSetup
+// for (let data of deviceList) {
+//     for (let i = data.startingNumber; i <= data.endingNumber; i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
+//         if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
+//             await devitrakApi.post('/db_event/device-final-status', {
+//                 status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
+//                 condition: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
+//                 updated_at: formatDate(new Date()),
+//                 serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
+//                 event_id: event.sql.event_id,
+//             })
+//         }
+//     }
+// }
+

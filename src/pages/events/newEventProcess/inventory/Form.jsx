@@ -10,26 +10,24 @@ import { Select, Space, Tag, Tooltip } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { CheckIcon, PlusIcon } from "../../../../components/icons/Icons";
+import { CheckIcon, PlusIcon, RectanglePlusIcon } from "../../../../components/icons/Icons";
+import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from '../../../../styles/global/CenteringGrid';
 import { LightBlueButton } from '../../../../styles/global/LightBlueButton';
 import LightBlueButtonText from '../../../../styles/global/LightBlueButtonText';
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import "../../../../styles/global/ant-select.css"
-import { useNavigate } from "react-router-dom";
-import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
+import "../../../../styles/global/ant-select.css";
 import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
 const Form = () => {
   const {
     register,
-    watch,
     handleSubmit,
     setValue,
-    formState: { errors },
   } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { deviceSetup } = useSelector((state) => state.event);
@@ -37,6 +35,7 @@ const Form = () => {
     useState(false);
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState(deviceSetup);
+  const [assignAllDevices, setAssignAllDevices] = useState(false)
   const navigate = useNavigate();
   const dispatch = useDispatch()
   const itemQuery = useQuery({
@@ -83,34 +82,43 @@ const Form = () => {
     setValueItemSelected(optionRendering);
   };
 
-  const substractingRangesSelectedItem = () => {
-    const gettingValues = new Set()
-    if (valueItemSelected.length > 0) {
-      for (let data of valueItemSelected) {
-        gettingValues.add(Number(data.serial_number))
-      }
-      const toArray = Array.from(gettingValues)
-      const maxRange = Math.max(...toArray)
-      const minRange = Math.min(...toArray)
-      return {
-        min: String(minRange).padStart(valueItemSelected[0].serial_number?.length, '0') ?? 0,
-        max: String(maxRange).padStart(valueItemSelected[0].serial_number?.length, '0') ?? 0
-      }
-    }
-  }
+  // const substractingRangesSelectedItem = () => {
+  //   const gettingValues = new Set()
+  //   if (valueItemSelected.length > 0) {
+  //     for (let data of valueItemSelected) {
+  //       gettingValues.add(Number(data.serial_number))
+  //     }
+  //     const toArray = Array.from(gettingValues)
+  //     const maxRange = Math.max(...toArray)
+  //     const minRange = Math.min(...toArray)
+  //     return {
+  //       min: String(minRange).padStart(valueItemSelected[0].serial_number?.length, '0') ?? 0,
+  //       max: String(maxRange).padStart(valueItemSelected[0].serial_number?.length, '0') ?? 0
+  //     }
+  //   }
+  // }
+
   const removeItemSelected = (item) => {
     const filter = selectedItem.filter((_, index) => index !== item);
     dispatch(onAddDeviceSetup(filter));
     return setSelectedItem(filter);
   };
-  const handleAddingNewItemToInventoryEvent = (data) => {
-    const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: `${data.endingNumber - (data.startingNumber - 1)}`, existing: true }]
+
+  // const handleAddingNewItemToInventoryEvent = (data) => {
+  //   const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: `${Number(data.endingNumber) - (Number(data.startingNumber) - 1)}`, existing: true }]
+  //   setSelectedItem(resulting)
+  //   setValue('startingNumber', '')
+  //   setValue('endingNumber', '')
+  //   return;
+  // }
+
+  const handleAddingNewItemToDeviceSetupEvent = (data) => {
+    const resulting = [...selectedItem, { ...data, ...valueItemSelected[0], quantity: assignAllDevices ? valueItemSelected.length : data.quantity, existing: true }]
     setSelectedItem(resulting)
-    setValue('startingNumber', '')
-    setValue('endingNumber', '')
+    setValue('quantity', '')
+    setAssignAllDevices(false)
     return;
   }
-
   const handleNextStepEventSetup = () => {
     dispatch(onAddDeviceSetup(selectedItem))
     return navigate("/create-event-page/review-submit")
@@ -133,7 +141,7 @@ const Form = () => {
       >
         <Typography
           textTransform="none"
-          style={AntSelectorStyle}
+          style={{ ...TextFontSize20LineHeight30, color: "var(--gray600)" }}
         >
           Assign from existing groups in the inventory
         </Typography>
@@ -141,14 +149,11 @@ const Form = () => {
       <Typography
         textTransform="none"
         textAlign="justify"
-        fontFamily="Inter"
-        fontSize="14px"
-        fontStyle="normal"
-        fontWeight={400}
-        lineHeight="20px"
-        color="var(--gray-600, #475467)"
+        // color="var(--gray-600, #475467)"
         margin={'0.2rem auto 0.5rem'}
         style={{
+          ...Subtitle,
+          color: "var(--gray600)",
           wordWrap: "break-word",
           width: "100%",
           display: "flex",
@@ -206,20 +211,87 @@ const Form = () => {
           options={optionsToRenderInSelector().map((item) => {
             return {
               label: <Typography textTransform={'capitalize'} style={{ ...Subtitle, display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                <span><span style={{ fontWeight: 700 }}>{item[0].category_name}</span> {item[0].item_group}</span>
-                <span style={{ textAlign: "left" }}>Location: <span style={{ fontWeight: 700 }}>{item[0].location}</span></span>
-                <span>Total available: {item.length}</span>
+                <span style={{ width: "50%" }}>
+                  <span style={{ fontWeight: 700 }}>{item[0].category_name}</span> {item[0].item_group}
+                </span>
+                <span style={{ textAlign: "left", width: "30%" }}>Location: <span style={{ fontWeight: 700 }}>{item[0].location}</span></span>
+                <span style={{ textAlign: "right", width: "20%" }}>Total available: {item.length}</span>
               </Typography>, //renderOptionAsNeededFormat(JSON.stringify(option))
               value: JSON.stringify(item),
             };
           })}
         />
         <form
-          onSubmit={handleSubmit(handleAddingNewItemToInventoryEvent)}
+          onSubmit={handleSubmit(handleAddingNewItemToDeviceSetupEvent)}
           style={{
             width: "100%",
           }}
         >
+          {/* <Grid
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            marginY={2}
+            gap={2}
+            style={{
+              width: "100%",
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+
+            <Grid item xs={6} sm={6} md={6} lg={6}>
+              <InputLabel
+                style={{ marginBottom: "0.2rem", width: "100%" }}
+              >
+                <Typography
+                  textTransform={"none"}
+                  textAlign={"left"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
+                >
+                  Quantity
+                </Typography>
+              </InputLabel>
+              <OutlinedInput
+                {...register("startingNumber", { required: true })}
+                aria-invalid={errors.startingNumber}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                }}
+                placeholder={`Selected category min value: ${substractingRangesSelectedItem()?.min}`}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6} sm={6} md={6} lg={6}>
+
+              <InputLabel
+                style={{ marginBottom: "0.2rem", width: "100%" }}
+              >
+                <Typography
+                  textTransform={"none"}
+                  textAlign={"left"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
+                >
+                  Ending number
+                </Typography>
+              </InputLabel>
+              <OutlinedInput
+                {...register("endingNumber", { required: true })}
+                aria-invalid={errors.endingNumber}
+                style={{
+                  ...OutlinedInputStyle,
+                  border: `${errors.endingNumber && "solid 1px #004EEB"}`,
+                  width: "100%",
+                }}
+                placeholder={`Selected category max value: ${substractingRangesSelectedItem()?.max}`}
+                fullWidth
+              />
+            </Grid>
+          </Grid> */}
           <Grid
             display={"flex"}
             justifyContent={"space-between"}
@@ -245,45 +317,10 @@ const Form = () => {
                   textAlign={"left"}
                   style={{ ...Subtitle, fontWeight: 500 }}
                 >
-                  From starting number
+                  Assign all&nbsp;<input type="checkbox" value={assignAllDevices} onChange={(e) => setAssignAllDevices(e.target.checked)} />
                 </Typography>
+
               </InputLabel>
-              <OutlinedInput
-                {...register("startingNumber", { required: true })}
-                aria-invalid={errors.startingNumber}
-                style={{
-                  ...OutlinedInputStyle,
-                  border: `${errors.startingNumber && "solid 1px #004EEB"
-                    }`,
-                  width: "100%",
-                }}
-                placeholder={`Selected category min value: ${substractingRangesSelectedItem()?.min}`}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={6} md={6} lg={6}>
-              <InputLabel
-                style={{ marginBottom: "0.2rem", width: "100%" }}
-              >
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  To ending number
-                </Typography>
-              </InputLabel>
-              <OutlinedInput
-                {...register("endingNumber", { required: true })}
-                aria-invalid={errors.endingNumber}
-                style={{
-                  ...OutlinedInputStyle,
-                  border: `${errors.endingNumber && "solid 1px #004EEB"}`,
-                  width: "100%",
-                }}
-                placeholder={`Selected category max value: ${substractingRangesSelectedItem()?.max}`}
-                fullWidth
-              />
             </Grid>
           </Grid>
           <Grid
@@ -312,26 +349,15 @@ const Form = () => {
                 </Typography>
               </InputLabel>
               <OutlinedInput
-                disabled
+                disabled={assignAllDevices}
+                {...register('quantity')}
                 style={{
                   ...OutlinedInputStyle,
                   width: "100%",
                 }}
-                placeholder={`${isNaN(watch('endingNumber') - watch('startingNumber')) ? 0 : watch('endingNumber') - (watch('startingNumber') - 1)}`}
+                placeholder="Enter quantity needed."
                 fullWidth
               />
-              {errors?.quantity && (
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                  color={"red"}
-                  width={"100%"}
-                  padding={"0.5rem 0"}
-                >
-                  {errors.quantity.type}
-                </Typography>
-              )}
             </Grid>
             <Grid style={{ alignSelf: "baseline" }} item xs={6} sm={6} md={6} lg={6}>
               <InputLabel
@@ -340,7 +366,7 @@ const Form = () => {
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
+                  style={{ ...Subtitle, fontWeight: 500, color: "transparent" }}
                   color={"transparent"}
                 >
                   Quantity
@@ -350,7 +376,7 @@ const Form = () => {
                 type="submit"
                 style={{ ...LightBlueButton, ...CenteringGrid, width: "100%", }}
               >
-                <PlusIcon /><Typography
+                <RectanglePlusIcon stroke={'var(--gray900)'} />&nbsp;<Typography
                   textTransform="none"
                   style={LightBlueButtonText}
                 >
@@ -389,11 +415,10 @@ const Form = () => {
                   <Tag
                     bordered={false}
                     closable
-                    icon={<CheckIcon />}
                     style={{
                       display: "flex",
                       padding: "2px 4px 2px 5px",
-                      justifyContent: "space-between",
+                      justifyContent: "flex-start",
                       alignItems: "center",
                       gap: "3px",
                       borderRadius: "6px",
@@ -404,10 +429,10 @@ const Form = () => {
                     onClose={() => removeItemSelected(index)}
                     key={`${item._id}${index}`}
                   >
-                    &nbsp;{item.item_group}
+                    <CheckIcon />&nbsp;{item.item_group}
                     {"      "}&nbsp;Qty: {item.quantity}
-                    <br />
-                    {item.startingNumber} - {item.endingNumber}
+                    {/* <br />
+                    {item.startingNumber} - {item.endingNumber} */}
                   </Tag>
                 </Tooltip>
 
@@ -485,7 +510,7 @@ const Form = () => {
       <Grid
         style={{
           width: "100%",
-          display: "flex",
+          display: `${displayFormToCreateCategory ? "none" : "flex"}`,
           justifyContent: "space-between",
           alignItems: "center",
           gap: "0.5rem",
@@ -498,7 +523,7 @@ const Form = () => {
         lg={12}
       >
         <Button
-        onClick={() => navigate("/create-event-page/review-submit")}
+          onClick={() => navigate("/create-event-page/review-submit")}
           style={{
             display: "flex",
             padding: "12px 20px",

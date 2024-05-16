@@ -4,15 +4,12 @@ import {
   Grid,
   Typography
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import Loading from "../../../../components/animation/Loading";
 import { WhitePlusIcon } from "../../../../components/icons/Icons";
 import { onAddCustomerInfo } from "../../../../store/slices/customerSlice";
 import {
@@ -24,12 +21,11 @@ import {
 } from "../../../../store/slices/stripeSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import ConsumerActivity from "./ConsumerDetail/ConsumerActivity";
 import Details from "./ConsumerDetail/Details";
 
 const CustomerDetail = () => {
-  const { register, watch, setValue } = useForm();
+  const { setValue } = useForm();
   const { choice, event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
   const [loadingStatus, setLoadingStatus] = useState(false)

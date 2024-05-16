@@ -25,6 +25,9 @@ import {
     onAddPaymentIntentDetailSelected,
     onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 import '../../../../../styles/global/ant-table.css';
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
@@ -33,9 +36,6 @@ import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue }) => {
@@ -80,9 +80,9 @@ const StripeTransactionTable = ({ searchValue }) => {
     const deviceAssignedListQuery = useQuery({
         queryKey: ['assginedDeviceList'],
         queryFn: () => devitrakApi.post('/receiver/receiver-assigned-list', {
-            "user": customer.email,
-            'provider': event.company,
-            "eventSelected": event.eventInfoDetail.eventName
+            user: customer.email,
+            provider: event.company,
+            eventSelected: event.eventInfoDetail.eventName
         }),
         enabled: false,
         refetchOnMount: false,
@@ -154,6 +154,7 @@ const StripeTransactionTable = ({ searchValue }) => {
     }
     //*nested table starts here
     const renderDataPerRow = (rowRecord) => {
+        console.log("🚀 ~ renderDataPerRow ~ rowRecord:", rowRecord)
         const foundTransactionAndDevicesAssigned = () => {
             if (foundAllTransactionsAndDevicesAssigned()) {
                 const paymentIntentInRecord = foundAllTransactionsAndDevicesAssigned()[rowRecord.paymentIntent]
@@ -758,27 +759,27 @@ const StripeTransactionTable = ({ searchValue }) => {
                             </Popconfirm>}</Grid>
                     <Grid item xs={12} sm={12} md={4} display={'flex'} alignItems={'center'}>
                         {record.device[0].deviceNeeded > 4 && <Tooltip title="This option is to return bulk of devices">
-                        <Button
-                            onClick={() => handleReturnDeviceInBulk(record)}
-                            underline="none"
-                            style={{
-                                ...CenteringGrid,
-                                width: "100%",
-                                border: `${!record.active ? "1px solid var(--blue-dark-600, #ffbbb6)" : "1px solid var(--blue-dark-600, #B42318)"}`,
-                                borderRadius: "8px",
-                                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                                padding: "5px",
-                                background: `${!record.active ? "#ffbbb6" : "#B42318"}`
-                            }}
-                        >
-                            <Typography
-                                textTransform={"none"}
-                                style={{ ...BlueButtonText, cursor: "pointer", color: "#fff" }}
+                            <Button
+                                onClick={() => handleReturnDeviceInBulk(record)}
+                                underline="none"
+                                style={{
+                                    ...CenteringGrid,
+                                    width: "100%",
+                                    border: `${!record.active ? "1px solid var(--blue-dark-600, #ffbbb6)" : "1px solid var(--blue-dark-600, #B42318)"}`,
+                                    borderRadius: "8px",
+                                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                                    padding: "5px",
+                                    background: `${!record.active ? "#ffbbb6" : "#B42318"}`
+                                }}
                             >
-                                Bulk
-                            </Typography>
-                        </Button>
-                    </Tooltip>}
+                                <Typography
+                                    textTransform={"none"}
+                                    style={{ ...BlueButtonText, cursor: "pointer", color: "#fff" }}
+                                >
+                                    Bulk
+                                </Typography>
+                            </Button>
+                        </Tooltip>}
                     </Grid>
                 </Grid>
             ),
@@ -787,6 +788,7 @@ const StripeTransactionTable = ({ searchValue }) => {
     return (
         <>
             {contextHolder}
+
             <Table
                 columns={columns}
                 dataSource={sourceData()}

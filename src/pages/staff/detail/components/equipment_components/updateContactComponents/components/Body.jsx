@@ -12,14 +12,15 @@ import { Avatar, Divider, Space, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
+import { onAddStaffProfile } from "../../../../../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
-import { onLogin } from "../../../../../../../store/slices/adminSlice";
 import "./Body.css";
+import { useNavigate } from "react-router-dom";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -35,6 +36,7 @@ const Body = () => {
     },
   });
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = () => {
     api.open({
@@ -85,21 +87,17 @@ const Body = () => {
         imageProfile: base64,
       });
       if (resp) {
-        const dataUser = user.data
         dispatch(
-          onLogin({
-            ...user,
-            name: data.name,
+          onAddStaffProfile({
+            ...profile,
+            firstName: data.name,
             lastName: data.lastName,
             email: data.email,
             phone: data.phone,
-            data: {
-              ...dataUser,
-              name: data.name,
-              lastName: data.lastName,
-              email: data.email,
+            adminUserInfo: {
+              ...profile.adminUserInfo,
               phone: data.phone,
-            },
+            }
           })
         );
         return openNotificationWithIcon()
@@ -112,21 +110,17 @@ const Body = () => {
         phone: data.phone,
       });
       if (resp) {
-        const dataUser = user.data
         dispatch(
-          onLogin({
-            ...user,
-            name: data.name,
+          onAddStaffProfile({
+            ...profile,
+            firstName: data.name,
             lastName: data.lastName,
             email: data.email,
             phone: data.phone,
-            data: {
-              ...dataUser,
-              name: data.name,
-              lastName: data.lastName,
-              email: data.email,
+            adminUserInfo: {
+              ...profile.adminUserInfo,
               phone: data.phone,
-            },
+            }
           })
         );
         return openNotificationWithIcon()
@@ -151,7 +145,41 @@ const Body = () => {
           }}
           container
         >
-          {" "}
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            marginY={0}
+            gap={2}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+          >
+            <Button
+              style={{ ...GrayButton, width: "fit-content" }}
+              onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
+            >
+              <Typography
+                textTransform={"none"}
+                style={GrayButtonText}
+              >
+                Cancel
+              </Typography>
+            </Button>
+            <Button
+              type="submit"
+              style={{ ...BlueButton, width: "fit-content" }}
+            >
+              <Typography
+                textTransform={"none"}
+                style={BlueButtonText}
+              >
+                Save
+              </Typography>
+            </Button>
+          </Grid>
+          <Divider />
           <Grid
             display={"flex"}
             flexDirection={"column"}
@@ -494,7 +522,7 @@ const Body = () => {
             sm={6}
             md={6}
           >
-            <Space size={[8, 16]} wrap>
+            <Space style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignItems: "center" }} size={[8, 16]} wrap>
               {listOfEvents().map((evet) => {
 
                 return (
@@ -534,6 +562,7 @@ const Body = () => {
         >
           <Button
             style={{ ...GrayButton, width: "fit-content" }}
+            onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
           >
             <Typography
               textTransform={"none"}

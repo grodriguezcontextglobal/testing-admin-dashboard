@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import { Space } from "antd";
-import CardRendered from "./CardRendered";
+import CardRendered from "./CardRenderedDeviceSetup";
 
 const DisplayAllItemsSetInventoryEvent = () => {
   const { event } = useSelector((state) => state.event);

@@ -34,7 +34,6 @@ const FormDeviceTrackingMethod = ({
   setDisplayFormToCreateCategory,
   existingData
 }) => {
-  console.log("🚀 ~ selectedItem:", selectedItem)
   const [taxableLocation, setTaxableLocation] = useState('')
   const [choose, setChoose] = useState([])
   const { user } = useSelector((state) => state.admin);
@@ -211,7 +210,8 @@ const FormDeviceTrackingMethod = ({
           current_location: locationSelection,
           created_at: formatDate(new Date()),
           updated_at: formatDate(new Date()),
-          company: user.company, quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
+          company: user.company,
+          quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
           existing: false
 
         }]

@@ -36,7 +36,7 @@ import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime()
-  const { choice, event, company } = useSelector((state) => state.event);
+  const { choice, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
   const [editingStaff, setEditingStaff] = useState(false)
@@ -59,6 +59,16 @@ const MainPageQuickGlance = () => {
     refetchOnMount: false,
     notifyOnChangeProps: ['data', 'dataUpdatedAt']
   });
+  const eventAttendeesParametersQuery = useQuery({
+    queryKey: ["listOfAttendeesPerSelectedEvent"],
+    queryFn: () => devitrakApi.post("/auth/user-query", {
+      provider:user.company,
+      eventSelected: choice
+    }),
+    enabled: false,
+    refetchOnMount: false,
+    notifyOnChangeProps: ['data', 'dataUpdatedAt']
+  });
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event?.eventInfoDetail?.eventName, provider: event.company }),
@@ -70,6 +80,7 @@ const MainPageQuickGlance = () => {
     const controller = new AbortController()
     eventAttendeesQuery.refetch()
     receiversPoolQuery.refetch()
+    eventAttendeesParametersQuery.refetch()
     return () => {
       controller.abort()
     }
@@ -78,9 +89,10 @@ const MainPageQuickGlance = () => {
   if (eventAttendeesQuery.isLoading) return <div style={{ ...CenteringGrid, width: "100%" }} > <Loading /></ div>
   if (eventAttendeesQuery.data || eventAttendeesQuery.isFetched) {
     const foundAllDevicesGivenInEvent = () => {
-      const check = receiversPoolQuery?.data?.data?.receiversInventory?.filter(
-        (item) => item.eventSelected === choice && item.provider === company
-      );
+      // const check = receiversPoolQuery?.data?.data?.receiversInventory?.filter(
+      //   (item) => item.eventSelected === choice && item.provider === company
+      // );
+      const check = receiversPoolQuery?.data?.data?.receiversInventory
       return check;
     };
     const checkStaffRoleToDisplayCashReportInfo = () => {
@@ -88,9 +100,10 @@ const MainPageQuickGlance = () => {
     };
 
     const foundAttendeesPerEvent = () => {
-      const check = eventAttendeesQuery.data.data.users?.filter((item) =>
-        item?.eventSelected?.find((item) => item === choice)
-      );
+      // const check = eventAttendeesQuery.data.data.users?.filter((item) =>
+      //   item?.eventSelected?.find((item) => item === choice)
+      // );
+      const check = eventAttendeesQuery.data.data.users
       return check;
     };
 

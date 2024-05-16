@@ -16,6 +16,8 @@ import AddNewItem from "../../pages/inventory/actions/AddNewItem";
 import EditGroup from "../../pages/inventory/actions/EditGroup";
 import AddNewBulkItems from "../../pages/inventory/actions/NewBulkItems";
 import MainPageGrouping from "../../pages/inventory/details/GroupDetail/MainPage";
+import MainPageBrand from "../../pages/inventory/details/BrandDetail/MainPage";
+import MainPageCategory from "../../pages/inventory/details/categoryDetail/MainPage";
 import MainPage from "../../pages/inventory/details/LocationDetail/MainPage";
 import { default as InventoryInUsePage } from "../../pages/inventory/InventoryInUse/MainPage";
 import ParentRenderingChildrenPage from "../../pages/ParentRenderingChildrenPage";
@@ -89,6 +91,8 @@ const AuthRoutes = () => {
                         <Route path="/inventory" element={<Inventory />} />
                         <Route path="/inventory/location" element={<MainPage />} />
                         <Route path="/inventory/group" element={<MainPageGrouping />} />
+                        <Route path="/inventory/category_name" element={<MainPageCategory />} />
+                        <Route path="/inventory/brand" element={<MainPageBrand />} />
                         <Route path="/inventory/:id" element={<InventoryDetail />} />
                         <Route path="/inventory/event-inventory" element={<InventoryEvent />} />
                         <Route path="/inventory/new-item" element={<AddNewItem />} />

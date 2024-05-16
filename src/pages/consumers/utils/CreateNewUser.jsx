@@ -8,7 +8,7 @@ import {
     Select,
     Typography,
 } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
@@ -16,14 +16,14 @@ import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
-import Loading from "../../../components/animation/Loading";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import Loading from "../../../components/animation/Loading";
+import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import "../../../styles/global/ant-select.css"
+import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import "../../../styles/global/ant-select.css";
 const schema = yup
     .object({
         firstName: yup.string().required("first name is required"),
@@ -50,7 +50,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
     const { user } = useSelector((state) => state.admin);
     const { eventsPerAdmin } = useSelector((state) => state.event);
     const [api, contextHolder] = notification.useNotification();
-    const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active] ?? [];
+    const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active];
     const openNotificationWithIcon = (type, msg) => {
         api.open({
             message: type,
@@ -59,20 +59,6 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
     };
 
     const queryClient = useQueryClient();
-
-    const newConsumerMutation = useMutation({
-        mutationFn: (newConsumerProfile) =>
-            devitrakApi.post("/auth/new", newConsumerProfile),
-    });
-
-    const updateConsumerMutation = useMutation({
-        mutationFn: (updateConsumerProfile) =>
-            devitrakApi.patch(
-                `/auth/${updateConsumerProfile.id}`,
-                updateConsumerProfile
-            ),
-    });
-
     const checkConsumerInData = async (props) => {
         const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
             email: props.email
@@ -80,78 +66,65 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
         if (listOfConsumersQuery.data.ok) {
             return setConsumersList(listOfConsumersQuery.data.users)
         } else {
-            return [];
+            return setConsumersList([]);
         }
     };
+
+    const newConsumerAfterBeingCheck = async (data) => {
+        const newUserProfile = {
+            name: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phoneNumber: contactPhoneNumber,
+            privacyPolicy: true,
+            category: "Regular",
+            provider: [user.company],
+            eventSelected: [data.eventAssignedTo],
+        };
+        const newUser = await devitrakApi.post("/auth/new", newUserProfile)
+        if (newUser.data) {
+            queryClient.invalidateQueries(["listOfConsumers", "attendeesList", "consumersList"]);
+            openNotificationWithIcon("success", "New consumer added");
+            setLoading(false)
+            closeDeviceModal();
+        }
+    }
+    const zeroDuplications = (props) => {
+        const result = new Set()
+        for (let data of props) {
+            result.add(data)
+        }
+        return Array.from(result)
+    }
+    const updateExistingUserInRecord = async (data) => {
+        const { eventSelected, provider, id } = consumersList.at(-1);
+        const updateConsumerProfile = {
+            id: id,
+            eventSelected: zeroDuplications([...eventSelected, data.eventAssignedTo]),
+            provider: zeroDuplications([...provider, user.company]),
+            phoneNumber: contactPhoneNumber,
+        };
+        const updatingUserInfoQuery = await devitrakApi.patch(
+            `/auth/${id}`,
+            updateConsumerProfile
+        )
+        if (updatingUserInfoQuery.data) {
+            queryClient.invalidateQueries(["listOfConsumers", "consumersList"]);
+            openNotificationWithIcon("success", "New consumer added");
+            setLoading(false)
+            closeDeviceModal();
+        }
+    }
     const handleNewConsumer = async (data) => {
         setLoading(true)
         try {
             await checkConsumerInData(data)
-            if (consumersList.length === 0) {
-                const newUserProfile = {
-                    name: data.firstName,
-                    lastName: data.lastName,
-                    email: data.email,
-                    phoneNumber: contactPhoneNumber,
-                    privacyPolicy: true,
-                    category: "Regular",
-                    provider: [user.company],
-                    eventSelected: [data.eventAssignedTo],
-                };
-                newConsumerMutation.mutate(newUserProfile);
-                if (
-                    (newConsumerMutation.isIdle || newConsumerMutation.isSuccess) &&
-                    !newConsumerMutation.isError
-                ) {
-                    queryClient.invalidateQueries(["listOfConsumers", "attendeesList", "consumersList"]);
-                    openNotificationWithIcon("success", "New consumer added");
-                    setLoading(false)
-                    closeDeviceModal();
-                }
+            if (consumersList.length < 1) {
+                return newConsumerAfterBeingCheck(data)
             } else {
-                const { eventSelected, provider, id } = consumersList[0];
-                let updateProvider = provider;
-                let updateEventSelected = eventSelected;
-                const checkIfEventExistsInConsumer = eventSelected.some(
-                    (event) => event === data.eventAssignedTo
-                );
-                if (!checkIfEventExistsInConsumer) {
-                    updateEventSelected = eventSelected.toSpliced(
-                        eventSelected.at(-1),
-                        0,
-                        data.eventAssignedTo
-                    );
-                }
-                const checkIfProviderExistsInConsumer = provider.some(
-                    (company) => company === user.company
-                );
-                if (!checkIfProviderExistsInConsumer) {
-                    return (updateProvider = provider.toSpliced(
-                        provider.at(-1),
-                        0,
-                        user.company
-                    ));
-                }
-                const updateConsumerProfile = {
-                    id: id,
-                    eventSelected: updateEventSelected,
-                    provider: updateProvider,
-                    phoneNumber: contactPhoneNumber,
-                };
-                updateConsumerMutation.mutate(updateConsumerProfile);
-                if (
-                    (updateConsumerMutation.isIdle || updateConsumerMutation.isSuccess) &&
-                    !updateConsumerMutation.isError
-                ) {
-                    queryClient.invalidateQueries(["listOfConsumers", "consumersList"]);
-                    openNotificationWithIcon("success", "New consumer added");
-                    setLoading(false)
-                    closeDeviceModal();
-                }
+                return updateExistingUserInRecord(data)
             }
-
         } catch (error) {
-            console.log("🚀 ~ handleNewConsumer ~ error:", error)
             setLoading(false)
         }
     };

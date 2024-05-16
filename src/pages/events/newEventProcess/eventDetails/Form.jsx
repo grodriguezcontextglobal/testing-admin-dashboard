@@ -701,7 +701,7 @@ const Form = () => {
               textTransform={"none"}
               style={BlueButtonText}
             >
-              Next step
+              {String(eventInfoDetail.eventName).length === 0 ? "Next step" : "Save changes"}
             </Typography>
           </Button>
         </Grid>

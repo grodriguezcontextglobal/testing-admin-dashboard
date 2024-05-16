@@ -1,9 +1,8 @@
 import {
-  Button,
   Grid,
   InputAdornment,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { Divider } from "antd";
 import { useForm } from "react-hook-form";
@@ -70,44 +69,41 @@ const MainPage = () => {
           lg={6}
         >
           <Link to="/inventory/edit-group">
-            <Button
+            <button
               style={{ ...LightBlueButton, width: "fit-content" }}
             >
-              <Typography
-                textTransform={"none"}
-                style={LightBlueButtonText}
+              <p
+                style={{...LightBlueButtonText, textTransform:"none"}}
               >
                 Update a group of device
-              </Typography>
-            </Button>
+              </p>
+            </button>
           </Link>
           <Link to="/inventory/new-bulk-items">
-            <Button
+            <button
               style={{ ...BlueButton, width: 'fit-content' }}
             >
               <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
               &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
+              <p
+                style={{...BlueButtonText, textTransform:"none"}}
               >
                 Add a group of devices
-              </Typography>
-            </Button>
+              </p>
+            </button>
           </Link>
           <Link to="/inventory/new-item">
-            <Button
+            <button
               style={{ ...LightBlueButton, width: "fit-content" }}
             >
               <BluePlusIcon />
               &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={LightBlueButtonText}
+              <p
+                style={{...LightBlueButtonText, textTransform:"none"}}
               >
                 Add one device
-              </Typography>
-            </Button>
+              </p>
+            </button>
           </Link>
         </Grid>
       </Grid>
@@ -134,7 +130,7 @@ const MainPage = () => {
         md={12}
         lg={12}
       >
-        <Typography style={{ ...Title, fontSize: "28px", padding: 0, width: "fit-content" }}>Search inventory:&nbsp;</Typography>
+        <p style={{ ...Title, fontSize: "28px", padding: 0, width: "fit-content" }}>Search inventory:&nbsp;</p>
         <Grid item xs sm md lg>
           <OutlinedInput
             {...register("searchItem")}

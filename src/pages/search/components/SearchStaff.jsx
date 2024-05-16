@@ -88,7 +88,7 @@ const SearchStaff = ({ searchParams }) => {
       return openNotification('Staff member has not confirmed invitation yet.')
     }
     dispatch(onAddStaffProfile(template));
-    return navigate(`/staff/${record._id}/events`)
+    return navigate(`/staff/${record.other.id}/main`)
   };
   if (staffMembersQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
   if (staffMembersQuery.data) {

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
+  console.log("🚀 ~ Device ~ deviceSetup:", deviceSetup)
   // const { user } = useSelector((state) => state.admin);
   // const [saveInventoryState, setSaveInventoryState] = useState(false)
   // const [loadingState, setLoadingState] = useState(false)

@@ -11,8 +11,9 @@ import Device from "./review/Device";
 import Event from "./review/Event";
 import Staff from "./review/Staff";
 import { nanoid } from "@reduxjs/toolkit";
-import { formatDate } from "../../../inventory/utils/dateFormat";
+// import { formatDate } from "../../../inventory/utils/dateFormat";
 import "./blurring.css"
+import { formatDate } from "../../../inventory/utils/dateFormat";
 const ReviewAndSubmitEvent = () => {
   const { subscription } = useSelector((state) => state.subscription);
   const {
@@ -91,37 +92,37 @@ const ReviewAndSubmitEvent = () => {
     }
   }
 
-  const createDeviceRecordInNoSQLDatabase = async () => {
-    for (let data of deviceSetup) {
-      for (let index = Number(data.startingNumber); index <= Number(data.endingNumber); index++) {
-        await devitrakApi.post('/receiver/receivers-pool', {
-          device: String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`), status: "Operational", activity: "NO", comment: "No comment", eventSelected: eventInfoDetail.eventName, provider: user.company, type: data.item_group,
-        })
-      }
-    }
-  }
+  // const createDeviceRecordInNoSQLDatabase = async () => {
+  //   for (let data of deviceSetup) {
+  //     for (let index = Number(data.startingNumber); index <= Number(data.endingNumber); index++) {
+  //       await devitrakApi.post('/receiver/receivers-pool', {
+  //         device: String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`), status: "Operational", activity: "NO", comment: "No comment", eventSelected: eventInfoDetail.eventName, provider: user.company, type: data.item_group,
+  //       })
+  //     }
+  //   }
+  // }
 
-  const createDeviceInEvent = async (newEventId) => {
-    for (let data of deviceSetup) {
-      const respoUpdating = await devitrakApi.post('/db_event/event_device', {
-        event_id: newEventId,
-        item_group: data.item_group,
-        category_name: data.category_name,
-        min_serial_number: data.startingNumber,
-        max_serial_number: data.endingNumber
-      })
-      if (respoUpdating.data.ok) {
-        await devitrakApi.post('/db_item/item-out-warehouse', {
-          warehouse: false,
-          company: user.company,
-          item_group: data.item_group,
-          min_serial_number: data.startingNumber,
-          max_serial_number: data.endingNumber
-        })
-      }
-    }
-    await createDeviceRecordInNoSQLDatabase()
-  }
+  // const createDeviceInEvent = async (newEventId) => {
+  //   for (let data of deviceSetup) {
+  //     const respoUpdating = await devitrakApi.post('/db_event/event_device', {
+  //       event_id: newEventId,
+  //       item_group: data.item_group,
+  //       category_name: data.category_name,
+  //       min_serial_number: data.startingNumber,
+  //       max_serial_number: data.endingNumber
+  //     })
+  //     if (respoUpdating.data.ok) {
+  //       await devitrakApi.post('/db_item/item-out-warehouse', {
+  //         warehouse: false,
+  //         company: user.company,
+  //         item_group: data.item_group,
+  //         min_serial_number: data.startingNumber,
+  //         max_serial_number: data.endingNumber
+  //       })
+  //     }
+  //   }
+  //   await createDeviceRecordInNoSQLDatabase()
+  // }
 
   const deviceSetupNoSQL = () => {
     const result = new Set()
@@ -139,8 +140,9 @@ const ReviewAndSubmitEvent = () => {
         dateCreated: new Date().toString(),
         resume: `${data.category_name} ${data.item_group} ${data.cost} ${data.descript_item} ${data.company} ${data.quantity} ${data.ownership} ${user.email} ${new Date().toString()} ${true} ${data.startingNumber} ${data.endingNumber}`,
         consumerUses: true,
-        startingNumber: data.startingNumber,
-        endingNumber: data.endingNumber,
+        startingNumber: '000000', //data.startingNumber
+        endingNumber: '000000',//data.endingNumber,
+        existing:data.existing
       })
     }
     return Array.from(result)
@@ -200,7 +202,7 @@ const ReviewAndSubmitEvent = () => {
         )
       );
       await createStaffInEvent(newEventId)
-      await createDeviceInEvent(newEventId)
+      // await createDeviceInEvent(newEventId)//function to be trigger in event quick glance
     }
     return;
   }
@@ -240,7 +242,7 @@ const ReviewAndSubmitEvent = () => {
       openNotificationWithIcon('Your request is being processed. When it is done, you will be redirected to event page.')
       setLoadingStatus(true)
       setButtonDisable(true)
-      await checkAndCreateNewDevicesInSqlDB()
+      await checkAndCreateNewDevicesInSqlDB() //creating new devices in sql db => moving to event quick glance
       await createEvent()
       setLoadingStatus(false)
       setButtonDisable(false)

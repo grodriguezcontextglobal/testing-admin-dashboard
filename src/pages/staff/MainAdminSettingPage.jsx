@@ -73,204 +73,11 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     justifyContent: "flex-start",
     color: "var(--gray-600, #475467)"
   }
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      align: "left",
-      width: "25%",
-      sorter: {
-        compare: (a, b) => ("" + a.name).localeCompare(b.name),
-      },
-      render: (name, record) => {
-        const initials = String(name).split(" ")
-        return (
-          <span key={`${name}`} style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignSelf: "flex-start" }}>
-            <Avatar src={record.entireData.adminUserInfo.imageProfile}>{initials.map(initial => initial[0])}</Avatar>&nbsp;
-            <div style={{
-              width: "70%",
-              flexDirection: "column",
-              justifyContent: "flex-start"
-            }}>
-              <Typography
-                style={{
-                  justifyContent: "flex-start",
-                  color: "var(--gray900, #101828)",
-                  fontSize: "14px",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  fontWeight: 500,
-                }}
-              >
-                {name}
-              </Typography>
-              <Typography
-                style={styling}
-              >
-                {record.entireData.adminUserInfo.phone ?? '+1-000-000-0000'}
-              </Typography>
-            </div>
-          </span >
-        )
-      },
-    },
-    {
-      title: "Role",
-      dataIndex: "role",
-      width: "10%",
-      responsive: ['lg'],
-      editable: true,
-      sorter: {
-        compare: (a, b) => ("" + a.role).localeCompare(b.role),
-      },
-      render: (role) => (
-        <Typography
-          style={styling}
-        >
-          {role}
-        </Typography>
-      ),
-    },
-    {
-      title: "At event",
-      dataIndex: "active",
-      width: "10%",
-      responsive: ['lg'],
-      editable: true,
-      sorter: {
-        compare: (a, b) => ("" + a.active).localeCompare(b.active),
-      },
-      render: (active) => (
-        <span
-          style={{
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
-            style={styling}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
-            />
-            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
-          </Typography>
-        </span>
-      ),
-    },
-    {
-      title: "Devices",
-      dataIndex: "active",
-      width: "10%",
-      responsive: ['lg'],
-      editable: true,
-      sorter: {
-        compare: (a, b) => ("" + a.active).localeCompare(b.active),
-      },
-      render: (active) => (
-        <span
-          style={{
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
-            style={styling}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
-            />
-            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
-          </Typography>
-        </span>
-      ),
-    },
-    {
-      title: "Event status",
-      dataIndex: "active",
-      width: "10%",
-      responsive: ['lg'],
-      editable: true,
-      sorter: {
-        compare: (a, b) => ("" + a.active).localeCompare(b.active),
-      },
-      render: (active) => (
-        <span
-          style={{
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
-            style={styling}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
-            />
-            {active === 'Pending' ? active : active ? "Active" : "Inactive"}
-          </Typography>
-        </span>
-      ),
-    },
-    {
-      title: "Email address",
-      dataIndex: "email",
-      width: "30%",
-      responsive: ['lg'],
-      sorter: {
-        compare: (a, b) => ("" + a.email).localeCompare(b.email),
-      },
-    },
-    {
-      title: "",
-      key: "action",
-      align: "center",
-      width: "5%",
-      render: (_, record) => {
-        return (
-          <>
-            {
-              record.active !== "Pending" && <Typography.Link
-                // disabled={editingKey !== ""}
-                onClick={() => handleDetailStaff(record)}
-              >
-                <Icon icon="bxs:user-detail" width={30} />
-              </Typography.Link>
-            }
-          </>
-        )
-      },
-    },
-  ];
   const employeeListRef = useRef([])
 
   const employees = async () => {
     const result = new Set()
-    const companiesData = companiesEmployees?.data?.data?.company[0]?.employees
+    const companiesData = companiesEmployees?.data?.data?.company[0]?.employees ?? []
     for (let data of companiesData) {
       const individual = await devitrakApi.post('/staff/admin-users', {
         email: data.user
@@ -293,6 +100,200 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
 
   if (companiesEmployees.isLoading) return <div style={CenteringGrid}><Loading /></div>
   if (companiesEmployees.data) {
+    const columns = [
+      {
+        title: "Name",
+        dataIndex: "name",
+        align: "left",
+        width: "25%",
+        sorter: {
+          compare: (a, b) => ("" + a.name).localeCompare(b.name),
+        },
+        render: (name, record) => {
+          const initials = String(name).split(" ")
+          return (
+            <span key={`${name}`} style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignSelf: "flex-start" }}>
+              <Avatar src={record?.entireData?.adminUserInfo?.imageProfile}>{!record?.entireData?.adminUserInfo?.imageProfile && initials.map(initial => initial[0])}</Avatar>&nbsp;
+              <div style={{
+                width: "70%",
+                flexDirection: "column",
+                justifyContent: "flex-start"
+              }}>
+                <Typography
+                  style={{
+                    justifyContent: "flex-start",
+                    color: "var(--gray900, #101828)",
+                    fontSize: "14px",
+                    fontFamily: "Inter",
+                    lineHeight: "20px",
+                    fontWeight: 500,
+                  }}
+                >
+                  {name}
+                </Typography>
+                <Typography
+                  style={styling}
+                >
+                  {record?.entireData?.adminUserInfo?.phone ? record.entireData.adminUserInfo.phone : '+1-000-000-0000'}
+                </Typography>
+              </div>
+            </span >
+          )
+        },
+      },
+      {
+        title: "Role",
+        dataIndex: "role",
+        width: "10%",
+        responsive: ['lg'],
+        editable: true,
+        sorter: {
+          compare: (a, b) => ("" + a.role).localeCompare(b.role),
+        },
+        render: (role) => (
+          <Typography
+            style={styling}
+          >
+            {role}
+          </Typography>
+        ),
+      },
+      {
+        title: "At event",
+        dataIndex: "active",
+        width: "10%",
+        responsive: ['lg'],
+        editable: true,
+        sorter: {
+          compare: (a, b) => ("" + a.active).localeCompare(b.active),
+        },
+        render: (active) => (
+          <span
+            style={{
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+              width: "fit-content",
+            }}
+          >
+            <Typography
+              color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
+              style={styling}
+            >
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
+              />
+              {active === 'Pending' ? active : active ? "Active" : "Inactive"}
+            </Typography>
+          </span>
+        ),
+      },
+      {
+        title: "Devices",
+        dataIndex: "active",
+        width: "10%",
+        responsive: ['lg'],
+        editable: true,
+        sorter: {
+          compare: (a, b) => ("" + a.active).localeCompare(b.active),
+        },
+        render: (active) => (
+          <span
+            style={{
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+              width: "fit-content",
+            }}
+          >
+            <Typography
+              color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
+              style={styling}
+            >
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
+              />
+              {active === 'Pending' ? active : active ? "Active" : "Inactive"}
+            </Typography>
+          </span>
+        ),
+      },
+      {
+        title: "Event status",
+        dataIndex: "active",
+        width: "10%",
+        responsive: ['lg'],
+        editable: true,
+        sorter: {
+          compare: (a, b) => ("" + a.active).localeCompare(b.active),
+        },
+        render: (active) => (
+          <span
+            style={{
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              background: `${(!active || active === 'Pending') ? "#ffefef" : "var(--success-50, #ECFDF3)"}`,
+              width: "fit-content",
+            }}
+          >
+            <Typography
+              color={`${(!active || active === 'Pending') ? "#d31717" : "var(--success-700, #027A48)"}`}
+              style={styling}
+            >
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={`${(!active || active === 'Pending') ? "#d31717" : "#12B76A"}`}
+              />
+              {active === 'Pending' ? active : active ? "Active" : "Inactive"}
+            </Typography>
+          </span>
+        ),
+      },
+      {
+        title: "Email address",
+        dataIndex: "email",
+        width: "30%",
+        responsive: ['lg'],
+        sorter: {
+          compare: (a, b) => ("" + a.email).localeCompare(b.email),
+        },
+      },
+      {
+        title: "",
+        key: "action",
+        align: "center",
+        width: "5%",
+        render: (_, record) => {
+          return (
+            <>
+              {
+                record.active !== "Pending" && <Typography.Link
+                  // disabled={editingKey !== ""}
+                  onClick={() => handleDetailStaff(record)}
+                >
+                  <Icon icon="bxs:user-detail" width={30} />
+                </Typography.Link>
+              }
+            </>
+          )
+        },
+      },
+    ];
+
     const sortDataAdminUser = () => {
       if (String(searchAdmin)?.length > 0) {
         const check = employeeListRef.current.filter(
@@ -366,13 +367,13 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             </Button>
           </div>
         </Grid>
-          <Table
-            style={{ width: "100%" }}
-            dataSource={getInfoNeededToBeRenderedInTable()}
-            columns={columns}
-            rowClassName="editable-row"
-            className="table-ant-customized"
-          />
+        <Table
+          style={{ width: "100%" }}
+          dataSource={getInfoNeededToBeRenderedInTable()}
+          columns={columns}
+          rowClassName="editable-row"
+          className="table-ant-customized"
+        />
 
       </Grid>
     );

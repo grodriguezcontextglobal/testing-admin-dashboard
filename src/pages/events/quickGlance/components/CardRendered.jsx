@@ -1,22 +1,16 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 
-const CardRendered = ({props, title}) => {
-    const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-    const isMediumDevice = useMediaQuery(
-      "only screen and (min-width : 769px) and (max-width : 992px)"
-    );
-    // const isLargeDevice = useMediaQuery(
-    //   "only screen and (min-width : 993px) and (max-width : 1200px)"
-    // );
-    return (
+const CardRendered = ({ props, title }) => {
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isMediumDevice = useMediaQuery(
+    "only screen and (min-width : 769px) and (max-width : 992px)"
+  );
+  return (
       <Grid
-        // padding={`${
-        //   isSmallDevice || isMediumDevice || isLargeDevice
-        //     ? "10px 0px"
-        //     : "10px 10px 10px 0"
-        // }`}
         padding={'0 0 10px'}
         item
         xs={12}
@@ -45,13 +39,7 @@ const CardRendered = ({props, title}) => {
             >
               <Typography
                 textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-600, #475467)"}
-                style={{textWrap:'nowrap'}}
+                style={{ ...Subtitle, textWrap: 'nowrap' }}
               >
                 {title}
               </Typography>
@@ -67,12 +55,7 @@ const CardRendered = ({props, title}) => {
             >
               <Typography
                 paddingTop={"8px"}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"38px"}
-                color={"var(--gray-900, #101828)"}
+                style={TextFontSize30LineHeight38}
               >
                 {props}
               </Typography>
@@ -80,7 +63,7 @@ const CardRendered = ({props, title}) => {
           </Grid>
         </Card>
       </Grid>
-    );
-  };
+  );
+};
 
 export default CardRendered

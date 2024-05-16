@@ -27,6 +27,16 @@ const SearchDevice = ({ searchParams }) => {
     enabled: false,
     refetchOnMount: false,
   });
+  const deviceInUseStaffMemberQuery = useQuery({
+    queryKey: ["deviceInUseStaffMember"],
+    queryFn: () => devitrakApi.post("/db_item/consulting-item", {
+      company: user.company,
+      warehouse: 0
+    }),
+    enabled: false,
+    refetchOnMount: false,
+  });
+
   const imageDeviceQuery = useQuery({
     queryKey: ["imageDeviceList"],
     queryFn: () => devitrakApi.post("/image/images", {
@@ -43,15 +53,28 @@ const SearchDevice = ({ searchParams }) => {
     const controller = new AbortController()
     staffMembersQuery.refetch()
     imageDeviceQuery.refetch()
-
+    deviceInUseStaffMemberQuery.refetch()
     return () => {
       controller.abort()
     }
   }, [searchParams])
+  // const sortDeviceAssignedStaff = () => {
+  //   const reference = new Set()
+  //   if (deviceInUseStaffMemberQuery.data) {
+  //     const data = deviceInUseStaffMemberQuery?.data?.data?.items
+  //     for (let item of data) {
+  //       const stringifyItem = JSON.stringify(item)
+  //       if (String(stringifyItem).toLowerCase().includes(String(searchParams).toLowerCase())) {
+  //         reference.add(JSON.parse({device: item.serial_number, type: item.item_group, event: '', image: "", data: item ?? [] }))
+  //       }
+  //     }
+  //   }
+  //   return Array.from(reference)
+  // }
 
   const sortAndRenderFoundData = () => {
-    if (staffMembersQuery.data) {
-      const foundData = staffMembersQuery.data.data.listOfReceivers
+    if (staffMembersQuery.data && deviceInUseStaffMemberQuery.data ) {
+      const foundData = [...staffMembersQuery.data.data.listOfReceivers]
       const result = foundData?.filter(element => JSON.stringify(element).toLowerCase().includes(`${searchParams}`.toLowerCase()))
       return result
     }
@@ -104,8 +127,8 @@ const SearchDevice = ({ searchParams }) => {
   if (staffMembersQuery.data) {
     return (
       <Grid container style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
-        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center",alignSelf:"flex-start" }} item xs={12} sm={12} md={4} lg={4}>
-          
+        <Grid style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", alignSelf: "flex-start" }} item xs={12} sm={12} md={4} lg={4}>
+
           <Typography style={{ ...TextFontSize30LineHeight38, fontSize: "36px", lineHeight: "44px", fontWeight: 600, width: "100%", textAlign: "left" }}>Search Device </Typography><br />
           <Typography style={{ ...TextFontSize20LineHeight30, width: "100%", textAlign: "left" }}>
             All devices matching the search keywords.

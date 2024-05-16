@@ -1,11 +1,10 @@
 import { Icon } from '@iconify/react';
 import { AppBar, Box, Divider, Drawer, Grid, IconButton, InputAdornment, List, ListItem, ListItemButton, OutlinedInput, Toolbar, Typography } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 // import { PropTypes } from 'prop-types'
 import { useMediaQuery, useWindowScroll } from '@uidotdev/usehooks';
 import { Dropdown } from 'antd';
 import pkg from 'prop-types';
-import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { devitrakApi } from '../../api/devitrakApi';
@@ -22,21 +21,22 @@ import { onResetStripesInfo } from '../../store/slices/stripeSlice';
 import { onResetSubscriptionInfo } from '../../store/slices/subscriptionSlice';
 import CenteringGrid from '../../styles/global/CenteringGrid';
 import { OutlinedInputStyle } from '../../styles/global/OutlinedInputStyle';
-import { SettingIcon } from '../icons/Icons';
+import { DevitrakLogo, DevitrakName, SettingIcon } from '../icons/Icons';
 import './style/style.css';
+// import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
 
 const NavigationBarMain = (props) => {
+    // eslint-disable-next-line no-unused-vars
     const [{ x, y }, scrollTo] = useWindowScroll()
-    const { register, handleSubmit } = useForm()
+    // const { register, handleSubmit, watch } = useForm()
     const { window } = props;
     const [mobileOpen, setMobileOpen] = useState(false);
     const location = useLocation()
     const { user, status } = useSelector((state) => state.admin)
     const [searchValue, setSearchValue] = useState("");
-    const ref = useRef();
     const dispatch = useDispatch();
     const navigate = useNavigate()
     const logout = async () => {
@@ -84,8 +84,9 @@ const NavigationBarMain = (props) => {
     const handleDrawerToggle = () => {
         setMobileOpen((prevState) => !prevState);
     };
-    const handleSearch = (data) => {
-        navigate(`/search-result-page?search=${data.searchValue}`);
+    const handleSearch = (e) => {
+        e.preventDefault()
+        navigate(`/search-result-page?search=${searchValue}`);
     };
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
     const isMediumDevice = useMediaQuery(
@@ -152,13 +153,13 @@ const NavigationBarMain = (props) => {
                             </IconButton>
 
                             <Box sx={{ display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex' }, justifyContent: "flex-start", alignItems: "center" }}>
-                                {/* <NavLink
+                                <NavLink
                                     key={'devitrakName'}
                                     to={`/`}
                                     style={{ margin: "0 3px 0 0" }}
                                 >
                                     <DevitrakLogo /><DevitrakName />
-                                </NavLink> */}
+                                </NavLink>
 
                                 {navItems.map((item) => {
                                     if (item.permission.some(element => element === user.role)) {
@@ -190,10 +191,11 @@ const NavigationBarMain = (props) => {
 
                         <Grid item sm={8} md={5} lg={4} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: "flex-end", alignItems: 'center', margin: 0 }}>
                             {/* <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}> */}
-                            <form onSubmit={handleSubmit(handleSearch)} style={{ margin: `${isSmallDevice ? '0 5px 0 0' : isMediumDevice ? '0 -5px 0 0' : isLargeDevice ? '0 -5px 0 0' : '0 -10px 0 0'}` }}>
+                            <form onSubmit={handleSearch} style={{ margin: `${isSmallDevice ? '0 5px 0 0' : isMediumDevice ? '0 -5px 0 0' : isLargeDevice ? '0 -5px 0 0' : '0 -10px 0 0'}` }}>
                                 <OutlinedInput placeholder="Search"
+                                    required
                                     sx={OutlinedInputStyle}
-                                    {...register('searchValue')}
+                                    onChange={(e) => setSearchValue(e.target.value)}
                                     endAdornment={
                                         <>
                                             <InputAdornment position="end">
@@ -203,13 +205,12 @@ const NavigationBarMain = (props) => {
                                                     color="#1e73be"
                                                     width="25"
                                                     height="25"
-                                                    opacity={`${searchValue?.length > 0 ? 1 : 0}`}
-                                                    display={`${searchValue?.length > 0 ? "auto" : "none"
+                                                    opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
+                                                    display={`${String(searchValue)?.length > 0 ? "auto" : "none"
                                                         }`}
                                                     onClick={() => {
                                                         setSearchValue("");
                                                         dispatch(onResetResult());
-                                                        ref.current = undefined;
                                                     }}
                                                 />
                                             </InputAdornment>
@@ -226,7 +227,7 @@ const NavigationBarMain = (props) => {
                                                         alignItems: "center",
                                                     }}
                                                     opacity={1}
-                                                    type='submit'
+                                                    onClick={(e)=> handleSearch(e)}
                                                 />
                                             </InputAdornment>
                                         </>
@@ -251,13 +252,13 @@ const NavigationBarMain = (props) => {
 
                                             }}
                                         >
-                                            <div onClick={() => scrollTo({ left: 0, top: 0, behavior: 'smooth' })} className="content-main-navbar-updated" >
+                                            <div className="content-main-navbar-updated" >
                                                 <article
                                                     className="nav-item-base-1-main-navbar-updated"
                                                 >
                                                     <div className="content-2-main-navbar-updated">
                                                         <div className="text-1-main-navbar-updated text-mdsemibold">
-                                                            <p style={{ textTransform: "capitalize", fontSize: "25px" }} ><SettingIcon /></p>
+                                                            <p onClick={() => scrollTo({ left: 0, top: 0, behavior: 'smooth' })} style={{ textTransform: "capitalize", fontSize: "25px" }} ><SettingIcon /></p>
                                                         </div>
                                                     </div>
                                                 </article>

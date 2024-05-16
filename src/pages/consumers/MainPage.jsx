@@ -11,18 +11,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
-import TablesConsumers from "./tables/TablesConsumers";
 import Loading from "../../components/animation/Loading";
-import "../../styles/global/OutlineInput.css"
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+import { MagnifyIcon, WhitePlusIcon } from "../../components/icons/Icons";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
+import CenteringGrid from "../../styles/global/CenteringGrid";
+import "../../styles/global/OutlineInput.css";
+import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
-import { MagnifyIcon } from "../../components/icons/Icons";
+import TablesConsumers from "./tables/TablesConsumers";
+import { CreateNewConsumer } from "./utils/CreateNewUser";
+import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false)
-  // const [createUserButton, setCreateUserButton] = useState(false);
+  const [createUserButton, setCreateUserButton] = useState(false);
   const [responseData, setResponseData] = useState([])
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -169,7 +172,7 @@ const MainPage = () => {
           xs={6}
         >
           <Button
-            // onClick={() => setCreateUserButton(true)}
+            onClick={() => setCreateUserButton(true)}
             style={BlueButton}
           >
             <Icon
@@ -188,7 +191,7 @@ const MainPage = () => {
           </Button>
         </Grid>
       </Grid>
-      <Divider />
+      <Divider/>
       <Grid
         display={"flex"}
         justifyContent={"flex-start"}
@@ -196,6 +199,10 @@ const MainPage = () => {
         gap={1}
         container
       >
+        <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
+          <Typography style={{ ...TextFontsize18LineHeight28, color:"var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</Typography>
+        </Grid>
+        <Divider style={{margin:"20px 0 24px"}} />
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
           <Typography style={{ ...TextFontSize20LineHeight30, display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>Search consumers:&nbsp;</Typography>
           <Grid item xs sm md lg>
@@ -221,7 +228,7 @@ const MainPage = () => {
         gap={1}
         container
       >
-        <Grid
+        {Array.isArray(getInfoNeededToBeRenderedInTable()) && getInfoNeededToBeRenderedInTable().length > 0 ? (<Grid
           border={"1px solid var(--gray-200, #eaecf0)"}
           borderRadius={"12px 12px 0 0"}
           display={"flex"}
@@ -265,16 +272,39 @@ const MainPage = () => {
               </Typography>
             </div>
           </Typography>
-        </Grid>
+        </Grid>) : (
+          <div style={{ ...CenteringGrid, flexDirection: "column", width: "50%", margin: "40px auto" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"center"}
+              fontWeight={500}
+              fontSize={"36px"}
+              fontFamily={"Inter"}
+              lineHeight={"44px"}
+              color={"var(--gray900)"}
+              padding={"0px 8px"}
+            >Add consumers</Typography>
+
+            <Typography
+              textTransform={"none"}
+              textAlign={"center"}
+              padding={"0px 8px"}
+              style={TextFontSize20LineHeight30}
+            >Consumers are users that will use the devices you provide with an intent to be returned. They can include.</Typography>
+            <Button style={{ ...CenteringGrid, ...BlueButton, margin: "40px auto 0" }} onClick={() => setCreateUserButton(true)}>
+              <WhitePlusIcon />&nbsp;<Typography style={BlueButtonText}>Add new consumer</Typography>
+            </Button>
+          </div>
+        )}
         <Grid item xs={12}>
           {loadingState ? <Loading /> : <TablesConsumers key={counter} getInfoNeededToBeRenderedInTable={getInfoNeededToBeRenderedInTable()} />}
         </Grid>
       </Grid>
       {/* </Grid> */}
-      {/* <ModalCreateUser
+      {createUserButton && <CreateNewConsumer
         createUserButton={createUserButton}
         setCreateUserButton={setCreateUserButton}
-      /> */}
+      />}
     </Grid>
   );
 };
