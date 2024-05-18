@@ -30,6 +30,7 @@ const schema = yup.object().shape({
 
 const Form = () => {
     const { staff } = useSelector((state) => state.event)
+    console.log("🚀 ~ Form ~ staff:", staff)
     const {
         register,
         setValue,
@@ -322,7 +323,7 @@ const Form = () => {
                             lineHeight={"24px"}
                             color={"var(--base-white, #FFF)"}
                         >
-                            Save and continue
+                            {staff?.adminUser.length>0 ? "Save changes to continue" : "Save and continue"}
                         </Typography>
                     </Button>
                 </form>

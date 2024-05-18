@@ -1,18 +1,23 @@
 // import StripeTransactionHistoryByUser from '../Attendees/tables/StripeTransactionHistoryByUser';
 import { Icon } from '@iconify/react';
 import { Button, Grid, InputAdornment, OutlinedInput, Typography } from '@mui/material';
-import { Divider } from 'antd';
 import { useQuery } from '@tanstack/react-query';
+import { Divider } from 'antd';
 import { useForm } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import StripeTransactionPerConsumer from './tables/StripeTransactionPerConsumer';
 import { devitrakApi } from '../../api/devitrakApi';
-import CenteringGrid from '../../styles/global/CenteringGrid';
 import Loading from '../../components/animation/Loading';
-import FormatAttendeeDetailInfo from '../events/quickGlance/consumer/ConsumerDetail/Details';
+import { EditIcon } from '../../components/icons/Icons';
+import CenteringGrid from '../../styles/global/CenteringGrid';
 import { OutlinedInputStyle } from '../../styles/global/OutlinedInputStyle';
+import TextFontsize18LineHeight28 from '../../styles/global/TextFontSize18LineHeight28';
 import { TextFontSize30LineHeight38 } from '../../styles/global/TextFontSize30LineHeight38';
+import CardRendered from '../inventory/utils/CardRendered';
+import CardActionsButton from './components/CardActionsButton';
+import ConsumerDetailInformation from './components/ConsumerDetailInformation';
+import ConsumerDetailInfoCntact from './components/ConsumerDetailinfoContact';
+import StripeTransactionPerConsumer from './tables/StripeTransactionPerConsumer';
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
@@ -109,26 +114,25 @@ const DetailPerConsumer = () => {
               xs={12}
             >
               <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-600, #155EEF)"}
-                style={{ cursor: "pointer" }}
+                style={{
+                  ...TextFontsize18LineHeight28, textTransform: "capitalize",
+                  textAlign: "left",
+                  fontWeight: 600,
+                  color: "var(--blue-dark-600, #155EEF)",
+                  cursor: "pointer"
+                }}
                 onClick={() => handleBackAction()}
               >
                 All consumers
               </Typography>
               <Typography
-                textTransform={"capitalize"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
+                style={{
+                  ...TextFontsize18LineHeight28, textTransform: "capitalize",
+                  textAlign: "left",
+                  fontWeight: 600,
+                  color: "var(--gray-900, #101828)"
+                }}
+
               >
                 <Icon icon="mingcute:right-line" />
                 {customer?.name} {customer?.lastName}
@@ -138,21 +142,51 @@ const DetailPerConsumer = () => {
           <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
         <Divider />
-        <Grid container>
-          <Grid item xs={12}>
-            <FormatAttendeeDetailInfo />
+        <Grid gap={'5px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'} alignSelf={'flex-start'} container>
+          <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} item xs={12} sm={12} md={4} lg={4}>
+            <ConsumerDetailInformation />
           </Grid>
-        </Grid>
-        <Divider />{" "}
+          <Grid display={'flex'} justifyContent={'flex-start'} alignItems={'center'} alignSelf={'flex-start'} item xs={12} sm={12} md={4} lg={4}>
+            <ConsumerDetailInfoCntact />
+          </Grid>
+          <Grid display={'flex'} justifyContent={'flex-end'} alignItems={'center'} alignSelf={'flex-start'} item xs={12} sm={12} md={3} lg={3}>
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "5px" }}>
+              <button style={{
+                outline:"none",
+                display: 'flex',
+                padding: '10px 16px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px',
+                borderRadius: '8px',
+                border: '1px solid var(--Blue-dark-50, #EFF4FF)',
+                background: 'var(--Blue-dark-50, #EFF4FF)',
+              }}><EditIcon />
+              <p style={{
+                color: 'var(--Blue-dark-700, #004EEB)',
+                fontFamily: 'Inter',
+                fontSize: '14px',
+                fontStyle: 'normal',
+                fontWeight: '600',
+                lineHeight: '20px',
+              }}>Edit</p>
+              </button>
+        </div>
+      </Grid>
+        </Grid >
+  <Divider />{ " " }
+        <Grid alignSelf={'flex-start'} item xs={12} sm={12} md={6} lg={6} ><CardRendered title={'Group'} props={'No group provided'} optional={null} /></Grid>
+        <Grid alignSelf={'flex-start'} item xs={12} sm={12} md={6} lg={6} ><CardActionsButton /></Grid>
+        <Divider />{ " " }
         <Grid
-          marginY={3}
           display={"flex"}
           justifyContent={"flex-start"}
           alignItems={"center"}
           gap={1}
           container
         >
-          <Grid justifyContent={"left"} alignItems={"center"} item xs={3}>
+          <p style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign: "left" }}>Events attended</p>
+          <Grid display={"flex"} justifyContent={"flex-start"} alignItems={"center"} item xs={3}>
             <OutlinedInput
               {...register("searchEvent")}
               style={OutlinedInputStyle}
@@ -184,7 +218,7 @@ const DetailPerConsumer = () => {
                 </InputAdornment>
               }
             />
-          </Grid> <Grid textAlign={"right"} item xs></Grid>
+          </Grid>
         </Grid>
         <Grid
           marginY={3}
@@ -200,7 +234,7 @@ const DetailPerConsumer = () => {
             />
           </Grid>
         </Grid>
-      </Grid>
+      </Grid >
     );
   }
 };

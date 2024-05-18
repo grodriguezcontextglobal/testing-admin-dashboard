@@ -31,7 +31,6 @@ const CardEventDisplay = ({ props }) => {
         const date = new Date(`${props.eventInfoDetail.dateBegin}`).toString().split(' ')
         return date
     }
-    console.log("🚀 ~ substractingDateBeginInfo ~ substractingDateBeginInfo:", props.staff.adminUser)
     const substractingDateEndInfo = () => {
         const date = new Date(`${props.eventInfoDetail.dateEnd}`).toString().split(' ')
         return date

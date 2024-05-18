@@ -1,18 +1,25 @@
 import { Box, Typography } from "@mui/material";
-import { Button, Steps } from "antd";
+import { Button, Steps, message } from "antd";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useSelector } from "react-redux";
 
 const StepsLine = () => {
-  const { eventInfoDetail, staff } = useSelector((state) => state.event)
+  const { eventInfoDetail, staff, deviceSetup } = useSelector((state) => state.event)
   const pathCheck = useLocation()
   const [current, setCurrent] = useState(0)
   const navigate = useNavigate()
   const prev = () => {
     setCurrent(current - 1);
     navigate(`${step[current].previous}`)
+  };
+  const [messageApi, contextHolder] = message.useMessage();
+  const error = () => {
+    messageApi.open({
+      type: 'error',
+      content: 'This is an error message',
+    });
   };
   const step = [
     {
@@ -72,8 +79,8 @@ const StepsLine = () => {
   const onChange = (value) => {
     setCurrent(value);
     if (value === 3) {
-      if (eventInfoDetail.eventName && staff.adminUser.length > 0) return navigate(`/${step[value].current}`)
-      return null;
+      if (eventInfoDetail.eventName && staff.adminUser.length > 0 && deviceSetup.length > 0) return navigate(`/${step[value].current}`)
+      return error();
     }
     return navigate(`/${step[value].current}`)
   };
@@ -87,6 +94,7 @@ const StepsLine = () => {
         onChange={onChange}
         items={items}
       />
+      {contextHolder}
       {current > 0 && (
         <Button
           onClick={() => prev()}

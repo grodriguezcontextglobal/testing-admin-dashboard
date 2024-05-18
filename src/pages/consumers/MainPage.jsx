@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Icon } from "@iconify/react";
 import {
   Button,
@@ -191,7 +192,7 @@ const MainPage = () => {
           </Button>
         </Grid>
       </Grid>
-      <Divider/>
+      <Divider />
       <Grid
         display={"flex"}
         justifyContent={"flex-start"}
@@ -200,9 +201,9 @@ const MainPage = () => {
         container
       >
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
-          <Typography style={{ ...TextFontsize18LineHeight28, color:"var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</Typography>
+          <Typography style={{ ...TextFontsize18LineHeight28, color: "var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</Typography>
         </Grid>
-        <Divider style={{margin:"20px 0 24px"}} />
+        <Divider style={{ margin: "20px 0 24px" }} />
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
           <Typography style={{ ...TextFontSize20LineHeight30, display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>Search consumers:&nbsp;</Typography>
           <Grid item xs sm md lg>
@@ -239,15 +240,9 @@ const MainPage = () => {
           xs={12}
         >
           <Typography
-            style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", }}
+            style={{ ...TextFontsize18LineHeight28,display: "flex", alignItems: "center", justifyContent: "flex-start",color:"var(--gray-900, #101828)", padding:"24px" }}
             textTransform={"none"}
             textAlign={"left"}
-            fontWeight={600}
-            fontSize={"18px"}
-            fontFamily={"Inter"}
-            lineHeight={"28px"}
-            color={"var(--gray-900, #101828)"}
-            padding={"24px"}
           > Consumers&nbsp;
             <div
               style={{

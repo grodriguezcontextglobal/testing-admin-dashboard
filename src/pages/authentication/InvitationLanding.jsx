@@ -140,7 +140,7 @@ const InvitationLanding = () => {
                 const findInvitedStaff = hostCompanyInfo.employees.findIndex(element => element.user === email)
                 const employeesInCompany = [...hostCompanyInfo.employees]
                 employeesInCompany[findInvitedStaff] = {
-                    ...employeesInCompany[findInvitedStaff], status: true
+                    ...employeesInCompany[findInvitedStaff], status: "Confirmed"
                 }
                 await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
                     employees: employeesInCompany
