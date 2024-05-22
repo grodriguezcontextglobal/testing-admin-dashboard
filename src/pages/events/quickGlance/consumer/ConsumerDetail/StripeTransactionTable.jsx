@@ -1,9 +1,7 @@
-import { SearchOutlined } from "@ant-design/icons";
 import { Grid, Link, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     Button,
-    Input,
     Popconfirm,
     Space,
     Table,
@@ -13,7 +11,6 @@ import {
 import _ from "lodash";
 import pkg from 'prop-types';
 import { useEffect, useRef, useState } from "react";
-import Highlighter from "react-highlight-words";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
@@ -39,8 +36,6 @@ import Releasing from "./actions/deposit/Releasing";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue }) => {
-    const [searchText, setSearchText] = useState("");
-    const [searchedColumn, setSearchedColumn] = useState("");
     const [openModal, setOpenModal] = useState(false);
     const [openCapturingDepositModal, setOpenCapturingDepositModal] =
         useState(false);
@@ -48,7 +43,6 @@ const StripeTransactionTable = ({ searchValue }) => {
         useState(false);
     const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] = useState(false)
     const recordRef = useRef(null)
-    const searchInput = useRef(null);
     const { event } = useSelector((state) => state.event);
     const { customer } =
         useSelector((state) => state.stripe);
@@ -130,6 +124,14 @@ const StripeTransactionTable = ({ searchValue }) => {
         return []
     };
 
+    const searchingTransaction = (props) => {
+        if (Array.isArray(props)) {
+            const transactionFound = props.map(element => JSON.stringify(element).toLowerCase()) //.includes(String(searchValue).toLowerCase()
+            const findingInfo = transactionFound.filter(element => element.includes(String(searchValue).toLowerCase()))
+            return JSON.parse(findingInfo)
+        }
+    }
+
     const sourceData = () => {
         const result = new Set();
         if (filterDataBasedOnUserAndEvent().length > 0) {
@@ -139,7 +141,11 @@ const StripeTransactionTable = ({ searchValue }) => {
                     ...data,
                 });
             }
-            return Array.from(result);
+            const transactions = Array.from(result)
+            if (searchValue.length > 0) {
+                return searchingTransaction(transactions)
+            }
+            return transactions;
         }
         return []
     };
@@ -678,7 +684,8 @@ const StripeTransactionTable = ({ searchValue }) => {
                 }}
                 style={{ cursor: "pointer" }}
                 expandable={{
-                    expandRowByClick: true,
+                    expandIcon:false,
+                    expandRowByClick: false,
                     expandedRowRender: (record) => (
                         renderDataPerRow(record))
                 }}
