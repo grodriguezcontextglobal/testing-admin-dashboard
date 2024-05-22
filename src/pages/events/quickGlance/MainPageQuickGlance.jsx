@@ -40,7 +40,7 @@ const MainPageQuickGlance = () => {
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
   const [editingStaff, setEditingStaff] = useState(false)
-  const [notificationStatus, setNotificationStatus] = useState(today > new Date(event.eventInfoDetail.dateEnd).getTime())
+  const [notificationStatus, setNotificationStatus] = useState(today > new Date(event?.eventInfoDetail?.dateEnd).getTime())
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -437,7 +437,7 @@ const MainPageQuickGlance = () => {
               color={"var(--blue-dark-700, #004EEB)"}
               padding={"0px 8px"}
             >
-              {event.staff.adminUser.length + event.staff.headsetAttendees.length} total
+              {event?.staff?.adminUser?.length + event?.staff?.headsetAttendees?.length} total
             </Typography>
           </div></Typography>
           <Button onClick={() => setEditingStaff(true)} style={{ ...BlueButton, width: "fit-content", display: "flex", justifyContent: "space-between", alignItems: "center" }}><Typography style={BlueButtonText}>Update staff</Typography></Button>
