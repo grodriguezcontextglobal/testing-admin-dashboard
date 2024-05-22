@@ -22,6 +22,7 @@ import EditItem from "./detailComponent/actions/EditItem";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import DeleteItem from "./detailComponent/actions/DeleteItem";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 
 const MainPage = () => {
     const { user } = useSelector((state) => state.admin)
@@ -150,32 +151,24 @@ const MainPage = () => {
                             xs={12}
                         >
                             <Link to="/inventory">
-                                <Typography
-                                    display={"flex"}
-                                    justifyContent={"flex-start"}
-                                    alignItems={"center"}
-                                    textTransform={"none"}
-                                    textAlign={"left"}
-                                    fontWeight={600}
-                                    fontSize={"18px"}
-                                    fontFamily={"Inter"}
-                                    lineHeight={"28px"}
-                                    color={"var(--blue-dark-600, #155EEF)"}
+                                <p style={{
+                                    display: "flex",
+                                    justifyContent: "flex-start",
+                                    alignItems: "center",
+                                    textTransform: "none",
+                                    textAlign: "left",
+                                    fontWeight: 600,
+                                    fontSize: "18px",
+                                    fontFamily: "Inter",
+                                    lineHeight: "28px",
+                                    color: "var(--blue-dark-600, #155EEF)",
+                                }}
                                 >
                                     Back
-                                </Typography>
+                                </p>
                             </Link>
                             <Typography
-                                display={"flex"}
-                                justifyContent={"flex-start"}
-                                alignItems={"center"}
-                                textTransform={"none"}
-                                textAlign={"left"}
-                                fontWeight={600}
-                                fontSize={"18px"}
-                                fontFamily={"Inter"}
-                                lineHeight={"28px"}
-                                color={"var(--gray-900, #101828)"}
+                                style={{ ...TextFontsize18LineHeight28, fontWeight: 600, color: "var(--gray-900, #101828)" }}
                             >
                                 <Icon icon="mingcute:right-line" />
                                 {dataFound[0]?.item_group}{" "}
@@ -222,14 +215,15 @@ const MainPage = () => {
                         justifyContent={"flex-end"}
                         alignItems={"center"}
                         alignSelf={'start'}
+                        gap={1}
                         item
                         xs={12}
                         sm={12}
                         md={3}
                         lg={3}
                     >
-                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />}
                         {user.role === "Administrator" && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
+                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />}
                     </Grid>
                 </Grid>
                 <Grid
