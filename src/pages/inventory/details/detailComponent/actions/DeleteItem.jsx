@@ -1,8 +1,6 @@
-import { Grid, Typography } from "@mui/material"
+/* eslint-disable no-unused-vars */
 import { useWindowScroll } from "@uidotdev/usehooks"
-import { Button, Card } from "antd"
 import { useState } from "react"
-import { CardStyle } from "../../../../../styles/global/CardStyle"
 import { DangerButton } from "../../../../../styles/global/DangerButton"
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText"
 import DeleteItemModal from "../components/DeleteItemModal"
@@ -11,7 +9,8 @@ const DeleteItem = ({ dataFound }) => {
     const [{ x, y }, scrollTo] = useWindowScroll()
     const [openDeleteItemModal, setOpenDeleteItemModal] = useState(false)
     return (
-        <Grid
+        <>
+            {/* <Grid
             padding={"0px"}
             display={"flex"}
             justifyContent={"flex-end"}
@@ -40,16 +39,33 @@ const DeleteItem = ({ dataFound }) => {
                         alignItems={"center"}
                         item
                         xs={12}
-                    >
-                        <Button onClick={() => { scrollTo({ left: 0, top: '50dv', behavior: 'smooth' }); setOpenDeleteItemModal(true) }} style={{ ...DangerButton, border: "none" }}>
-                            <Typography style={DangerButtonText}>Delete</Typography>
-                        </Button>
-                    </Grid>
+                    > */}
+            <button onClick={() => { scrollTo({ left: 0, top: '50dv', behavior: 'smooth' }); setOpenDeleteItemModal(true) }} style={{
+                outline: "none",
+                display: 'flex',
+                padding: '10px 16px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px',
+                borderRadius: '8px',
+                border: '1px solid #fff2f1',
+                background: '#fff2f1',
+            }}>
+                <p style={{
+                    color: "#b42318",
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    lineHeight: '20px',
+                }}>Delete</p>
+            </button>
+            {/* </Grid>
                 </Grid>
-            </Card>
+            </Card> */}
             {openDeleteItemModal && <DeleteItemModal dataFound={dataFound} openDeleteItemModal={openDeleteItemModal} setOpenDeleteItemModal={setOpenDeleteItemModal} />}
-        </Grid>
-
+            {/* </Grid> */}
+        </>
     )
 }
 
