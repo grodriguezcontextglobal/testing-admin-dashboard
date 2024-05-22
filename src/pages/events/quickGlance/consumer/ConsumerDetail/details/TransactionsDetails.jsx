@@ -1,20 +1,19 @@
-import { Grid, Typography, OutlinedInput, InputAdornment } from "@mui/material"
-import StripeTransactionTable from "../StripeTransactionTable"
-import { useForm } from "react-hook-form"
-import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle"
-import { MagnifyIcon } from "../../../../../../components/icons/Icons"
 import { Icon } from "@iconify/react"
-import { useEffect } from "react"
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material"
+import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
+import { MagnifyIcon } from "../../../../../../components/icons/Icons"
+import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle"
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28"
+import StripeTransactionTable from "../StripeTransactionTable"
 const TransactionsDetails = () => {
-    const { watch, register, setValue } = useForm()
+    const [searchValue, setSearchValue] = useState("")
     const { customer } = useSelector((state) => state.stripe)
     useEffect(() => {
         const controller = new AbortController()
         const refreshing = async () => {
-            await setValue('searchEvent', '.')
-            await setValue('searchEvent', '')
+            await setSearchValue('.')
+            await setSearchValue('')
         }
         refreshing()
         return () => {
@@ -34,7 +33,8 @@ const TransactionsDetails = () => {
             >
                 <Grid display={'flex'} justifyContent={"flex-end"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
                     <OutlinedInput
-                        {...register("searchEvent")}
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
                         style={OutlinedInputStyle}
                         fullWidth
                         placeholder="Search a transaction here"
@@ -51,9 +51,9 @@ const TransactionsDetails = () => {
                                     color="#1e73be"
                                     width="25"
                                     height="25"
-                                    opacity={`${watch("searchEvent")?.length > 0 ? 1 : 0}`}
+                                    opacity={`${String(searchValue).length > 0 ? 1 : 0}`}
                                     onClick={() => {
-                                        setValue("searchEvent", "");
+                                        setSearchValue("");
                                     }}
                                 />
                             </InputAdornment>
@@ -88,9 +88,7 @@ const TransactionsDetails = () => {
                     </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <StripeTransactionTable
-                        searchValue={watch("searchEvent")}
-                    />
+                    <StripeTransactionTable searchValue={searchValue} />
                 </Grid>
             </Grid>
         </>
