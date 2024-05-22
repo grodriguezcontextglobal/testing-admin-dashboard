@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
-import { Grid, Typography } from "@mui/material"
+import { Grid } from "@mui/material"
 import { Avatar, Card } from "antd"
+import { useSelector } from "react-redux"
 import { CardStyle } from "../../../styles/global/CardStyle"
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28"
-import { useSelector } from "react-redux"
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38"
 
 const ConsumerDetailInformation = () => {
@@ -43,25 +43,22 @@ const ConsumerDetailInformation = () => {
                                 <Avatar style={{ width: "100%", height: "10dvh" }}>{customer.name[0]}{customer.lastName[0]}</Avatar>
                             </div>
                         </div>
-                        <Typography
-                            textAlign={"left"}
-                            style={{ ...TextFontsize18LineHeight28, color: "var(--gray-900, #101828)", fontWeight: 600 }}
+                        <p
+                            style={{ ...TextFontsize18LineHeight28, color: "var(--gray-900, #101828)", textAlign: "left", fontWeight: 600 }}
                         >
                             Name
                             <br />
-                            <Typography
-                                textAlign={"left"}
-                                style={{ ...TextFontSize30LineHeight38, color: "var(--gray-900, #101828)", fontWeight: 600 }}
+                            <p
+                                style={{ ...TextFontSize30LineHeight38, color: "var(--gray-900, #101828)", textAlign: "left", fontWeight: 600 }}
                             >
                                 {customer.name} {customer.lastName}
-                            </Typography>
-                            <Typography
-                                textAlign={"left"}
-                                style={{ ...TextFontsize18LineHeight28, color: "var(--gray-900, #101828)", fontWeight: 400 }}
+                            </p>
+                            <p
+                                style={{ ...TextFontsize18LineHeight28, color: "var(--gray-900, #101828)", textAlign: "left", fontWeight: 400 }}
                             >
-                                tag if consumer is active in event
-                            </Typography>
-                        </Typography>
+                                {/* tag if consumer is active in event */}
+                            </p>
+                        </p>
                     </Grid>
                 </Grid>
             </Card>
