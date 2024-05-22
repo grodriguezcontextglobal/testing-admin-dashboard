@@ -14,8 +14,6 @@ const Graphic = () => {
         queryFn: () => devitrakApi.post("/db_item/consulting-item", { company: user.company }),
         enabled: false,
         refetchOnMount: false,
-        cacheTime: 1000 * 60 * 15, //fifteenMinutesInMs
-        staleTime: 1000 * 60 * 15
 
     });
 
