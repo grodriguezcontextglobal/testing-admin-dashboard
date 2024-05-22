@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Grid,
   Typography
 } from "@mui/material";
@@ -107,7 +106,7 @@ const HeaderStaffDetail = () => {
             item
             xs={6}
           >
-            <Button
+            <button
               style={{
                 width: "fit-content",
                 ...BlueButton
@@ -120,7 +119,7 @@ const HeaderStaffDetail = () => {
                 <WhitePlusIcon />&nbsp;
                 Add new staff
               </Typography>
-            </Button>
+            </button>
           </Grid>
         </Grid>
         <Grid
@@ -141,19 +140,19 @@ const HeaderStaffDetail = () => {
               xs={12}
             >
               <Link to="/staff">
-                <Typography
+                <p
                   style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--blue-dark-600)" }}
                   onClick={() => dispatch(onResetStaffProfile())}
                 >
                   All staff
-                </Typography>
+                </p>
               </Link>
-              <Typography
+              <p
                 style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)" }}
               >
                 <Icon icon="mingcute:right-line" />
                 {profile.firstName}, {profile?.lastName}
-              </Typography>
+              </p>
             </Grid>
           </Grid>
           <Grid textAlign={"right"} item xs={4}></Grid>
@@ -178,22 +177,19 @@ const HeaderStaffDetail = () => {
             <Grid item xs={12} sm={12} md={3} lg={3}><Avatar src={profile?.adminUserInfo?.imageProfile} style={{ width: "5rem", height: "5rem" }}>
               {!profile.adminUserInfo.imageProfile && `${profile?.firstName[0]} ${profile?.lastName[0]}`}</Avatar></Grid>
             <Grid item xs={12} sm={12} md={9} lg={9}>
-              <Typography
+              <p
                 style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)", width: "100%" }}>
                 Name
-              </Typography>
-              <Typography
-                textAlign={"left"}
-                paddingTop={"8px"}
-                style={{ ...TextFontSize30LineHeight38, width: "100%" }}
+              </p>
+              <p
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left", width: "100%", paddingTop: "8px" }}
               >
                 {profile?.firstName} {profile?.lastName}
-              </Typography>
-              <Typography
-                textTransform={"capitalize"}
-                style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)", width: "100%" }}>
+              </p>
+              <p
+                style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)", width: "100%", textTransform: "capitalize" }}>
                 {profile?.role}
-              </Typography></Grid>
+              </p></Grid>
 
           </Grid>
           <Grid
@@ -206,25 +202,20 @@ const HeaderStaffDetail = () => {
             item
             xs={12}
           >
-            <Typography
+            <p
               style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)", width: "100%" }}
             >
               Contact
-            </Typography>
-            <Typography
-              textAlign={"left"}
-              paddingTop={"8px"}
-              style={{ ...TextFontSize30LineHeight38, width: "100%" }}
+            </p>
+            <p
+              style={{ ...TextFontSize30LineHeight38, width: "100%", textAlign: "left", paddingTop: "8px" }}
             >
               {profile.adminUserInfo.phone ? profile.adminUserInfo.phone : "+1-000-000-0000"}
-            </Typography>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{ ...TextFontSize30LineHeight38, width: "100%" }}
-            >
+            </p>
+            <p
+              style={{ ...TextFontsize18LineHeight28, textAlign: "left", color: "var(--gray-900)", width: "100%", textTransform: "none" }}>
               {profile?.email}
-            </Typography>
+            </p>
           </Grid>
           <Grid
             container
@@ -243,11 +234,10 @@ const HeaderStaffDetail = () => {
             >
               <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                 {user.role === "Administrator" &&
-                  <Button style={{ background: "transparent" }}>
+                  <button style={{ background: "transparent" }}>
 
                     <Popconfirm title={`Do you want to ${profile.active ? "remove" : "grant"} access to this staff member?`} onConfirm={() => activeOrDesactiveStaffMemberInCompany()}>
-                      <Typography
-                        textTransform={"none"}
+                      <p
                         style={{
                           ...BlueButtonText,
                           fontWeight: 400,
@@ -261,7 +251,8 @@ const HeaderStaffDetail = () => {
                           backgroundColor: `${!profile.status ? "var(--blue-50, #EFF8FF)"
                             : "var(--success-50, #ECFDF3)"}`,
                           color: `${!profile.status ? "var(--blue-700, #175CD3)"
-                            : "var(--success-700, #027A48)"}`
+                            : "var(--success-700, #027A48)"}`,
+                            textTransform:"none"
                         }}
                       >
                         {profile.status ? (
@@ -270,9 +261,9 @@ const HeaderStaffDetail = () => {
                         ) : (
                           <PointFilled style={{ color: "#D0D5DD" }} />
                         )}{profile.status ? "Active" : "Inactive"}
-                      </Typography>
+                      </p>
                     </Popconfirm>
-                  </Button>}
+                  </button>}
 
               </div>
               <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
@@ -289,19 +280,20 @@ const HeaderStaffDetail = () => {
                     marginBottom: "5px",
                   }}
                 >
-                  <Typography
-                    color={
-                      filterActiveEventsPerStaffMember().length > 0
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      fontFamily: "Inter",
+                      fontStyle: "normal",
+                      fontWeight: 500,
+                      lineHeight: "18px",
+                      textAlign: "left",
+                      textTransform: "capitalize",
+                      color: `${filterActiveEventsPerStaffMember().length > 0
                         ? "var(--primary-700, #6941C6)"
                         : "var(--orange-700, #B93815)"
-                    }
-                    fontSize={"12px"}
-                    fontFamily={"Inter"}
-                    fontStyle={"normal"}
-                    fontWeight={500}
-                    lineHeight={"18px"}
-                    textAlign={"left"}
-                    textTransform={"capitalize"}
+                        }`
+                    }}
                   >
                     <Icon
                       icon="tabler:point-filled"
@@ -315,7 +307,7 @@ const HeaderStaffDetail = () => {
                     {filterActiveEventsPerStaffMember().length > 0 ? filterActiveEventsPerStaffMember().at(-1).eventName
                       : "No active event"}
                     {/* */}
-                  </Typography>
+                  </p>
                 </span>
               </div>
             </Grid>
