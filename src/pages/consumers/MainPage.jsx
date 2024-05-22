@@ -24,7 +24,7 @@ import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import { Subtitle } from "../../styles/global/Subtitle";
-import Main from "./components/charts/Main";
+// import Main from "./components/charts/Main";
 
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false)
@@ -232,6 +232,7 @@ const MainPage = () => {
           display={'flex'}
           justifyContent={"flex-start"}
           alignItems={"center"}
+          marginY={3}
           gap={1}
           item
           xs={12}
@@ -239,7 +240,7 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <Main />
+          {/* <Main /> */}
         </Grid>
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
           <p style={{ ...TextFontsize18LineHeight28, color: "var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</p>

@@ -1,5 +1,5 @@
 import { Chip } from "@mui/material";
-import { Avatar, Badge, Space, Table } from "antd";
+import { Avatar, Badge, Table } from "antd";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,6 @@ import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-table.css';
-import { nanoid } from "@reduxjs/toolkit";
 const StripeTransactionPerConsumer = ({ searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event)
@@ -111,52 +110,51 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   };
 
   //*expanded row
-  const expandedRowRender = (rowRecord) => {
-    console.log("🚀 ~ expandedRowRender ~ rowRecord:", rowRecord)
-    const columns = [
-      {
-        title: 'Date',
-        dataIndex: 'date',
-        key: 'date',
-      },
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-      },
-      {
-        title: 'Status',
-        key: 'state',
-        render: () => <Badge status="success" text="Finished" />,
-      },
-      {
-        title: 'Upgrade Status',
-        dataIndex: 'upgradeNum',
-        key: 'upgradeNum',
-      },
-      {
-        title: 'Action',
-        key: 'operation',
-        render: () => (
-          <Space size="middle">
-            <a>Pause</a>
-            <a>Stop</a>
+  // const expandedRowRender = (rowRecord) => {
+  //   const columns = [
+  //     {
+  //       title: 'Date',
+  //       dataIndex: 'date',
+  //       key: 'date',
+  //     },
+  //     {
+  //       title: 'Name',
+  //       dataIndex: 'name',
+  //       key: 'name',
+  //     },
+  //     {
+  //       title: 'Status',
+  //       key: 'state',
+  //       render: () => <Badge status="success" text="Finished" />,
+  //     },
+  //     {
+  //       title: 'Upgrade Status',
+  //       dataIndex: 'upgradeNum',
+  //       key: 'upgradeNum',
+  //     },
+  //     {
+  //       title: 'Action',
+  //       key: 'operation',
+  //       render: () => (
+  //         <Space size="middle">
+  //           <a>Pause</a>
+  //           <a>Stop</a>
 
-          </Space>
-        ),
-      },
-    ];
-    const dataExpanded = [];
-    for (let i = 0; i < 3; ++i) {
-      dataExpanded.push({
-        key: i.toString(),
-        date: '2014-12-24 23:12:00',
-        name: 'This is production name',
-        upgradeNum: 'Upgraded: 56',
-      });
-    }
-    return <Table columns={columns} dataSource={dataExpanded} pagination={false} />;
-  };
+  //         </Space>
+  //       ),
+  //     },
+  //   ];
+  //   const dataExpanded = [];
+  //   for (let i = 0; i < 3; ++i) {
+  //     dataExpanded.push({
+  //       key: i.toString(),
+  //       date: '2014-12-24 23:12:00',
+  //       name: 'This is production name',
+  //       upgradeNum: 'Upgraded: 56',
+  //     });
+  //   }
+  //   return <Table columns={columns} dataSource={dataExpanded} pagination={false} />;
+  // };
   const columns = [
     {
       title: "Event",
@@ -243,10 +241,10 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   return (
     <Table
       columns={columns}
-      expandable={{
-        expandedRowRender: (record) => (
-          expandedRowRender(record))
-      }}
+      // expandable={{
+      //   expandedRowRender: (record) => (
+      //     expandedRowRender(record))
+      // }}
       dataSource={finalDataToDiplayIncludeSearchFN()}
       className="table-ant-customized"
       pagination={{

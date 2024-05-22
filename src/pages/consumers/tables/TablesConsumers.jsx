@@ -1,13 +1,18 @@
-import { Typography } from "@mui/material";
-import { Table } from "antd";
-import { useDispatch } from "react-redux";
+import { Chip } from "@mui/material";
+import { Avatar, Table } from "antd";
+import _ from 'lodash';
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-// import "../../../../style/component/events/EventsToHomePage.css";
-import "../../../styles/global/ant-table.css"
+import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import "../../../styles/global/ant-table.css";
+
 export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
-  console.log("🚀 ~ TablesConsumers ~ getInfoNeededToBeRenderedInTable:", getInfoNeededToBeRenderedInTable)
+  const { user } = useSelector((state) => state.admin)
+  const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] = useState([])
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
@@ -23,53 +28,121 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
     dispatch(onAddCustomer(userFormatData));
     navigate(`/consumers/${record.entireData.id}`);
   };
+
+  const currentStatus = (props) => {
+    const grouping = _.groupBy(props, 'device.status')
+    if (grouping[true]) return true;
+    return false
+  }
+  const dataToRenderInTable = async () => {
+    const result = new Set()
+    for (let data of getInfoNeededToBeRenderedInTable) {
+      const fetching = await devitrakApi.post('/receiver/receiver-assigned-users-list', {
+        user: data.email,
+        provider: user.company
+      })
+      if (fetching.data.ok) {
+        result.add({ ...data, currentActivity: fetching.data.listOfReceivers, status: currentStatus(fetching.data.listOfReceivers) })
+      }
+    }
+    return setDataSortedAndFilterToRender(Array.from(result))
+  }
+
+  useEffect(() => {
+    const controller = new AbortController()
+    dataToRenderInTable()
+    return () => {
+      controller.abort()
+    }
+  }, [getInfoNeededToBeRenderedInTable])
+
+  const renderingStyle = {
+    ...TextFontsize18LineHeight28, fontSize: "14px", lineHeight: "20px", color: "var(--Gray-600, #475467)",
+    alignSelf: "stretch", fontWeight: 500,
+  }
+  const renderingRowStyle = {
+    ...TextFontsize18LineHeight28, fontSize: "12px", lineHeight: "18px", color: "var(--Indigo-700, #3538CD)",
+    alignSelf: "stretch", fontWeight: 400,
+  }
+
+  const renderingStyleInChip = (props) => {
+    return <p style={renderingRowStyle}>{props}</p>
+  }
+
+  const renderingRowStyling = (props) => {
+    return <p style={renderingStyle}>{props}</p>
+  }
+
   const columns = [
     {
-      title: "User",
+      title: renderingRowStyling("User"),
       dataIndex: "user",
-      width: "30%",
+      width: "fit-content",
       sorter: {
         compare: (a, b) => ("" + a.user).localeCompare(b.user),
       },
       render: (user) => (
-        <span key={`${user}`}>
+        <span key={`${user}`} style={{ display: "flex", justifyContent: "flex-start", alignSelf: "flex-start", gap: "5px" }}>
+          <Avatar />
           {user.map((detail, index) => {
             return (
-              <div
-                key={`${detail}-${index}`}
+              <div key={`${detail}-${index}`}
                 style={{
                   flexDirection: "column",
-                  color: `${index === 0
-                    ? "var(--gray-900, #101828)"
-                    : "var(--gray-600, #475467)"
-                    }`,
+                  color: "var(--gray-600, #475467)",
                   fontSize: "14px",
                   fontFamily: "Inter",
                   lineHeight: "20px",
-                  fontWeight: `${index === 0 ? "500" : null}`,
+                  fontWeight: 500,
                 }}
               >
-                <Typography textTransform={"capitalize"}>{detail}</Typography>
+                <p style={{ ...renderingStyle, textTransform: "capitalize" }} >{detail}</p>
               </div>
             );
           })}
         </span>
       ),
-    },
-    {
-      title: "Email",
+    },    {
+      title: <div style={{ width: "fit-content" }}>{renderingRowStyling("Status")}</div>,
       dataIndex: "email",
-      width: "30%",
+      width: "10%",
       sorter: {
         compare: (a, b) => ("" + a.email).localeCompare(b.email),
       },
+      render: (email) => (
+        <p style={renderingStyle}>{email}</p>
+      )
+    },
+
+    {
+      title: <div style={{ width: "fit-content" }}>{renderingRowStyling("Email")}</div>,
+      dataIndex: "email",
+      width: "fit-content",
+      sorter: {
+        compare: (a, b) => ("" + a.email).localeCompare(b.email),
+      },
+      render: (email) => (
+        <p style={renderingStyle}>{email}</p>
+      )
     },
     {
-      title: "Events",
+      title: renderingRowStyling("Devices"),
+      dataIndex: "currentActivity",
+      sorter: {
+        compare: (a, b) => ("" + a.currentActivity).localeCompare(b.currentActivity),
+      },
+      width: "10%",
+      render: (currentActivity) => (
+        <p style={{ ...renderingStyle, width: "fit-content" }}>{currentActivity.length}</p>
+      )
+    },
+
+    {
+      title: renderingRowStyling("Events"),
       dataIndex: "entireData",
-      width: "30%",
-      render:(entireData) => (
-        <span>{entireData.eventSelected.at(-1)}</span>
+      width: "fit-content",
+      render: (entireData) => (
+        <><Chip style={{background: "var(--Indigo-50, #EEF4FF)"}} label={renderingStyleInChip(entireData.eventSelected.at(-1))} />&nbsp;{entireData.eventSelected.length > 1 && <Chip label={renderingRowStyling(`+${(Number(entireData.eventSelected.length) - 1)}`)} />}</>
       )
     }
 
@@ -79,7 +152,7 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
       sticky
       size="large"
       columns={columns}
-      dataSource={getInfoNeededToBeRenderedInTable}
+      dataSource={dataSortedAndFilterToRender}
       onRow={(record) => {
         return {
           onClick: () => { handleDataDetailUser(record) }
