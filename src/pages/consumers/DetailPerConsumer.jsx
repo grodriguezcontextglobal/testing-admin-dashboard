@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { devitrakApi } from '../../api/devitrakApi';
 import Loading from '../../components/animation/Loading';
-import { EditIcon } from '../../components/icons/Icons';
+import { CreditCardIcon, EditIcon, ReleaseDepositIcon } from '../../components/icons/Icons';
 import CenteringGrid from '../../styles/global/CenteringGrid';
 import { OutlinedInputStyle } from '../../styles/global/OutlinedInputStyle';
 import TextFontsize18LineHeight28 from '../../styles/global/TextFontSize18LineHeight28';
@@ -152,7 +152,7 @@ const DetailPerConsumer = () => {
           <Grid display={'flex'} justifyContent={'flex-end'} alignItems={'center'} alignSelf={'flex-start'} item xs={12} sm={12} md={3} lg={3}>
             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "5px" }}>
               <button style={{
-                outline:"none",
+                outline: "none",
                 display: 'flex',
                 padding: '10px 16px',
                 justifyContent: 'center',
@@ -162,22 +162,22 @@ const DetailPerConsumer = () => {
                 border: '1px solid var(--Blue-dark-50, #EFF4FF)',
                 background: 'var(--Blue-dark-50, #EFF4FF)',
               }}><EditIcon />
-              <p style={{
-                color: 'var(--Blue-dark-700, #004EEB)',
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                fontStyle: 'normal',
-                fontWeight: '600',
-                lineHeight: '20px',
-              }}>Edit</p>
+                <p style={{
+                  color: 'var(--Blue-dark-700, #004EEB)',
+                  fontFamily: 'Inter',
+                  fontSize: '14px',
+                  fontStyle: 'normal',
+                  fontWeight: '600',
+                  lineHeight: '20px',
+                }}>Edit</p>
               </button>
-        </div>
-      </Grid>
+            </div>
+          </Grid>
         </Grid >
-  <Divider />{ " " }
+        <Divider />{" "}
         <Grid alignSelf={'flex-start'} item xs={12} sm={12} md={6} lg={6} ><CardRendered title={'Group'} props={'No group provided'} optional={null} /></Grid>
         <Grid alignSelf={'flex-start'} item xs={12} sm={12} md={6} lg={6} ><CardActionsButton /></Grid>
-        <Divider />{ " " }
+        <Divider />{" "}
         <Grid
           display={"flex"}
           justifyContent={"flex-start"}
@@ -234,6 +234,50 @@ const DetailPerConsumer = () => {
             />
           </Grid>
         </Grid>
+        <Grid
+          marginY={3}
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          gap={1}
+          container
+        >
+          <button style={{
+            width: "80%",
+            outline: "none",
+            display: 'flex',
+            padding: '16px 28px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '12px',
+            flex: '1 0 0',
+            borderRadius: '8px',
+            border: '1px solid var(--Error-300, #FDA29B)',
+            background: 'var(--Base-White, #FFF)',
+            /* Shadow/xs */
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)"
+          }}>
+            <CreditCardIcon /><p style={{ ...TextFontsize18LineHeight28, color: "var(--Error-700, #B42318)" }}>Charge for lost device</p>
+          </button>
+          <button style={{
+            width: "80%",
+            outline: "none",
+            display: 'flex',
+            padding: '16px 28px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '12px',
+            flex: '1 0 0',
+            borderRadius: '8px',
+            border: '1px solid var(--Gray-300, #D0D5DD)',
+            background: 'var(--Base-White, #FFF)',
+            /* Shadow/xs */
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)"
+          }}>
+            <ReleaseDepositIcon /><p style={{ ...TextFontsize18LineHeight28, color: "var(--Gray-700, #344054)" }}>Release deposit</p>
+          </button>
+        </Grid>
+
       </Grid >
     );
   }
