@@ -9,6 +9,9 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
+import { useQuery } from "@tanstack/react-query";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { Subtitle } from "../../../styles/global/Subtitle";
 
 export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
   const { user } = useSelector((state) => state.admin)
@@ -29,20 +32,49 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
     navigate(`/consumers/${record.entireData.id}`);
   };
 
+  const eventsInfo = useQuery({
+    queryKey: ['allEventsInfoPerCompanyList'],
+    queryFn: () => devitrakApi.post('/event/event-list', {
+      company: user.company
+    }),
+    enabled: false,
+    refetchOnMount: false
+  })
+
+  const sortEventsDataPerCompany = () => {
+    const events = new Map();
+    if (eventsInfo.data) {
+      const info = [...eventsInfo.data.data.list]
+      for (let data of info) {
+        events.set(data.eventInfoDetail.eventName, data)
+      }
+    }
+    return events
+  }
   const currentStatus = (props) => {
     const grouping = _.groupBy(props, 'device.status')
     if (grouping[true]) return true;
     return false
   }
+  const checkingActiveEventForActiveConsumer = (props) => {
+    const result = [false]
+    for (let [key, value] of sortEventsDataPerCompany()) {
+      if (props.some(element => element === key)) {
+        if (value.active) return result[0] = value.active
+      }
+    }
+    return result[0]
+  }
   const dataToRenderInTable = async () => {
     const result = new Set()
     for (let data of getInfoNeededToBeRenderedInTable) {
+      const currentActiveStatus = await checkingActiveEventForActiveConsumer(data.entireData.eventSelected)
       const fetching = await devitrakApi.post('/receiver/receiver-assigned-users-list', {
         user: data.email,
         provider: user.company
       })
       if (fetching.data.ok) {
-        result.add({ ...data, currentActivity: fetching.data.listOfReceivers, status: currentStatus(fetching.data.listOfReceivers) })
+        result.add({ ...data, currentActivity: fetching.data.listOfReceivers, status: currentStatus(fetching.data.listOfReceivers), currentConsumerActive: currentActiveStatus })
       }
     }
     return setDataSortedAndFilterToRender(Array.from(result))
@@ -51,10 +83,12 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
   useEffect(() => {
     const controller = new AbortController()
     dataToRenderInTable()
+    eventsInfo.refetch()
     return () => {
       controller.abort()
     }
   }, [getInfoNeededToBeRenderedInTable])
+  console.log("🚀 ~ useEffect ~ eventsInfo.:", eventsInfo?.data)
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28, fontSize: "14px", lineHeight: "20px", color: "var(--Gray-600, #475467)",
@@ -71,6 +105,12 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
 
   const renderingRowStyling = (props) => {
     return <p style={renderingStyle}>{props}</p>
+  }
+
+  const cellStyle = {
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center"
   }
 
   const columns = [
@@ -102,15 +142,51 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
           })}
         </span>
       ),
-    },    {
+    }, {
       title: <div style={{ width: "fit-content" }}>{renderingRowStyling("Status")}</div>,
-      dataIndex: "email",
+      dataIndex: "currentConsumerActive",
       width: "10%",
       sorter: {
-        compare: (a, b) => ("" + a.email).localeCompare(b.email),
+        compare: (a, b) => ("" + a.currentConsumerActive).localeCompare(b.currentConsumerActive),
       },
-      render: (email) => (
-        <p style={renderingStyle}>{email}</p>
+      render: (currentConsumerActive) => (
+        <span
+        style={{
+          ...cellStyle,
+          borderRadius: "16px",
+          justifyContent: "center",
+          display: "flex",
+          padding: "2px 8px",
+          alignItems: "center",
+          background: `${!currentConsumerActive
+            ? "var(--blue-50, #EFF8FF)"
+            : "var(--success-50, #ECFDF3)"
+            }`,
+          width: "fit-content",
+        }}
+      >
+        <p
+          style={{
+            ...Subtitle, color: `${!currentConsumerActive
+              ? "var(--blue-700, #175CD3)"
+              : "var(--success-700, #027A48)"
+              }`, textTransform: "capitalize"
+          }}
+
+        >
+          <Icon
+            icon="tabler:point-filled"
+            rotate={3}
+            color={`${!currentConsumerActive
+              ? "#2E90FA"
+              : "#12B76A"
+              }`}
+          />
+          {!currentConsumerActive
+            ? "No active"
+            : "Active"}
+        </p>
+      </span>
       )
     },
 
@@ -142,7 +218,7 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
       dataIndex: "entireData",
       width: "fit-content",
       render: (entireData) => (
-        <><Chip style={{background: "var(--Indigo-50, #EEF4FF)"}} label={renderingStyleInChip(entireData.eventSelected.at(-1))} />&nbsp;{entireData.eventSelected.length > 1 && <Chip label={renderingRowStyling(`+${(Number(entireData.eventSelected.length) - 1)}`)} />}</>
+        <><Chip style={{ background: "var(--Indigo-50, #EEF4FF)" }} label={renderingStyleInChip(entireData.eventSelected.at(-1))} />&nbsp;{entireData.eventSelected.length > 1 && <Chip label={renderingRowStyling(`+${(Number(entireData.eventSelected.length) - 1)}`)} />}</>
       )
     }
 
