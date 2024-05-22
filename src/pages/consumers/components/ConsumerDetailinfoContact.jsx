@@ -1,11 +1,11 @@
 /* eslint-disable no-unused-vars */
 import { Grid, Typography } from "@mui/material"
-import { Avatar, Card } from "antd"
+import { Card } from "antd"
+import { useSelector } from "react-redux"
 import { CardStyle } from "../../../styles/global/CardStyle"
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28"
-import { useSelector } from "react-redux"
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38"
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30"
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38"
 
 const ConsumerDetailInfoCntact = () => {
     const { customer } = useSelector((state) => state.customer);
