@@ -1,5 +1,5 @@
 import { Chip } from "@mui/material";
-import { Avatar, Badge, Table } from "antd";
+import { Avatar, Badge, Space, Table } from "antd";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import '../../../styles/global/ant-table.css';
+import { nanoid } from "@reduxjs/toolkit";
 const StripeTransactionPerConsumer = ({ searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event)
@@ -68,6 +69,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     const result = new Set()
     responsedData.forEach((value) => {
       result.add({
+        // key: nanoid(Number(String(value[0].paymentIntent).length)),
         eventSelected: value[0].eventSelected,
         paymentIntent: value[0].paymentIntent,
         device: value.length,
@@ -77,14 +79,26 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     return Array.from(result)
   };
 
+  const addingKeysToExpandRow = () => {
+    const result = new Set()
+    for (let data of reformedSourceData()) {
+      result.add({
+        // key: nanoid(String(data.paymentIntent).length),
+        ...data
+      })
+    }
+    return Array.from(result)
+  };
+
+
   const finalDataToDiplayIncludeSearchFN = () => {
-    if (searchValue?.length > 0 && reformedSourceData()?.length > 0) {
-      return reformedSourceData().filter(element =>
+    if (searchValue?.length > 0 && addingKeysToExpandRow()?.length > 0) {
+      return addingKeysToExpandRow().filter(element =>
         String(element.eventSelected).toLowerCase().includes(String(searchValue).toLowerCase()) ||
         String(element.paymentIntent).toLowerCase().includes(String(searchValue).toLowerCase())
       )
     }
-    return reformedSourceData()
+    return addingKeysToExpandRow()
   }
   const moreDetailFn = async (record) => {
     const eventListQuery = await devitrakApi.post("/event/event-list", { company: user.company, 'eventInfoDetail.eventName': record.eventSelected[0] })
@@ -94,6 +108,54 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     dispatch(onAddSubscription(eventListQuery.data.list[0].subscription));
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     navigate(`/events/event-attendees/${customer.uid ?? customer.id}/transactions-details`);
+  };
+
+  //*expanded row
+  const expandedRowRender = (rowRecord) => {
+    console.log("🚀 ~ expandedRowRender ~ rowRecord:", rowRecord)
+    const columns = [
+      {
+        title: 'Date',
+        dataIndex: 'date',
+        key: 'date',
+      },
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+      },
+      {
+        title: 'Status',
+        key: 'state',
+        render: () => <Badge status="success" text="Finished" />,
+      },
+      {
+        title: 'Upgrade Status',
+        dataIndex: 'upgradeNum',
+        key: 'upgradeNum',
+      },
+      {
+        title: 'Action',
+        key: 'operation',
+        render: () => (
+          <Space size="middle">
+            <a>Pause</a>
+            <a>Stop</a>
+
+          </Space>
+        ),
+      },
+    ];
+    const dataExpanded = [];
+    for (let i = 0; i < 3; ++i) {
+      dataExpanded.push({
+        key: i.toString(),
+        date: '2014-12-24 23:12:00',
+        name: 'This is production name',
+        upgradeNum: 'Upgraded: 56',
+      });
+    }
+    return <Table columns={columns} dataSource={dataExpanded} pagination={false} />;
   };
   const columns = [
     {
@@ -181,6 +243,10 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   return (
     <Table
       columns={columns}
+      expandable={{
+        expandedRowRender: (record) => (
+          expandedRowRender(record))
+      }}
       dataSource={finalDataToDiplayIncludeSearchFN()}
       className="table-ant-customized"
       pagination={{
