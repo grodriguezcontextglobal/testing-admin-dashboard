@@ -7,6 +7,7 @@ import "../../../styles/global/ant-table.css"
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
+  console.log("🚀 ~ TablesConsumers ~ getInfoNeededToBeRenderedInTable:", getInfoNeededToBeRenderedInTable)
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
@@ -62,7 +63,16 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
       sorter: {
         compare: (a, b) => ("" + a.email).localeCompare(b.email),
       },
+    },
+    {
+      title: "Events",
+      dataIndex: "entireData",
+      width: "30%",
+      render:(entireData) => (
+        <span>{entireData.eventSelected.at(-1)}</span>
+      )
     }
+
   ];
   return (
     <Table
