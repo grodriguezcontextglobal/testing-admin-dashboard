@@ -23,6 +23,8 @@ import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20He
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
+import { Subtitle } from "../../styles/global/Subtitle";
+import Main from "./components/charts/Main";
 
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false)
@@ -200,12 +202,51 @@ const MainPage = () => {
         gap={1}
         container
       >
+        <Grid
+          textAlign={"right"}
+          flexDirection={'column'}
+          display={'flex'}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <p
+            style={{ ...TextFontsize18LineHeight28, textAlign: "left", width: "100%", color: " var(--Base-Black, #000)" }}
+          >
+            Quick glance
+          </p>
+          <p
+            style={{ ...Subtitle, textAlign: "left", width: "100%" }}
+          >
+            Here are all the categories of devices within your inventory, and a quick glance at devices locations.
+          </p>
+        </Grid>
+        <Grid
+          textAlign={"right"}
+          flexDirection={'column'}
+          display={'flex'}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <Main />
+        </Grid>
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
-          <Typography style={{ ...TextFontsize18LineHeight28, color: "var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</Typography>
+          <p style={{ ...TextFontsize18LineHeight28, color: "var(--gray900)", display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>All consumers&nbsp;</p>
         </Grid>
         <Divider style={{ margin: "20px 0 24px" }} />
         <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} item xs={12} sm={12} md={12} lg={12}>
-          <Typography style={{ ...TextFontSize20LineHeight30, display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>Search consumers:&nbsp;</Typography>
+          <p style={{ ...TextFontSize20LineHeight30, display: "flex", justifyContent: "flex-start", alignItems: "center", width: "fit-content" }}>Search consumers:&nbsp;</p>
           <Grid item xs sm md lg>
             <OutlinedInput
               {...register("searchEvent")}
@@ -240,7 +281,7 @@ const MainPage = () => {
           xs={12}
         >
           <Typography
-            style={{ ...TextFontsize18LineHeight28,display: "flex", alignItems: "center", justifyContent: "flex-start",color:"var(--gray-900, #101828)", padding:"24px" }}
+            style={{ ...TextFontsize18LineHeight28, display: "flex", alignItems: "center", justifyContent: "flex-start", color: "var(--gray-900, #101828)", padding: "24px" }}
             textTransform={"none"}
             textAlign={"left"}
           > Consumers&nbsp;
