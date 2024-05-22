@@ -1,9 +1,82 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
+import { Grid, InputLabel } from "@mui/material";
+import { Table } from "antd";
 import { useSelector } from "react-redux";
+import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
+import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
-  console.log("🚀 ~ Device ~ deviceSetup:", deviceSetup)
+
+  const renderingStyle = {
+    ...TextFontsize18LineHeight28, fontSize: "16px", lineHeight: "24px", color: "var(--gray-600, #475467)",
+    alignSelf: "stretch", fontWeight: 400
+  }
+  const columns = [
+    {
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      render: text => <div style={renderingStyle}>{text}</div>,
+    },
+    {
+      title: 'Brand',
+      dataIndex: 'brand',
+      key: 'brand',
+      render: text => <div style={renderingStyle}>{text}</div>,
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category_name',
+      key: 'category_name',
+      render: text => <div style={renderingStyle}>{text}</div>,
+    },
+    {
+      title: 'Group',
+      dataIndex: 'item_group',
+      key: 'item_group',
+      render: text => <div style={renderingStyle}>{text}</div>,
+    },
+  ];
+
+  const totalDevicesAssigned = () => {
+    const initial = 0
+    return deviceSetup.reduce((accu, { quantity }) => accu + quantity, initial)
+  }
+  return (
+    <Grid
+      display={"flex"}
+      justifyContent={"flex-start"}
+      alignItems={"center"}
+      container
+    >
+      <InputLabel style={{
+        marginBottom: "0.2rem", width: "100%", display: "flex",
+        alignItems: "center", justifyContent: "flex-start"
+      }}>
+        <p
+          style={{
+            ...TextFontSize20LineHeight30,
+            fontWeight: 600,
+            color: "var(--gray-600, #475467)",
+            alignSelf: "stretch",
+          }}
+        >
+          Devices added&nbsp;<span style={{
+            ...TextFontsize18LineHeight28,
+            fontWeight: 400,
+            color: "var(--gray-600, #475467)",
+            alignSelf: "stretch",
+          }}>({totalDevicesAssigned()} {totalDevicesAssigned() > 1 ? "units" : "unit"})</span>
+        </p>
+      </InputLabel>
+
+      <Table dataSource={deviceSetup} style={{ width: "100%", border: "none", backgroundColor: "transparent" }} columns={columns} pagination={false} bordered={false} showHeader={false} />
+    </Grid>
+  );
+};
+
+export default Device;
+
   // const { user } = useSelector((state) => state.admin);
   // const [saveInventoryState, setSaveInventoryState] = useState(false)
   // const [loadingState, setLoadingState] = useState(false)
@@ -32,32 +105,8 @@ const Device = () => {
   //     setLoadingState(false)
   //   }
   // };
-  return (
-    <Grid
-      display={"flex"}
-      justifyContent={"flex-start"}
-      alignItems={"center"}
-      container
-    >
-      <InputLabel style={{
-        marginBottom: "0.2rem", width: "100%", display: "flex",
-        alignItems: "center", justifyContent: "flex-start"
-      }}>
-        <Typography
-          textTransform={"none"}
-          textAlign={"left"}
-          fontFamily={"Inter"}
-          fontSize={"20px"}
-          fontStyle={"normal"}
-          fontWeight={600}
-          lineHeight={"30px"}
-          color={"var(--gray-600, #475467)"}
-          alignSelf={"stretch"}
-        >
-          Devices added &nbsp;
-        </Typography>
-      </InputLabel>
-      {deviceSetup.map((item) => {
+
+{/* {deviceSetup.map((item) => {
         return (
           <InputLabel
             key={item._id}
@@ -78,9 +127,4 @@ const Device = () => {
             </Typography>
           </InputLabel>
         );
-      })}
-    </Grid>
-  );
-};
-
-export default Device;
+      })} */}
