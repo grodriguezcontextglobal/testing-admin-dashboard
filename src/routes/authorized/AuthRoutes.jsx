@@ -35,6 +35,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import ForgetPasswordLinkFromStaffPage from "../../pages/staff/detail/components/equipment_components/ResetPasswordLink";
 import UpdateRoleInCompany from "../../pages/staff/detail/components/equipment_components/UpdateRoleInCompany";
 import AssignStaffMemberToEvent from "../../pages/staff/detail/components/AssignStaffMemberToEvent";
+import ConsumerDeviceLostFeeCash from "../../pages/consumers/components/markedLostOption/Cash";
 const AuthRoutes = () => {
     const Home = lazy(() => import("../../pages/home/MainPage"))
     const SearchResultPage = lazy(() => import("../../pages/search/MainPage"))
@@ -101,6 +102,7 @@ const AuthRoutes = () => {
                         <Route path="/inventory/inventory-in-use" element={<InventoryInUsePage />} />
                         <Route path="/consumers" element={<ConsumersMainPage />} />
                         <Route path="/consumers/:id" element={<ConsumerDetail />} />
+                        <Route path="/consumers/:id/lost-device-fee/cash" element={<ConsumerDeviceLostFeeCash />} />
                         <Route path="/staff" element={<Staff />} />
                         <Route path="/staff/:id" element={<StaffDetail />} >
                             <Route key={'/staff/:id/main'} path="main" element={<TableStaffDetail />} />
