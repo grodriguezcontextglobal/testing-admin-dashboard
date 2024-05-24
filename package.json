@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port=5522",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
@@ -57,6 +57,9 @@
     "vite-plugin-svgr": "^4.2.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz",
     "yup": "^1.2.0"
+  },
+  "engines": {
+    "node": "20.11.1"
   },
   "devDependencies": {
     "@iconify/react": "^4.1.0",
