@@ -98,7 +98,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         paymentIntent: value[0].paymentIntent,
         device: value.length,
         status: value.reduce(
-          (acc, { device }) => acc + (device.status === false),
+          (acc, { device }) => acc + (device.status === false || device.status === "Lost"),
           0
         ),
       });
@@ -285,6 +285,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       pagination={{
         position: ["bottomCenter"],
       }}
+      style={{ cursor: "pointer" }}
     />
   );
 };
