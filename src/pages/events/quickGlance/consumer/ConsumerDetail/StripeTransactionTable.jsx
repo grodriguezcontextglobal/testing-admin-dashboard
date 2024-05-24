@@ -685,7 +685,7 @@ const StripeTransactionTable = ({ searchValue }) => {
                 style={{ cursor: "pointer" }}
                 expandable={{
                     expandIcon:false,
-                    expandRowByClick: false,
+                    expandRowByClick: true,
                     expandedRowRender: (record) => (
                         renderDataPerRow(record))
                 }}
