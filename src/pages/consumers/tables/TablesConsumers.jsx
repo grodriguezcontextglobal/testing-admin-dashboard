@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Chip } from "@mui/material";
 import { Avatar, Table } from "antd";
 import _ from 'lodash';
@@ -88,7 +89,6 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
       controller.abort()
     }
   }, [getInfoNeededToBeRenderedInTable])
-  console.log("🚀 ~ useEffect ~ eventsInfo.:", eventsInfo?.data)
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28, fontSize: "14px", lineHeight: "20px", color: "var(--Gray-600, #475467)",
