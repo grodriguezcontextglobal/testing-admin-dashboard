@@ -155,7 +155,7 @@ const ExpandedRow = ({ rowRecord }) => {
             onClick={() => handleReturnSingleDevice(record)}
             style={{
               ...BlueButton,
-              display: `${record.status ? "flex" : "none"}`,
+              display: `${record.status === "Lost" ? "none" : record.status ? "flex": "none"}`,
             }}
           >
             <p style={BlueButtonText}>Mark as returned</p>
@@ -164,7 +164,7 @@ const ExpandedRow = ({ rowRecord }) => {
             onClick={() => handleLostSingleDevice(record)}
             style={{
               ...GrayButton,
-              display: `${record.status ? "flex" : "none"}`,
+              display: `${record.status === "Lost" ? "none" : record.status ? "flex": "none"}`,
             }}
           >
             <p
