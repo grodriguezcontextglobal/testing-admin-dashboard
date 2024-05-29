@@ -70,8 +70,9 @@ const UpdateRoleInCompany = () => {
 
   const options = [
     { label: "Administrator", value: 1 },
-    { label: "Approver", value: 2 },
-    { label: "Editor", value: 3 },
+    { label: "Manager", value: 2 },
+    { label: "Support", value: 3 },
+    { label: "Staff event assistant", value: 4 },
   ];
   // const options = [{ label: "Administrator", value: "Administrator" }, { label: "Approver", value: "Approver" }, { label: "Editor", value: "Editor" },]
 
