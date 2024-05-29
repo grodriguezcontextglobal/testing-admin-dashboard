@@ -55,7 +55,7 @@ const ModalListOfDefectedDevices = ({
     ];
 
     return (
-      <Table columns={columns} dataSource={record.report} rowKey={record.key} />
+      <Table columns={columns} dataSource={record.report} />
     );
   };
 
@@ -83,7 +83,6 @@ const ModalListOfDefectedDevices = ({
       <Table
         columns={columns}
         dataSource={dataToRender()}
-        rowKey="device"
         expandable={{
           expandIcon: (record) => {
             if (record.expanded) {
