@@ -152,7 +152,6 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
     }
     return [];
   };
-
   const handleRecord = (record) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
@@ -825,9 +824,21 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         expandable={{
           expandIcon: (record) => {
             if (record.expanded) {
-              return <Icon icon="mdi:arrow-collapse" width={20} color="var(--gray300)"/>;
+              return (
+                <Icon
+                  icon="mdi:arrow-collapse"
+                  width={20}
+                  color="var(--gray300)"
+                />
+              );
             } else {
-              return <Icon icon="mdi:arrow-expand" width={20} color="var(--gray300)"/>;
+              return (
+                <Icon
+                  icon="mdi:arrow-expand"
+                  width={20}
+                  color="var(--gray300)"
+                />
+              );
             }
           },
           expandRowByClick: true,

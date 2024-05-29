@@ -30,7 +30,6 @@ const schema = yup.object().shape({
 
 const Form = () => {
     const { staff } = useSelector((state) => state.event)
-    console.log("🚀 ~ Form ~ staff:", staff)
     const {
         register,
         setValue,
