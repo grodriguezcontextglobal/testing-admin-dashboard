@@ -11,7 +11,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useState } from "react";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
 import { onLogin } from "../../../../../store/slices/adminSlice";
-
+import dicRole from '../../../../../components/general/dicRole'
 const UpdateRoleInCompany = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
@@ -80,7 +80,7 @@ const UpdateRoleInCompany = () => {
       {contextHolder}
       <Modal
         title={renderingTitle(
-          `Staff member: ${profile.firstName} ${profile.lastName} Current role in company: ${profile.role}`
+          `Staff member: ${profile.firstName} ${profile.lastName} Current role in company: ${dicRole[profile.role]}`
         )}
         centered
         open={true}
