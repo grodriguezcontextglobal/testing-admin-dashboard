@@ -26,7 +26,7 @@ const MainPage = () => {
     });
     const [openDeviceModal, setOpenDeviceModal] = useState(false);
     const { register } = useForm();
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
     const isMediumDevice = useMediaQuery(
         "only screen and (min-width : 769px) and (max-width : 992px)"

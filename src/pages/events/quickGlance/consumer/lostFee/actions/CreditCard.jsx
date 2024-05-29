@@ -1,8 +1,16 @@
-import { Button, FormControl, Grid, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert } from "antd";
-import _ from 'lodash';
+import _ from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,8 +20,10 @@ import { LostDeviceStripeElement } from "../../../../../../components/stripe/ele
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import { GrayButton } from "../../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const navigator = useNavigate();
@@ -60,7 +70,11 @@ const CreditCard = () => {
   });
   const listOfDeviceInPool = useQuery({
     queryKey: ["deviceListOfPool"],
-    queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event.eventInfoDetail.eventName, provider: event.company }),
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
   });
 
   const updateAssignedDeviceMutation = useMutation({
@@ -120,9 +134,9 @@ const CreditCard = () => {
           id: findTheOneInUsed.id,
           activity: "NO",
           comment: "Device lost",
-          status: "Lost"
+          status: "Lost",
         }
-      )
+      );
 
       const objectReturnIssueProfile = {
         ...findTheOneInUsed,
@@ -131,7 +145,7 @@ const CreditCard = () => {
         status: "Lost",
         user: customer?.email,
         admin: user?.email,
-        timeStamp: Date.now()
+        timeStamp: Date.now(),
       };
       devitrakApi.post(
         "/receiver/receiver-returned-issue",
@@ -141,11 +155,11 @@ const CreditCard = () => {
 
     const verifyPaymentIntentReceiversAssignedFormat = () => {
       if (Array.isArray(paymentIntentReceiversAssigned)) {
-        return paymentIntentReceiversAssigned
+        return paymentIntentReceiversAssigned;
       } else {
-        return [paymentIntentReceiversAssigned]
+        return [paymentIntentReceiversAssigned];
       }
-    }
+    };
     const changeStatusInDeviceAssignedData = async () => {
       // const checkIndex = verifyPaymentIntentReceiversAssignedFormat()[0]?.device.findIndex(
       //   (item) => item.serialNumber === receiverToReplaceObject.serialNumber
@@ -213,8 +227,8 @@ const CreditCard = () => {
         cashReportProfile
       );
       if (respo) {
-        const stringDate = new Date().toString()
-        const dateSplitting = stringDate.split(" ")
+        const stringDate = new Date().toString();
+        const dateSplitting = stringDate.split(" ");
         await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
           consumer: {
             name: `${customer.name} ${customer.lastName}`,
@@ -225,12 +239,15 @@ const CreditCard = () => {
           company: event.company,
           date: dateSplitting.slice(0, 4),
           time: dateSplitting[4],
-          transaction: verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
+          transaction:
+            verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
           link: `https://app.devitrak.net/authentication/${encodeURI(
-              event.eventInfoDetail.eventName
-            )}/${encodeURI(event.company)}/${customer.uid}`
+            event.eventInfoDetail.eventName
+          )}/${encodeURI(event.company)}/${customer.uid}`,
         });
-        await navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
+        await navigator(
+          `/events/event-attendees/${customer.uid}/transactions-details`
+        );
       }
     };
     const dispatchFnAfterPaymentIntentSuccessfully = () => {
@@ -258,7 +275,6 @@ const CreditCard = () => {
     };
     return (
       <>
-
         <form
           style={{
             width: "100%",
@@ -269,9 +285,12 @@ const CreditCard = () => {
           }}
           onSubmit={handleSubmit(triggerStripePaymentIntent)}
         >
-          <Grid display={"flex"}
+          <Grid
+            display={"flex"}
             alignItems={"center"}
-            justifyContent={"space-between"} container>
+            justifyContent={"space-between"}
+            container
+          >
             <Grid
               display={"flex"}
               alignItems={"center"}
@@ -284,9 +303,9 @@ const CreditCard = () => {
             >
               <Typography
                 textTransform={"none"}
-                style={TextFontSize30LineHeight38}
+                style={TextFontsize18LineHeight28}
               >
-                Credit card
+                Credit card transaction for lost device
               </Typography>
             </Grid>
             <Grid
@@ -360,26 +379,14 @@ const CreditCard = () => {
               md={3}
               lg={2}
             >
-              <Button
-                style={BlueButton}
-                onClick={() => handleBackAction()}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+              <Button style={GrayButton} onClick={() => handleBackAction()}>
+                <Typography textTransform={"none"} style={GrayButtonText}>
                   Cancel
                 </Typography>
               </Button>{" "}
-              <Button
-                style={BlueButton}
-                type="submit"
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
-                  Submit
+              <Button style={BlueButton} type="submit">
+                <Typography textTransform={"none"} style={BlueButtonText}>
+                  Add CC information
                 </Typography>
               </Button>
             </Grid>
@@ -400,4 +407,4 @@ const CreditCard = () => {
   }
 };
 
-export default CreditCard
+export default CreditCard;

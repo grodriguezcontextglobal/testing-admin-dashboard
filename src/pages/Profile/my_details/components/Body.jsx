@@ -20,6 +20,8 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import dicRole from "../../../../components/general/dicRole";
+
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -29,7 +31,7 @@ const Body = () => {
       lastName: user.lastName,
       email: user.email,
       phone: user.phone ?? "000-000-0000",
-      role: user.role,
+      role: dicRole[Number(user.role)],
     },
   });
   const dispatch = useDispatch();

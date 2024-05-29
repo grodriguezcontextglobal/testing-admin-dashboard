@@ -17,7 +17,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { user } = useAdminStore();
   const [permissionStatus, setPermissionStatus] = useState(false);
   const [permissionUpdated, setPermissionUpdated] = useState("");
-  const adminUserRole = user.role;
+  const adminUserRole = Number(user.role);
   const handleEditAdminPermission = async () => {
     setPermissionStatus(!permissionStatus);
   };
@@ -73,6 +73,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
             onClick={handleEditAdminPermission}
             size={50}
             disabled={
+              // adminUserRole === "Approver" || adminUserRole === "Administrator"
               adminUserRole === "Approver" || adminUserRole === "Administrator"
                 ? false
                 : true

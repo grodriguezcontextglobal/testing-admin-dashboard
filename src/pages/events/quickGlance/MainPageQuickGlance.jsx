@@ -31,6 +31,8 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -51,13 +53,14 @@ const MainPageQuickGlance = () => {
   const isExtraLargeDevice = useMediaQuery(
     "only screen and (min-width : 1201px)"
   );
-
+  const sum = (a, b) => {
+    return a + b;
+  };
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
     enabled: false,
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   const eventAttendeesParametersQuery = useQuery({
     queryKey: ["listOfAttendeesPerSelectedEvent"],
@@ -98,7 +101,11 @@ const MainPageQuickGlance = () => {
         <Loading />
       </div>
     );
-  if (eventAttendeesQuery.data || eventAttendeesQuery.isFetched) {
+  if (
+    eventAttendeesQuery.data &&
+    receiversPoolQuery.data &&
+    eventAttendeesParametersQuery.data
+  ) {
     const foundAllDevicesGivenInEvent = () => {
       // const check = receiversPoolQuery?.data?.data?.receiversInventory?.filter(
       //   (item) => item.eventSelected === choice && item.provider === company
@@ -114,7 +121,7 @@ const MainPageQuickGlance = () => {
       // const check = eventAttendeesQuery.data.data.users?.filter((item) =>
       //   item?.eventSelected?.find((item) => item === choice)
       // );
-      const check = eventAttendeesQuery.data.data.users;
+      const check = eventAttendeesParametersQuery.data.data.users;
       return check;
     };
 
@@ -198,12 +205,20 @@ const MainPageQuickGlance = () => {
           }}
           container
         >
-          <Grid marginY={0} item xs={12} md={6}>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            marginY={0}
+            item
+            xs={12}
+            md={6}
+          >
             <p
               style={{
                 ...TextFontSize30LineHeight38,
                 fontWeight: 600,
                 padding: `${(isSmallDevice || isMediumDevice) && "5px"}`,
+                textAlign: "left",
               }}
             >
               Events
@@ -276,17 +291,7 @@ const MainPageQuickGlance = () => {
                   All events
                 </p>
               </Link>
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 600,
-                  fontSize: "18px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--gray-900, #101828)",
-                }}
-              >
+              <p style={TextFontsize18LineHeight28}>
                 <Icon icon="mingcute:right-line" />
                 {choice}
               </p>
@@ -301,17 +306,7 @@ const MainPageQuickGlance = () => {
               item
               xs={12}
             >
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 400,
-                  fontSize: "14px",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  color: "var(--gray-600, #475467)",
-                }}
-              >
+              <p style={TextFontSize14LineHeight20}>
                 {event?.eventInfoDetail?.address}{" "}
               </p>
             </Grid>
@@ -564,8 +559,10 @@ const MainPageQuickGlance = () => {
                   padding: "0px 8px",
                 }}
               >
-                {event?.staff?.adminUser?.length +
-                  event?.staff?.headsetAttendees?.length}{" "}
+                {sum(
+                  event.staff.adminUser.length ?? 0,
+                  event.staff.headsetAttendees.length ?? 0
+                )}{" "}
                 total
               </p>
             </div>

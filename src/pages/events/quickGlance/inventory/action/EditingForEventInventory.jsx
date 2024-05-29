@@ -7,7 +7,16 @@ import {
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery } from "@tanstack/react-query";
-import { Card, Divider, Modal, Popconfirm, Select, Space, Tag } from "antd";
+import {
+  Button,
+  Card,
+  Divider,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+} from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,8 +24,6 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import { CheckIcon } from "../../../../../components/icons/Icons";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
@@ -202,6 +209,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (
     props
   ) => {
+    console.log(props);
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
@@ -212,7 +220,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
     if (selectedDevicesPool.data) {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
+      console.log("devicesFetchedPool", devicesFetchedPool);
       for (let data of devicesFetchedPool) {
+        console.log("data for-of", data);
         const deviceSQL = {
           warehouse: 1,
           status: data.status,
@@ -233,7 +243,16 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }
     }
   };
+  const updateDeviceSetupStore = (props) => {
+    return dispatch(
+      onAddEventData({
+        ...event,
+        deviceSetup: props,
+      })
+    );
+  };
   const handleRemoveItemFromInventoryEvent = async (props) => {
+    console.log("handleRemoveItemFromInventoryEvent", props);
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {
@@ -252,13 +271,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         { deviceSetup: removing }
       );
       if (updatingDeviceInEventProcess.data) {
-        returningDevicesInStockAfterBeingRemoveFromInventoryEvent(props);
-        dispatch(
-          onAddEventData({
-            ...event,
-            deviceSetup: removing,
-          })
-        );
+        await returningDevicesInStockAfterBeingRemoveFromInventoryEvent(props);
+        await updateDeviceSetupStore(removing);
       }
     } else {
       return alert(
@@ -275,10 +289,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         justifyContent: "center",
         alignItems: "center",
       }}
-      width={1000}
       footer={[]}
     >
-      <Grid container>
+      <Grid width={"70vw"} container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <Grid
             style={{
@@ -422,13 +435,16 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               >
                 <Grid item xs={6} sm={6} md={6} lg={6}>
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      style={{ ...Subtitle, fontWeight: 500 }}
+                    <p
+                      style={{
+                        ...Subtitle,
+                        fontWeight: 500,
+                        textTransform: "none",
+                        textAlign: "left",
+                      }}
                     >
                       Quantity
-                    </Typography>
+                    </p>
                   </InputLabel>
                   <OutlinedInput
                     disabled={assignAllDevices}
@@ -450,22 +466,23 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                   lg={6}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
+                    <p
                       style={{
                         ...Subtitle,
                         fontWeight: 500,
                         color: "transparent",
+                        textTransform: "none",
+                        textAlign: "left",
                       }}
                       color={"transparent"}
                     >
                       Quantity
-                    </Typography>
+                    </p>
                   </InputLabel>
-                  <button
+                  <Button
+                    loading={loadingStatus}
                     disabled={loadingStatus}
-                    type="submit"
+                    htmlType="submit"
                     style={{
                       ...LightBlueButton,
                       ...CenteringGrid,
@@ -473,20 +490,23 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                     }}
                   >
                     <p style={LightBlueButtonText}>Add item</p>
-                  </button>
+                  </Button>
                 </Grid>
               </Grid>
             </form>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={12} md={12} lg={12}>
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
+                <p
+                  style={{
+                    ...Subtitle,
+                    fontWeight: 500,
+                    textTransform: "none",
+                    textAlign: "left",
+                  }}
                 >
                   Groups selected
-                </Typography>
+                </p>
               </InputLabel>
               <Space
                 style={{
@@ -495,13 +515,13 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                   justifyContent: "flex-start",
                   alignItems: "center",
                 }}
-                size={[0, "small"]}
+                size={[8, 16]}
                 wrap
               >
                 {selectedItem.map((item, index) => {
                   return (
                     <Tooltip
-                      key={index}
+                      key={`${index}-${item._id}`}
                       title={`${
                         item.consumerUses ? "" : "Item set up for internal use."
                       }`}
@@ -534,30 +554,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             </Grid>
           </Grid>
           <Divider />
-          <button
-            disabled={loadingStatus}
-            onClick={() => closeModal()}
-            style={{
-              ...BlueButton,
-              display: "flex",
-              padding: "12px 20px",
-              justifyContent: "center",
-              alignItems: "center",
-              width: "100%",
-            }}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                textTransform: "none",
-              }}
-            >
-              Save changes
-            </p>
-          </button>
-          <Divider />
           <Grid item xs={12} sm={12} md={12} lg={12}>
-            <Space size={[8, 16]} wrap>
+            <Space style={{ width: "100%" }} size={[8, 16]} wrap>
               {event.deviceSetup.map((item) => {
                 return (
                   <Card

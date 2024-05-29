@@ -1,16 +1,16 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
+  // Button,
   Grid,
   Typography
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Outlet, useNavigate } from "react-router-dom";
-import { WhitePlusIcon } from "../../../../components/icons/Icons";
+import { Outlet, useNavigate } from "react-router-dom";
+// import { WhitePlusIcon } from "../../../../components/icons/Icons";
 import { onAddCustomerInfo } from "../../../../store/slices/customerSlice";
 import {
   onAddCustomer,
@@ -19,8 +19,8 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+// import { BlueButton } from "../../../../styles/global/BlueButton";
+// import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import ConsumerActivity from "./ConsumerDetail/ConsumerActivity";
 import Details from "./ConsumerDetail/Details";
 
@@ -28,7 +28,6 @@ const CustomerDetail = () => {
   const { setValue } = useForm();
   const { choice, event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
-  const [loadingStatus, setLoadingStatus] = useState(false)
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const stripeTransactionsSavedQuery = useQuery({
@@ -66,21 +65,19 @@ const CustomerDetail = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
+  // const isLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 993px) and (max-width : 1200px)"
+  // );
+  // const isExtraLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 1201px)"
+  // );
   useEffect(() => {
     const controller = new AbortController()
     const refreshing = async () => {
-      setLoadingStatus(true)
       await setValue('searchEvent', '  ')
       setTimeout(() => {
         setValue('searchEvent', '')
       }, 200)
-      setLoadingStatus(false)
     }
     refreshing()
     return () => {
@@ -129,7 +126,7 @@ const CustomerDetail = () => {
             }}
             container
           >
-            {(isSmallDevice || isMediumDevice) && (
+            {/* {(isSmallDevice || isMediumDevice) && (
               <Grid
                 textAlign={"right"}
                 display={"flex"}
@@ -158,7 +155,7 @@ const CustomerDetail = () => {
                   </Button>
                 </Link>
               </Grid>
-            )}
+            )} */}
             <Grid marginY={0} item xs={12} sm={12} md={8}>
               <Typography
                 textTransform={"none"}
@@ -174,7 +171,7 @@ const CustomerDetail = () => {
                 Consumer activity in {event?.eventInfoDetail?.eventName}
               </Typography>
             </Grid>
-            {(isLargeDevice || isExtraLargeDevice) && (
+            {/* {(isLargeDevice || isExtraLargeDevice) && (
               <Grid
                 textAlign={"right"}
                 display={"flex"}
@@ -219,7 +216,7 @@ const CustomerDetail = () => {
                   </Button>
                 </Link>
               </Grid>
-            )}
+            )} */}
           </Grid>
           <Grid
             style={{

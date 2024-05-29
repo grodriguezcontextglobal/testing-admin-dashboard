@@ -62,7 +62,7 @@ const ButtonSections = () => {
   }, {
     icon: <EmailIcon />,
     text: 'Email Notifications to Attendees',
-    disableStatus: false,
+    disableStatus: !event.active,
     fn: () => setCustomizedEmailNotificationModal(true)
   }];
 
@@ -146,12 +146,6 @@ const ButtonSections = () => {
             padding: "0 0 0px 10px"
           }
         }}
-      // bodyStyle={{
-      //   display: "flex",
-      //   justifyContent: "center",
-      //   alignSelf: "stretch",
-      //   padding: "0 0 0px 10px"
-      // }}
       >
         <Grid
           display={"flex"}
@@ -195,7 +189,8 @@ const ButtonSections = () => {
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <SpreadSheet />
           </Grid>
-          <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}>
+          {/* <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}> */}
+          <Grid display={`${(!event.active && Number(user.role) > 1) && "none"}`} item xs={12} sm={12} md={12} lg={12}>
             <EndEventButton />
           </Grid>
         </Grid>

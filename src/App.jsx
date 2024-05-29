@@ -1,26 +1,32 @@
-import { notification } from 'antd';
-import { jwtDecode } from 'jwt-decode';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
-import './App.css';
-import AuthRoutes from './routes/authorized/AuthRoutes';
-import NoAuthRoutes from './routes/no-authorized/NoAuthRoutes';
-import { onLogout } from './store/slices/adminSlice';
-import { onResetArticleEdited } from './store/slices/articleSlide';
-import { onResetCustomer } from './store/slices/customerSlice';
-import { onResetDeviceInQuickGlance, onResetDevicesHandle } from './store/slices/devicesHandleSlice';
-import { onResetEventInfo } from './store/slices/eventSlice';
-import { onResetHelpers } from './store/slices/helperSlice';
-import { onResetStaffProfile } from './store/slices/staffDetailSlide';
-import { onResetStripesInfo } from './store/slices/stripeSlice';
-import { onResetSubscriptionInfo } from './store/slices/subscriptionSlice';
+import { notification } from "antd";
+import { jwtDecode } from "jwt-decode";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import "./App.css";
+import AuthRoutes from "./routes/authorized/AuthRoutes";
+import NoAuthRoutes from "./routes/no-authorized/NoAuthRoutes";
+import { onLogout } from "./store/slices/adminSlice";
+import { onResetArticleEdited } from "./store/slices/articleSlide";
+import { onResetCustomer } from "./store/slices/customerSlice";
+import {
+  onResetDeviceInQuickGlance,
+  onResetDevicesHandle,
+} from "./store/slices/devicesHandleSlice";
+import { onResetEventInfo } from "./store/slices/eventSlice";
+import { onResetHelpers } from "./store/slices/helperSlice";
+import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
+import { onResetStripesInfo } from "./store/slices/stripeSlice";
+import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
+// import useVersionCheck from "../versionChecker";
 
 const App = () => {
   const { status } = useSelector((state) => state.admin);
-  const adminToken = localStorage.getItem('admin-token')
+  const adminToken = localStorage.getItem("admin-token");
   const dispatch = useDispatch();
-  const location = useLocation()
+  const location = useLocation();
+  // const currentVersion = "1.0.0"; // Replace this with the current version of your app
+  // useVersionCheck(currentVersion);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg) => {
     api.open({
@@ -30,12 +36,12 @@ const App = () => {
 
   const isTokenValid = (token) => {
     if (token) {
-      const decodedToken = jwtDecode(token)
-      return new Date().getTime() < decodedToken.exp * 1000
+      const decodedToken = jwtDecode(token);
+      return new Date().getTime() < decodedToken.exp * 1000;
     }
-    return false
-  }
-  
+    return false;
+  };
+
   const dispatchActionBasedOnTokenValidation = () => {
     if (adminToken && !isTokenValid(adminToken)) {
       dispatch(onResetArticleEdited());
@@ -50,15 +56,17 @@ const App = () => {
       localStorage.setItem("admin-token", "");
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
-      return window.location.reload()
+      return window.location.reload();
     }
   };
 
-
-  const [connectionType, setConnectionType] = useState('');
+  const [connectionType, setConnectionType] = useState("");
 
   useEffect(() => {
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const connection =
+      navigator.connection ||
+      navigator.mozConnection ||
+      navigator.webkitConnection;
     if (connection) {
       setConnectionType(connection.effectiveType);
     }
@@ -66,33 +74,37 @@ const App = () => {
 
   // Function to render the network status message based on connection type
   const renderNetworkStatusMessage = () => {
-    if (connectionType === 'slow-2g' || connectionType === '2g') {
-      setTimeout(() => openNotificationWithIcon('The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection.'), 3000);
+    if (connectionType === "slow-2g" || connectionType === "2g") {
+      setTimeout(
+        () =>
+          openNotificationWithIcon(
+            "The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection."
+          ),
+        3000
+      );
     } else {
       return null;
     }
   };
   useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
     dispatchActionBasedOnTokenValidation();
-    return () => { controller.abort() }
-
+    return () => {
+      controller.abort();
+    };
   }, [status, adminToken, location.pathname]);
 
   return (
     <>
-      {
-        renderNetworkStatusMessage()
-      }
+      {renderNetworkStatusMessage()}
       {contextHolder}
-      {
-        status === "authenticated" && adminToken ?
-          <AuthRoutes />
-          :
-          <NoAuthRoutes />
-      }
+      {status === "authenticated" && adminToken ? (
+        <AuthRoutes />
+      ) : (
+        <NoAuthRoutes />
+      )}
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

@@ -222,8 +222,10 @@ const MainPage = () => {
                         md={3}
                         lg={3}
                     >
-                        {user.role === "Administrator" && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
-                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />}
+                        {/* {user.role === "Administrator" && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
+                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />} */}
+                        {Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
+                        {Number(user.role) < 2 && <EditItem dataFound={dataFound} />}
                     </Grid>
                 </Grid>
                 <Grid

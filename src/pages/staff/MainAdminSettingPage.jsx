@@ -14,6 +14,8 @@ import Loading from "../../components/animation/Loading";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import '../../styles/global/ant-table.css';
+import dicRole from "../../components/general/dicRole";
+
 const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
@@ -154,7 +156,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
           <Typography
             style={styling}
           >
-            {role}
+            {dicRole[role]}
           </Typography>
         ),
       },

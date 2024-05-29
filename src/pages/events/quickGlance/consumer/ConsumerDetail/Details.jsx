@@ -114,9 +114,6 @@ const FormatAttendeeDetailInfo = () => {
                             padding: "24px 0 24px 24px "
                         }
                     }}
-                    // bodyStyle={{
-                    //     padding: "24px 0 24px 24px "
-                    // }}
                 >
                     <Grid
                         display={"flex"}

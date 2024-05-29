@@ -10,11 +10,11 @@ const MainProfileSettings = () => {
     {
       label: "My details",
       route: "my_details",
-      permission: ['Administrator', 'Editor', 'Approver']
+      permission: [0,1,2,3,4]
     }, {
       label: "Password",
       route: "password",
-      permission: ['Administrator', 'Approver', 'Editor']
+      permission: [0,1,2,3,4]
     }, 
     // {
     //   label: "Billing",
@@ -24,11 +24,11 @@ const MainProfileSettings = () => {
     {
       label: "Notifications",
       route: "notifications",
-      permission: ["Administrator"]
+      permission: [0,1]
     }, {
       label: "Staff activity",
       route: "staff-activity",
-      permission: ['Administrator']
+      permission: [0,1]
     }
   ]
   return (
@@ -80,7 +80,7 @@ const MainProfileSettings = () => {
           <nav style={{ display: "flex" }}>
             {
               tabOptions.map(option => {
-                if (option.permission.some(element => element === user.role)) {
+                if (option.permission.some(element => element === Number(user.role))) {
                   return (
                     <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
                       return {

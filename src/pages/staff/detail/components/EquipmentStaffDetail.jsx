@@ -30,7 +30,8 @@ const EquipmentStafDetail = () => {
                     <nav style={{ display: "flex", }}>
                         {
                             tabOptions.map(option => {
-                                if (user.role === "Administrator") {
+                                // if (user.role === "Administrator") {
+                                    if (Number(user.role) < 2) {
                                     return (
                                         <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
                                             return {

@@ -13,7 +13,7 @@ import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 const Cash = () => {
   const navigator = useNavigate();
   const { choice, company, event } = useSelector((state) => state.event);
@@ -210,9 +210,9 @@ const Cash = () => {
             >
               <Typography
                 textTransform={"none"}
-                style={TextFontSize30LineHeight38}
+                style={TextFontsize18LineHeight28}
               >
-                Cash method
+                Cash transaction for lost device
               </Typography>
             </Grid>
             <Grid

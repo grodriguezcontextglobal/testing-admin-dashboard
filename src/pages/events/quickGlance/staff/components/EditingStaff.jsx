@@ -1,35 +1,39 @@
+import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
+  Divider,
   Modal,
   Popconfirm,
   Select,
   Space,
   notification,
 } from "antd";
+import _ from "lodash";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useEffect, useState } from "react";
-import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { CardStyle } from "../../../../../styles/global/CardStyle";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import { useForm } from "react-hook-form";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import {
   onAddEventData,
   onAddEventStaff,
 } from "../../../../../store/slices/eventSlice";
-import _ from "lodash";
+import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { CardStyle } from "../../../../../styles/global/CardStyle";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, watch } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [roleSelected, setRoleSelected] = useState("");
+  const [checkingStaffInfo, setCheckingStaffInfo] = useState([]);
+  console.log("checking staff info", checkingStaffInfo);
   const { event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const staffEventQuery = useQuery({
@@ -37,8 +41,6 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     queryFn: () => devitrakApi.get("/staff/admin-users"),
     enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity,
-    cacheTime: 1000 * 60 * 60, //oneHourInMs
   });
   useEffect(() => {
     const controller = new AbortController();
@@ -54,6 +56,39 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       message: msg,
     });
   };
+
+  const validateEmailFormat = (props) => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailPattern.test(props);
+  };
+  const checkStaffExisting = async () => {
+    const staffFound = await devitrakApi.post("/staff/admin-users", {
+      email: watch("email"),
+    });
+    if (staffFound.data.ok) {
+      const companyInfo = await devitrakApi.post("company/search-company", {
+        company_name: event.company,
+        "employees.user": staffFound.data.adminUsers[0].email,
+      });
+      console.log("company info", companyInfo);
+      return setCheckingStaffInfo([
+        {
+          ...staffFound.data.adminUsers[0],
+          company: companyInfo.data.company[0],
+        },
+      ]);
+    }
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+    if (validateEmailFormat(watch("email"))) {
+      checkStaffExisting();
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("email")?.length]);
+
   if (staffEventQuery.data) {
     const employee = staffEventQuery.data.data.adminUsers;
     const groupingEmployees = _.groupBy(employee, "email");
@@ -214,54 +249,101 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       >
         {contextHolder}
         <Grid container>
-          <Grid padding={'0 25px 0 0'} item xs={10} sm={10} md={12} lg={12}>
+          <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
             <form
               style={{
                 display: "flex",
+                flexDirection: "column",
                 justifyContent: "space-between",
                 alignItems: "center",
                 gap: "10px",
-                width:"100%"
+                width: "100%",
               }}
               onSubmit={handleSubmit(handleNewStaffMember)}
             >
-              <OutlinedInput
-                placeholder="Email"
-                {...register("email")}
-                style={{ ...OutlinedInputStyle, width: "100%" }}
-              />
-              <OutlinedInput
-                placeholder="First name"
-                style={{ ...OutlinedInputStyle, width: "100%" }}
-                {...register("name", { required: true })}
-              />
-              <OutlinedInput
-                placeholder="Last name"
-                style={{ ...OutlinedInputStyle, width: "100%" }}
-                {...register("lastName", { required: true })}
-              />
-              <Select
-                style={{ ...AntSelectorStyle, width: "100%" }}
-                onChange={handleChange}
-                options={[
-                  {
-                    value: "administrator",
-                    label: "Administrator",
-                  },
-                  {
-                    value: "headsetAttendee",
-                    label: "Assistant",
-                  },
-                ]}
-              ></Select>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <OutlinedInput
+                  placeholder="Email"
+                  {...register("email")}
+                  style={{ ...OutlinedInputStyle, width: "100%" }}
+                />
+                {}
+                <Select
+                  style={{ ...AntSelectorStyle, width: "60%" }}
+                  onChange={handleChange}
+                  options={[
+                    {
+                      value: "adminUser",
+                      label: "Event administrator",
+                    },
+                    {
+                      value: "headsetAttendee",
+                      label: "Event headset Attendees",
+                    },
+                    {
+                      value: "eventStaffOnly",
+                      label: "Event staff only",
+                    },
+                  ]}
+                ></Select>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    color: "var(--danger-action)",
+                    cursor: "pointer",
+                  }}
+                >
+                  Staff is not assigned to company as employee. Please click
+                  this link to invite staff to sign up in Devitrak app for{" "}
+                  {event.company}
+                </p>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <OutlinedInput
+                  placeholder="First name"
+                  style={{ ...OutlinedInputStyle, width: "100%" }}
+                  {...register("name", { required: true })}
+                />
+                <OutlinedInput
+                  placeholder="Last name"
+                  style={{ ...OutlinedInputStyle, width: "100%" }}
+                  {...register("lastName", { required: true })}
+                />
+              </div>
               <Button
-                style={BlueButton}
+                style={{ ...BlueButton, width: "100%" }}
                 loading={loadingStatus}
                 htmlType="submit"
               >
                 <Typography style={BlueButtonText}>Add staff</Typography>
               </Button>
             </form>
+            <Divider />
             <Grid item xs={12} sm={12} md={12} lg={12}>
               <Space size={[8, 16]} wrap>
                 {[...result.values()].map((member) => {

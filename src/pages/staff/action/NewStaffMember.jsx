@@ -21,6 +21,7 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import dicRole from "../../../components/general/dicRole";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -32,7 +33,9 @@ const schema = yup.object().shape({
   role: yup.string().required("Role is required"),
 });
 
-const roles = ["Administrator", "Approver", "Editor"];
+// const roles = ["Administrator", "Approver", "Editor"];
+const roles = [0,1,2,3,4];
+
 export const NewStaffMember = ({ modalState, setModalState }) => {
   const [loadingStatus, setLoadingStatus] = useState(false)
   const { user } = useSelector((state) => state.admin);
@@ -237,7 +240,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                   {roles.map((company) => {
                     return (
                       <MenuItem key={company} value={company}>
-                        {company}
+                        {dicRole[company]}
                       </MenuItem>
                     );
                   })}

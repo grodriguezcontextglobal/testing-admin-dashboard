@@ -1,14 +1,14 @@
 import { Typography } from "@mui/material";
-import { Table, Tooltip } from "antd";
+import { Table } from "antd";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import '../../../../../styles/global/ant-table.css';
 // import { devitrakApi } from "../../../../../api/devitrakApi";
 // import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 // import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
+import { Icon } from "@iconify/react";
 import { RightNarrowInCircle } from "../../../../../components/icons/Icons";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { Icon } from "@iconify/react";
 const EventInventoryTable = ({ dataFound }) => {
     // const dispatch = useDispatch();
     const navigate = useNavigate();

@@ -65,7 +65,7 @@ const ChargedTransaction = ({
                 <Divider />
                 <Box style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "5px" }}>
                     <Button style={{ ...BlueButton, width: "100%" }} onClick={() => setOptionToRender(0)}><Typography style={{ ...BlueButtonText, textDecoration: `${optionToRender === 0 ? "underline" : "none"}`, textTransform: `${optionToRender === 0 ? "uppercase" : "none"}` }}>single device</Typography></Button>
-                    <Button style={{ ...BlueButton, width: "100%" }} onClick={() => setOptionToRender(1)}><Typography style={{ ...BlueButtonText, textDecoration: `${optionToRender === 1 ? "underline" : "none"}`, textTransform: `${optionToRender === 1 ? "uppercase" : "none"}` }}>multiple device</Typography></Button>
+                    <Button style={{ ...BlueButton, width: "100%" }} onClick={() => setOptionToRender(1)}><Typography style={{ ...BlueButtonText, textDecoration: `${optionToRender === 1 ? "underline" : "none"}`, textTransform: `${optionToRender === 1 ? "uppercase" : "none"}` }}>multiple devices</Typography></Button>
                 </Box>
                 <Divider />
                 <Typography>{

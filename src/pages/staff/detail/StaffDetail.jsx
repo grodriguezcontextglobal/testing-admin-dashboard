@@ -18,31 +18,31 @@ const StaffDetail = () => {
     {
       label: "Assign devices",
       route: "assignment",
-      permission: ["Administrator"],
+      permission: [0,1],
       disabled: false
     },
     {
       label: "Assign to event",
       route: "assign-staff-events",
-      permission: ["Administrator"],
+      permission: [0,1],
       disabled: false
     },
     {
       label: "Update contact info",
       route: "update-contact-info",
-      permission: ["Administrator", "Approver", "Editor"],
+      permission: [0,1,2,3,4],
       disabled: user.email !== profile.email
     },
     {
       label: "Change role",
       route: "update-role-company",
-      permission: ["Administrator"],
+      permission: [0,1],
       disabled: false
     },
     {
       label: "Send password reset email",
       route: "reset-password-link",
-      permission: ["Administrator", "Approver", "Editor"],
+      permission: [0,1,2,3,4],
       disabled: false
     },
   ]
@@ -72,7 +72,7 @@ const StaffDetail = () => {
               tabOptions.map((option, index) => {
                 if (index === 0) {
                   return (
-                    <NavLink key={option.label} to={`${option.route}`} style={{ ...BlueButton, display: `${option.permission.some(element => element === user.role) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10x 16px", gap: "8px" }}>
+                    <NavLink key={option.label} to={`${option.route}`} style={{ ...BlueButton, display: `${option.permission.some(element => element === Number(user.role)) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10x 16px", gap: "8px" }}>
                       <Typography
                         style={{ ...BlueButtonText, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
                       >
@@ -84,7 +84,7 @@ const StaffDetail = () => {
                   return (
                     <NavLink key={option.label} to={`${option.route}`} style={LightBlueButton}>
                       <Typography
-                        style={{ ...LightBlueButtonText, display: `${option.permission.some(element => element === user.role) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
+                        style={{ ...LightBlueButtonText, display: `${option.permission.some(element => element === Number(user.role)) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
                       >
                         {dicIcons[option.label]}&nbsp;{option.label}
                       </Typography>

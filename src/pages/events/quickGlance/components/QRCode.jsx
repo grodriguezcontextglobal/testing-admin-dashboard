@@ -3,7 +3,7 @@ import { Button, Card } from "antd";
 import { useState } from 'react';
 import { QRCode } from "react-qrcode-logo";
 import { useSelector } from "react-redux";
-import DevitrakLogoWhiteBg from '../../../../assets/qrcode-maskable_icon_x48.png';
+// import DevitrakLogoWhiteBg from '../../../../assets/qrcode-maskable_icon_x48.png';
 import { DownloadIcon } from "../../../../components/icons/Icons";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -119,7 +119,7 @@ const QRCodeDisplay = () => {
                             quietZone={10}
                             bgColor="#fff"
                             fgColor="#000"
-                            logoImage={DevitrakLogoWhiteBg}
+                            // logoImage={DevitrakLogoWhiteBg}
                             logoHeight={30}
                             logoWidth={30}
                             logoPadding={3}

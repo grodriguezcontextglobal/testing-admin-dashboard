@@ -26,7 +26,7 @@ import './style/style.css';
 // import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
 const drawerWidth = 240;
-const navItems = [{ title: 'home', route: '/', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'inventory', route: '/inventory', permission: ['Administrator'] }, { title: 'events', route: '/events', permission: ['Administrator', 'Editor', 'Approver'] }, { title: 'consumers', route: '/consumers', permission: ['Administrator'] }, { title: 'staff', route: '/staff', permission: ['Administrator', 'Approver', 'Editor'] }];
+const navItems = [{ title: 'home', route: '/', permission: [0,1,2,3,4] }, { title: 'inventory', route: '/inventory', permission: [0,1] }, { title: 'events', route: '/events', permission: [0,1,2,3,4] }, { title: 'consumers', route: '/consumers', permission: [0,1] }, { title: 'staff', route: '/staff', permission: [0,1,2,3,4] }];
 
 const NavigationBarMain = (props) => {
     // eslint-disable-next-line no-unused-vars
@@ -162,7 +162,7 @@ const NavigationBarMain = (props) => {
                                 </NavLink>
 
                                 {navItems.map((item) => {
-                                    if (item.permission.some(element => element === user.role)) {
+                                    if (item.permission.some(element => element === Number(user.role))) {
                                         return <NavLink
                                             key={item.title}
                                             to={`${item.route}`}
