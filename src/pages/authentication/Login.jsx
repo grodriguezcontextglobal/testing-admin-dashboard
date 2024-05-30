@@ -317,8 +317,7 @@ const Login = () => {
                   justifyContent={"flex-end"}
                   alignItems={"center"}
                 >
-                  <button
-                    onClick={() => setUpdatePasswordModalState(true)}
+                  <span
                     style={{
                       backgroundColor: "transparent",
                       outline: "none",
@@ -336,10 +335,11 @@ const Login = () => {
                         lineHeight: "20px",
                         cursor: "pointer",
                       }}
+                      onClick={() => setUpdatePasswordModalState(true)}
                     >
                       Forgot password?
                     </p>
-                  </button>
+                  </span>
                 </Grid>
               </Grid>
               <OutlinedInput
