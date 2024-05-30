@@ -1,17 +1,16 @@
 import {
-  Button,
   Grid,
   InputAdornment,
-  OutlinedInput,
-  Typography,
+  OutlinedInput
 } from "@mui/material";
 import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { MagnifyIcon, WhitePlusIcon } from "../../components/icons/Icons";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import '../../styles/global/OutlineInput.css';
+import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
@@ -20,17 +19,17 @@ import { NewStaffMember } from "./action/NewStaffMember";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
-
+  const { user } = useSelector((state) => state.admin);
   useEffect(() => {
-    const controller = new AbortController()
-    setValue('searchAdmin', '.')
+    const controller = new AbortController();
+    setValue("searchAdmin", ".");
     setTimeout(() => {
-      setValue("searchAdmin", "")
+      setValue("searchAdmin", "");
     }, 900);
     return () => {
-      controller.abort()
-    }
-  }, [])
+      controller.abort();
+    };
+  }, []);
 
   return (
     <>
@@ -45,34 +44,56 @@ const MainPage = () => {
           alignItems={"center"}
           justifyContent={"space-between"}
           item
-          xs={12} sm={12} md={12} lg={12}>
-          <Typography
-            textTransform={"none"}
-            style={Title}
-            textAlign={"left"}
-          >
-            Staff
-          </Typography>
-          <Grid display={"flex"}
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <p style={{...Title, textTransform:"none", textAlign:"left"}}>
+             Staff
+          </p>
+          <Grid
+            display={Number(user.role) < 2 ? "flex" : "none"}
             alignItems={"center"}
-            justifyContent={"flex-end"} item xs={2} sm={2} md={2} lg={2}>
-            <Button
-              style={BlueButton}
-              onClick={() => setModalState(true)}
-            >
+            justifyContent={"flex-end"}
+            item
+            xs={2}
+            sm={2}
+            md={2}
+            lg={2}
+          >
+            <button style={BlueButton} onClick={() => setModalState(true)}>
               <WhitePlusIcon />
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
-              >
+              <p style={{...BlueButtonText, textTransform:"none"}}>
                 Add new staff
-              </Typography>
-            </Button>
+              </p>
+            </button>
           </Grid>
         </Grid>
         <Divider />
-        <Grid display={'flex'} justifyContent={"space-between"} alignItems={"center"} margin={'0 0 0.5rem'} item xs={12} sm={12} md={12} lg={12}>
-          <Typography style={{ ...TextFontSize20LineHeight30, fontWeight: 500, color: '#000', display: "flex", justifyContent: "flex-start", alignItems: "center" }}>Staff: &nbsp;</Typography>
+        <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          margin={"0 0 0.5rem"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <p
+            style={{
+              ...TextFontSize20LineHeight30,
+              fontWeight: 500,
+              color: "#000",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+          >
+            Staff: &nbsp;
+          </p>
           <Grid item xs sm md lg>
             <OutlinedInput
               {...register("searchAdmin")}
@@ -88,14 +109,15 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <MainAdminSettingPage searchAdmin={watch("searchAdmin")} modalState={modalState} />
+          <MainAdminSettingPage
+            searchAdmin={watch("searchAdmin")}
+            modalState={modalState}
+          />
         </Grid>
-
       </Grid>
-      {
-        modalState && <NewStaffMember modalState={modalState} setModalState={setModalState} />
-      }
-
+      {modalState && (
+        <NewStaffMember modalState={modalState} setModalState={setModalState} />
+      )}
     </>
   );
 };

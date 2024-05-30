@@ -73,21 +73,21 @@ const StaffDetail = () => {
                 if (index === 0) {
                   return (
                     <NavLink key={option.label} to={`${option.route}`} style={{ ...BlueButton, display: `${option.permission.some(element => element === Number(user.role)) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10x 16px", gap: "8px" }}>
-                      <Typography
+                      <p
                         style={{ ...BlueButtonText, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
                       >
                         {dicIcons[option.label]}&nbsp;{option.label}
-                      </Typography>
+                      </p>
                     </NavLink>
                   )
                 } else if (index === 1) {
                   return (
                     <NavLink key={option.label} to={`${option.route}`} style={LightBlueButton}>
-                      <Typography
+                      <p
                         style={{ ...LightBlueButtonText, display: `${option.permission.some(element => element === Number(user.role)) ? 'flex' : "none"}`, justifyContent: "space-between", alignItems: "center", padding: "10px 16px" }}
                       >
                         {dicIcons[option.label]}&nbsp;{option.label}
-                      </Typography>
+                      </p>
                     </NavLink>
                   )
                 }

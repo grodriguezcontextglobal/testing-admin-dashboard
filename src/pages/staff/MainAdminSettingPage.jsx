@@ -348,7 +348,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
             marginRight: "5px",
             padding: "0 0 0 0"
           }}>
-            <Button style={{ display: "flex", alignItems: "center" }} onClick={() => {
+            <Button style={{ display: "flex", alignItems: "center", outline:"none", backgroundColor:"transparent" }} onClick={() => {
               listAdminUsers.refetch();
               companiesEmployees.refetch()
             }}>

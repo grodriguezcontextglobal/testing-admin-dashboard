@@ -6,6 +6,8 @@ import { useSelector } from "react-redux";
 import "./PaymentMethod.css";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import UpdateCreditCard from "./UpdatingData/UpdateCreditCard";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 const PaymentMethodDetails = () => {
   const [openUpdateCreditCardModal, setOpenUpdateCreditCardModal] =
     useState(false);
@@ -107,32 +109,19 @@ const PaymentMethodDetails = () => {
             marginTop={1}
             container
           >
-            <Typography
-              width={"100%"}
-              textTransform={"none"}
-              color="var(--gray-900, #101828)"
-              lineHeight={"28px"}
-              textAlign={"left"}
-              fontWeight={600}
-              fontFamily={"Inter"}
-              fontSize={"18px"}
-              noWrap={true}
+            <p
+              style={{
+                ...TextFontsize18LineHeight28,
+                fontWeight: 600,
+                textWrap: "nowrap",
+                width: "100%",
+              }}
             >
               Payment method
-            </Typography>
-            <Typography
-              width={"100%"}
-              textTransform={"none"}
-              color="var(--gray-600, #475467)"
-              lineHeight={"20px"}
-              textAlign={"left"}
-              fontWeight={400}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              noWrap={true}
-            >
+            </p>
+            <p style={{ ...Subtitle, width: "100%", fontWeight: 400 }}>
               Change how you pay for your plan.
-            </Typography>
+            </p>
             <Grid
               display={"flex"}
               justifyContent={"center"}
