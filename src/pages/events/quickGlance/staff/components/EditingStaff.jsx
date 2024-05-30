@@ -27,13 +27,13 @@ import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import PropTypes from "prop-types";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [roleSelected, setRoleSelected] = useState("");
   const [checkingStaffInfo, setCheckingStaffInfo] = useState([]);
-  console.log("checking staff info", checkingStaffInfo);
   const { event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const staffEventQuery = useQuery({
@@ -48,7 +48,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     return () => {
       controller.abort();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
@@ -62,27 +64,22 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     return emailPattern.test(props);
   };
   const checkStaffExisting = async () => {
-    const staffFound = await devitrakApi.post("/staff/admin-users", {
-      email: watch("email"),
+    const companyInfo = await devitrakApi.post("company/search-company", {
+      company_name: event.company,
+      "employees.user": watch("email"),
     });
-    if (staffFound.data.ok) {
-      const companyInfo = await devitrakApi.post("company/search-company", {
-        company_name: event.company,
-        "employees.user": staffFound.data.adminUsers[0].email,
-      });
-      console.log("company info", companyInfo);
-      return setCheckingStaffInfo([
-        {
-          ...staffFound.data.adminUsers[0],
-          company: companyInfo.data.company[0],
-        },
-      ]);
-    }
+    return setCheckingStaffInfo([
+      {
+        company: companyInfo.data.company[0],
+      },
+    ]);
   };
   useEffect(() => {
     const controller = new AbortController();
     if (validateEmailFormat(watch("email"))) {
       checkStaffExisting();
+    } else {
+      setCheckingStaffInfo([]);
     }
     return () => {
       controller.abort();
@@ -182,10 +179,79 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     const handleChange = (value) => {
       return setRoleSelected(value);
     };
+    const newStaffMemberCreated = async (data) => {
+      try {
+        const companiesQuery = await devitrakApi.post(
+          "company/search-company",
+          {
+            company_name: event.company,
+          }
+        );
+        const templateNewUser = {
+          name: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          question: "company name",
+          answer: event.company,
+          role: 4,
+          company: event.company,
+        };
+        await devitrakApi.patch(
+          `/company/update-company/${companiesQuery.data.company[0].id}`,
+          {
+            employees: [
+              ...companiesQuery.data.company[0].employees,
+              {
+                user: templateNewUser.email,
+                firstName: templateNewUser.name,
+                lastName: templateNewUser.lastName,
+                status: "Pending",
+                super_user: false,
+                role: templateNewUser.role,
+              },
+            ],
+          }
+        );
+
+        await devitrakApi.post("/nodemailer/new_invitation", {
+          consumer: templateNewUser.email,
+          subject: "Invitation",
+          company: event.company,
+          link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["listAdminUsers"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({ queryKey: ["staff"], exact: true });
+        queryClient.invalidateQueries({
+          queryKey: ["employeesPerCompanyList"],
+          exact: true,
+        });
+        openNotificationWithIcon(
+          "success",
+          `An invitation was sent to ${data.name} ${data.lastName}!`
+        );
+      } catch (error) {
+        openNotificationWithIcon(
+          "error",
+          "Please try later. If error persists, please contact administrator."
+        );
+      }
+    };
+
+    const checkingIfStaffWouldBeAdded = async (data) => {
+      if (!checkingStaffInfo[0].company) {
+        await newStaffMemberCreated(data);
+      } else {
+        return;
+      }
+    };
+
     const handleNewStaffMember = async (data) => {
       try {
         setLoadingStatus(true);
-
+        await checkingIfStaffWouldBeAdded(data);
         if (String(roleSelected).toLowerCase() === "administrator") {
           const result = [
             ...event.staff.adminUser,
@@ -231,6 +297,22 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
           queryKey: ["staffEvent"],
           exact: true,
         });
+        await devitrakApi.post("/nodemailer/staff_internal_notification", {
+          staff: data.email,
+          subject: `Invitation to Join ${event.eventInfoDetail.eventName} as a Staff Member`,
+          company: event.company,
+          staffMember: `${data.name} ${data.lastName}`,
+          eventInfo:{
+            eventName:event.eventInfoDetail.eventName,
+            address:event.eventInfoDetail.address,
+            dateBegin:event.eventInfoDetail.dateBegin
+          },
+          contactInfo:{
+            name:event.contactInfo.name,
+            email:event.contactInfo.email
+          }
+        });
+
         setLoadingStatus(false);
         openNotificationWithIcon("success", "Staff member added to event.");
         await closeModal();
@@ -281,7 +363,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                   onChange={handleChange}
                   options={[
                     {
-                      value: "adminUser",
+                      value: "administrator",
                       label: "Event administrator",
                     },
                     {
@@ -308,11 +390,15 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     ...Subtitle,
                     color: "var(--danger-action)",
                     cursor: "pointer",
+                    display: `${
+                      checkingStaffInfo[0]?.company ? "none" : "flex"
+                    }`,
                   }}
                 >
-                  Staff is not assigned to company as employee. Please click
-                  this link to invite staff to sign up in Devitrak app for{" "}
-                  {event.company}
+                  Staff members are not initially assigned to the company as
+                  employees. By clicking the &quot;Add Staff&quot; button, a
+                  staff member will be added to the company as an employee at{" "}
+                  {event.company}.
                 </p>
               </div>
               <div
@@ -390,3 +476,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
 };
 
 export default EditingStaff;
+
+EditingStaff.propTypes = {
+  editingStaff: PropTypes.bool.isRequired,
+  setEditingStaff: PropTypes.func,
+};

@@ -22,6 +22,7 @@ import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import dicRole from "../../../components/general/dicRole";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -34,10 +35,10 @@ const schema = yup.object().shape({
 });
 
 // const roles = ["Administrator", "Approver", "Editor"];
-const roles = [0,1,2,3,4];
+const roles = [0, 1, 2, 3, 4];
 
 export const NewStaffMember = ({ modalState, setModalState }) => {
-  const [loadingStatus, setLoadingStatus] = useState(false)
+  const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -50,23 +51,24 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   function closeModal() {
     setModalState(false);
   }
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
     enabled: false,
-    refetchOnMount: false
+    refetchOnMount: false,
   });
 
   const companiesQuery = useQuery({
-    queryKey: ['companyListQuery'],
-    queryFn: () => devitrakApi.post('/company/search-company', {
-      company_name: user.company
-    }),
+    queryKey: ["companyListQuery"],
+    queryFn: () =>
+      devitrakApi.post("/company/search-company", {
+        company_name: user.company,
+      }),
     enabled: false,
-    refetchOnMount: false
-  })
+    refetchOnMount: false,
+  });
   const [messageApi, contextHolder] = message.useMessage();
   const warning = (type, content) => {
     messageApi.open({
@@ -76,18 +78,18 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     });
   };
   useEffect(() => {
-    const controller = new AbortController()
-    allStaffSavedQuery.refetch()
-    companiesQuery.refetch()
+    const controller = new AbortController();
+    allStaffSavedQuery.refetch();
+    companiesQuery.refetch();
     return () => {
-      controller.abort()
-    }
-  }, [user.company])
+      controller.abort();
+    };
+  }, [user.company]);
 
   if (allStaffSavedQuery.data) {
     const onSubmitRegister = async (data) => {
       try {
-        setLoadingStatus(true)
+        setLoadingStatus(true);
         const templateNewUser = {
           name: data.name,
           lastName: data.lastName,
@@ -96,53 +98,57 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           answer: user.company,
           role: data.role,
           company: user.company,
-        }
-        await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company[0].id}`, {
-          employees: [
-            ...companiesQuery.data.data.company[0].employees,
-            {
-              user: templateNewUser.email,
-              firstName: templateNewUser.name,
-              lastName: templateNewUser.lastName,
-              status: "Pending",
-              super_user: false,
-              role: templateNewUser.role
-            }
-          ]
-        })
+        };
+        await devitrakApi.patch(
+          `/company/update-company/${companiesQuery.data.data.company[0].id}`,
+          {
+            employees: [
+              ...companiesQuery.data.data.company[0].employees,
+              {
+                user: templateNewUser.email,
+                firstName: templateNewUser.name,
+                lastName: templateNewUser.lastName,
+                status: "Pending",
+                super_user: false,
+                role: templateNewUser.role,
+              },
+            ],
+          }
+        );
 
-        await devitrakApi.post('/nodemailer/new_invitation', {
+        await devitrakApi.post("/nodemailer/new_invitation", {
           consumer: templateNewUser.email,
           subject: "Invitation",
           company: user.company,
-          link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`
-        })
-        queryClient.invalidateQueries({ queryKey: ['listAdminUsers'], exact: true })
-        queryClient.invalidateQueries({ queryKey: ['staff'], exact: true })
-        queryClient.invalidateQueries({ queryKey: ['employeesPerCompanyList'], exact: true })
-        warning('success', `An invitation was sent to ${data.name} ${data.lastName}!`)
+          link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["listAdminUsers"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({ queryKey: ["staff"], exact: true });
+        queryClient.invalidateQueries({
+          queryKey: ["employeesPerCompanyList"],
+          exact: true,
+        });
+        warning(
+          "success",
+          `An invitation was sent to ${data.name} ${data.lastName}!`
+        );
         await setTimeout(() => {
-          return closeModal()
+          return closeModal();
         }, 3500);
       } catch (error) {
-        warning('error', 'Please try later. If error persists, please contact administrator.')
-        setLoadingStatus(false)
+        warning(
+          "error",
+          "Please try later. If error persists, please contact administrator."
+        );
+        setLoadingStatus(false);
       }
-
     };
     const renderTitle = () => {
       return (
-        <Typography
-          textTransform={"none"}
-          lineHeight={"38px"}
-          color={"var(--gray-900, #101828)"}
-          textAlign={"center"}
-          fontWeight={600}
-          fontFamily={"Inter"}
-          fontSize={"30px"}
-        >
-          New staff
-        </Typography>
+        <p style={TextFontSize30LineHeight38}>New staff</p>
       );
     };
     return (
@@ -166,7 +172,19 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               item
               xs={12}
             >
-              <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>Name</InputLabel>
+              <InputLabel
+                style={{
+                  marginTop: "0.5rem",
+                  marginBottom: "0px",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  textAlign: "left",
+                }}
+              >
+                Name
+              </InputLabel>
               <OutlinedInput
                 type="text"
                 {...register("name", { required: true })}
@@ -184,7 +202,17 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               item
               xs={12}
             >
-              <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
+              <InputLabel
+                style={{
+                  marginTop: "0.5rem",
+                  marginBottom: "0px",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  textAlign: "left",
+                }}
+              >
                 Last name
               </InputLabel>
               <OutlinedInput
@@ -204,7 +232,19 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               item
               xs={12}
             >
-              <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>Email</InputLabel>
+              <InputLabel
+                style={{
+                  marginTop: "0.5rem",
+                  marginBottom: "0px",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  textAlign: "left",
+                }}
+              >
+                Email
+              </InputLabel>
               <OutlinedInput
                 {...register("email", { required: true, minLength: 6 })}
                 style={OutlinedInputStyle}
@@ -221,7 +261,17 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               item
               xs={12}
             >
-              <InputLabel style={{ marginTop: "0.5rem", marginBottom: "0px", width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left" }}>
+              <InputLabel
+                style={{
+                  marginTop: "0.5rem",
+                  marginBottom: "0px",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  textAlign: "left",
+                }}
+              >
                 Role
               </InputLabel>
               <Grid
@@ -258,7 +308,10 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               alignItems={"center"}
               gap={1}
               item
-              xs={12} sm={12} md={12} lg={12}
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
               <Button
                 disabled={loadingStatus}
@@ -266,10 +319,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                 style={{ ...GrayButton, width: "100%" }}
                 htmlType="reset"
               >
-                <Typography
-                  textTransform={"none"}
-                  style={GrayButtonText}
-                >
+                <Typography textTransform={"none"} style={GrayButtonText}>
                   Cancel
                 </Typography>
               </Button>
@@ -278,16 +328,13 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
                 style={{ ...BlueButton, width: "100%" }}
                 htmlType="submit"
               >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+                <Typography textTransform={"none"} style={BlueButtonText}>
                   Save
                 </Typography>
               </Button>
             </Grid>
           </form>
-        </Modal >
+        </Modal>
       </>
     );
   }

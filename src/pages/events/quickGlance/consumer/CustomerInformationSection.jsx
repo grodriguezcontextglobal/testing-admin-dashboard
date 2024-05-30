@@ -72,7 +72,7 @@ const CustomerInformationSection = () => {
             alignItems: "center",
             marginRight: "5px"
           }}>
-            <Button style={{ display: "flex", alignItems: "center" }} onClick={() => queryClient.invalidateQueries('listOfAttendees')}>
+            <Button style={{ display: "flex", alignItems: "center", outline:"none", backgroundColor:"transparent" }} onClick={() => queryClient.invalidateQueries('listOfAttendees')}>
               <Typography
                 textTransform={"none"}
                 textAlign={"left"}
