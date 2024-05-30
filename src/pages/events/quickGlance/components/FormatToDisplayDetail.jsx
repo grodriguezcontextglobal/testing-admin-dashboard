@@ -117,7 +117,7 @@ const FormatToDisplayDetail = () => {
             }}
           >
             <CardRendered
-              key={"Total devices not functional"}
+              key={"Total lost/defected devices"}
               props={foundAllNoOperatingDeviceInEvent()}
               title={"Total devices not functional"}
             />
