@@ -55,7 +55,6 @@ const Login = () => {
       email: props.email,
       password: props.password,
     });
-    console.log("respo", respo);
     if (respo.data) {
       localStorage.setItem("admin-token", respo.data.token);
       const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
@@ -318,19 +317,29 @@ const Login = () => {
                   justifyContent={"flex-end"}
                   alignItems={"center"}
                 >
-                  <Typography
-                    style={{
-                      color: "#004EEB",
-                      fontSize: "14px",
-                      fontFamily: "Inter",
-                      fontWeight: "600",
-                      lineHeight: "20px",
-                      cursor: "pointer",
-                    }}
+                  <button
                     onClick={() => setUpdatePasswordModalState(true)}
+                    style={{
+                      backgroundColor: "transparent",
+                      outline: "none",
+                      margin: 0,
+                      padding: 0,
+                    }}
                   >
-                    Forgot password?
-                  </Typography>
+                    {" "}
+                    <p
+                      style={{
+                        color: "#004EEB",
+                        fontSize: "14px",
+                        fontFamily: "Inter",
+                        fontWeight: "600",
+                        lineHeight: "20px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Forgot password?
+                    </p>
+                  </button>
                 </Grid>
               </Grid>
               <OutlinedInput
