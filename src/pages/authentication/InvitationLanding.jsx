@@ -80,6 +80,7 @@ const InvitationLanding = () => {
             controller.abort()
         }
     }, [company])
+
     const newUser = useRef(null)
     if (allStaffSavedQuery.data && companiesQuery.data) {
         const hostCompanyInfo = companiesQuery.data.data.company.at(-1)
@@ -91,7 +92,6 @@ const InvitationLanding = () => {
             }
             return null
         }
-
         // Example function to display a masked password on the screen
         const displayMaskedPassword = (password) => {
             return '*'.repeat(password.length); // Mask the password with asterisks
