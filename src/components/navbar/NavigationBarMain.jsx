@@ -15,7 +15,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-// import { PropTypes } from 'prop-types'
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import { Dropdown } from "antd";
 import pkg from "prop-types";
@@ -43,15 +42,14 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { DevitrakLogo, DevitrakName, SettingIcon } from "../icons/Icons";
 import "./style/style.css";
-// import { useForm } from 'react-hook-form';
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
-  { title: "home", route: "/", permission: [0, 1, 2, 3, 4] },
+  { title: "home", route: "/", permission: [0, 1, 2, 3] },
   { title: "inventory", route: "/inventory", permission: [0, 1] },
-  { title: "events", route: "/events", permission: [0, 1, 2, 3, 4] },
+  { title: "events", route: "/events", permission: [0, 1, 2, 3] },
   { title: "consumers", route: "/consumers", permission: [0, 1] },
-  { title: "staff", route: "/staff", permission: [0, 1, 2, 3, 4] },
+  { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
 ];
 
 const NavigationBarMain = (props) => {
@@ -79,7 +77,7 @@ const NavigationBarMain = (props) => {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.setItem("admin-token", "");
+    localStorage.removeItem("admin-token", "");
     dispatch(onLogout());
     return;
   };
