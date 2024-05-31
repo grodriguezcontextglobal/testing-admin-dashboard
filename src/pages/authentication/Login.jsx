@@ -22,6 +22,7 @@ import {
 } from "../../store/slices/adminSlice";
 import {
   onAddEventData,
+  onAddListEventPermitPerAdmin,
   onAddQRCodeLink,
   onSelectCompany,
   onSelectEvent,
@@ -82,6 +83,12 @@ const Login = () => {
             )}&company=${encodeURI(props.company)}`
         )
       );
+      dispatch(
+        onAddListEventPermitPerAdmin({
+            active: [{...props}],
+            completed: [],
+        })
+    );  
       return navigate("/events/event-quickglance");
     }
     dispatch(onSelectEvent(props.eventInfoDetail.eventName));
@@ -96,6 +103,13 @@ const Login = () => {
           )}&company=${encodeURI(props.company)}`
       )
     );
+    dispatch(
+      onAddListEventPermitPerAdmin({
+          active: [{...props}],
+          completed: [],
+      })
+  );
+
     return navigate("/events/event-quickglance");
   };
 
