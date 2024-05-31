@@ -102,6 +102,35 @@ const EndEventButton = () => {
       message: msg,
     });
   };
+
+  const removingAccessFromStaffMemberOnly = async () => {
+    const checkCompanyUserSet = await devitrakApi.post(
+      "/company/search-company",
+      { company_name: event.company }
+    );
+    if (checkCompanyUserSet.data.ok) {
+      const employeesCompany = [...checkCompanyUserSet.data.company.employees];
+      const employeesEvent = [
+        ...event.staff.adminUser,
+        ...event.staff.headsetAttendees,
+      ];
+      for (let data of employeesEvent) {
+        const checkRole = employeesCompany.findIndex(
+          (element) => element.user === data.email
+        );
+        if (Number(employeesCompany[checkRole].role) === 4) {
+          employeesCompany[checkRole].active = false;
+        }
+      }
+      return await devitrakApi.patch(
+        `/company/update-company/${checkCompanyUserSet.data.company.id}`,
+        {
+          employees: employeesCompany,
+        }
+      );
+    }
+  };
+
   const groupingByCompany = _.groupBy(
     listOfInventoryQuery?.data?.data?.listOfItems,
     "company"
@@ -251,7 +280,7 @@ const EndEventButton = () => {
           "success",
           "Event is closed. Inventory is updated!"
         );
-        return window.location.reload()
+        return window.location.reload();
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.message}`);
@@ -307,7 +336,8 @@ const EndEventButton = () => {
     await sqlDeviceFinalStatusAtEventFinished();
     await sqlDeviceReturnedToCompanyStock();
     await addingRecordOfActivityInEvent();
-    return await inactiveEventAfterEndIt();
+    await inactiveEventAfterEndIt();
+    return await removingAccessFromStaffMemberOnly()
   };
   return (
     <>

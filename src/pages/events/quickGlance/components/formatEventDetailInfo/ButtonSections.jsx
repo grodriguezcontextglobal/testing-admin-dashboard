@@ -1,7 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "antd";
-import _ from 'lodash';
+import _ from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -22,50 +22,55 @@ const ButtonSections = () => {
   ] = useState(false);
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
-    queryFn: () => devitrakApi.get("/inventory/list-inventories", {
-      company: user.company
-    }),
+    queryFn: () =>
+      devitrakApi.get("/inventory/list-inventories", {
+        company: user.company,
+      }),
     enabled: false,
-    refetchOnMount: false
+    refetchOnMount: false,
   });
   const listOfItemsInInventoryQuery = useQuery({
     queryKey: ["listOfItemsInInventory"],
-    queryFn: () => devitrakApi.get("/item/list-items", {
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company
-    }),
+    queryFn: () =>
+      devitrakApi.get("/item/list-items", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
   });
   const ItemsInPoolQuery = useQuery({
     queryKey: ["listOfItemsInInventory"],
-    queryFn: () => devitrakApi.post("/item/list-items", {
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company
-    }),
+    queryFn: () =>
+      devitrakApi.post("/item/list-items", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
   });
   const navigate = useNavigate();
 
   useEffect(() => {
-    const controller = new AbortController()
-    listOfInventoryQuery.refetch()
-    listOfItemsInInventoryQuery.refetch()
-    ItemsInPoolQuery.refetch()
+    const controller = new AbortController();
+    listOfInventoryQuery.refetch();
+    listOfItemsInInventoryQuery.refetch();
+    ItemsInPoolQuery.refetch();
     return () => {
-      controller.abort()
-    }
-  }, [])
+      controller.abort();
+    };
+  }, []);
 
-  const options = [{
-    icon: <PrinterIcon />,
-    text: 'Print All Serial Numbers',
-    disableStatus: true,
-    fn: () => navigate('/page-to-print')
-  }, {
-    icon: <EmailIcon />,
-    text: 'Email Notifications to Attendees',
-    disableStatus: !event.active,
-    fn: () => setCustomizedEmailNotificationModal(true)
-  }];
-
+  const options = [
+    {
+      icon: <PrinterIcon />,
+      text: "Print All Serial Numbers",
+      disableStatus: true,
+      fn: () => navigate("/page-to-print"),
+    },
+    {
+      icon: <EmailIcon />,
+      text: "Email Notifications to Attendees",
+      disableStatus: !event.active,
+      fn: () => setCustomizedEmailNotificationModal(true),
+    },
+  ];
 
   const groupingByCompany = _.groupBy(
     listOfInventoryQuery?.data?.data?.listOfItems,
@@ -87,7 +92,8 @@ const ButtonSections = () => {
   findInventoryStored();
 
   const findItemsInPoolEvent = () => {
-    const listOfItemsInPoolQuery = ItemsInPoolQuery?.data?.data?.receiversInventory
+    const listOfItemsInPoolQuery =
+      ItemsInPoolQuery?.data?.data?.receiversInventory;
     if (listOfItemsInPoolQuery?.length > 0) {
       return listOfItemsInPoolQuery;
     }
@@ -106,26 +112,37 @@ const ButtonSections = () => {
         groupingItemsByCompany[user.company],
         "group"
       );
-      return groupingByGroup
+      return groupingByGroup;
     }
     return [];
   };
   itemsPerCompany();
 
   const checkItemsInUseToUpdateInventory = () => {
-    const result = {}
+    const result = {};
     for (let data of findItemsInPoolEvent()) {
-      if (`${data.activity}`.toLocaleLowerCase() === "yes" || `${data.status}`.toLowerCase() === "lost") {
+      if (
+        `${data.activity}`.toLocaleLowerCase() === "yes" ||
+        `${data.status}`.toLowerCase() === "lost"
+      ) {
         if (!result[data.type]) {
-          result[data.type] = 1
+          result[data.type] = 1;
         } else {
-          result[data.type]++
+          result[data.type]++;
         }
       }
     }
-    return Object.entries(result)
-  }
-  checkItemsInUseToUpdateInventory()
+    return Object.entries(result);
+  };
+  checkItemsInUseToUpdateInventory();
+  const checkUserIsAssignedAsAdminInEvent = () => {
+    const staffList = [...event.staff.adminUser];
+    const check = staffList.findIndex(
+      (element) => element.email === user.email
+    );
+    return check < 0;
+  };
+
   return (
     <>
       <Card
@@ -136,15 +153,15 @@ const ButtonSections = () => {
           boxShadow: "none",
           textAlign: "left",
           width: "100%",
-          padding: 0
+          padding: 0,
         }}
         styles={{
           body: {
             display: "flex",
             justifyContent: "center",
             alignSelf: "stretch",
-            padding: "0 0 0px 10px"
-          }
+            padding: "0 0 0px 10px",
+          },
         }}
       >
         <Grid
@@ -154,43 +171,59 @@ const ButtonSections = () => {
           alignItems={"center"}
           container
         >
-          {
-            options.map(item => {
-              return (
-                <Grid
-                  key={item.text}
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                  textAlign={"left"}
-                  alignItems={"center"}
-                  margin={'0 0 6px 0'}
-                  item
-                  xs={12} sm={12} md={12} lg={12}
+          {options.map((item) => {
+            return (
+              <Grid
+                key={item.text}
+                display={"flex"}
+                justifyContent={"flex-start"}
+                textAlign={"left"}
+                alignItems={"center"}
+                margin={"0 0 6px 0"}
+                item
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
+              >
+                <Button
+                  disabled={item.disableStatus}
+                  onClick={() => item.fn()}
+                  style={{ ...GrayButton, width: "100%" }}
                 >
-                  <Button
-                    disabled={item.disableStatus}
-                    onClick={() => item.fn()}
-                    style={{ ...GrayButton, width: "100%" }}
+                  {" "}
+                  <Typography
+                    textTransform={"none"}
+                    textAlign={"left"}
+                    style={
+                      item.disableStatus
+                        ? { ...GrayButtonText, color: "" }
+                        : GrayButtonText
+                    }
                   >
-                    {" "}
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      style={item.disableStatus ? {...GrayButtonText, color:""} : GrayButtonText}
-                    >
-                      {!item.disableStatus && item.icon}
-                      &nbsp;{item.text}
-                    </Typography>
-                  </Button>
-                </Grid>
-              )
-            })
-          }
+                    {!item.disableStatus && item.icon}
+                    &nbsp;{item.text}
+                  </Typography>
+                </Button>
+              </Grid>
+            );
+          })}
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <SpreadSheet />
           </Grid>
           {/* <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}> */}
-          <Grid display={`${(!event.active && Number(user.role) > 1) && "none"}`} item xs={12} sm={12} md={12} lg={12}>
+          <Grid
+            display={`${
+              ((!event.active && checkUserIsAssignedAsAdminInEvent()) ||
+                (event.active && checkUserIsAssignedAsAdminInEvent())) &&
+              "none"
+            }`}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
             <EndEventButton />
           </Grid>
         </Grid>
