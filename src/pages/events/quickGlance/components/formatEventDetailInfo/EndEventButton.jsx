@@ -3,15 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Popconfirm, notification } from "antd";
 import _ from "lodash";
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { onAddEventData } from "../../../../../store/slices/eventSlice";
 
 const EndEventButton = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const dispatch = useDispatch();
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
@@ -109,7 +111,9 @@ const EndEventButton = () => {
       { company_name: event.company }
     );
     if (checkCompanyUserSet.data.ok) {
-      const employeesCompany = [...checkCompanyUserSet.data.company.employees];
+      const employeesCompany = [
+        ...checkCompanyUserSet.data.company[0].employees,
+      ];
       const employeesEvent = [
         ...event.staff.adminUser,
         ...event.staff.headsetAttendees,
@@ -122,12 +126,13 @@ const EndEventButton = () => {
           employeesCompany[checkRole].active = false;
         }
       }
-      return await devitrakApi.patch(
-        `/company/update-company/${checkCompanyUserSet.data.company.id}`,
+      await devitrakApi.patch(
+        `/company/update-company/${checkCompanyUserSet.data.company[0].id}`,
         {
           employees: employeesCompany,
         }
       );
+      return window.location.reload();
     }
   };
 
@@ -276,11 +281,11 @@ const EndEventButton = () => {
         active: false,
       });
       if (resp.data.ok) {
-        openNotificationWithIcon(
+        dispatch(onAddEventData({ ...event, active: false }));
+        return openNotificationWithIcon(
           "success",
           "Event is closed. Inventory is updated!"
         );
-        return window.location.reload();
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.message}`);
@@ -337,7 +342,7 @@ const EndEventButton = () => {
     await sqlDeviceReturnedToCompanyStock();
     await addingRecordOfActivityInEvent();
     await inactiveEventAfterEndIt();
-    return await removingAccessFromStaffMemberOnly()
+    return await removingAccessFromStaffMemberOnly();
   };
   return (
     <>
