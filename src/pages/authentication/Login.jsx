@@ -20,6 +20,13 @@ import {
   onLogin,
   onLogout,
 } from "../../store/slices/adminSlice";
+import {
+  onAddEventData,
+  onAddQRCodeLink,
+  onSelectCompany,
+  onSelectEvent,
+} from "../../store/slices/eventSlice";
+import { onAddSubscription } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -27,6 +34,8 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import ForgotPassword from "./ForgotPassword";
 import ModalMultipleCompanies from "./multipleCompanies/Modal";
 import "./style/authStyle.css";
+import PropTypes from "prop-types";
+
 const Login = () => {
   const {
     register,
@@ -50,6 +59,65 @@ const Login = () => {
     });
   };
   const dataPassed = useRef([]);
+  const addingEventState = async (props) => {
+    const sqpFetchInfo = await devitrakApi.post(
+      "/db_event/events_information",
+      {
+        zip_address: props.eventInfoDetail.address.split(" ").at(-1),
+        event_name: props.eventInfoDetail.eventName,
+      }
+    );
+    if (sqpFetchInfo.data.ok) {
+      dispatch(onSelectEvent(props.eventInfoDetail.eventName));
+      dispatch(onSelectCompany(props.company));
+      dispatch(
+        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) })
+      );
+      dispatch(onAddSubscription(props.subscription));
+      dispatch(
+        onAddQRCodeLink(
+          props.qrCodeLink ??
+            `https://app.devitrak.net/?event=${encodeURI(
+              props.eventInfoDetail.eventName
+            )}&company=${encodeURI(props.company)}`
+        )
+      );
+      return navigate("/events/event-quickglance");
+    }
+    dispatch(onSelectEvent(props.eventInfoDetail.eventName));
+    dispatch(onSelectCompany(props.company));
+    dispatch(onAddEventData(props));
+    dispatch(onAddSubscription(props.subscription));
+    dispatch(
+      onAddQRCodeLink(
+        props.qrCodeLink ??
+          `https://app.devitrak.net/?event=${encodeURI(
+            props.eventInfoDetail.eventName
+          )}&company=${encodeURI(props.company)}`
+      )
+    );
+    return navigate("/events/event-quickglance");
+  };
+
+  const navigateUserBasedOnRole = async (props) => {
+    if (Number(props.role) === 4) {
+      const response = await devitrakApi.post("/event/event-list", {
+        "staff.headsetAttendees.email": props.email,
+        active: true,
+      });
+      if (response.data.ok) {
+        if (response.data.list.length > 0) {
+          return addingEventState(response.data.list[0]);
+        } else {
+          return openNotificationWithIcon(
+            "error",
+            "Event is ended. If you need log in into your devitrak account, please contact event administrator."
+          );
+        }
+      }
+    }
+    return navigate("/");
+  };
   const loginIntoOneCompanyAccount = async ({ props }) => {
     const respo = await devitrakApiAdmin.post("/login", {
       email: props.email,
@@ -100,11 +168,13 @@ const Login = () => {
           },
         })
       );
-
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("success", "User logged in.");
-      navigate("/");
+      await navigateUserBasedOnRole({
+        role: props.role,
+        email: respo.data.email,
+      });
     }
   };
   const onSubmitLogin = async (data) => {
@@ -143,10 +213,11 @@ const Login = () => {
           });
         }
         if (infoFound.length > 1) {
-          return (dataPassed.current = {
+          const storeData = (dataPassed.current = {
             ...data,
             companyInfo: infoFound,
           });
+          return storeData;
         }
       }
     } catch (error) {
@@ -407,6 +478,20 @@ const Login = () => {
       )}
     </>
   );
+};
+
+Login.propTypes = {
+  eventInfoDetail: PropTypes.shape({
+    address: PropTypes.string.isRequired,
+    eventName: PropTypes.string.isRequired,
+  }).isRequired,
+  company: PropTypes.string.isRequired,
+  subscription: PropTypes.string.isRequired,
+  qrCodeLink: PropTypes.string,
+  email: PropTypes.string.isRequired,
+  password: PropTypes.string.isRequired,
+  company_name: PropTypes.string.isRequired,
+  role: PropTypes.string.isRequired,
 };
 
 export default Login;
