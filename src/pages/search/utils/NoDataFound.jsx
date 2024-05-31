@@ -33,7 +33,7 @@ const NoDataFound = () => {
             fontWeight: '400',
             lineHeight: '20px', /* 150% */
           }}>
-            Your search {location.search.slice(8, -1)} did not match anything in the database. Please try a different keyword.
+            Your search {location.search.slice(8)} did not match anything in the database. Please try a different keyword.
           </Typography>
         </div>
       </Grid>
