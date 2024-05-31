@@ -374,6 +374,7 @@ const MainPageQuickGlance = () => {
               alignItems: "center",
               margin: "2rem auto 0.2rem",
             }}
+            item
             xs={12}
             sm={12}
             md={12}
@@ -467,6 +468,7 @@ const MainPageQuickGlance = () => {
             alignItems: "center",
             margin: "2rem auto 1rem",
           }}
+          item
           xs={12}
           sm={12}
           md={12}
@@ -522,6 +524,7 @@ const MainPageQuickGlance = () => {
             alignItems: "center",
             margin: "2rem auto 1rem",
           }}
+          item
           xs={12}
           sm={12}
           md={12}
