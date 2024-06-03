@@ -1,8 +1,16 @@
-import { Button, FormControl, Grid, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert, message } from "antd";
-import _ from 'lodash';
+import _ from "lodash";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -28,8 +36,8 @@ const Cash = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const loading = () => {
     messageApi.open({
-      type: 'loading',
-      content: 'Action in progress..',
+      type: "loading",
+      content: "Action in progress..",
       duration: 0,
     });
   };
@@ -59,12 +67,17 @@ const Cash = () => {
   });
   const listOfDeviceInPool = useQuery({
     queryKey: ["deviceListOfPool"],
-    queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event.eventInfoDetail.eventName, provider: event.company }),
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
   });
   const checkTypeOfPaymentIntentReceiversAssigned = () => {
-    if (Array.isArray(paymentIntentReceiversAssigned)) return paymentIntentReceiversAssigned[0]
-    return paymentIntentReceiversAssigned
-  }
+    if (Array.isArray(paymentIntentReceiversAssigned))
+      return paymentIntentReceiversAssigned[0];
+    return paymentIntentReceiversAssigned;
+  };
   const groupingByCompany = _.groupBy(
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
@@ -84,13 +97,12 @@ const Cash = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
-  if (listOfDeviceInPool.isLoading) return <div style={CenteringGrid}><Loading /></div>
+  if (listOfDeviceInPool.isLoading)
+    return (
+      <div style={CenteringGrid}>
+        <Loading />
+      </div>
+    );
   if (listOfDeviceInPool.data) {
     const changeStatusInPool = async () => {
       let findTheOneInUsed;
@@ -106,9 +118,9 @@ const Cash = () => {
           id: findTheOneInUsed.id,
           activity: "NO",
           comment: "Device lost",
-          status: "Lost"
+          status: "Lost",
         }
-      )
+      );
       const objectReturnIssueProfile = {
         ...findTheOneInUsed,
         activity: "NO",
@@ -116,24 +128,25 @@ const Cash = () => {
         status: "Lost",
         user: customer?.email,
         admin: user?.email,
-        timeStamp: new Date().getTime()
+        timeStamp: new Date().getTime(),
       };
       await devitrakApi.post(
         "/receiver/receiver-returned-issue",
         objectReturnIssueProfile
       );
-
     };
     const changeStatusInDeviceAssignedData = async () => {
       const assignedDeviceProfile = {
         id: checkTypeOfPaymentIntentReceiversAssigned().id,
         device: {
           ...checkTypeOfPaymentIntentReceiversAssigned().device,
-          status: "Lost"
+          status: "Lost",
         },
       };
       const updateAssignedDeviceList = await devitrakApi.patch(
-        `/receiver/receiver-update/${assignedDeviceProfile.id}`, assignedDeviceProfile)
+        `/receiver/receiver-update/${assignedDeviceProfile.id}`,
+        assignedDeviceProfile
+      );
       if (updateAssignedDeviceList.data.ok) {
         changeStatusInPool();
       }
@@ -153,22 +166,33 @@ const Cash = () => {
         company: company,
         typeCollection: "Cash",
       };
-      loading()
+      loading();
       await changeStatusInDeviceAssignedData();
       const respo = await devitrakApi.post(
         "/cash-report/create-cash-report",
         cashReportProfile
       );
       if (respo) {
+        const stringDate = new Date().toString();
+        const dateSplitting = stringDate.split(" ");
         await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
           consumer: {
             name: `${customer.name} ${customer.lastName}`,
             email: customer.email,
           },
+          device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
           amount: data.total,
+          event: event.eventInfoDetail.eventName,
+          company: event.company,
+          date: dateSplitting.slice(0, 4),
+          time: dateSplitting[4],
+          transaction:
+            checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
         });
-        await messageApi.destroy
-        navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
+        await messageApi.destroy;
+        navigator(
+          `/events/event-attendees/${customer.uid}/transactions-details`
+        );
       }
     };
     const handleBackAction = () => {
@@ -188,10 +212,12 @@ const Cash = () => {
           }}
           onSubmit={handleSubmit(handleSubmitForm)}
         >
-          <Grid display={"flex"}
+          <Grid
+            display={"flex"}
             alignItems={"center"}
             justifyContent={"space-between"}
-            container>
+            container
+          >
             <Grid
               display={"flex"}
               alignItems={"center"}
@@ -230,8 +256,7 @@ const Cash = () => {
               display={"flex"}
               alignItems={"center"}
               justifyContent={"center"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"
-                }`}
+              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
               item
               xs={12}
               sm={12}
@@ -283,28 +308,22 @@ const Cash = () => {
               <Button
                 style={{
                   ...BlueButton,
-                  width: "fit-content"
+                  width: "fit-content",
                 }}
                 onClick={() => handleBackAction()}
               >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+                <Typography textTransform={"none"} style={BlueButtonText}>
                   Cancel
                 </Typography>
               </Button>{" "}
               <Button
                 style={{
                   ...BlueButton,
-                  width: "fit-content"
+                  width: "fit-content",
                 }}
                 type="submit"
               >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+                <Typography textTransform={"none"} style={BlueButtonText}>
                   Submit
                 </Typography>
               </Button>
@@ -312,9 +331,8 @@ const Cash = () => {
           </Grid>
         </form>
       </>
-    )
+    );
   }
 };
 
-
-export default Cash
+export default Cash;
