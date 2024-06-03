@@ -162,6 +162,7 @@ const Cash = () => {
             name: `${customer.name} ${customer.lastName}`,
             email: customer.email,
           },
+          device:`${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
           amount: data.total,
           event: event.eventInfoDetail.eventName,
           company: event.company,
