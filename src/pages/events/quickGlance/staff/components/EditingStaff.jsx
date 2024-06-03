@@ -239,12 +239,28 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         );
       }
     };
+    const checkStatusAndUpdate = async (data) => {
+      const employeesList = checkingStaffInfo[0].company.employees;
+      const index = employeesList.findIndex(
+        (element) => element.user === data.email
+      );
+      if (index > -1) {
+        employeesList[index].active = true;
+        return await devitrakApi.patch(
+          `/company/update-company/${checkingStaffInfo[0].company.id}`,
+          {
+            employees: employeesList,
+          }
+        );
+      }
+      return null;
+    };
 
     const checkingIfStaffWouldBeAdded = async (data) => {
       if (!checkingStaffInfo[0].company) {
         await newStaffMemberCreated(data);
       } else {
-        return;
+        return checkStatusAndUpdate(data);
       }
     };
 
@@ -302,15 +318,15 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
           subject: `Invitation to Join ${event.eventInfoDetail.eventName} as a Staff Member`,
           company: event.company,
           staffMember: `${data.name} ${data.lastName}`,
-          eventInfo:{
-            eventName:event.eventInfoDetail.eventName,
-            address:event.eventInfoDetail.address,
-            dateBegin:event.eventInfoDetail.dateBegin
+          eventInfo: {
+            eventName: event.eventInfoDetail.eventName,
+            address: event.eventInfoDetail.address,
+            dateBegin: event.eventInfoDetail.dateBegin,
           },
-          contactInfo:{
-            name:event.contactInfo.name,
-            email:event.contactInfo.email
-          }
+          contactInfo: {
+            name: event.contactInfo.name,
+            email: event.contactInfo.email,
+          },
         });
 
         setLoadingStatus(false);
@@ -320,6 +336,13 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         console.log("🚀 ~ handleNewStaffMember ~ error:", error);
         setLoadingStatus(false);
       }
+    };
+
+    const displayMessage = () => {
+      if (String(watch("email")).length > 0) {
+        return checkingStaffInfo[0]?.company ? "none" : "flex";
+      }
+      return "none";
     };
     return (
       <Modal
@@ -390,9 +413,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     ...Subtitle,
                     color: "var(--danger-action)",
                     cursor: "pointer",
-                    display: `${
-                      checkingStaffInfo[0]?.company ? "none" : "flex"
-                    }`,
+                    display: displayMessage(),
                   }}
                 >
                   Staff members are not initially assigned to the company as
@@ -474,10 +495,11 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     );
   }
 };
-
-export default EditingStaff;
-
 EditingStaff.propTypes = {
   editingStaff: PropTypes.bool.isRequired,
   setEditingStaff: PropTypes.func,
+  email: PropTypes.string,
+  role: PropTypes.string,
 };
+
+export default EditingStaff;
