@@ -234,6 +234,7 @@ const CreditCard = () => {
             name: `${customer.name} ${customer.lastName}`,
             email: customer.email,
           },
+          device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
           amount: refTotal.current,
           event: event.eventInfoDetail.eventName,
           company: event.company,
