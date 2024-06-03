@@ -1,21 +1,19 @@
-import { useState, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import _ from 'lodash'
-import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { devitrakApi } from "../../../../../../api/devitrakApi";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
 import { Button, FormControl, Grid, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { WhitePlusIcon } from "../../../../../../components/icons/Icons";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
-import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
-import { Icon } from "@iconify/react";
-import { Alert, Divider } from "antd";
-import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { Alert } from "antd";
+import _ from 'lodash';
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { LostDeviceStripeElement } from "../../../../../../components/stripe/elements/LostDeviceStripeElement";
+import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
+import { BlueButton } from "../../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const navigator = useNavigate();
@@ -54,7 +52,6 @@ const CreditCard = () => {
     handleSubmit,
     register,
     watch,
-    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -93,12 +90,6 @@ const CreditCard = () => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
   );
   if (listOfDeviceInPool.isLoading) return <p>Loading...</p>;
   if (listOfDeviceInPool.data) {
@@ -220,12 +211,20 @@ const CreditCard = () => {
         cashReportProfile
       );
       if (respo) {
+        const stringDate = new Date().toString()
+        const dateSplitting = stringDate.split(" ")
         await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
           consumer: {
             name: `${customer.name} ${customer.lastName}`,
             email: customer.email,
           },
+          device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
+          event: event.eventInfoDetail.eventName,
+          company: event.company,
+          date: dateSplitting.slice(0, 4),
+          time: dateSplitting[4],
           amount: refTotal.current,
+          transaction: verifyPaymentIntentReceiversAssignedFormat().paymentIntent
         });
         await navigator(`/events/event-attendees/${customer.uid}`);
       }
