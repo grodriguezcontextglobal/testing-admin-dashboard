@@ -125,16 +125,13 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
   };
 
   const searchingTransaction = (props) => {
-    console.log(props)
     if (Array.isArray(props)) {
       const transactionFound = props.map((element) =>
         JSON.stringify(element).toLowerCase()
       ); //.includes(String(searchValue).toLowerCase()
-      console.log(transactionFound);
       const findingInfo = transactionFound.filter((element) =>
         element.includes(String(searchValue).toLowerCase())
       );
-      console.log(findingInfo);
       return JSON.parse(findingInfo);
     }
   };
@@ -149,7 +146,10 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         });
       }
       const transactions = Array.from(result);
-      console.log('String(searchValue).length > 0',String(searchValue).length > 0)
+      console.log(
+        "String(searchValue).length > 0",
+        String(searchValue).length > 0
+      );
       if (String(searchValue).length > 0) {
         return searchingTransaction(transactions);
       }
@@ -368,6 +368,21 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         );
       }
     };
+    const checkingRenderBackgroundColor = (props, col1, col2, col3) => {
+      if (typeof props === "string") {
+        return col1;
+      } else {
+        if (props) return col2;
+        return col3;
+      }
+    };
+    const checkingRenderStatus = (props) => {
+      if (typeof props === "string") {
+        return props;
+      } else {
+        return props ? "In-use" : "Returned";
+      }
+    };
 
     const columns = [
       {
@@ -424,18 +439,18 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
               borderRadius: "8px",
               display: "flex",
               alignItems: "center",
-              backgroundColor:
-                typeof status === "string"
-                  ? "#ffb5b5"
-                  : status
-                  ? "#ffe4b5"
-                  : "#ECFDF3",
-              color:
-                typeof status === "string"
-                  ? "#ad0101"
-                  : status
-                  ? "#714904"
-                  : "#027A48",
+              backgroundColor: checkingRenderBackgroundColor(
+                status,
+                "#ffb5b5",
+                "#ffe4b5",
+                "#ECFDF3"
+              ),
+              color: checkingRenderBackgroundColor(
+                status,
+                "#ad0101",
+                "#714904",
+                "#027A48"
+              ),
             }}
           >
             <p
@@ -448,11 +463,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                 lineHeight: "24px",
               }}
             >
-              {typeof status === "string"
-                ? status
-                : status
-                ? "In-use"
-                : "Returned"}
+              {checkingRenderStatus(status)}
             </p>
           </span>
         ),
