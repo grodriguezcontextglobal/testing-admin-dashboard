@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, Card } from "antd";
+import { Button, Card, QRCode } from "antd";
 import { useState } from 'react';
-import { QRCode } from "react-qrcode-logo";
+// import { QRCode } from "react-qrcode-logo";
 import { useSelector } from "react-redux";
 // import DevitrakLogoWhiteBg from '../../../../assets/qrcode-maskable_icon_x48.png';
 import { DownloadIcon } from "../../../../components/icons/Icons";
@@ -112,17 +112,10 @@ const QRCodeDisplay = () => {
                         }}
                     >
                         <QRCode
+                            errorLevel="H"
                             value={valueQRCode}
-                            ecLevel="Q"
-                            qrStyle="fluid"
-                            size={120}
-                            quietZone={10}
-                            bgColor="#fff"
-                            fgColor="#000"
-                            // logoImage={DevitrakLogoWhiteBg}
-                            logoHeight={30}
-                            logoWidth={30}
-                            logoPadding={3}
+                            icon="https://i.ibb.co/kKktFyw/maskable-icon.png"
+                            iconSize={50}
                         />
                         <div style={{
                             height: "auto",

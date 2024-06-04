@@ -55,6 +55,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   })
 
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery = deviceInPoolQuery?.data?.data?.receiversInventory
+  console.log('checkDeviceInUseInOtherCustomerInTheSameEventQuery', checkDeviceInUseInOtherCustomerInTheSameEventQuery)
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
     api.open({
@@ -66,7 +67,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   //!refactoring functions to assign devices
   let serialNumber = watch("serialNumber");
   const sortAndFilterDeviceListPerCompanyAndEvent = () => {
-    if (checkDeviceInUseInOtherCustomerInTheSameEventQuery.length > 0) {
+    if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
       return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
     }
     return [];

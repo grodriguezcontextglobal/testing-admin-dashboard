@@ -47,7 +47,7 @@ const drawerWidth = 240;
 const navItems = [
   { title: "home", route: "/", permission: [0, 1, 2, 3] },
   { title: "inventory", route: "/inventory", permission: [0, 1] },
-  { title: "events", route: "/events", permission: [0, 1, 2, 3] },
+  { title: "events", route: "/events", permission: [0, 1, 2, 3, 4 ] },
   { title: "consumers", route: "/consumers", permission: [0, 1] },
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
 ];

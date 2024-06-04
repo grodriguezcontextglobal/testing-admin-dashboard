@@ -30,7 +30,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
-  console.log(searchValue);
   const [openModal, setOpenModal] = useState(false);
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
     useState(false);
@@ -146,10 +145,6 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         });
       }
       const transactions = Array.from(result);
-      console.log(
-        "String(searchValue).length > 0",
-        String(searchValue).length > 0
-      );
       if (String(searchValue).length > 0) {
         return searchingTransaction(transactions);
       }
