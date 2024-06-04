@@ -85,10 +85,10 @@ const Login = () => {
       );
       dispatch(
         onAddListEventPermitPerAdmin({
-            active: [{...props}],
-            completed: [],
+          active: [{ ...props }],
+          completed: [],
         })
-    );  
+      );
       return navigate("/events/event-quickglance");
     }
     dispatch(onSelectEvent(props.eventInfoDetail.eventName));
@@ -105,10 +105,10 @@ const Login = () => {
     );
     dispatch(
       onAddListEventPermitPerAdmin({
-          active: [{...props}],
-          completed: [],
+        active: [{ ...props }],
+        completed: [],
       })
-  );
+    );
 
     return navigate("/events/event-quickglance");
   };
@@ -247,6 +247,21 @@ const Login = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
   );
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen and (min-width : 1201px)"
+  );
+  const formFittingTrigger = () => {
+    if (isSmallDevice || isMediumDevice) {
+      return "55vw";
+    } else if (isLargeDevice) {
+      return "40vw";
+    } else if (isExtraLargeDevice) {
+      return "30vw";
+    }
+  };
   return (
     <>
       {contextHolder}
@@ -278,13 +293,14 @@ const Login = () => {
             justifyContent={"center"}
             alignSelf={"center"}
             margin={"auto"}
+            id="checking"
             item
             xs={12}
             sm={12}
             md={12}
             lg={12}
           >
-            <Typography
+            <p
               style={{
                 color: "var(--gray900, #101828)",
                 fontSize: "30px",
@@ -296,8 +312,8 @@ const Login = () => {
               }}
             >
               Welcome
-            </Typography>
-            <Typography
+            </p>
+            <p
               style={{
                 width: "100%",
                 color: "var(--gray-500, #667085)",
@@ -307,10 +323,10 @@ const Login = () => {
               }}
             >
               Please enter your email
-            </Typography>
+            </p>
             <form
               onSubmit={handleSubmit(onSubmitLogin)}
-              style={{ width: "100%" }}
+              style={{ width: formFittingTrigger() }}
             >
               <Grid
                 marginY={"20px"}
@@ -354,7 +370,7 @@ const Login = () => {
                     ...OutlinedInputStyle,
                     border: `${errors.password && "solid 0.5px #eb0000"}`,
                   }}
-                  placeholder="**********"
+                  placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                   type="password"
                   fullWidth
                 />
@@ -402,13 +418,14 @@ const Login = () => {
                   justifyContent={"flex-end"}
                   alignItems={"center"}
                 >
-                  <span
+                  <button
                     style={{
                       backgroundColor: "transparent",
                       outline: "none",
                       margin: 0,
                       padding: 0,
                     }}
+                    onClick={() => setUpdatePasswordModalState(true)}
                   >
                     {" "}
                     <p
@@ -420,11 +437,10 @@ const Login = () => {
                         lineHeight: "20px",
                         cursor: "pointer",
                       }}
-                      onClick={() => setUpdatePasswordModalState(true)}
                     >
                       Forgot password?
                     </p>
-                  </span>
+                  </button>
                 </Grid>
               </Grid>
               <OutlinedInput
