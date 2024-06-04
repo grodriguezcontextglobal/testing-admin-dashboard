@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   Grid,
   InputLabel,
   MenuItem,
@@ -9,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal, notification, Button } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -23,8 +22,8 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import "../../../styles/global/ant-select.css";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import "../../../styles/global/ant-select.css";
 const schema = yup
   .object({
     firstName: yup.string().required("first name is required"),
@@ -36,11 +35,23 @@ const schema = yup
     eventAssignedTo: yup.string().required(),
   })
   .required();
+
+const paragraphStyle = {
+  textTransform: "none",
+  textAlign: "left",
+  fontFamily: "Inter",
+  fontSize: "14px",
+  fontStyle: "normal",
+  fontWeight: 500,
+  lineHeight: "20px",
+  color: "var(--gray-700, #344054)",
+};
+
 export const CreateNewConsumer = ({
   createUserButton,
   setCreateUserButton,
 }) => {
-  const [consumersList, setConsumersList] = useState([]);
+  // const [consumersList, setConsumersList] = useState([]);
   const {
     register,
     handleSubmit,
@@ -52,7 +63,7 @@ export const CreateNewConsumer = ({
   const [contactPhoneNumber, setContactPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin } = useSelector((state) => state.event);
+  const { eventsPerAdmin, event } = useSelector((state) => state.event);
   const [api, contextHolder] = notification.useNotification();
   const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active];
   const openNotificationWithIcon = (type, msg) => {
@@ -63,16 +74,16 @@ export const CreateNewConsumer = ({
   };
 
   const queryClient = useQueryClient();
-  const checkConsumerInData = async (props) => {
-    const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
-      email: props.email,
-    });
-    if (listOfConsumersQuery.data.ok) {
-      return setConsumersList(listOfConsumersQuery.data.users);
-    } else {
-      return setConsumersList([]);
-    }
-  };
+  // const checkConsumerInData = async (props) => {
+  //   const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
+  //     email: props.email,
+  //   });
+  //   if (listOfConsumersQuery.data.ok) {
+  //     return setConsumersList(listOfConsumersQuery.data.users);
+  //   } else {
+  //     return setConsumersList([]);
+  //   }
+  // };
 
   const newConsumerAfterBeingCheck = async (data) => {
     const newUserProfile = {
@@ -105,33 +116,54 @@ export const CreateNewConsumer = ({
     return Array.from(result);
   };
   const updateExistingUserInRecord = async (data) => {
-    const { eventSelected, provider, id } = consumersList.at(-1);
-    const updateConsumerProfile = {
-      id: id,
-      eventSelected: zeroDuplications([...eventSelected, data.eventAssignedTo]),
-      provider: zeroDuplications([...provider, user.company]),
-      phoneNumber: contactPhoneNumber,
-    };
-    const updatingUserInfoQuery = await devitrakApi.patch(
-      `/auth/${id}`,
-      updateConsumerProfile
-    );
-    if (updatingUserInfoQuery.data) {
-      queryClient.invalidateQueries(["listOfConsumers", "consumersList"]);
-      openNotificationWithIcon("success", "New consumer added");
-      setLoading(false);
-      closeDeviceModal();
+    const { eventSelected, provider, id } = data.consumersList.at(-1);
+    if (
+      eventSelected.some(
+        (element) => element === event.eventInfoDetail.eventName
+      )
+    ) {
+      alert(
+        `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
+      );
+      return setLoading(false);
+    } else {
+      const updateConsumerProfile = {
+        id: id,
+        eventSelected: zeroDuplications([
+          ...eventSelected,
+          data.eventAssignedTo,
+        ]),
+        provider: zeroDuplications([...provider, user.company]),
+        phoneNumber: contactPhoneNumber,
+      };
+      const updatingUserInfoQuery = await devitrakApi.patch(
+        `/auth/${id}`,
+        updateConsumerProfile
+      );
+      if (updatingUserInfoQuery.data) {
+        queryClient.invalidateQueries(["listOfConsumers", "consumersList"]);
+        openNotificationWithIcon("success", "New consumer added");
+        setLoading(false);
+        closeDeviceModal();
+      }
     }
   };
   const handleNewConsumer = async (data) => {
     setLoading(true);
     try {
-      await checkConsumerInData(data);
-      if (consumersList.length < 1) {
+      const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
+        email: data.email,
+      });
+      if (listOfConsumersQuery.data.ok) {
+        if (listOfConsumersQuery.data.users.length > 0) {
+          return updateExistingUserInRecord({
+            ...data,
+            consumersList: listOfConsumersQuery.data.users,
+          });
+        }
         return newConsumerAfterBeingCheck(data);
-      } else {
-        return updateExistingUserInRecord(data);
       }
+      return setLoading(false);
     } catch (error) {
       setLoading(false);
     }
@@ -146,11 +178,7 @@ export const CreateNewConsumer = ({
     setCreateUserButton(false);
   };
   const titleRender = () => {
-    return (
-      <p style={TextFontsize18LineHeight28}>
-        Add new consumer.
-      </p>
-    );
+    return <p style={TextFontsize18LineHeight28}>Add new consumer.</p>;
   };
 
   return (
@@ -234,18 +262,19 @@ export const CreateNewConsumer = ({
                       <InputLabel
                         style={{ marginBottom: "3px", width: "100%" }}
                       >
-                        <Typography
-                          textTransform={"none"}
-                          textAlign={"left"}
-                          fontFamily={"Inter"}
-                          fontSize={"14px"}
-                          fontStyle={"normal"}
-                          fontWeight={500}
-                          lineHeight={"20px"}
-                          color={"var(--gray-700, #344054)"}
+                        <p
+                          style={paragraphStyle}
+                          // textTransform={"none"}
+                          // textAlign={"left"}
+                          // fontFamily={"Inter"}
+                          // fontSize={"14px"}
+                          // fontStyle={"normal"}
+                          // fontWeight={500}
+                          // lineHeight={"20px"}
+                          // color={"var(--gray-700, #344054)"}
                         >
                           First name
-                        </Typography>
+                        </p>
                       </InputLabel>
                       <OutlinedInput
                         {...register("firstName", { required: true })}
@@ -333,18 +362,7 @@ export const CreateNewConsumer = ({
                   />
                   {errors?.email?.message}
                   <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={500}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
-                    >
-                      Phone number
-                    </Typography>
+                    <p>Phone number</p>
                   </InputLabel>
                   <Grid item xs={12} sm={12} md={12} lg={12}>
                     <PhoneInput
@@ -366,18 +384,20 @@ export const CreateNewConsumer = ({
                   </Grid>
 
                   <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={500}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
+                    <p
+                      style={{
+                        textTransform: "none",
+                        textAlign: "left",
+                        fontFamily: "Inter",
+                        fontSize: "14px",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        lineHeight: "20px",
+                        color: "var(--gray-700, #344054)",
+                      }}
                     >
                       Event assigned to
-                    </Typography>
+                    </p>
                   </InputLabel>
                   <Select
                     className="custom-autocomplete"
@@ -399,24 +419,30 @@ export const CreateNewConsumer = ({
                           value={event?.eventInfoDetail?.eventName}
                           key={event?.id}
                         >
-                          <Typography
-                            textTransform={"none"}
-                            textAlign={"left"}
-                            fontFamily={"Inter"}
-                            fontSize={"14px"}
-                            fontStyle={"normal"}
-                            fontWeight={400}
-                            lineHeight={"20px"}
-                            color={"var(--gray-700, #344054)"}
+                          <p
+                            style={{
+                              textTransform: "none",
+                              textAlign: "left",
+                              fontFamily: "Inter",
+                              fontSize: "14px",
+                              fontStyle: "normal",
+                              fontWeight: 400,
+                              lineHeight: "20px",
+                              color: "var(--gray-700, #344054)",
+                            }}
                           >
                             {event?.eventInfoDetail?.eventName}
-                          </Typography>
+                          </p>
                         </MenuItem>
                       );
                     })}
                   </Select>
                   {errors?.eventAssignedTo?.message}
-                  <Button type="submit" style={BlueButton}>
+                  <Button
+                    loading={loading}
+                    htmlType="submit"
+                    style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+                  >
                     <Typography textTransform={"none"} style={BlueButtonText}>
                       Add new consumer
                     </Typography>
