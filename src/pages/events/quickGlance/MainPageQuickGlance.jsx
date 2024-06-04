@@ -13,9 +13,9 @@ import BannerNotificationTemplate from "../../../components/notification/alerts/
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../../styles/global/Title";
@@ -31,8 +31,6 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -185,14 +183,14 @@ const MainPageQuickGlance = () => {
             disabled={!event.active}
             onClick={() => setCreateUserButton(true)}
             style={{
-              ...GrayButton,
+              ...BlueButton,
               border: "1px solid var(--gray-300, #D0D5DD)",
               width: "100%",
             }}
           >
             <PlusIcon />
             &nbsp;
-            <p style={{ ...GrayButtonText, textTransform: "none" }}>
+            <p style={{ ...BlueButtonText, textTransform: "none" }}>
               Add new consumer
             </p>
           </button>
@@ -246,11 +244,9 @@ const MainPageQuickGlance = () => {
             )}
             <button
               onClick={() => setCreateUserButton(true)}
-              style={GrayButton}
+              style={BlueButton}
             >
-              <PlusIcon />
-              &nbsp;
-              <p style={{ ...GrayButtonText, textTransform: "none" }}>
+              <p style={{ ...BlueButtonText, textTransform: "none" }}>
                 Add new consumer
               </p>
             </button>
@@ -464,7 +460,7 @@ const MainPageQuickGlance = () => {
         <Grid
           style={{
             display: "flex",
-            justifyContent: "flex-start",
+            justifyContent: "space-between",
             alignItems: "center",
             margin: "2rem auto 1rem",
           }}
@@ -510,6 +506,18 @@ const MainPageQuickGlance = () => {
               </p>
             </div>
           </p>
+          <button
+            onClick={() => setCreateUserButton(true)}
+            style={{
+              ...BlueButton,
+              width: "fit-content",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <p style={BlueButtonText}>Add new customer</p>
+          </button>
         </Grid>
         <CustomerInformationSection
           foundAttendeesPerEvent={foundAttendeesPerEvent}
