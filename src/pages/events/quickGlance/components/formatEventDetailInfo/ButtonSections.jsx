@@ -1,4 +1,4 @@
-import { Button, Grid, Typography } from "@mui/material";
+import { Button, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "antd";
 import _ from "lodash";
@@ -8,9 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { EmailIcon, PrinterIcon } from "../../../../../components/icons/Icons";
 import EmailNotification from "../../../../../components/notification/email/EmailNotification";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import SpreadSheet from "../SpreadSheet";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
 import EndEventButton from "./EndEventButton";
 
 const ButtonSections = () => {
@@ -189,21 +189,43 @@ const ButtonSections = () => {
                 <Button
                   disabled={item.disableStatus}
                   onClick={() => item.fn()}
-                  style={{ ...GrayButton, width: "100%" }}
+                  style={
+                    item.disableStatus
+                      ? {
+                          ...BlueButton,
+                          width: "100%",
+                          backgroundColor: "var(--disabled-blue-button)",
+                          border: "transparent",
+                        }
+                      : { ...BlueButton, width: "100%" }
+                  }
                 >
                   {" "}
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
+                  <p
                     style={
                       item.disableStatus
-                        ? { ...GrayButtonText, color: "" }
-                        : GrayButtonText
+                        ? {
+                            ...BlueButtonText,
+                            color: "",
+                            textTransform: "none",
+                            textAlign: "left",
+                            display: "flex",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
+                          }
+                        : {
+                            ...BlueButtonText,
+                            textTransform: "none",
+                            textAlign: "left",
+                            display: "flex",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
+                          }
                     }
                   >
                     {!item.disableStatus && item.icon}
                     &nbsp;{item.text}
-                  </Typography>
+                  </p>
                 </Button>
               </Grid>
             );
