@@ -36,6 +36,7 @@ import ForgetPasswordLinkFromStaffPage from "../../pages/staff/detail/components
 import UpdateRoleInCompany from "../../pages/staff/detail/components/equipment_components/UpdateRoleInCompany";
 import AssignStaffMemberToEvent from "../../pages/staff/detail/components/AssignStaffMemberToEvent";
 import ConsumerDeviceLostFeeCash from "../../pages/consumers/components/markedLostOption/Cash";
+import RedirectionPage from "../../components/utils/RedirectionPage";
 const AuthRoutes = () => {
   const Home = lazy(() => import("../../pages/home/MainPage"));
   const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
@@ -77,7 +78,7 @@ const AuthRoutes = () => {
 
   return (
     <div style={{ width: "100%", margin: "auto" }}>
-      <header ref={navbarRef}  style={{ width: "100%", margin: "auto" }}>
+      <header ref={navbarRef} style={{ width: "100%", margin: "auto" }}>
         <UpperBanner />
         <NavigationBarMain />
       </header>
@@ -197,6 +198,8 @@ const AuthRoutes = () => {
               />
             </Route>
             <Route path="search-result-page" element={<SearchResultPage />} />
+            <Route path="login" element={<RedirectionPage />} />
+            <Route path="register" element={<RedirectionPage />} />
             <Route path="/*" element={<ErrorPage />} />
           </Route>
         </Routes>
