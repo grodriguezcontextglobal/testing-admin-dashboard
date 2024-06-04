@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const adminSlice = createSlice({
   name: "admin",
@@ -11,6 +11,7 @@ const adminSlice = createSlice({
       password: undefined,
       company: undefined,
       role: undefined,
+      imageProfile: undefined,
     },
     errorMessage: undefined,
     companyAccountStripe: undefined,
@@ -35,6 +36,7 @@ const adminSlice = createSlice({
         password: "",
         company: "",
         role: "",
+        imageProfile: "",
       };
       state.companyAccountStripe = undefined;
     },
