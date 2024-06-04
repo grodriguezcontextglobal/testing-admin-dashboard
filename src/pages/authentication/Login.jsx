@@ -418,7 +418,7 @@ const Login = () => {
                   justifyContent={"flex-end"}
                   alignItems={"center"}
                 >
-                  <button
+                  <span
                     style={{
                       backgroundColor: "transparent",
                       outline: "none",
@@ -440,7 +440,7 @@ const Login = () => {
                     >
                       Forgot password?
                     </p>
-                  </button>
+                  </span>
                 </Grid>
               </Grid>
               <OutlinedInput
