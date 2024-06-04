@@ -1,30 +1,31 @@
 import {
-    Button,
-    Chip,
-    FormLabel,
-    Grid,
-    OutlinedInput,
-    Typography,
+  Button,
+  Chip,
+  FormLabel,
+  Grid,
+  OutlinedInput,
+  Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { AutoComplete, Space, Tooltip, notification } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import {
-    onAddErrorMessage,
-    onLogin,
-    onLogout,
+  onAddErrorMessage,
+  onLogin,
+  onLogout,
 } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import InfrmationCard from "./components/InfrmationCard";
+import CenteringGrid from "../../styles/global/CenteringGrid";
 
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -32,13 +33,15 @@ const RegisterCompany = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const { user } = useSelector((state) => state.admin);
+  const [listCompany, setListCompany] = useState([]);
+  const [companyValue, setCompanyValue] = useState(user.company);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [industry, setIndustry] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
   const dispatch = useDispatch();
-//   const navigate = useNavigate();
+  //   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { register, handleSubmit } = useForm();
   const [api, contextHolder] = notification.useNotification();
@@ -57,14 +60,69 @@ const RegisterCompany = () => {
     enabled: false,
     refetchOnMount: false,
   });
+  const checkUserInfo = useQuery({
+    queryKey: ["checkUserInfoQuery"],
+    queryFn: () =>
+      devitrakApi.post("/staff/admin-users", {
+        email: user.email,
+      }),
+    enabled: false,
+    refetchOnMount: false,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
     industryListQuery.refetch();
+    checkUserInfo.refetch();
     return () => {
       controller.abort();
     };
   }, []);
+
+  console.log(checkUserInfo?.data?.data?.adminUsers);
+  const callAPiUserCompany = useCallback(async () => {
+    const resp = await devitrakApi.post("/company/companies");
+    if (resp) {
+      return setListCompany(resp.data.company);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    callAPiUserCompany();
+    return () => {
+      controller.abort();
+    };
+  }, [listCompany.length, callAPiUserCompany]);
+
+  const companies = useCallback(() => {
+    let result = new Set();
+
+    for (let data of listCompany) {
+      result.add(data.company_name);
+    }
+    return Array.from(result);
+  }, [listCompany]);
+
+  companies();
+
+  const matchCompany = useCallback(() => {
+    const foundCompany = companies()?.find(
+      (company) =>
+        String(company).toLowerCase() === String(companyValue).toLowerCase()
+    );
+    // return foundCompany;
+    if (foundCompany) {
+      openNotificationWithIcon(
+        "error",
+        "Company exists!",
+        "Company already exists in our records.",
+        0
+      );
+      return true;
+    }
+    return false;
+  }, [companyValue]);
 
   const retrieveIndustryOptions = () => {
     const result = new Set();
@@ -77,10 +135,12 @@ const RegisterCompany = () => {
     return Array.from(result);
   };
   const handleAddLocation = async () => {
-    let result = [...locationList, newlocation];
-    await setLocationList(result);
-    await setNewlocation("");
-    return;
+    if (newlocation.length > 0) {
+      let result = [...locationList, newlocation];
+      await setLocationList(result);
+      await setNewlocation("");
+      return;
+    }
   };
   const handleDeleteLocation = (location) => {
     const result = locationList.filter((element) => element !== location);
@@ -98,9 +158,11 @@ const RegisterCompany = () => {
         question: "What's your company name",
         answer: String(user.company).toLowerCase(),
         role: "0",
-        // role: "Administrator",
         super_user: true,
         online: true,
+        data: {
+          ...user.data,
+        },
       };
       const resp = await devitrakApi.post(
         "/admin/new_admin_user",
@@ -191,7 +253,7 @@ const RegisterCompany = () => {
           lastName: user.lastName,
           status: "confirmed",
           super_user: true,
-          role: "Administrator",
+          role: "0",
         },
       ],
     };
@@ -386,8 +448,7 @@ const RegisterCompany = () => {
           "Your new account was created.",
           3
         );
-        await window.location.reload(true);
-        // navigate('/', { replace: true, relative: 'path', })
+        await redirect("/", { replace: true });
       } catch (error) {
         notification.destroy("info");
         openNotificationWithIcon(
@@ -398,9 +459,6 @@ const RegisterCompany = () => {
         );
         dispatch(onAddErrorMessage(error));
         setLoadingStatus(false);
-        // setTimeout(() => {
-        //     return navigate('/login')
-        // }, 2500)
       }
     }
   };
@@ -434,12 +492,10 @@ const RegisterCompany = () => {
               className="register-container"
               style={{
                 padding: `${isSmallDevice ? "1rem" : "0 2rem"}`,
-                // height: "100dvh",
                 margin: "4dvh auto 0",
               }}
               container
             >
-              {" "}
               <form
                 className="register-form-container"
                 onSubmit={handleSubmit(onSubmitRegister)}
@@ -475,6 +531,37 @@ const RegisterCompany = () => {
                   textAlign={"left"}
                   item
                   xs={12}
+                >
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>
+                    Type to select your company{" "}
+                    <span style={{ fontWeight: 800 }}>*</span>
+                  </FormLabel>
+                  <Grid
+                    item
+                    xs={12}
+                    display={"flex"}
+                    alignItems={"center"}
+                    justifyContent={"space-between"}
+                  >
+                    <OutlinedInput
+                      type="text"
+                      value={companyValue}
+                      onChange={(e) => setCompanyValue(e.target.value)}
+                      style={{
+                        ...OutlinedInputStyle,
+                      }}
+                      placeholder="Enter your company name"
+                      fullWidth
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  item
+                  xs={12}
                   sm={12}
                   md={12}
                   lg={12}
@@ -482,7 +569,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
                     Main phone number <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       {...register("main_phone", { required: true })}
                       // value={phoneNumberCompany}
                       // onChange={(e) => setPhoneNumberCompany(e.target.value)}
@@ -508,7 +595,7 @@ const RegisterCompany = () => {
                     <span style={{ fontWeight: 800 }}></span>
                   </FormLabel>
                   <OutlinedInput
-                    disabled={loadingStatus}
+                    disabled={loadingStatus || matchCompany()}
                     {...register("alternative_phone", { required: true })}
                     // value={phoneNumberCompany}
                     // onChange={(e) => setPhoneNumberCompany(e.target.value)}
@@ -533,7 +620,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
                     Street <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       {...register("street", { required: true })}
                       style={OutlinedInputStyle}
                       placeholder=""
@@ -560,7 +647,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     City <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       {...register("city", { required: true })}
                       style={OutlinedInputStyle}
                       placeholder=""
@@ -571,7 +658,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     State <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       {...register("state", { required: true })}
                       style={OutlinedInputStyle}
                       placeholder=""
@@ -599,7 +686,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     Zip code <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       {...register("postal_code", { required: true })}
                       style={OutlinedInputStyle}
                       placeholder=""
@@ -617,7 +704,7 @@ const RegisterCompany = () => {
                     Industry <span style={{ fontWeight: 800 }}>*</span>
                     <AutoComplete
                       className="custom-autocomplete" // Add a custom className here
-                      disabled={loadingStatus}
+                      disabled={loadingStatus || matchCompany()}
                       variant="outlined"
                       style={{
                         ...AntSelectorStyle,
@@ -651,7 +738,7 @@ const RegisterCompany = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Locations
+                    Your company locations
                   </FormLabel>
                   <div
                     style={{
@@ -675,9 +762,26 @@ const RegisterCompany = () => {
                     </Tooltip>
                     <Button
                       onClick={() => handleAddLocation()}
-                      style={BlueButton}
+                      style={{
+                        ...BlueButton,
+                        background: `${
+                          matchCompany()
+                            ? "var(--disabled-blue-button)"
+                            : BlueButton.background
+                        }`,
+                      }}
                     >
-                      <Typography style={BlueButtonText}>Add</Typography>
+                      <p
+                        style={{
+                          ...BlueButtonText,
+                          ...CenteringGrid,
+                          color: `${
+                            matchCompany() ? "" : BlueButtonText.color
+                          }`,
+                        }}
+                      >
+                        Add
+                      </p>
                     </Button>
                   </div>
                 </Grid>
@@ -706,7 +810,7 @@ const RegisterCompany = () => {
                     Website <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <OutlinedInput
-                    disabled={loadingStatus}
+                    disabled={loadingStatus || matchCompany()}
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
                     style={OutlinedInputStyle}
@@ -726,13 +830,26 @@ const RegisterCompany = () => {
                   xs={12}
                 >
                   <Button
-                    disabled={loadingStatus}
+                    disabled={loadingStatus || matchCompany()}
                     type="submit"
-                    style={{ ...BlueButton, width: "100%" }}
+                    style={{
+                      ...BlueButton,
+                      width: "100%",
+                      background: `${
+                        matchCompany()
+                          ? "var(--disabled-blue-button)"
+                          : BlueButton.background
+                      }`,
+                    }}
                   >
-                    <Typography style={BlueButtonText}>
+                    <p
+                      style={{
+                        ...BlueButtonText,
+                        color: `${matchCompany() ? "" : BlueButtonText.color}`,
+                      }}
+                    >
                       {!loadingStatus ? "Register" : "Loading"}
-                    </Typography>
+                    </p>
                   </Button>
                 </Grid>
                 <Grid
@@ -741,7 +858,7 @@ const RegisterCompany = () => {
                   justifyContent={"center"}
                   alignItems={"center"}
                 >
-                  <Typography
+                  <p
                     style={{
                       color: "var(--gray-600, #475467)",
                       fontSize: "14px",
@@ -751,9 +868,12 @@ const RegisterCompany = () => {
                   >
                     Do you have an account already?{" "}
                     <Link to="/login">
-                      <span
+                      <button
                         onClick={() => dispatch(onLogout())}
                         style={{
+                          backgroundColor: "transparent",
+                          outline: "none",
+                          padding: 0,
                           color: "#004EEB",
                           fontSize: "14px",
                           fontFamily: "Inter",
@@ -763,9 +883,9 @@ const RegisterCompany = () => {
                         }}
                       >
                         Sign in
-                      </span>
+                      </button>
                     </Link>
-                  </Typography>
+                  </p>
                 </Grid>
                 <div
                   style={{
