@@ -12,6 +12,7 @@ const adminSlice = createSlice({
       company: undefined,
       role: undefined,
       imageProfile: undefined,
+      rowImageProfile:undefined
     },
     errorMessage: undefined,
     companyAccountStripe: undefined,
@@ -37,6 +38,7 @@ const adminSlice = createSlice({
         company: "",
         role: "",
         imageProfile: "",
+        rowImageProfile: undefined
       };
       state.companyAccountStripe = undefined;
     },
