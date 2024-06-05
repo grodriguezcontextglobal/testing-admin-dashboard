@@ -31,7 +31,6 @@ const Registration = () => {
       email: user.email,
       password: user.password,
       password2: user.password,
-      photo: user.imageProfile,
     },
   });
   const dispatch = useDispatch();
@@ -61,7 +60,7 @@ const Registration = () => {
       if (data.photo.length > 0) {
         base64 = await convertToBase64(data.photo[0]);
       } else if (user.imageProfile) {
-        base64 = user.imageProfile;
+        base64 = await convertToBase64(user.rowImageProfile);
       }
       const newAdminUserTemplate = {
         name: data.firstName,
@@ -72,6 +71,7 @@ const Registration = () => {
         online: true,
         super_user: true,
         imageProfile: base64,
+        rowImageProfile: data.photo[0],
         data: {
           name: data.firstName,
           lastName: data.lastName,
@@ -240,7 +240,7 @@ const Registration = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Name <span style={{ fontWeight: 800 }}>*</span>
+                    First name <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <OutlinedInput
                     required
@@ -281,6 +281,7 @@ const Registration = () => {
 
                 <Grid
                   display={"flex"}
+                  flexDirection={"column"}
                   justifyContent={"flex-start"}
                   alignItems={"center"}
                   marginY={0}
@@ -297,112 +298,138 @@ const Registration = () => {
                     marginY={0}
                     gap={2}
                     item
-                    xs={4}
-                    sm={4}
-                    md={4}
+                    xs={12}
+                    sm={12}
+                    md={12}
                   >
-                    <Avatar
-                      size={{
-                        xs: 24,
-                        sm: 32,
-                        md: 40,
-                        lg: 64,
-                        xl: 80,
-                        xxl: 100,
-                      }}
-                      src={
-                        user.data ? (
-                          user.data.imageProfile
-                        ) : (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <UploadImagePlaceholder style={{}} />
-                          </div>
-                        )
-                      }
-                      style={{
-                        background: "var(--Gray-100, #F2F4F7)",
-                      }}
-                    />
+                    <FormLabel style={{ marginBottom: "0.5rem" }}>
+                      Update your profile photo{" "}
+                      <span style={{ fontWeight: 800 }}>*</span>
+                    </FormLabel>
                   </Grid>
                   <Grid
                     display={"flex"}
-                    flexDirection={"column"}
-                    justifyContent={"center"}
-                    alignItems={"center"}
-                    marginBottom={2}
-                    style={{
-                      width: "100%",
-                      borderRadius: "12px",
-                      border: "1px solid var(--gray-200, #EAECF0)",
-                      background: "var(--base-white, #FFF)",
-                    }}
+                    justifyContent={"flex-start"}
+                    alignSelf={"stretch"}
+                    marginY={0}
+                    gap={2}
                     item
                     xs={12}
+                    sm={12}
+                    md={12}
                   >
                     <Grid
                       display={"flex"}
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                      marginTop={2}
+                      justifyContent={"flex-start"}
+                      alignSelf={"stretch"}
+                      marginY={0}
+                      gap={2}
                       item
-                      xs={12}
+                      xs={4}
+                      sm={4}
+                      md={4}
                     >
                       <Avatar
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          border: "6px solid var(--gray-50, #F9FAFB)",
-                          background: "6px solid var(--gray-50, #F9FAFB)",
-                          borderRadius: "28px",
+                        size={{
+                          xs: 24,
+                          sm: 32,
+                          md: 40,
+                          lg: 64,
+                          xl: 80,
+                          xxl: 100,
                         }}
-                      >
-                        {" "}
-                        <Icon
-                          icon="tabler:cloud-upload"
-                          color="#475467"
-                          width={20}
-                          height={20}
-                        />
-                      </Avatar>
-                    </Grid>
-                    <Grid
-                      display={"flex"}
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                      item
-                      xs={12}
-                    >
-                      <TextField
-                        {...register("photo", {
-                          value: user.imageProfile,
-                        })}
-                        id="file-upload"
-                        type="file"
-                        accept=".jpeg, .png, .jpg"
+                        src={
+                          user.data ? (
+                            user.data.imageProfile
+                          ) : (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <UploadImagePlaceholder style={{}} />
+                            </div>
+                          )
+                        }
                         style={{
-                          outline: "none",
-                          border: "transparent",
+                          background: "var(--Gray-100, #F2F4F7)",
                         }}
                       />
                     </Grid>
                     <Grid
                       display={"flex"}
+                      flexDirection={"column"}
                       justifyContent={"center"}
                       alignItems={"center"}
                       marginBottom={2}
+                      style={{
+                        width: "100%",
+                        borderRadius: "12px",
+                        border: "1px solid var(--gray-200, #EAECF0)",
+                        background: "var(--base-white, #FFF)",
+                      }}
                       item
                       xs={12}
                     >
-                      <p style={{ ...Subtitle, fontWeight: 400 }}>
-                        SVG, PNG, JPG or GIF (max. 1MB)
-                      </p>
+                      <Grid
+                        display={"flex"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        marginTop={2}
+                        item
+                        xs={12}
+                      >
+                        <Avatar
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            border: "6px solid var(--gray-50, #F9FAFB)",
+                            background: "6px solid var(--gray-50, #F9FAFB)",
+                            borderRadius: "28px",
+                          }}
+                        >
+                          {" "}
+                          <Icon
+                            icon="tabler:cloud-upload"
+                            color="#475467"
+                            width={20}
+                            height={20}
+                          />
+                        </Avatar>
+                      </Grid>
+                      <Grid
+                        display={"flex"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        item
+                        xs={12}
+                      >
+                        <TextField
+                          {...register("photo")}
+                          id="file-upload"
+                          type="file"
+                          accept=".jpeg, .png, .jpg"
+                          style={{
+                            outline: "none",
+                            border: "transparent",
+                          }}
+                        />
+                      </Grid>
+                      <Grid
+                        display={"flex"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        marginBottom={2}
+                        item
+                        xs={12}
+                      >
+                        <p style={{ ...Subtitle, fontWeight: 400 }}>
+                          SVG, PNG, JPG or GIF (max. 1MB)
+                        </p>
+                      </Grid>
                     </Grid>
                   </Grid>
                 </Grid>
