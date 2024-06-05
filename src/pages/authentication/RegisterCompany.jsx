@@ -26,7 +26,7 @@ import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import InfrmationCard from "./components/InfrmationCard";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-
+import { PropTypes } from "prop-types";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -34,14 +34,13 @@ const RegisterCompany = () => {
   );
   const { user } = useSelector((state) => state.admin);
   const [listCompany, setListCompany] = useState([]);
-  const [companyValue, setCompanyValue] = useState(user.company);
+  const [companyValue, setCompanyValue] = useState();
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [industry, setIndustry] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
   const dispatch = useDispatch();
-  //   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { register, handleSubmit } = useForm();
   const [api, contextHolder] = notification.useNotification();
@@ -79,7 +78,6 @@ const RegisterCompany = () => {
     };
   }, []);
 
-  console.log(checkUserInfo?.data?.data?.adminUsers);
   const callAPiUserCompany = useCallback(async () => {
     const resp = await devitrakApi.post("/company/companies");
     if (resp) {
@@ -139,7 +137,7 @@ const RegisterCompany = () => {
       let result = [...locationList, newlocation];
       await setLocationList(result);
       await setNewlocation("");
-      return;
+      return null;
     }
   };
   const handleDeleteLocation = (location) => {
@@ -154,12 +152,21 @@ const RegisterCompany = () => {
         lastName: user.lastName,
         email: user.email,
         password: user.password,
-        company: user.company,
+        company: companyValue,
         question: "What's your company name",
         answer: String(user.company).toLowerCase(),
         role: "0",
         super_user: true,
         online: true,
+        companiesAssigned: [
+          {
+            company: companyValue,
+            active: true,
+            super_user: false,
+            role: "0",
+          },
+        ],
+
         data: {
           ...user.data,
         },
@@ -174,9 +181,9 @@ const RegisterCompany = () => {
         onLogin({
           data: resp.data.entire,
           uid: resp.data.uid,
-          name: resp.data.name,
-          lastName: resp.data.lastName,
-          email: resp.data.email,
+          name: user.name,
+          lastName: user.lastName,
+          email: user.email,
           phone: resp.data.phone,
           role: resp.data.role,
           company: user.company,
@@ -188,9 +195,9 @@ const RegisterCompany = () => {
         userRegistration: {
           data: resp.data.entire,
           uid: resp.data.uid,
-          name: resp.data.name,
-          lastName: resp.data.lastName,
-          email: resp.data.email,
+          name: user.name,
+          lastName: user.lastName,
+          email: user.email,
           phone: resp.data.phone,
           role: resp.data.role,
           company: user.company,
@@ -205,7 +212,7 @@ const RegisterCompany = () => {
 
   const createStripeAccount = async () => {
     const newCompanyAccountTemplate = {
-      companyName: user.company,
+      companyName: companyValue,
       ownerFirstName: user.name,
       ownerLastName: user.lastName,
       ownerEmail: user.email,
@@ -295,7 +302,7 @@ const RegisterCompany = () => {
     const insertingCompanyInfo = await devitrakApi.post(
       "/db_company/new_company",
       {
-        company_name: user.company,
+        company_name: companyValue,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -678,6 +685,7 @@ const RegisterCompany = () => {
                   justifyContent={"space-between"}
                   alignItems={"center"}
                   gap={1}
+                  item
                   xs={12}
                   sm={12}
                   md={12}
@@ -727,9 +735,6 @@ const RegisterCompany = () => {
                     />
                   </FormLabel>
                 </Grid>
-                {/* <div style={{ display: "flex", justifyContent: "space-between", gap: "5px" }}>
-                                    
-                                </div>  */}
                 <Grid
                   marginY={"20px"}
                   marginX={0}
@@ -912,5 +917,14 @@ const RegisterCompany = () => {
       </Grid>{" "}
     </>
   );
+};
+
+RegisterCompany.propTypes = {
+  street: PropTypes.string.isRequired,
+  city: PropTypes.string.isRequired,
+  state: PropTypes.string.isRequired,
+  postal_code: PropTypes.string.isRequired,
+  main_phone: PropTypes.string.isRequired,
+  alternative_phone: PropTypes.string.isRequired,
 };
 export default RegisterCompany;
