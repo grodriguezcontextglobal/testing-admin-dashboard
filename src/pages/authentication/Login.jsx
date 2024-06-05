@@ -41,8 +41,7 @@ const Login = () => {
   const {
     register,
     handleSubmit,
-    setValue,
-    formState: { errors },
+    setValue
   } = useForm();
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
@@ -338,21 +337,18 @@ const Login = () => {
                 md={12}
                 lg={12}
               >
-                <FormLabel style={{ marginBottom: "0.5rem" }}>Email</FormLabel>
+                <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
                 <OutlinedInput
+                required
                   {...register("email", { required: true, minLength: 10 })}
-                  aria-invalid={errors.email}
                   type="email"
                   style={{
                     ...OutlinedInputStyle,
-                    border: `${errors.email && "solid 0.5px #eb0000"}`,
+                    marginTop:"6px"
                   }}
                   placeholder="Enter your email"
                   fullWidth
                 />
-                {errors?.email && (
-                  <Typography>This field is required</Typography>
-                )}
               </Grid>
               <Grid
                 marginY={"20px"}
@@ -361,22 +357,20 @@ const Login = () => {
                 item
                 xs={12}
               >
-                <FormLabel style={{ marginBottom: "0.5rem" }}>
+                <FormLabel style={{ marginBottom: "0.9rem" }}>
                   Password
                 </FormLabel>
                 <OutlinedInput
+                required
                   {...register("password", { required: true, minLength: 6 })}
                   style={{
                     ...OutlinedInputStyle,
-                    border: `${errors.password && "solid 0.5px #eb0000"}`,
+                    marginTop:"6px"
                   }}
                   placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                   type="password"
                   fullWidth
                 />
-                {errors?.password && (
-                  <Typography>This field is required</Typography>
-                )}
               </Grid>
               <Grid
                 marginY={"20px"}
