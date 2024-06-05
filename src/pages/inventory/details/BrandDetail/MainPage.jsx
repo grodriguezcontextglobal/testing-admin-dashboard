@@ -50,7 +50,7 @@ const MainPageBrand = () => {
                     <Typography
                         style={TextFontSize30LineHeight38}
                     >
-                        Locations
+                       Brands
                     </Typography>
                 </Grid>
                 <Grid

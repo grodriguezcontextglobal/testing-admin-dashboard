@@ -50,7 +50,7 @@ const MainPage = () => {
                     <Typography
                         style={TextFontSize30LineHeight38}
                     >
-                        Group
+                        Locations
                     </Typography>
                 </Grid>
                 <Grid

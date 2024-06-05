@@ -29,7 +29,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     });
 
     const itemsInInventoryQuery = useQuery({
-        queryKey: ['deviceInInventoryPerLocation'],
+        queryKey: ['deviceInInventoryPerBrand'],
         queryFn: () => devitrakApi.post("/db_item/consulting-item", {
             company: user.company,
             brand: decodeURI(location.search.slice(1))
