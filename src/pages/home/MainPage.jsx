@@ -69,7 +69,6 @@ const MainPage = () => {
   checkForActiveSubscriptionPerCompany();
   useEffect(() => {
     const controller = new AbortController();
-    totalConsumers();
     inventoryQuery.refetch();
     companiesCheck.refetch();
     subscriptionPerCompanyQuery.refetch();
@@ -77,7 +76,24 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [notificationStatus, inventory.length, user.company]);
+  }, [
+    notificationStatus,
+    inventoryQuery.data,
+    inventoryQuery.isLoading,
+    inventory.length,
+    user.company,
+  ]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    totalConsumers();
+    return () => {
+      controller.abort();
+    };
+  }, [
+    inventoryQuery.data,
+    inventoryQuery.isLoading,
+  ]);
 
   const checkUserAssignedCompanies = () => {
     const result = new Set();
@@ -208,7 +224,7 @@ const MainPage = () => {
         </Typography>
       </Grid>
       <Divider />
-      {inventory.length > 0 ? (
+      {inventoryQuery?.data?.data?.items.length > 0 ? (
         <>
           <Grid
             textAlign={"right"}
