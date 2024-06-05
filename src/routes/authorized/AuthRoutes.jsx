@@ -199,7 +199,7 @@ const AuthRoutes = () => {
             </Route>
             <Route path="search-result-page" element={<SearchResultPage />} />
             <Route path="login" element={<RedirectionPage />} />
-            <Route path="register" element={<RedirectionPage />} />
+            <Route path="register/company-setup" element={<RedirectionPage />} />
             <Route path="/*" element={<ErrorPage />} />
           </Route>
         </Routes>
