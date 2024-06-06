@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
 import _ from "lodash";
 import pkg from "prop-types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -366,31 +366,115 @@ const ItemTable = ({ searchItem }) => {
       ),
     },
   ];
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const onSelectChange = (newSelectedRowKeys) => {
+    if (selectedRowKeys.length > 2)
+      return alert("Reached out max locations allowed.");
 
+    if (selectedRowKeys.some((element) => element === newSelectedRowKeys)) {
+      const result = selectedRowKeys.filter(
+        (element) => element !== newSelectedRowKeys
+      );
+      return setSelectedRowKeys(result);
+    }
+    return setSelectedRowKeys(newSelectedRowKeys);
+  };
   const optionsToRenderInDetailsHtmlTags = [
     {
       title: "Locations",
       data: sortingByParameters("location"),
       open: true,
+      displayCards: selectedRowKeys.length > 0,
       routeTitle: "location",
+      renderSelectedOptions: [],
+      renderMoreOptions: true,
+      rowSelection: {
+        selectedRowKeys,
+        onChange: onSelectChange,
+      },
+      columns: [
+        {
+          title: "Locations name",
+          dataIndex: "key",
+          key: "key",
+          render: (key) => <p style={Subtitle}>{key}</p>,
+        },
+        {
+          title: "Total device",
+          dataIndex: "value",
+          key: "value",
+          render: (value) => <p style={Subtitle}>{value}</p>,
+        },
+        {
+          title: "",
+          dataIndex: "action",
+          key: "action",
+          render: (_, record) => (
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
+              <button
+                onClick={() => console.log(record)}
+                style={{
+                  backgroundColor: "transparent",
+                  outline: "none",
+                  margin: 0,
+                  padding: 0,
+                }}
+              >
+                <RightNarrowInCircle />
+              </button>
+            </div>
+          ),
+        },
+      ],
     },
     {
       title: "Category",
       data: sortingByParameters("category_name"),
       open: false,
       routeTitle: "category_name",
+      renderMoreOptions: false,
+      columns: [
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ],
     },
     {
       title: "Groups",
       data: sortingByParameters("item_group"),
       open: false,
       routeTitle: "group",
+      renderMoreOptions: false,
+      columns: [
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ],
     },
     {
       title: "Brands",
       data: sortingByParameters("brand"),
       open: false,
       routeTitle: "brand",
+      renderMoreOptions: false,
+      columns: [
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ],
     },
   ];
   return (
@@ -449,6 +533,22 @@ const ItemTable = ({ searchItem }) => {
                   );
                 })}
               </Grid>
+              {item.renderMoreOptions && (
+                <Table
+                  pagination={{
+                    position: ["bottomCenter"],
+                    pageSizeOptions: [10, 20, 30, 50, 100],
+                    total: item.data.length,
+                    defaultPageSize: 10,
+                    defaultCurrent: 1,
+                  }}
+                  style={{ width: "100%" }}
+                  rowSelection={item.rowSelection}
+                  columns={item.columns}
+                  dataSource={item.data}
+                  className="table-ant-customized"
+                />
+              )}
             </details>
             <Divider />
           </Grid>
@@ -589,5 +689,4 @@ export default ItemTable;
 
 ItemTable.propTypes = {
   searchItem: PropTypes.string,
-  location: PropTypes.object,
 };
