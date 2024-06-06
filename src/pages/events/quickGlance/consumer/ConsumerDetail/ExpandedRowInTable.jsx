@@ -1,6 +1,6 @@
-import { Link, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Popconfirm, Space, Table } from "antd";
+import { Popconfirm, Space, Table, notification } from "antd";
 import _ from "lodash";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +18,7 @@ import "../../../../../styles/global/ant-table.css";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 
 const ExpandedRowInTable = ({ rowRecord }) => {
-  const { event } = useSelector((state) => state.event);
+     const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -58,6 +58,13 @@ const ExpandedRowInTable = ({ rowRecord }) => {
 
   const refetchingFn = () => {
     return deviceAssignedListQuery.refetch();
+  };
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (message) => {
+    api.open({
+      message: message,
+      placement: "bottomRight",
+    });
   };
 
   const foundAllTransactionsAndDevicesAssigned = () => {
@@ -163,6 +170,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
               )}/${encodeURI(event.company)}/${customer.uid}`,
             }
           );
+          openNotificationWithIcon("Device returned.");
         }
       }
     } catch (error) {
@@ -236,6 +244,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
               event.eventInfoDetail.eventName
             )}/${encodeURI(event.company)}/${customer.uid}`,
           });
+          openNotificationWithIcon("Device assigned.");
         }
       }
     } catch (error) {
@@ -264,12 +273,27 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     }
   };
 
+  const checkingRenderBackgroundColor = (props, col1, col2, col3) => {
+    if (typeof props === "string") {
+      return col1;
+    } else {
+      if (props) return col2;
+      return col3;
+    }
+  };
+  const checkingRenderStatus = (props) => {
+    if (typeof props === "string") {
+      return props;
+    } else {
+      return props ? "In-use" : "Returned";
+    }
+  };
+
   const columns = [
     {
       title: "Device serial number",
       dataIndex: "serialNumber",
       key: "serialNumber",
-      // ...getColumnSearchProps("serialNumber"),
       sorter: {
         compare: (a, b) => ("" + a.serialNumber).localeCompare(b.serialNumber),
       },
@@ -318,24 +342,32 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             borderRadius: "8px",
             display: "flex",
             alignItems: "center",
-            backgroundColor: "#ECFDF3",
-            color: "#027A48",
+            backgroundColor: checkingRenderBackgroundColor(
+              status,
+              "#ffb5b5",
+              "#ffe4b5",
+              "#ECFDF3"
+            ),
+            color: checkingRenderBackgroundColor(
+              status,
+              "#ad0101",
+              "#714904",
+              "#027A48"
+            ),
           }}
         >
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontWeight={400}
-            fontSize={"14px"}
-            fontFamily={"Inter"}
-            lineHeight={"24px"}
+          <p
+            style={{
+              textTransform: "none",
+              textAlign: "left",
+              fontWeight: 400,
+              fontSize: "14px",
+              fontFamily: "Inter",
+              lineHeight: "24px",
+            }}
           >
-            {typeof status === "string"
-              ? status
-              : status
-              ? "In-use"
-              : "Returned"}
-          </Typography>
+            {checkingRenderStatus(status)}
+          </p>
         </span>
       ),
     },
@@ -347,92 +379,103 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       render: (_, record) => (
         <Space size="middle">
           {record.status === "Lost" || record.status === false ? (
-            <Link
-              component="button"
-              underline="none"
+            <button
+              onClick={() => handleAssignSingleDevice(record)}
               disabled={String(record.status).toLowerCase() === "lost"}
               style={{
                 width: "fit-content",
-                border: "1px solid var(--blue-dark-600, #155EEF)",
+                border: `${
+                  String(record.status).toLowerCase() === "lost"
+                    ? "1px solid var(--disabled-blue-button)"
+                    : "1px solid var(--blue-dark-600, #155EEF)"
+                }`,
+                backgroundColor: `${
+                  String(record.status).toLowerCase() === "lost"
+                    ? "var(--disabled-blue-button)"
+                    : "var(--blue-dark-600, #155EEF)"
+                }`,
                 borderRadius: "8px",
                 boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 padding: "5px",
               }}
             >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={400}
-                fontSize={"16px"}
-                fontFamily={"Inter"}
-                lineHeight={"24px"}
-                color={"var(--blue-dark-600, #155EEF)"}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleAssignSingleDevice(record)}
+              <p
+                style={{
+                  cursor: "pointer",
+                  textTransform: "none",
+                  textAlign: "left",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  fontFamily: "Inter",
+                  lineHeight: "24px",
+                  color: "var(--basewhite)",
+                }}
               >
                 Assign
-              </Typography>
-            </Link>
+              </p>
+            </button>
           ) : (
-            <Link
+            <button
+              onClick={() => handleReturnSingleDevice(record)}
               disabled={!event.active}
-              component="button"
-              underline="none"
               style={{
                 width: "fit-content",
                 border: "1px solid var(--error-700, #B42318)",
+                backgroundColor: "var(--error-700, #B42318)",
                 borderRadius: "8px",
                 boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 padding: "5px",
                 color: "#B42318",
               }}
             >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={400}
-                fontSize={"16px"}
-                fontFamily={"Inter"}
-                lineHeight={"24px"}
-                color={"var(--error-700, #B42318)"}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleReturnSingleDevice(record)}
+              <p
+                style={{
+                  cursor: "pointer",
+                  textTransform: "none",
+                  textAlign: "left",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  fontFamily: "Inter",
+                  lineHeight: "24px",
+                  color: "var(--basewhite)",
+                }}
               >
                 Return
-              </Typography>
-            </Link>
+              </p>
+            </button>
           )}
           {record.status === true && (
-            <Link
+            <button
+              onClick={() => {
+                dispatch(onTriggerModalToReplaceReceiver(true));
+                dispatch(onReceiverObjectToReplace(record));
+                handleRecord(rowRecord);
+              }}
               disabled={!event.active}
-              component="button"
-              underline="none"
               style={{
                 width: "fit-content",
                 border: "1px solid var(--blue-dark-600, #155EEF)",
+                backgroundColor: "var(--blue-dark-600, #155EEF)",
                 borderRadius: "8px",
                 boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 padding: "5px",
               }}
             >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={400}
-                fontSize={"16px"}
-                fontFamily={"Inter"}
-                lineHeight={"24px"}
-                color={""}
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  dispatch(onTriggerModalToReplaceReceiver(true));
-                  dispatch(onReceiverObjectToReplace(record));
-                  handleRecord(rowRecord);
+              <p
+                style={{
+                  cursor: "pointer",
+                  textTransform: "none",
+                  textAlign: "left",
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  fontFamily: "Inter",
+                  lineHeight: "24px",
+                  color: "var(--basewhite)",
                 }}
               >
                 Replace
-              </Typography>
-            </Link>
+              </p>
+            </button>
           )}
           {record.status === true &&
             event.staff.adminUser.some(
@@ -442,31 +485,20 @@ const ExpandedRowInTable = ({ rowRecord }) => {
                 title="Are you sure it is lost?"
                 onConfirm={() => handleLostSingleDevice(record)}
               >
-                <Link
-                  disabled={!event.active}
-                  component="button"
-                  underline="none"
+                <p
                   style={{
-                    width: "fit-content",
-                    border: "1px solid var(--blue-dark-600, #155EEF)",
-                    borderRadius: "8px",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    padding: "5px",
+                    cursor: "pointer",
+                    textTransform: "none",
+                    textAlign: "left",
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    fontFamily: "Inter",
+                    lineHeight: "24px",
+                    color: "#000",
                   }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    fontWeight={400}
-                    fontSize={"16px"}
-                    fontFamily={"Inter"}
-                    lineHeight={"24px"}
-                    color={""}
-                    style={{ cursor: "pointer" }}
-                  >
-                    Lost
-                  </Typography>
-                </Link>
+                  Lost
+                </p>
               </Popconfirm>
             )}
         </Space>
@@ -475,6 +507,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
   ];
   return (
     <>
+      {contextHolder}
       <div
         style={{
           display: `${
@@ -502,7 +535,6 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       )}
     </>
   );
-  // };
 };
 
 export default ExpandedRowInTable;
