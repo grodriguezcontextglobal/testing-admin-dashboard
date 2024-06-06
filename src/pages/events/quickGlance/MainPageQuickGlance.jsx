@@ -105,9 +105,6 @@ const MainPageQuickGlance = () => {
     eventAttendeesParametersQuery.data
   ) {
     const foundAllDevicesGivenInEvent = () => {
-      // const check = receiversPoolQuery?.data?.data?.receiversInventory?.filter(
-      //   (item) => item.eventSelected === choice && item.provider === company
-      // );
       const check = receiversPoolQuery?.data?.data?.receiversInventory;
       return check;
     };
@@ -116,9 +113,6 @@ const MainPageQuickGlance = () => {
     };
 
     const foundAttendeesPerEvent = () => {
-      // const check = eventAttendeesQuery.data.data.users?.filter((item) =>
-      //   item?.eventSelected?.find((item) => item === choice)
-      // );
       const check = eventAttendeesParametersQuery.data.data.users;
       return check;
     };
@@ -236,15 +230,19 @@ const MainPageQuickGlance = () => {
             {checkStaffRoleToDisplayCashReportInfo() && (
               <Link to="/event/new_subscription">
                 <button style={BlueButton}>
-                  <WhitePlusIcon />
-                  &nbsp;
+                  <span style={{ ...CenteringGrid, alignSelf: "stretch" }}>
+                    <WhitePlusIcon />
+                  </span>
+                  {/* &nbsp; */}
                   <p style={BlueButtonText}>Add new event</p>
                 </button>
               </Link>
             )}
             <button
               onClick={() => setCreateUserButton(true)}
-              style={BlueButton}
+              style={{
+                ...BlueButton,
+              }}
             >
               <p style={{ ...BlueButtonText, textTransform: "none" }}>
                 Add new consumer
@@ -417,9 +415,9 @@ const MainPageQuickGlance = () => {
               style={{
                 ...BlueButton,
                 width: "fit-content",
-                display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                display: user.role === "4" ? "none" : "flex",
               }}
             >
               <p style={BlueButtonText}>Update inventory</p>
@@ -583,7 +581,7 @@ const MainPageQuickGlance = () => {
             style={{
               ...BlueButton,
               width: "fit-content",
-              display: "flex",
+              display: user.role === "4" ? "none" : "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}

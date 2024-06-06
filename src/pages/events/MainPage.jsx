@@ -265,7 +265,7 @@ const MainPage = () => {
                     )
                   )
                 }
-                style={BlueButton}
+                style={{ ...BlueButton, display: user.role === "4" && "none" }}
               >
                 <WhitePlusIcon />
                 <Typography style={BlueButtonText}>Add new event</Typography>
