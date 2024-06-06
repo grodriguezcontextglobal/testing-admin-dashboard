@@ -11,6 +11,7 @@ import {
   notification,
 } from "antd";
 import _ from "lodash";
+import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,7 +28,6 @@ import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import PropTypes from "prop-types";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
@@ -176,6 +176,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         dispatch(onAddEventStaff(responseUpdating.data.event.staff));
       }
     };
+
     const handleChange = (value) => {
       return setRoleSelected(value);
     };
@@ -344,6 +345,17 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       }
       return "none";
     };
+    const checkAdminSpots = () => {
+      const data = event.staff.adminUser;
+      let index = 1;
+      for (let staff of data) {
+        if (staff.role === "Administrator") {
+          index += 1;
+        }
+      }
+      return index;
+    };
+
     return (
       <Modal
         open={editingStaff}
@@ -388,14 +400,19 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     {
                       value: "administrator",
                       label: "Event administrator",
+                      disabled: event.subscription.adminUser
+                        ? checkAdminSpots() === event.subscription.adminUser
+                        : true,
                     },
                     {
                       value: "headsetAttendee",
                       label: "Event headset Attendees",
+                      disabled: false,
                     },
                     {
                       value: "eventStaffOnly",
                       label: "Event staff only",
+                      disabled: false,
                     },
                   ]}
                 ></Select>
@@ -416,10 +433,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     display: displayMessage(),
                   }}
                 >
-                  Staff members are not initially assigned to the company as
-                  employees. By clicking the &quot;Add Staff&quot; button, a
-                  staff member will be added to the company as an employee at{" "}
-                  {event.company}.
+                  Add staff members not currently registered with{" "}
+                  {event.company}. By clicking the &quot;Add staff&quot; button,
+                  this user will be added to the company staff in devitrak.
                 </p>
               </div>
               <div
