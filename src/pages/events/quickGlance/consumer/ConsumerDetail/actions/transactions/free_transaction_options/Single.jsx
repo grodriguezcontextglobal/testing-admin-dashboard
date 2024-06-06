@@ -1,4 +1,5 @@
 import { Button, OutlinedInput, Typography } from "@mui/material";
+import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select } from "antd";
 import _ from "lodash";
@@ -10,7 +11,6 @@ import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelec
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
-import { nanoid } from "@reduxjs/toolkit";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
@@ -29,9 +29,8 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     refetchOnMount: false,
     staleTime: Infinity,
   });
-  const queryClient = useQueryClient();
   const reference = useRef(null);
-
+  const queryClient = useQueryClient();
   useEffect(() => {
     const controller = new AbortController();
     deviceTrackInPoolQuery.refetch();
@@ -178,10 +177,26 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             "/stripe/save-transaction",
             transactionProfile
           );
-          queryClient.invalidateQueries("transactionListQuery");
-          queryClient.invalidateQueries("listOfDevicesAssigned");
-          alert("Device assigned successfully");
-        //   await refetchingTransactionFn()
+          await queryClient.refetchQueries({
+            queryKey: ["transactionListQuery"],
+            exact: true,
+          });
+          await queryClient.refetchQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          });
+
+          await queryClient.refetchQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          });
+          await queryClient.refetchQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          });
+          alert(
+            "Device assigned successfully. If transaction/device are not showed in table, please click 'Refresh button' in header of the transaction table."
+          );
           await closeModal();
         }
       } catch (error) {
