@@ -15,11 +15,6 @@ import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import FreeTransaction from "./actions/transactions/FreeTransaction";
 import ConsumerDetails from "./details/ConsumerDetails";
 import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
-// import "../../Events/quickGlance/FormatEventDetailInfo.css";
-// import { ModalCreateTransactionForNoRegularUser } from "../transactionOptions/ModalCreateTransactionForNoRegularUser";
-// import { ModalPaidTransaction } from "../transactionOptions/ModalPaidTransaction";
-// import { ModalPaidTransactionChargeOption } from "../transactionOptions/ModalPaidTransactionChargeOption";
-// import ModalCashDepositTransaction from "../transactionOptions/ModalCashDepositTransaction";
 
 const items = [
     {
