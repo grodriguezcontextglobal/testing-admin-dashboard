@@ -38,11 +38,7 @@ import "./style/authStyle.css";
 import PropTypes from "prop-types";
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    setValue
-  } = useForm();
+  const { register, handleSubmit, setValue } = useForm();
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
@@ -174,6 +170,7 @@ const Login = () => {
           company: props.company_name,
           token: respo.data.token,
           online: updatingOnlineStatusResponse.data.entire.online,
+          companyData: props.company_data[0],
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
             ...companyInfoTable.data.company.at(-1),
@@ -222,6 +219,7 @@ const Login = () => {
               password: data.password,
               company_name: infoFound[0].company,
               role: infoFound[0].role,
+              company_data: userFoundInCompany,
             },
           });
         }
@@ -229,6 +227,7 @@ const Login = () => {
           const storeData = (dataPassed.current = {
             ...data,
             companyInfo: infoFound,
+            company_data: userFoundInCompany,
           });
           return storeData;
         }
@@ -339,12 +338,12 @@ const Login = () => {
               >
                 <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
                 <OutlinedInput
-                required
+                  required
                   {...register("email", { required: true, minLength: 10 })}
                   type="email"
                   style={{
                     ...OutlinedInputStyle,
-                    marginTop:"6px"
+                    marginTop: "6px",
                   }}
                   placeholder="Enter your email"
                   fullWidth
@@ -361,11 +360,11 @@ const Login = () => {
                   Password
                 </FormLabel>
                 <OutlinedInput
-                required
+                  required
                   {...register("password", { required: true, minLength: 6 })}
                   style={{
                     ...OutlinedInputStyle,
-                    marginTop:"6px"
+                    marginTop: "6px",
                   }}
                   placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                   type="password"
@@ -515,6 +514,7 @@ Login.propTypes = {
   email: PropTypes.string.isRequired,
   password: PropTypes.string.isRequired,
   company_name: PropTypes.string.isRequired,
+  company_data: PropTypes.object.isRequired,
   role: PropTypes.string.isRequired,
 };
 

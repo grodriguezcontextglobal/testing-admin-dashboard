@@ -164,6 +164,8 @@ const RegisterCompany = () => {
             active: true,
             super_user: false,
             role: "0",
+            inventory_location: [],
+          
           },
         ],
 
@@ -261,6 +263,7 @@ const RegisterCompany = () => {
           status: "confirmed",
           super_user: true,
           role: "0",
+          inventory_location: [],        
         },
       ],
     };
