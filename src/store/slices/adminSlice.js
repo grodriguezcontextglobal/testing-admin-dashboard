@@ -16,6 +16,7 @@ const adminSlice = createSlice({
     },
     errorMessage: undefined,
     companyAccountStripe: undefined,
+    companyInfo:undefined
   },
   reducers: {
     onChecking: (state) => {
@@ -40,8 +41,9 @@ const adminSlice = createSlice({
         imageProfile: "",
         rowImageProfile: undefined
       };
-      state.companyAccountStripe = undefined;
-    },
+      state.companyAccountStripe= undefined;
+      state.companyInfo=undefined
+      },
     clearErrorMessage: (state) => {
       state.errorMessage = undefined;
     },
