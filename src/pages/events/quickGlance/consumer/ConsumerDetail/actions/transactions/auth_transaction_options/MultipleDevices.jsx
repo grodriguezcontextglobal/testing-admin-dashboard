@@ -33,7 +33,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
     staleTime: Infinity,
   });

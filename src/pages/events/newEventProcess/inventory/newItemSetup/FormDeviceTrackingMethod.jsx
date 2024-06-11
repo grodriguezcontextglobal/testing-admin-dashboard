@@ -10,12 +10,15 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Tooltip } from "antd";
-import _ from 'lodash';
+import _ from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { QuestionIcon, UploadIcon } from "../../../../../components/icons/Icons";
+import {
+  QuestionIcon,
+  UploadIcon,
+} from "../../../../../components/icons/Icons";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -25,17 +28,17 @@ import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import '../../../../../styles/global/ant-select.css';
+import "../../../../../styles/global/ant-select.css";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
   setSelectedItem,
   setDisplayFormToCreateCategory,
-  existingData
+  existingData,
 }) => {
-  const [taxableLocation, setTaxableLocation] = useState('')
-  const [choose, setChoose] = useState([])
+  const [taxableLocation, setTaxableLocation] = useState("");
+  const [choose, setChoose] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -43,107 +46,135 @@ const FormDeviceTrackingMethod = ({
     setValue,
     formState: { errors },
   } = useForm();
-  const [loading, setLoading] = useState(false)
-  const [locationSelection, setLocationSelection] = useState('')
+  const [loading, setLoading] = useState(false);
+  const [locationSelection, setLocationSelection] = useState("");
 
   const companiesQuery = useQuery({
-    queryKey: ['locationOptionsPerCompany'],
-    queryFn: () => devitrakApi.post('/company/search-company', {
-      company_name: user.company
-    }),
-    enabled: false,
-    refetchOnMount: false
-  })
+    queryKey: ["locationOptionsPerCompany"],
+    queryFn: () =>
+      devitrakApi.post("/company/search-company", {
+        company_name: user.company,
+      }),
+    // enabled: false,
+    refetchOnMount: false,
+  });
   const itemsInInventoryQuery = useQuery({
-    queryKey: ['ItemsInInventoryCheckingQuery'],
-    queryFn: () => devitrakApi.post("/db_item/consulting-item", {
-      company: user.company
-    }),
-    enabled: false,
-    refetchOnMount: false
-  })
+    queryKey: ["ItemsInInventoryCheckingQuery"],
+    queryFn: () =>
+      devitrakApi.post("/db_item/consulting-item", {
+        company: user.company,
+      }),
+    // enabled: false,
+    refetchOnMount: false,
+  });
   useEffect(() => {
-    const controller = new AbortController()
-    companiesQuery.refetch()
-    itemsInInventoryQuery.refetch()
+    const controller = new AbortController();
+    companiesQuery.refetch();
+    itemsInInventoryQuery.refetch();
     return () => {
-      controller.abort()
-    }
-  }, [])
+      controller.abort();
+    };
+  }, []);
 
   const retrieveItemOptions = () => {
-    const result = new Set()
+    const result = new Set();
     if (existingData) {
       for (let [, value] of existingData) {
-        result.add(value.item_group)
+        result.add(value.item_group);
       }
     }
-    return Array.from(result)
-  }
+    return Array.from(result);
+  };
   const renderLocationOptions = () => {
     if (companiesQuery.data) {
-      const locations = companiesQuery?.data?.data?.company?.at(-1)?.location ?? []
-      const result = new Set()
+      const locations =
+        companiesQuery?.data?.data?.company?.at(-1)?.location ?? [];
+      const result = new Set();
       for (let data of locations) {
-        result.add({ value: data })
+        result.add({ value: data });
       }
-      return Array.from(result)
+      return Array.from(result);
     }
-    return []
-  }
+    return [];
+  };
   const retrieveItemDataSelected = () => {
-    const result = new Map()
+    const result = new Map();
     if (itemsInInventoryQuery.data) {
-      const industryData = itemsInInventoryQuery?.data?.data?.items
+      const industryData = itemsInInventoryQuery?.data?.data?.items;
       for (let data of industryData) {
-        result.set(data.item_group, data)
+        result.set(data.item_group, data);
       }
     }
-    return result
-  }
+    return result;
+  };
 
   useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
     if (retrieveItemDataSelected().has(choose)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(choose)
-      setValue('category_name', `${dataToRetrieve.category_name}`)
-      setValue('cost', `${dataToRetrieve.cost}`)
-      setValue('brand', `${dataToRetrieve.brand}`)
-      setValue('descript_item', `${dataToRetrieve.descript_item}`)
-      setLocationSelection(`${dataToRetrieve.location}`)
-      setTaxableLocation(`${dataToRetrieve.main_warehouse}`)
+      const dataToRetrieve = retrieveItemDataSelected().get(choose);
+      setValue("category_name", `${dataToRetrieve.category_name}`);
+      setValue("cost", `${dataToRetrieve.cost}`);
+      setValue("brand", `${dataToRetrieve.brand}`);
+      setValue("descript_item", `${dataToRetrieve.descript_item}`);
+      setLocationSelection(`${dataToRetrieve.location}`);
+      setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
     }
 
     return () => {
-      controller.abort()
-    }
-  }, [choose])
+      controller.abort();
+    };
+  }, [choose]);
 
   const savingNewItem = async (data) => {
-    const dataDevices = itemsInInventoryQuery.data.data.items
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group")
-    let checkExistingDevice = []
+    const dataDevices = itemsInInventoryQuery.data.data.items;
+    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    let checkExistingDevice = [];
     let base64;
     if (choose === "") return alert("A group of item must be provided.");
-    if (taxableLocation === "") return alert("A taxable location must be provided.");
-    for (let index = Number(data.startingNumber); index < Number(data.endingNumber); index++) {
+    if (taxableLocation === "")
+      return alert("A taxable location must be provided.");
+    for (
+      let index = Number(data.startingNumber);
+      index < Number(data.endingNumber);
+      index++
+    ) {
       if (groupingByDeviceType[choose]) {
-        const dataRef = _.groupBy(groupingByDeviceType[choose], "serial_number")
-        if (dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
-          checkExistingDevice = [...checkExistingDevice, ...dataRef[String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]]
+        const dataRef = _.groupBy(
+          groupingByDeviceType[choose],
+          "serial_number"
+        );
+        if (
+          dataRef[
+            String(index).padStart(
+              data.startingNumber.length,
+              `${data.startingNumber[0]}`
+            )
+          ]
+        ) {
+          checkExistingDevice = [
+            ...checkExistingDevice,
+            ...dataRef[
+              String(index).padStart(
+                data.startingNumber.length,
+                `${data.startingNumber[0]}`
+              )
+            ],
+          ];
         }
       }
     }
     if (checkExistingDevice.length > 0) {
-      return alert("Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.")
+      return alert(
+        "Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store."
+      );
     }
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
-      setLoading(false)
+      setLoading(false);
       return alert(
         "Image is bigger than allow. Please resize the image or select a new one."
       );
     } else if (data.photo.length > 0) {
-      setLoading(true)
+      setLoading(true);
       base64 = await convertToBase64(data.photo[0]);
       const resp = await devitrakApi.post(`/image/new_image`, {
         source: base64,
@@ -153,7 +184,67 @@ const FormDeviceTrackingMethod = ({
       });
       if (resp.data) {
         try {
-          const resulting = [...selectedItem, {
+          const resulting = [
+            ...selectedItem,
+            {
+              category_name: data.category_name,
+              item_group: choose,
+              cost: data.cost,
+              brand: data.brand,
+              descript_item: data.descript_item,
+              ownership: "Rent",
+              startingNumber: data.startingNumber,
+              endingNumber: data.endingNumber,
+              main_warehouse: taxableLocation,
+              location: locationSelection,
+              current_location: locationSelection,
+              created_at: formatDate(new Date()),
+              updated_at: formatDate(new Date()),
+              company: user.company,
+              quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
+              existing: false,
+            },
+          ];
+          setSelectedItem(resulting);
+          setLoading(false);
+          if (
+            !renderLocationOptions().some(
+              (element) => element.value === locationSelection
+            )
+          ) {
+            let template = [
+              ...companiesQuery.data.data.company.at(-1).location,
+              locationSelection,
+            ];
+            await devitrakApi.patch(
+              `/company/update-company/:${
+                companiesQuery.data.data.company.at(-1).id
+              }`,
+              {
+                location: template,
+              }
+            );
+          }
+          setValue("category_name", "");
+          setValue("item_group", "");
+          setValue("cost", "");
+          setValue("brand", "");
+          setValue("descript_item", "");
+          setValue("ownership", "");
+          setValue("startingNumber", "");
+          setValue("endingNumber", "");
+          setLoading(false);
+          setDisplayFormToCreateCategory(false);
+        } catch (error) {
+          setLoading(false);
+        }
+      }
+    } else if (data.photo.length < 1) {
+      setLoading(true);
+      try {
+        const resulting = [
+          ...selectedItem,
+          {
             category_name: data.category_name,
             item_group: choose,
             cost: data.cost,
@@ -167,102 +258,72 @@ const FormDeviceTrackingMethod = ({
             current_location: locationSelection,
             created_at: formatDate(new Date()),
             updated_at: formatDate(new Date()),
-            company: user.company, quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
-            existing: false
-
-          }]
-          setSelectedItem(resulting)
-          setLoading(false)
-          if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-            let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
-            await devitrakApi.patch(`/company/update-company/:${companiesQuery.data.data.company.at(-1).id}`, {
-              location: template
-            })
-          }
-          setValue("category_name", "");
-          setValue("item_group", "");
-          setValue("cost", "");
-          setValue("brand", "");
-          setValue("descript_item", "");
-          setValue("ownership", "");
-          setValue("startingNumber", "")
-          setValue("endingNumber", "")
-          setLoading(false)
-          setDisplayFormToCreateCategory(false)
-        } catch (error) {
-          setLoading(false)
+            company: user.company,
+            quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
+            existing: false,
+          },
+        ];
+        if (
+          !renderLocationOptions().some(
+            (element) => element.value === locationSelection
+          )
+        ) {
+          let template = [
+            ...companiesQuery.data.data.company.at(-1).location,
+            locationSelection,
+          ];
+          await devitrakApi.patch(
+            `/company/update-company/${
+              companiesQuery.data.data.company.at(-1).id
+            }`,
+            {
+              location: template,
+            }
+          );
         }
-      }
-    } else if (data.photo.length < 1) {
-      setLoading(true)
-      try {
-        const resulting = [...selectedItem, {
-          category_name: data.category_name,
-          item_group: choose,
-          cost: data.cost,
-          brand: data.brand,
-          descript_item: data.descript_item,
-          ownership: "Rent",
-          startingNumber: data.startingNumber,
-          endingNumber: data.endingNumber,
-          main_warehouse: taxableLocation,
-          location: locationSelection,
-          current_location: locationSelection,
-          created_at: formatDate(new Date()),
-          updated_at: formatDate(new Date()),
-          company: user.company,
-          quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
-          existing: false
-
-        }]
-        if (!renderLocationOptions().some(element => element.value === locationSelection)) {
-          let template = [...companiesQuery.data.data.company.at(-1).location, locationSelection]
-          await devitrakApi.patch(`/company/update-company/${companiesQuery.data.data.company.at(-1).id}`, {
-            location: template
-          })
-        }
-        setSelectedItem(resulting)
-        setLoading(false)
-        setDisplayFormToCreateCategory(false)
+        setSelectedItem(resulting);
+        setLoading(false);
+        setDisplayFormToCreateCategory(false);
       } catch (error) {
-        setLoading(false)
+        setLoading(false);
       }
       // }
     }
   };
   const renderTitle = () => {
-    return (<>
-      <InputLabel
-        id="eventName"
-        style={{ marginBottom: "0.2rem", width: "100%" }}
-      >
-        <Typography
-          textAlign={'left'}
-          textTransform={"none"}
-          style={TextFontSize20LineHeight30}
-          color={"var(--gray600, #475467)"}
+    return (
+      <>
+        <InputLabel
+          id="eventName"
+          style={{ marginBottom: "0.2rem", width: "100%" }}
         >
-          Add a group of devices
-        </Typography>
-      </InputLabel>
-      <InputLabel
-        id="eventName"
-        style={{ marginBottom: "0.2rem", width: "100%" }}
-      >
-        <Typography
-          textAlign={'left'}
-          textTransform={"none"}
-          style={{ ...TextFontSize20LineHeight30, textWrap: "pretty" }}
-          color={"var(--gray600, #475467)"}
+          <Typography
+            textAlign={"left"}
+            textTransform={"none"}
+            style={TextFontSize20LineHeight30}
+            color={"var(--gray600, #475467)"}
+          >
+            Add a group of devices
+          </Typography>
+        </InputLabel>
+        <InputLabel
+          id="eventName"
+          style={{ marginBottom: "0.2rem", width: "100%" }}
         >
-          Devices serial numbers can be created by inputting a serial number base
-          to define the category of device, and then a range from one number to
-          another, depending on your inventory.
-        </Typography>
-      </InputLabel>
-    </>
-    )
-  }
+          <Typography
+            textAlign={"left"}
+            textTransform={"none"}
+            style={{ ...TextFontSize20LineHeight30, textWrap: "pretty" }}
+            color={"var(--gray600, #475467)"}
+          >
+            Devices serial numbers can be created by inputting a serial number
+            base to define the category of device, and then a range from one
+            number to another, depending on your inventory.
+          </Typography>
+        </InputLabel>
+      </>
+    );
+  };
   return (
     <Grid
       display={"flex"}
@@ -326,8 +387,7 @@ const FormDeviceTrackingMethod = ({
                 textAlign: "left",
                 width: "50%",
               }}
-            >
-            </div>
+            ></div>
           </div>
           <div
             style={{
@@ -350,28 +410,28 @@ const FormDeviceTrackingMethod = ({
               style={{
                 ...AntSelectorStyle,
                 border: "solid 0.3 var(--gray600)",
-                fontFamily: 'Inter',
+                fontFamily: "Inter",
                 fontSize: "14px",
-                width: "100%"
+                width: "100%",
               }}
-
               value={choose}
               onChange={(value) => setChoose(value)}
-              options={retrieveItemOptions().map(item => { return ({ value: item }) })}
+              options={retrieveItemOptions().map((item) => {
+                return { value: item };
+              })}
               placeholder="Type the name of the device"
               filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                -1
               }
             />
 
             <div
-
               style={{
                 textAlign: "left",
                 width: "50%",
               }}
-            >
-            </div>
+            ></div>
           </div>
         </div>
         <div
@@ -420,7 +480,9 @@ const FormDeviceTrackingMethod = ({
                 textAlign={"left"}
                 style={{ ...Subtitle, fontWeight: 500 }}
               >
-                <Tooltip title="Address where tax deduction for equipment will be applied.">Taxable location <QuestionIcon /></Tooltip>
+                <Tooltip title="Address where tax deduction for equipment will be applied.">
+                  Taxable location <QuestionIcon />
+                </Tooltip>
               </Typography>
             </InputLabel>
             <AutoComplete
@@ -430,7 +492,8 @@ const FormDeviceTrackingMethod = ({
               value={taxableLocation}
               placeholder="Select a location"
               filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                -1
               }
               onChange={(value) => setTaxableLocation(value)}
             />
@@ -487,28 +550,35 @@ const FormDeviceTrackingMethod = ({
               width: "50%",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
-            <div style={{
-              textAlign: "left",
-              width: "100%",
-              display: "flex",
-              alignSelf: "flex-start",
-            }}>
+            <div
+              style={{
+                textAlign: "left",
+                width: "100%",
+                display: "flex",
+                alignSelf: "flex-start",
+              }}
+            >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
                   style={{ ...Subtitle, fontWeight: 500 }}
                 >
-                  Ownership status of items <Tooltip title="Device added from this option would be set as rented Device."><strong><QuestionIcon /></strong></Tooltip>
+                  Ownership status of items{" "}
+                  <Tooltip title="Device added from this option would be set as rented Device.">
+                    <strong>
+                      <QuestionIcon />
+                    </strong>
+                  </Tooltip>
                 </Typography>
                 <OutlinedInput
                   disabled
                   style={OutlinedInputStyle}
                   readOnly
-                  value={'Rent'}
+                  value={"Rent"}
                   fullWidth
                 />
               </InputLabel>
@@ -590,7 +660,10 @@ const FormDeviceTrackingMethod = ({
               textAlign={"left"}
               style={{ ...Subtitle, fontWeight: 500 }}
             >
-              Location <Tooltip title="Where the item is location physically."><QuestionIcon /></Tooltip>
+              Location{" "}
+              <Tooltip title="Where the item is location physically.">
+                <QuestionIcon />
+              </Tooltip>
             </Typography>
           </InputLabel>
           <AutoComplete
@@ -600,11 +673,11 @@ const FormDeviceTrackingMethod = ({
             options={renderLocationOptions()}
             placeholder="Select a location"
             filterOption={(inputValue, option) =>
-              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+              -1
             }
             onChange={(value) => setLocationSelection(value)}
           />
-
         </div>
         <div
           style={{
@@ -678,9 +751,10 @@ const FormDeviceTrackingMethod = ({
                 background: "6px solid var(--gray50, #F9FAFB)",
                 borderRadius: "28px",
               }}
-            > <UploadIcon />
+            >
+              {" "}
+              <UploadIcon />
             </Avatar>
-
           </Grid>
           <Grid
             display={"flex"}
@@ -708,9 +782,7 @@ const FormDeviceTrackingMethod = ({
             item
             xs={12}
           >
-            <Typography
-              style={Subtitle}
-            >
+            <Typography style={Subtitle}>
               SVG, PNG, JPG or GIF (max. 1MB)
             </Typography>
           </Grid>
@@ -731,7 +803,8 @@ const FormDeviceTrackingMethod = ({
             style={{
               textAlign: "left",
               width: "50%",
-            }}>
+            }}
+          >
             <Button
               disabled={loading}
               onClick={() => setDisplayFormToCreateCategory(false)}
@@ -744,10 +817,7 @@ const FormDeviceTrackingMethod = ({
                 height={20}
               />
               &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={GrayButtonText}
-              >
+              <Typography textTransform={"none"} style={GrayButtonText}>
                 Go back
               </Typography>
             </Button>
@@ -757,13 +827,15 @@ const FormDeviceTrackingMethod = ({
               textAlign: "right",
               width: "50%",
             }}
-          ><Button
-            disabled={loading}
-            type="submit"
-            style={{
-              ...BlueButton, width: "100%",
-            }}
           >
+            <Button
+              disabled={loading}
+              type="submit"
+              style={{
+                ...BlueButton,
+                width: "100%",
+              }}
+            >
               <Icon
                 icon="ic:baseline-plus"
                 color="var(--base-white, #FFF)"
@@ -771,13 +843,11 @@ const FormDeviceTrackingMethod = ({
                 height={20}
               />
               &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
-              >
+              <Typography textTransform={"none"} style={BlueButtonText}>
                 Save new item
               </Typography>
-            </Button></div>
+            </Button>
+          </div>
         </div>
       </form>
     </Grid>

@@ -31,7 +31,7 @@ const DeleteItemModal = ({
       devitrakApi.post("/company/search-company", {
         company_name: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
@@ -40,7 +40,7 @@ const DeleteItemModal = ({
       devitrakApi.post("/db_item/consulting-item", {
         item_id: dataFound[0].item_id,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const companyInfoQuery = useQuery({
@@ -49,7 +49,7 @@ const DeleteItemModal = ({
       devitrakApi.post("/company/search-company", {
         company_name: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const [api, contextHolder] = notification.useNotification();

@@ -28,7 +28,7 @@ const MainPage = () => {
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
     queryFn: () => devitrakApi.post("/company/companies"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const dispatch = useDispatch();
@@ -38,7 +38,7 @@ const MainPage = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const totalConsumers = useCallback(async () => {
@@ -53,7 +53,7 @@ const MainPage = () => {
       devitrakApi.post("/subscription/search_subscription", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -90,10 +90,7 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [
-    inventoryQuery.data,
-    inventoryQuery.isLoading,
-  ]);
+  }, [inventoryQuery.data, inventoryQuery.isLoading]);
 
   const checkUserAssignedCompanies = () => {
     const result = new Set();

@@ -39,7 +39,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const staffEventQuery = useQuery({
     queryKey: ["staffEvent"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {

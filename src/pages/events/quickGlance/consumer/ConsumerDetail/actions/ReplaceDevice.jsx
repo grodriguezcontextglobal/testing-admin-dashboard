@@ -4,7 +4,7 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
@@ -12,8 +12,14 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import { onReceiverObjectToReplace, onTriggerModalToReplaceReceiver } from "../../../../../../store/slices/helperSlice";
-import { onAddPaymentIntentDetailSelected, onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
+import {
+  onReceiverObjectToReplace,
+  onTriggerModalToReplaceReceiver,
+} from "../../../../../../store/slices/helperSlice";
+import {
+  onAddPaymentIntentDetailSelected,
+  onAddPaymentIntentSelected,
+} from "../../../../../../store/slices/stripeSlice";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
@@ -54,43 +60,46 @@ export const ReplaceDevice = ({ refetching }) => {
 
   const assignedDeviceInTransactionQuery = useQuery({
     queryKey: ["assignedDeviceInTransaction"],
-    queryFn: () => devitrakApi.post('/receiver/receiver-assigned-list', {
-      "eventSelected": event.eventInfoDetail.eventName,
-      "provider": event.company,
-      "device.serialNumber": receiverToReplaceObject.serialNumber,
-      "device.deviceType": receiverToReplaceObject.deviceType,
-      paymentIntent: paymentIntentSelected
-    }),
-    enabled: false,
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-assigned-list", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+        "device.serialNumber": receiverToReplaceObject.serialNumber,
+        "device.deviceType": receiverToReplaceObject.deviceType,
+        paymentIntent: paymentIntentSelected,
+      }),
+    // enabled: false,
     refetchOnMount: false,
-    notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  })
+    notifyOnChangeProps: ["data", "dataUpdatedAt"],
+  });
 
   const deviceInPoolQuery = useQuery({
     queryKey: ["deviceInPoolList"],
-    queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company,
-      device: receiverToReplaceObject.serialNumber,
-      type: receiverToReplaceObject.deviceType
-    }),
-    enabled: false,
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+        device: receiverToReplaceObject.serialNumber,
+        type: receiverToReplaceObject.deviceType,
+      }),
+    // enabled: false,
     refetchOnMount: false,
-    notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  })
+    notifyOnChangeProps: ["data", "dataUpdatedAt"],
+  });
 
   useEffect(() => {
-    const controller = new AbortController()
-    assignedDeviceInTransactionQuery.refetch()
-    deviceInPoolQuery.refetch()
+    const controller = new AbortController();
+    assignedDeviceInTransactionQuery.refetch();
+    deviceInPoolQuery.refetch();
 
     return () => {
-      controller.abort()
-    }
-  }, [])
+      controller.abort();
+    };
+  }, []);
 
-  const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory
-  const assignedDeviceInTransaction = assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers
+  const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory;
+  const assignedDeviceInTransaction =
+    assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers;
 
   const handleClearRecord = () => {
     dispatch(onAddPaymentIntentSelected(undefined));
@@ -101,8 +110,8 @@ export const ReplaceDevice = ({ refetching }) => {
     setValue("reason", "");
     setValue("otherComment", "");
     dispatch(onTriggerModalToReplaceReceiver(false));
-    dispatch(onReceiverObjectToReplace({}))
-    handleClearRecord()
+    dispatch(onReceiverObjectToReplace({}));
+    handleClearRecord();
   }
   //!refactoring functions based on new schema from DB
   //*function to insert data of defected returned device
@@ -110,16 +119,16 @@ export const ReplaceDevice = ({ refetching }) => {
     const template = {
       device: receiverToReplaceObject.serialNumber,
       status: props.reason,
-      activity: 'No',
+      activity: "No",
       comment: props.otherComment,
       user: customer.email,
       eventSelected: event.eventInfoDetail.eventName,
       provider: event.company,
       admin: user.email,
       timeStamp: new Date().toDateString(),
-    }
-    await devitrakApi.post('/receiver/receiver-returned-issue', template)
-  }
+    };
+    await devitrakApi.post("/receiver/receiver-returned-issue", template);
+  };
 
   //*function to create activity in repot document in DB
   const reportEventLog = async (props) => {
@@ -128,7 +137,7 @@ export const ReplaceDevice = ({ refetching }) => {
       actionTaken: `Device ${receiverToReplaceObject.serialNumber} was replaced for ${props.serialNumber}`,
       time: stampTime,
       action: "device",
-      company: user.company
+      company: user.company,
     };
     await devitrakApi.post("/event-log/feed-event-log", eventProfile);
   };
@@ -143,18 +152,22 @@ export const ReplaceDevice = ({ refetching }) => {
         comment: props.otherComment,
       }
     );
-  }
+  };
 
   //*function to update new device in pool
   const updateNewDeviceInPool = async (props) => {
-    const newDeviceToAssignData = await devitrakApi.post('/receiver/receiver-pool-list', {
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company,
-      device: props.serialNumber,
-      type: receiverToReplaceObject.deviceType
-    })
+    const newDeviceToAssignData = await devitrakApi.post(
+      "/receiver/receiver-pool-list",
+      {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+        device: props.serialNumber,
+        type: receiverToReplaceObject.deviceType,
+      }
+    );
     if (newDeviceToAssignData.data.ok) {
-      const newDeviceInfo = newDeviceToAssignData.data.receiversInventory.at(-1)
+      const newDeviceInfo =
+        newDeviceToAssignData.data.receiversInventory.at(-1);
       await devitrakApi.patch(
         `/receiver/receivers-pool-update/${newDeviceInfo.id}`,
         {
@@ -164,8 +177,7 @@ export const ReplaceDevice = ({ refetching }) => {
         }
       );
     }
-
-  }
+  };
 
   //*function to update new device in transaction
   const updateNewDeviceInTransaction = async (props) => {
@@ -175,23 +187,29 @@ export const ReplaceDevice = ({ refetching }) => {
         id: assignedDeviceInTransaction.at(-1).id,
         device: {
           ...assignedDeviceInTransaction.at(-1).device,
-          serialNumber: props.serialNumber
+          serialNumber: props.serialNumber,
         },
       }
     );
-    queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
-  }
+    queryClient.invalidateQueries({
+      queryKey: ["assginedDeviceList"],
+      exact: true,
+    });
+  };
 
   const replaceDevice = async (data) => {
     await updateOldDeviceInPool(data);
     await updateNewDeviceInPool(data);
-    await updateNewDeviceInTransaction(data)
-    await defectedDevice(data)
+    await updateNewDeviceInTransaction(data);
+    await defectedDevice(data);
     reportEventLog(data);
-    handleClearRecord()
-    queryClient.invalidateQueries({ queryKey: ['assginedDeviceList'], exact: true })
-    refetching()
-    openNotificationWithIcon('success', 'Device replaced successfully.')
+    handleClearRecord();
+    queryClient.invalidateQueries({
+      queryKey: ["assginedDeviceList"],
+      exact: true,
+    });
+    refetching();
+    openNotificationWithIcon("success", "Device replaced successfully.");
     closeModal();
   };
 
@@ -209,13 +227,14 @@ export const ReplaceDevice = ({ refetching }) => {
       >
         <form
           style={{
-            ...CenteringGrid, flexDirection: "column",
+            ...CenteringGrid,
+            flexDirection: "column",
             width: "100%",
           }}
           onSubmit={handleSubmit(replaceDevice)}
         >
           <Grid container>
-            <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
               <OutlinedInput
                 id="outlined-adornment-password"
                 placeholder="Serial number"
@@ -223,11 +242,9 @@ export const ReplaceDevice = ({ refetching }) => {
                 style={OutlinedInputStyle}
                 fullWidth
               />
-              {errors?.serialNumber && (
-                <Typography>Field required</Typography>
-              )}
+              {errors?.serialNumber && <Typography>Field required</Typography>}
             </Grid>
-            <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
               {watch("serialNumber") !== "" && (
                 <Select
                   className="custom-autocomplete"
@@ -243,7 +260,7 @@ export const ReplaceDevice = ({ refetching }) => {
                 </Select>
               )}
             </Grid>
-            <Grid margin={'1rem auto'} item xs={12} sm={12} md={12} lg={12}>
+            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
               {watch("reason") === "Other" && (
                 <OutlinedInput
                   multiline
@@ -263,10 +280,7 @@ export const ReplaceDevice = ({ refetching }) => {
                   onClick={closeModal}
                   style={{ ...GrayButton, width: "100%" }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    style={GrayButtonText}
-                  >
+                  <Typography textTransform={"none"} style={GrayButtonText}>
                     Cancel
                   </Typography>
                 </Button>
@@ -276,10 +290,7 @@ export const ReplaceDevice = ({ refetching }) => {
                   type="submit"
                   style={{ ...BlueButton, width: "100%" }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    style={BlueButtonText}
-                  >
+                  <Typography textTransform={"none"} style={BlueButtonText}>
                     Save
                   </Typography>
                 </Button>

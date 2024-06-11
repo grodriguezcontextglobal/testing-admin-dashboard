@@ -25,9 +25,8 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   const reference = useRef(null);
   const queryClient = useQueryClient();
@@ -181,6 +180,11 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             queryKey: ["transactionListQuery"],
             exact: true,
           });
+          await queryClient.refetchQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          });
+
           await queryClient.refetchQueries({
             queryKey: ["listOfNoOperatingDevices"],
             exact: true,

@@ -26,9 +26,8 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   useEffect(() => {
     const controller = new AbortController();
@@ -178,8 +177,29 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             "/stripe/save-transaction",
             transactionProfile
           );
-          queryClient.invalidateQueries("transactionListQuery");
-          queryClient.invalidateQueries("listOfDevicesAssigned");          alert("Device assigned successful");
+          await queryClient.refetchQueries({
+            queryKey: ["transactionListQuery"],
+            exact: true,
+          });
+          await queryClient.refetchQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          });
+
+          await queryClient.refetchQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          });
+
+          await queryClient.refetchQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          });
+          await queryClient.refetchQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          });
+          alert("Device assigned successful");
           closeModal();
         }
       } catch (error) {

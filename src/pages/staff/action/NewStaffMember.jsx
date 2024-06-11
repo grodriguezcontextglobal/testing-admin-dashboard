@@ -56,7 +56,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -66,7 +66,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
       devitrakApi.post("/company/search-company", {
         company_name: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const [messageApi, contextHolder] = message.useMessage();
@@ -147,9 +147,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
       }
     };
     const renderTitle = () => {
-      return (
-        <p style={TextFontSize30LineHeight38}>New staff</p>
-      );
+      return <p style={TextFontSize30LineHeight38}>New staff</p>;
     };
     return (
       <>

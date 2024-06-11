@@ -50,7 +50,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         provider: event.company,
         "consumerInfo.email": customer.email,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
@@ -62,7 +62,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
         provider: event.company,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -107,7 +107,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
           .toLowerCase()
           .includes(String(searchValue).toLowerCase())
       );
-      console.log(transactionFound)
+      console.log(transactionFound);
       return transactionFound;
     }
   };

@@ -57,7 +57,7 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const eventAttendeesParametersQuery = useQuery({
@@ -67,7 +67,7 @@ const MainPageQuickGlance = () => {
         provider: user.company,
         eventSelected: choice,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
@@ -78,7 +78,7 @@ const MainPageQuickGlance = () => {
         eventSelected: event?.eventInfoDetail?.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });

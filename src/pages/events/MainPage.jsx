@@ -34,7 +34,7 @@ const MainPage = () => {
       devitrakApi.post("/event/event-list", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const companyAccountStripeQuery = useQuery({

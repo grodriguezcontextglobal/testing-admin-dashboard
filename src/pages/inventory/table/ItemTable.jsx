@@ -35,14 +35,14 @@ const ItemTable = ({ searchItem }) => {
       devitrakApi.post("/db_item/current-inventory", {
         company_name: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -52,7 +52,7 @@ const ItemTable = ({ searchItem }) => {
       devitrakApi.post("/db_item/consulting-item", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
@@ -528,27 +528,30 @@ const ItemTable = ({ searchItem }) => {
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
-  
+
     if (keys1.length !== keys2.length) return false;
-  
-    return keys1.every(key => {
+
+    return keys1.every((key) => {
       const val1 = obj1[key];
       const val2 = obj2[key];
-  
-      const areObjects = val1 && typeof val1 === 'object' && val2 && typeof val2 === 'object';
+
+      const areObjects =
+        val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
       return areObjects ? deepEqual(val1, val2) : val1 === val2;
     });
   };
-  
+
   const compareArraysOfObjects = (arr1, arr2) => {
     if (arr1.length !== arr2.length) return false;
-  
+
     const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
     const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
-  
-    return sortedArr1.every((obj1, index) => deepEqual(obj1, sortedArr2[index]));
+
+    return sortedArr1.every((obj1, index) =>
+      deepEqual(obj1, sortedArr2[index])
+    );
   };
-    
+
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
       {optionsToRenderInDetailsHtmlTags.map((item) => {
@@ -585,14 +588,20 @@ const ItemTable = ({ searchItem }) => {
                   }}
                 >
                   {item.title} &nbsp;{" "}
-                  {item.buttonFn && !compareArraysOfObjects(selectedRowKeys,renderingCardData.preference.inventory_location) && (
-                    <button
-                      onClick={() => updateInventoryLocationPreferences()}
-                      style={BlueButton}
-                    >
-                      <p style={BlueButtonText}>Update locations preferences</p>
-                    </button>
-                  )}
+                  {item.buttonFn &&
+                    !compareArraysOfObjects(
+                      selectedRowKeys,
+                      renderingCardData.preference.inventory_location
+                    ) && (
+                      <button
+                        onClick={() => updateInventoryLocationPreferences()}
+                        style={BlueButton}
+                      >
+                        <p style={BlueButtonText}>
+                          Update locations preferences
+                        </p>
+                      </button>
+                    )}
                 </p>
               </summary>
               <Divider />

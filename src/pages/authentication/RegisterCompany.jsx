@@ -56,7 +56,7 @@ const RegisterCompany = () => {
   const industryListQuery = useQuery({
     queryKey: ["companyInfoList"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const checkUserInfo = useQuery({
@@ -65,7 +65,7 @@ const RegisterCompany = () => {
       devitrakApi.post("/staff/admin-users", {
         email: user.email,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -165,7 +165,6 @@ const RegisterCompany = () => {
             super_user: false,
             role: "0",
             inventory_location: [],
-          
           },
         ],
 
@@ -263,7 +262,7 @@ const RegisterCompany = () => {
           status: "confirmed",
           super_user: true,
           role: "0",
-          inventory_location: [],        
+          inventory_location: [],
         },
       ],
     };

@@ -32,7 +32,7 @@ const SearchDevice = ({ searchParams }) => {
         "device.serialNumber": searchParams,
         "device.status": true,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const deviceInUseStaffMemberQuery = useQuery({
@@ -42,7 +42,7 @@ const SearchDevice = ({ searchParams }) => {
         company: user.company,
         warehouse: 0,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -52,7 +52,7 @@ const SearchDevice = ({ searchParams }) => {
       devitrakApi.post("/image/images", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 

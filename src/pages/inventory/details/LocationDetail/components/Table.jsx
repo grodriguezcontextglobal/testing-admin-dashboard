@@ -24,14 +24,14 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         company_name: user.company,
         location: decodeURI(location.search.slice(1)),
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -42,7 +42,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         company: user.company,
         location: String(decodeURI(location.search.slice(1))).toLowerCase(),
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;

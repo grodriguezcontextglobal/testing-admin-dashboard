@@ -9,25 +9,31 @@ import { CardStyle } from "../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 
 const DeviceInformationDetail = ({ dataFound }) => {
-  const { user } = useSelector((state) => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItem"],
-    queryFn: () => devitrakApi.post("/image/images", {
-      company: user.company,
-      category: dataFound[0]?.category_name,
-      item_group: dataFound[0]?.item_group
-    }),
-    enabled: false,
-    refetchOnMount: false
+    queryFn: () =>
+      devitrakApi.post("/image/images", {
+        company: user.company,
+        category: dataFound[0]?.category_name,
+        item_group: dataFound[0]?.item_group,
+      }),
+    // enabled: false,
+    refetchOnMount: false,
   });
   useEffect(() => {
-    const controller = new AbortController()
-    listImagePerItemQuery.refetch()
+    const controller = new AbortController();
+    listImagePerItemQuery.refetch();
     return () => {
-      controller.abort()
-    }
-  }, [dataFound[0]?.category_name, dataFound[0]?.item_group])
-  if (listImagePerItemQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
+      controller.abort();
+    };
+  }, [dataFound[0]?.category_name, dataFound[0]?.item_group]);
+  if (listImagePerItemQuery.isLoading)
+    return (
+      <div style={CenteringGrid}>
+        <Loading />
+      </div>
+    );
   if (listImagePerItemQuery.data) {
     return (
       <Grid
@@ -42,9 +48,7 @@ const DeviceInformationDetail = ({ dataFound }) => {
         sm={12}
         md={12}
       >
-        <Card
-          style={CardStyle}
-        >
+        <Card style={CardStyle}>
           <Grid
             display={"flex"}
             justifyContent={"space-around"}
@@ -59,9 +63,30 @@ const DeviceInformationDetail = ({ dataFound }) => {
               item
               xs={12}
             >
-              <div style={{ alignSelf: "stretch", margin: "0 20px 0 0", width: "110px" }}>
+              <div
+                style={{
+                  alignSelf: "stretch",
+                  margin: "0 20px 0 0",
+                  width: "110px",
+                }}
+              >
                 <div style={{ width: "100px", height: "100px" }}>
-                  {listImagePerItemQuery.data.data.item.length > 0 && <img style={{ objectFit:"contain", width:"65%", height:"85%" }} src={`${listImagePerItemQuery.data.data.item.length > 0 && listImagePerItemQuery.data.data.item[0]?.source}`} alt='item_image' width={250} height={360} />}
+                  {listImagePerItemQuery.data.data.item.length > 0 && (
+                    <img
+                      style={{
+                        objectFit: "contain",
+                        width: "65%",
+                        height: "85%",
+                      }}
+                      src={`${
+                        listImagePerItemQuery.data.data.item.length > 0 &&
+                        listImagePerItemQuery.data.data.item[0]?.source
+                      }`}
+                      alt="item_image"
+                      width={250}
+                      height={360}
+                    />
+                  )}
                 </div>
               </div>
               <Typography
@@ -104,7 +129,6 @@ const DeviceInformationDetail = ({ dataFound }) => {
         </Card>
       </Grid>
     );
-
   }
 };
 

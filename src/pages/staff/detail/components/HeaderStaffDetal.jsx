@@ -32,7 +32,7 @@ const HeaderStaffDetail = () => {
         company: user.company,
         active: true,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {

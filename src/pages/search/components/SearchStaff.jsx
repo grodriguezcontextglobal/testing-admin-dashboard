@@ -21,7 +21,7 @@ const SearchStaff = ({ searchParams }) => {
       devitrakApi.post("/company/search-company", {
         company_name: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const staffMembersInfoQuery = useQuery({
@@ -30,7 +30,7 @@ const SearchStaff = ({ searchParams }) => {
       devitrakApi.post("/staff/admin-users", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const dispatch = useDispatch();

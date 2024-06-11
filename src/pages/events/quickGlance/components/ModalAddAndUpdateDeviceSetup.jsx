@@ -45,7 +45,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         warehouse: true,
         item_group: deviceTitle,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const recordNoSqlDevicesQuery = useQuery({
@@ -56,7 +56,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         type: deviceTitle,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 

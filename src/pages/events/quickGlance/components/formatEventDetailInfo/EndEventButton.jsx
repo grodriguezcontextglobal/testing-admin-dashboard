@@ -17,7 +17,7 @@ const EndEventButton = () => {
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const listOfItemsInInventoryQuery = useQuery({
@@ -27,7 +27,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInPoolQuery = useQuery({
@@ -37,7 +37,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -48,7 +48,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -59,7 +59,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -70,7 +70,7 @@ const EndEventButton = () => {
         company: user.company,
         warehouse: false,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const sqlDBInventoryEventQuery = useQuery({
@@ -80,7 +80,7 @@ const EndEventButton = () => {
         company: user.company,
         warehouse: false,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 

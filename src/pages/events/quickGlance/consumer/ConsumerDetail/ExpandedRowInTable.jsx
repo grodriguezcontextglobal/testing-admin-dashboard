@@ -18,7 +18,7 @@ import "../../../../../styles/global/ant-table.css";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 
 const ExpandedRowInTable = ({ rowRecord }) => {
-     const { event } = useSelector((state) => state.event);
+  const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -31,7 +31,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         provider: event.company,
         "consumerInfo.email": customer.email,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
@@ -43,7 +43,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         provider: event.company,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });

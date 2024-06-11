@@ -19,7 +19,7 @@ const SpreadSheet = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const transactionPlusUserInfo = useQuery({
@@ -30,7 +30,7 @@ const SpreadSheet = () => {
         provider: event.company,
         "device.status": true,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 

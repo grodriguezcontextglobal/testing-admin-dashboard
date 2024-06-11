@@ -33,7 +33,7 @@ const ExpandedRow = ({ rowRecord }) => {
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         paymentIntent: rowRecord.key,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -44,7 +44,7 @@ const ExpandedRow = ({ rowRecord }) => {
         company: user.company,
         "eventInfoDetail.eventName": rowRecord.eventSelected[0],
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -155,7 +155,13 @@ const ExpandedRow = ({ rowRecord }) => {
             onClick={() => handleReturnSingleDevice(record)}
             style={{
               ...BlueButton,
-              display: `${record.status === "Lost" ? "none" : record.status ? "flex": "none"}`,
+              display: `${
+                record.status === "Lost"
+                  ? "none"
+                  : record.status
+                  ? "flex"
+                  : "none"
+              }`,
             }}
           >
             <p style={BlueButtonText}>Mark as returned</p>
@@ -164,7 +170,13 @@ const ExpandedRow = ({ rowRecord }) => {
             onClick={() => handleLostSingleDevice(record)}
             style={{
               ...GrayButton,
-              display: `${record.status === "Lost" ? "none" : record.status ? "flex": "none"}`,
+              display: `${
+                record.status === "Lost"
+                  ? "none"
+                  : record.status
+                  ? "flex"
+                  : "none"
+              }`,
             }}
           >
             <p

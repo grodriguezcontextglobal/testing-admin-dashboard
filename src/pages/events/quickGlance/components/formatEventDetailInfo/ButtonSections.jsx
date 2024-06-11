@@ -26,7 +26,7 @@ const ButtonSections = () => {
       devitrakApi.get("/inventory/list-inventories", {
         company: user.company,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
   const listOfItemsInInventoryQuery = useQuery({

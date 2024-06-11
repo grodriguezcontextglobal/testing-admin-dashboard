@@ -1,5 +1,11 @@
 import { Icon } from "@iconify/react";
-import { Button, Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  Grid,
+  InputAdornment,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
@@ -25,279 +31,293 @@ import DeleteItem from "./detailComponent/actions/DeleteItem";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 
 const MainPage = () => {
-    const { user } = useSelector((state) => state.admin)
-    const item_id = new URLSearchParams(window.location.search).get(
-        "id"
-    );
-    const trackingHistoryItemQuery = useQuery({
-        queryKey: ["trackingItemActivity"],
-        queryFn: () => devitrakApi.post(`/db_item/tracking_item/${item_id}`),
-        enabled: false,
-        refetchOnMount: false
-    });
-    const { register } = useForm();
-    const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-    const isMediumDevice = useMediaQuery(
-        "only screen and (min-width : 769px) and (max-width : 992px)"
-    );
-    const isLargeDevice = useMediaQuery(
-        "only screen and (min-width : 993px) and (max-width : 1200px)"
-    );
-    const isExtraLargeDevice = useMediaQuery(
-        "only screen and (min-width : 1201px)"
-    );
-    const navigate = useNavigate()
-    useEffect(() => {
-        const controller = new AbortController()
-        trackingHistoryItemQuery.refetch()
-        return () => {
-            controller.abort()
-        }
-    }, [item_id])
+  const { user } = useSelector((state) => state.admin);
+  const item_id = new URLSearchParams(window.location.search).get("id");
+  const trackingHistoryItemQuery = useQuery({
+    queryKey: ["trackingItemActivity"],
+    queryFn: () => devitrakApi.post(`/db_item/tracking_item/${item_id}`),
+    // enabled: false,
+    refetchOnMount: false,
+  });
+  const { register } = useForm();
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isMediumDevice = useMediaQuery(
+    "only screen and (min-width : 769px) and (max-width : 992px)"
+  );
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen and (min-width : 1201px)"
+  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    const controller = new AbortController();
+    trackingHistoryItemQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, [item_id]);
 
-    if (trackingHistoryItemQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
-    if (trackingHistoryItemQuery.data) {
-        const dataFound = [{ ...trackingHistoryItemQuery?.data?.data?.result[0], data: { ...trackingHistoryItemQuery.data.data.result[0] } }]
-        return (
-            <Grid
-                style={{
-                    padding: "5px",
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-                container
+  if (trackingHistoryItemQuery.isLoading)
+    return (
+      <div style={CenteringGrid}>
+        <Loading />
+      </div>
+    );
+  if (trackingHistoryItemQuery.data) {
+    const dataFound = [
+      {
+        ...trackingHistoryItemQuery?.data?.data?.result[0],
+        data: { ...trackingHistoryItemQuery.data.data.result[0] },
+      },
+    ];
+    return (
+      <Grid
+        style={{
+          padding: "5px",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        container
+      >
+        <Grid
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          container
+        >
+          <Grid
+            textAlign={"right"}
+            display={`${isLargeDevice || isExtraLargeDevice ? "none" : "flex"}`}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            gap={1}
+            item
+            xs={12}
+            sm={12}
+          >
+            <Button
+              style={{ ...BlueButton }}
+              onClick={() => navigate("/inventory/new-bulk-items")}
             >
-                <Grid
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                    }}
-                    container
+              <WhitePlusIcon />
+              &nbsp;{" "}
+              <Typography textTransform={"none"} style={BlueButtonText}>
+                {" "}
+                Add new group of devices{" "}
+              </Typography>
+            </Button>
+          </Grid>
+          <Grid marginY={0} item xs={12} sm={12} md={6}>
+            <Typography
+              textTransform={"none"}
+              style={{
+                color: "var(--gray-900, #101828)",
+                lineHeight: "38px",
+              }}
+              textAlign={"left"}
+              fontWeight={600}
+              fontFamily={"Inter"}
+              fontSize={"30px"}
+            >
+              Devices
+            </Typography>
+          </Grid>
+          <Grid
+            textAlign={"right"}
+            display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            gap={1}
+            item
+            md={6}
+          >
+            <Button
+              style={{ ...BlueButton }}
+              onClick={() => navigate("/inventory/new-bulk-items")}
+            >
+              <WhitePlusIcon />
+              &nbsp;{" "}
+              <Typography textTransform={"none"} style={BlueButtonText}>
+                {" "}
+                Add new group of devices{" "}
+              </Typography>
+            </Button>
+          </Grid>
+        </Grid>
+        <Grid
+          style={{
+            paddingTop: "0px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          container
+          marginTop={4}
+        >
+          <Grid marginY={0} item xs={12} sm={12} md={8}>
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              item
+              xs={12}
+            >
+              <Link to="/inventory">
+                <p
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    textTransform: "none",
+                    textAlign: "left",
+                    fontWeight: 600,
+                    fontSize: "18px",
+                    fontFamily: "Inter",
+                    lineHeight: "28px",
+                    color: "var(--blue-dark-600, #155EEF)",
+                  }}
                 >
-                    <Grid
-                        textAlign={"right"}
-                        display={`${(isLargeDevice || isExtraLargeDevice) ? "none" : "flex"}`}
-                        justifyContent={"flex-end"}
-                        alignItems={"center"}
-                        gap={1}
-                        item
-                        xs={12}
-                        sm={12}
-                    >
-                        <Button
-                            style={{ ...BlueButton }}
-                            onClick={() => navigate('/inventory/new-bulk-items')}
-                        >
-                            <WhitePlusIcon />&nbsp; <Typography
-                                textTransform={"none"}
-                                style={BlueButtonText}
-                            > Add new group of devices </Typography>
-                        </Button>
-                    </Grid>
-                    <Grid marginY={0} item xs={12} sm={12} md={6}>
-                        <Typography
-                            textTransform={"none"}
-                            style={{
-                                color: "var(--gray-900, #101828)",
-                                lineHeight: "38px",
-                            }}
-                            textAlign={"left"}
-                            fontWeight={600}
-                            fontFamily={"Inter"}
-                            fontSize={"30px"}
-                        >
-                            Devices
-                        </Typography>
-                    </Grid>
-                    <Grid
-                        textAlign={"right"}
-                        display={`${(isSmallDevice || isMediumDevice) ? "none" : "flex"}`}
-                        justifyContent={"flex-end"}
-                        alignItems={"center"}
-                        gap={1}
-                        item
-                        md={6}
-                    >
-                        <Button
-                            style={{ ...BlueButton }}
-                            onClick={() => navigate('/inventory/new-bulk-items')}
-                        >
-                            <WhitePlusIcon />&nbsp; <Typography
-                                textTransform={"none"}
-                                style={BlueButtonText}
-                            > Add new group of devices </Typography>
-                        </Button>
-                    </Grid>
-                </Grid>
-                <Grid
-                    style={{
-                        paddingTop: "0px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                    }}
-                    container
-                    marginTop={4}
-                >
-                    <Grid marginY={0} item xs={12} sm={12} md={8}>
-                        <Grid
-                            display={"flex"}
-                            justifyContent={"flex-start"}
-                            alignItems={"center"}
-                            item
-                            xs={12}
-                        >
-                            <Link to="/inventory">
-                                <p style={{
-                                    display: "flex",
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                    textTransform: "none",
-                                    textAlign: "left",
-                                    fontWeight: 600,
-                                    fontSize: "18px",
-                                    fontFamily: "Inter",
-                                    lineHeight: "28px",
-                                    color: "var(--blue-dark-600, #155EEF)",
-                                }}
-                                >
-                                    Back
-                                </p>
-                            </Link>
-                            <Typography
-                                style={{ ...TextFontsize18LineHeight28, fontWeight: 600, color: "var(--gray-900, #101828)" }}
-                            >
-                                <Icon icon="mingcute:right-line" />
-                                {dataFound[0]?.item_group}{" "}
-                                {dataFound[0]?.serial_number}
-                            </Typography>
-                        </Grid>
-                    </Grid>
-                    <Grid textAlign={"right"} item xs={4}></Grid>
-                </Grid>
-                <Divider />
-                <Grid display={"flex"}
-                    justifyContent={"space-between"}
-                    alignItems={"center"} alignSelf={'start'} container>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"left"}
-                        textAlign={"left"}
-                        alignItems={"center"}
-                        alignSelf={'start'}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={4}
-                        lg={4}
-                    >
-                        <DeviceInformationDetail dataFound={dataFound} />
-                    </Grid>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        textAlign={"left"}
-                        alignItems={"center"}
-                        alignSelf={'start'}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={3}
-                        lg={3}
-                    >
-                        <DeviceDescriptionTags dataFound={dataFound} />
-                    </Grid>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"flex-end"}
-                        alignItems={"center"}
-                        alignSelf={'start'}
-                        gap={1}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={3}
-                        lg={3}
-                    >
-                        {/* {user.role === "Administrator" && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
-                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />} */}
-                        {Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
-                        {Number(user.role) < 2 && <EditItem dataFound={dataFound} />}
-                    </Grid>
-                </Grid>
-                <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    container
-                >
-                    <Grid item xs={12} sm={12} md={6} lg={4}>
-                        {" "}
-                        <TotalDevicesDistributed
-                            dataFound={dataFound}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={6} lg={4}>
-                        <TotalRequestedDevice
-                            dataFound={dataFound}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={6} lg={4}>
-                        <TotalReturnedDevice
-                            dataFound={dataFound}
-                        />
-                    </Grid>
-                </Grid>
-                <Divider />
-                <Grid
-                    marginY={3}
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    gap={1}
-                    container
-                >
-
-                    <Grid
-                        display={'flex'}
-                        justifyContent={"flex-end"}
-                        alignItems={"center"}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={3}
-                    >
-                        <OutlinedInput
-                            {...register("searchDevice")}
-                            fullWidth
-                            placeholder="Search devices here"
-                            style={OutlinedInputStyle}
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <MagnifyIcon />
-                                </InputAdornment>
-                            }
-                        />
-                    </Grid>
-                </Grid>
-                <Grid container>
-                    <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        item
-                        xs={12}
-                    >
-                        <TableDetailPerDevice dataFound={dataFound} />
-                    </Grid>
-                </Grid>
+                  Back
+                </p>
+              </Link>
+              <Typography
+                style={{
+                  ...TextFontsize18LineHeight28,
+                  fontWeight: 600,
+                  color: "var(--gray-900, #101828)",
+                }}
+              >
+                <Icon icon="mingcute:right-line" />
+                {dataFound[0]?.item_group} {dataFound[0]?.serial_number}
+              </Typography>
             </Grid>
-        )
-    }
+          </Grid>
+          <Grid textAlign={"right"} item xs={4}></Grid>
+        </Grid>
+        <Divider />
+        <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          alignSelf={"start"}
+          container
+        >
+          <Grid
+            display={"flex"}
+            justifyContent={"left"}
+            textAlign={"left"}
+            alignItems={"center"}
+            alignSelf={"start"}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={4}
+          >
+            <DeviceInformationDetail dataFound={dataFound} />
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            textAlign={"left"}
+            alignItems={"center"}
+            alignSelf={"start"}
+            item
+            xs={12}
+            sm={12}
+            md={3}
+            lg={3}
+          >
+            <DeviceDescriptionTags dataFound={dataFound} />
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            alignSelf={"start"}
+            gap={1}
+            item
+            xs={12}
+            sm={12}
+            md={3}
+            lg={3}
+          >
+            {/* {user.role === "Administrator" && dataFound[0].ownership !== "Rent" && <DeleteItem dataFound={dataFound} />}
+                        {user.role === "Administrator" && <EditItem dataFound={dataFound} />} */}
+            {Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
+              <DeleteItem dataFound={dataFound} />
+            )}
+            {Number(user.role) < 2 && <EditItem dataFound={dataFound} />}
+          </Grid>
+        </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          container
+        >
+          <Grid item xs={12} sm={12} md={6} lg={4}>
+            {" "}
+            <TotalDevicesDistributed dataFound={dataFound} />
+          </Grid>
+          <Grid item xs={12} sm={12} md={6} lg={4}>
+            <TotalRequestedDevice dataFound={dataFound} />
+          </Grid>
+          <Grid item xs={12} sm={12} md={6} lg={4}>
+            <TotalReturnedDevice dataFound={dataFound} />
+          </Grid>
+        </Grid>
+        <Divider />
+        <Grid
+          marginY={3}
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          container
+        >
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            item
+            xs={12}
+            sm={12}
+            md={3}
+          >
+            <OutlinedInput
+              {...register("searchDevice")}
+              fullWidth
+              placeholder="Search devices here"
+              style={OutlinedInputStyle}
+              startAdornment={
+                <InputAdornment position="start">
+                  <MagnifyIcon />
+                </InputAdornment>
+              }
+            />
+          </Grid>
+        </Grid>
+        <Grid container>
+          <Grid
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            item
+            xs={12}
+          >
+            <TableDetailPerDevice dataFound={dataFound} />
+          </Grid>
+        </Grid>
+      </Grid>
+    );
+  }
+};
 
-}
-
-export default MainPage
+export default MainPage;
