@@ -32,7 +32,7 @@ import {
 import { onResetEventInfo } from "../../store/slices/eventSlice";
 import {
   onResetHelpers,
-  onSwitchingCompany,
+  // onSwitchingCompany,
 } from "../../store/slices/helperSlice";
 import { onResetResult } from "../../store/slices/searchBarResultSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
@@ -91,14 +91,14 @@ const NavigationBarMain = (props) => {
         </NavLink>
       ),
     },
-    {
-      key: "2",
-      label: (
-        <Typography onClick={() => dispatch(onSwitchingCompany(true))}>
-          Switch company
-        </Typography>
-      ),
-    },
+    // {
+    //   key: "2",
+    //   label: (
+    //     <Typography onClick={() => dispatch(onSwitchingCompany(true))}>
+    //       Switch company
+    //     </Typography>
+    //   ),
+    // },
     {
       key: "3",
       label: (
