@@ -101,11 +101,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    if (grouping[props]) {
-      return true;
-    } else {
-      return false;
-    }
+    return grouping[props].at(-1).activity === "YES";
   };
   const createReceiverInTransaction = async (props) => {
     await devitrakApi.post("/receiver/receiver-assignation", {
@@ -128,7 +124,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   };
 
   const onSubmitRegister = async (data) => {
-    if (checkDeviceAvailability(data.serialNumber)) {
+    if (!checkDeviceAvailability(data.serialNumber)) {
       try {
         const id = nanoid();
         const max = 918273645;

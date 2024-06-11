@@ -101,11 +101,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    if (grouping[props]) {
-      return true;
-    } else {
-      return false;
-    }
+    return grouping[props].at(-1).activity === "YES";
   };
   const createReceiverInTransaction = async (props) => {
     await devitrakApi.post("/receiver/receiver-assignation", {
@@ -128,7 +124,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
   };
 
   const onSubmitRegister = async (data) => {
-    if (checkDeviceAvailability(data.serialNumber)) {
+    if (!checkDeviceAvailability(data.serialNumber)) {
       try {
         const id = nanoid(12);
         const max = 918273645;
@@ -211,7 +207,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
         alert(error);
       }
     } else {
-      return alert("Device in use for other consumer");
+      return alert("Device in use for other consumer. Please assign a different serial number.");
     }
   };
   return (

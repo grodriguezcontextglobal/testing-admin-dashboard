@@ -15,7 +15,7 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { StripeElementChargeTransactionFromDashboard } from "../../../../../../../../components/stripe/elements/StripeElementChargeTransactionFromDashboard";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
-
+import _ from "lodash";
 const SingleDevice = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
@@ -66,6 +66,11 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   };
   checkIfDeviceIsInUsed();
 
+  const checkDeviceAvailability = (props) => {
+    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    return grouping[props].at(-1).activity === "YES";
+  };
+
   const formattingSerialNumberLeadingZero = (num, reference) => {
     return String(num).padStart(reference.length, `${reference[0]}`);
   };
@@ -105,6 +110,11 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   subtractRangePerGroupToDisplayItInScreen();
 
   const generatePaymentIntent = async (data) => {
+    if (!checkDeviceAvailability(data.serialNumber)) {
+      return alert(
+        "device is already assigned to other consumer. Please assign a different serial number."
+      );
+    }
     totalRef.current = data.amount;
     const response = await devitrakApi.post(
       "/stripe/create-payment-intent-customized",
