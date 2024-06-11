@@ -9,7 +9,7 @@ import { Divider, notification } from "antd";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import _ from "lodash"
+import _ from "lodash";
 import "./Body.css";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -19,13 +19,12 @@ import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { compareSync } from "bcryptjs";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { useNavigate } from "react-router-dom";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const reference = useRef("");
-  const {
-    register,
-    handleSubmit,
-  } = useForm();
+  const navigate = useNavigate();
+  const { register, handleSubmit } = useForm();
   // const bcrypt = require("bcryptjs");
   const adminUsersStaffQuery = useQuery({
     queryKey: ["adminUser"],
@@ -52,6 +51,13 @@ const Body = () => {
       return groupingByEmail[user.email][0];
     };
     foundAdminInfo();
+    const triggerRoutes = () => {
+      if (Number(user.role) === Number("4")) {
+        return navigate("/events");
+      }
+      return navigate("/");
+    };
+  
     const handleUpdatePersonalInfo = async (data) => {
       try {
         const isValid = compareSync(
@@ -92,6 +98,7 @@ const Body = () => {
           error
         );
         openNotificationWithIcon("error", error.message);
+        return triggerRoutes();
       }
     };
     return (
@@ -272,24 +279,13 @@ const Body = () => {
             sm={12}
             md={12}
           >
-            <Button
-              style={GrayButton}
-            >
-              <Typography
-                textTransform={"none"}
-                style={GrayButtonText}
-              >
+            <Button onClick={() => triggerRoutes()} style={GrayButton}>
+              <Typography textTransform={"none"} style={GrayButtonText}>
                 Cancel
               </Typography>
             </Button>
-            <Button
-              type="submit"
-              style={BlueButton}
-            >
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
-              >
+            <Button type="submit" style={BlueButton}>
+              <Typography textTransform={"none"} style={BlueButtonText}>
                 Save
               </Typography>
             </Button>

@@ -11,7 +11,6 @@ import {
 import { Avatar, Divider, Space, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import "./Body.css";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -21,6 +20,8 @@ import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import dicRole from "../../../../components/general/dicRole";
+import { useNavigate } from "react-router-dom";
+import "./Body.css";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -35,11 +36,18 @@ const Body = () => {
     },
   });
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = () => {
     api.open({
-      message: 'Information updated',
+      message: "Information updated",
     });
+  };
+  const triggerRoutes = () => {
+    if (Number(user.role) === Number("4")) {
+      return navigate("/events");
+    }
+    return navigate("/");
   };
   const listOfEvents = () => {
     const events = new Set();
@@ -73,7 +81,7 @@ const Body = () => {
     let base64;
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
       return alert(
-        "Image is bigger than allow. Please resize the image or select a new one."
+        "Image is bigger than 1mb. Please resize the image or select a new one."
       );
     } else if (data.photo.length > 0) {
       base64 = await convertToBase64(data.photo[0]);
@@ -85,7 +93,7 @@ const Body = () => {
         imageProfile: base64,
       });
       if (resp) {
-        const dataUser = user.data
+        const dataUser = user.data;
         dispatch(
           onLogin({
             ...user,
@@ -103,7 +111,8 @@ const Body = () => {
             },
           })
         );
-        openNotificationWithIcon()
+        openNotificationWithIcon();
+        return triggerRoutes()
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -113,7 +122,7 @@ const Body = () => {
         phone: data.phone,
       });
       if (resp) {
-        const dataUser = user.data
+        const dataUser = user.data;
         dispatch(
           onLogin({
             ...user,
@@ -130,7 +139,8 @@ const Body = () => {
             },
           })
         );
-        openNotificationWithIcon()
+        openNotificationWithIcon();
+        return triggerRoutes();
       }
     }
   };
@@ -304,9 +314,7 @@ const Body = () => {
             md={4}
           >
             <InputLabel style={{ width: "100%" }}>
-              <Typography
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
+              <Typography style={{ ...Subtitle, fontWeight: 500 }}>
                 Your photo
               </Typography>
             </InputLabel>
@@ -421,8 +429,7 @@ const Body = () => {
                 item
                 xs={12}
               >
-                <Typography
-                  style={{ ...Subtitle, fontWeight: 400 }}>
+                <Typography style={{ ...Subtitle, fontWeight: 400 }}>
                   SVG, PNG, JPG or GIF (max. 1MB)
                 </Typography>
               </Grid>
@@ -459,7 +466,12 @@ const Body = () => {
             sm={6}
             md={6}
           >
-            <OutlinedInput disabled style={{ ...OutlinedInputStyle }} {...register("role")} fullWidth />
+            <OutlinedInput
+              disabled
+              style={{ ...OutlinedInputStyle }}
+              {...register("role")}
+              fullWidth
+            />
           </Grid>
           <Divider />
           <Grid
@@ -495,9 +507,7 @@ const Body = () => {
           >
             <Space size={[8, 16]} wrap>
               {listOfEvents().map((evet) => {
-
                 return (
-
                   <Grid
                     key={evet?.eventInfoDetail?.eventName}
                     display={"flex"}
@@ -513,7 +523,6 @@ const Body = () => {
                       style={OutlinedInputStyle}
                     />
                   </Grid>
-
                 );
               })}
             </Space>
@@ -532,29 +541,21 @@ const Body = () => {
           md={12}
         >
           <Button
+            onClick={() =>triggerRoutes()}
             style={{ ...GrayButton, width: "fit-content" }}
           >
-            <Typography
-              textTransform={"none"}
-              style={GrayButtonText}
-            >
+            <Typography textTransform={"none"} style={GrayButtonText}>
               Cancel
             </Typography>
           </Button>
-          <Button
-            type="submit"
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <Typography
-              textTransform={"none"}
-              style={BlueButtonText}
-            >
+          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+            <Typography textTransform={"none"} style={BlueButtonText}>
               Save
             </Typography>
           </Button>
         </Grid>
-      </form>    </>
-
+      </form>{" "}
+    </>
   );
 };
 

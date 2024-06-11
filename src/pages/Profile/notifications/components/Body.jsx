@@ -15,10 +15,11 @@ import { useDispatch, useSelector } from "react-redux";
 import "./Body.css";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onLogin } from "../../../../store/slices/adminSlice";
+import { useNavigate } from "react-router-dom";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit } = useForm();
-
+  const navigate = useNavigate();
   const [subscriptions, setSubscriptions] = useState(
     user.data.subscriptionRenewals
   );
@@ -30,7 +31,7 @@ const Body = () => {
   );
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type) => {
+  const openNotificationWithIcon = () => {
     api.open({
       message: "Information updated",
     });
@@ -189,11 +190,7 @@ const Body = () => {
               md={8}
             >
               <FormControlLabel
-                control={
-                  <Checkbox
-                    {...register("newsAndUpdates")}
-                  />
-                }
+                control={<Checkbox {...register("newsAndUpdates")} />}
                 label={renderLabel({
                   bodyContent: {
                     title: "News and updates",
@@ -214,11 +211,7 @@ const Body = () => {
               md={12}
             >
               <FormControlLabel
-                control={
-                  <Checkbox
-                    {...register("tipsAndTutorials")}
-                  />
-                }
+                control={<Checkbox {...register("tipsAndTutorials")} />}
                 label={renderLabel({
                   bodyContent: {
                     title: "Tips and tutorials",
@@ -239,11 +232,7 @@ const Body = () => {
               md={12}
             >
               <FormControlLabel
-                control={
-                  <Checkbox
-                    {...register("userResearch")}
-                  />
-                }
+                control={<Checkbox {...register("userResearch")} />}
                 label={renderLabel({
                   bodyContent: {
                     title: "User research",
@@ -513,6 +502,7 @@ const Body = () => {
           md={12}
         >
           <Button
+            onClick={() => navigate("/")}
             style={{
               width: "fit-content",
               border: "1px solid var(--gray-300, #D0D5DD)",
