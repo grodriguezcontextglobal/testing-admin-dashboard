@@ -192,6 +192,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           type: props.deviceType,
         }
       );
+      if(String(deviceInPoolListQuery.data.receiversInventory.at(-1).activity).toLowerCase() === "yes") return alert(`Device is already in use for another consumer. Please assign another device serial number.`) 
 
       let assignedItem = {
         ...props,
