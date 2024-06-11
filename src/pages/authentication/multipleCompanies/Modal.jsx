@@ -27,6 +27,12 @@ const ModalMultipleCompanies = ({
     });
   };
   const queryClient = useQueryClient();
+  const findingCompanyInfoBasedOnSelection = (props) => {
+    const result = dataPassed.company_data.find(
+      (element) => element.company_name === props
+    );
+    return result;
+  };
   const loginIntoOneCompanyAccount = async (props) => {
     const respo = await devitrakApiAdmin.post("/login", {
       email: dataPassed.email,
@@ -68,7 +74,7 @@ const ModalMultipleCompanies = ({
           role: props.role,
           phone: respo.data.phone,
           company: props.company,
-          companyData: props.company_data[0],
+          companyData: findingCompanyInfoBasedOnSelection(props.company),
           token: respo.data.token,
           online: updatingOnlineStatusResponse.data.entire.online,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
