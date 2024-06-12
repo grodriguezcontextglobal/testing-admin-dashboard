@@ -347,15 +347,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
     };
     const checkAdminSpots = () => {
       const data = event.staff.adminUser;
-      let index = 1;
-      for (let staff of data) {
-        if (staff.role === "Administrator") {
-          index += 1;
-        }
-      }
+      let index = data.length;
       return index;
     };
-
     return (
       <Modal
         open={editingStaff}
@@ -401,7 +395,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                       value: "administrator",
                       label: "Event administrator",
                       disabled: event.subscription.adminUser
-                        ? checkAdminSpots() === event.subscription.adminUser
+                        ? Number(checkAdminSpots()) === Number(event.subscription.adminUser)
                         : true,
                     },
                     {
