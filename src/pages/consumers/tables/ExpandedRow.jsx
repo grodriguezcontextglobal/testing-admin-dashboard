@@ -66,6 +66,16 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     });
   };
 
+  const displayTernary = (arg1, bg1, bg2, bg3) => {
+    if (typeof arg1 === 'string') {
+      return bg1;
+    } else {
+      if (arg1) {
+        return bg2;
+      }
+      return bg3;
+    }
+  };
   const columns = [
     {
       title: "Date",
@@ -84,58 +94,53 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Badge
-          style={{
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            borderRadius: "16px",
-            background: `${
-              status !== "Lost"
-                ? status
-                  ? "var(--Primary-50, #F9F5FF)"
-                  : "var(--Success-50, #ECFDF3)"
-                : "var(--Success-50, #ECFDF3)"
-            }`,
-            mixBlendMode: "multiply",
-          }}
-        >
-          <Chip
+        (
+          <Badge
             style={{
-              backgroundColor: `${
-                status !== "Lost"
-                  ? status
-                    ? "var(--Success-50, #ECFDF3)"
-                    : "var(--Primary-50, #F9F5FF)"
-                  : "var(--Primary-50, #F9F5FF)"
-              }`,
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              borderRadius: "16px",
+              background: displayTernary(
+                status,
+                "#ffb5b5",
+                "var(--Primary-50, #F9F5FF)",
+                "var(--Success-50, #ECFDF3)"
+              ),
+              mixBlendMode: "multiply",
             }}
-            label={
-              <p
-                style={{
-                  color: `${
-                    status !== "Lost"
-                      ? status
-                        ? "var(--success-700, #027A48)"
-                        : "var(--Primary-700, #6941C6)"
-                      : "var(--Primary-700, #6941C6)"
-                  }`,
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  fontStyle: "normal",
-                  fontWeight: 500,
-                  lineHeight: "18px",
-                }}
-              >
-                {status === "Lost"
-                  ? "Returned"
-                  : status
-                  ? "Active"
-                  : "Returned"}
-              </p>
-            }
-          />
-        </Badge>
+          >
+            <Chip
+              style={{
+                backgroundColor: displayTernary(
+                  status,
+                  "#ffb5b5",
+                  "var(--Success-50, #ECFDF3)",
+                  "var(--Primary-50, #F9F5FF)"
+                ),
+              }}
+              label={
+                <p
+                  style={{
+                    color: displayTernary(
+                      status,
+                      "#f71212",
+                      "var(--success-700, #027A48)",
+                      "var(--Primary-700, #6941C6)"
+                    ),
+                    fontFamily: "Inter",
+                    fontSize: "12px",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    lineHeight: "18px",
+                  }}
+                >
+                  {displayTernary(status, status, "Active", "Returned")}
+                </p>
+              }
+            />
+          </Badge>
+        )
       ),
     },
     {
@@ -275,7 +280,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
               }
             );
             await assignedDevicesQuery.refetch();
-            await refetching()
+            await refetching();
             return success();
           }
         }
