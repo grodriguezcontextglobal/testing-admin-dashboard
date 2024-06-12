@@ -37,6 +37,7 @@ import UpdateRoleInCompany from "../../pages/staff/detail/components/equipment_c
 import AssignStaffMemberToEvent from "../../pages/staff/detail/components/AssignStaffMemberToEvent";
 import ConsumerDeviceLostFeeCash from "../../pages/consumers/components/markedLostOption/Cash";
 import RedirectionPage from "../../components/utils/RedirectionPage";
+import ConsumerDeviceLostFeeCreditCard from "../../pages/consumers/components/markedLostOption/CreditCard";
 const AuthRoutes = () => {
   const Home = lazy(() => import("../../pages/home/MainPage"));
   const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
@@ -154,6 +155,11 @@ const AuthRoutes = () => {
               path="/consumers/:id/lost-device-fee/cash"
               element={<ConsumerDeviceLostFeeCash />}
             />
+                        <Route
+              path="/consumers/:id/lost-device-fee/credit_card"
+              element={<ConsumerDeviceLostFeeCreditCard />}
+            />
+
             <Route path="/staff" element={<Staff />} />
             <Route path="/staff/:id" element={<StaffDetail />}>
               <Route
