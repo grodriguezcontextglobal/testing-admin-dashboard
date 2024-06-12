@@ -2,7 +2,7 @@ import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Popconfirm, Space, Table, notification } from "antd";
 import _ from "lodash";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
@@ -15,12 +15,15 @@ import {
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
+import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
-
+import { ReplaceDevice } from "./actions/ReplaceDevice";
 const ExpandedRowInTable = ({ rowRecord }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
+  const [openModal, setOpenModal] = useState(false);
+  const { triggerModal } = useSelector((state) => state.helper);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const transactionsQuery = useQuery({
@@ -54,6 +57,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     return () => {
       controller.abort();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refetchingFn = () => {
@@ -82,8 +86,6 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
   };
-  //*nested table starts here
-  // const renderDataPerRow = (rowRecord) => {
   const foundTransactionAndDevicesAssigned = () => {
     if (foundAllTransactionsAndDevicesAssigned()) {
       const paymentIntentInRecord =
@@ -192,7 +194,14 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           type: props.deviceType,
         }
       );
-      if(String(deviceInPoolListQuery.data.receiversInventory.at(-1).activity).toLowerCase() === "yes") return alert(`Device is already in use for another consumer. Please assign another device serial number.`) 
+      if (
+        String(
+          deviceInPoolListQuery.data.receiversInventory.at(-1).activity
+        ).toLowerCase() === "yes"
+      )
+        return alert(
+          `Device is already in use for another consumer. Please assign another device serial number.`
+        );
 
       let assignedItem = {
         ...props,
@@ -261,6 +270,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         foundTransactionAndDevicesAssigned(),
         "device.serialNumber"
       );
+      setOpenModal(true);
       dispatch(onReceiverObjectToReplace(props));
       dispatch(
         onAddDevicesAssignedInPaymentIntent(findData[props.serialNumber])
@@ -534,8 +544,11 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           }}
         />
       )}
+      {openModal && (
+        <Choice openModal={openModal} setOpenModal={setOpenModal} />
+      )}
+      {triggerModal && <ReplaceDevice refetching={refetchingFn} />}
     </>
   );
 };
-
 export default ExpandedRowInTable;
