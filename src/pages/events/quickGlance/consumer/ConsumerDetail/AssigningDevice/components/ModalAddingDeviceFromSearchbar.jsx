@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
+import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
@@ -56,6 +57,14 @@ const ModalAddingDeviceFromSearchbar = () => {
       return Array.from(result);
     };
 
+    const renderTernaryOption = (props) => {
+      if (typeof props === "string") {
+        return props;
+      } else {
+        if (props) return "In-use";
+        return "Returned";
+      }
+    };
     const columns = [
       {
         title: "Device serial number",
@@ -67,21 +76,45 @@ const ModalAddingDeviceFromSearchbar = () => {
         },
         sortDirections: ["descend", "ascend"],
         width: "30%",
+        render: (serialNumber) => (
+          <p
+            style={{
+              ...Subtitle,
+              textTransform: "none",
+              fontSize: "16px",
+              lineHeight: "24px",
+            }}
+          >
+            {serialNumber}
+          </p>
+        ),
       },
       {
         title: "Type",
         dataIndex: "deviceType",
         key: "deviceType",
-        width: "20%",
         sorter: {
           compare: (a, b) => ("" + a.deviceType).localeCompare(b.deviceType),
         },
         sortDirections: ["descend", "ascend"],
+        render: (deviceType) => (
+          <p
+            style={{
+              ...Subtitle,
+              textTransform: "none",
+              fontSize: "16px",
+              lineHeight: "24px",
+            }}
+          >
+            {deviceType}
+          </p>
+        ),
       },
       {
         title: "Status",
         dataIndex: "status",
         key: "status",
+        width: "20%",
         sorter: {
           compare: (a, b) => ("" + a.status).localeCompare(b.status),
         },
@@ -89,19 +122,13 @@ const ModalAddingDeviceFromSearchbar = () => {
         render: (status) => (
           <p
             style={{
+              ...Subtitle,
               textTransform: "none",
-              textAlign: "left",
-              fontWeight: 400,
               fontSize: "16px",
-              fontFamily: "Inter",
               lineHeight: "24px",
             }}
           >
-            {typeof status === "string"
-              ? status
-              : status
-              ? "In-use"
-              : "Returned"}
+            {renderTernaryOption(status)}
           </p>
         ),
       },
