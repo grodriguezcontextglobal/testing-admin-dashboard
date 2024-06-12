@@ -82,6 +82,10 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     }
     return setResponsedData(result);
   };
+
+  const refetchingAfterReturnDeviceInRow = () => {
+    return fetchingDataPerAllowed();
+  };
   useEffect(() => {
     const controller = new AbortController();
     fetchingDataPerAllowed();
@@ -98,7 +102,8 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         paymentIntent: value[0].paymentIntent,
         device: value.length,
         status: value.reduce(
-          (acc, { device }) => acc + (device.status === false || device.status === "Lost"),
+          (acc, { device }) =>
+            acc + (device.status === false || device.status === "Lost"),
           0
         ),
       });
@@ -248,7 +253,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                     lineHeight: "18px",
                   }}
                 >
-                  {record.status === record.device ? "Returned":"Active"}
+                  {record.status === record.device ? "Returned" : "Active"}
                 </p>
               }
             />
@@ -278,7 +283,12 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       expandable={{
         expandIcon: false,
         expandRowByClick: true,
-        expandedRowRender: (record) => <ExpandedRow rowRecord={record} />,
+        expandedRowRender: (record) => (
+          <ExpandedRow
+            rowRecord={record}
+            refetching={refetchingAfterReturnDeviceInRow}
+          />
+        ),
       }}
       dataSource={finalDataToDisplayIncludeSearchFN()}
       className="table-ant-customized"
