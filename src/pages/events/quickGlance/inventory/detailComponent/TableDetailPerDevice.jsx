@@ -102,6 +102,18 @@ const TableDetailPerDevice = ({ searching }) => {
     fontWeight: 400,
     lineHeight: "20px",
   };
+
+  const displayTernary = (arg1, bg1, bg2, bg3) => {
+    if (typeof arg1 === 'string') {
+      return bg1;
+    } else {
+      if (arg1) {
+        return bg2;
+      }
+      return bg3;
+    }
+  };
+
   const columns = [
     {
       title: "Event",
@@ -141,28 +153,42 @@ const TableDetailPerDevice = ({ searching }) => {
         compare: (a, b) => ("" + a.status).localeCompare(b.status),
       },
       render: (_, record) => (
-        <span
-          style={{
-            margin: "auto",
-          }}
-        >
-          <p
+        console.log("record", record),
+        (
+          <span
             style={{
-              ...renderRowStyle,
-              backgroundColor: record.device.status
-                ? "var(--orange-dark-50, #FFF4ED)"
-                : "var(--success-50, #ECFDF3)",
-              width: "fit-content",
-              padding: "5px 8px",
-              borderRadius: "8px",
-              color: record.device.status
-                ? "var(--orange-700, #B93815)"
-                : "var(--success-700, #027A48)",
+              margin: "auto",
             }}
           >
-            {record.device.status ? "In-use" : "Returned"}
-          </p>
-        </span>
+            <p
+              style={{
+                ...renderRowStyle,
+                backgroundColor: displayTernary(
+                  record.device.status,
+                  "var(--orange-dark-50, #FFF4ED)",
+                  "var(--orange-dark-50, #FFF4ED)",
+                  "var(--success-50, #ECFDF3)"
+                ),
+                width: "fit-content",
+                padding: "5px 8px",
+                borderRadius: "8px",
+                color: displayTernary(
+                  record.device.status,
+                  "var(--orange-700, #B93815)",
+                  "var(--orange-700, #B93815)",
+                  "var(--success-700, #027A48)"
+                ),
+              }}
+            >
+              {displayTernary(
+                record.device.status,
+                record.device.status,
+                "In-use",
+                "Returned"
+              )}
+            </p>
+          </span>
+        )
       ),
     },
     {
