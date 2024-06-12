@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -24,6 +24,7 @@ import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 const SearchDevice = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin);
+  const [loadingStatus, setLoadingStatus] = useState(false);
   const staffMembersQuery = useQuery({
     queryKey: ["listOfAssignedReceivers"],
     queryFn: () =>
@@ -58,6 +59,7 @@ const SearchDevice = ({ searchParams }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,19 +70,6 @@ const SearchDevice = ({ searchParams }) => {
       controller.abort();
     };
   }, [searchParams]);
-  // const sortDeviceAssignedStaff = () => {
-  //   const reference = new Set()
-  //   if (deviceInUseStaffMemberQuery.data) {
-  //     const data = deviceInUseStaffMemberQuery?.data?.data?.items
-  //     for (let item of data) {
-  //       const stringifyItem = JSON.stringify(item)
-  //       if (String(stringifyItem).toLowerCase().includes(String(searchParams).toLowerCase())) {
-  //         reference.add(JSON.parse({device: item.serial_number, type: item.item_group, event: '', image: "", data: item ?? [] }))
-  //       }
-  //     }
-  //   }
-  //   return Array.from(reference)
-  // }
 
   const sortAndRenderFoundData = () => {
     if (staffMembersQuery.data && deviceInUseStaffMemberQuery.data) {
@@ -110,11 +99,9 @@ const SearchDevice = ({ searchParams }) => {
   }, [searchParams, staffMembersQuery.data]);
 
   const handleDeviceSearch = async (record) => {
-    console.log(record);
     const respTransaction = await devitrakApi.post("/transaction/transaction", {
       paymentIntent: record.data.paymentIntent,
     });
-    console.log(respTransaction.data);
     if (respTransaction.data.ok) {
       let userProfile = {
         ...respTransaction.data.list[0].consumerInfo,
@@ -141,6 +128,92 @@ const SearchDevice = ({ searchParams }) => {
       return navigate(
         `/events/event-attendees/${userProfile.uid}/transactions-details`
       );
+    }
+  };
+  const returningDevice = async (record) => {
+    try {
+      setLoadingStatus(true);
+      const assignedDeviceListQuery = await devitrakApi.post(
+        "/receiver/receiver-assigned-list",
+        {
+          eventSelected: record.eventSelected,
+          provider: record.provider,
+          "device.serialNumber": record.serialNumber,
+          "device.deviceType": record.type,
+          "device.status": true,
+        }
+      );
+      const deviceInPoolListQuery = await devitrakApi.post(
+        "/receiver/receiver-pool-list",
+        {
+          eventSelected: record.eventSelected,
+          provider: record.provider,
+          device: record.serialNumber,
+          type: record.type,
+          activity: "YES",
+        }
+      );
+      if (assignedDeviceListQuery.data && deviceInPoolListQuery.data) {
+        const respUpdate = await devitrakApi.patch(
+          `/receiver/receiver-update/${
+            assignedDeviceListQuery.data.listOfReceivers.at(-1).id
+          }`,
+          {
+            id: assignedDeviceListQuery.data.listOfReceivers.at(-1).id,
+            device: {
+              ...assignedDeviceListQuery.data.listOfReceivers.at(-1).device,
+              status: false,
+            },
+          }
+        );
+        if (respUpdate.data) {
+          const dateString = new Date().toString();
+          const dateRef = dateString.split(" ");
+          queryClient.invalidateQueries({
+            queryKey: ["assignedDeviceListQuery"],
+            exact: true,
+          });
+          await devitrakApi.patch(
+            `/receiver/receivers-pool-update/${
+              deviceInPoolListQuery.data.receiversInventory.at(-1).id
+            }`,
+            {
+              activity: "No",
+            }
+          );
+          await devitrakApi.post(
+            "/nodemailer/confirm-returned-device-notification",
+            {
+              consumer: {
+                name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
+                email: record.data.userInfo.email,
+              },
+              device: {
+                serialNumber: record.data.device.serialNumber,
+                deviceType: record.data.device.deviceType,
+              },
+              event: record.data.eventSelected[0],
+              company: record.data.provider[0],
+              transaction: record.data.paymentIntent,
+              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              time: dateRef[4],
+              link: `https://app.devitrak.net/authentication/${encodeURI(
+                record.data.eventSelected[0]
+              )}/${encodeURI(record.data.provider[0])}/${
+                record.data.userInfo.id
+              }`,
+            }
+          );
+          setLoadingStatus(false);
+          await handleDeviceSearch(record);
+        }
+      }
+    } catch (error) {
+      console.log(
+        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
+        error
+      );
+      setLoadingStatus(false);
     }
   };
   if (
@@ -212,6 +285,7 @@ const SearchDevice = ({ searchParams }) => {
                 <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
                   {" "}
                   <CardDeviceFound
+                    key={item.id}
                     props={{
                       serialNumber: item?.device?.serialNumber,
                       type: item?.device?.deviceType,
@@ -223,6 +297,8 @@ const SearchDevice = ({ searchParams }) => {
                       data: item ?? [],
                     }}
                     fn={handleDeviceSearch}
+                    returnFn={returningDevice}
+                    loadingStatus={loadingStatus}
                   />
                 </Grid>
               ))
