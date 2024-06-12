@@ -24,6 +24,7 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 import CardEventDisplay from "./components/CardEventDisplay";
 import PastEventsTable from "./components/PastEventsTable";
 import BannerMsg from "./utils/BannerMsg";
+import BannerNoEventStaffOnly from "../../components/utils/BannerNoEventStaffOnly";
 const MainPage = () => {
   const { watch } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -161,6 +162,7 @@ const MainPage = () => {
       }
     };
     renderingDataBasedOnStaffAndActiveEvent();
+
     const dataToBeRenderedInUpcomingSection = () => {
       const result = new Set();
       for (let data of renderingDataBasedOnStaffAndActiveEvent()) {
@@ -170,6 +172,7 @@ const MainPage = () => {
         if (
           (data.active && currentDate < begin) ||
           (data.active && currentDate >= begin && currentDate <= ending)
+          // data.active
         ) {
           result.add({ key: data.id, ...data });
         }
@@ -179,6 +182,7 @@ const MainPage = () => {
         (a, b) => a.eventInfoDetail.dateBegin - b.eventInfoDetail.dateBegin
       );
     };
+
     return (
       <Grid
         alignSelf={"flex-start"}
@@ -312,7 +316,15 @@ const MainPage = () => {
               );
             })
           ) : (
-            <BannerMsg />
+            <>
+              {/* <div
+                style={{
+                  display: `${Number(user.role) < 4 ? "flex" : "none"}`,
+                }}
+              > */}
+              {Number(user.role) < 4 ? <BannerMsg /> : <BannerNoEventStaffOnly props={{title:"No event", message:"There is not active events where you are assigned as staff member."}} />}
+              {/* </div> */}
+            </>
           )}
         </Grid>
         {dataToBeRenderedInUpcomingSection()?.length > 0 && (
