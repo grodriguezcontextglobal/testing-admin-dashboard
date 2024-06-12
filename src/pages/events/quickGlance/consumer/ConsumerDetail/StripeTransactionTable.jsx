@@ -15,17 +15,14 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-table.css";
-import Choice from "../lostFee/Choice";
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
-import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
-  const [openModal, setOpenModal] = useState(false);
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
     useState(false);
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
@@ -35,8 +32,6 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
   const recordRef = useRef(null);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
-  // const { user } = useSelector((state) => state.admin);
-  const { triggerModal } = useSelector((state) => state.helper);
   const { openModalToAssignDevice } = useSelector(
     (state) => state.devicesHandle
   );
@@ -356,9 +351,6 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
           // renderDataPerRow(record),
         }}
       />
-      {openModal && (
-        <Choice openModal={openModal} setOpenModal={setOpenModal} />
-      )}
       {openCapturingDepositModal && (
         <Capturing
           openCapturingDepositModal={openCapturingDepositModal}
@@ -381,7 +373,6 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
           refetching={refetchingFn}
         />
       )}
-      {triggerModal && <ReplaceDevice refetching={refetchingFn} />}
       {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
     </>
   );
