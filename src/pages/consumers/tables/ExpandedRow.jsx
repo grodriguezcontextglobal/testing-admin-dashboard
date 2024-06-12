@@ -23,7 +23,7 @@ import {
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
 
-const ExpandedRow = ({ rowRecord }) => {
+const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
@@ -51,7 +51,6 @@ const ExpandedRow = ({ rowRecord }) => {
   useEffect(() => {
     const controller = new AbortController();
     assignedDevicesQuery.refetch();
-    console.log("assignedDevicesQuery", assignedDevicesQuery?.data?.data);
     eventsRelatedToTransactionQuery.refetch();
     return () => {
       controller.abort();
@@ -276,6 +275,7 @@ const ExpandedRow = ({ rowRecord }) => {
               }
             );
             await assignedDevicesQuery.refetch();
+            await refetching()
             return success();
           }
         }
