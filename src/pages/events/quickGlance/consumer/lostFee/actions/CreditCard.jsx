@@ -1,9 +1,7 @@
 import {
   Button,
-  FormControl,
   Grid,
   InputAdornment,
-  InputLabel,
   OutlinedInput,
   Typography,
 } from "@mui/material";
@@ -26,6 +24,8 @@ import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInpu
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
+  const [blocking, setBlocking] = useState(false);
+  console.log(blocking);
   const navigator = useNavigate();
   const dispatch = useDispatch();
   const refRender = useRef(0);
@@ -202,6 +202,7 @@ const CreditCard = () => {
 
       if (response) {
         setClientSecret(response.data.paymentSubscription.client_secret);
+        return setBlocking(true);
       }
     };
 
@@ -246,7 +247,7 @@ const CreditCard = () => {
             event.eventInfoDetail.eventName
           )}/${encodeURI(event.company)}/${customer.uid}`,
         });
-        await navigator(
+        navigator(
           `/events/event-attendees/${customer.uid}/transactions-details`
         );
       }
@@ -312,7 +313,8 @@ const CreditCard = () => {
             <Grid
               display={"flex"}
               alignItems={"center"}
-              justifyContent={"center"}
+              justifyContent={"flex-end"}
+              gap={"10px"}
               margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
               item
               xs={12}
@@ -320,17 +322,31 @@ const CreditCard = () => {
               md={4}
               lg={3}
             >
+              <p
+                style={{
+                  width: "fit-content",
+                  color: "#000",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  fontFamily: "Inter",
+                  lineHeight: "20px",
+                  textTransform: "none",
+                }}
+              >
+                Serial number
+              </p>
+
               <OutlinedInput
                 disabled
                 value={receiverToReplaceObject.serialNumber}
                 style={OutlinedInputStyle}
-                fullWidth
               />
             </Grid>
             <Grid
               display={"flex"}
               alignItems={"center"}
-              justifyContent={"center"}
+              justifyContent={"flex-end"}
+              gap={"10px"}
               margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
               item
               xs={12}
@@ -338,33 +354,28 @@ const CreditCard = () => {
               md={4}
               lg={3}
             >
-              <FormControl fullWidth>
-                <InputLabel htmlFor="outlined-adornment-amount">
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      color: "#000",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    Amount
-                  </Typography>
-                </InputLabel>
-                <OutlinedInput
-                  id="outlined-adornment-amount"
-                  style={OutlinedInputStyle}
-                  startAdornment={
-                    <InputAdornment position="start">$</InputAdornment>
-                  }
-                  {...register("total", { required: true })}
-                  aria-invalid={errors.total ? "true" : "false"}
-                  label="Amount"
-                  name="total"
-                />
-              </FormControl>
+              <p
+                style={{
+                  color: "#000",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  fontFamily: "Inter",
+                  lineHeight: "20px",
+                  textTransform: "none",
+                }}
+              >
+                Amount
+              </p>
+              <OutlinedInput
+                disabled={blocking}
+                id="outlined-adornment-amount"
+                style={OutlinedInputStyle}
+                startAdornment={
+                  <InputAdornment position="start">$</InputAdornment>
+                }
+                {...register("total", { required: true })}
+                name="total"
+              />
               {errors?.total && (
                 <Alert message="Amount is required" type="error" />
               )}
