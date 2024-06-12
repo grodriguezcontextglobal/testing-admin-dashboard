@@ -4,17 +4,17 @@ import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Link } from "react-router-dom";
 import { Grid } from "@mui/material";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 
 const Choice = ({ openModal, setOpenModal }) => {
-  const { customer } = useSelector((state) => state.stripe);
+  // const { customer } = useSelector((state) => state.stripe);
   const { customer: customerDetail } = useSelector((state) => state.customer);
-  console.log("stripe", customer);
-  console.log("customer", customerDetail);
   const handleClose = () => {
     setOpenModal(false);
   };
   return (
-    <Modal open={openModal} onCancel={() => handleClose()} footer={[]}>
+    <Modal open={openModal} centered onCancel={() => handleClose()} footer={[]}>
       <p
         style={{
           textTransform: "none",
@@ -31,35 +31,35 @@ const Choice = ({ openModal, setOpenModal }) => {
         container
         marginY={2}
         display={"flex"}
+        flexDirection={'column'}
         justifyContent={"space-between"}
         alignItems={"center"}
+        gap={2}
       >
-        <Link to={`/consumers/${customerDetail?.uid}/lost-device-fee/cash`}>
-          <button style={BlueButton}>
-            <p style={{ ...BlueButtonText, textTransform: "none" }}>
+        <Link
+          style={{ width: "100%", backgroundColor:"transparent" }}
+          to={`/consumers/${customerDetail?.uid}/lost-device-fee/credit_card`}
+        >
+          <button style={{ ...BlueButton, width: "100%" }} >
+            <p style={{ ...BlueButtonText, textTransform: "none", ...CenteringGrid }}>
               Credit card
             </p>
           </button>
         </Link>
-        <Divider />
-        <Link to={`/consumers/${customerDetail?.uid}/lost-device-fee/cash`}>
-          <button style={BlueButton}>
-            <p style={{ ...BlueButtonText, textTransform: "none" }}>Cash</p>
+        <Link
+          style={{ width: "100%", backgroundColor:"transparent" }}
+          to={`/consumers/${customerDetail?.uid}/lost-device-fee/cash`}
+        >
+          <button style={{ ...BlueButton, width: "100%" }}>
+            <p style={{ ...BlueButtonText, textTransform: "none", ...CenteringGrid }}>Cash</p>
           </button>
         </Link>
       </Grid>
 
       <Divider />
-      <button onClick={handleClose}>
+      <button onClick={handleClose} style={{ width: "100%" }}>
         <p
-          style={{
-            textTransform: "none",
-            textAlign: "left",
-            fontWeight: 400,
-            fontSize: "16px",
-            fontFamily: "Inter",
-            lineHeight: "24px",
-          }}
+          style={{...Subtitle, color:"var(--whitebase)", ...CenteringGrid}}
         >
           Go back
         </p>
