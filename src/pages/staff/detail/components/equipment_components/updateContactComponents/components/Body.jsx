@@ -86,7 +86,7 @@ const Body = () => {
         phone: data.phone,
         imageProfile: base64,
       });
-      if (resp) {
+      if (resp.data) {
         dispatch(
           onAddStaffProfile({
             ...profile,
@@ -100,7 +100,8 @@ const Body = () => {
             }
           })
         );
-        return openNotificationWithIcon()
+         openNotificationWithIcon()
+         return navigate(`/staff/${profile.adminUserInfo.id}/main`)
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -109,7 +110,7 @@ const Body = () => {
         email: data.email,
         phone: data.phone,
       });
-      if (resp) {
+      if (resp.data) {
         dispatch(
           onAddStaffProfile({
             ...profile,
@@ -123,7 +124,8 @@ const Body = () => {
             }
           })
         );
-        return openNotificationWithIcon()
+        navigate(`/staff/${profile.adminUserInfo.id}/main`)
+        navigate(`/staff/${profile.adminUserInfo.id}/main`)
       }
     }
   };
