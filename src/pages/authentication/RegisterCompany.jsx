@@ -28,10 +28,23 @@ import InfrmationCard from "./components/InfrmationCard";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { PropTypes } from "prop-types";
 const RegisterCompany = () => {
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width: 769px) and (max-width:992px)"
   );
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen abd (min-width: 1201px)"
+  );
+
+  const adjustingFormWidth = (arg1, arg2, arg3, arg4) => {
+    if (isSmallDevice) return arg1; //"90vw";
+    if (isMediumDevice) return arg2; //"50vw";
+    if (isLargeDevice) return arg3; //"40vw";
+    if (isExtraLargeDevice) return arg4; //"50vw";
+  };
   const { user } = useSelector((state) => state.admin);
   const [listCompany, setListCompany] = useState([]);
   const [companyValue, setCompanyValue] = useState();
@@ -477,8 +490,10 @@ const RegisterCompany = () => {
       {contextHolder}
       <Grid
         style={{
-          backgroundColor: "var(--basewhite)",
-          // height: "100dvh"
+          backgroundColor: "var(--whitebase)",
+          height: "100dvh",
+          margin: 0,
+          width: "100vw",
         }}
         container
       >
@@ -493,7 +508,6 @@ const RegisterCompany = () => {
             paddingBottom={0}
             style={{
               overflow: "auto",
-              // height: "90dvh",
             }}
           >
             <Grid
@@ -508,6 +522,9 @@ const RegisterCompany = () => {
               <form
                 className="register-form-container"
                 onSubmit={handleSubmit(onSubmitRegister)}
+                style={{
+                  width: adjustingFormWidth("90vw", "90vw", "45vw", "90vw"),
+                }}
               >
                 <Typography
                   style={{

@@ -21,7 +21,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
-import "./style/authStyle.css";
+// import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit } = useForm({
@@ -44,10 +44,23 @@ const Registration = () => {
     });
   };
 
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width: 769px) and (max-width:992px)"
   );
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen abd (min-width: 1201px)"
+  );
+
+  const adjustingFormWidth = (arg1, arg2, arg3, arg4) => {
+    if (isSmallDevice) return arg1; //"90vw";
+    if (isMediumDevice) return arg2; //"50vw";
+    if (isLargeDevice) return arg3; //"40vw";
+    if (isExtraLargeDevice) return arg4; //"50vw";
+  };
   const onSubmitRegister = async (data) => {
     if (data.password !== data.password2)
       return openNotificationWithIcon(
@@ -95,12 +108,27 @@ const Registration = () => {
     <>
       {contextHolder}
       <Grid
-        style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
+        id="container-checking"
         container
+        style={{
+          backgroundColor: "var(--whitebase)",
+          height: "100dvh",
+          margin: 0,
+          width: "100vw",
+        }}
       >
         <Grid
           display={"flex"}
           flexDirection={"column"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          margin={"auto"}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            alignSelf: "stretch",
+          }}
           item
           xs={12}
           sm={12}
@@ -108,405 +136,358 @@ const Registration = () => {
           lg={6}
         >
           <Grid
-            container
             display={"flex"}
             flexDirection={"column"}
-            justifyContent={"space-around"}
-            alignItems={"center"}
-            overflow={"auto"}
-            paddingBottom={0}
+            justifyContent={"center"}
+            alignSelf={"center"}
+            margin={"auto"}
+            id="checking"
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <p
+              style={{
+                color: "var(--gray900, #101828)",
+                fontSize: "30px",
+                fontFamily: "Inter",
+                fontWeight: "600",
+                lineHeight: "38px",
+                marginBottom: "1rem",
+              }}
+            >
+              Welcome
+            </p>
+            <p
+              style={{
+                color: "var(--gray-500, #667085)",
+                fontSize: "16px",
+                fontFamily: "Inter",
+                lineHeight: "24px",
+              }}
+            >
+              Please enter your information
+            </p>
+          </Grid>
+
+          <form
+            className="register-form-container"
+            onSubmit={handleSubmit(onSubmitRegister)}
             style={{
-              overflow: "auto",
-              height: "90dvh",
+              width: adjustingFormWidth("90vw", "90vw", "45vw", "90vw"),
+              padding: "0 20px 0 0",
             }}
           >
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                Email <span style={{ fontWeight: 800 }}>*</span>
+              </FormLabel>
+              <OutlinedInput
+                required
+                {...register("email")}
+                // value={email}
+                // onChange={(e) => setEmail(e.target.value)}
+                style={OutlinedInputStyle}
+                placeholder="Enter your email"
+                type="email"
+                fullWidth
+              />
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                <Typography style={Subtitle}>
+                  {" "}
+                  You need to enter a company email if you are creating a new
+                  company.
+                </Typography>
+              </FormLabel>
+            </Grid>
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                Password <span style={{ fontWeight: 800 }}>*</span>
+              </FormLabel>
+              <OutlinedInput
+                required
+                {...register("password")}
+                // value={password}
+                // onChange={(e) => setPassword(e.target.value)}
+                style={OutlinedInputStyle}
+                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                type="password"
+                fullWidth
+              />
+            </Grid>
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                Repeat password <span style={{ fontWeight: 800 }}>*</span>
+              </FormLabel>
+              <OutlinedInput
+                required
+                {...register("password2")}
+                // value={password2}
+                // onChange={(e) => setPassword2(e.target.value)}
+                style={OutlinedInputStyle}
+                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                type="password"
+                fullWidth
+              />
+            </Grid>
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                First name <span style={{ fontWeight: 800 }}>*</span>
+              </FormLabel>
+              <OutlinedInput
+                required
+                {...register("firstName")}
+                type="text"
+                // value={firstName}
+                // onChange={(e) => setFirstName(e.target.value)}
+                style={{
+                  ...OutlinedInputStyle,
+                }}
+                placeholder="Enter your name"
+                fullWidth
+              />
+            </Grid>
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+              <FormLabel style={{ marginBottom: "0.5rem" }}>
+                Last name <span style={{ fontWeight: 800 }}>*</span>
+              </FormLabel>
+              <OutlinedInput
+                required
+                {...register("lastName")}
+                type="text"
+                // value={lastName}
+                // onChange={(e) => setLastName(e.target.value)}
+                style={{
+                  ...OutlinedInputStyle,
+                }}
+                placeholder="Enter your last name"
+                fullWidth
+              />
+            </Grid>
+
             <Grid
-              className="register-container"
               display={"flex"}
               flexDirection={"column"}
-              style={{ padding: `${isSmallDevice ? "1rem" : "2rem"}` }}
-              container
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              marginY={0}
+              gap={2}
+              item
+              xs={12}
+              sm={12}
+              md={12}
             >
-              <form
-                className="register-form-container"
-                onSubmit={handleSubmit(onSubmitRegister)}
+              <Grid
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignSelf={"stretch"}
+                marginY={0}
+                gap={2}
+                item
+                xs={12}
+                sm={12}
+                md={12}
+              >
+                <FormLabel style={{ marginBottom: "0.5rem" }}>
+                  Update your profile photo{" "}
+                  <span style={{ fontWeight: 800 }}>*</span>
+                </FormLabel>
+              </Grid>
+              <Grid
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignSelf={"stretch"}
+                marginY={0}
+                gap={2}
+                item
+                xs={12}
+                sm={12}
+                md={12}
               >
                 <Grid
-                  item
-                  xs={12}
                   display={"flex"}
-                  flexDirection={"column"}
-                  justifyContent={"space-around"}
-                  alignItems={"center"}
-                >
-                  <Typography
-                    style={{
-                      color: "var(--gray900, #101828)",
-                      fontSize: "30px",
-                      fontFamily: "Inter",
-                      fontWeight: "600",
-                      lineHeight: "38px",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    Welcome
-                  </Typography>
-                  <Typography
-                    style={{
-                      color: "var(--gray-500, #667085)",
-                      fontSize: "16px",
-                      fontFamily: "Inter",
-                      lineHeight: "24px",
-                    }}
-                  >
-                    Please enter your information
-                  </Typography>
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Email <span style={{ fontWeight: 800 }}>*</span>
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("email")}
-                    // value={email}
-                    // onChange={(e) => setEmail(e.target.value)}
-                    style={OutlinedInputStyle}
-                    placeholder="Enter your email"
-                    type="email"
-                    fullWidth
-                  />
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    <Typography style={Subtitle}>
-                      {" "}
-                      You need to enter a company email if you are creating a
-                      new company.
-                    </Typography>
-                  </FormLabel>
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Password <span style={{ fontWeight: 800 }}>*</span>
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("password")}
-                    // value={password}
-                    // onChange={(e) => setPassword(e.target.value)}
-                    style={OutlinedInputStyle}
-                    placeholder="******"
-                    type="password"
-                    fullWidth
-                  />
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Repeat password <span style={{ fontWeight: 800 }}>*</span>
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("password2")}
-                    // value={password2}
-                    // onChange={(e) => setPassword2(e.target.value)}
-                    style={OutlinedInputStyle}
-                    placeholder="******"
-                    type="password"
-                    fullWidth
-                  />
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    First name <span style={{ fontWeight: 800 }}>*</span>
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("firstName")}
-                    type="text"
-                    // value={firstName}
-                    // onChange={(e) => setFirstName(e.target.value)}
-                    style={{
-                      ...OutlinedInputStyle,
-                    }}
-                    placeholder="Enter your name"
-                    fullWidth
-                  />
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Last name <span style={{ fontWeight: 800 }}>*</span>
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("lastName")}
-                    type="text"
-                    // value={lastName}
-                    // onChange={(e) => setLastName(e.target.value)}
-                    style={{
-                      ...OutlinedInputStyle,
-                    }}
-                    placeholder="Enter your last name"
-                    fullWidth
-                  />
-                </Grid>
-
-                <Grid
-                  display={"flex"}
-                  flexDirection={"column"}
                   justifyContent={"flex-start"}
-                  alignItems={"center"}
+                  alignSelf={"stretch"}
                   marginY={0}
                   gap={2}
                   item
-                  xs={12}
-                  sm={12}
-                  md={12}
+                  xs={4}
+                  sm={4}
+                  md={4}
                 >
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignSelf={"stretch"}
-                    marginY={0}
-                    gap={2}
-                    item
-                    xs={12}
-                    sm={12}
-                    md={12}
-                  >
-                    <FormLabel style={{ marginBottom: "0.5rem" }}>
-                      Update your profile photo{" "}
-                      <span style={{ fontWeight: 800 }}>*</span>
-                    </FormLabel>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignSelf={"stretch"}
-                    marginY={0}
-                    gap={2}
-                    item
-                    xs={12}
-                    sm={12}
-                    md={12}
-                  >
-                    <Grid
-                      display={"flex"}
-                      justifyContent={"flex-start"}
-                      alignSelf={"stretch"}
-                      marginY={0}
-                      gap={2}
-                      item
-                      xs={4}
-                      sm={4}
-                      md={4}
-                    >
-                      <Avatar
-                        size={{
-                          xs: 24,
-                          sm: 32,
-                          md: 40,
-                          lg: 64,
-                          xl: 80,
-                          xxl: 100,
-                        }}
-                        src={
-                          user.data ? (
-                            user.data.imageProfile
-                          ) : (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <UploadImagePlaceholder style={{}} />
-                            </div>
-                          )
-                        }
-                        style={{
-                          background: "var(--Gray-100, #F2F4F7)",
-                        }}
-                      />
-                    </Grid>
-                    <Grid
-                      display={"flex"}
-                      flexDirection={"column"}
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                      marginBottom={2}
-                      style={{
-                        width: "100%",
-                        borderRadius: "12px",
-                        border: "1px solid var(--gray-200, #EAECF0)",
-                        background: "var(--base-white, #FFF)",
-                      }}
-                      item
-                      xs={12}
-                    >
-                      <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        marginTop={2}
-                        item
-                        xs={12}
-                      >
-                        <Avatar
+                  <Avatar
+                    size={{
+                      xs: 24,
+                      sm: 32,
+                      md: 40,
+                      lg: 64,
+                      xl: 80,
+                      xxl: 100,
+                    }}
+                    src={
+                      user.data ? (
+                        user.data.imageProfile
+                      ) : (
+                        <div
                           style={{
                             display: "flex",
-                            justifyContent: "center",
                             alignItems: "center",
-                            border: "6px solid var(--gray-50, #F9FAFB)",
-                            background: "6px solid var(--gray-50, #F9FAFB)",
-                            borderRadius: "28px",
+                            justifyContent: "center",
                           }}
                         >
-                          {" "}
-                          <Icon
-                            icon="tabler:cloud-upload"
-                            color="#475467"
-                            width={20}
-                            height={20}
-                          />
-                        </Avatar>
-                      </Grid>
-                      <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        item
-                        xs={12}
-                      >
-                        <TextField
-                          {...register("photo")}
-                          id="file-upload"
-                          type="file"
-                          accept=".jpeg, .png, .jpg"
-                          style={{
-                            outline: "none",
-                            border: "transparent",
-                          }}
-                        />
-                      </Grid>
-                      <Grid
-                        display={"flex"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        marginBottom={2}
-                        item
-                        xs={12}
-                      >
-                        <p style={{ ...Subtitle, fontWeight: 400 }}>
-                          SVG, PNG, JPG or GIF (max. 1MB)
-                        </p>
-                      </Grid>
-                    </Grid>
-                  </Grid>
+                          <UploadImagePlaceholder style={{}} />
+                        </div>
+                      )
+                    }
+                    style={{
+                      background: "var(--Gray-100, #F2F4F7)",
+                    }}
+                  />
                 </Grid>
-
                 <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
                   display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
-                  <button
-                    type="submit"
-                    style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-                  >
-                    <p style={BlueButtonText}>Set up new company</p>
-                  </button>
-                </Grid>
-                <Grid
-                  item
-                  xs={12}
+                  flexDirection={"column"}
                   justifyContent={"center"}
                   alignItems={"center"}
+                  marginBottom={2}
+                  style={{
+                    width: "100%",
+                    borderRadius: "12px",
+                    border: "1px solid var(--gray-200, #EAECF0)",
+                    background: "var(--base-white, #FFF)",
+                  }}
+                  item
+                  xs={12}
                 >
-                  <p
-                    style={{
-                      color: "var(--gray-600, #475467)",
-                      fontSize: "14px",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
+                  <Grid
+                    display={"flex"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    marginTop={2}
+                    item
+                    xs={12}
                   >
-                    Do you have an account already?{" "}
-                    <Link to="/login">
-                      <button
-                        onClick={() =>
-                          dispatch(
-                            onLogin({
-                              name: "",
-                              lastName: "",
-                              email: "",
-                              password: "",
-                              company: "",
-                              role: "",
-                            })
-                          )
-                        }
-                        style={{
-                          backgroundColor: "transparent",
-                          outline: "none",
-                          color: "#004EEB",
-                          fontSize: "14px",
-                          fontFamily: "Inter",
-                          fontWeight: "600",
-                          lineHeight: "20px",
-                          cursor: "pointer",
-                          margin: 0,
-                          padding: 0,
-                        }}
-                      >
-                        Sign in
-                      </button>
-                    </Link>
-                  </p>
+                    <Avatar
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        border: "6px solid var(--gray-50, #F9FAFB)",
+                        background: "6px solid var(--gray-50, #F9FAFB)",
+                        borderRadius: "28px",
+                      }}
+                    >
+                      {" "}
+                      <Icon
+                        icon="tabler:cloud-upload"
+                        color="#475467"
+                        width={20}
+                        height={20}
+                      />
+                    </Avatar>
+                  </Grid>
+                  <Grid
+                    display={"flex"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    item
+                    xs={12} sm={10}
+                  >
+                    <TextField
+                      {...register("photo")}
+                      id="file-upload"
+                      type="file"
+                      accept=".jpeg, .png, .jpg"
+                      style={{
+                        outline: "none",
+                        border: "transparent",
+                      }}
+                    />
+                  </Grid>
+                  <Grid
+                    display={"flex"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    marginBottom={2}
+                    item
+                    xs={12}
+                  >
+                    <p style={{ ...Subtitle, fontWeight: 400 }}>
+                      SVG, PNG, JPG or GIF (max. 1MB)
+                    </p>
+                  </Grid>
                 </Grid>
-              </form>
+              </Grid>
             </Grid>
+
+            <Grid
+              marginY={"20px"}
+              marginX={0}
+              textAlign={"left"}
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              item
+              xs={12}
+            >
+              <button
+                type="submit"
+                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+              >
+                <p style={BlueButtonText}>Set up new company</p>
+              </button>
+            </Grid>
+          </form>
+          <Grid item xs={12} justifyContent={"center"} alignItems={"center"}>
+            <p
+              style={{
+                color: "var(--gray-600, #475467)",
+                fontSize: "14px",
+                fontFamily: "Inter",
+                lineHeight: "20px",
+              }}
+            >
+              Do you have an account already?{" "}
+              <Link to="/login">
+                <button
+                  onClick={() =>
+                    dispatch(
+                      onLogin({
+                        name: "",
+                        lastName: "",
+                        email: "",
+                        password: "",
+                        company: "",
+                        role: "",
+                      })
+                    )
+                  }
+                  style={{
+                    backgroundColor: "transparent",
+                    outline: "none",
+                    color: "#004EEB",
+                    fontSize: "14px",
+                    fontFamily: "Inter",
+                    fontWeight: "600",
+                    lineHeight: "20px",
+                    cursor: "pointer",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                >
+                  Sign in
+                </button>
+              </Link>
+            </p>
           </Grid>
+
           <div
             style={{
-              position: "absolute",
-              left: "50px",
-              bottom: "25px",
-              width: "100%",
+              position: "relative",
+              bottom: "0dvh",
+              margin: "0 20vw 0 0",
             }}
           >
             <FooterComponent />
@@ -519,7 +500,7 @@ const Registration = () => {
           md={6}
           lg={6}
         ></Grid>
-      </Grid>{" "}
+      </Grid>
     </>
   );
 };
