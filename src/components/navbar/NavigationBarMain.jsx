@@ -47,7 +47,7 @@ const drawerWidth = 240;
 const navItems = [
   { title: "home", route: "/", permission: [0, 1, 2, 3] },
   { title: "inventory", route: "/inventory", permission: [0, 1] },
-  { title: "events", route: "/events", permission: [0, 1, 2, 3, 4 ] },
+  { title: "events", route: "/events", permission: [0, 1, 2, 3, 4] },
   { title: "consumers", route: "/consumers", permission: [0, 1] },
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
 ];
@@ -165,6 +165,11 @@ const NavigationBarMain = (props) => {
   const container =
     window !== undefined ? () => window().document.body : undefined;
 
+  const renderOtherWidth = () => {
+    if (isMediumDevice) return "100vw";
+    if (isLargeDevice) return "100vw";
+    return "1228px";
+  };
   return (
     <Grid
       container
@@ -178,24 +183,25 @@ const NavigationBarMain = (props) => {
     >
       <AppBar
         style={{
-          top: "2.5dvh",
+          top: "2.9dvh",
           backgroundColor: "var(--blue700)",
           width: "100%",
         }}
         component="nav"
       >
         <Toolbar>
-          <Grid
+          <div
             id="grid-container-inside"
             style={{
               ...CenteringGrid,
               justifyContent: "space-between",
               backgroundColor: "var(--blue700)",
+              width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
             }}
-            item
-            sm={11}
-            md={11}
-            lg={11}
+            // item
+            // sm={8}
+            // md={12}
+            // lg={10.5}
           >
             <Grid item sm={9} md={7} lg={8}>
               <IconButton
@@ -271,22 +277,23 @@ const NavigationBarMain = (props) => {
                 justifyContent: "flex-end",
                 alignItems: "center",
                 margin: 0,
+                gap: "5px",
               }}
             >
               {/* <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}> */}
               <form
                 onSubmit={handleSearch}
-                style={{
-                  margin: `${
-                    isSmallDevice
-                      ? "0 5px 0 0"
-                      : isMediumDevice
-                      ? "0 -5px 0 0"
-                      : isLargeDevice
-                      ? "0 -5px 0 0"
-                      : "0 -10px 0 0"
-                  }`,
-                }}
+                // style={{
+                //   margin: `${
+                //     isSmallDevice
+                //       ? "0 5px 0 0"
+                //       : isMediumDevice
+                //       ? "0 -5px 0 0"
+                //       : isLargeDevice
+                //       ? "0 -5px 0 0"
+                //       : "0 -10px 0 0"
+                //   }`,
+                // }}
               >
                 <OutlinedInput
                   placeholder="Search"
@@ -392,7 +399,7 @@ const NavigationBarMain = (props) => {
                 )}
               </Grid>
             </Grid>
-          </Grid>
+          </div>
         </Toolbar>
       </AppBar>
       <nav>
