@@ -53,10 +53,10 @@ const App = () => {
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.setItem("admin-token", "");
+      localStorage.removeItem("admin-token");
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
-      return window.location.reload();
+      return window.location.reload(true);
     }
   };
 
