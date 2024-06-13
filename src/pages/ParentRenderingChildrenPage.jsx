@@ -44,17 +44,19 @@ const ParentRenderingChildrenPage = () => {
       display={"flex"}
       justifyContent={"center"}
       alignItems={"center"}
+      width={'100%'}
       container
     >
       <Grid
         alignSelf={"flex-start"}
         style={{ minHeight: "80dvh" }}
-        margin={"12.5dvh 0 1dvh"}
+        margin={"12.5dvh 20px 1dvh"}
+        // margin={"2.5dvh 20px 1dvh"}
         item
-        xs={11}
-        sm={11}
-        md={11}
-        lg={11}
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
       >
         <Outlet />
         {switchingCompanyInfo && (

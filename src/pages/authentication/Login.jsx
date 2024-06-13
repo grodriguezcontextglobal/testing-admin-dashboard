@@ -245,27 +245,32 @@ const Login = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
-  const formFittingTrigger = () => {
-    if (isSmallDevice || isMediumDevice) {
-      return "55vw";
-    } else if (isLargeDevice) {
-      return "40vw";
-    } else if (isExtraLargeDevice) {
-      return "30vw";
-    }
-  };
+  // const isLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 993px) and (max-width : 1200px)"
+  // );
+  // const isExtraLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 1201px)"
+  // );
+  // const formFittingTrigger = () => {
+  //   if (isSmallDevice || isMediumDevice) {
+  //     return "55vw";
+  //   } else if (isLargeDevice) {
+  //     return "40vw";
+  //   } else if (isExtraLargeDevice) {
+  //     return "1228px";
+  //   }
+  // };
   return (
     <>
       {contextHolder}
       <Grid
         container
-        style={{ backgroundColor: "var(--whitebase)", height: "100dvh" }}
+        style={{
+          backgroundColor: "var(--whitebase)",
+          height: "100dvh",
+          margin: "auto",
+          width: "100vw",
+        }}
       >
         <Grid
           display={"flex"}
@@ -324,7 +329,7 @@ const Login = () => {
             </p>
             <form
               onSubmit={handleSubmit(onSubmitLogin)}
-              style={{ width: formFittingTrigger() }}
+              style={{ width: "100%", padding: "0 20px 0 0" }} //formFittingTrigger()
             >
               <Grid
                 marginY={"20px"}
@@ -466,17 +471,15 @@ const Login = () => {
                 </span>
               </Typography>
             </div>
+            <div
+              style={{
+                position: "relative",
+                bottom: "-10dvh",
+              }}
+            >
+              <FooterComponent />
+            </div>
           </Grid>
-          <div
-            style={{
-              position: "absolute",
-              left: "50px",
-              bottom: "25px",
-              width: "100%",
-            }}
-          >
-            <FooterComponent />
-          </div>
         </Grid>
         <Grid
           display={(isSmallDevice || isMediumDevice) && "none"}
