@@ -335,22 +335,22 @@ const ItemTable = ({ searchItem }) => {
         </span>
       ),
     },
-    {
-      title: "Value",
-      dataIndex: "cost",
-      key: "cost",
-      sorter: {
-        compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
-      },
-      render: (cost) => (
-        <span style={cellStyle}>
-          {" "}
-          <Typography style={Subtitle} textTransform={"capitalize"}>
-            ${cost}
-          </Typography>
-        </span>
-      ),
-    },
+    // {
+    //   title: "Value",
+    //   dataIndex: "cost",
+    //   key: "cost",
+    //   sorter: {
+    //     compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
+    //   },
+    //   render: (cost) => (
+    //     <span style={cellStyle}>
+    //       {" "}
+    //       <Typography style={Subtitle} textTransform={"capitalize"}>
+    //         ${cost}
+    //       </Typography>
+    //     </span>
+    //   ),
+    // },
     {
       title: "",
       dataIndex: "data",
@@ -379,12 +379,7 @@ const ItemTable = ({ searchItem }) => {
   const updateEmployeesPreference = () => {
     let employCopy = user.companyData.employees.map((employee) => ({
       ...employee,
-      preference: {
-        ...employee.preference,
-        inventory_location: [...employee.preference.inventory_location],
-      },
     }));
-
     const index = employCopy.findIndex(
       (element) => element.user === user.email
     );
@@ -396,6 +391,7 @@ const ItemTable = ({ searchItem }) => {
       employCopy[index] = newData;
       return employCopy;
     }
+    return employCopy;
   };
   const updateInventoryLocationPreferences = async () => {
     const updatedCompany = await devitrakApi.patch(
@@ -404,6 +400,7 @@ const ItemTable = ({ searchItem }) => {
         employees: updateEmployeesPreference(),
       }
     );
+    console.log(updatedCompany.data);
     if (updatedCompany.data.ok) {
       return dispatch(
         onLogin({ ...user, companyData: updatedCompany.data.company })
