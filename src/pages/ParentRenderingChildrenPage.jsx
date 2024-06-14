@@ -50,7 +50,7 @@ const ParentRenderingChildrenPage = () => {
       <Grid
         alignSelf={"flex-start"}
         style={{ minHeight: "80dvh" }}
-        margin={"12.5dvh 20px 1dvh"}
+        margin={"12.5dvh auto 1dvh"}
         // margin={"2.5dvh 20px 1dvh"}
         item
         xs={12}
