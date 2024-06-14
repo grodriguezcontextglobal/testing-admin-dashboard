@@ -265,9 +265,19 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       }
     };
 
+    const checkExistingStaffMembers = (props) => {
+      const data = [...event.staff.adminUser, ...event.staff.headsetAttendees];
+      return data.some((element) => element.email === props);
+    };
     const handleNewStaffMember = async (data) => {
       try {
         setLoadingStatus(true);
+        if (checkExistingStaffMembers(data.email)) {
+          alert(
+            `Staff member :${data.name} ${data.lastName} ${data.email} is already assigned as staff member in this event. Please check information and add different staff member.`
+          );
+          return setLoadingStatus(false);
+        }
         await checkingIfStaffWouldBeAdded(data);
         if (String(roleSelected).toLowerCase() === "administrator") {
           const result = [
@@ -345,6 +355,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       }
       return "none";
     };
+
     const checkAdminSpots = () => {
       const data = event.staff.adminUser;
       let index = data.length;
@@ -395,7 +406,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                       value: "administrator",
                       label: "Event administrator",
                       disabled: event.subscription.adminUser
-                        ? Number(checkAdminSpots()) === Number(event.subscription.adminUser)
+                        ? Number(checkAdminSpots()) ===
+                          Number(event.subscription.adminUser)
                         : true,
                     },
                     {
@@ -427,9 +439,10 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     display: displayMessage(),
                   }}
                 >
-                  Add staff members not currently registered with{" "}
-                  {event.company}. By clicking the &quot;Add staff&quot; button,
-                  this user will be added to the company staff in devitrak.
+                  Add staff member not currently registered with {event.company}{" "}
+                  devitrak account. By clicking the &quot;Add staff&quot;
+                  button, this user will be added to the company staff in
+                  devitrak.
                 </p>
               </div>
               <div
