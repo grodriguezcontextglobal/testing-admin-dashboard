@@ -25,7 +25,6 @@ import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFont
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [blocking, setBlocking] = useState(false);
-  console.log(blocking);
   const navigator = useNavigate();
   const dispatch = useDispatch();
   const refRender = useRef(0);
