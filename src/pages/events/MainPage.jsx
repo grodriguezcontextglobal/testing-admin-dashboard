@@ -73,9 +73,7 @@ const MainPage = () => {
     };
     triggerDispatchWhenUserLandingInPage();
     eventQuery.refetch();
-    // companyAccountStripeQuery.refetch()
   }, [user.company]);
-
   if (eventQuery.isLoading)
     return (
       <div style={CenteringGrid}>
@@ -99,67 +97,46 @@ const MainPage = () => {
       return undefined;
     };
     dataPerCompany();
-
     const renderingDataBasedOnStaffAndActiveEvent = () => {
-      let checking = [];
-      if (dataPerCompany()) {
-        const group_by_active = _.groupBy(dataPerCompany(), "active");
-        const activeAndAdminMember = group_by_active.true?.filter(
-          (adminMember) =>
-            adminMember.staff?.adminUser?.find(
-              (member) => member.email === user.email
-            )
-        );
-        if (activeAndAdminMember) {
-          checking = [...checking, ...activeAndAdminMember];
-        } else {
-          checking = [...checking];
-        }
-        const activeAndHeadsetAttendeesMember = group_by_active.true?.filter(
-          (adminMember) =>
-            adminMember.staff.headsetAttendees?.find(
-              (member) => member.email === user?.email
-            )
-        );
-        if (activeAndHeadsetAttendeesMember) {
-          checking = [...checking, ...activeAndHeadsetAttendeesMember];
-        } else {
-          checking = [...checking];
-        }
-        const activeEventAndMembers = [...checking];
+      const companyData = dataPerCompany(); 
 
-        const inactiveButAdmin = group_by_active.false?.filter((adminMember) =>
-          adminMember.staff.adminUser?.find(
-            (member) => member.email === user.email
-          )
-        );
+      if (!companyData) return [];
 
-        dispatch(
-          onAddListEventPermitPerAdmin({
-            active: activeEventAndMembers,
-            completed: inactiveButAdmin,
-          })
-        );
-        if (activeEventAndMembers && inactiveButAdmin) {
-          const noDuplicated = new Set();
-          for (let data of [...activeEventAndMembers, ...inactiveButAdmin]) {
-            const jsonToString = JSON.stringify(data);
-            if (!noDuplicated.has(jsonToString)) {
-              noDuplicated.add(jsonToString);
-            }
-          }
-          const depuratedResult = new Set();
-          for (let data of Array.from(noDuplicated)) {
-            const parsing = JSON.parse(data);
-            depuratedResult.add(parsing);
-          }
-          return Array.from(depuratedResult);
-        }
-        if (activeEventAndMembers && !inactiveButAdmin)
-          return activeEventAndMembers;
-        if (!activeAndAdminMember && inactiveButAdmin) return inactiveButAdmin;
-        if (!activeAndAdminMember && !inactiveButAdmin) return [];
-      }
+      const groupByActive = _.groupBy(companyData, "active");
+
+      const filterEventsByEmail = (events, key) =>
+        events?.filter((event) =>
+          event.staff?.[key]?.some((member) => member.email === user.email)
+        ) || [];
+
+      const activeAdminEvents = filterEventsByEmail(
+        groupByActive.true,
+        "adminUser"
+      );
+      const activeHeadsetEvents = filterEventsByEmail(
+        groupByActive.true,
+        "headsetAttendees"
+      );
+      const activeEvents = [...activeAdminEvents, ...activeHeadsetEvents];
+
+      const inactiveAdminEvents = filterEventsByEmail(
+        groupByActive.false,
+        "adminUser"
+      );
+
+      dispatch(
+        onAddListEventPermitPerAdmin({
+          active: activeEvents,
+          completed: inactiveAdminEvents,
+        })
+      );
+
+      const combinedEvents = [...activeEvents, ...inactiveAdminEvents];
+      const uniqueEvents = _.uniqBy(combinedEvents, (event) =>
+        JSON.stringify(event)
+      );
+
+      return uniqueEvents;
     };
     renderingDataBasedOnStaffAndActiveEvent();
 
@@ -172,7 +149,6 @@ const MainPage = () => {
         if (
           (data.active && currentDate < begin) ||
           (data.active && currentDate >= begin && currentDate <= ending)
-          // data.active
         ) {
           result.add({ key: data.id, ...data });
         }
@@ -317,17 +293,21 @@ const MainPage = () => {
             })
           ) : (
             <>
-              {/* <div
-                style={{
-                  display: `${Number(user.role) < 4 ? "flex" : "none"}`,
-                }}
-              > */}
-              {Number(user.role) < 4 ? <BannerMsg /> : <BannerNoEventStaffOnly props={{title:"No event", message:"There is not active events where you are assigned as staff member."}} />}
-              {/* </div> */}
+              {Number(user.role) < 4 ? (
+                <BannerMsg />
+              ) : (
+                <BannerNoEventStaffOnly
+                  props={{
+                    title: "No event",
+                    message:
+                      "There is not active events where you are assigned as staff member.",
+                  }}
+                />
+              )}
             </>
           )}
         </Grid>
-        {dataToBeRenderedInUpcomingSection()?.length > 0 && (
+        {renderingDataBasedOnStaffAndActiveEvent()?.length > 0 && (
           <>
             {" "}
             <Grid
