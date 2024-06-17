@@ -1,12 +1,14 @@
 #root {
-  min-width: 768px;
-  max-width: 1228px;
+  /* min-width: 768px;
+  max-width: 1228px; */
+
+  width: 100%;
   margin: 0 auto;
   padding: 0;
   text-align: center;
-  /* border-top: transparent;
-  border-left:0.1px solid var(--gray100);
-  border-right:0.1px solid var(--gray100) */
+  border-top: transparent;
+  border-left: 0.1px solid var(--gray100);
+  border-right: 0.1px solid var(--gray100);
 }
 
 .logo {
