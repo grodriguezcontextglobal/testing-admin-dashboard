@@ -1,26 +1,24 @@
 import { Icon } from "@iconify/react";
 import {
-  Grid,
   Button,
-  Typography,
+  Chip,
+  Grid,
   InputLabel,
   OutlinedInput,
   TextField,
-  Chip,
+  Typography,
 } from "@mui/material";
 import { Avatar, Divider, Space, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import dicRole from "../../../../components/general/dicRole";
 import { onLogin } from "../../../../store/slices/adminSlice";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import dicRole from "../../../../components/general/dicRole";
-import { useNavigate } from "react-router-dom";
 import "./Body.css";
 
 const Body = () => {
@@ -47,7 +45,7 @@ const Body = () => {
     if (Number(user.role) === Number("4")) {
       return navigate("/events");
     }
-    return navigate("/");
+    return null; //navigate("/");
   };
   const listOfEvents = () => {
     const events = new Set();
@@ -112,7 +110,7 @@ const Body = () => {
           })
         );
         openNotificationWithIcon();
-        return triggerRoutes()
+        return triggerRoutes();
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -540,14 +538,14 @@ const Body = () => {
           sm={12}
           md={12}
         >
-          <Button
-            onClick={() =>triggerRoutes()}
+          {/* <Button
+            onClick={() => triggerRoutes()}
             style={{ ...GrayButton, width: "fit-content" }}
           >
             <Typography textTransform={"none"} style={GrayButtonText}>
               Cancel
             </Typography>
-          </Button>
+          </Button> */}
           <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
             <Typography textTransform={"none"} style={BlueButtonText}>
               Save
