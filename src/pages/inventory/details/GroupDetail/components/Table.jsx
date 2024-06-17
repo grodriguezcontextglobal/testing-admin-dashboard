@@ -334,22 +334,22 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         </span>
       ),
     },
-    {
-      title: "Value",
-      dataIndex: "cost",
-      key: "cost",
-      sorter: {
-        compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
-      },
-      render: (cost) => (
-        <span style={cellStyle}>
-          {" "}
-          <Typography style={Subtitle} textTransform={"capitalize"}>
-            ${cost}
-          </Typography>
-        </span>
-      ),
-    },
+    // {
+    //   title: "Value",
+    //   dataIndex: "cost",
+    //   key: "cost",
+    //   sorter: {
+    //     compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
+    //   },
+    //   render: (cost) => (
+    //     <span style={cellStyle}>
+    //       {" "}
+    //       <Typography style={Subtitle} textTransform={"capitalize"}>
+    //         ${cost}
+    //       </Typography>
+    //     </span>
+    //   ),
+    // },
     {
       title: "",
       dataIndex: "data",

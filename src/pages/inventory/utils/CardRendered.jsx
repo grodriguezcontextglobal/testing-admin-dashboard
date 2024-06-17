@@ -45,10 +45,10 @@ const CardRendered = ({ props, title, optional }) => {
                         <Typography
                             textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
                             fontFamily={"Inter"}
-                            fontSize={"14px"}
+                            fontSize={"12px"}
                             fontStyle={"normal"}
                             fontWeight={500}
-                            lineHeight={"20px"}
+                            lineHeight={"18px"}
                             color={"var(--gray-600, #475467)"}
                             
                         >
@@ -107,11 +107,12 @@ const CardRendered = ({ props, title, optional }) => {
                         <Typography
                             paddingTop={"8px"}
                             fontFamily={"Inter"}
-                            fontSize={"1.367vw"}
+                            fontSize={"30px"}
                             fontStyle={"normal"}
                             fontWeight={600}
                             lineHeight={"38px"}
                             color={"var(--gray-900, #101828)"}
+                            textAlign={"left"}
                             style={{
                                 textOverflow: "ellipsis"
                             }}
