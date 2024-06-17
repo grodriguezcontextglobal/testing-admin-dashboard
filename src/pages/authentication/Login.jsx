@@ -269,7 +269,7 @@ const Login = () => {
           backgroundColor: "var(--whitebase)",
           height: "100dvh",
           margin: "auto",
-          width: "100vw",
+          // width: "100vw",
         }}
       >
         <Grid

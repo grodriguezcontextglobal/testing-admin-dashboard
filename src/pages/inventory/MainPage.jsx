@@ -1,26 +1,27 @@
-import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { devitrakApi } from "../../api/devitrakApi";
 import {
   BluePlusIcon,
   MagnifyIcon,
   WhiteCirclePlusIcon,
 } from "../../components/icons/Icons";
+import BannerMsg from "../../components/utils/BannerMsg";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { LightBlueButton } from "../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../styles/global/LightBlueButtonText";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
 import "../../styles/global/ant-select.css";
 import ItemTable from "./table/ItemTable";
-import { useQuery } from "@tanstack/react-query";
-import { devitrakApi } from "../../api/devitrakApi";
-import { useEffect } from "react";
-import BannerMsg from "../../components/utils/BannerMsg";
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const { register, watch } = useForm();
@@ -60,20 +61,16 @@ const MainPage = () => {
         }}
         container
       >
-        <Grid marginY={0} item xs={6}>
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
-            }}
-            textAlign={"left"}
-            fontWeight={600}
-            fontFamily={"Inter"}
-            fontSize={"30px"}
+        <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
+          <p
+            style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+            // textAlign={"left"}
+            // fontWeight={600}
+            // fontFamily={"Inter"}
+            // fontSize={"30px"}
           >
             Inventory of {user.company}
-          </Typography>
+          </p>
         </Grid>
         <Grid
           textAlign={"right"}
@@ -84,8 +81,8 @@ const MainPage = () => {
           item
           xs={12}
           sm={12}
-          md={6}
-          lg={6}
+          md={8}
+          lg={8}
         >
           <Link to="/inventory/edit-group">
             <button style={{ ...LightBlueButton, width: "fit-content" }}>
