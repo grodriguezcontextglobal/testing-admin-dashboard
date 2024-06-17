@@ -119,8 +119,15 @@ const MainPage = () => {
       active: [],
       inactive: [],
     };
-    returnValues.active = result.get(true);
-    returnValues.inactive = [...result.get(false), ...result.get("Lost")];
+    if (result.has(true)) {
+      returnValues.active = result.get(true);
+    }
+    if (result.has(false)) {
+      returnValues.inactive = [...result.get(false)];
+    }
+    if (result.has("Lost")) {
+      returnValues.inactive = [...result.get(false), ...result.get('Lost')];
+    }
     return setDataToRenderInComponent(returnValues);
   };
   const checkEventsPerCompany = () => {
