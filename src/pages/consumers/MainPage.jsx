@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { MagnifyIcon } from "../../components/icons/Icons";
+import BannerMsg from "../../components/utils/BannerMsg";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import "../../styles/global/OutlineInput.css";
@@ -21,18 +22,27 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
+import RenderingConsumersChartsBehavior from "./components/RenderingConsumersChartsBehavior";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
-import BannerMsg from "../../components/utils/BannerMsg";
-
+import { useQuery } from "@tanstack/react-query";
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false);
   const [createUserButton, setCreateUserButton] = useState(false);
   const [responseData, setResponseData] = useState([]);
+  const [dataToRenderInComponent, setDataToRenderInComponent] = useState([]);
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const searching = watch("searchEvent");
+  const leaseListQuery = useQuery({
+    queryKey: ["leaseList"],
+    queryFn: devitrakApi.post("/db_lease/consulting-lease", {
+      company_id: user.sqlInfo.company_id,
+      subscription_current_in_use: true,
+    }),
+    refetchOnMount: false,
+  });
   let counter = 0;
   const listOfEventsPerAdmin = useCallback(() => {
     let activeEvents = [];
@@ -50,6 +60,14 @@ const MainPage = () => {
     return [...activeEvents, ...completedEvents];
   }, [user.company]);
   listOfEventsPerAdmin();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    leaseListQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const consumersPerAllowEvents = useMemo(async () => {
     setLoadingState(true);
@@ -81,6 +99,30 @@ const MainPage = () => {
     }
   }, [listOfEventsPerAdmin().length, user.company]);
 
+  const renderActiveAndInactiveCount = (props) => {
+    const result = new Map();
+    if (Array.isArray(props)) {
+      for (let data of props) {
+        data.currentActivity.map((item) => {
+          if (!result.has(item.device.status)) {
+            result.set(item.device.status, [item.device]);
+          } else {
+            result.set(item.device.status, [
+              ...result.get(item.device.status),
+              item.device,
+            ]);
+          }
+        });
+      }
+    }
+    const returnValues = {
+      active: 0,
+      inactive: 0,
+    };
+    returnValues.active = result.get(true);
+    returnValues.inactive = [...result.get(false), ...result.get("Lost")];
+    return setDataToRenderInComponent(returnValues);
+  };
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
       const check = responseData?.filter(
@@ -230,6 +272,39 @@ const MainPage = () => {
             </Grid>
             <Grid
               display={"flex"}
+              justifyContent={"space-around"}
+              alignItems={"center"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <RenderingConsumersChartsBehavior
+                active={{
+                  title: "Active",
+                  number: dataToRenderInComponent.active?.length,
+                }}
+                inactive={{
+                  title: "Inactive",
+                  number: dataToRenderInComponent.inactive?.length,
+                }}
+              />
+
+              <RenderingConsumersChartsBehavior
+                active={{
+                  title: "Event",
+                  number: 0,
+                }}
+                inactive={{
+                  title: "General",
+                  number: 0,
+                }}
+              />
+            </Grid>
+
+            <Grid
+              display={"flex"}
               justifyContent={"space-between"}
               alignItems={"center"}
               item
@@ -351,6 +426,7 @@ const MainPage = () => {
                 <TablesConsumers
                   key={counter}
                   getInfoNeededToBeRenderedInTable={getInfoNeededToBeRenderedInTable()}
+                  getActiveAndInactiveCount={renderActiveAndInactiveCount}
                 />
               )}
             </Grid>
@@ -386,7 +462,7 @@ const MainPage = () => {
             display={"flex"}
             justifyContent={"flex-end"}
             alignItems={"center"}
-            margin={'-10px 0 0 0'}
+            margin={"-10px 0 0 0"}
             gap={1}
             item
             xs={12}
