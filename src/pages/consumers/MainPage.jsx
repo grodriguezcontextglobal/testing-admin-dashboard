@@ -116,8 +116,8 @@ const MainPage = () => {
       }
     }
     const returnValues = {
-      active: 0,
-      inactive: 0,
+      active: [],
+      inactive: [],
     };
     returnValues.active = result.get(true);
     returnValues.inactive = [...result.get(false), ...result.get("Lost")];
@@ -283,11 +283,11 @@ const MainPage = () => {
               <RenderingConsumersChartsBehavior
                 active={{
                   title: "Active",
-                  number: dataToRenderInComponent.active?.length,
+                  number: dataToRenderInComponent?.active?.length,
                 }}
                 inactive={{
                   title: "Inactive",
-                  number: dataToRenderInComponent.inactive?.length,
+                  number: dataToRenderInComponent?.inactive?.length,
                 }}
               />
 
