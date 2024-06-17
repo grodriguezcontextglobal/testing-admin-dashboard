@@ -14,7 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Subtitle } from "../../../styles/global/Subtitle";
 
-export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
+export default function TablesConsumers({
+  getInfoNeededToBeRenderedInTable,
+  getActiveAndInactiveCount,
+}) {
   const { user } = useSelector((state) => state.admin);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
     useState([]);
@@ -89,7 +92,9 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
           currentConsumerActive: currentActiveStatus,
         });
       }
+      await getActiveAndInactiveCount(Array.from(result));
     }
+    // await getActiveAndInactiveCount(Array.from(result));
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
@@ -100,7 +105,10 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
     return () => {
       controller.abort();
     };
-  }, [getInfoNeededToBeRenderedInTable]);
+  }, [
+    Array.isArray(getInfoNeededToBeRenderedInTable),
+    getInfoNeededToBeRenderedInTable.length,
+  ]);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -181,7 +189,7 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
         </div>
       ),
       dataIndex: "currentConsumerActive",
-      width: "10%",
+      width: "13%",
       sorter: {
         compare: (a, b) =>
           ("" + a.currentConsumerActive).localeCompare(b.currentConsumerActive),
@@ -245,7 +253,7 @@ export default function TablesConsumers({ getInfoNeededToBeRenderedInTable }) {
         compare: (a, b) =>
           ("" + a.currentActivity).localeCompare(b.currentActivity),
       },
-      width: "10%",
+      width: "7%",
       render: (currentActivity) => (
         <p style={{ ...renderingStyle, width: "fit-content" }}>
           {currentActivity.length}
