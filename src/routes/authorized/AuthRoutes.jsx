@@ -1,4 +1,3 @@
-import { Grid } from "@mui/material";
 import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import Loading from "../../components/animation/Loading";
@@ -90,131 +89,145 @@ const AuthRoutes = () => {
           </div>
         }
       >
-        <Routes>
-          <Route path="/" element={<ParentRenderingChildrenPage />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/events" element={<EventMainPage />} />
-            <Route
-              path="/events/event-quickglance"
-              element={<EventQuickGlanceMainPage />}
-            />
-            <Route
-              path="/events/event-attendees/:id"
-              element={<CustomerDetailInEvent />}
-            >
+        <div
+          style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto" }}
+        >
+          <Routes>
+            <Route path="/" element={<ParentRenderingChildrenPage />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/events" element={<EventMainPage />} />
               <Route
-                path="transactions-details"
-                element={<TransactionsDetails />}
+                path="/events/event-quickglance"
+                element={<EventQuickGlanceMainPage />}
               />
-              <Route path="payment-confirmed" element={<Confirmation />} />
-              <Route path="collect-lost-fee/cash-method" element={<Cash />} />
               <Route
-                path="collect-lost-fee/credit-card-method"
-                element={<CreditCard />}
-              />
-            </Route>
+                path="/events/event-attendees/:id"
+                element={<CustomerDetailInEvent />}
+              >
+                <Route
+                  path="transactions-details"
+                  element={<TransactionsDetails />}
+                />
+                <Route path="payment-confirmed" element={<Confirmation />} />
+                <Route path="collect-lost-fee/cash-method" element={<Cash />} />
+                <Route
+                  path="collect-lost-fee/credit-card-method"
+                  element={<CreditCard />}
+                />
+              </Route>
 
-            <Route
-              path="/event/new_subscription"
-              element={<NewEventSubscription />}
-            />
-            <Route path="create-event-page" element={<MainPageEventCreation />}>
-              <Route path="event-detail" element={<FormEventDetail />} />
-              <Route path="staff-detail" element={<FormStaffDetail />} />
-              <Route path="device-detail" element={<FormDeviceDetail />} />
-              <Route path="review-submit" element={<ReviewAndSubmitEvent />} />
-            </Route>
-            <Route path="/device-quick-glance" element={<DeviceDetail />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/inventory/location" element={<MainPage />} />
-            <Route path="/inventory/group" element={<MainPageGrouping />} />
-            <Route
-              path="/inventory/category_name"
-              element={<MainPageCategory />}
-            />
-            <Route path="/inventory/brand" element={<MainPageBrand />} />
-            <Route path="/inventory/:id" element={<InventoryDetail />} />
-            <Route
-              path="/inventory/event-inventory"
-              element={<InventoryEvent />}
-            />
-            <Route path="/inventory/new-item" element={<AddNewItem />} />
-            <Route path="/inventory/edit-group" element={<EditGroup />} />
-            <Route
-              path="/inventory/new-bulk-items"
-              element={<AddNewBulkItems />}
-            />
-            <Route
-              path="/inventory/inventory-in-use"
-              element={<InventoryInUsePage />}
-            />
-            <Route path="/consumers" element={<ConsumersMainPage />} />
-            <Route path="/consumers/:id" element={<ConsumerDetail />} />
-            <Route
-              path="/consumers/:id/lost-device-fee/cash"
-              element={<ConsumerDeviceLostFeeCash />}
-            />
-                        <Route
-              path="/consumers/:id/lost-device-fee/credit_card"
-              element={<ConsumerDeviceLostFeeCreditCard />}
-            />
+              <Route
+                path="/event/new_subscription"
+                element={<NewEventSubscription />}
+              />
+              <Route
+                path="create-event-page"
+                element={<MainPageEventCreation />}
+              >
+                <Route path="event-detail" element={<FormEventDetail />} />
+                <Route path="staff-detail" element={<FormStaffDetail />} />
+                <Route path="device-detail" element={<FormDeviceDetail />} />
+                <Route
+                  path="review-submit"
+                  element={<ReviewAndSubmitEvent />}
+                />
+              </Route>
+              <Route path="/device-quick-glance" element={<DeviceDetail />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/inventory/location" element={<MainPage />} />
+              <Route path="/inventory/group" element={<MainPageGrouping />} />
+              <Route
+                path="/inventory/category_name"
+                element={<MainPageCategory />}
+              />
+              <Route path="/inventory/brand" element={<MainPageBrand />} />
+              <Route path="/inventory/:id" element={<InventoryDetail />} />
+              <Route
+                path="/inventory/event-inventory"
+                element={<InventoryEvent />}
+              />
+              <Route path="/inventory/new-item" element={<AddNewItem />} />
+              <Route path="/inventory/edit-group" element={<EditGroup />} />
+              <Route
+                path="/inventory/new-bulk-items"
+                element={<AddNewBulkItems />}
+              />
+              <Route
+                path="/inventory/inventory-in-use"
+                element={<InventoryInUsePage />}
+              />
+              <Route path="/consumers" element={<ConsumersMainPage />} />
+              <Route path="/consumers/:id" element={<ConsumerDetail />} />
+              <Route
+                path="/consumers/:id/lost-device-fee/cash"
+                element={<ConsumerDeviceLostFeeCash />}
+              />
+              <Route
+                path="/consumers/:id/lost-device-fee/credit_card"
+                element={<ConsumerDeviceLostFeeCreditCard />}
+              />
 
-            <Route path="/staff" element={<Staff />} />
-            <Route path="/staff/:id" element={<StaffDetail />}>
+              <Route path="/staff" element={<Staff />} />
+              <Route path="/staff/:id" element={<StaffDetail />}>
+                <Route
+                  key={"/staff/:id/main"}
+                  path="main"
+                  element={<TableStaffDetail />}
+                />
+                <Route
+                  key={"/staff/:id/update-contact-info"}
+                  path="update-contact-info"
+                  element={<UpdateContactInfo />}
+                />
+                <Route
+                  key={"/staff/:id/reset-password-link"}
+                  path="reset-password-link"
+                  element={<ForgetPasswordLinkFromStaffPage />}
+                />
+                <Route
+                  key={"/staff/:id/assignment"}
+                  path="assignment"
+                  element={<Assignment />}
+                />
+                <Route
+                  key={"/staff/:id/update-role-company"}
+                  path="update-role-company"
+                  element={<UpdateRoleInCompany />}
+                />
+                <Route
+                  key={"/staff/:id/assign-staff-events"}
+                  path="assign-staff-events"
+                  element={<AssignStaffMemberToEvent />}
+                />
+              </Route>
+              <Route path="/profile" element={<MainProfileSetting />}>
+                <Route path="my_details" element={<MyDetailsMainPage />} />
+                <Route path="password" element={<PasswordMainPage />} />
+                <Route
+                  path="notifications"
+                  element={<NotificationsMainPage />}
+                />
+                <Route path="billing" element={<BillingMainPage />} />
+                <Route
+                  path="staff-activity"
+                  element={<StaffActivityMainPage />}
+                />
+              </Route>
+              <Route path="search-result-page" element={<SearchResultPage />} />
+              <Route path="login" element={<RedirectionPage />} />
               <Route
-                key={"/staff/:id/main"}
-                path="main"
-                element={<TableStaffDetail />}
+                path="register/company-setup"
+                element={<RedirectionPage />}
               />
-              <Route
-                key={"/staff/:id/update-contact-info"}
-                path="update-contact-info"
-                element={<UpdateContactInfo />}
-              />
-              <Route
-                key={"/staff/:id/reset-password-link"}
-                path="reset-password-link"
-                element={<ForgetPasswordLinkFromStaffPage />}
-              />
-              <Route
-                key={"/staff/:id/assignment"}
-                path="assignment"
-                element={<Assignment />}
-              />
-              <Route
-                key={"/staff/:id/update-role-company"}
-                path="update-role-company"
-                element={<UpdateRoleInCompany />}
-              />
-              <Route
-                key={"/staff/:id/assign-staff-events"}
-                path="assign-staff-events"
-                element={<AssignStaffMemberToEvent />}
-              />
+              <Route path="/*" element={<ErrorPage />} />
             </Route>
-            <Route path="/profile" element={<MainProfileSetting />}>
-              <Route path="my_details" element={<MyDetailsMainPage />} />
-              <Route path="password" element={<PasswordMainPage />} />
-              <Route path="notifications" element={<NotificationsMainPage />} />
-              <Route path="billing" element={<BillingMainPage />} />
-              <Route
-                path="staff-activity"
-                element={<StaffActivityMainPage />}
-              />
-            </Route>
-            <Route path="search-result-page" element={<SearchResultPage />} />
-            <Route path="login" element={<RedirectionPage />} />
-            <Route path="register/company-setup" element={<RedirectionPage />} />
-            <Route path="/*" element={<ErrorPage />} />
-          </Route>
-        </Routes>
+          </Routes>
+        </div>
       </Suspense>
-      <Grid container>
-        <Grid margin={"0 20px 2.5rem"} item xs={12} sm={12} md={12} lg={12}>
-          <FooterComponent />
-        </Grid>
-      </Grid>
+      <div style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}>
+        <FooterComponent />
+      </div>
     </div>
   );
 };
