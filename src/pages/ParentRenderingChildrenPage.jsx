@@ -44,7 +44,9 @@ const ParentRenderingChildrenPage = () => {
       display={"flex"}
       justifyContent={"center"}
       alignItems={"center"}
-      width={'100%'}
+      // width={'100%'}
+      maxWidth={'1228px'}
+      minWidth={'768px'}
       container
     >
       <Grid
