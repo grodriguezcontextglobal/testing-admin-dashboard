@@ -1,8 +1,4 @@
-import {
-  Grid,
-  InputAdornment,
-  OutlinedInput
-} from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,15 +12,19 @@ import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20He
 import { Title } from "../../styles/global/Title";
 import MainAdminSettingPage from "./MainAdminSettingPage";
 import { NewStaffMember } from "./action/NewStaffMember";
+import Loading from "../../components/animation/Loading";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
   const { user } = useSelector((state) => state.admin);
+  const [loadingStatus, setLoadingStatus] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     setValue("searchAdmin", ".");
+    setLoadingStatus(true);
     setTimeout(() => {
       setValue("searchAdmin", "");
+      setLoadingStatus(false);
     }, 900);
     return () => {
       controller.abort();
@@ -49,8 +49,8 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <p style={{...Title, textTransform:"none", textAlign:"left"}}>
-             Staff
+          <p style={{ ...Title, textTransform: "none", textAlign: "left" }}>
+            Staff
           </p>
           <Grid
             display={Number(user.role) < 2 ? "flex" : "none"}
@@ -64,7 +64,7 @@ const MainPage = () => {
           >
             <button style={BlueButton} onClick={() => setModalState(true)}>
               <WhitePlusIcon />
-              <p style={{...BlueButtonText, textTransform:"none"}}>
+              <p style={{ ...BlueButtonText, textTransform: "none" }}>
                 Add new staff
               </p>
             </button>
@@ -109,10 +109,15 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <MainAdminSettingPage
-            searchAdmin={watch("searchAdmin")}
-            modalState={modalState}
-          />
+          {loadingStatus ? (
+            <Loading />
+          ) : (
+            <MainAdminSettingPage
+              searchAdmin={watch("searchAdmin")}
+              modalState={modalState}
+              loadingRenderInfoStaff={loadingStatus}
+            />
+          )}
         </Grid>
       </Grid>
       {modalState && (
