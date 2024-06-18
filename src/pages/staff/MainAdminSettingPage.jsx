@@ -11,7 +11,7 @@ import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/ant-table.css";
 import dicRole from "../../components/general/dicRole";
-
+import { PropTypes } from "prop-types";
 const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
@@ -56,7 +56,14 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort();
     };
-  }, [location.key, user.company, modalState]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    location.key,
+    user.company,
+    modalState,
+    listAdminUsers,
+    companiesEmployees,
+    eventQuery,
+  ]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
@@ -109,8 +116,16 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort();
     };
-  }, [location.key, companiesEmployees.data, searchAdmin]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, companiesEmployees.data, searchAdmin?.length]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
+  const renderTernary = (props) => {
+    if (typeof props === "string") {
+      return props;
+    } else {
+      if (props) return "Active";
+      return "Inactive";
+    }
+  };
   if (companiesEmployees.isLoading)
     return (
       <div style={CenteringGrid}>
@@ -226,7 +241,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
                   !active || active === "Pending" ? "#d31717" : "#12B76A"
                 }`}
               />
-              {active === "Pending" ? active : active ? "Active" : "Inactive"}
+              {renderTernary(active)}
             </Typography>
           </span>
         ),
@@ -271,7 +286,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
                   !active || active === "Pending" ? "#d31717" : "#12B76A"
                 }`}
               />
-              {active === "Pending" ? active : active ? "Active" : "Inactive"}
+              {renderTernary(active)}
             </Typography>
           </span>
         ),
@@ -316,7 +331,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
                   !active || active === "Pending" ? "#d31717" : "#12B76A"
                 }`}
               />
-              {active === "Pending" ? active : active ? "Active" : "Inactive"}
+              {renderTernary(active)}
             </Typography>
           </span>
         ),
@@ -453,4 +468,8 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
   }
 };
 
+MainAdminSettingPage.propTypes = {
+  searchAdmin: PropTypes.string.isRequired,
+  modalState: PropTypes.bool.isRequired,
+};
 export default MainAdminSettingPage;
