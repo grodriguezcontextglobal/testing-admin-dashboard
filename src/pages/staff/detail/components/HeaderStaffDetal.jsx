@@ -1,23 +1,22 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Divider, Popconfirm } from "antd";
+import { Avatar, Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import dicRole from "../../../../components/general/dicRole";
 import { PointFilled, WhitePlusIcon } from "../../../../components/icons/Icons";
 import {
-  onAddStaffProfile,
-  onResetStaffProfile,
+  onResetStaffProfile
 } from "../../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import dicRole from "../../../../components/general/dicRole";
 import { NewStaffMember } from "../../action/NewStaffMember";
 
 const HeaderStaffDetail = () => {
@@ -50,44 +49,8 @@ const HeaderStaffDetail = () => {
       </div>
     );
   if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
-    const activeOrDesactiveStaffMemberInCompany = async () => {
-      try {
-        const employeesInCompany = [...profile.companyData.employees];
-        const foundUserIndex = employeesInCompany.findIndex(
-          (element) => element.user === profile.email
-        );
-
-        employeesInCompany[foundUserIndex] = {
-          ...employeesInCompany[foundUserIndex],
-          active: !profile.status,
-        };
-        const respoCompany = await devitrakApi.patch(
-          `/company/update-company/${profile.companyData.id}`,
-          {
-            employees: employeesInCompany,
-          }
-        );
-        if (respoCompany.data.ok) {
-          dispatch(
-            onAddStaffProfile({
-              ...profile,
-              active: !profile.status,
-              status: !profile.status,
-              companyData: respoCompany.data.company,
-            })
-          );
-          return;
-        }
-      } catch (error) {
-        console.log(
-          "🚀 ~ activeOrDesactiveStaffMemberInCompany ~ error:",
-          error
-        );
-      }
-    };
-
     const filterActiveEventsPerStaffMember = () => {
-      const data = eventQuery.data.data.list;
+      const data = eventQuery?.data?.data?.list;
       const findingEvent = new Set();
       for (let item of data) {
         const staffMembers = [
@@ -332,17 +295,8 @@ const HeaderStaffDetail = () => {
                     alignItems: "center",
                   }}
                 >
-                  {/* {user.role === "Administrator" && ( */}
                   {Number(user.role) < 2 && (
-                    <button style={{ background: "transparent" }}>
-                      <Popconfirm
-                        title={`Do you want to ${
-                          profile.active ? "remove" : "grant"
-                        } access to this staff member?`}
-                        onConfirm={() =>
-                          activeOrDesactiveStaffMemberInCompany()
-                        }
-                      >
+                    <button style={{ background: "transparent", cursor:"default" }}>
                         <p
                           style={{
                             ...BlueButtonText,
@@ -374,7 +328,6 @@ const HeaderStaffDetail = () => {
                           )}
                           {profile.status ? "Active" : "Inactive"}
                         </p>
-                      </Popconfirm>
                     </button>
                   )}
                 </div>
