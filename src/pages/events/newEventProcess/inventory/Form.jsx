@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { CheckIcon, PlusIcon, RectanglePlusIcon } from "../../../../components/icons/Icons";
+import { CheckIcon, PlusIcon, RectangleBluePlusIcon } from "../../../../components/icons/Icons";
 import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from '../../../../styles/global/CenteringGrid';
@@ -376,7 +376,7 @@ const Form = () => {
                 type="submit"
                 style={{ ...LightBlueButton, ...CenteringGrid, width: "100%", }}
               >
-                <RectanglePlusIcon stroke={'var(--gray900)'} />&nbsp;<Typography
+                <RectangleBluePlusIcon />&nbsp;<Typography
                   textTransform="none"
                   style={LightBlueButtonText}
                 >

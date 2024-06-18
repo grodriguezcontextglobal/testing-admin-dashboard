@@ -33,14 +33,14 @@ import "../../../../styles/global/ant-select.css";
 import "../../../../styles/global/reactInput.css";
 import "../style/NewEventInfoSetup.css";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import CenteringGrid from "../../../../styles/global/CenteringGrid"
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 const Form = () => {
   const { subscription, subscriptionJSON } = useSelector(
     (state) => state.subscription
   );
-  const { eventInfoDetail } = useSelector((state => state.event))
+  const { eventInfoDetail } = useSelector((state) => state.event);
   const { companyAccountStripe } = useSelector((state) => state.admin);
-  const addressSplit = eventInfoDetail?.address?.split(' ')
+  const addressSplit = eventInfoDetail?.address?.split(" ");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
@@ -50,19 +50,27 @@ const Form = () => {
   } = useForm({
     defaultValues: {
       eventName: eventInfoDetail?.eventName,
-      eventLocation: `${addressSplit?.at(-3)}, ${addressSplit?.at(-2)?.replace(",", "")}`,
-      address: `${addressSplit?.slice(0, -3)}, ${addressSplit?.at(-3)} ${addressSplit?.at(-2)}, ${addressSplit?.at(-1)}`,
+      eventLocation: `${addressSplit?.at(-3)}, ${addressSplit
+        ?.at(-2)
+        ?.replace(",", "")}`,
+      address: `${addressSplit?.slice(0, -3)}, ${addressSplit?.at(
+        -3
+      )} ${addressSplit?.at(-2)}, ${addressSplit?.at(-1)}`,
       building: eventInfoDetail?.eventName,
       conferenceRoom: eventInfoDetail?.floor,
       city: addressSplit?.at(-3),
       state: addressSplit?.at(-2)?.replace(",", ""),
       street: addressSplit?.slice(0, -3)?.toString()?.replaceAll(",", " "),
-      zipCode: addressSplit?.at(-1)
-    }
+      zipCode: addressSplit?.at(-1),
+    },
   });
-  const [begin, setBegin] = useState(eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date());
-  const [end, setEnd] = useState(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date());
-  const [contactPhoneNumber, setContactPhoneNumber] = useState('');
+  const [begin, setBegin] = useState(
+    eventInfoDetail.dateBegin ? new Date(eventInfoDetail.dateBegin) : new Date()
+  );
+  const [end, setEnd] = useState(
+    eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date()
+  );
+  const [contactPhoneNumber, setContactPhoneNumber] = useState("");
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
@@ -148,33 +156,33 @@ const Form = () => {
           status: "active",
         })
       );
-
     }
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
     if (paymentIntentParams) {
-      storeSubscriptionJSON()
+      storeSubscriptionJSON();
     }
     return () => {
-      controller.abort()
-    }
-  }, [])
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
-    setEnd(eventInfoDetail.dateEnd ? new Date(eventInfoDetail.dateEnd) : new Date(begin))
+    setEnd(
+      eventInfoDetail.dateEnd
+        ? new Date(eventInfoDetail.dateEnd)
+        : new Date(begin)
+    );
   }, [begin, eventInfoDetail.dateBegin]);
 
   const addingPhoneNumber = () => {
-    const result = [
-      ...numberOfPhoneNumbersPerEvent,
-      contactPhoneNumber,
-    ]
+    const result = [...numberOfPhoneNumbersPerEvent, contactPhoneNumber];
     setNumberOfPhoneNumbersPerEvent(result);
     setContactPhoneNumber("");
     return;
-  }
+  };
   const removePhoneNumber = (phone) => {
     const filter = numberOfPhoneNumbersPerEvent.filter(
       (element) => element !== phone
@@ -198,7 +206,9 @@ const Form = () => {
       phone: numberOfPhoneNumbersPerEvent,
     };
     if (numberOfPhoneNumbersPerEvent.length < 1)
-      return alert("There is no phone number assigned to event. Please enter the phone number and then click plus icon button.");
+      return alert(
+        "There is no phone number assigned to event. Please enter the phone number and then click plus icon button."
+      );
     dispatch(onAddEventInfoDetail(format));
     dispatch(onAddContactInfo(contactInfoFormat));
     storeSubscriptionJSON();
@@ -232,11 +242,7 @@ const Form = () => {
           id="eventName"
           style={{ marginBottom: "0.2rem", width: "100%" }}
         >
-          <Typography
-            style={InputLabelStyle}
-          >
-            Event name
-          </Typography>
+          <Typography style={InputLabelStyle}>Event name</Typography>
         </InputLabel>
         <OutlinedInput
           required
@@ -252,9 +258,7 @@ const Form = () => {
           placeholder="Event name"
         />
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            style={InputLabelStyle}
-          >
+          <Typography style={InputLabelStyle}>
             Event contact Phone number
           </Typography>
         </InputLabel>
@@ -276,14 +280,17 @@ const Form = () => {
               alignItems: "center",
               textAlign: "left",
               width: "100%",
-              alignSelf: "flex-start"
+              alignSelf: "flex-start",
             }}
           >
-            <Tooltip title="Please click the 'Add phone number' button to include your phone number. Otherwise, it will not be added." style={{ width: "100%" }}>
+            <Tooltip
+              title="Please click the 'Add phone number' button to include your phone number. Otherwise, it will not be added."
+              style={{ width: "100%" }}
+            >
               <PhoneInput
                 className="container-phone input-phone"
-                id='phone_input_check'
-                style={{ boxShadow: 'rgba(16, 24, 40, 0.05) 1px 1px 2px' }}
+                id="phone_input_check"
+                style={{ boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px" }}
                 countrySelectProps={{ unicodeFlags: true }}
                 defaultCountry="US"
                 placeholder="(555) 000-0000"
@@ -291,7 +298,6 @@ const Form = () => {
                 onChange={setContactPhoneNumber}
               />
             </Tooltip>
-
           </div>
           <div
             style={{
@@ -304,10 +310,22 @@ const Form = () => {
             <Button
               disabled={contactPhoneNumber === ""}
               onClick={() => addingPhoneNumber()}
-              style={{ ...CenteringGrid, ...BlueButton, height: "2.5rem", padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1.5rem", width: "100%" }}
+              style={{
+                ...CenteringGrid,
+                ...BlueButton,
+                height: "2.5rem",
+                padding: "2.5px 12px",
+                border: "0.3px solid var(--gray300)",
+                margin: "0.1rem auto 1.5rem",
+                width: "100%",
+              }}
             >
               {/* <Icon icon="material-symbols:add" width={15} />&nbsp; */}
-              <Typography style={{ ...BlueButtonText, ...CenteringGrid, fontWeight: 600, }}>Add phone number</Typography>
+              <Typography
+                style={{ ...BlueButtonText, ...CenteringGrid, fontWeight: 600 }}
+              >
+                Add phone number
+              </Typography>
             </Button>
           </div>
         </div>
@@ -341,11 +359,7 @@ const Form = () => {
                 }}
               >
                 &nbsp;
-                <Typography
-                  style={InputLabelStyle}
-                >
-                  {item}
-                </Typography>
+                <Typography style={InputLabelStyle}>{item}</Typography>
                 &nbsp;
               </Tag>
             );
@@ -355,14 +369,10 @@ const Form = () => {
           style={{
             width: "100%",
             textAlign: "left",
-            marginBottom: "0.5rem"
+            marginBottom: "0.5rem",
           }}
         >
-          <Typography
-            style={InputLabelStyle}
-          >
-            Date of the event
-          </Typography>
+          <Typography style={InputLabelStyle}>Date of the event</Typography>
         </div>
         <div
           style={{
@@ -387,13 +397,15 @@ const Form = () => {
             startDate={new Date()}
             style={{
               ...OutlinedInputStyle,
-              margin: "0.1rem 0 1.5rem", width: '100%'
+              margin: "0.1rem 0 1.5rem",
+              width: "100%",
             }}
           />
           <DatePicker
             style={{
               ...OutlinedInputStyle,
-              margin: "0.1rem 0 1.5rem", width: '100%'
+              margin: "0.1rem 0 1.5rem",
+              width: "100%",
             }}
             id="calender-event"
             showTimeSelect
@@ -458,7 +470,8 @@ const Form = () => {
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Typography
             textTransform={"none"}
-            style={{ ...Subtitle, fontWeight: 500 }}          >
+            style={{ ...Subtitle, fontWeight: 500 }}
+          >
             Venue name
           </Typography>
         </InputLabel>
@@ -497,9 +510,7 @@ const Form = () => {
           fullWidth
         />
         <div style={{ width: "100%" }}>
-          {errors?.city && (
-            <Typography>This field is required</Typography>
-          )}
+          {errors?.city && <Typography>This field is required</Typography>}
         </div>
 
         <div
@@ -540,9 +551,7 @@ const Form = () => {
               fullWidth
             />
             <div style={{ width: "100%" }}>
-              {errors?.state && (
-                <Typography>This field is required</Typography>
-              )}
+              {errors?.state && <Typography>This field is required</Typography>}
             </div>
           </div>
           <div
@@ -589,12 +598,9 @@ const Form = () => {
           </Typography>
         </div>
         <div style={{ width: "100%", textAlign: "left" }}>
-          <Typography
-            style={{ ...InputLabelStyle, fontWeight: 400 }}
-          >
-            A merchant service is needed to process monetary transactions
-            such as obtaining deposits and charging users for lost
-            devices.
+          <Typography style={{ ...InputLabelStyle, fontWeight: 400 }}>
+            A merchant service is needed to process monetary transactions such
+            as obtaining deposits and charging users for lost devices.
           </Typography>
         </div>
         <div
@@ -618,24 +624,29 @@ const Form = () => {
                 ...BlueButton,
                 gap: "8px",
                 margin: "0.1rem 0 1.5rem",
-                border: `${merchant
-                  ? "1px solid var(--blue-dark-700, #004EEB)"
-                  : "1px solid #d5d5d5"
-                  }`,
-                background: `${merchant
-                  ? "var(--blue-dark-700, #004EEB)"
-                  : "var(--base-white, #FFF)"
-                  }`,
+                border: `${
+                  merchant
+                    ? "1px solid var(--blue-dark-700, #004EEB)"
+                    : "1px solid #d5d5d5"
+                }`,
+                background: `${
+                  merchant
+                    ? "var(--blue-dark-700, #004EEB)"
+                    : "var(--base-white, #FFF)"
+                }`,
               }}
+              onClick={() => setMerchant(true)}
             >
-              <Typography
-                display={"flex"}
-                justifyContent={"space-around"}
-                alignItems={"center"}
-                textTransform={"capitalize"}
-                style={{ ...Subtitle, fontWeight: 600 }}
-                color={`${merchant ? "#fff" : "#8f8f8f"}`}
-                onClick={() => setMerchant(true)}
+              <p
+                style={{
+                  ...Subtitle,
+                  fontWeight: 600,
+                  display: "flex",
+                  justifyContent: "space-around",
+                  alignItems: "center",
+                  textTransform: "capitalize",
+                  color: `${merchant ? "#fff" : "#8f8f8f"}`,
+                }}
               >
                 {merchant ? (
                   <Icon width={20} height={20} icon="iconoir:check" />
@@ -643,7 +654,7 @@ const Form = () => {
                   <Icon width={20} height={20} icon="octicon:x-24" />
                 )}
                 &nbsp;Yes
-              </Typography>
+              </p>
             </Button>
           </div>
           <div
@@ -657,26 +668,30 @@ const Form = () => {
                 ...BlueButton,
                 gap: "8px",
                 margin: "0.1rem 0 1.5rem",
-                border: `${!merchant
-                  ? "1px solid var(--blue-dark-700, #004EEB)"
-                  : "1px solid #d5d5d5"
-                  }`,
-                background: `${!merchant ? "var(--blue-dark-700, #004EEB)" : "#fff"
-                  }`,
+                border: `${
+                  !merchant
+                    ? "1px solid var(--blue-dark-700, #004EEB)"
+                    : "1px solid #d5d5d5"
+                }`,
+                background: `${
+                  !merchant ? "var(--blue-dark-700, #004EEB)" : "#fff"
+                }`,
               }}
               onClick={() => setMerchant(false)}
             >
-              <Typography
-                display={"flex"}
-                justifyContent={"space-around"}
-                alignItems={"center"}
-                textTransform={"capitalize"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"20px"}
-                color={`${!merchant ? "#fff" : "#8f8f8f"}`}
+              <p
+                style={{
+                  display: "flex",
+                  justifyContent: "space-around",
+                  alignItems: "center",
+                  textTransform: "capitalize",
+                  fontFamily: "Inter",
+                  fontSize: "14px",
+                  fontStyle: "normal",
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  color: `${!merchant ? "#fff" : "#8f8f8f"}`,
+                }}
               >
                 {!merchant ? (
                   <Icon width={20} height={20} icon="iconoir:check" />
@@ -684,7 +699,7 @@ const Form = () => {
                   <Icon width={20} height={20} icon="octicon:x-24" />
                 )}
                 &nbsp;No
-              </Typography>
+              </p>
             </Button>
           </div>
         </div>
@@ -697,11 +712,10 @@ const Form = () => {
               margin: "0.1rem 0 1.5rem",
             }}
           >
-            <Typography
-              textTransform={"none"}
-              style={BlueButtonText}
-            >
-              {String(eventInfoDetail.eventName).length === 0 ? "Next step" : "Save changes"}
+            <Typography textTransform={"none"} style={BlueButtonText}>
+              {String(eventInfoDetail.eventName).length === 0
+                ? "Next step"
+                : "Save changes"}
             </Typography>
           </Button>
         </Grid>
@@ -710,5 +724,4 @@ const Form = () => {
   );
 };
 
-
-export default Form
+export default Form;
