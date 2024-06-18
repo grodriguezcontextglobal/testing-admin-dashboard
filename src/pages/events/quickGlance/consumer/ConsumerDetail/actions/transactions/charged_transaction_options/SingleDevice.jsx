@@ -110,7 +110,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   subtractRangePerGroupToDisplayItInScreen();
 
   const generatePaymentIntent = async (data) => {
-    if (!checkDeviceAvailability(data.serialNumber)) {
+    if (checkDeviceAvailability(data.serialNumber)) {
       return alert(
         "device is already assigned to other consumer. Please assign a different serial number."
       );
