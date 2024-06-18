@@ -37,12 +37,15 @@ const MainPage = () => {
   const searching = watch("searchEvent");
   const leaseListQuery = useQuery({
     queryKey: ["leaseList"],
-    queryFn: devitrakApi.post("/db_lease/consulting-lease", {
-      company_id: user.sqlInfo.company_id,
-      subscription_current_in_use: true,
-    }),
+    queryFn: () =>
+      devitrakApi.post("/db_lease/consulting-lease", {
+        company_id: user.sqlInfo.company_id,
+        subscription_current_in_use: 1,
+      }),
+    enabled: false,
     refetchOnMount: false,
   });
+
   let counter = 0;
   const listOfEventsPerAdmin = useCallback(() => {
     let activeEvents = [];
@@ -126,9 +129,26 @@ const MainPage = () => {
       returnValues.inactive = [...result.get(false)];
     }
     if (result.has("Lost")) {
-      returnValues.inactive = [...result.get(false), ...result.get('Lost')];
+      returnValues.inactive = [...result.get(false), ...result.get("Lost")];
     }
     return setDataToRenderInComponent(returnValues);
+  };
+  const checkingDevicesGivenInEvents = () => {
+    if (dataToRenderInComponent.active || dataToRenderInComponent.inactive) {
+      const data = [
+        ...dataToRenderInComponent.active,
+        ...dataToRenderInComponent.inactive,
+      ];
+      const result = new Set();
+      for (let item of data) {
+        result.add({
+          serialNumber: item?.serialNumber,
+          deviceType: item?.deviceType,
+        });
+      }
+      return Array.from(result);
+    }
+    return [];
   };
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
@@ -301,11 +321,11 @@ const MainPage = () => {
               <RenderingConsumersChartsBehavior
                 active={{
                   title: "Event",
-                  number: 0,
+                  number: checkingDevicesGivenInEvents().length,
                 }}
                 inactive={{
                   title: "General",
-                  number: 0,
+                  number: leaseListQuery?.data?.data?.lease.length,
                 }}
               />
             </Grid>
