@@ -105,19 +105,7 @@ const MainPage = () => {
       return Array.from(result);
     };
     return (
-      <Grid
-        textAlign={"right"}
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        alignSelf={"flex-start"}
-        gap={1}
-        item
-        xs={12}
-        sm={12}
-        md={12}
-        lg={12}
-      >
+      <Grid container>
         {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
           dataToBeRenderedInUpcomingSection()?.map((event) => {
             return (
@@ -128,7 +116,7 @@ const MainPage = () => {
                 item
                 xs={12}
                 sm={12}
-                md={12}
+                md={6}
                 lg={6}
               >
                 <CardEventDisplay props={event} />
