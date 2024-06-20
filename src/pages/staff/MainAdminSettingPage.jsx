@@ -368,7 +368,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     ];
 
     const sortDataAdminUser = () => {
-      if (String(searchAdmin)?.length > 0) {
+      if (!searchAdmin || String(searchAdmin)?.length > 0) {
         const check = employeeListRef.current.filter(
           (item) =>
             String(item?.name)
@@ -457,11 +457,16 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
           </div>
         </Grid>
         <Table
-          style={{ width: "100%" }}
+          style={{ width: "100%", cursor: "pointer" }}
           dataSource={getInfoNeededToBeRenderedInTable()}
           columns={columns}
           rowClassName="editable-row"
           className="table-ant-customized"
+          onRow={(record) => {
+            return {
+              onClick: () => handleDetailStaff(record),
+            };
+          }}
         />
       </Grid>
     );
