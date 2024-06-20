@@ -17,6 +17,7 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-select.css";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
 import { useLocation } from "react-router-dom";
+import { checkArray } from "../../../../../components/utils/checkArray";
 const ListEquipment = () => {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -61,10 +62,11 @@ const ListEquipment = () => {
     };
   }, []);
   const fetchLeasePerStaffMember = async (staffMember) => {
+    const staffmemberInfo = await checkArray(staffMember?.data?.member);
     const assignedEquipmentStaffQuery = await devitrakApi.post(
       "/db_lease/consulting-lease",
       {
-        staff_member_id: staffMember?.data?.member.at(-1).staff_id,
+        staff_member_id: staffmemberInfo.staff_id,
       }
     );
     if (assignedEquipmentStaffQuery.data.ok) {
