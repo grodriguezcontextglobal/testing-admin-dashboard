@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-select.css";
-import AddNewItem from "../../../../inventory/actions/AddNewItem";
+import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
 const Assignment = () => {
   const { profile } = useSelector((state) => state.staffDetail);
@@ -58,7 +58,11 @@ const Assignment = () => {
               defaultChecked
             />
           </Divider>
-          {existingOption ? <AssignmentFromExistingInventory /> : null}
+          {existingOption ? (
+            <AssignmentFromExistingInventory />
+          ) : (
+            <AssignemntNewDeviceInInventory />
+          )}
         </Grid>
       </Modal>
       {/* )} */}
