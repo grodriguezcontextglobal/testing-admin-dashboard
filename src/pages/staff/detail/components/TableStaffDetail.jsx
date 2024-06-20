@@ -210,7 +210,7 @@ const TableStaffDetail = () => {
           md={12}
           lg={12}
         >
-          <Typography
+          <p
             style={{
               ...TextFontSize20LineHeight30,
               fontWeight: 500,
@@ -221,7 +221,7 @@ const TableStaffDetail = () => {
             }}
           >
             Devices assigned:&nbsp;
-          </Typography>
+          </p>
         </Grid>
         <ListEquipment />
         <Grid
@@ -234,7 +234,7 @@ const TableStaffDetail = () => {
           md={12}
           lg={12}
         >
-          <Typography
+          <p
             style={{
               ...TextFontSize20LineHeight30,
               fontWeight: 500,
@@ -245,7 +245,7 @@ const TableStaffDetail = () => {
             }}
           >
             Events assigned:&nbsp;
-          </Typography>
+          </p>
         </Grid>
         <Grid
           display={"flex"}
