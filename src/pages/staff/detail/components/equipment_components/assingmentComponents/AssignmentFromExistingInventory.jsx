@@ -1,6 +1,6 @@
-import { Button, Grid, InputLabel, OutlinedInput, Select } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
+import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { notification, Select } from "antd";
 import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -54,7 +54,7 @@ const AssignmentFromExistingInventory = () => {
     // enabled: false,
     refetchOnMount: false,
   });
-
+  const queryClient = useQueryClient();
   useEffect(() => {
     const controller = new AbortController();
     itemsInInventoryQuery.refetch();
@@ -71,7 +71,6 @@ const AssignmentFromExistingInventory = () => {
     };
   }, [itemsInInventoryQuery.data, dataFound.current?.length]);
   dataFound.current = itemsInInventoryQuery?.data?.data?.items;
-
   const groupingItemByCategoriesToRenderThemInSelector = () => {
     const result = new Map();
     const dataToIterate = dataFound.current ?? [];
@@ -156,10 +155,10 @@ const AssignmentFromExistingInventory = () => {
     }
   };
 
-//   const removeItemSelected = (item) => {
-//     const filter = selectedItem.filter((_, index) => index !== item);
-//     return setSelectedItem(filter);
-//   };
+  //   const removeItemSelected = (item) => {
+  //     const filter = selectedItem.filter((_, index) => index !== item);
+  //     return setSelectedItem(filter);
+  //   };
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg) => {
     api.open({
@@ -234,6 +233,18 @@ const AssignmentFromExistingInventory = () => {
         max_serial_number: data.max_serial_number,
       });
     }
+    queryClient.invalidateQueries({
+      queryKey: ["staffMemberInfo"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["imagePerItemList"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ItemsInventoryCheckingQuery"],
+      exact: true,
+    });
   };
 
   const option1 = async (props) => {
@@ -262,10 +273,10 @@ const AssignmentFromExistingInventory = () => {
           max_serial_number: deviceInfo[0].serial_number,
         },
       ]);
+      openNotificationWithIcon("Equipment assigned to staff member.");
+      setLoadingStatus(false);
       await navigate(`/staff/${profile.adminUserInfo._id}/main`);
     }
-    openNotificationWithIcon("Equipment assigned to staff member.");
-    setLoadingStatus(false);
   };
   const option2 = async (props) => {
     let newProps = [];
