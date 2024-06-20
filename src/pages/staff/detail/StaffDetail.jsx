@@ -212,7 +212,7 @@ const StaffDetail = () => {
                   style={{
                     ...GrayButton,
                     display: `${
-                      option.id === 2 && user.email !== profile.user
+                      (option.id === 2 && user.email !== profile.user) || (option.id === 5 && user.email === profile.user)
                         ? "none"
                         : "flex"
                     }`,
