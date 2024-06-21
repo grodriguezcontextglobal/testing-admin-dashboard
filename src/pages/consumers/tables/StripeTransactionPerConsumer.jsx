@@ -1,5 +1,6 @@
 import { Chip } from "@mui/material";
 import { Avatar, Badge, Table } from "antd";
+import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,8 @@ import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import { DangerButton } from "../../../styles/global/DangerButton";
 const StripeTransactionPerConsumer = ({ searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -192,21 +195,23 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       title: "Transaction ID",
       dataIndex: "paymentIntent",
       key: "paymentIntent",
-      render: (paymentIntent) => (
-        <p
-          style={{
-            color: "var(--Gray900)", //, #101828
-            fontFamily: "Inter",
-            fontSize: "14px",
-            fontStyle: "normal",
-            fontWeight: "400",
-            lineHeight: "20px" /* 142.857% */,
-          }}
-        >
-          {" "}
-          {paymentIntent}
-        </p>
-      ),
+      render: (paymentIntent) => {
+        const checkPaymentID = String(paymentIntent).split("_");
+        return (
+          <p
+            style={{
+              color: "var(--Gray900)", //, #101828
+              fontFamily: "Inter",
+              fontSize: "14px",
+              fontStyle: "normal",
+              fontWeight: "400",
+              lineHeight: "20px" /* 142.857% */,
+            }}
+          >
+            {checkPaymentID[1] === "cash" ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${String(checkPaymentID[4]).split("**")[1]}` : `${checkPaymentID[0]}_${checkPaymentID[1]}`}
+          </p>
+        );
+      },
     },
     {
       title: "Devices",
@@ -267,16 +272,82 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       key: "action",
       responsive: ["md"],
       width: "3%",
-      render: (_, record) => (
-        <button
-          style={{ background: "transparent", outline: "none" }}
-          onClick={() => moreDetailFn(record)}
-        >
-          <RightNarrowInCircle />
-        </button>
-      ),
+      render: (_, record) => {
+        const checkPaymentID = String(record.paymentIntent).split("_");
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <button
+              style={{
+                ...DangerButton,
+                background: "transparent",
+                outline: "none",
+                display: `${
+                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                    ? "none"
+                    : "flex"
+                }`,
+              }}
+            >
+              <p
+                style={{
+                  ...DangerButtonText,
+                  display: `${
+                    checkPaymentID[1] === "cash" ||
+                    checkPaymentID[1].length < 13
+                      ? "none"
+                      : "flex"
+                  }`,
+                }}
+              >
+                Capture
+              </p>
+            </button>
+
+            <button
+              style={{
+                ...DangerButton,
+                background: "transparent",
+                outline: "none",
+                display: `${
+                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                    ? "none"
+                    : "flex"
+                }`,
+              }}
+            >
+              <p
+                style={{
+                  ...DangerButtonText,
+                  display: `${
+                    checkPaymentID[1] === "cash" ||
+                    checkPaymentID[1].length < 13
+                      ? "none"
+                      : "flex"
+                  }`,
+                }}
+              >
+                Release
+              </p>
+            </button>
+            <button
+              style={{ background: "transparent", outline: "none" }}
+              onClick={() => moreDetailFn(record)}
+            >
+              <RightNarrowInCircle />
+            </button>
+          </div>
+        );
+      },
     },
   ];
+
   return (
     <Table
       columns={columns}
@@ -300,4 +371,37 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   );
 };
 
+StripeTransactionPerConsumer.propTypes = {
+  searchValue: PropTypes.string,
+};
 export default StripeTransactionPerConsumer;
+
+// {/* <button
+// style={
+//   {
+//     width: "fit-content",
+//     outline: "none",
+//     display: "flex",
+//     padding: "16px 28px",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     gap: "12px",
+//     flex: "1 0 0",
+//     borderRadius: "8px",
+//     border: "1px solid var(--Gray-300, #D0D5DD)",
+//     background: "var(--Base-White, #FFF)",
+//     /* Shadow/xs */
+//     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+//   }
+// }
+// >
+// <ReleaseDepositIcon />
+// <p
+//   style={{
+//     ...TextFontsize18LineHeight28,
+//     color: "var(--Gray-700, #344054)",
+//   }}
+// >
+//   Release deposit
+// </p>
+// </button> */}

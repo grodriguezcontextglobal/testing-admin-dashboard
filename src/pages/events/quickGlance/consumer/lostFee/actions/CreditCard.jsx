@@ -22,6 +22,7 @@ import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
+import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [blocking, setBlocking] = useState(false);
@@ -125,13 +126,13 @@ const CreditCard = () => {
       if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
         findTheOneInUsed = findDeviceInPool[
           receiverToReplaceObject.serialNumber
-        ].find((element) => element.activity === "YES");
+        ].find((element) => element.activity === true);
       }
       await devitrakApi.patch(
         `/receiver/receivers-pool-update/${findTheOneInUsed.id}`,
         {
           id: findTheOneInUsed.id,
-          activity: "NO",
+          activity: false,
           comment: "Device lost",
           status: "Lost",
         }
@@ -139,7 +140,7 @@ const CreditCard = () => {
 
       const objectReturnIssueProfile = {
         ...findTheOneInUsed,
-        activity: "NO",
+        activity: false,
         comment: "Device lost",
         status: "Lost",
         user: customer?.email,
@@ -318,8 +319,8 @@ const CreditCard = () => {
               item
               xs={12}
               sm={12}
-              md={4}
-              lg={3}
+              md={12}
+              lg={9}
             >
               <p
                 style={{
@@ -334,25 +335,11 @@ const CreditCard = () => {
               >
                 Serial number
               </p>
-
               <OutlinedInput
                 disabled
                 value={receiverToReplaceObject.serialNumber}
                 style={OutlinedInputStyle}
               />
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={"10px"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
               <p
                 style={{
                   color: "#000",
@@ -368,7 +355,7 @@ const CreditCard = () => {
               <OutlinedInput
                 disabled={blocking}
                 id="outlined-adornment-amount"
-                style={OutlinedInputStyle}
+                style={{ ...OutlinedInputStyle, width: "fit-content" }}
                 startAdornment={
                   <InputAdornment position="start">$</InputAdornment>
                 }
@@ -378,6 +365,45 @@ const CreditCard = () => {
               {errors?.total && (
                 <Alert message="Amount is required" type="error" />
               )}
+              <Button style={GrayButton} onClick={() => handleBackAction()}>
+                <Typography textTransform={"none"} style={GrayButtonText}>
+                  Cancel
+                </Typography>
+              </Button>{" "}
+              <Button
+                disabled={clientSecret !== ""}
+                style={{
+                  ...BlueButton,
+                  backgroundColor: `${
+                    clientSecret === ""
+                      ? BlueButton.background
+                      : LightBlueButton.background
+                  }`,
+                  border: `${
+                    clientSecret === ""
+                      ? BlueButton.border
+                      : LightBlueButton.border
+                  }`,
+                }}
+                type="submit"
+              >
+                <Typography textTransform={"none"} style={BlueButtonText}>
+                  Add CC information
+                </Typography>
+              </Button>
+            </Grid>
+            {/* <Grid
+              display={"flex"}
+              alignItems={"center"}
+              justifyContent={"flex-end"}
+              gap={"10px"}
+              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
+              item
+              xs={12}
+              sm={12}
+              md={4}
+              lg={3}
+            >
             </Grid>
             <Grid
               display={"flex"}
@@ -390,17 +416,7 @@ const CreditCard = () => {
               md={3}
               lg={2}
             >
-              <Button style={GrayButton} onClick={() => handleBackAction()}>
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Cancel
-                </Typography>
-              </Button>{" "}
-              <Button style={BlueButton} type="submit">
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Add CC information
-                </Typography>
-              </Button>
-            </Grid>
+            </Grid> */}
           </Grid>
         </form>
         <Grid item xs={12}>
