@@ -5,10 +5,7 @@ import { PropTypes } from "prop-types";
 import DevicesInventoryGraph from "../../../../home/components/graphic_components/DevicesInventoryGraph";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 
-const legend = ['Checked out',
-  'Not-Functional Report',
-  'On hands',
-  'Lost']
+const legend = ["Checked out", "Not-Functional Report", "On hands", "Lost"];
 const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
 
 const FormatQuickGlanceCardGraphRender = ({
@@ -16,7 +13,6 @@ const FormatQuickGlanceCardGraphRender = ({
   totalDeviceInRange,
   index,
 }) => {
-
   const style = {
     padding: 0,
   };
@@ -67,16 +63,28 @@ const FormatQuickGlanceCardGraphRender = ({
           boxShadow:
             "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
         }}
-        headStyle={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+        styles={{
+          head: {
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          },
+          body: {
+            padding: "10px 10px 0px 10px",
+            height: "19.5rem",
+          },
         }}
-        bodyStyle={{
-          padding: "10px 10px 0px 10px",
-          height: "19.5rem",
-        }}
+        // headStyle={{
+        //   width: "100%",
+        //   display: "flex",
+        //   justifyContent: "space-between",
+        //   alignItems: "center",
+        // }}
+        // bodyStyle={{
+        //   padding: "10px 10px 0px 10px",
+        //   height: "19.5rem",
+        // }}
         actions={[
           <Typography
             key={"render-total-device-activity"}
@@ -112,19 +120,27 @@ const FormatQuickGlanceCardGraphRender = ({
             <DevicesInventoryGraph dataToRender={dataToRender} />
             <Space style={{ alignSelf: "flex-start" }} size={[8, 16]} wrap>
               {legend.map((item, index) => {
-                return <Typography
-                  key={item}
-                  fontFamily={"Inter"}
-                  fontSize={"12px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"18px"}
-                  textAlign={"right"}
-                  color={COLORS[index]}
-                  style={CenteringGrid}
-                >
-                  <Icon icon="tabler:point-filled" width={25} height={25} color={`${COLORS[index]}`} />{item}
-                </Typography>
+                return (
+                  <Typography
+                    key={item}
+                    fontFamily={"Inter"}
+                    fontSize={"12px"}
+                    fontStyle={"normal"}
+                    fontWeight={400}
+                    lineHeight={"18px"}
+                    textAlign={"right"}
+                    color={COLORS[index]}
+                    style={CenteringGrid}
+                  >
+                    <Icon
+                      icon="tabler:point-filled"
+                      width={25}
+                      height={25}
+                      color={`${COLORS[index]}`}
+                    />
+                    {item}
+                  </Typography>
+                );
               })}
             </Space>
           </Grid>
