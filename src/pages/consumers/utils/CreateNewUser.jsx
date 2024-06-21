@@ -24,6 +24,7 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-select.css";
+import { Subtitle } from "../../../styles/global/Subtitle";
 const schema = yup
   .object({
     firstName: yup.string().required("first name is required"),
@@ -51,7 +52,6 @@ export const CreateNewConsumer = ({
   createUserButton,
   setCreateUserButton,
 }) => {
-  // const [consumersList, setConsumersList] = useState([]);
   const {
     register,
     handleSubmit,
@@ -72,19 +72,7 @@ export const CreateNewConsumer = ({
       description: msg,
     });
   };
-
   const queryClient = useQueryClient();
-  // const checkConsumerInData = async (props) => {
-  //   const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
-  //     email: props.email,
-  //   });
-  //   if (listOfConsumersQuery.data.ok) {
-  //     return setConsumersList(listOfConsumersQuery.data.users);
-  //   } else {
-  //     return setConsumersList([]);
-  //   }
-  // };
-
   const newConsumerAfterBeingCheck = async (data) => {
     const newUserProfile = {
       name: data.firstName,
@@ -141,7 +129,14 @@ export const CreateNewConsumer = ({
         updateConsumerProfile
       );
       if (updatingUserInfoQuery.data) {
-        queryClient.invalidateQueries(["listOfConsumers", "consumersList"]);
+        queryClient.invalidateQueries({
+          queryKey: ["listOfConsumers"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["consumersList"],
+          exact: true,
+        });
         openNotificationWithIcon("success", "New consumer added");
         setLoading(false);
         closeDeviceModal();
@@ -178,7 +173,11 @@ export const CreateNewConsumer = ({
     setCreateUserButton(false);
   };
   const titleRender = () => {
-    return <p style={TextFontsize18LineHeight28}>Add new consumer.</p>;
+    return (
+      <p style={{ ...TextFontsize18LineHeight28, textAlign: "center" }}>
+        Add new consumer.
+      </p>
+    );
   };
 
   return (
@@ -230,19 +229,9 @@ export const CreateNewConsumer = ({
                   onSubmit={handleSubmit(handleNewConsumer)}
                   className="form"
                 >
-                  <Typography
-                    margin={"0px auto 2rem"}
-                    textTransform={"none"}
-                    textAlign={"center"}
-                    fontFamily={"Inter"}
-                    fontSize={"14px"}
-                    fontStyle={"normal"}
-                    fontWeight={400}
-                    lineHeight={"20px"}
-                    color={"var(--gray-600, #475467)"}
-                  >
+                  <p style={Subtitle}>
                     Enter all the user details for a consumer.
-                  </Typography>
+                  </p>
                   <div
                     style={{
                       width: "100%",
@@ -251,6 +240,7 @@ export const CreateNewConsumer = ({
                       alignItems: "center",
                       textAlign: "left",
                       gap: "10px",
+                      margin: "0.5rem 0 0",
                     }}
                   >
                     <div
@@ -259,48 +249,19 @@ export const CreateNewConsumer = ({
                         width: "50%",
                       }}
                     >
-                      <InputLabel
-                        style={{ marginBottom: "3px", width: "100%" }}
-                      >
-                        <p
-                          style={paragraphStyle}
-                          // textTransform={"none"}
-                          // textAlign={"left"}
-                          // fontFamily={"Inter"}
-                          // fontSize={"14px"}
-                          // fontStyle={"normal"}
-                          // fontWeight={500}
-                          // lineHeight={"20px"}
-                          // color={"var(--gray-700, #344054)"}
-                        >
-                          First name
-                        </p>
+                      <InputLabel style={{ margin: 0, width: "100%" }}>
+                        <p style={paragraphStyle}>First name</p>
                       </InputLabel>
                       <OutlinedInput
                         {...register("firstName", { required: true })}
                         aria-invalid={errors.firstName}
                         style={{
                           ...OutlinedInputStyle,
-                          // borderRadius: "12px",
                           border: `${errors.firstName && "solid 1px #004EEB"}`,
-                          // margin: "0.1rem auto 1rem",
-                          // display: "flex",
-                          // justifyContent: "flex-start",
                         }}
                         placeholder="First name"
                       />
-                      <Typography
-                        textTransform={"none"}
-                        textAlign={"left"}
-                        fontFamily={"Inter"}
-                        fontSize={"14px"}
-                        fontStyle={"normal"}
-                        fontWeight={500}
-                        lineHeight={"20px"}
-                        color={"var(--gray-700, #344054)"}
-                      >
-                        {errors?.firstName?.message}
-                      </Typography>
+                      <p style={Subtitle}>{errors?.firstName?.message}</p>
                     </div>
                     <div
                       style={{
@@ -308,21 +269,8 @@ export const CreateNewConsumer = ({
                         width: "50%",
                       }}
                     >
-                      <InputLabel
-                        style={{ marginBottom: "3px", width: "100%" }}
-                      >
-                        <Typography
-                          textTransform={"none"}
-                          textAlign={"left"}
-                          fontFamily={"Inter"}
-                          fontSize={"14px"}
-                          fontStyle={"normal"}
-                          fontWeight={500}
-                          lineHeight={"20px"}
-                          color={"var(--gray-700, #344054)"}
-                        >
-                          Last name
-                        </Typography>
+                      <InputLabel style={{ margin: 0, width: "100%" }}>
+                        <p style={paragraphStyle}>Last name</p>
                       </InputLabel>
                       <OutlinedInput
                         {...register("lastName", { required: true })}
@@ -336,39 +284,50 @@ export const CreateNewConsumer = ({
                       {errors?.lastName?.message}
                     </div>
                   </div>
-                  <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={500}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
-                    >
-                      Email
-                    </Typography>
-                  </InputLabel>
-                  <OutlinedInput
-                    {...register("email", { required: true, minLength: 10 })}
-                    aria-invalid={errors.email}
+                  <div
                     style={{
-                      ...OutlinedInputStyle,
-                      border: `${errors.email && "solid 1px #004EEB"}`,
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      textAlign: "left",
+                      margin: "0.5rem 0 0",
                     }}
-                    placeholder="Enter your email"
-                    fullWidth
-                  />
-                  {errors?.email?.message}
-                  <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                    <p>Phone number</p>
-                  </InputLabel>
-                  <Grid item xs={12} sm={12} md={12} lg={12}>
+                  >
+                    <InputLabel style={{ margin: 0, width: "100%" }}>
+                      <p style={paragraphStyle}>Email</p>
+                    </InputLabel>
+                    <OutlinedInput
+                      {...register("email", { required: true, minLength: 10 })}
+                      aria-invalid={errors.email}
+                      style={{
+                        ...OutlinedInputStyle,
+                        border: `${errors.email && "solid 1px #004EEB"}`,
+                      }}
+                      placeholder="Enter your email"
+                      fullWidth
+                    />
+                    {errors?.email?.message}
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      textAlign: "left",
+                      margin: "0.5rem 0 0",
+                    }}
+                  >
+                    <InputLabel style={{ margin: 0, width: "100%" }}>
+                      <p style={paragraphStyle}>Phone number</p>
+                    </InputLabel>
                     <PhoneInput
                       style={{
                         ...OutlinedInputStyle,
-                        margin: "0.1rem 0 1.5rem",
+                        margin: "0.5rem 0 ",
                         padding: "0px 20px",
                         width: "90%",
                         boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
@@ -381,67 +340,49 @@ export const CreateNewConsumer = ({
                       value={contactPhoneNumber}
                       onChange={setContactPhoneNumber}
                     />
-                  </Grid>
-
-                  <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                    <p
+                  </div>
+                  <div>
+                    <InputLabel style={{ margin: 0, width: "100%" }}>
+                      <p style={paragraphStyle}>Event assigned to</p>
+                    </InputLabel>
+                    <Select
+                      className="custom-autocomplete"
+                      displayEmpty
+                      {...register("eventAssignedTo", { required: true })}
+                      aria-invalid={errors.eventAssignedTo}
                       style={{
-                        textTransform: "none",
-                        textAlign: "left",
-                        fontFamily: "Inter",
-                        fontSize: "14px",
-                        fontStyle: "normal",
-                        fontWeight: 500,
-                        lineHeight: "20px",
-                        color: "var(--gray-700, #344054)",
+                        ...AntSelectorStyle,
+                        width: "100%",
+                        margin: "0 0 0.3rem",
                       }}
                     >
-                      Event assigned to
-                    </p>
-                  </InputLabel>
-                  <Select
-                    className="custom-autocomplete"
-                    displayEmpty
-                    {...register("eventAssignedTo", { required: true })}
-                    aria-invalid={errors.eventAssignedTo}
-                    style={{
-                      ...AntSelectorStyle,
-                      width: "100%",
-                      margin: "0.3rem 0",
-                    }}
-                  >
-                    <MenuItem disabled value="">
-                      <em>Select event</em>
-                    </MenuItem>
-                    {listOfAvailableEventsPerAdmin?.map((event) => {
-                      return (
-                        <MenuItem
-                          value={event?.eventInfoDetail?.eventName}
-                          key={event?.id}
-                        >
-                          <p
-                            style={{
-                              textTransform: "none",
-                              textAlign: "left",
-                              fontFamily: "Inter",
-                              fontSize: "14px",
-                              fontStyle: "normal",
-                              fontWeight: 400,
-                              lineHeight: "20px",
-                              color: "var(--gray-700, #344054)",
-                            }}
+                      <MenuItem disabled value="">
+                        <em>Select event</em>
+                      </MenuItem>
+                      {listOfAvailableEventsPerAdmin?.map((event) => {
+                        return (
+                          <MenuItem
+                            value={event?.eventInfoDetail?.eventName}
+                            key={event?.id}
                           >
-                            {event?.eventInfoDetail?.eventName}
-                          </p>
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                  {errors?.eventAssignedTo?.message}
+                            <p style={paragraphStyle}>
+                              {event?.eventInfoDetail?.eventName}
+                            </p>
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                    {errors?.eventAssignedTo?.message}
+                  </div>
                   <Button
                     loading={loading}
                     htmlType="submit"
-                    style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+                    style={{
+                      ...BlueButton,
+                      ...CenteringGrid,
+                      width: "100%",
+                      margin: "1.5rem 0 0",
+                    }}
                   >
                     <Typography textTransform={"none"} style={BlueButtonText}>
                       Add new consumer

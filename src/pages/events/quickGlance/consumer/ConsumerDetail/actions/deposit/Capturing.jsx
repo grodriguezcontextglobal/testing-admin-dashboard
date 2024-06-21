@@ -17,7 +17,8 @@ import * as yup from "yup";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
+import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -27,19 +28,19 @@ const schema = yup
 const Capturing = ({
   openCapturingDepositModal,
   setOpenCapturingDepositModal,
-  refetchingTransactionFn
+  refetchingTransactionFn,
 }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
       message: title,
-      duration: 0
+      duration: 0,
     });
   };
   const { paymentIntentDetailSelected, customer } = useSelector(
     (state) => state.stripe
   );
-  const { event } = useSelector((state) => state.event)
+  const { event } = useSelector((state) => state.event);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
@@ -47,22 +48,19 @@ const Capturing = ({
         `/stripe/payment_intents/${paymentIntentDetailSelected.paymentIntent}`
       ),
     refetchOnMount: false,
-    staleTime: Infinity
+    staleTime: Infinity,
   });
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
     queryFn: () =>
-      devitrakApi.post(
-        `/transaction/transaction`,
-        {
-          paymentIntent: paymentIntentDetailSelected.paymentIntent,
-          active: true
-        }
-      ),
+      devitrakApi.post(`/transaction/transaction`, {
+        paymentIntent: paymentIntentDetailSelected.paymentIntent,
+        active: true,
+      }),
     refetchOnMount: false,
-    staleTime: Infinity
+    staleTime: Infinity,
   });
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const {
     register,
     setValue,
@@ -75,22 +73,12 @@ const Capturing = ({
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
   const initalValue = useCallback(() => {
     return setValue("amount", amountWithNoDecimal);
-  }, [
-    amountWithNoDecimal,
-    setValue,
-  ]);
+  }, [amountWithNoDecimal, setValue]);
 
   if (stripeTransactionQuery.data) {
     initalValue();
     const renderingTitle = () => {
-      return (
-        <Typography
-          textTransform={"none"}
-
-        >
-          Capturing deposit
-        </Typography>
-      );
+      return <Typography textTransform={"none"}>Capturing deposit</Typography>;
     };
 
     const closeModal = () => {
@@ -110,10 +98,13 @@ const Capturing = ({
           }
         );
         if (resp.data.ok) {
-          const transactionInfo = transactionQuery?.data?.data?.list.at(-1)
-          const dateString = new Date().toString()
-          const dateRef = dateString.split(' ')
-          await devitrakApi.patch(`/transaction/update-transaction/${transactionInfo.id}`, { active: false })
+          const transactionInfo = transactionQuery?.data?.data?.list.at(-1);
+          const dateString = new Date().toString();
+          const dateRef = dateString.split(" ");
+          await devitrakApi.patch(
+            `/transaction/update-transaction/${transactionInfo.id}`,
+            { active: false }
+          );
           await devitrakApi.post("/nodemailer/deposit-collected-notification", {
             consumer: {
               name: `${customer.name}, ${customer.lastName}`,
@@ -130,21 +121,22 @@ const Capturing = ({
             company: event.company,
             link: `https://app.devitrak.net/authentication/${encodeURI(
               event.eventInfoDetail.eventName
-            )}/${encodeURI(event.company)}/${customer.uid}`
+            )}/${encodeURI(event.company)}/${customer.uid}`,
           });
-          queryClient.invalidateQueries({ queryKey: ['transactionPerConsumerListQuery'], exact: true })
-          refetchingTransactionFn()
-          openNotificationWithIcon('success', 'Deposit was captured.')
+          queryClient.invalidateQueries({
+            queryKey: ["transactionPerConsumerListQuery"],
+            exact: true,
+          });
+          refetchingTransactionFn();
+          openNotificationWithIcon("success", "Deposit was captured.");
           setTimeout(() => {
-            return closeModal()
+            return closeModal();
           }, 2500);
-          
         }
       }
     };
 
     return (
-
       <Modal
         open={openCapturingDepositModal}
         title={renderingTitle()}
@@ -190,29 +182,29 @@ const Capturing = ({
                   onSubmit={handleSubmit(handleEventInfo)}
                   className="form"
                 >
-                  <InputLabel
-                    style={{ marginBottom: "0.2rem", width: "100%" }}
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={500}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <p
+                      style={Subtitle}
+                      // textTransform={"none"}
+                      // textAlign={"left"}
+                      // fontFamily={"Inter"}
+                      // fontSize={"14px"}
+                      // fontStyle={"normal"}
+                      // fontWeight={500}
+                      // lineHeight={"20px"}
+                      // color={"var(--gray-700, #344054)"}
                     >
                       Transaction ID
-                    </Typography>
+                    </p>
                   </InputLabel>
                   <OutlinedInput
                     disabled
                     value={paymentIntentDetailSelected.paymentIntent}
                     style={{
                       borderRadius: "12px",
-                      border: `${errors.serialNumberBase && "solid 1px #004EEB"
-                        }`,
+                      border: `${
+                        errors.serialNumberBase && "solid 1px #004EEB"
+                      }`,
                       margin: "0.1rem auto 1rem",
                       display: "flex",
                       justifyContent: "flex-start",
@@ -220,21 +212,20 @@ const Capturing = ({
                     }}
                   />
 
-                  <InputLabel
-                    style={{ marginBottom: "0.2rem", width: "100%" }}
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={500}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <p
+                      style={Subtitle}
+                      // textTransform={"none"}
+                      // textAlign={"left"}
+                      // fontFamily={"Inter"}
+                      // fontSize={"14px"}
+                      // fontStyle={"normal"}
+                      // fontWeight={500}
+                      // lineHeight={"20px"}
+                      // color={"var(--gray-700, #344054)"}
                     >
                       Capturing deposit amount
-                    </Typography>
+                    </p>
                   </InputLabel>
                   <OutlinedInput
                     {...register("amount")}
@@ -249,34 +240,36 @@ const Capturing = ({
                     placeholder="e.g. $200"
                     startAdornment={
                       <InputAdornment position="start">
-                        <Typography
-                          textTransform={"none"}
-                          textAlign={"left"}
-                          fontFamily={"Inter"}
-                          fontSize={"14px"}
-                          fontStyle={"normal"}
-                          fontWeight={400}
-                          lineHeight={"20px"}
-                          color={"var(--gray-700, #344054)"}
+                        <p
+                          style={Subtitle}
+                          // textTransform={"none"}
+                          // textAlign={"left"}
+                          // fontFamily={"Inter"}
+                          // fontSize={"14px"}
+                          // fontStyle={"normal"}
+                          // fontWeight={400}
+                          // lineHeight={"20px"}
+                          // color={"var(--gray-700, #344054)"}
                         >
                           $
-                        </Typography>
+                        </p>
                       </InputAdornment>
                     }
                   />
                   {errors?.amount && (
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={400}
-                      lineHeight={"18px"}
-                      color={"var(--gray-700, #344054)"}
+                    <p
+                      style={Subtitle}
+                      // textTransform={"none"}
+                      // textAlign={"left"}
+                      // fontFamily={"Inter"}
+                      // fontSize={"12px"}
+                      // fontStyle={"normal"}
+                      // fontWeight={400}
+                      // lineHeight={"18px"}
+                      // color={"var(--gray-700, #344054)"}
                     >
                       {errors?.amount?.message}
-                    </Typography>
+                    </p>
                   )}
                   <FormHelperText
                     style={{
@@ -284,26 +277,24 @@ const Capturing = ({
                     }}
                     id="outlined-weight-helper-text"
                   >
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={400}
-                      lineHeight={"20px"}
-                      color={"var(--gray-600, #475467)"}
+                    <p
+                      style={Subtitle}
+                      // textTransform={"none"}
+                      // textAlign={"left"}
+                      // fontFamily={"Inter"}
+                      // fontSize={"14px"}
+                      // fontStyle={"normal"}
+                      // fontWeight={400}
+                      // lineHeight={"20px"}
+                      // color={"var(--gray-600, #475467)"}
                     >
                       Please be aware that the displayed amount is the maximum
                       value that will be captured. If you wish to capture a
                       lesser amount, you have the option to manually input the
                       desired value before submitting.
-                    </Typography>
+                    </p>
                   </FormHelperText>
-                  <Button
-                    type="submit"
-                    style={BlueButton}
-                  >
+                  <Button type="submit" style={BlueButton}>
                     <Typography
                       textTransform={"none"}
                       style={{ ...BlueButtonText, width: "100%" }}
@@ -317,7 +308,6 @@ const Capturing = ({
           </Grid>
         </Grid>
       </Modal>
-
     );
   }
 };
@@ -328,4 +318,4 @@ Capturing.propTypes = {
   openCapturingDepositModal: PropTypes.bool,
   setOpenCapturingDepositModal: PropTypes.bool,
   refetchingTransactionFn: PropTypes.func,
-}
+};

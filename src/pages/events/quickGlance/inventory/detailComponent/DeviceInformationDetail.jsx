@@ -2,6 +2,8 @@ import { Grid, Typography } from "@mui/material";
 import { Card } from "antd";
 import { useSelector } from "react-redux";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 
 const DeviceInformationDetail = () => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -25,9 +27,6 @@ const DeviceInformationDetail = () => {
             padding: "24px 24px 24px 0"
           }
         }}
-        // bodyStyle={{
-        //   padding: "24px 24px 24px 0"
-        // }}
       >
         <Grid
           display={"flex"}
@@ -76,18 +75,19 @@ const DeviceInformationDetail = () => {
             item
             xs={12}
           >
-            <Typography
-              textAlign={"left"}
-              paddingTop={"8px"}
-              fontFamily={"Inter"}
-              fontSize={"18px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"28px"}
-              color={"var(--gray-900, #101828)"}
+            <p
+            style={TextFontsize18LineHeight28}
+              // textAlign={"left"}
+              // paddingTop={"8px"}
+              // fontFamily={"Inter"}
+              // fontSize={"18px"}
+              // fontStyle={"normal"}
+              // fontWeight={600}
+              // lineHeight={"28px"}
+              // color={"var(--gray-900, #101828)"}
             >
               Serial number
-            </Typography>
+            </p>
           </Grid>
           <Grid
             display={"flex"}
@@ -97,18 +97,19 @@ const DeviceInformationDetail = () => {
             item
             xs={12}
           >
-            <Typography
-              textAlign={"left"}
-              paddingTop={"8px"}
-              fontFamily={"Inter"}
-              fontSize={"38px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"38px"}
-              color={"var(--gray-900, #101828)"}
+            <p
+            style={TextFontSize30LineHeight38}
+              // textAlign={"left"}
+              // paddingTop={"8px"}
+              // fontFamily={"Inter"}
+              // fontSize={"38px"}
+              // fontStyle={"normal"}
+              // fontWeight={600}
+              // lineHeight={"38px"}
+              // color={"var(--gray-900, #101828)"}
             >
               {deviceInfoSelected.entireData.device}
-            </Typography>
+            </p>
           </Grid>
         </Grid>
       </Card>
