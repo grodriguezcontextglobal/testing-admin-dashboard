@@ -67,7 +67,7 @@ const FormatToDisplayDetail = () => {
     const foundDevicesOut = () => {
       let index = 0;
       for (let data of foundAllDevicesGivenInEvent()) {
-        if (data.activity === "YES") {
+        if (data.activity) {
           index++;
         }
       }

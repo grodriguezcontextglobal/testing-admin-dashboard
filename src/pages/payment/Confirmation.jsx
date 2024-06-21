@@ -31,23 +31,22 @@ const Confirmation = () => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
-        activity: "No",
+        activity: false,
       }),
     refetchOnMount: false,
-    cacheTime: 1000 * 60 * 2,
   });
 
   const addingDeviceInTransactionMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/receiver/receiver-assignation", template),
   });
-  const updateDeviceInPoolMutation = useMutation({
-    mutationFn: (template) =>
-      devitrakApi.patch(`/receiver/receivers-pool-update/${template.id}`, {
-        activity: "YES",
-        status: "Operational",
-      }),
-  });
+  // const updateDeviceInPoolMutation = useMutation({
+  //   mutationFn: (template) =>
+  //     devitrakApi.patch(`/receiver/receivers-pool-update/${template.id}`, {
+  //       activity: "YES",
+  //       status: "Operational",
+  //     }),
+  // });
   const payment_intent = new URLSearchParams(window.location.search).get(
     "payment_intent"
   );
@@ -99,7 +98,13 @@ const Confirmation = () => {
     const createDeviceInPool = async (props) => {
       const device = await checkArray(groupingByDevice[props]);
       if (device.id) {
-        await updateDeviceInPoolMutation.mutateAsync(device);
+        await devitrakApi.patch(
+          `/receiver/receivers-pool-update/${device.id}`,
+          {
+            activity: true,
+            status: "Operational",
+          }
+        );
         await usedDevices.findIndex((element) => element.id === device.id);
       }
     };
@@ -187,10 +192,26 @@ const Confirmation = () => {
             "Device assigned.",
             "All device assigned into account."
           );
-          queryClient.invalidateQueries([
-            "transactionPerConsumerListQuery",
-            "assginedDeviceList",
-          ]);
+          queryClient.invalidateQueries({
+            queryKey: ["transactionPerConsumerListQuery"],
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          });
           setLoadingStatus(false);
         }
       } catch (error) {

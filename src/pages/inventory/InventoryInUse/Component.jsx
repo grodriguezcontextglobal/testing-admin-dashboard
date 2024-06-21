@@ -112,18 +112,18 @@ const Component = ({ searchDevice }) => {
             filters: [
                 {
                     text: "In Use",
-                    value: "YES",
+                    value: true,
                 },
                 {
                     text: "In Stock",
-                    value: "NO",
+                    value: false,
                 },
                 {
                     text: "Lost",
                     value: "LOST",
                 },
             ],
-            onFilter: (value, record) => record.activity.startsWith(value),
+            onFilter: (value, record) => record.activity === value,
             filterSearch: true,
             render: (activity) => (
                 <span style={{ textTransform: 'capitalize' }}>{activity}</span>

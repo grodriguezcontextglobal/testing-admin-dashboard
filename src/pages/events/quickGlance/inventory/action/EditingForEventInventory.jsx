@@ -168,7 +168,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       await devitrakApi.post("/receiver/receivers-pool", {
         device: valueItemSelected[index].serial_number,
         status: "Operational",
-        activity: "NO",
+        activity: false,
         comment: "No comment",
         eventSelected: event.eventInfoDetail.eventName,
         provider: user.company,
@@ -209,7 +209,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (
     props
   ) => {
-    console.log(props);
+    // console.log(props);
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
@@ -220,9 +220,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
     if (selectedDevicesPool.data) {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
-      console.log("devicesFetchedPool", devicesFetchedPool);
+      // console.log("devicesFetchedPool", devicesFetchedPool);
       for (let data of devicesFetchedPool) {
-        console.log("data for-of", data);
+        // console.log("data for-of", data);
         const deviceSQL = {
           warehouse: 1,
           status: data.status,
@@ -252,7 +252,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
   };
   const handleRemoveItemFromInventoryEvent = async (props) => {
-    console.log("handleRemoveItemFromInventoryEvent", props);
+    // console.log("handleRemoveItemFromInventoryEvent", props);
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {

@@ -82,7 +82,7 @@ const ConsumerDeviceLostFeeCash = () => {
     if (deviceInPoolListQuery.data) {
       const deviceInPoolProfile = {
         id: deviceInPoolListQuery.data.receiversInventory[0].id,
-        activity: "NO",
+        activity: false,
         comment: "Device lost",
         status: "Lost",
       };
@@ -94,7 +94,7 @@ const ConsumerDeviceLostFeeCash = () => {
       if (returningInPool.data) {
         const objectReturnIssueProfile = {
           ...deviceInPoolListQuery.data.receiversInventory[0],
-          activity: "NO",
+          activity: false,
           comment: "Device lost",
           status: "Lost",
           user: customer?.email,
@@ -139,8 +139,8 @@ const ConsumerDeviceLostFeeCash = () => {
       company: event.company,
       typeCollection: "Cash",
     };
-    console.log(cashReportProfile);
-    console.log(data);
+    // console.log(cashReportProfile);
+    // console.log(data);
     loading();
     if (data.total) {
       await changeStatusInDeviceAssignedData();

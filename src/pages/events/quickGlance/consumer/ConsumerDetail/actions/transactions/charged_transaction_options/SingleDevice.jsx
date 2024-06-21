@@ -68,7 +68,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    return grouping[props].at(-1).activity === "YES";
+    return grouping[props].at(-1).activity; // === "YES"
   };
 
   const formattingSerialNumberLeadingZero = (num, reference) => {
@@ -81,7 +81,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
     for (let i = 0; i < devicesInPool.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
-          `${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
+          !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
           `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
         )
           findingRange.add(Number(devicesInPool[i].device));

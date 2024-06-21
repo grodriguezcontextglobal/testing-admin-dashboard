@@ -45,7 +45,7 @@ const DeviceDescriptionTags = () => {
                 alignItems: "center",
                 mixBlendMode: "multiply",
                 background: `${
-                  deviceInfoSelected.activity === "YES"
+                  deviceInfoSelected.activity
                     ? "var(--orange-dark-50, #FFF4ED)"
                     : "var(--success-50, #ECFDF3)"
                 }`,
@@ -55,7 +55,7 @@ const DeviceDescriptionTags = () => {
             >
               <Typography
                 color={`${
-                  deviceInfoSelected.activity === "YES"
+                  deviceInfoSelected.activity
                     ? "var(--orange-700, #B93815)"
                     : "var(--success-700, #027A48)"
                 }`}
@@ -71,12 +71,12 @@ const DeviceDescriptionTags = () => {
                   icon="tabler:point-filled"
                   rotate={3}
                   color={`${
-                    deviceInfoSelected.activity === "YES"
+                    deviceInfoSelected.activity
                       ? "#EF6820"
                       : "#12B76A"
                   }`}
                 />
-                {deviceInfoSelected.activity === "YES" ? "In Use" : "In Stock"}
+                {deviceInfoSelected.activity ? "In Use" : "In Stock"}
               </Typography>
             </span>
           ) : (

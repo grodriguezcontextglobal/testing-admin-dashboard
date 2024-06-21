@@ -145,7 +145,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           deviceAssignedListQuery.refetch();
           const deviceInPoolProfile = {
             id: checkInPool.id,
-            activity: "No",
+            activity: false,
           };
           await devitrakApi.patch(
             `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
@@ -194,11 +194,11 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           type: props.deviceType,
         }
       );
-      if (
-        String(
-          deviceInPoolListQuery.data.receiversInventory.at(-1).activity
-        ).toLowerCase() === "yes"
-      )
+      // String(
+      //   deviceInPoolListQuery.data.receiversInventory.at(-1).activity
+      // ).toLowerCase() === "yes"
+
+      if (deviceInPoolListQuery.data.receiversInventory.at(-1).activity)
         return alert(
           `Device is already in use for another consumer. Please assign another device serial number.`
         );
@@ -230,7 +230,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           deviceAssignedListQuery.refetch();
           const deviceInPoolProfile = {
             ...devicePoolData,
-            activity: "YES",
+            activity: true,
           };
           await devitrakApi.patch(
             `/receiver/receivers-pool-update/${devicePoolData.id}`,

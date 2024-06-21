@@ -119,7 +119,7 @@ export const ReplaceDevice = ({ refetching }) => {
     const template = {
       device: receiverToReplaceObject.serialNumber,
       status: props.reason,
-      activity: "No",
+      activity: false,
       comment: props.otherComment,
       user: customer.email,
       eventSelected: event.eventInfoDetail.eventName,
@@ -148,7 +148,7 @@ export const ReplaceDevice = ({ refetching }) => {
       `/receiver/receivers-pool-update/${deviceInPool.at(-1).id}`,
       {
         status: props.reason,
-        activity: "No",
+        activity: false,
         comment: props.otherComment,
       }
     );
@@ -172,7 +172,7 @@ export const ReplaceDevice = ({ refetching }) => {
         `/receiver/receivers-pool-update/${newDeviceInfo.id}`,
         {
           status: "Operational",
-          activity: "YES",
+          activity: true,
           comment: "No comment",
         }
       );

@@ -71,7 +71,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     for (let i = 0; i < devicesInPool.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
-          `${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
+          !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
           `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
         )
           findingRange.add(Number(devicesInPool[i].device));
@@ -124,7 +124,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
-      { activity: "YES", status: "Operational" }
+      { activity: true, status: "Operational" }
     );
   };
 

@@ -134,7 +134,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       await devitrakApi.post("/receiver/receivers-pool", {
         device: props.deviceInfo[index].serial_number,
         status: "Operational",
-        activity: "NO",
+        activity: false,
         comment: "No comment",
         eventSelected: eventInfoDetail.eventName,
         provider: user.company,

@@ -25,7 +25,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: record.eventSelected,
             provider: record.provider,
-            activity: "YES",
+            activity: true,
             type: record.deviceType
         }),
         refetchOnMount: false
@@ -73,7 +73,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
     const returnDeviceInPool = async (props) => {
         const deviceInPoolData = _.groupBy(deviceInPoolQuery.data.data.receiversInventory, 'device')
         if (deviceInPoolData[props].at(-1).id) {
-            await devitrakApi.patch(`/receiver/receivers-pool-update/${deviceInPoolData[props].at(-1).id}`, { device: props, activity: "No", status: "Operational" })
+            await devitrakApi.patch(`/receiver/receivers-pool-update/${deviceInPoolData[props].at(-1).id}`, { device: props, activity: false, status: "Operational" })
             queryClient.invalidateQueries('assginedDeviceList', { exact: true });
         }
     }

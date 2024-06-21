@@ -250,7 +250,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           const dateRef = dateString.split(" ");
           const deviceInPoolProfile = {
             id: deviceInPoolListQuery.data.receiversInventory[0].id,
-            activity: "No",
+            activity: false,
           };
 
           const returningInPool = await devitrakApi.patch(

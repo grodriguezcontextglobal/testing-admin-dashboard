@@ -92,7 +92,7 @@ export const Replace = () => {
     const template = {
       device: deviceInfoSelected.entireData.serialNumber,
       status: props.reason,
-      activity: "No",
+      activity: false,
       comment: props.otherComment,
       user: deviceInTransactionQuery.data.data.user,
       eventSelected: event.eventInfoDetail.eventName,
@@ -110,7 +110,7 @@ export const Replace = () => {
       }`,
       {
         status: props.reason,
-        activity: "No",
+        activity: false,
         comment: props.otherComment,
       }
     );
@@ -134,7 +134,7 @@ export const Replace = () => {
         }`,
         {
           status: "Operational",
-          activity: "YES",
+          activity: true,
           comment: "No comment",
         }
       );
@@ -187,7 +187,7 @@ export const Replace = () => {
     dispatch(
       onAddDeviceToDisplayInQuickGlance({
         company: [event.eventInfoDetail.eventName, event.company],
-        activity: "YES",
+        activity: true,
         status: "Operational",
         serialNumber: data.serialNumber,
         user: "YES",
@@ -196,7 +196,7 @@ export const Replace = () => {
           device: data.serialNumber,
           type: deviceInfoSelected.entireData.type,
           status: "Operational",
-          activity: "YES",
+          activity: true,
           comment: "No comment",
           provider: event.company,
           id: newDeviceInfoFromPool.id,
@@ -290,160 +290,3 @@ export const Replace = () => {
     </Modal>
   );
 };
-
-// //*found all devices of the event/company
-// const sortAndFilterDeviceListPerCompanyAndEvent = () => {
-//     if (poolQuery) {
-//         return poolQuery;
-//     }
-//     return [];
-// };
-// sortAndFilterDeviceListPerCompanyAndEvent();
-
-// //*substract device set for consumer in event
-// const retrieveDeviceInfoSetInEventForConsumers = () => {
-//     const result = new Set();
-//     for (let data of deviceSetup) {
-//         if (data.consumerUses) {
-//             result.add(data);
-//         }
-//     }
-//     refDeviceSetInEvent.current = Array.from(result);
-//     return Array.from(result);
-// };
-// retrieveDeviceInfoSetInEventForConsumers();
-
-// //*check if device to assign is already assigned to some consumer in event
-// const checkDeviceIsAssignedInEvent = () => {
-//     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//         const deviceCheck = _.groupBy(
-//             sortAndFilterDeviceListPerCompanyAndEvent(),
-//             "device"
-//         );
-//         if (deviceCheck[serialNumber]) {
-//             for (let data of deviceCheck[serialNumber]) {
-//                 if (data.activity === "YES") {
-//                     openNotificationWithIcon(
-//                         "info",
-//                         `device ${serialNumber} is already assigned to other customer`
-//                     );
-//                     setValue("serialNumber", "");
-//                 }
-//             }
-//             refDeviceHasRecordInEvent.current = deviceCheck[serialNumber].at(-1);
-//             return true;
-//         }
-//         refDeviceHasRecordInEvent.current = null;
-//         return false;
-//     }
-// };
-// checkDeviceIsAssignedInEvent();
-
-// //*check if serial number to assign has record in pool
-// const retrieveDeviceDataInPoolToUpdateIt = () => {
-//     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//         const deviceCheck = _.groupBy(
-//             sortAndFilterDeviceListPerCompanyAndEvent(),
-//             "device"
-//         );
-//         if (deviceCheck[serialNumber]) {
-//             return deviceCheck[serialNumber].at(-1);
-//         } else {
-//             return [];
-//         }
-//     } else {
-//         return [];
-//     }
-// };
-
-// //* function to save new serial number in pool based on if has record update or create
-// const saveAndUpdateNewDeviceToAssignInPool = async (props) => {
-//     await devitrakApi.patch(
-//         `/receiver/receivers-pool-update/${retrieveDeviceDataInPoolToUpdateIt().id
-//         }`,
-//         {
-//             status: "Operational",
-//             activity: "YES",
-//             comment: "No comment",
-//         }
-//     );
-// };
-
-// //*finding current device to report with defect in DB
-// const currentDeviceToChangeInPool = () => {
-//     const groupingByDevice = _.groupBy(
-//         sortAndFilterDeviceListPerCompanyAndEvent(),
-//         "device"
-//     );
-//     if (groupingByDevice[deviceInfoSelected.serialNumber]) {
-//         return groupingByDevice[deviceInfoSelected.serialNumber].at(-1);
-//     }
-// };
-// currentDeviceToChangeInPool();
-
-// //*function to update device to change in pool
-// const updateCurrentAssignedDeviceInDB = async (props) => {
-//     await devitrakApi.patch(
-//         `/receiver/receivers-pool-update/${currentDeviceToChangeInPool().id}`,
-//         {
-//             activity: "NO",
-//             status: props.reason,
-//             comment: `${props.otherComment ? props?.otherComment : "No comment"}`,
-//         }
-//     );
-// };
-// updateCurrentAssignedDeviceInDB.propTypes = {
-//     reason: PropTypes.string,
-//     otherComment: PropTypes.string,
-// };
-// //*finding assigned device list in payment intent
-// const findingAssignedDeviceListInPaymentIntent = () => {
-//     if (listOfDevicesAssignedInEventQuery.length > 0) {
-//         const deviceGroup = _.groupBy(listOfDevicesAssignedInEventQuery, "device.serialNumber");
-//         const deviceInfo = deviceGroup[deviceInfoSelected.serialNumber];
-//         if (deviceInfo) {
-//             refDeviceListOfUser.current = deviceInfo
-//             return deviceInfo.at(-1);
-//         }
-//     }
-// };
-// findingAssignedDeviceListInPaymentIntent();
-// const addingDefectDeviceInDB = async (props) => {
-//     const issueDeviceProfile = {
-//         ...currentDeviceToChangeInPool(),
-//         activity: "NO",
-//         status: props.reason,
-//         comment: `${props.otherComment ? props?.otherComment : "No comment"}`,
-//         user: findingAssignedDeviceListInPaymentIntent().user,
-//         admin: user.email,
-//         timeStamp: new Date().getTime()
-//     };
-//     await devitrakApi.post(
-//         "/receiver/receiver-returned-issue",
-//         issueDeviceProfile
-//     );
-// };
-// //*function to update list of devices in payment intent
-// const updateAssignedDevicesListInPaymentIntent = async (props) => {
-//     if (findingAssignedDeviceListInPaymentIntent()) {
-//         const template = {
-//             deviceType: deviceInfoSelected.entireData.type,
-//             serialNumber: props.serialNumber,
-//             status: true,
-//         };
-//         const respoNewDeviceList = await devitrakApi.patch(
-//             `/receiver/receiver-update/${findingAssignedDeviceListInPaymentIntent().id
-//             }`,
-//             {
-//                 id: findingAssignedDeviceListInPaymentIntent().id,
-//                 device: template,
-//             }
-//         );
-//         if (respoNewDeviceList.data.ok) {
-//             openNotificationWithIcon(
-//                 "success",
-//                 "New device assigned to transaction/consumer"
-//             );
-//         }
-//     }
-// };

@@ -111,13 +111,13 @@ const CreditCard = () => {
       if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
         findTheOneInUsed = findDeviceInPool[
           receiverToReplaceObject.serialNumber
-        ].find((element) => element.activity === "YES");
+        ].find((element) => element.activity === true);
       }
       await devitrakApi.patch(
         `/receiver/receivers-pool-update/${findTheOneInUsed.id}`,
         {
           id: findTheOneInUsed.id,
-          activity: "NO",
+          activity: false,
           comment: "Device lost",
           status: "Lost"
         }
@@ -125,7 +125,7 @@ const CreditCard = () => {
 
       const objectReturnIssueProfile = {
         ...findTheOneInUsed,
-        activity: "NO",
+        activity: false,
         comment: "Device lost",
         status: "Lost",
         user: customer?.email,

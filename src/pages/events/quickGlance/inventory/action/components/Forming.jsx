@@ -161,7 +161,7 @@ import {
         await devitrakApi.post("/receiver/receivers-pool", {
           device: valueItemSelected[index].serial_number,
           status: "Operational",
-          activity: "NO",
+          activity: false,
           comment: "No comment",
           eventSelected: event.eventInfoDetail.eventName,
           provider: user.company,

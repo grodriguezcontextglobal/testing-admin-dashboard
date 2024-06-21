@@ -62,7 +62,7 @@ const ActionsMainPage = () => {
       const respoPool = await devitrakApi.post("/receiver/receiver-pool-list", {
         device: deviceInfoSelected.entireData.device,
         type: deviceInfoSelected.entireData.type,
-        activity: "YES",
+        activity: true,
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       });
@@ -72,7 +72,7 @@ const ActionsMainPage = () => {
           `/receiver/receivers-pool-update/${poolDevice.id}`,
           {
             id: poolDevice.id,
-            activity: "No",
+            activity: false,
           }
         );
         openNotificationWithIcon("success", "Device returned.");
@@ -80,13 +80,17 @@ const ActionsMainPage = () => {
           queryKey: ["assignedDeviceListQuery"],
           exact: true,
         });
+        queryClient.invalidateQueries({
+          queryKey: ["deviceInPoolList"],
+          exact: true,
+        });
         dispatch(
           onAddDeviceToDisplayInQuickGlance({
             ...deviceInfoSelected,
-            activity: "No",
+            activity: false,
             entireData: {
               ...deviceInfoSelected.entireData,
-              activity: "YES",
+              activity: true,
             },
           })
         );
@@ -185,7 +189,7 @@ const ActionsMainPage = () => {
             padding: 0,
           }}
         >
-          {deviceInfoSelected.activity === "YES" && (
+          {deviceInfoSelected.activity && (
             <Grid
               container
               display={"flex"}

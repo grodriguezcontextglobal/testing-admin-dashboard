@@ -116,7 +116,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       );
       if (deviceCheck[serialNumber]) {
         for (let data of deviceCheck[serialNumber]) {
-          if (data.activity === "YES" || data.status === "Lost") {
+          if (data.activity || data.status === "Lost") {
             openNotificationWithIcon(
               "info",
               `device ${serialNumber} is already assigned to other customer`
@@ -155,7 +155,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       }`,
       {
         status: "Operational",
-        activity: "YES",
+        activity: true,
         comment: "No comment",
       }
     );

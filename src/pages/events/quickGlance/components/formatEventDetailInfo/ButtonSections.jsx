@@ -122,7 +122,7 @@ const ButtonSections = () => {
     const result = {};
     for (let data of findItemsInPoolEvent()) {
       if (
-        `${data.activity}`.toLocaleLowerCase() === "yes" ||
+        data.activity ||
         `${data.status}`.toLowerCase() === "lost"
       ) {
         if (!result[data.type]) {

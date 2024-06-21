@@ -240,7 +240,7 @@ const EndEventButton = () => {
     const result = {};
     for (let data of findItemsInPoolEvent()) {
       if (
-        `${data.activity}`.toLowerCase() === "yes" ||
+        data.activity ||
         `${data.status}`.toLowerCase() === "lost"
       ) {
         if (!result[data.type]) {
@@ -310,7 +310,7 @@ const EndEventButton = () => {
               ? "In-Use"
               : "Returned"
           }`,
-          activity: `${data.device.status ? "YES" : "No"}`,
+          activity: data.device.status, ///`${data.device.status ? "YES" : "No"}`,
           payment_id: data.paymentIntent,
           event: event.eventInfoDetail.eventName,
           item_group: data.device.deviceType,

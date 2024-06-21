@@ -51,7 +51,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
-        activity: "No",
+        activity: false,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -60,10 +60,10 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
 
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery =
     deviceInPoolQuery?.data?.data?.receiversInventory;
-  console.log(
-    "checkDeviceInUseInOtherCustomerInTheSameEventQuery",
-    checkDeviceInUseInOtherCustomerInTheSameEventQuery
-  );
+  // console.log(
+  //   "checkDeviceInUseInOtherCustomerInTheSameEventQuery",
+  //   checkDeviceInUseInOtherCustomerInTheSameEventQuery
+  // );
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
     api.open({
@@ -125,7 +125,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       if (deviceCheck[serialNumber]) {
         for (let data of deviceCheck[serialNumber]) {
           if (
-            String(data.activity).toLowerCase() === "yes" ||
+            data.activity || //String(data.activity).toLowerCase() === "yes" ||
             String(data.status).toLowerCase() === "lost"
           ) {
             openNotificationWithIcon(
@@ -167,7 +167,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       }`,
       {
         status: "Operational",
-        activity: "YES",
+        activity: true,
         comment: "No comment",
       }
     );

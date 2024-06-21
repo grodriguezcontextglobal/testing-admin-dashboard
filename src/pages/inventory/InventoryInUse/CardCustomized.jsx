@@ -60,7 +60,7 @@ const CardCustomized = ({ title, props }) => {
                                 display: "flex",
                                 padding: "2px 8px",
                                 alignItems: "center",
-                                background: `${props.activity === "LOST" || props.activity === "YES"
+                                background: `${props.activity === "LOST" || props.activity
                                     ? "var(--blue-50, #EFF8FF)"
                                     : "var(--success-50, #ECFDF3)"
                                     }`,
@@ -68,7 +68,7 @@ const CardCustomized = ({ title, props }) => {
                             }}
                         >
                             <Typography
-                                color={`${props.activity === "LOST" || props.activity === "YES"
+                                color={`${props.activity === "LOST" || props.activity
                                     ? "var(--blue-700, #175CD3)"
                                     : "var(--success-700, #027A48)"
                                     }`}
@@ -83,14 +83,14 @@ const CardCustomized = ({ title, props }) => {
                                 <Icon
                                     icon="tabler:point-filled"
                                     rotate={3}
-                                    color={`${props.activity === "LOST" || props.activity === "YES"
+                                    color={`${props.activity === "LOST" || props.activity
                                         ? "#2E90FA"
                                         : "#12B76A"
                                         }`}
                                 />
                                 {props.activity === "LOST"
                                     ? "Lost"
-                                    : props.activity === "YES"
+                                    : props.activity
                                         ? "In Use"
                                         : "In Stock"}
                             </Typography>

@@ -70,7 +70,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     for (let i = 0; i < devicesInPool.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
-          `${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
+          !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
           `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
         )
           findingRange.add(Number(devicesInPool[i].device));
@@ -101,7 +101,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    return grouping[props].at(-1).activity === "YES";
+    return grouping[props].at(-1).activity; // === "YES";
   };
   const createReceiverInTransaction = async (props) => {
     await devitrakApi.post("/receiver/receiver-assignation", {
@@ -119,7 +119,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
-      { activity: "YES", status: "Operational" }
+      { activity: true, status: "Operational" }
     );
   };
 
@@ -207,7 +207,9 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
         alert(error);
       }
     } else {
-      return alert("Device in use for other consumer. Please assign a different serial number.");
+      return alert(
+        "Device in use for other consumer. Please assign a different serial number."
+      );
     }
   };
   return (
