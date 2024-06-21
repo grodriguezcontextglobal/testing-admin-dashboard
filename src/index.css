@@ -109,6 +109,7 @@ input {
   background: #fff;
   color: #000;
   border: none;
+  height: 0 dvh;
 }
 input::placeholder {
   font-family: "Inter";
@@ -116,6 +117,20 @@ input::placeholder {
   background: #fff;
   color: #000;
 }
+input:focus {
+  height: 0;
+}
+input:focus-visible {
+  height: 0;
+}
+input:autofill {
+  height: 0;
+}
+
+input:-webkit-autofill {
+  height: 0;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
