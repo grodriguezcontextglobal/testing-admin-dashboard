@@ -21,6 +21,7 @@ import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedI
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import "./Body.css";
 import { useNavigate } from "react-router-dom";
+import dicRole from "../../../../../../../components/general/dicRole";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -32,7 +33,7 @@ const Body = () => {
       lastName: profile.lastName,
       email: profile.user,
       phone: profile.adminUserInfo.phone ?? "000-000-0000",
-      role: profile.role,
+      role: dicRole[Number(profile.role)],
     },
   });
   const dispatch = useDispatch()
