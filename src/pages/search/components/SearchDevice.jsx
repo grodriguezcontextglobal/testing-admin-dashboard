@@ -9,6 +9,7 @@ import Loading from "../../../components/animation/Loading";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../store/slices/devicesHandleSlice";
 import {
+  onAddEventData,
   onSelectCompany,
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
@@ -22,8 +23,11 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
+import { checkArray } from "../../../components/utils/checkArray";
 const SearchDevice = ({ searchParams }) => {
+  const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const staffMembersQuery = useQuery({
     queryKey: ["listOfAssignedReceivers"],
@@ -33,7 +37,6 @@ const SearchDevice = ({ searchParams }) => {
         "device.serialNumber": searchParams,
         "device.status": true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const deviceInUseStaffMemberQuery = useQuery({
@@ -43,7 +46,6 @@ const SearchDevice = ({ searchParams }) => {
         company: user.company,
         warehouse: 0,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -53,7 +55,6 @@ const SearchDevice = ({ searchParams }) => {
       devitrakApi.post("/image/images", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -61,11 +62,34 @@ const SearchDevice = ({ searchParams }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const fetchActiveAssignedDevicesPerEvent = async () => {
+    const rowEventsData = [...eventsPerAdmin.active];
+    const result = new Set();
+    for (let data of rowEventsData) {
+      const fetchingDataPerEvent = await devitrakApi.post(
+        "/receiver/receiver-assigned-users-list",
+        {
+          company: user.company,
+          "device.serialNumber": searchParams,
+          "device.status": true,
+          eventSelected: data.eventInfoDetail.eventName,
+        }
+      );
+      if (
+        Array.isArray(fetchingDataPerEvent.data.listOfReceivers) &&
+        fetchingDataPerEvent.data.listOfReceivers.length > 0
+      ) {
+        result.add(fetchingDataPerEvent.data.listOfReceivers.at(-1));
+      }
+    }
+    return setFoundDeviceData(Array.from(result));
+  };
   useEffect(() => {
     const controller = new AbortController();
     staffMembersQuery.refetch();
     imageDeviceQuery.refetch();
     deviceInUseStaffMemberQuery.refetch();
+    fetchActiveAssignedDevicesPerEvent();
     return () => {
       controller.abort();
     };
@@ -73,7 +97,8 @@ const SearchDevice = ({ searchParams }) => {
 
   const sortAndRenderFoundData = () => {
     if (staffMembersQuery.data && deviceInUseStaffMemberQuery.data) {
-      const foundData = [...staffMembersQuery.data.data.listOfReceivers];
+      // const foundData = [...staffMembersQuery.data.data.listOfReceivers];
+      const foundData = [...foundDeviceData];
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
           .toLowerCase()
@@ -81,6 +106,7 @@ const SearchDevice = ({ searchParams }) => {
       );
       return result;
     }
+    return foundDeviceData;
   };
   const imagesDeviceFoundData = () => {
     if (imageDeviceQuery.data) {
@@ -114,20 +140,43 @@ const SearchDevice = ({ searchParams }) => {
         user: userProfile,
         device: respTransaction.data.list[0].device[0].deviceNeeded,
       };
-      dispatch(onOpenDeviceAssignmentModalFromSearchPage(true));
-      dispatch(
-        onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile)
+     const eventInfo = await devitrakApi.post("/event/event-list", {
+        company: user.company,
+        "eventInfoDetail.eventName":record.event,
+      })
+
+      const eventInfoSqlDB = await devitrakApi.post(
+        "/db_event/events_information",
+        {
+          event_name: record.event,
+          company_assigned_event_id: user.sqlInfo.company_id,
+        }
       );
-      dispatch(onSelectEvent(record.event));
-      dispatch(onSelectCompany(record.data.provider[0]));
-      dispatch(onAddCustomer(paymentIntentDetailSelectedProfile.consumerInfo));
-      dispatch(
-        onAddCustomerInfo(paymentIntentDetailSelectedProfile.consumerInfo)
-      );
-      dispatch(onAddPaymentIntentSelected(record.data.paymentIntent));
-      return navigate(
-        `/events/event-attendees/${userProfile.uid}/transactions-details`
-      );
+      if (eventInfo.data && eventInfoSqlDB.data) {
+        dispatch(onOpenDeviceAssignmentModalFromSearchPage(true));
+        dispatch(
+          onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile)
+        );
+        dispatch(
+          onAddEventData({
+            ...checkArray(eventInfo.data.list),
+            sql: eventInfoSqlDB.data.events.at(-1),
+          })
+        );
+
+        dispatch(onSelectEvent(record.event));
+        dispatch(onSelectCompany(record.data.provider[0]));
+        dispatch(
+          onAddCustomer(paymentIntentDetailSelectedProfile.consumerInfo)
+        );
+        dispatch(
+          onAddCustomerInfo(paymentIntentDetailSelectedProfile.consumerInfo)
+        );
+        dispatch(onAddPaymentIntentSelected(record.data.paymentIntent));
+        return navigate(
+          `/events/event-attendees/${userProfile.uid}/transactions-details`
+        );
+      }
     }
   };
   const returningDevice = async (record) => {
@@ -150,7 +199,7 @@ const SearchDevice = ({ searchParams }) => {
           provider: record.provider,
           device: record.serialNumber,
           type: record.type,
-          activity: "YES",
+          activity: true,
         }
       );
       if (assignedDeviceListQuery.data && deviceInPoolListQuery.data) {
@@ -178,7 +227,7 @@ const SearchDevice = ({ searchParams }) => {
               deviceInPoolListQuery.data.receiversInventory.at(-1).id
             }`,
             {
-              activity: "No",
+              activity: false,
             }
           );
           await devitrakApi.post(
