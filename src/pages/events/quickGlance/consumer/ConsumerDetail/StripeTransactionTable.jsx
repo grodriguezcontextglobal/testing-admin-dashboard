@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Popconfirm, Table, Tooltip } from "antd";
+import { Popconfirm, Table, Tooltip } from "antd";
 import _ from "lodash";
 import pkg from "prop-types";
 import { useEffect, useRef, useState } from "react";
@@ -102,7 +102,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
           .toLowerCase()
           .includes(String(searchValue).toLowerCase())
       );
-      console.log(transactionFound);
+      // console.log(transactionFound);
       return transactionFound;
     }
   };
@@ -149,7 +149,15 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
       title: "Transaction ID",
       dataIndex: "paymentIntent",
       key: "paymentIntent",
-      render: (paymentIntent) => <span style={Subtitle}>{paymentIntent}</span>,
+      render: (paymentIntent) => {
+        const checkPaymentIntent = String(paymentIntent).split('_')
+        // console.log(checkPaymentIntent)
+        return (
+          <span style={{ ...Subtitle, textOverflow: "ellipsis" }}>
+            {checkPaymentIntent[1] === "cash" ? `${checkPaymentIntent[1]}_${checkPaymentIntent[2]}_${String(checkPaymentIntent[4].split('**')[1])}`: paymentIntent}
+          </span>
+        );
+      },
     },
     {
       title: "Status",
@@ -191,16 +199,13 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                   handleRecord(record);
                 }}
               >
-                <Button
-                  underline="none"
+                <button
                   disabled={!record.active}
                   style={{
                     ...CenteringGrid,
                     width: "100%",
                     border: `${
-                      !record.active
-                        ? "1px solid var(--blue-dark-600, #ffbbb6)"
-                        : "1px solid var(--blue-dark-600, #B42318)"
+                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
                     }`,
                     borderRadius: "8px",
                     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -218,7 +223,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                   >
                     Release
                   </Typography>
-                </Button>
+                </button>
               </Popconfirm>
             )}
           </Grid>
@@ -238,16 +243,13 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                   handleRecord(record);
                 }}
               >
-                <Button
-                  underline="none"
+                <button
                   disabled={!record.active}
                   style={{
                     ...CenteringGrid,
                     width: "100%",
                     border: `${
-                      !record.active
-                        ? "1px solid var(--blue-dark-600, #ffbbb6)"
-                        : "1px solid var(--blue-dark-600, #B42318)"
+                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
                     }`,
                     borderRadius: "8px",
                     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -265,7 +267,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                   >
                     Capture
                   </Typography>
-                </Button>
+                </button>
               </Popconfirm>
             )}
           </Grid>
@@ -279,16 +281,13 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
           >
             {record.device[0].deviceNeeded > 4 && (
               <Tooltip title="This option is to return bulk of devices">
-                <Button
+                <button
                   onClick={() => handleReturnDeviceInBulk(record)}
-                  underline="none"
                   style={{
                     ...CenteringGrid,
                     width: "100%",
                     border: `${
-                      !record.active
-                        ? "1px solid var(--blue-dark-600, #ffbbb6)"
-                        : "1px solid var(--blue-dark-600, #B42318)"
+                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
                     }`,
                     borderRadius: "8px",
                     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -306,7 +305,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
                   >
                     Bulk
                   </Typography>
-                </Button>
+                </button>
               </Tooltip>
             )}
           </Grid>
