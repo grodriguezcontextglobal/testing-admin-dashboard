@@ -19,7 +19,6 @@ const ConsumerActivity = () => {
         provider: event.company,
         "consumerInfo.email": customer.email,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const receiversAssignedQuery = useQuery({
@@ -30,25 +29,37 @@ const ConsumerActivity = () => {
         provider: event.company,
         user: customer.email,
       }),
-    // // enabled: false,
     refetchOnMount: false,
   });
   const deviceAssignedListQuery = useQuery({
     queryKey: ["listOfNoOperatingDevices"],
     queryFn: () => devitrakApi.get("/receiver/list-receiver-returned-issue"),
-    // // enabled: false,
     refetchOnMount: false,
   });
   const queryClient = useQueryClient();
   useEffect(() => {
     const controller = new AbortController();
-    queryClient.invalidateQueries([
-      "transactionsList",
-      "listOfDevicesAssigned",
-      "listOfNoOperatingDevices",
-      "transactionPerConsumerListQuery",
-      "assginedDeviceList",
-    ]);
+    queryClient.invalidateQueries({
+      queryKey: ["transactionPerConsumerListQuery"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["transactionsList"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["listOfDevicesAssigned"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["listOfNoOperatingDevices"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["assginedDeviceList"],
+      exact: true,
+    });
+
     stripeTransactionsSavedQuery.refetch();
     receiversAssignedQuery.refetch();
     deviceAssignedListQuery.refetch();
