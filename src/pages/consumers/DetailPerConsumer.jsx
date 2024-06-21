@@ -15,9 +15,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import {
-  CreditCardIcon,
-  EditIcon,
-  ReleaseDepositIcon,
+  EditIcon
 } from "../../components/icons/Icons";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -327,69 +325,6 @@ const DetailPerConsumer = () => {
             <StripeTransactionPerConsumer searchValue={watch("searchEvent")} />
           </Grid>
         </Grid>
-        <Grid
-          marginY={3}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          gap={1}
-          container
-        >
-          <button
-            style={{
-              width: "80%",
-              outline: "none",
-              display: "flex",
-              padding: "16px 28px",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "12px",
-              flex: "1 0 0",
-              borderRadius: "8px",
-              border: "1px solid var(--Error-300, #FDA29B)",
-              background: "var(--Base-White, #FFF)",
-              /* Shadow/xs */
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-          >
-            <CreditCardIcon />
-            <p
-              style={{
-                ...TextFontsize18LineHeight28,
-                color: "var(--Error-700, #B42318)",
-              }}
-            >
-              Charge for lost device
-            </p>
-          </button>
-          <button
-            style={{
-              width: "80%",
-              outline: "none",
-              display: "flex",
-              padding: "16px 28px",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "12px",
-              flex: "1 0 0",
-              borderRadius: "8px",
-              border: "1px solid var(--Gray-300, #D0D5DD)",
-              background: "var(--Base-White, #FFF)",
-              /* Shadow/xs */
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-          >
-            <ReleaseDepositIcon />
-            <p
-              style={{
-                ...TextFontsize18LineHeight28,
-                color: "var(--Gray-700, #344054)",
-              }}
-            >
-              Release deposit
-            </p>
-          </button>
-        </Grid>
         <Outlet />
       </Grid>
     );
@@ -397,3 +332,69 @@ const DetailPerConsumer = () => {
 };
 
 export default DetailPerConsumer;
+
+{/* <Grid
+marginY={3}
+display={"flex"}
+justifyContent={"space-between"}
+alignItems={"center"}
+gap={1}
+container
+>
+</Grid> */}
+
+// {/* <button
+// style={{
+//   width: "80%",
+//   outline: "none",
+//   display: "flex",
+//   padding: "16px 28px",
+//   justifyContent: "center",
+//   alignItems: "center",
+//   gap: "12px",
+//   flex: "1 0 0",
+//   borderRadius: "8px",
+//   border: "1px solid var(--Gray-300, #D0D5DD)",
+//   background: "var(--Base-White, #FFF)",
+//   /* Shadow/xs */
+//   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+// }}
+// >
+// <ReleaseDepositIcon />
+// <p
+//   style={{
+//     ...TextFontsize18LineHeight28,
+//     color: "var(--Gray-700, #344054)",
+//   }}
+// >
+//   Release deposit
+// </p>
+// </button> */}
+
+// {/* <button
+// style={{
+//   width: "80%",
+//   outline: "none",
+//   display: "flex",
+//   padding: "16px 28px",
+//   justifyContent: "center",
+//   alignItems: "center",
+//   gap: "12px",
+//   flex: "1 0 0",
+//   borderRadius: "8px",
+//   border: "1px solid var(--Error-300, #FDA29B)",
+//   background: "var(--Base-White, #FFF)",
+//   /* Shadow/xs */
+//   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+// }}
+// >
+// <CreditCardIcon />
+// <p
+//   style={{
+//     ...TextFontsize18LineHeight28,
+//     color: "var(--Error-700, #B42318)",
+//   }}
+// >
+//   Charge for lost device
+// </p>
+// </button> */}
