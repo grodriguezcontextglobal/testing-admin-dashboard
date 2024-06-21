@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Button, Modal, notification } from "antd";
+import { Button, Modal, notification, Input } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -7,21 +7,24 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { useState } from "react";
+const { TextArea } = Input;
+
 const EmailNotification = ({
   customizedEmailNotificationModal,
   setCustomizedEmailNotificationModal,
 }) => {
   const { consumersOfEvent } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm();
+  const [message, setMessage] = useState("");
+  const { register, handleSubmit, setValue } = useForm();
   const closeModal = () => {
     setCustomizedEmailNotificationModal(false);
   };
+  const onChange = (e) => {
+    return setMessage(e.target.value);
+  };
+
   const renderListOfEmailsOfConsumersPerEvent = () => {
     const result = [];
     consumersOfEvent.forEach((element) => result.unshift(element.email));
@@ -54,9 +57,9 @@ const EmailNotification = ({
     const emailNotificationProfile = {
       consumersList: renderListOfEmailsOfConsumersPerEvent(),
       subject: data.subject,
-      message: data.message,
+      message: message,
       eventSelected: event.eventInfoDetail.eventName,
-      company: event.company
+      company: event.company,
     };
     const resp = await devitrakApi.post(
       "/nodemailer/customized-notification",
@@ -100,7 +103,10 @@ const EmailNotification = ({
             textAlign={"center"}
             marginY={"1rem auto"}
             item
-            xs={12} sm={12} md={10} lg={10}
+            xs={12}
+            sm={12}
+            md={10}
+            lg={10}
           >
             <Typography
               textTransform={"none"}
@@ -122,46 +128,48 @@ const EmailNotification = ({
             item
             xs={10}
           >
-            <form style={{ width: "100%" }} onSubmit={handleSubmit(handleSubmitEmailNotification)}>
+            <form
+              style={{ width: "100%" }}
+              onSubmit={handleSubmit(handleSubmitEmailNotification)}
+            >
               <Grid marginY={"0.5rem"} item xs={12}>
                 <OutlinedInput
+                  required
                   placeholder="Your email's subject here."
                   fullWidth
-                  required
-                  aria-required
-                  style={OutlinedInputStyle}
+                  style={{ ...OutlinedInputStyle, width: "100%" }}
                   {...register("subject")}
                 />
-                {errors.subject && <Typography>{errors.subject}</Typography>}
               </Grid>
               <Grid marginY={"0.5rem"} item xs={12}>
-                <textarea
-                  {...register("message")}
+                <TextArea
                   required
-                  aria-required
-                  placeholder=" Write your email here."
+                  showCount
+                  maxLength={500}
+                  {...register("message")}
+                  onChange={onChange}
+                  placeholder="Write your email here."
                   style={{
-                    ...OutlinedInputStyle,
-                    width: "100%",
-                    padding: "5px",
-                    overflow: "hidden",
-                    textWrap: "balance",
-                    border: "0.1px solid #d3d3d3"
+                    height: 120,
+                    resize: "none",
+                    margin: "0 0 0.8rem",
                   }}
                 />
-                {errors.subject && <Typography>{errors.message}</Typography>}
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Button
                   htmlType="submit"
                   style={{
-                    ...BlueButton, width: "100%",
+                    ...BlueButton,
+                    width: "100%",
                   }}
                 >
                   <Typography
                     textTransform={"none"}
                     style={{ ...BlueButtonText, ...CenteringGrid }}
-                  >Send email</Typography>
+                  >
+                    Send email
+                  </Typography>
                 </Button>
               </Grid>
             </form>
