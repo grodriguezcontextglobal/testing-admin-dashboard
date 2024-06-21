@@ -163,7 +163,7 @@ const UpdatingSubscription = ({
               <Button
                 disabled={item.id === 1}
                 key={"update-subscription-button"}
-                onClick={() => console.log(item)}
+                // onClick={() => console.log(item)}
               >
                 <Typography
                   fontFamily={"Inter"}

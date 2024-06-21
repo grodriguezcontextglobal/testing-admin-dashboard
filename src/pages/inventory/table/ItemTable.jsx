@@ -400,7 +400,7 @@ const ItemTable = ({ searchItem }) => {
         employees: updateEmployeesPreference(),
       }
     );
-    console.log(updatedCompany.data);
+    // console.log(updatedCompany.data);
     if (updatedCompany.data.ok) {
       return dispatch(
         onLogin({ ...user, companyData: updatedCompany.data.company })

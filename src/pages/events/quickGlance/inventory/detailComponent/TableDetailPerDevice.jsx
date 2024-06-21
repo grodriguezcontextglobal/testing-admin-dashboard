@@ -153,7 +153,7 @@ const TableDetailPerDevice = ({ searching }) => {
         compare: (a, b) => ("" + a.status).localeCompare(b.status),
       },
       render: (_, record) => (
-        console.log("record", record),
+        // console.log("record", record),
         (
           <span
             style={{
