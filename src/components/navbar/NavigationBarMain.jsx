@@ -40,7 +40,13 @@ import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import { DevitrakLogo, DevitrakName, SettingIcon } from "../icons/Icons";
+import {
+  DevitrakLogo,
+  DevitrakName,
+  MagnifyIcon,
+  ProfileIcon,
+  SettingIcon,
+} from "../icons/Icons";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -83,14 +89,14 @@ const NavigationBarMain = (props) => {
   };
 
   const items = [
-    {
-      key: "1",
-      label: (
-        <NavLink to={"/profile/my_details"}>
-          <Typography>Profile</Typography>
-        </NavLink>
-      ),
-    },
+    // {
+    //   key: "1",
+    //   label: (
+    //     <NavLink to={"/profile/my_details"}>
+    //       <Typography>Profile</Typography>
+    //     </NavLink>
+    //   ),
+    // },
     // {
     //   key: "2",
     //   label: (
@@ -119,7 +125,7 @@ const NavigationBarMain = (props) => {
   };
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/search-result-page?search=${searchValue}`);
+    return navigate(`/search-result-page?search=${searchValue}`);
   };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -170,6 +176,11 @@ const NavigationBarMain = (props) => {
     if (isLargeDevice) return "100vw";
     return "1228px";
   };
+
+  const handleResetSearchValue = () => {
+    setSearchValue("");
+    return dispatch(onResetResult());
+  };
   return (
     <Grid
       container
@@ -198,12 +209,8 @@ const NavigationBarMain = (props) => {
               backgroundColor: "var(--blue700)",
               width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
             }}
-            // item
-            // sm={8}
-            // md={12}
-            // lg={10.5}
           >
-            <Grid item sm={9} md={7} lg={8}>
+            <Grid item sm={9} md={6} lg={6}>
               <IconButton
                 color="inherit"
                 aria-label="open drawer"
@@ -269,135 +276,142 @@ const NavigationBarMain = (props) => {
 
             <Grid
               item
-              sm={8}
-              md={5}
-              lg={4}
+              sm={6}
+              md={6}
+              lg={6}
               sx={{
-                display: { xs: "none", sm: "flex" },
+                display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
                 justifyContent: "flex-end",
                 alignItems: "center",
                 margin: 0,
                 gap: "5px",
               }}
             >
-              {/* <Grid item sm={9} md={10} lg={10} style={{ ...CenteringGrid, justifyContent: "flex-end" }}> */}
-              <form
-                onSubmit={handleSearch}
-                // style={{
-                //   margin: `${
-                //     isSmallDevice
-                //       ? "0 5px 0 0"
-                //       : isMediumDevice
-                //       ? "0 -5px 0 0"
-                //       : isLargeDevice
-                //       ? "0 -5px 0 0"
-                //       : "0 -10px 0 0"
-                //   }`,
-                // }}
-              >
+              <form onSubmit={handleSearch}>
                 <OutlinedInput
                   placeholder="Search"
                   required
                   sx={OutlinedInputStyle}
                   onChange={(e) => setSearchValue(e.target.value)}
                   endAdornment={
-                    <>
-                      <InputAdornment position="end">
-                        <Icon
-                          cursor={"pointer"}
-                          icon="ic:baseline-delete-forever"
-                          color="#1e73be"
-                          width="25"
-                          height="25"
-                          opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
-                          display={`${
-                            String(searchValue)?.length > 0 ? "auto" : "none"
-                          }`}
-                          onClick={() => {
-                            setSearchValue("");
-                            dispatch(onResetResult());
-                          }}
-                        />
-                      </InputAdornment>
-                      <InputAdornment position="end">
-                        {" "}
-                        <Icon
-                          icon="entypo:magnifying-glass"
-                          rotate={1}
-                          width="25"
-                          cursor={"pointer"}
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                          opacity={1}
-                          onClick={(e) => handleSearch(e)}
-                        />
-                      </InputAdornment>
-                    </>
+                    <InputAdornment position="end">
+                      <Icon
+                        cursor={"pointer"}
+                        icon="ic:baseline-delete-forever"
+                        color="#1e73be"
+                        width="25"
+                        height="25"
+                        opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
+                        display={`${
+                          String(searchValue)?.length > 0 ? "auto" : "none"
+                        }`}
+                        onClick={(e) => handleResetSearchValue(e)}
+                      />
+                    </InputAdornment>
                   }
                   fullWidth
                 />
               </form>
-              {/* </Grid> */}
-              <Grid
-                item
-                sm={2}
-                md={2}
-                lg={2}
+              <button
                 style={{
-                  ...CenteringGrid,
-                  justifyContent: "flex-end",
+                  outline: "none",
+                  border: "transparent",
                   margin: 0,
+                  padding: 0,
+                  backgroundColor: "transparent",
                 }}
+                key={"item.title"}
+                onClick={(e) => handleSearch(e)}
               >
-                {status === "authenticated" && (
-                  <NavLink>
-                    <Dropdown
-                      menu={{
-                        items,
-                      }}
-                      trigger={["click"]}
-                      autoAdjustOverflow
-                      placement="bottom"
-                    >
-                      <div className="content-main-navbar-updated">
-                        <article className="nav-item-base-1-main-navbar-updated">
-                          <div className="content-2-main-navbar-updated">
-                            <div className="text-1-main-navbar-updated text-mdsemibold">
-                              <button
-                                style={{
-                                  outline: "none",
-                                  backgroundColor: "transparent",
-                                  padding: 0,
-                                  margin: 0,
-                                }}
-                                onClick={() =>
-                                  scrollTo({
-                                    left: 0,
-                                    top: 0,
-                                    behavior: "smooth",
-                                  })
-                                }
-                              >
-                                <p
-                                  style={{
-                                    textTransform: "capitalize",
-                                    fontSize: "25px",
-                                  }}
-                                >
-                                  <SettingIcon />
-                                </p>
-                              </button>
-                            </div>
-                          </div>
-                        </article>
+                <div className="content-main-navbar-updated">
+                  <article className={"nav-item-base-1-main-navbar-updated"}>
+                    <div className="content-2-main-navbar-updated">
+                      <div className="text-1-main-navbar-updated text-mdsemibold">
+                        <p
+                          style={{
+                            textTransform: "capitalize",
+                            fontSize: "25px",
+                          }}
+                        >
+                          <MagnifyIcon />
+                        </p>
                       </div>
-                    </Dropdown>
-                  </NavLink>
-                )}
-              </Grid>
+                    </div>
+                  </article>
+                </div>
+              </button>
+              <NavLink key={"/profile/my_details"} to={`/profile/my_details`}>
+                <div className="content-main-navbar-updated">
+                  <article
+                    className={
+                      location.pathname === `/profile/my_details`
+                        ? "nav-item-base-main-navbar-updated"
+                        : "nav-item-base-1-main-navbar-updated"
+                    }
+                  >
+                    <div className="content-2-main-navbar-updated">
+                      <div className="text-1-main-navbar-updated text-mdsemibold">
+                        <p
+                          style={{
+                            textTransform: "capitalize",
+                            fontSize: "25px",
+                          }}
+                        >
+                          <ProfileIcon />
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </NavLink>
+              {status === "authenticated" && (
+                <NavLink>
+                  <Dropdown
+                    menu={{
+                      items,
+                    }}
+                    trigger={["click"]}
+                    autoAdjustOverflow
+                    placement="bottom"
+                  >
+                    <div className="content-main-navbar-updated">
+                      <article className="nav-item-base-1-main-navbar-updated">
+                        <div className="content-2-main-navbar-updated">
+                          <div className="text-1-main-navbar-updated text-mdsemibold" style={{display:"flex"}}>
+                            <button
+                              style={{
+                                outline: "none",
+                                backgroundColor: "transparent",
+                                padding: 0,
+                                margin: 0,
+                              }}
+                              onClick={() =>
+                                scrollTo({
+                                  left: 0,
+                                  top: 0,
+                                  behavior: "smooth",
+                                })
+                              }
+                            >
+                              <p
+                                style={{
+                                  textTransform: "capitalize",
+                                  fontSize: "25px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <SettingIcon />
+                              </p>
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    </div>
+                  </Dropdown>
+                </NavLink>
+              )}
             </Grid>
           </div>
         </Toolbar>
