@@ -76,7 +76,7 @@ const SearchConsumer = ({ searchParams }) => {
                 <Grid item xs={12} sm={12} md={8} lg={8}>
                     <Grid container gap={1}>
                         {sortAndRenderFoundData()?.length > 0 ?
-                            sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}> <CardSearchConsumersFound props={item} fn={handleConsumerInfo} /></Grid>)
+                            sortAndRenderFoundData()?.map(item => <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}> <CardSearchConsumersFound props={item} fn={handleConsumerInfo} /></Grid>)
                             : <NoDataFound />}
                     </Grid>
                 </Grid>

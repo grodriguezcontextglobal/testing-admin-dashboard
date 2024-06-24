@@ -162,7 +162,7 @@ const SearchStaff = ({ searchParams }) => {
             {sortAndRenderFoundData()?.length > 0 &&
             staffMembersInfoQuery.data ? (
               sortAndRenderFoundData()?.map((item) => (
-                <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
+                <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                   {" "}
                   <CardSearchStaffFound
                     props={{

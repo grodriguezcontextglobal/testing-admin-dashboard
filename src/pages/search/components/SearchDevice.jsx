@@ -331,7 +331,7 @@ const SearchDevice = ({ searchParams }) => {
           <Grid container gap={1}>
             {sortAndRenderFoundData()?.length > 0 ? (
               sortAndRenderFoundData()?.map((item) => (
-                <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
+                <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                   {" "}
                   <CardDeviceFound
                     key={item.id}
