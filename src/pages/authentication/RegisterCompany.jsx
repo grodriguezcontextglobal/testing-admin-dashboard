@@ -1,20 +1,24 @@
+import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Button,
   Chip,
   FormLabel,
   Grid,
   OutlinedInput,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { AutoComplete, Space, Tooltip, notification } from "antd";
+import { AutoComplete, Avatar, Space, Tooltip, notification } from "antd";
+import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, redirect } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
+import { CompanyIcon } from "../../components/icons/Icons";
 import {
   onAddErrorMessage,
   onLogin,
@@ -23,10 +27,11 @@ import {
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import InfrmationCard from "./components/InfrmationCard";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import { PropTypes } from "prop-types";
+import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../styles/global/Subtitle";
+import InfrmationCard from "./components/InfrmationCard";
+import { convertToBase64 } from "../../components/utils/convertToBase64";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
@@ -246,7 +251,7 @@ const RegisterCompany = () => {
 
   const createCompany = async (props) => {
     const companyTemplate = {
-      company_name: user.company,
+      company_name: companyValue,
       address: {
         street: props.street,
         city: props.city,
@@ -278,6 +283,7 @@ const RegisterCompany = () => {
           inventory_location: [],
         },
       ],
+      company_logo: props.company_logo
     };
     const resp = await devitrakApi.post("/company/new", companyTemplate);
     if (resp.data) {
@@ -440,11 +446,21 @@ const RegisterCompany = () => {
   };
 
   const onSubmitRegister = async (data) => {
+    let base64 = "";
     if (locationList.length < 1) {
       return alert(
         "Please provide at least one location. Go to locations field, type a location where your inventory will be located and then click button Add, then you can proceed to complete the registration process."
       );
     } else {
+      if (data.photo.length > 0 && data.photo[0].size > 1048576) {
+        setLoadingStatus(false);
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
+      } else if (data.photo.length > 0) {
+        setLoadingStatus(true);
+        base64 = await convertToBase64(data.photo[0]);
+      }
       try {
         setLoadingStatus(true);
         openNotificationWithIcon(
@@ -454,7 +470,7 @@ const RegisterCompany = () => {
           0
         );
         await createStripeAccount();
-        await createCompany({ ...data });
+        await createCompany({ ...data, company_logo: base64 });
         await userRegistrationProcess();
         await insertingUserMemberInSqlDb(data.main_phone);
         await insertingNewCompanyInSqlDb(data);
@@ -597,10 +613,8 @@ const RegisterCompany = () => {
                     <OutlinedInput
                       disabled={loadingStatus || matchCompany()}
                       {...register("main_phone", { required: true })}
-                      // value={phoneNumberCompany}
-                      // onChange={(e) => setPhoneNumberCompany(e.target.value)}
                       style={OutlinedInputStyle}
-                      placeholder=""
+                      placeholder="+1 (123) 456-7890"
                       type="text"
                       fullWidth
                     />
@@ -623,8 +637,20 @@ const RegisterCompany = () => {
                   <OutlinedInput
                     disabled={loadingStatus || matchCompany()}
                     {...register("alternative_phone", { required: true })}
-                    // value={phoneNumberCompany}
-                    // onChange={(e) => setPhoneNumberCompany(e.target.value)}
+                    style={OutlinedInputStyle}
+                    placeholder=""
+                    type="text"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid marginX={0} textAlign={"left"} item xs={12}>
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>
+                    Website <span style={{ fontWeight: 800 }}>*</span>
+                  </FormLabel>
+                  <OutlinedInput
+                    disabled={loadingStatus || matchCompany()}
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
                     style={OutlinedInputStyle}
                     placeholder=""
                     type="text"
@@ -644,17 +670,78 @@ const RegisterCompany = () => {
                   lg={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-                    Street <span style={{ fontWeight: 800 }}>*</span>
+                    Country <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
-                      {...register("street", { required: true })}
+                      {...register("country")}
                       style={OutlinedInputStyle}
-                      placeholder=""
+                      placeholder="Country name"
                       type="text"
                       fullWidth
                     />
                   </FormLabel>
                 </Grid>
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  display={"flex"}
+                  flexDirection={"column"}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                >
+                  <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
+                    Address for company headquarters{" "}
+                    <span style={{ fontWeight: 800 }}>*</span>
+                    <OutlinedInput
+                      disabled={loadingStatus || matchCompany()}
+                      {...register("street", { required: true })}
+                      style={{ ...OutlinedInputStyle, margin: "0 0 20px" }}
+                      placeholder="Address line 1"
+                      type="text"
+                      fullWidth
+                    />
+                    <OutlinedInput
+                      disabled={loadingStatus || matchCompany()}
+                      {...register("street2")}
+                      style={OutlinedInputStyle}
+                      placeholder="Address line 2"
+                      type="text"
+                      fullWidth
+                    />
+                  </FormLabel>
+                </Grid>
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  display={"flex"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  gap={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                >
+                  <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
+                    City <span style={{ fontWeight: 800 }}>*</span>
+                    <OutlinedInput
+                      disabled={loadingStatus || matchCompany()}
+                      {...register("city", { required: true })}
+                      style={OutlinedInputStyle}
+                      placeholder="City name"
+                      type="text"
+                      fullWidth
+                    />
+                  </FormLabel>
+                </Grid>
+
                 <Grid
                   marginY={"20px"}
                   marginX={0}
@@ -671,17 +758,6 @@ const RegisterCompany = () => {
                 >
                   {" "}
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                    City <span style={{ fontWeight: 800 }}>*</span>
-                    <OutlinedInput
-                      disabled={loadingStatus || matchCompany()}
-                      {...register("city", { required: true })}
-                      style={OutlinedInputStyle}
-                      placeholder=""
-                      type="text"
-                      fullWidth
-                    />
-                  </FormLabel>
-                  <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     State <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
                       disabled={loadingStatus || matchCompany()}
@@ -692,10 +768,18 @@ const RegisterCompany = () => {
                       fullWidth
                     />
                   </FormLabel>
+                  <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
+                    Zip code <span style={{ fontWeight: 800 }}>*</span>
+                    <OutlinedInput
+                      disabled={loadingStatus || matchCompany()}
+                      {...register("postal_code", { required: true })}
+                      style={OutlinedInputStyle}
+                      placeholder=""
+                      type="text"
+                      fullWidth
+                    />
+                  </FormLabel>
                 </Grid>
-                {/* <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", gap: "5px" }}>
-                                   
-                                </div> */}
                 <Grid
                   marginY={"20px"}
                   marginX={0}
@@ -710,17 +794,6 @@ const RegisterCompany = () => {
                   md={12}
                   lg={12}
                 >
-                  <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                    Zip code <span style={{ fontWeight: 800 }}>*</span>
-                    <OutlinedInput
-                      disabled={loadingStatus || matchCompany()}
-                      {...register("postal_code", { required: true })}
-                      style={OutlinedInputStyle}
-                      placeholder=""
-                      type="text"
-                      fullWidth
-                    />
-                  </FormLabel>
                   <FormLabel
                     style={{
                       marginBottom: "0.5rem",
@@ -829,20 +902,163 @@ const RegisterCompany = () => {
                     })}
                   </Space>
                 </Grid>
-                <Grid marginX={0} textAlign={"left"} item xs={12}>
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Website <span style={{ fontWeight: 800 }}>*</span>
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  display={"flex"}
+                  flexDirection={"column"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  gap={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                >
+                  <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
+                    Upload your company logo
                   </FormLabel>
-                  <OutlinedInput
-                    disabled={loadingStatus || matchCompany()}
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    style={OutlinedInputStyle}
-                    placeholder=""
-                    type="text"
-                    fullWidth
-                  />
+                  <Grid
+                    marginY={"20px"}
+                    marginX={0}
+                    textAlign={"left"}
+                    display={"flex"}
+                    justifyContent={"space-between"}
+                    alignItems={"center"}
+                    gap={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={12}
+                    lg={12}
+                  >
+                    <Grid
+                      display={"flex"}
+                      justifyContent={"flex-start"}
+                      alignSelf={"stretch"}
+                      marginY={0}
+                      gap={2}
+                      item
+                      xs={12}
+                      sm={12}
+                      md={12}
+                    >
+                      <Grid
+                        display={"flex"}
+                        justifyContent={"flex-start"}
+                        alignSelf={"stretch"}
+                        marginY={0}
+                        gap={2}
+                        item
+                        xs={4}
+                        sm={4}
+                        md={4}
+                      >
+                        <Avatar
+                          size={{
+                            xs: 24,
+                            sm: 32,
+                            md: 40,
+                            lg: 64,
+                            xl: 80,
+                            xxl: 100,
+                          }}
+                          src={
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <CompanyIcon />
+                            </div>
+                          }
+                          style={{
+                            background: "var(--Gray-100, #F2F4F7)",
+                          }}
+                        />
+                      </Grid>
+                      <Grid
+                        display={"flex"}
+                        flexDirection={"column"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        marginBottom={2}
+                        style={{
+                          width: "100%",
+                          borderRadius: "12px",
+                          border: "1px solid var(--gray-200, #EAECF0)",
+                          background: "var(--base-white, #FFF)",
+                        }}
+                        item
+                        xs={12}
+                      >
+                        <Grid
+                          display={"flex"}
+                          justifyContent={"center"}
+                          alignItems={"center"}
+                          marginTop={2}
+                          item
+                          xs={12}
+                        >
+                          <Avatar
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              border: "6px solid var(--gray-50, #F9FAFB)",
+                              background: "6px solid var(--gray-50, #F9FAFB)",
+                              borderRadius: "28px",
+                            }}
+                          >
+                            {" "}
+                            <Icon
+                              icon="tabler:cloud-upload"
+                              color="#475467"
+                              width={20}
+                              height={20}
+                            />
+                          </Avatar>
+                        </Grid>
+                        <Grid
+                          display={"flex"}
+                          justifyContent={"center"}
+                          alignItems={"center"}
+                          item
+                          xs={12}
+                          sm={10}
+                        >
+                          <TextField
+                            {...register("photo")}
+                            id="file-upload"
+                            type="file"
+                            accept=".jpeg, .png, .jpg"
+                            style={{
+                              outline: "none",
+                              border: "transparent",
+                            }}
+                          />
+                        </Grid>
+                        <Grid
+                          display={"flex"}
+                          justifyContent={"center"}
+                          alignItems={"center"}
+                          marginBottom={2}
+                          item
+                          xs={12}
+                        >
+                          <p style={{ ...Subtitle, fontWeight: 400 }}>
+                            SVG, PNG, JPG or GIF (max. 1MB)
+                          </p>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Grid>
                 </Grid>
+
                 <Grid
                   marginY={"20px"}
                   marginX={0}
@@ -940,10 +1156,12 @@ const RegisterCompany = () => {
 
 RegisterCompany.propTypes = {
   street: PropTypes.string.isRequired,
+  street2: PropTypes.string.isRequired,
   city: PropTypes.string.isRequired,
   state: PropTypes.string.isRequired,
   postal_code: PropTypes.string.isRequired,
   main_phone: PropTypes.string.isRequired,
   alternative_phone: PropTypes.string.isRequired,
+  company_logo: PropTypes.string.isRequired,
 };
 export default RegisterCompany;
