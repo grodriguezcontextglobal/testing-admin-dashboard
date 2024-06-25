@@ -288,10 +288,10 @@ const NavigationBarMain = (props) => {
                 justifyContent: "flex-end",
                 alignItems: "center",
                 margin: 0,
-                gap: "5px",
+                // gap: "5px",
               }}
             >
-              <form onSubmit={handleSearch}>
+              <form style={{margin:"0 5px 0 0"}} onSubmit={handleSearch}>
                 <OutlinedInput
                   placeholder="Search"
                   required
