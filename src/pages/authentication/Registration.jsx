@@ -257,8 +257,6 @@ const Registration = () => {
                 required
                 {...register("lastName")}
                 type="text"
-                // value={lastName}
-                // onChange={(e) => setLastName(e.target.value)}
                 style={{
                   ...OutlinedInputStyle,
                 }}
