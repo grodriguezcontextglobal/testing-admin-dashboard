@@ -368,7 +368,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     ];
 
     const sortDataAdminUser = () => {
-      if (!searchAdmin || String(searchAdmin)?.length > 0) {
+       if (!searchAdmin || String(searchAdmin)?.length > 0) {
         const check = employeeListRef.current.filter(
           (item) =>
             String(item?.name)
