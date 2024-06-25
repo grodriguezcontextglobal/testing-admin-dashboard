@@ -123,6 +123,10 @@ const NavigationBarMain = (props) => {
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
   };
+
+  const onChange = (e) => {
+    return setSearchValue(e.target.value)
+  }
   const handleSearch = (e) => {
     e.preventDefault();
     return navigate(`/search-result-page?search=${searchValue}`);
@@ -292,7 +296,7 @@ const NavigationBarMain = (props) => {
                   placeholder="Search"
                   required
                   sx={OutlinedInputStyle}
-                  onChange={(e) => setSearchValue(e.target.value)}
+                  onChange={(e) => onChange(e)}
                   endAdornment={
                     <InputAdornment position="end">
                       <Icon
