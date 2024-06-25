@@ -24,13 +24,14 @@ import "./Body.css";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const roleDefinition = dicRole[Number(user.role)]
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
       phone: user.phone ?? "000-000-0000",
-      role: dicRole[Number(user.role)],
+      role: roleDefinition,
     },
   });
   const dispatch = useDispatch();
@@ -465,7 +466,7 @@ const Body = () => {
             md={6}
           >
             <OutlinedInput
-              disabled
+             readOnly
               style={{ ...OutlinedInputStyle }}
               {...register("role")}
               fullWidth
