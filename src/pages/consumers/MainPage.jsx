@@ -42,7 +42,7 @@ const MainPage = () => {
         company_id: user.sqlInfo.company_id,
         subscription_current_in_use: 1,
       }),
-    enabled: false,
+    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -299,7 +299,7 @@ const MainPage = () => {
             </Grid>
             <Grid
               display={"flex"}
-              justifyContent={"space-around"}
+              justifyContent={"flex-start"}
               alignItems={"center"}
               item
               xs={12}
@@ -317,7 +317,23 @@ const MainPage = () => {
                   number: dataToRenderInComponent?.inactive?.length,
                 }}
               />
-
+              {/* <p
+                style={{
+                  width: "10%",
+                  position: "absolute",
+                  left: "44vw",
+                  textAlign: "left",
+                  color: "var(--Gray-600, #475467)",
+                  fontFamily: "Inter",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  lineHeight: "18px",
+                }}
+              >
+                Active consumers refers to those users currently holding one or
+                more devices from the database.
+              </p> */}
               <RenderingConsumersChartsBehavior
                 active={{
                   title: "Event",
@@ -328,6 +344,23 @@ const MainPage = () => {
                   number: leaseListQuery?.data?.data?.lease.length,
                 }}
               />
+              {/* <p
+                style={{
+                  width: "10%",
+                  position: "absolute",
+                  right: "14vw",
+                  textAlign: "left",
+                  color: "var(--Gray-600, #475467)",
+                  fontFamily: "Inter",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  lineHeight: "18px",
+                }}
+              >
+                Consumers from an event typically spend a shorter time with your
+                devices.
+              </p> */}
             </Grid>
 
             <Grid
@@ -403,12 +436,13 @@ const MainPage = () => {
               borderRadius={"12px 12px 0 0"}
               display={"flex"}
               alignItems={"center"}
+              justifyContent={"space-between"}
               marginBottom={-2}
               paddingBottom={-2}
               item
               xs={12}
             >
-              <Typography
+              <p
                 style={{
                   ...TextFontsize18LineHeight28,
                   display: "flex",
@@ -416,9 +450,9 @@ const MainPage = () => {
                   justifyContent: "flex-start",
                   color: "var(--gray-900, #101828)",
                   padding: "24px",
+                  textTransform: "none",
+                  textAlign: "left",
                 }}
-                textTransform={"none"}
-                textAlign={"left"}
               >
                 {" "}
                 Consumers&nbsp;
@@ -431,20 +465,46 @@ const MainPage = () => {
                     height: "fit-content",
                   }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    fontWeight={500}
-                    fontSize={"12px"}
-                    fontFamily={"Inter"}
-                    lineHeight={"28px"}
-                    color={"var(--blue-dark-700, #004EEB)"}
-                    padding={"0px 8px"}
+                  <p
+                    style={{
+                      textTransform: "none",
+                      textAlign: "left",
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      fontFamily: "Inter",
+                      lineHeight: "28px",
+                      color: "var(--blue-dark-700, #004EEB)",
+                      padding: "0px 8px",
+                    }}
                   >
                     {getInfoNeededToBeRenderedInTable().length ?? "0"} total
-                  </Typography>
+                  </p>
                 </div>
-              </Typography>
+              </p>
+              <Button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  outline: "none",
+                  backgroundColor: "transparent",
+                }}
+                // onClick={() => handleRefetching()}
+              >
+                <p
+                  style={{
+                    textTransform: "none",
+                    textAlign: "left",
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    fontFamily: "Inter",
+                    lineHeight: "28px",
+                    color: "var(--blue-dark-700, #004EEB)",
+                    padding: "0px 8px",
+                  }}
+                >
+                  <Icon icon="jam:refresh" /> Refresh
+                </p>
+              </Button>
             </Grid>
             <Grid item xs={12}>
               {loadingState ? (
