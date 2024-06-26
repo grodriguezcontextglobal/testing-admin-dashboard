@@ -4,33 +4,40 @@ import { useSelector } from "react-redux";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const MainProfileSettings = () => {
-  const { user } = useSelector((state) => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const tabOptions = [
     {
       label: "My details",
       route: "my_details",
-      permission: [0,1,2,3,4]
-    }, {
+      permission: [0, 1, 2, 3, 4],
+    },
+    {
       label: "Password",
       route: "password",
-      permission: [0,1,2,3,4]
-    }, 
+      permission: [0, 1, 2, 3, 4],
+    },
     // {
     //   label: "Billing",
     //   route: "billing",
-    //   permission: ["Administrator"]
+    //   permission: [0,1,2]
     // },
     {
       label: "Notifications",
       route: "notifications",
-      permission: [0,1]
-    }, {
+      permission: [0, 1],
+    },
+    {
       label: "Staff activity",
       route: "staff-activity",
-      permission: [0,1]
-    }
-  ]
+      permission: [0, 1],
+    },
+    {
+      label: "Company info",
+      route: "company-info",
+      permission: [0],
+    },
+  ];
   return (
     <Grid
       style={{
@@ -78,38 +85,46 @@ const MainProfileSettings = () => {
       >
         <Grid marginY={0} item xs={12} sm={12} md={6}>
           <nav style={{ display: "flex" }}>
-            {
-              tabOptions.map(option => {
-                if (option.permission.some(element => element === Number(user.role))) {
-                  return (
-                    <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
+            {tabOptions.map((option) => {
+              if (
+                option.permission.some(
+                  (element) => element === Number(user.role)
+                )
+              ) {
+                return (
+                  <NavLink
+                    key={option.label}
+                    to={`${option.route}`}
+                    style={({ isActive }) => {
                       return {
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
                         padding: "1px 4px 11px",
                         gap: "8px",
-                        borderBottom: isActive ?
-                          "1px solid #004EEB" : "rgba(0, 0, 0, 0.88)",
+                        borderBottom: isActive
+                          ? "1px solid #004EEB"
+                          : "rgba(0, 0, 0, 0.88)",
                       };
-                    }}>
-                      <Typography
-                        color={`${location.pathname === `/profile/${option.route}`
+                    }}
+                  >
+                    <Typography
+                      color={`${
+                        location.pathname === `/profile/${option.route}`
                           ? "#004EEB"
                           : "#667085"
-                          }`}
-                        fontFamily={"Inter"}
-                        fontSize={"14px"}
-                        fontWeight={600}
-                        lineHeight={"20px"}
-                      >
-                        {option.label}
-                      </Typography>
-                    </NavLink>
-                  )
-                }
-              })
-            }
+                      }`}
+                      fontFamily={"Inter"}
+                      fontSize={"14px"}
+                      fontWeight={600}
+                      lineHeight={"20px"}
+                    >
+                      {option.label}
+                    </Typography>
+                  </NavLink>
+                );
+              }
+            })}
           </nav>
         </Grid>
       </Grid>
