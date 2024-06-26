@@ -65,6 +65,7 @@ const MainPage = () => {
       );
     }
     return dispatch(onAddSubscriptionRecord([]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subscriptionPerCompanyQuery.data]);
   checkForActiveSubscriptionPerCompany();
   useEffect(() => {
@@ -76,11 +77,12 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     notificationStatus,
-    inventoryQuery.data,
-    inventoryQuery.isLoading,
-    inventory.length,
+    // inventoryQuery.data,
+    // inventoryQuery.isLoading,
+    // inventory.length,
     user.company,
   ]);
 

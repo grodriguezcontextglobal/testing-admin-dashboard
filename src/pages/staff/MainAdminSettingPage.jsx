@@ -60,9 +60,9 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     location.key,
     user.company,
     modalState,
-    listAdminUsers,
-    companiesEmployees,
-    eventQuery,
+    // listAdminUsers,
+    // companiesEmployees,
+    // eventQuery,
   ]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleDetailStaff = (record) => {
