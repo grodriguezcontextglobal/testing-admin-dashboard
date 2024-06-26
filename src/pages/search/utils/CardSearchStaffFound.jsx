@@ -28,7 +28,7 @@ const CardSearchStaffFound = ({ props, fn }) => {
             props.name[0]}{props.lastName[0]
           }
         </Avatar>
-        <Typography style={{...Subtitle, display:`${props.status !== "Confirmed" ? "flex" :"none"}`, color:"red", textDecoration:"underline"}}>
+        <Typography style={{...Subtitle, display:`${String(props.status).toLowerCase() !== "confirmed" ? "flex" :"none"}`, color:"red", textDecoration:"underline"}}>
           {props.status}
         </Typography>
       </div>
