@@ -37,6 +37,7 @@ import AssignStaffMemberToEvent from "../../pages/staff/detail/components/Assign
 import ConsumerDeviceLostFeeCash from "../../pages/consumers/components/markedLostOption/Cash";
 import RedirectionPage from "../../components/utils/RedirectionPage";
 import ConsumerDeviceLostFeeCreditCard from "../../pages/consumers/components/markedLostOption/CreditCard";
+import CompanyInfo from "../../pages/Profile/company_info/MainPage";
 const AuthRoutes = () => {
   const Home = lazy(() => import("../../pages/home/MainPage"));
   const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
@@ -213,6 +214,7 @@ const AuthRoutes = () => {
                   path="staff-activity"
                   element={<StaffActivityMainPage />}
                 />
+                <Route path="company-info" element={<CompanyInfo />} />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route path="login" element={<RedirectionPage />} />
@@ -225,7 +227,9 @@ const AuthRoutes = () => {
           </Routes>
         </div>
       </Suspense>
-      <div style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}>
+      <div
+        style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}
+      >
         <FooterComponent />
       </div>
     </div>
