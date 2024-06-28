@@ -140,7 +140,7 @@ const Confirmation = () => {
             date: new Date(),
           };
           const responseTransaction = await devitrakApi.post(
-            "/stripe/save-transaction",
+            "/transaction/save-transaction",
             transactionProfile
           );
           if (responseTransaction.data.ok) return (sequency = false);
@@ -219,8 +219,7 @@ const Confirmation = () => {
           "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
           error
         );
-        openNotification("error", "Error.", "Please try again later.");
-        setLoadingStatus(false);
+        setLoadingStatus(false)
       }
     };
 
