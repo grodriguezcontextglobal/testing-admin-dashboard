@@ -13,6 +13,7 @@ import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../../../../styles/global/CardStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
+import { checkArray } from "../../../../../../../../components/utils/checkArray";
 const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -26,6 +27,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
+        activity:false
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -71,7 +73,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     for (let i = 0; i < devicesInPool.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
-          !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
+          !devicesInPool[i]?.activity &&
           `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
         )
           findingRange.add(Number(devicesInPool[i].device));
@@ -102,11 +104,8 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    if (grouping[props]) {
-      return true;
-    } else {
-      return false;
-    }
+    return grouping[props].at(-1).activity;
+    // return grouping[props].length > 0;
   };
   const createReceiverInTransaction = async (props) => {
     await devitrakApi.post("/receiver/receiver-assignation", {
@@ -130,7 +129,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
 
   const onSubmitRegister = async (data) => {
     try {
-      const totalDeviceAssigned = data.endingNumber - data.startingNumber + 1;
+      const totalDeviceAssigned = data.quantity;
       const id = nanoid(12);
       const max = 918273645;
       const transactionGenerated = "pi_" + id;
@@ -166,33 +165,40 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           eventSelected: event.eventInfoDetail.eventName,
           date: `${new Date()}`,
         };
-        for (
-          let index = data.startingNumber;
-          index <= data.endingNumber;
-          index++
-        ) {
-          const serialNumber = String(index).padStart(
-            data.startingNumber.length,
-            `${data.startingNumber[0]}`
-          );
-          if (checkDeviceAvailability(serialNumber)) {
-            const createTransactionTemplate = {
-              device: {
-                serialNumber: serialNumber,
-                deviceType: deviceSelectedOption.deviceType,
-                status: true,
-              },
-              paymentIntent: reference.current,
-            };
-            await createReceiverInTransaction(createTransactionTemplate);
-            await createDevicesInPool(serialNumber);
-          } else {
-            let resultingNoAssigned = [];
-            resultingNoAssigned = [...noAssigned, serialNumber];
-            setNoAssigned(resultingNoAssigned);
+        const grouping = _.groupBy(
+          checkDeviceInUseInOtherCustomerInTheSameEventQuery,
+          "type"
+        );
+        const copiedDeviceData = grouping[deviceInfToStoreParsed.group];
+        const deviceFound = copiedDeviceData.findIndex(
+          (element) => element.device === data.startingNumber
+        );
+        if (Number(deviceFound) > -1) {
+          for (
+            let index = Number(deviceFound);
+            index < Number(deviceFound) + Number(totalDeviceAssigned);
+            index++
+          ) {
+            const serialNumber = await checkArray(copiedDeviceData[index])
+              .device;
+            if (!checkDeviceAvailability(serialNumber)) {
+              const createTransactionTemplate = {
+                device: {
+                  serialNumber: serialNumber,
+                  deviceType: deviceSelectedOption.deviceType,
+                  status: true,
+                },
+                paymentIntent: reference.current,
+              };
+              await createReceiverInTransaction(createTransactionTemplate);
+              await createDevicesInPool(serialNumber);
+            } else {
+              let resultingNoAssigned = [];
+              resultingNoAssigned = [...noAssigned, serialNumber];
+              setNoAssigned(resultingNoAssigned);
+            }
           }
         }
-
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
         await queryClient.refetchQueries({
           queryKey: ["transactionListQuery"],
@@ -314,10 +320,10 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           />
           <OutlinedInput
             disabled={deviceSelection === null}
-            {...register("endingNumber")}
+            {...register("quantity")}
             autoFocus={true}
             style={OutlinedInputStyle}
-            placeholder="Scan or enter the ending serial number here.."
+            placeholder="Enter the number of devices to assign in transaction."
             fullWidth
           />
         </div>
