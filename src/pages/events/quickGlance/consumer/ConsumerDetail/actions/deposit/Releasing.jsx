@@ -13,22 +13,24 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import { PropTypes } from 'prop-types'
+import { PropTypes } from "prop-types";
 
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
-  refetchingTransactionFn
+  refetchingTransactionFn,
 }) => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
       message: title,
-      duration: 0
+      duration: 0,
     });
   };
-  const { paymentIntentDetailSelected, customer } = useSelector((state) => state.stripe);
-  const { event } = useSelector((state) => state.event)
+  const { paymentIntentDetailSelected, customer } = useSelector(
+    (state) => state.stripe
+  );
+  const { event } = useSelector((state) => state.event);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
@@ -36,22 +38,19 @@ const Releasing = ({
         `/stripe/payment_intents/${paymentIntentDetailSelected.paymentIntent}`
       ),
     refetchOnMount: false,
-    staleTime: Infinity
+    staleTime: Infinity,
   });
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
     queryFn: () =>
-      devitrakApi.post(
-        `/transaction/transaction`,
-        {
-          paymentIntent: paymentIntentDetailSelected.paymentIntent,
-          active: true
-        }
-      ),
+      devitrakApi.post(`/transaction/transaction`, {
+        paymentIntent: paymentIntentDetailSelected.paymentIntent,
+        active: true,
+      }),
     refetchOnMount: false,
-    staleTime: Infinity
+    staleTime: Infinity,
   });
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const maxAmount = stripeTransactionQuery?.data?.data?.paymentIntent?.amount;
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
 
@@ -78,7 +77,7 @@ const Releasing = ({
   };
 
   const handleEventInfo = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     const resp = await devitrakApi.post(
       `/stripe/payment-intents/${paymentIntentDetailSelected.paymentIntent}/cancel`,
       {
@@ -87,10 +86,13 @@ const Releasing = ({
     );
 
     if (resp.data.ok) {
-      const transactionInfo = transactionQuery?.data?.data?.list.at(-1)
-      const dateString = new Date().toString()
-      const dateRef = dateString.split(' ')
-      await devitrakApi.patch(`/transaction/update-transaction/${transactionInfo.id}`, { active: false })
+      const transactionInfo = transactionQuery?.data?.data?.list.at(-1);
+      const dateString = new Date().toString();
+      const dateRef = dateString.split(" ");
+      await devitrakApi.patch(
+        `/transaction/update-transaction/${transactionInfo.id}`,
+        { active: false }
+      );
       devitrakApi.post("/nodemailer/deposit-return-notification", {
         consumer: {
           name: `${customer.name}, ${customer.lastName}`,
@@ -108,12 +110,15 @@ const Releasing = ({
         company: event.company,
         link: `https://app.devitrak.net/authentication/${encodeURI(
           event.eventInfoDetail.eventName
-        )}/${encodeURI(event.company)}/${customer.uid}`
+        )}/${encodeURI(event.company)}/${customer.uid}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['transactionPerConsumerListQuery'], exact: true })
-      refetchingTransactionFn()
-      openNotificationWithIcon('success', 'Deposit was released.')
-      await closeModal()
+      queryClient.invalidateQueries({
+        queryKey: ["transactionPerConsumerListQuery"],
+        exact: true,
+      });
+      refetchingTransactionFn();
+      openNotificationWithIcon("success", "Deposit was released.");
+      await closeModal();
     }
   };
 
@@ -257,17 +262,20 @@ const Releasing = ({
 
                 <Button
                   type="submit"
-                  disabled={stripeTransactionQuery?.data?.data?.paymentIntent?.status === "canceled"}
+                  disabled={
+                    stripeTransactionQuery?.data?.data?.paymentIntent
+                      ?.status === "canceled"
+                  }
                   style={{
                     ...BlueButton,
-                    width: "100%"
+                    width: "100%",
                   }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    style={BlueButtonText}
-                  >
-                    {stripeTransactionQuery?.data?.data?.paymentIntent?.status === "canceled" ? 'Transaction released already' : 'Cancelling deposit'}
+                  <Typography textTransform={"none"} style={BlueButtonText}>
+                    {stripeTransactionQuery?.data?.data?.paymentIntent
+                      ?.status === "canceled"
+                      ? "Transaction released already"
+                      : "Cancelling deposit"}
                   </Typography>
                 </Button>
               </form>
@@ -285,4 +293,4 @@ Releasing.propTypes = {
   openCancelingDepositModal: PropTypes.bool,
   setOpenCancelingDepositModal: PropTypes.bool,
   refetchingTransactionFn: PropTypes.func,
-}
+};

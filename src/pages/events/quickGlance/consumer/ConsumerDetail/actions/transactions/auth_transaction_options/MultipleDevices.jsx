@@ -32,10 +32,10 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
+        activity:false
       }),
     // enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   useEffect(() => {
     const controller = new AbortController();
@@ -118,7 +118,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
     if (response) {
       setClientSecret(response.data.paymentIntentCustomized.client_secret);
       dispatch(
-        onAddDevicesSelection(data.endingNumber - data.startingNumber + 1)
+        onAddDevicesSelection(data.quantity)
       );
       dispatch(
         onAddDevicesSelectionPaidTransactions({
@@ -148,7 +148,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: "1px",
+            gap: "5px",
             width: "100%",
           }}
         >
@@ -195,7 +195,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: "1px",
+            gap: "5px",
             width: "100%",
           }}
         >
@@ -207,11 +207,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             placeholder="Scan or enter starting serial number"
           />
           <OutlinedInput
-            disabled={clientSecret !== ""}
-            style={{ ...OutlinedInputStyle, width: "90%" }}
-            type="text"
-            placeholder="Scan or enter ending serial number"
-            {...register("endingNumber", { required: true })}
+            disabled={deviceSelection === null}
+            {...register("quantity")}
+            autoFocus={true}
+            style={OutlinedInputStyle}
+            placeholder="Enter the number of devices to assign in transaction."
+            fullWidth
           />
         </div>
         <OutlinedInput

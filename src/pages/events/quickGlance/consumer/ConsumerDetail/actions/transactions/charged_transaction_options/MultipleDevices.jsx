@@ -31,6 +31,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
+        activity:false
       }),
     // enabled: false,
     refetchOnMount: false,

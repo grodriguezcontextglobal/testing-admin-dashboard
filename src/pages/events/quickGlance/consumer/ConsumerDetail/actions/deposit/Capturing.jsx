@@ -183,19 +183,7 @@ const Capturing = ({
                   className="form"
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p
-                      style={Subtitle}
-                      // textTransform={"none"}
-                      // textAlign={"left"}
-                      // fontFamily={"Inter"}
-                      // fontSize={"14px"}
-                      // fontStyle={"normal"}
-                      // fontWeight={500}
-                      // lineHeight={"20px"}
-                      // color={"var(--gray-700, #344054)"}
-                    >
-                      Transaction ID
-                    </p>
+                    <p style={Subtitle}>Transaction ID</p>
                   </InputLabel>
                   <OutlinedInput
                     disabled
@@ -213,19 +201,7 @@ const Capturing = ({
                   />
 
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p
-                      style={Subtitle}
-                      // textTransform={"none"}
-                      // textAlign={"left"}
-                      // fontFamily={"Inter"}
-                      // fontSize={"14px"}
-                      // fontStyle={"normal"}
-                      // fontWeight={500}
-                      // lineHeight={"20px"}
-                      // color={"var(--gray-700, #344054)"}
-                    >
-                      Capturing deposit amount
-                    </p>
+                    <p style={Subtitle}>Capturing deposit amount</p>
                   </InputLabel>
                   <OutlinedInput
                     {...register("amount")}
@@ -240,36 +216,12 @@ const Capturing = ({
                     placeholder="e.g. $200"
                     startAdornment={
                       <InputAdornment position="start">
-                        <p
-                          style={Subtitle}
-                          // textTransform={"none"}
-                          // textAlign={"left"}
-                          // fontFamily={"Inter"}
-                          // fontSize={"14px"}
-                          // fontStyle={"normal"}
-                          // fontWeight={400}
-                          // lineHeight={"20px"}
-                          // color={"var(--gray-700, #344054)"}
-                        >
-                          $
-                        </p>
+                        <p style={Subtitle}>$</p>
                       </InputAdornment>
                     }
                   />
                   {errors?.amount && (
-                    <p
-                      style={Subtitle}
-                      // textTransform={"none"}
-                      // textAlign={"left"}
-                      // fontFamily={"Inter"}
-                      // fontSize={"12px"}
-                      // fontStyle={"normal"}
-                      // fontWeight={400}
-                      // lineHeight={"18px"}
-                      // color={"var(--gray-700, #344054)"}
-                    >
-                      {errors?.amount?.message}
-                    </p>
+                    <p style={Subtitle}>{errors?.amount?.message}</p>
                   )}
                   <FormHelperText
                     style={{
@@ -277,17 +229,7 @@ const Capturing = ({
                     }}
                     id="outlined-weight-helper-text"
                   >
-                    <p
-                      style={Subtitle}
-                      // textTransform={"none"}
-                      // textAlign={"left"}
-                      // fontFamily={"Inter"}
-                      // fontSize={"14px"}
-                      // fontStyle={"normal"}
-                      // fontWeight={400}
-                      // lineHeight={"20px"}
-                      // color={"var(--gray-600, #475467)"}
-                    >
+                    <p style={Subtitle}>
                       Please be aware that the displayed amount is the maximum
                       value that will be captured. If you wish to capture a
                       lesser amount, you have the option to manually input the
