@@ -21,10 +21,10 @@ const items = [
         label: "Authorization",
         key: "0",
     },
-    {
-        label: "Charge",
-        key: "1",
-    },
+    // {
+    //     label: "Charge",
+    //     key: "1",
+    // },
     {
         label: "Cash",
         key: "2"
