@@ -2,7 +2,7 @@ import { Button, Grid, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Result, notification } from "antd";
 import _ from "lodash";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -16,7 +16,6 @@ import { checkArray } from "../../components/utils/checkArray";
 const Confirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [triggerStatus, setTriggerStatus] = useState(true);
-  const [count, setCount] = useState(0);
   const { event } = useSelector((state) => state.event);
   const { deviceSelection, deviceSelectionPaidTransaction } = useSelector(
     (state) => state.devicesHandle
@@ -35,18 +34,19 @@ const Confirmation = () => {
       }),
     refetchOnMount: false,
   });
+  useEffect(() => {
+    const controller = new AbortController();
+    checkDeviceInUseInOtherCustomerInTheSameEventQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const addingDeviceInTransactionMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/receiver/receiver-assignation", template),
   });
-  // const updateDeviceInPoolMutation = useMutation({
-  //   mutationFn: (template) =>
-  //     devitrakApi.patch(`/receiver/receivers-pool-update/${template.id}`, {
-  //       activity: "YES",
-  //       status: "Operational",
-  //     }),
-  // });
+
   const payment_intent = new URLSearchParams(window.location.search).get(
     "payment_intent"
   );
@@ -105,7 +105,6 @@ const Confirmation = () => {
             status: "Operational",
           }
         );
-        await usedDevices.findIndex((element) => element.id === device.id);
       }
     };
 
@@ -140,7 +139,7 @@ const Confirmation = () => {
             date: new Date(),
           };
           const responseTransaction = await devitrakApi.post(
-            "/stripe/save-transaction",
+            "/transaction/save-transaction",
             transactionProfile
           );
           if (responseTransaction.data.ok) return (sequency = false);
@@ -152,39 +151,40 @@ const Confirmation = () => {
       try {
         setLoadingStatus(true);
         setTriggerStatus(false);
-        setCount(count + 1);
         const response = await devitrakApi.get(
           `/stripe/payment_intents/${payment_intent}`
         );
-        if (response.data.ok && count === 0) {
+        if (response.data.ok) {
           dispatch(onAddNewPaymentIntent(response.data));
           await saveTransaction();
-          if (deviceSelectionPaidTransaction.serialNumber && count === 0) {
+          if (Number(deviceSelectionPaidTransaction.quantity) === 1) {
             await formatToDeviceInAssignedReceiverInDocumentInDB(
               deviceSelectionPaidTransaction.serialNumber
             );
             await createDeviceInPool(
               deviceSelectionPaidTransaction.serialNumber
             );
-          }
-          if (deviceSelectionPaidTransaction.startingNumber && count === 0) {
-            for (
-              let index = Number(deviceSelectionPaidTransaction.startingNumber);
-              index <= Number(deviceSelectionPaidTransaction.endingNumber);
-              index++
-            ) {
-              await formatToDeviceInAssignedReceiverInDocumentInDB(
-                String(index).padStart(
-                  deviceSelectionPaidTransaction.startingNumber.length,
-                  `${deviceSelectionPaidTransaction.startingNumber[0]}`
-                )
-              );
-              await createDeviceInPool(
-                String(index).padStart(
-                  deviceSelectionPaidTransaction.startingNumber.length,
-                  `${deviceSelectionPaidTransaction.startingNumber[0]}`
-                )
-              );
+          } else {
+            const copiedData = usedDevices;
+            const deviceFound = usedDevices.findIndex(
+              (element) =>
+                element.device === deviceSelectionPaidTransaction.startingNumber
+            );
+            if (deviceFound > -1) {
+              for (
+                let index = deviceFound;
+                index <=
+                Number(deviceFound) +
+                  Number(deviceSelectionPaidTransaction.quantity) -
+                  1;
+                index++
+              ) {
+                const argument = await checkArray(copiedData[index]);
+                await formatToDeviceInAssignedReceiverInDocumentInDB(
+                  argument.device
+                );
+                await createDeviceInPool(argument.device);
+              }
             }
           }
           openNotification(
@@ -224,7 +224,7 @@ const Confirmation = () => {
       }
     };
 
-    if (triggerStatus && count === 0) {
+    if (triggerStatus) {
       confirmPaymentIntent();
     }
     return (
