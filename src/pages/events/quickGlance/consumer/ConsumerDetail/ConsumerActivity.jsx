@@ -85,7 +85,7 @@ const ConsumerActivity = () => {
         firstResult.add(data.device[0]);
       }
       return Array.from(firstResult).reduce(
-        (accumulator, curr) => accumulator + curr.deviceNeeded,
+        (accumulator, curr) => accumulator + Number(curr.deviceNeeded),
         0
       );
     };
