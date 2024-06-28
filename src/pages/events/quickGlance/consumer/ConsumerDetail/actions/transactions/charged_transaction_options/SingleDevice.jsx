@@ -130,6 +130,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
         onAddDevicesSelectionPaidTransactions({
           ...data,
           deviceType: JSON.parse(deviceSelection),
+          quantity: 1,
         }) //pass data serial number from handleSubmit
       );
     }
