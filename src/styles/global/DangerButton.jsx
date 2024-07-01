@@ -7,6 +7,6 @@ export const DangerButton = {
     padding: "10px 16px",
     borderRadius: "8px",
     backgroundColor: "var(--danger-action)",
-    border: "1px solid ar(--danger-action)",
+    border: "1px solid var(--danger-action)",
     outline: "none",
 }

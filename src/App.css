@@ -1,7 +1,4 @@
 #root {
-  /* min-width: 768px;
-  max-width: 1228px; */
-
   width: 100%;
   margin: 0 auto;
   padding: 0;
@@ -15,26 +12,44 @@
   height: 6em;
   padding: 1.5em;
   will-change: filter;
+  transition: -webkit-filter 300ms;
   transition: filter 300ms;
+  transition: filter 300ms, -webkit-filter 300ms; /* Combined for compatibility */
 }
+
 .logo:hover {
+  -webkit-filter: drop-shadow(0 0 2em #646cffaa);
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
+  -webkit-filter: drop-shadow(0 0 2em #61dafbaa);
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
 @keyframes logo-spin {
   from {
+    -webkit-transform: rotate(0deg);
     transform: rotate(0deg);
   }
   to {
+    -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes logo-spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
+    -webkit-animation: logo-spin infinite 20s linear;
     animation: logo-spin infinite 20s linear;
   }
 }
