@@ -323,6 +323,10 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
         footer={[]}
         width={1000}
         maskClosable={false}
+        style={{
+          zIndex:30,
+          margin:"12dvh 0 0"
+        }}
       >
         {contextHolder}
         <Grid margin={"15px 0 0 0"} padding={0} container>
