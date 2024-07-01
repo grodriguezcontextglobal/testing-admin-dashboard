@@ -13,9 +13,13 @@ import { Title } from "../../styles/global/Title";
 import MainAdminSettingPage from "./MainAdminSettingPage";
 import { NewStaffMember } from "./action/NewStaffMember";
 import Loading from "../../components/animation/Loading";
+import { DangerButton } from "../../styles/global/DangerButton";
+import { DangerButtonText } from "../../styles/global/DangerButtonText";
+import DeleteStaffMember from "./action/DeleteStaffMember";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
+  const [deleteModalState, setDeleteModalState] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
   useEffect(() => {
@@ -56,11 +60,12 @@ const MainPage = () => {
             display={Number(user.role) < 2 ? "flex" : "none"}
             alignItems={"center"}
             justifyContent={"flex-end"}
+            gap={2}
             item
             xs={2}
             sm={2}
-            md={2}
-            lg={2}
+            md={9}
+            lg={9}
           >
             <button style={BlueButton} onClick={() => setModalState(true)}>
               <WhitePlusIcon />
@@ -68,6 +73,12 @@ const MainPage = () => {
                 Add new staff
               </p>
             </button>
+            <button style={DangerButton} onClick={() => setDeleteModalState(true)}>
+              <p style={{ ...DangerButtonText, textTransform: "none" }}>
+                Delete staff members
+              </p>
+            </button>
+
           </Grid>
         </Grid>
         <Divider />
@@ -123,6 +134,11 @@ const MainPage = () => {
       {modalState && (
         <NewStaffMember modalState={modalState} setModalState={setModalState} />
       )}
+      {
+        deleteModalState && (
+          <DeleteStaffMember modalState={deleteModalState} setModalState={setDeleteModalState} />
+        )
+      }
     </>
   );
 };
