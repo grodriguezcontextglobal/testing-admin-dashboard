@@ -73,12 +73,17 @@ const MainPage = () => {
                 Add new staff
               </p>
             </button>
-            <button style={DangerButton} onClick={() => setDeleteModalState(true)}>
+            <button
+              style={{
+                ...DangerButton,
+                display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+              }}
+              onClick={() => setDeleteModalState(true)}
+            >
               <p style={{ ...DangerButtonText, textTransform: "none" }}>
                 Delete staff members
               </p>
             </button>
-
           </Grid>
         </Grid>
         <Divider />
@@ -134,11 +139,12 @@ const MainPage = () => {
       {modalState && (
         <NewStaffMember modalState={modalState} setModalState={setModalState} />
       )}
-      {
-        deleteModalState && (
-          <DeleteStaffMember modalState={deleteModalState} setModalState={setDeleteModalState} />
-        )
-      }
+      {deleteModalState && (
+        <DeleteStaffMember
+          modalState={deleteModalState}
+          setModalState={setDeleteModalState}
+        />
+      )}
     </>
   );
 };
