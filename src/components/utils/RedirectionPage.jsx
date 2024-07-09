@@ -10,7 +10,7 @@ const RedirectionPage = () => {
       <Loading />
       {location.pathname === "/register/company-setup" &&
         setTimeout(() => {
-          navigate("/");
+          navigate("/subscription-company");
         }, 2000)}
     </div>
   );
