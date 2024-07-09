@@ -2,17 +2,20 @@ import { Modal } from "antd";
 import { useState } from "react";
 import { StripeCheckoutElementAdmin } from "../../../../../components/stripe/elements/StripeCheckoutElementAdmin";
 
-const ModalAnnualPayment = ({ clientSecret, setClientSecret, total }) => {
-  const [openModal, setOpenModal] = useState(
-    `${clientSecret.length}`
-  );
+const ModalAnnualPayment = ({
+  clientSecret,
+  setClientSecret,
+  total,
+  title,
+}) => {
+  const [openModal, setOpenModal] = useState(`${clientSecret.length}`);
   const closeModal = () => {
     setOpenModal(false);
-    setClientSecret(null)
+    setClientSecret(null);
   };
   return (
     <Modal
-      title="Annual payment method"
+      title={title}
       centered
       open={openModal}
       onOk={() => closeModal()}
