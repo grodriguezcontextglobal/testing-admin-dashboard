@@ -38,6 +38,8 @@ import ConsumerDeviceLostFeeCash from "../../pages/consumers/components/markedLo
 import RedirectionPage from "../../components/utils/RedirectionPage";
 import ConsumerDeviceLostFeeCreditCard from "../../pages/consumers/components/markedLostOption/CreditCard";
 import CompanyInfo from "../../pages/Profile/company_info/MainPage";
+import SubscriptionMainPage from "../../pages/subscription/MainPage";
+import ConfirmSubscription from "../../components/stripe/payment/ConfirmSubscription";
 const AuthRoutes = () => {
   const Home = lazy(() => import("../../pages/home/MainPage"));
   const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
@@ -217,6 +219,15 @@ const AuthRoutes = () => {
                 <Route path="company-info" element={<CompanyInfo />} />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
+              <Route
+                path="subscription-company"
+                element={<SubscriptionMainPage />}
+              />
+              <Route
+                path="confirm-subscription"
+                element={<ConfirmSubscription />}
+              />
+
               <Route path="login" element={<RedirectionPage />} />
               <Route
                 path="register/company-setup"
