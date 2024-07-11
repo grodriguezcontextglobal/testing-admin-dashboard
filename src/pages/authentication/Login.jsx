@@ -36,6 +36,7 @@ import ForgotPassword from "./ForgotPassword";
 import ModalMultipleCompanies from "./multipleCompanies/Modal";
 import "./style/authStyle.css";
 import PropTypes from "prop-types";
+import { checkArray } from "../../components/utils/checkArray";
 
 const Login = () => {
   const { register, handleSubmit, setValue } = useForm();
@@ -153,7 +154,7 @@ const Login = () => {
         }
       );
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: companyInfoTable.data.company.at(-1).company_id,
+        company_id: checkArray(companyInfoTable.data.company).company_id,
       });
       dispatch(
         onLogin({
@@ -171,10 +172,10 @@ const Login = () => {
           token: respo.data.token,
           online: updatingOnlineStatusResponse.data.entire.online,
           companyData: props.company_data[0],
-          sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+          sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
           sqlInfo: {
-            ...companyInfoTable.data.company.at(-1),
-            stripeID: stripeSQL.data.stripe.at(-1),
+            ...checkArray(companyInfoTable.data.company),
+            stripeID: checkArray(stripeSQL.data.stripe),
           },
         })
       );
@@ -245,21 +246,21 @@ const Login = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
   );
-  // const isLargeDevice = useMediaQuery(
-  //   "only screen and (min-width : 993px) and (max-width : 1200px)"
-  // );
-  // const isExtraLargeDevice = useMediaQuery(
-  //   "only screen and (min-width : 1201px)"
-  // );
-  // const formFittingTrigger = () => {
-  //   if (isSmallDevice || isMediumDevice) {
-  //     return "55vw";
-  //   } else if (isLargeDevice) {
-  //     return "40vw";
-  //   } else if (isExtraLargeDevice) {
-  //     return "1228px";
-  //   }
-  // };
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen and (min-width : 1201px)"
+  );
+  const formFittingTrigger = () => {
+    if (isSmallDevice || isMediumDevice) {
+      return "55vw";
+    } else if (isLargeDevice) {
+      return "40vw";
+    } else if (isExtraLargeDevice) {
+      return "30vw";
+    }
+  };
   return (
     <>
       {contextHolder}
@@ -329,7 +330,7 @@ const Login = () => {
             </p>
             <form
               onSubmit={handleSubmit(onSubmitLogin)}
-              style={{ width: "100%", padding: "0 20px 0 0" }} //formFittingTrigger()
+              style={{ width: formFittingTrigger(), }} //formFittingTrigger(),padding: "0 20px 0 0" 
             >
               <Grid
                 marginY={"20px"}
