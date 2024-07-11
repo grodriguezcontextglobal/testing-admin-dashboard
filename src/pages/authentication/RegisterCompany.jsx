@@ -19,6 +19,8 @@ import { Link, redirect } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { CompanyIcon } from "../../components/icons/Icons";
+import { checkArray } from "../../components/utils/checkArray";
+import { convertToBase64 } from "../../components/utils/convertToBase64";
 import {
   onAddErrorMessage,
   onLogin,
@@ -31,7 +33,6 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import InfrmationCard from "./components/InfrmationCard";
-import { convertToBase64 } from "../../components/utils/convertToBase64";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
@@ -74,7 +75,6 @@ const RegisterCompany = () => {
   const industryListQuery = useQuery({
     queryKey: ["companyInfoList"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
-    // enabled: false,
     refetchOnMount: false,
   });
   const checkUserInfo = useQuery({
@@ -83,7 +83,6 @@ const RegisterCompany = () => {
       devitrakApi.post("/staff/admin-users", {
         email: user.email,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -163,72 +162,6 @@ const RegisterCompany = () => {
     return setLocationList(result);
   };
   const ref = useRef({});
-  const userRegistrationProcess = async () => {
-    try {
-      const newAdminUserTemplate = {
-        name: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        password: user.password,
-        company: companyValue,
-        question: "What's your company name",
-        answer: String(user.company).toLowerCase(),
-        role: "0",
-        super_user: true,
-        online: true,
-        companiesAssigned: [
-          {
-            company: companyValue,
-            active: true,
-            super_user: false,
-            role: "0",
-            inventory_location: [],
-          },
-        ],
-
-        data: {
-          ...user.data,
-        },
-      };
-      const resp = await devitrakApi.post(
-        "/admin/new_admin_user",
-        newAdminUserTemplate
-      );
-
-      localStorage.setItem("admin-token", resp.data.token);
-      dispatch(
-        onLogin({
-          data: resp.data.entire,
-          uid: resp.data.uid,
-          name: user.name,
-          lastName: user.lastName,
-          email: user.email,
-          phone: resp.data.phone,
-          role: resp.data.role,
-          company: user.company,
-          token: resp.data.token,
-        })
-      );
-      ref.current = {
-        ...ref.current,
-        userRegistration: {
-          data: resp.data.entire,
-          uid: resp.data.uid,
-          name: user.name,
-          lastName: user.lastName,
-          email: user.email,
-          phone: resp.data.phone,
-          role: resp.data.role,
-          company: user.company,
-          token: resp.data.token,
-        },
-      };
-      return resp.data;
-    } catch (error) {
-      return error;
-    }
-  };
-
   const createStripeAccount = async () => {
     const newCompanyAccountTemplate = {
       companyName: companyValue,
@@ -241,14 +174,15 @@ const RegisterCompany = () => {
       newCompanyAccountTemplate
     );
     if (creatingStripeCustomer.data) {
+      console.log(creatingStripeCustomer.data.companyCustomer);
       ref.current = {
         ...ref.current,
-        stripeAccount: creatingStripeCustomer.data.companyCustomer.stripeID,
+        stripeAccount: checkArray(creatingStripeCustomer.data.companyCustomer),
       };
+      console.log(ref.current);
       return creatingStripeCustomer.data;
     }
   };
-
   const createCompany = async (props) => {
     const companyTemplate = {
       company_name: companyValue,
@@ -271,7 +205,7 @@ const RegisterCompany = () => {
       website: websiteUrl,
       main_email: user.email,
       industry: industry,
-      stripe_customer_id: ref.current.stripeAccount,
+      stripe_customer_id: ref.current.stripeAccount.stripeID,
       employees: [
         {
           user: user.email,
@@ -283,20 +217,75 @@ const RegisterCompany = () => {
           inventory_location: [],
         },
       ],
-      company_logo: props.company_logo
+      company_logo: props.company_logo,
     };
     const resp = await devitrakApi.post("/company/new", companyTemplate);
     if (resp.data) {
+      console.log(resp.data.company);
+      const companyData = checkArray(resp.data.company);
       ref.current = {
         ...ref.current,
-        companyRegistration: resp.data.company,
+        companyData: companyData,
       };
-      dispatch(
-        onLogin({
-          companyInfo: resp.data.company,
-        })
+      console.log(ref.current);
+      return;
+    }
+  };
+
+  const userRegistrationProcess = async () => {
+    try {
+      const newAdminUserTemplate = {
+        name: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        password: user.password,
+        company: companyValue,
+        question: "What's your company name",
+        answer: String(companyValue).toLowerCase(),
+        role: "0",
+        super_user: true,
+        online: true,
+        companiesAssigned: [
+          {
+            company: companyValue,
+            active: true,
+            super_user: false,
+            role: "0",
+            inventory_location: [],
+          },
+        ],
+
+        data: {
+          ...user.data,
+        },
+      };
+      const resp = await devitrakApi.post(
+        "/admin/new_admin_user",
+        newAdminUserTemplate
       );
+      if (resp.data) {
+        console.log(resp.data);
+
+        localStorage.setItem("admin-token", resp.data.token);
+        ref.current = {
+          ...ref.current,
+          userRegistration: {
+            data: resp.data.entire,
+            uid: resp.data.uid,
+            name: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            phone: resp.data.entire.phone,
+            role: '0',
+            company: user.company,
+            token: resp.data.token,
+          },
+        };
+      }
+      console.log(ref.current);
       return resp.data;
+    } catch (error) {
+      return error;
     }
   };
 
@@ -305,16 +294,18 @@ const RegisterCompany = () => {
       "/db_staff/new_member",
       {
         first_name: user.name,
-        last_name: user.lasName,
+        last_name: user.lastName,
         email: user.email,
         phone_number: props.main_phone,
       }
     );
     if (insertingNewMemberInCompany.data) {
+      console.log(insertingNewMemberInCompany.data);
       ref.current = {
         ...ref.current,
         userSQL: insertingNewMemberInCompany.data,
       };
+      console.log(ref.current);
       return insertingNewMemberInCompany.data;
     }
   };
@@ -334,10 +325,12 @@ const RegisterCompany = () => {
       }
     );
     if (insertingCompanyInfo.data) {
+      console.log(insertingCompanyInfo.data);
       ref.current = {
         ...ref.current,
-        companySQL: insertingCompanyInfo.data,
+        companySQL: insertingCompanyInfo.data.company.insertId,
       };
+      console.log(ref.current);
       return insertingCompanyInfo.data;
     }
   };
@@ -345,55 +338,18 @@ const RegisterCompany = () => {
     const insertingStripeCompanyInfo = await devitrakApi.post(
       "/db_stripe/new_stripe",
       {
-        stripe_id: ref.current.stripeAccount,
-        company_id: ref.current.companySQL.company.insertId,
+        stripe_id: ref.current.stripeAccount.stripeID,
+        company_id: ref.current.companySQL,
       }
     );
     if (insertingStripeCompanyInfo.data) {
+      console.log(insertingStripeCompanyInfo.data);
       ref.current = {
         ...ref.current,
         stripeSQL: insertingStripeCompanyInfo.data,
       };
+      console.log(ref.current);
       return insertingStripeCompanyInfo.data;
-    }
-  };
-
-  const updatingOnlineStatusUser = async () => {
-    const onlineStatus = await devitrakApiAdmin.patch(
-      `/profile/${ref.current.userRegistration.uid}`,
-      { online: true }
-    );
-    if (onlineStatus.data) {
-      dispatch(
-        onLogin({
-          data: onlineStatus.data.entire,
-          name: onlineStatus.data.name,
-          lastName: onlineStatus.data.lastName,
-          uid: onlineStatus.data.uid,
-          email: onlineStatus.data.email,
-          role: onlineStatus.data.role,
-          phone: onlineStatus.data.phone,
-          company: onlineStatus.data.company,
-          token: onlineStatus.data.token,
-          online: onlineStatus.data.entire.online,
-        })
-      );
-      ref.current = {
-        ...ref.current,
-        userRegistration: {
-          data: onlineStatus.data.entire,
-          name: onlineStatus.data.name,
-          lastName: onlineStatus.data.lastName,
-          uid: onlineStatus.data.uid,
-          email: onlineStatus.data.email,
-          role: onlineStatus.data.role,
-          phone: onlineStatus.data.phone,
-          company: onlineStatus.data.company,
-          token: onlineStatus.data.token,
-          online: onlineStatus.data.entire.online,
-        },
-      };
-      return onlineStatus;
     }
   };
 
@@ -403,15 +359,12 @@ const RegisterCompany = () => {
       { staff_id: ref.current.userSQL.member.insertId }
     );
     if (consultingNewStaffMember.data) {
-      dispatch(
-        onLogin({
-          ...ref.current.userRegistration,
-          sqlMemberInfo: consultingNewStaffMember.data.member.at(-1),
-        })
-      );
+      console.log(consultingNewStaffMember.data);
+      const sqlMemberInfo = checkArray(consultingNewStaffMember.data.member);
+      console.log(ref.current);
       return (ref.current = {
         ...ref.current,
-        sqlMemberInfo: consultingNewStaffMember.data.member.at(-1) ?? undefined,
+        sqlMemberInfo: sqlMemberInfo,
       });
     }
   };
@@ -420,28 +373,52 @@ const RegisterCompany = () => {
     const companyInfo = await devitrakApi.post(
       "/db_company/consulting-company",
       {
-        company_id: ref.current.companySQL.company.insertId,
+        company_id: ref.current.companySQL,
       }
     );
     if (companyInfo.data) {
-      const stripe_db = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: ref.current.companySQL.insertId,
-      });
-      dispatch(
-        onLogin({
-          ...ref.current.userRegistration,
-          sqlMemberInfo: { ...ref.current.sqlMemberInfo },
-          sqlInfo: companyInfo.data.company.at(-1) ?? undefined,
-        })
-      );
+      console.log(companyInfo.data);
+      const sqlInfo = {
+        ...checkArray(companyInfo.data.company),
+        stripeID: ref.current.stripeAccount.stripeID,
+      };
+      console.log(ref.current);
       return (ref.current = {
         ...ref.current,
-        sqlMemberInfo: { ...ref.current.sqlMemberInfo },
-        sqlInfo: {
-          ...companyInfo.data.result?.at(-1),
-          stripeID: stripe_db.data.stripe.at(-1),
-        },
+        sqlInfo: sqlInfo,
       });
+    }
+  };
+
+  const loginIntoOneCompanyAccount = async () => {
+    console.log(ref.current);
+    const respo = await devitrakApiAdmin.post("/login", {
+      email: user.email,
+      password: user.password,
+    });
+    if (respo.data) {
+      console.log(respo.data);
+      localStorage.setItem("admin-token", respo.data.token);
+      dispatch(
+        onLogin({
+          data: {
+            ...respo.data.entire,
+            online: respo.data.entire.online,
+          },
+          name: user.data.name,
+          lastName: user.data.lastName,
+          uid: respo.data.uid ?? respo.data.entire.id,
+          email: user.email,
+          role: "0",
+          phone: respo.data.phone,
+          company: companyValue,
+          token: respo.data.token,
+          online: true,
+          companyData: ref.current.companyData,
+          sqlMemberInfo: ref.current.sqlMemberInfo,
+          sqlInfo: {...ref.current.stripeAccount},
+        })
+      );
     }
   };
 
@@ -475,9 +452,9 @@ const RegisterCompany = () => {
         await insertingUserMemberInSqlDb(data.main_phone);
         await insertingNewCompanyInSqlDb(data);
         await insertingStripeAccountInSqlDb();
-        await updatingOnlineStatusUser();
         await consultingUserMemberInSqlDb();
         await consultingCompanyInSqlDb();
+        await loginIntoOneCompanyAccount();
         queryClient.clear();
         setLoadingStatus(false);
         openNotificationWithIcon(
@@ -1165,3 +1142,46 @@ RegisterCompany.propTypes = {
   company_logo: PropTypes.string.isRequired,
 };
 export default RegisterCompany;
+
+// const updatingOnlineStatusUser = async () => {
+//   const onlineStatus = await devitrakApiAdmin.patch(
+//     `/profile/${ref.current.userRegistration.uid}`,
+//     { online: true }
+//   );
+//   if (onlineStatus.data) {
+//     dispatch(
+//       onLogin({
+//         ...ref.current,
+//         data: onlineStatus.data.entire,
+//         name: onlineStatus.data.name,
+//         lastName: onlineStatus.data.lastName,
+//         uid: onlineStatus.data.uid,
+//         email: onlineStatus.data.email,
+//         role: onlineStatus.data.role,
+//         phone: onlineStatus.data.phone,
+//         company: onlineStatus.data.company,
+//         token: onlineStatus.data.token,
+//         online: onlineStatus.data.entire.online,
+//         sqlInfo: {
+//           stripeID: ref.current.stripeAccount,
+//         },
+//       })
+//     );
+//     ref.current = {
+//       ...ref.current,
+//       userRegistration: {
+//         data: onlineStatus.data.entire,
+//         name: onlineStatus.data.name,
+//         lastName: onlineStatus.data.lastName,
+//         uid: onlineStatus.data.uid,
+//         email: onlineStatus.data.email,
+//         role: onlineStatus.data.role,
+//         phone: onlineStatus.data.phone,
+//         company: onlineStatus.data.company,
+//         token: onlineStatus.data.token,
+//         online: onlineStatus.data.entire.online,
+//       },
+//     };
+//     return onlineStatus;
+//   }
+// };
