@@ -186,15 +186,13 @@ const UpdateCreditCard = ({
       {updatePaymentMethodInSubscription !== null && handleResponse()}
       <Modal
         title={renderTitle()}
-        style={{
-          top: 20,
-          margin: "auto",
-        }}
         open={openUpdateCreditCardModal}
         onOk={() => closeModal()}
         onCancel={() => closeModal()}
         footer={[]}
         maskClosable={false}
+        width={1000}
+        centered
       >
         <Grid
           display={"flex"}
