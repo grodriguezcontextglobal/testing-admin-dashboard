@@ -8,15 +8,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider } from "antd";
+import { Divider, Segmented } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import {
-  EditIcon
-} from "../../components/icons/Icons";
+import { EditIcon } from "../../components/icons/Icons";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
@@ -26,10 +24,12 @@ import CardActionsButton from "./components/CardActionsButton";
 import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
+import { useState } from "react";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
+  const [options, setOptions] = useState("Events");
   const navigate = useNavigate();
   const stripeTransactionsSavedQuery = useQuery({
     queryKey: ["stripeTransactionsList"],
@@ -322,7 +322,22 @@ const DetailPerConsumer = () => {
           container
         >
           <Grid item xs={12}>
-            <StripeTransactionPerConsumer searchValue={watch("searchEvent")} />
+            <Segmented
+              options={["Events", "Leases"]}
+              onChange={(value) => {
+                return setOptions(value);
+              }}
+              style={{
+                margin: "0 0 5px 0",
+              }}
+            />
+            {options === "Events" ? (
+              <StripeTransactionPerConsumer
+                searchValue={watch("searchEvent")}
+              />
+            ) : (
+              ""
+            )}
           </Grid>
         </Grid>
         <Outlet />
@@ -333,7 +348,8 @@ const DetailPerConsumer = () => {
 
 export default DetailPerConsumer;
 
-{/* <Grid
+{
+  /* <Grid
 marginY={3}
 display={"flex"}
 justifyContent={"space-between"}
@@ -341,7 +357,8 @@ alignItems={"center"}
 gap={1}
 container
 >
-</Grid> */}
+</Grid> */
+}
 
 // {/* <button
 // style={{
