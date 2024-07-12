@@ -12,7 +12,11 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/ant-table.css";
 import dicRole from "../../components/general/dicRole";
 import { PropTypes } from "prop-types";
-const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
+const MainAdminSettingPage = ({
+  searchAdmin,
+  modalState,
+  deletingStaffMembers,
+}) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -23,7 +27,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       devitrakApi.post("/staff/admin-users", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -33,7 +36,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
       devitrakApi.post("/company/search-company", {
         company_name: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -44,7 +46,6 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
         company: user.company,
         active: true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -56,14 +57,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort();
     };
-  }, [
-    location.key,
-    user.company,
-    modalState,
-    // listAdminUsers,
-    // companiesEmployees,
-    // eventQuery,
-  ]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, user.company, modalState, deletingStaffMembers]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
@@ -116,7 +110,12 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     return () => {
       controller.abort();
     };
-  }, [location.key, companiesEmployees.data, searchAdmin?.length]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    location.key,
+    companiesEmployees.data,
+    searchAdmin?.length,
+    deletingStaffMembers,
+  ]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const renderTernary = (props) => {
     if (typeof props === "string") {
@@ -368,7 +367,7 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
     ];
 
     const sortDataAdminUser = () => {
-       if (!searchAdmin || String(searchAdmin)?.length > 0) {
+      if (!searchAdmin || String(searchAdmin)?.length > 0) {
         const check = employeeListRef.current.filter(
           (item) =>
             String(item?.name)
@@ -474,7 +473,8 @@ const MainAdminSettingPage = ({ searchAdmin, modalState }) => {
 };
 
 MainAdminSettingPage.propTypes = {
-  searchAdmin: PropTypes.string.isRequired,
-  modalState: PropTypes.bool.isRequired,
+  searchAdmin: PropTypes.string,
+  modalState: PropTypes.bool,
+  deletingStaffMembers: PropTypes.bool,
 };
 export default MainAdminSettingPage;

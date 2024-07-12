@@ -402,7 +402,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
 };
 
 DeleteStaffMember.propTypes = {
-  modalState: PropTypes.bool.isRequired,
-  setModalState: PropTypes.func.isRequired,
+  modalState: PropTypes.bool,
+  setModalState: PropTypes.func,
 };
 export default DeleteStaffMember;
