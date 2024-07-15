@@ -18,6 +18,8 @@ import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { DangerButton } from "../../../styles/global/DangerButton";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 const StripeTransactionPerConsumer = ({ searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -208,7 +210,11 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
               lineHeight: "20px" /* 142.857% */,
             }}
           >
-            {checkPaymentID[1] === "cash" ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${String(checkPaymentID[4]).split("**")[1]}` : `${checkPaymentID[0]}_${checkPaymentID[1]}`}
+            {checkPaymentID[1] === "cash"
+              ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${
+                  String(checkPaymentID[4]).split("**")[1]
+                }`
+              : `${checkPaymentID[0]}_${checkPaymentID[1]}`}
           </p>
         );
       },
@@ -281,12 +287,13 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
               justifyContent: "flex-end",
               alignItems: "center",
               width: "100%",
+              gap: "5px",
             }}
           >
             <button
               style={{
                 ...DangerButton,
-                background: "transparent",
+                // background: "transparent",
                 outline: "none",
                 display: `${
                   checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
@@ -304,6 +311,8 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                       ? "none"
                       : "flex"
                   }`,
+                  border: "transparent",
+                  outline: "none",
                 }}
               >
                 Capture
@@ -312,8 +321,8 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
 
             <button
               style={{
-                ...DangerButton,
-                background: "transparent",
+                ...BlueButton,
+                // background: "transparent",
                 outline: "none",
                 display: `${
                   checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
@@ -324,13 +333,15 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
             >
               <p
                 style={{
-                  ...DangerButtonText,
+                  ...BlueButtonText,
                   display: `${
                     checkPaymentID[1] === "cash" ||
                     checkPaymentID[1].length < 13
                       ? "none"
                       : "flex"
                   }`,
+                  border: "transparent",
+                  outline: "none",
                 }}
               >
                 Release
