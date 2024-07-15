@@ -31,6 +31,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { QuestionIcon, UploadIcon } from "../../../../components/icons/Icons";
+import { checkArray } from "../../../../components/utils/checkArray";
 
 const options = [
   { value: "Select an option" },
@@ -39,15 +40,15 @@ const options = [
   { value: "Sale" },
 ];
 
-const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
-  console.log('consumerInfo', consumerInfoSqlDb)
+const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb, closeModal }) => {
+  console.log("consumerInfo", consumerInfoSqlDb);
   const [selectedItem, setSelectedItem] = useState("");
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState(options[0].value);
   const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
-  const { profile } = useSelector((state) => state.staffDetail);
+  const { customer } = useSelector((state) => state.customer);
   const newEventInfo = {};
   const queryClient = useQueryClient();
   const {
@@ -142,16 +143,20 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
   }, [selectedItem]);
 
   const createNewLease = async (props) => {
-    const staffMember = await devitrakApi.post("/db_staff/consulting-member", {
-      email: profile.email,
-    });
+    const staffMember = await devitrakApi.post(
+      "/db_consumer/consulting-consumer",
+      {
+        email: customer.email,
+      }
+    );
     for (let data of props.deviceInfo) {
-      await devitrakApi.post("/db_lease/new-lease", {
+      await devitrakApi.post("/db_lease/new-consumer-lease", {
         staff_admin_id: user.sqlMemberInfo.staff_id,
         company_id: user.sqlInfo.company_id,
         subscription_expected_return_data: formatDate(new Date()),
+        subscription_initial_date: new Date().getTime(),
         location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
-        staff_member_id: staffMember.data.member.at(-1).staff_id,
+        consumer_member_id: checkArray(staffMember.data.consumer).consumer_id,
         device_id: data.item_id,
       });
     }
@@ -159,18 +164,18 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `Leased equipment: ${profile.firstName} ${
-          profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
-        venue_name: `Leased equipment: ${profile.firstName} ${
-          profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
+        event_name: `Leased equipment: ${customer.firstName} ${
+          customer.lastName
+        } / email:${customer.email} / ${new Date().toLocaleDateString()}`,
+        venue_name: `Leased equipment: ${customer.firstName} ${
+          customer.lastName
+        } / email:${customer.email} / ${new Date().toLocaleDateString()}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
         zip_address: props.zip,
-        email_company: profile.email,
-        phone_number: profile.adminUserInfo.phone,
+        email_company: customer.email,
+        phone_number: customer.phoneNumber,
         company_assigned_event_id: user.sqlInfo.company_id,
         contact_name: `${user.name} ${user.lastName}`,
       });
@@ -206,7 +211,7 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
     queryClient.invalidateQueries({
-      queryKey: ["staffMemberInfo"],
+      queryKey: ["consumerSqlInfoQuery"],
       exact: true,
     });
     queryClient.invalidateQueries({
@@ -218,7 +223,7 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
       exact: true,
     });
 
-    await navigate(`/staff/${profile.adminUserInfo._id}/main`);
+    await closeModal();
   };
   const option1 = async (props) => {
     await createEvent(props.template);
@@ -871,9 +876,7 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb }) => {
           >
             <Button
               disabled={loadingStatus}
-              onClick={() =>
-                navigate(`/staff/${profile.adminUserInfo._id}/main`)
-              }
+              onClick={() => navigate(`/consumers/${customer.uid}`)}
               style={{
                 width: "100%",
                 border: "1px solid var(--gray-300, #D0D5DD)",
