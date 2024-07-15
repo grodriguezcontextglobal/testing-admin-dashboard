@@ -137,7 +137,7 @@ const MainPage = () => {
         </Grid>
       </Grid>
       {modalState && (
-        <NewStaffMember modalState={modalState} setModalState={setModalState} />
+        <NewStaffMember modalState={modalState} setModalState={setModalState} deletingStaffMembers={deleteModalState}/>
       )}
       {deleteModalState && (
         <DeleteStaffMember
