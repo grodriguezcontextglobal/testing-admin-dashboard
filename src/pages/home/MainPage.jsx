@@ -65,7 +65,7 @@ const MainPage = () => {
       );
     }
     return dispatch(onAddSubscriptionRecord([]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subscriptionPerCompanyQuery.data]);
   checkForActiveSubscriptionPerCompany();
   useEffect(() => {
@@ -77,7 +77,7 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     notificationStatus,
     // inventoryQuery.data,

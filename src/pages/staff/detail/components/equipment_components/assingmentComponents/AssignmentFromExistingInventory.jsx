@@ -42,7 +42,6 @@ const AssignmentFromExistingInventory = () => {
         company: user.company,
         warehouse: true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const staffMemberQuery = useQuery({
@@ -51,7 +50,6 @@ const AssignmentFromExistingInventory = () => {
       devitrakApi.post("/db_staff/consulting-member", {
         email: profile.email,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const queryClient = useQueryClient();
@@ -155,10 +153,6 @@ const AssignmentFromExistingInventory = () => {
     }
   };
 
-  //   const removeItemSelected = (item) => {
-  //     const filter = selectedItem.filter((_, index) => index !== item);
-  //     return setSelectedItem(filter);
-  //   };
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg) => {
     api.open({
