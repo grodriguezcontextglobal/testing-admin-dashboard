@@ -23,11 +23,6 @@ const ModalPayment = ({
       onCancel={() => closeModal()}
       footer={[]}
     >
-      {/* <StripeCheckoutElementAdmin
-        clientSecret={clientSecret}
-        total={total}
-        type={type}
-      /> */}
       <CheckoutElementCompanySubscription
         clientSecret={clientSecret}
         total={total}

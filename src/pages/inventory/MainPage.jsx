@@ -31,7 +31,6 @@ const MainPage = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {

@@ -51,6 +51,7 @@ const SubscriptionMainPage = () => {
       if (resp.data.ok) {
         await devitrakApi.post("/subscription/new_subscription", {
           company: user.company,
+          stripeCompanyID: user.companyData.stripe_customer_id,
           record: [
             {
               subscription_id: resp.data.data.id,

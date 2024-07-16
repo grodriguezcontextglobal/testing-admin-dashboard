@@ -9,10 +9,12 @@ import { useSelector } from "react-redux";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { useLocation } from "react-router-dom";
 
 export const StripeCheckoutFormSubscription = () => {
   const { subscription } = useSelector((state) => state.subscription);
   const stripe = useStripe();
+  const location = useLocation()
   const elements = useElements();
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +84,7 @@ export const StripeCheckoutFormSubscription = () => {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: myUrl + "/", //create-event-page/event-detail
+        return_url: myUrl + `${location.pathname !== "/event/new_subscription" ? "/" : "/create-event-page/event-detail"}`,
       },
     });
     if (error.type === "card_error" || error.type === "validation_error") {
