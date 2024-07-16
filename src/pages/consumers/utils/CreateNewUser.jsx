@@ -91,6 +91,12 @@ export const CreateNewConsumer = ({
         "attendeesList",
         "consumersList",
       ]);
+      await devitrakApi.post("/db_consumer/new_consumer", {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phoneNumber: contactPhoneNumber,
+      });
       openNotificationWithIcon("success", "New consumer added");
       setLoading(false);
       closeDeviceModal();

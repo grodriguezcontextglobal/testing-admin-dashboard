@@ -156,6 +156,12 @@ const Login = () => {
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: checkArray(companyInfoTable.data.company).company_id,
       });
+      const subscriptionCompanyInfo = await devitrakApi.post(
+        "/subscription/company-subscription",
+        {
+          companyName: props.company_name,
+        }
+      );
       dispatch(
         onLogin({
           data: {
@@ -177,7 +183,13 @@ const Login = () => {
             ...checkArray(companyInfoTable.data.company),
             stripeID: checkArray(stripeSQL.data.stripe),
           },
+          subscription: subscriptionCompanyInfo.data.subscription.subscription ?? {},
         })
+      );
+      dispatch(
+        onAddSubscription(
+          subscriptionCompanyInfo.data.subscription.subscription
+        )
       );
       dispatch(clearErrorMessage());
       queryClient.clear();
@@ -330,7 +342,7 @@ const Login = () => {
             </p>
             <form
               onSubmit={handleSubmit(onSubmitLogin)}
-              style={{ width: formFittingTrigger(), }} //formFittingTrigger(),padding: "0 20px 0 0" 
+              style={{ width: formFittingTrigger() }} //formFittingTrigger(),padding: "0 20px 0 0"
             >
               <Grid
                 marginY={"20px"}

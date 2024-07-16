@@ -16,12 +16,6 @@ const Assignment = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
   return (
-    <>
-      {/* {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
-        <div style={CenteringGrid}>
-          <Loading />
-        </div>
-      ) : ( */}
       <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]}>
         <Grid
           container
@@ -65,8 +59,6 @@ const Assignment = () => {
           )}
         </Grid>
       </Modal>
-      {/* )} */}
-    </>
   );
 };
 

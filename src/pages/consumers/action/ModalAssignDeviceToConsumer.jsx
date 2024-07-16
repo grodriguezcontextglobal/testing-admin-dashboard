@@ -28,7 +28,6 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
     };
   }, []);
 
-  console.log(checkConsumerInSqlDb?.data?.data)
   const closeModal = () => {
     return setAssignDevice(false);
   };
@@ -74,9 +73,9 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
           />
         </Divider>
         {existingOption ? (
-          <AssignmentFromExistingInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} />
+          <AssignmentFromExistingInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} closeModal={closeModal} />
         ) : (
-          <AssignemntNewDeviceInInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} />
+          <AssignemntNewDeviceInInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} closeModal={closeModal} />
         )}
       </Grid>
     </Modal>

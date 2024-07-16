@@ -22,7 +22,7 @@ import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { checkArray } from "../../../../components/utils/checkArray";
-const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
+const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
       quantity: 1,
@@ -174,14 +174,13 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
       }
     );
 
-    console.log("customerInfoQuery.data", customerInfoQuery?.data);
     if (customerInfoQuery.data) {
       for (let data of props.deviceInfo) {
         await devitrakApi.post("/db_lease/new-consumer-lease", {
           staff_admin_id: user.sqlMemberInfo.staff_id,
           company_id: user.sqlInfo.company_id,
           subscription_expected_return_data: formatDate(new Date()),
-          subscription_initial_date:formatDate(new Date()),
+          subscription_initial_date: formatDate(new Date()),
           location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
           consumer_member_id: checkArray(customerInfoQuery.data.consumer)
             .consumer_id,
@@ -227,7 +226,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
       });
     }
     queryClient.invalidateQueries({
-      queryKey: ["staffMemberInfo"],
+      queryKey: ["consumerSqlInfoQuery"],
       exact: true,
     });
     queryClient.invalidateQueries({
@@ -268,6 +267,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
       setLoadingStatus(false);
+      return closeModal()
     }
   };
   const option2 = async (props) => {
@@ -315,6 +315,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
     });
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
+    return closeModal()
   };
 
   const option3 = async (props) => {
@@ -354,6 +355,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
     });
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
+    return closeModal()
   };
 
   const assignDeviceToStaffMember = async () => {
@@ -579,19 +581,36 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
                               textTransform: "capitalize",
                             }}
                           >
-                            <span style={{ textAlign: "left", width:"fit-content" }}>
+                            <span
+                              style={{
+                                textAlign: "left",
+                                width: "fit-content",
+                              }}
+                            >
                               <span style={{ fontWeight: 700 }}>
                                 {item[0].category_name}
                               </span>{" "}
                               {item[0].item_group}
                             </span>
-                            <span style={{ textAlign:"left", width:"fit-content" }}>
+                            <span
+                              style={{
+                                textAlign: "left",
+                                width: "fit-content",
+                              }}
+                            >
                               Location:{" "}
                               <span style={{ fontWeight: 700 }}>
                                 {item[0].location}
                               </span>
                             </span>
-                            <span style={{ textAlign: "right", width:"fit-content" }}>Total available: {item.length}</span>
+                            <span
+                              style={{
+                                textAlign: "right",
+                                width: "fit-content",
+                              }}
+                            >
+                              Total available: {item.length}
+                            </span>
                           </p>
                         ), //renderOptionAsNeededFormat(JSON.stringify(option))
                         value: JSON.stringify(item),
@@ -692,7 +711,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb }) => {
           >
             <Button
               onClick={() =>
-                navigate(`/staff/${customer.adminUserInfo.id}/main`)
+                navigate(`/consumers/${customer.uid}`)
               }
               style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
             >
