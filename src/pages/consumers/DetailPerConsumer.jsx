@@ -25,6 +25,7 @@ import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
 import { useState } from "react";
+import LeasesTable from "./tables/LeasesTable";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
@@ -336,7 +337,7 @@ const DetailPerConsumer = () => {
                 searchValue={watch("searchEvent")}
               />
             ) : (
-              ""
+              <LeasesTable />
             )}
           </Grid>
         </Grid>
