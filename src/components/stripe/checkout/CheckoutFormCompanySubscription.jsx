@@ -7,6 +7,7 @@ import {
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { useLocation } from "react-router-dom";
 
 const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
   const stripe = useStripe();
@@ -14,6 +15,7 @@ const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
   const [errorMessage, setErrorMessage] = useState();
   const [loading, setLoading] = useState(false);
   const myUrl = window.location.origin;
+  const location = useLocation();
   const handleError = (error) => {
     setLoading(false);
     setErrorMessage(error.message);
@@ -92,7 +94,11 @@ const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
       elements,
       clientSecret,
       confirmParams: {
-        return_url: `${myUrl}/confirm-subscription`,
+        return_url: `${myUrl}/${
+          location.pathname === "/event/new_subscription"
+            ? "create-event-page/event-detail"
+            : "confirm-subscription"
+        }`,
       },
     });
 
@@ -100,7 +106,7 @@ const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
       // This point is only reached if there's an immediate error when confirming the Intent.
       // Show the error to your customer (for example, "payment details incomplete").
       handleError(error);
-    } 
+    }
   };
 
   return (
