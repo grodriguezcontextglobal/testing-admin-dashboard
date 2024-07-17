@@ -252,12 +252,20 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     navigator(`/consumers/${customer.uid}`);
   };
   return (
+    <Grid
+      style={{
+        padding: "5px",
+        display: "flex",
+        justifyContent: "center",
+        alignSelf: "stretch",
+      }}
+      container
+    >
       <Grid
         style={{
-          padding: "5px",
           display: "flex",
-          justifyContent: "center",
-          alignSelf: "stretch",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
         container
       >
@@ -267,336 +275,328 @@ const ConsumerDeviceLostFeeCreditCard = () => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
+          <p style={{ ...TextFontSize30LineHeight38, textTransform: "none" }}>
+            Consumer
+          </p>
+          <Link to="/event/new_subscription">
+            <button
+              style={{
+                width: "fit-content",
+                border: "1px solid var(--blue-dark-600, #155EEF)",
+                borderRadius: "8px",
+                background: "var(--blue-dark-600, #155EEF)",
+                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+              }}
+            >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF"
+                width={20}
+                height={20}
+              />
+              &nbsp;
+              <p
+                style={{
+                  color: "var(--base-white, #FFF",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  fontFamily: "Inter",
+                  lineHeight: "20px",
+                }}
+              >
+                Add new event
+              </p>
+            </button>
+          </Link>
+        </Grid>
+      </Grid>
+      <Grid
+        style={{
+          paddingTop: "0px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+        container
+      >
+        <Grid marginY={0} item xs={8}>
           <Grid
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
             item
             xs={12}
-            sm={12}
-            md={12}
-            lg={12}
           >
-            <p style={{ ...TextFontSize30LineHeight38, textTransform: "none" }}>
-              Consumer
-            </p>
-            <Link to="/event/new_subscription">
-              <button
-                style={{
-                  width: "fit-content",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  borderRadius: "8px",
-                  background: "var(--blue-dark-600, #155EEF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                }}
-              >
-                <Icon
-                  icon="ic:baseline-plus"
-                  color="var(--base-white, #FFF"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
-                <p
-                  style={{
-                    color: "var(--base-white, #FFF",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
-                  }}
-                >
-                  Add new event
-                </p>
-              </button>
-            </Link>
-          </Grid>
-        </Grid>
-        <Grid
-          style={{
-            paddingTop: "0px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-        >
-          <Grid marginY={0} item xs={8}>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
+            <button
+              style={{
+                backgroundColor: "transparent",
+                outline: "none",
+                margin: 0,
+                padding: 0,
+              }}
+              onClick={() => handleBackAction()}
             >
-              <button
-                style={{
-                  backgroundColor: "transparent",
-                  outline: "none",
-                  margin: 0,
-                  padding: 0,
-                }}
-                onClick={() => handleBackAction()}
-              >
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    textTransform: "capitalize",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "var(--blue-dark-600, #155EEF)",
-                    cursor: "pointer",
-                  }}
-                >
-                  All consumers
-                </p>
-              </button>
               <p
                 style={{
                   ...TextFontsize18LineHeight28,
                   textTransform: "capitalize",
                   textAlign: "left",
                   fontWeight: 600,
-                  color: "var(--gray-900, #101828)",
+                  color: "var(--blue-dark-600, #155EEF)",
+                  cursor: "pointer",
                 }}
               >
-                <Icon icon="mingcute:right-line" />
-                {customer?.name} {customer?.lastName}
-              </p>{" "}
-            </Grid>
+                All consumers
+              </p>
+            </button>
+            <p
+              style={{
+                ...TextFontsize18LineHeight28,
+                textTransform: "capitalize",
+                textAlign: "left",
+                fontWeight: 600,
+                color: "var(--gray-900, #101828)",
+              }}
+            >
+              <Icon icon="mingcute:right-line" />
+              {customer?.name} {customer?.lastName}
+            </p>{" "}
           </Grid>
-          <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
-        <Divider />
+        <Grid textAlign={"right"} item xs={4}></Grid>
+      </Grid>
+      <Divider />
+      <Grid
+        gap={"5px"}
+        display={"flex"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        alignSelf={"flex-start"}
+        container
+      >
         <Grid
-          gap={"5px"}
           display={"flex"}
-          justifyContent={"space-between"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          item
+          xs={12}
+          sm={12}
+          md={4}
+          lg={4}
+        >
+          <ConsumerDetailInformation />
+        </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-start"}
           alignItems={"center"}
           alignSelf={"flex-start"}
+          item
+          xs={12}
+          sm={12}
+          md={4}
+          lg={4}
+        >
+          <ConsumerDetailInfoCntact />
+        </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-end"}
+          alignItems={"center"}
+          alignSelf={"flex-start"}
+          item
+          xs={12}
+          sm={12}
+          md={3}
+          lg={3}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <button
+              style={{
+                outline: "none",
+                display: "flex",
+                padding: "10px 16px",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "8px",
+                borderRadius: "8px",
+                border: "1px solid var(--Blue-dark-50, #EFF4FF)",
+                background: "var(--Blue-dark-50, #EFF4FF)",
+              }}
+            >
+              <EditIcon />
+              <p
+                style={{
+                  color: "var(--Blue-dark-700, #004EEB)",
+                  fontFamily: "Inter",
+                  fontSize: "14px",
+                  fontStyle: "normal",
+                  fontWeight: "600",
+                  lineHeight: "20px",
+                }}
+              >
+                Edit
+              </p>
+            </button>
+          </div>
+        </Grid>
+      </Grid>
+      <Divider />{" "}
+      <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
+        <CardRendered
+          title={"Group"}
+          props={"No group provided"}
+          optional={null}
+        />
+      </Grid>
+      <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
+        <CardActionsButton />
+      </Grid>
+      <Divider />{" "}
+      <form
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "10px",
+        }}
+        onSubmit={handleSubmit(triggerStripePaymentIntent)}
+      >
+        <Grid
+          display={"flex"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
           container
         >
           <Grid
             display={"flex"}
-            justifyContent={"flex-start"}
             alignItems={"center"}
+            justifyContent={"flex-start"}
             item
             xs={12}
             sm={12}
-            md={4}
-            lg={4}
+            md={12}
+            lg={3}
           >
-            <ConsumerDetailInformation />
+            <p style={TextFontsize18LineHeight28}>
+              Credit card transaction for lost device
+            </p>
           </Grid>
           <Grid
             display={"flex"}
-            justifyContent={"flex-start"}
             alignItems={"center"}
-            alignSelf={"flex-start"}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={4}
-          >
-            <ConsumerDetailInfoCntact />
-          </Grid>
-          <Grid
-            display={"flex"}
             justifyContent={"flex-end"}
+            gap={"10px"}
+            margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={3}
+          >
+            <p
+              style={{
+                width: "fit-content",
+                color: "#000",
+                fontSize: "14px",
+                fontWeight: "600",
+                fontFamily: "Inter",
+                lineHeight: "20px",
+                textTransform: "none",
+              }}
+            >
+              Serial number
+            </p>
+
+            <OutlinedInput
+              disabled
+              value={receiverToReplaceObject.serialNumber}
+              style={OutlinedInputStyle}
+            />
+          </Grid>
+          <Grid
+            display={"flex"}
             alignItems={"center"}
-            alignSelf={"flex-start"}
+            justifyContent={"flex-end"}
+            gap={"10px"}
+            margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={3}
+          >
+            <p
+              style={{
+                color: "#000",
+                fontSize: "14px",
+                fontWeight: "600",
+                fontFamily: "Inter",
+                lineHeight: "20px",
+                textTransform: "none",
+              }}
+            >
+              Amount
+            </p>
+            <OutlinedInput
+              disabled={blocking}
+              id="outlined-adornment-amount"
+              style={OutlinedInputStyle}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+              {...register("total", { required: true })}
+              name="total"
+            />
+            {errors?.total && (
+              <Alert message="Amount is required" type="error" />
+            )}
+          </Grid>
+          <Grid
+            display={"flex"}
+            alignItems={"center"}
+            justifyContent={"flex-end"}
+            gap={2}
             item
             xs={12}
             sm={12}
             md={3}
-            lg={3}
+            lg={2}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              <button
-                style={{
-                  outline: "none",
-                  display: "flex",
-                  padding: "10px 16px",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "8px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--Blue-dark-50, #EFF4FF)",
-                  background: "var(--Blue-dark-50, #EFF4FF)",
-                }}
-              >
-                <EditIcon />
-                <p
-                  style={{
-                    color: "var(--Blue-dark-700, #004EEB)",
-                    fontFamily: "Inter",
-                    fontSize: "14px",
-                    fontStyle: "normal",
-                    fontWeight: "600",
-                    lineHeight: "20px",
-                  }}
-                >
-                  Edit
-                </p>
-              </button>
-            </div>
+            <Button style={GrayButton} onClick={() => handleBackAction()}>
+              <p style={GrayButtonText}>Cancel</p>
+            </Button>{" "}
+            <Button style={BlueButton} type="submit">
+              <p style={BlueButtonText}>Add CC information</p>
+            </Button>
           </Grid>
         </Grid>
-        <Divider />{" "}
-        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-          <CardRendered
-            title={"Group"}
-            props={"No group provided"}
-            optional={null}
+      </form>
+      <Grid item xs={12}>
+        {clientSecret !== "" && (
+          <LostDeviceStripeElement
+            clientSecret={clientSecret}
+            total={watch("total")}
+            customerStripeId={customer.uid}
+            customer={customer}
           />
-        </Grid>
-        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-          <CardActionsButton />
-        </Grid>
-        <Divider />{" "}
-        <form
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-          onSubmit={handleSubmit(triggerStripePaymentIntent)}
-        >
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            container
-          >
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-start"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={3}
-            >
-              <p style={TextFontsize18LineHeight28}>
-                Credit card transaction for lost device
-              </p>
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={"10px"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-              <p
-                style={{
-                  width: "fit-content",
-                  color: "#000",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Serial number
-              </p>
-
-              <OutlinedInput
-                disabled
-                value={receiverToReplaceObject.serialNumber}
-                style={OutlinedInputStyle}
-              />
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={"10px"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-              <p
-                style={{
-                  color: "#000",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Amount
-              </p>
-              <OutlinedInput
-                disabled={blocking}
-                id="outlined-adornment-amount"
-                style={OutlinedInputStyle}
-                startAdornment={
-                  <InputAdornment position="start">$</InputAdornment>
-                }
-                {...register("total", { required: true })}
-                name="total"
-              />
-              {errors?.total && (
-                <Alert message="Amount is required" type="error" />
-              )}
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={2}
-              item
-              xs={12}
-              sm={12}
-              md={3}
-              lg={2}
-            >
-              <Button style={GrayButton} onClick={() => handleBackAction()}>
-                <p style={GrayButtonText}>Cancel</p>
-              </Button>{" "}
-              <Button style={BlueButton} type="submit">
-                <p style={BlueButtonText}>Add CC information</p>
-              </Button>
-            </Grid>
-          </Grid>
-        </form>
-        <Grid item xs={12}>
-          {clientSecret !== "" && (
-            <LostDeviceStripeElement
-              clientSecret={clientSecret}
-              total={watch("total")}
-              customerStripeId={customer.uid}
-              customer={customer}
-            />
-          )}
-        </Grid>{" "}
-      </Grid>
+        )}
+      </Grid>{" "}
+    </Grid>
   );
 };
 
