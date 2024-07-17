@@ -15,6 +15,7 @@ const Assignment = () => {
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
+  
   return (
       <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]}>
         <Grid
@@ -47,8 +48,8 @@ const Assignment = () => {
             <Switch
               value={existingOption}
               onChange={() => setExistingOption(!existingOption)}
-              checkedChildren="From existing inventory"
-              unCheckedChildren="New inventory device"
+              // checkedChildren="From existing inventory"
+              // unCheckedChildren="New inventory device"
               defaultChecked
             />
           </Divider>
