@@ -67,8 +67,8 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
           <Switch
             value={existingOption}
             onChange={() => setExistingOption(!existingOption)}
-            checkedChildren="From existing inventory"
-            unCheckedChildren="New inventory device"
+            // checkedChildren="From existing inventory"
+            // unCheckedChildren="New inventory device"
             defaultChecked
           />
         </Divider>
