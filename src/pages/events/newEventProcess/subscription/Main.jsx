@@ -4,19 +4,16 @@ import { Divider, message } from "antd";
 import _ from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import {
-  onAddNewSubscription,
-  onAddSubscriptionRecord,
-} from "../../../../store/slices/subscriptionSlice";
+import Loading from "../../../../components/animation/Loading";
+import { onAddSubscriptionRecord } from "../../../../store/slices/subscriptionSlice";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import DescriptionFormat from "./components/DescriptionFormat";
 import ModalAnnualPayment from "./components/ModalAnnualPayment";
 import ModalMonthlyPayment from "./components/ModalMonthlyPayment";
 import OptionSubscriptionTitle from "./components/OptionSubscriptionTitle";
 import PricingTable from "./table/PricingTable";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import Loading from "../../../../components/animation/Loading";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
   const [value, setValue] = useState(0);
@@ -24,6 +21,7 @@ const Main = () => {
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const checkEventsPerCompany = useQuery({
     queryKey: ["eventsPerCompany"],
     queryFn: () =>
@@ -45,6 +43,9 @@ const Main = () => {
   }, []);
   checkExistingCompanyRecord();
 
+  const renderingStatus = (props) => {
+    return props === "active" || props === "trialing";
+  };
   const recordStored = (props) => {
     if (props.length > 0) {
       return props;
@@ -53,30 +54,36 @@ const Main = () => {
       const original = searchingExistingSubscriptionRecord.current.record;
       if (original) {
         for (let data of original) {
-          result.add({
-            active: data.status === "active" ? true : false,
-          });
+          if (data.subscription_id !== "unknown") {
+            result.add({
+              ...data,
+              active: renderingStatus(data.status),
+            });
+          }
         }
         return Array.from(result);
       }
     }
   };
+
   const checkSubscriptionInStripe = useCallback(async () => {
     const reference = searchingExistingSubscriptionRecord.current.record;
     const checkRecord = new Set();
     if (reference?.length > 0) {
       for (let index = 0; index < reference.length; index++) {
-        const check = await devitrakApi.get(
-          `/subscription/subscriptions/${reference[index].subscription_id}`
-        );
-        checkRecord.add({
-          subscription_id: check.data.subscriptions.id,
-          active: check.data.subscriptions.status === "active" ? true : false,
-          cancel_at: check.data.subscriptions.cancel_at,
-          created_at: check.data.subscriptions.created,
-          subscription_type:
-            check.data.subscriptions.items.data[0].plan.interval,
-        });
+        if (reference[index].subscription_id !== "unknown") {
+          const check = await devitrakApi.get(
+            `/subscription/subscriptions/${reference[index].subscription_id}`
+          );
+          checkRecord.add({
+            subscription_id: check.data.subscriptions.id,
+            active: renderingStatus(check.data.subscriptions.status),
+            cancel_at: check.data.subscriptions.cancel_at,
+            created_at: check.data.subscriptions.created,
+            subscription_type:
+              check.data.subscriptions.items.data[0].plan.interval,
+          });
+        }
       }
     }
     await devitrakApi.patch(
@@ -88,10 +95,19 @@ const Main = () => {
         },
       }
     );
+    searchingExistingSubscriptionRecord.current.record = recordStored(
+      Array.from(checkRecord)
+    );
     return dispatch(
       onAddSubscriptionRecord(recordStored(Array.from(checkRecord)))
     );
-  }, [searchingExistingSubscriptionRecord.current.length, user.company]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    searchingExistingSubscriptionRecord.current?.record?.length,
+    user.company,
+    location.key,
+  ]);
+
   checkSubscriptionInStripe();
   const [messageApi, contextHolder] = message.useMessage();
   const success = () => {
@@ -114,7 +130,6 @@ const Main = () => {
   useEffect(() => {
     const controller = new AbortController();
     checkEventsPerCompany.refetch();
-
     return () => {
       controller.abort();
     };
@@ -136,36 +151,42 @@ const Main = () => {
   } else {
     const handleSubmitEventPayment = async (props) => {
       if (props !== "00") {
-        const resp = await devitrakApi.post("/stripe/create-subscriptions", {
-          stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
-          items: [{ price: props }],
-          period: value > 0 ? "year" : "month",
-        });
+        const resp = await devitrakApi.post(
+          "/stripe/create-subscriptions_no_trial",
+          {
+            stripeCustomerID: user.sqlInfo.stripeID.stripe_id,
+            items: [{ price: props }],
+            period: value > 0 ? "year" : "month",
+          }
+        );
         if (resp.data.ok) {
-          if (searchingExistingSubscriptionRecord.current.company) {
-            const recordTemplate = {
-              subscription_id: resp.data.data.id,
-              active: false,
-              cancel_at: resp.data.data.cancel_at,
-              created_at: resp.data.data.created,
-              subscription_type: value > 0 ? "year" : "month",
-            };
-            const updateResponse = await devitrakApi.patch(
-              `/subscription/update-subscription/${searchingExistingSubscriptionRecord.current.id}`,
-              {
-                newSubscriptionData: {
-                  company: user.company,
-                  record: [
-                    recordTemplate,
-                    ...searchingExistingSubscriptionRecord.current.record,
-                  ],
-                },
-              }
-            );
-            dispatch(
-              onAddSubscriptionRecord(updateResponse.data.subscription.record)
-            );
-            dispatch(onAddNewSubscription(resp.data.data));
+          if (
+            Array.isArray(searchingExistingSubscriptionRecord.current.record) &&
+            searchingExistingSubscriptionRecord.current.record.length > 0
+          ) {
+            // const recordTemplate = {
+            //   subscription_id: resp.data.data.id,
+            //   active: false,
+            //   cancel_at: resp.data.data.cancel_at,
+            //   created_at: resp.data.data.created,
+            //   subscription_type: value > 0 ? "year" : "month",
+            // };
+            // const updateResponse = await devitrakApi.patch(
+            //   `/subscription/update-subscription/${searchingExistingSubscriptionRecord.current.id}`,
+            //   {
+            //     newSubscriptionData: {
+            //       company: user.company,
+            //       record: [
+            //         recordTemplate,
+            //         ...searchingExistingSubscriptionRecord.current.record,
+            //       ],
+            //     },
+            //   }
+            // );
+            // dispatch(
+            //   onAddSubscriptionRecord(updateResponse.data.subscription.record)
+            // );
+            // dispatch(onAddNewSubscription(resp.data.data));
             setClientSecret(resp.data.clientSecret);
             return;
           } else {
@@ -181,18 +202,18 @@ const Main = () => {
                 },
               ],
             });
-            dispatch(
-              onAddSubscriptionRecord([
-                {
-                  subscription_id: resp.data.subscriptionId,
-                  active: false,
-                  cancel_at: resp.data.data.cancel_at,
-                  subscription_type: value > 0 ? "year" : "month",
-                  created_at: resp.data.created,
-                },
-              ])
-            );
-            dispatch(onAddNewSubscription(resp.data.data));
+            // dispatch(
+            //   onAddSubscriptionRecord([
+            //     {
+            //       subscription_id: resp.data.subscriptionId,
+            //       active: false,
+            //       cancel_at: resp.data.data.cancel_at,
+            //       subscription_type: value > 0 ? "year" : "month",
+            //       created_at: resp.data.created,
+            //     },
+            //   ])
+            // );
+            // dispatch(onAddNewSubscription(resp.data.data));
             setClientSecret(resp.data.clientSecret);
             return;
           }
