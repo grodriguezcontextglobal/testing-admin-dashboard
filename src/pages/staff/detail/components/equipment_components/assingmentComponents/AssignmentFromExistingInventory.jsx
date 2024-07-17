@@ -21,6 +21,7 @@ import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInpu
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
+import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 const AssignmentFromExistingInventory = () => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -377,6 +378,43 @@ const AssignmentFromExistingInventory = () => {
       await option3({ groupingType: groupingType, template: template });
     }
   };
+  const renderTitle = () => {
+    return (
+      <>
+        <InputLabel
+          id="eventName"
+          style={{ marginBottom: "6px", width: "100%" }}
+        >
+          <p
+            style={{
+              ...TextFontSize30LineHeight38,
+              textAlign: "left",
+              color: "var(--gray600, #475467)",
+            }}
+          >
+            Assign a device to staff member from existing inventory.
+          </p>
+        </InputLabel>
+        <InputLabel
+          id="eventName"
+          style={{ marginBottom: "6px", width: "100%" }}
+        >
+          <p
+            style={{
+              ...TextFontSize20LineHeight30,
+              color: "var(--gray600, #475467)",
+              textAlign: "left",
+              textTransform: "none",
+            }}
+          >
+            You can enter all the details manually or use a scanner to enter the
+            serial number.
+          </p>
+        </InputLabel>
+      </>
+    );
+  };
+
   return (
     <>
       {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
@@ -393,6 +431,7 @@ const AssignmentFromExistingInventory = () => {
           key={"settingUp-deviceList-event"}
         >
           {contextHolder}
+          {renderTitle()}
           <Grid
             style={{
               borderRadius: "8px",
