@@ -5,24 +5,23 @@ import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { formatDate } from "../../../inventory/utils/dateFormat";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
-import { Subtitle } from "../../../../styles/global/Subtitle";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import { PlusIcon } from "../../../../components/icons/Icons";
-import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
+import { checkArray } from "../../../../components/utils/checkArray";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../styles/global/GrayButton";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { checkArray } from "../../../../components/utils/checkArray";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import { formatDate } from "../../../inventory/utils/dateFormat";
 const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -37,7 +36,6 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const newEventInfo = {};
   let dataFound = useRef([]);
   const customerSqlDb = useRef({});
-  const navigate = useNavigate();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInventoryCheckingQuery"],
     queryFn: () =>
@@ -268,7 +266,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
       setLoadingStatus(false);
-      return closeModal()
+      return;
     }
   };
   const option2 = async (props) => {
@@ -316,7 +314,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     });
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
-    return closeModal()
+    return;
   };
 
   const option3 = async (props) => {
@@ -356,7 +354,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     });
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
-    return closeModal()
+    return;
   };
 
   const assignDeviceToStaffMember = async () => {
@@ -382,12 +380,15 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     const groupingType = _.groupBy(dataFound.current, "item_group");
     if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
       await option1({ groupingType: groupingType, template: template });
+      return closeModal();
     }
     if (selectedItem.length > 0 && watch("startingNumber")?.length > 0) {
       await option2({ groupingType: groupingType, template: template });
+      return closeModal();
     }
     if (selectedItem.length > 0 && watch("startingNumber")?.length === 0) {
       await option3({ groupingType: groupingType, template: template });
+      return closeModal();
     }
   };
   const renderTitle = () => {
@@ -749,9 +750,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
             lg={12}
           >
             <Button
-              onClick={() =>
-                navigate(`/consumers/${customer.uid}`)
-              }
+              onClick={() => closeModal()}
               style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
             >
               <p style={{ ...GrayButtonText, textTransform: "none" }}>

@@ -12,26 +12,25 @@ import {
   AutoComplete,
   Avatar,
   Divider,
-  Tooltip,
   notification,
   Select,
+  Tooltip,
 } from "antd";
 import _ from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { formatDate } from "../../../inventory/utils/dateFormat";
-import { convertToBase64 } from "../../../../components/utils/convertToBase64";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
-import { Subtitle } from "../../../../styles/global/Subtitle";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { QuestionIcon, UploadIcon } from "../../../../components/icons/Icons";
 import { checkArray } from "../../../../components/utils/checkArray";
+import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import { formatDate } from "../../../inventory/utils/dateFormat";
 
 const options = [
   { value: "Select an option" },
@@ -57,7 +56,6 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb, closeModal }) => {
     setValue,
     formState: { errors },
   } = useForm();
-  const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -876,7 +874,7 @@ const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb, closeModal }) => {
           >
             <Button
               disabled={loadingStatus}
-              onClick={() => navigate(`/consumers/${customer.uid}`)}
+              onClick={() => closeModal()}
               style={{
                 width: "100%",
                 border: "1px solid var(--gray-300, #D0D5DD)",
