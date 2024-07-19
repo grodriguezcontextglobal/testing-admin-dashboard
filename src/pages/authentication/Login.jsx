@@ -183,12 +183,12 @@ const Login = () => {
             ...checkArray(companyInfoTable.data.company),
             stripeID: checkArray(stripeSQL.data.stripe),
           },
-          subscription: subscriptionCompanyInfo.data.subscription.subscription ?? {},
+          subscription:subscriptionCompanyInfo.data ? subscriptionCompanyInfo.data.subscription.subscription : {},
         })
       );
       dispatch(
         onAddSubscription(
-          subscriptionCompanyInfo.data.subscription.subscription
+          subscriptionCompanyInfo.data ? subscriptionCompanyInfo.data.subscription.subscription : {}
         )
       );
       dispatch(clearErrorMessage());
