@@ -61,12 +61,14 @@ const ListEquipment = () => {
       controller.abort();
     };
   }, []);
+
   const fetchLeasePerStaffMember = async (staffMember) => {
     const staffmemberInfo = await checkArray(staffMember?.data?.member);
     const assignedEquipmentStaffQuery = await devitrakApi.post(
       "/db_lease/consulting-lease",
       {
         staff_member_id: staffmemberInfo.staff_id,
+        subscription_current_in_use: 1,
       }
     );
     if (assignedEquipmentStaffQuery.data.ok) {
