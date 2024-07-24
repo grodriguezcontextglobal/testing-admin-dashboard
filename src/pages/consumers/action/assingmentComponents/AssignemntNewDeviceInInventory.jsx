@@ -39,8 +39,8 @@ const options = [
   { value: "Sale" },
 ];
 
-const AssignemntNewDeviceInInventory = ({ consumerInfoSqlDb, closeModal }) => {
-  console.log("consumerInfo", consumerInfoSqlDb);
+const AssignemntNewDeviceInInventory = ({ closeModal }) => {
+  //consumerInfoSqlDb,
   const [selectedItem, setSelectedItem] = useState("");
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState(options[0].value);
