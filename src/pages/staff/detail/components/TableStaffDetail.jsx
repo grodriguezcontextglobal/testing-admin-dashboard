@@ -26,6 +26,7 @@ const TableStaffDetail = () => {
     return () => {
       controller.abort();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.activeInCompany]);
 
   const columns = [
@@ -220,7 +221,7 @@ const TableStaffDetail = () => {
               alignItems: "center",
             }}
           >
-            Devices assigned:&nbsp;
+           Current assigned devices:&nbsp;
           </p>
         </Grid>
         <ListEquipment />
