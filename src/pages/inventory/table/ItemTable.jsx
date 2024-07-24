@@ -1,12 +1,12 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Popconfirm, Table } from "antd";
+import { Avatar, Button, Divider, Table } from "antd";
 import _ from "lodash";
-import pkg from "prop-types";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+// import pkg from "prop-types";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import {
   GeneralDeviceIcon,
@@ -19,15 +19,13 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 import DownloadingXlslFile from "../actions/DownloadXlsx";
-import CardLocations from "../utils/CardLocations";
-const { PropTypes } = pkg;
 import "../style/details.css";
-import { onLogin } from "../../../store/slices/adminSlice";
-import CardInventoryLocationPreference from "../utils/CardInventoryLocationPreference";
+import RenderingFilters from "./extras/RenderingFilters";
+// const { PropTypes } = pkg;
 
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const { user } = useSelector((state) => state.admin);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
@@ -70,6 +68,7 @@ const ItemTable = ({ searchItem }) => {
           resultFormatToDisplay.add({
             key: `${data.item_id}-${data.event_name}`,
             ...data,
+            brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
             data: {
               ...data,
               location:
@@ -95,28 +94,6 @@ const ItemTable = ({ searchItem }) => {
       controller.abort();
     };
   }, [user.company]);
-
-  const sortingByParameters = (props) => {
-    const totalPerLocation = new Map();
-    const parameter = props;
-    if (itemsInInventoryQuery.data) {
-      for (let data of itemsInInventoryQuery.data.data.items) {
-        if (totalPerLocation.has(data[parameter])) {
-          totalPerLocation.set(
-            data[parameter],
-            totalPerLocation.get(data[parameter]) + 1
-          );
-        } else {
-          totalPerLocation.set(data[parameter], 1);
-        }
-      }
-    }
-    const result = new Set();
-    for (let [key, value] of totalPerLocation) {
-      result.add({ key, value });
-    }
-    return Array.from(result);
-  };
 
   const dataToDisplay = () => {
     if (!searchItem || searchItem === "") {
@@ -310,16 +287,18 @@ const ItemTable = ({ searchItem }) => {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
       },
-      render: (data) => (
-        <span style={cellStyle}>
-          <Typography
-            style={{ ...Subtitle, textOverflow: "ellipsis" }}
-            textTransform={"capitalize"}
-          >
-            {data.warehouse === 1 ? data.location : data.event_name}
-          </Typography>
-        </span>
-      ),
+      render: (data) => {
+        return (
+          <span style={cellStyle}>
+            <Typography
+              style={{ ...Subtitle, textOverflow: "ellipsis" }}
+              textTransform={"capitalize"}
+            >
+              {data.warehouse === 1 ? data.location : data.event_name}
+            </Typography>
+          </span>
+        );
+      },
     },
     {
       title: "Main Serial Number",
@@ -370,298 +349,10 @@ const ItemTable = ({ searchItem }) => {
     },
   ];
 
-  const renderingCardData = user?.companyData?.employees?.find(
-    (element) => element.user === user.email
-  );
-  const [selectedRowKeys, setSelectedRowKeys] = useState([
-    ...renderingCardData.preference.inventory_location,
-  ]);
-  const updateEmployeesPreference = () => {
-    let employCopy = user.companyData.employees.map((employee) => ({
-      ...employee,
-    }));
-    const index = employCopy.findIndex(
-      (element) => element.user === user.email
-    );
-    if (index > -1) {
-      const newData = {
-        ...employCopy[index],
-        preference: { inventory_location: [...selectedRowKeys] },
-      };
-      employCopy[index] = newData;
-      return employCopy;
-    }
-    return employCopy;
-  };
-  const updateInventoryLocationPreferences = async () => {
-    const updatedCompany = await devitrakApi.patch(
-      `/company/update-company/${user.companyData.id}`,
-      {
-        employees: updateEmployeesPreference(),
-      }
-    );
-    // console.log(updatedCompany.data);
-    if (updatedCompany.data.ok) {
-      return dispatch(
-        onLogin({ ...user, companyData: updatedCompany.data.company })
-      );
-    }
-  };
-  const onSelectChange = async (newSelectedRowKeys) => {
-    if (
-      selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
-    ) {
-      const result = selectedRowKeys.filter(
-        (element) => element.key !== newSelectedRowKeys[0]
-      );
-      return setSelectedRowKeys(result);
-    }
-    const locationInfo = sortingByParameters("location");
-    const result = locationInfo.find(
-      (element) => element.key === newSelectedRowKeys[0]
-    );
-    setSelectedRowKeys([...selectedRowKeys, result]);
-  };
-  const optionsToRenderInDetailsHtmlTags = [
-    {
-      title: "Locations",
-      buttonFn: true,
-      data: sortingByParameters("location"),
-      renderedCardData: selectedRowKeys,
-      open: true,
-      displayCards: selectedRowKeys.length > 0,
-      routeTitle: "location",
-      renderSelectedOptions: [],
-      renderMoreOptions: true,
-      rowSelection: {
-        selectedRowKeys,
-        onChange: onSelectChange,
-      },
-      columns: [
-        {
-          title: "Locations name",
-          dataIndex: "key",
-          key: "key",
-          render: (key) => <p style={Subtitle}>{key}</p>,
-        },
-        {
-          title: "Total device",
-          dataIndex: "value",
-          key: "value",
-          render: (value) => <p style={Subtitle}>{value}</p>,
-        },
-        {
-          title: "",
-          dataIndex: "action",
-          key: "action",
-          render: (_, record) => (
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-              }}
-            >
-              <button
-                onClick={() => navigate(`/inventory/location?${record.key}`)}
-                style={{
-                  backgroundColor: "transparent",
-                  outline: "none",
-                  margin: 0,
-                  padding: 0,
-                }}
-              >
-                <RightNarrowInCircle />
-              </button>
-            </div>
-          ),
-        },
-      ],
-    },
-    {
-      title: "Category",
-      data: sortingByParameters("category_name"),
-      open: false,
-      routeTitle: "category_name",
-      renderMoreOptions: false,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
-    },
-    {
-      title: "Groups",
-      data: sortingByParameters("item_group"),
-      open: false,
-      routeTitle: "group",
-      renderMoreOptions: false,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
-    },
-    {
-      title: "Brands",
-      data: sortingByParameters("brand"),
-      open: false,
-      routeTitle: "brand",
-      renderMoreOptions: false,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
-    },
-  ];
-  const deepEqual = (obj1, obj2) => {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-
-    if (keys1.length !== keys2.length) return false;
-
-    return keys1.every((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
-
-      const areObjects =
-        val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
-      return areObjects ? deepEqual(val1, val2) : val1 === val2;
-    });
-  };
-
-  const compareArraysOfObjects = (arr1, arr2) => {
-    if (arr1.length !== arr2.length) return false;
-
-    const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
-    const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
-
-    return sortedArr1.every((obj1, index) =>
-      deepEqual(obj1, sortedArr2[index])
-    );
-  };
 
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
-      {optionsToRenderInDetailsHtmlTags.map((item) => {
-        return (
-          <Grid
-            key={item.title}
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            margin={"20px 0 0 0"}
-            item
-            xs={12}
-          >
-            <details
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-              open={item.open}
-            >
-              <summary>
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    width: "100%",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  {item.title} &nbsp;{" "}
-                  {item.buttonFn &&
-                    !compareArraysOfObjects(
-                      selectedRowKeys,
-                      renderingCardData.preference.inventory_location
-                    ) && (
-                      <button
-                        onClick={() => updateInventoryLocationPreferences()}
-                        style={BlueButton}
-                      >
-                        <p style={BlueButtonText}>
-                          Update locations preferences
-                        </p>
-                      </button>
-                    )}
-                </p>
-              </summary>
-              <Divider />
-              <Grid container>
-                {item.renderedCardData
-                  ? item.renderedCardData.map((opt) => {
-                      return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
-                          <Popconfirm
-                            title="Do you want to remove this location from your preferences?"
-                            onConfirm={() => ""}
-                          >
-                            <CardInventoryLocationPreference
-                              title={opt.key}
-                              props={`${opt.value} total devices`}
-                              route={`/inventory/${String(
-                                item.routeTitle
-                              ).toLowerCase()}?${decodeURI(opt.key)}`}
-                            />
-                          </Popconfirm>
-                        </Grid>
-                      );
-                    })
-                  : item.data.map((opt) => {
-                      return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
-                          {" "}
-                          <Link
-                            to={`/inventory/${String(
-                              item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}`}
-                          >
-                            <CardLocations
-                              title={opt.key}
-                              props={`${opt.value} total devices`}
-                              optional={null}
-                            />
-                          </Link>
-                        </Grid>
-                      );
-                    })}
-              </Grid>
-              {item.renderMoreOptions && (
-                <Table
-                  pagination={{
-                    position: ["bottomCenter"],
-                    pageSizeOptions: [10, 20, 30, 50, 100],
-                    total: item.data.length,
-                    defaultPageSize: 10,
-                    defaultCurrent: 1,
-                  }}
-                  style={{ width: "100%" }}
-                  rowSelection={item.rowSelection}
-                  columns={item.columns}
-                  dataSource={item.data}
-                  className="table-ant-customized"
-                />
-              )}
-            </details>
-            <Divider />
-          </Grid>
-        );
-      })}
+      <RenderingFilters dataToDisplay={dataToDisplay} user={user} />
       <Grid
         display={"flex"}
         flexDirection={"column"}
@@ -795,6 +486,347 @@ const ItemTable = ({ searchItem }) => {
 
 export default ItemTable;
 
-ItemTable.propTypes = {
-  searchItem: PropTypes.string,
-};
+
+
+// const sortingByParameters = (props) => {
+//   const totalPerLocation = new Map();
+//   const parameter = props;
+//   if (dataToDisplay().length > 0) {
+//     //itemsInInventoryQuery.data) {
+//     for (let data of dataToDisplay()) {
+//       //itemsInInventoryQuery.data.data.items) {
+//       if (totalPerLocation.has(data[parameter])) {
+//         totalPerLocation.set(
+//           data[parameter],
+//           totalPerLocation.get(data[parameter]) + 1
+//         );
+//       } else {
+//         totalPerLocation.set(data[parameter], 1);
+//       }
+//     }
+//   }
+//   const result = new Set();
+//   for (let [key, value] of totalPerLocation) {
+//     result.add({ key, value });
+//   }
+//   return Array.from(result);
+// };
+
+// ItemTable.propTypes = {
+//   searchItem: PropTypes.string,
+// };
+// const renderingCardData = user?.companyData?.employees?.find(
+//   (element) => element.user === user.email
+// );
+// const [selectedRowKeys, setSelectedRowKeys] = useState([
+//   ...renderingCardData.preference.inventory_location,
+// ]);
+// const updateEmployeesPreference = () => {
+//   let employCopy = user.companyData.employees.map((employee) => ({
+//     ...employee,
+//   }));
+//   const index = employCopy.findIndex(
+//     (element) => element.user === user.email
+//   );
+//   if (index > -1) {
+//     const newData = {
+//       ...employCopy[index],
+//       preference: { inventory_location: [...selectedRowKeys] },
+//     };
+//     employCopy[index] = newData;
+//     return employCopy;
+//   }
+//   return employCopy;
+// };
+
+// const updateInventoryLocationPreferences = async () => {
+//   const updatedCompany = await devitrakApi.patch(
+//     `/company/update-company/${user.companyData.id}`,
+//     {
+//       employees: updateEmployeesPreference(),
+//     }
+//   );
+//   if (updatedCompany.data.ok) {
+//     return dispatch(
+//       onLogin({ ...user, companyData: updatedCompany.data.company })
+//     );
+//   }
+// };
+// const onSelectChange = async (newSelectedRowKeys) => {
+//   if (
+//     selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
+//   ) {
+//     const result = selectedRowKeys.filter(
+//       (element) => element.key !== newSelectedRowKeys[0]
+//     );
+//     return setSelectedRowKeys(result);
+//   }
+//   const locationInfo = sortingByParameters("location");
+//   const result = locationInfo.find(
+//     (element) => element.key === newSelectedRowKeys[0]
+//   );
+//   setSelectedRowKeys([...selectedRowKeys, result]);
+// };
+
+// const renderingTotalUnits = (props) => {
+//   let result = 0;
+//   for (let data of props) {
+//     result = result + data.value;
+//   }
+//   return result;
+// };
+// const optionsToRenderInDetailsHtmlTags = [
+//   {
+//     title: `Locations`,
+//     buttonFn: true,
+//     data: sortingByParameters("location"),
+//     totalUnits: renderingTotalUnits(sortingByParameters("location")),
+//     renderedCardData: selectedRowKeys,
+//     open: true,
+//     displayCards: selectedRowKeys.length > 0,
+//     routeTitle: "location",
+//     renderSelectedOptions: [],
+//     renderMoreOptions: true,
+//     rowSelection: {
+//       selectedRowKeys,
+//       onChange: onSelectChange,
+//     },
+//     columns: [
+//       {
+//         title: "Locations name",
+//         dataIndex: "key",
+//         key: "key",
+//         render: (key) => <p style={Subtitle}>{key}</p>,
+//       },
+//       {
+//         title: "Total device",
+//         dataIndex: "value",
+//         key: "value",
+//         render: (value) => <p style={Subtitle}>{value}</p>,
+//       },
+//       {
+//         title: "",
+//         dataIndex: "action",
+//         key: "action",
+//         render: (_, record) => (
+//           <div
+//             style={{
+//               width: "100%",
+//               display: "flex",
+//               justifyContent: "flex-end",
+//               alignItems: "center",
+//             }}
+//           >
+//             <button
+//               onClick={() => navigate(`/inventory/location?${record.key}`)}
+//               style={{
+//                 backgroundColor: "transparent",
+//                 outline: "none",
+//                 margin: 0,
+//                 padding: 0,
+//               }}
+//             >
+//               <RightNarrowInCircle />
+//             </button>
+//           </div>
+//         ),
+//       },
+//     ],
+//   },
+//   {
+//     title: "Category",
+//     data: sortingByParameters("category_name"),
+//     totalUnits: sortingByParameters("category_name").length,
+//     open: false,
+//     routeTitle: "category_name",
+//     renderMoreOptions: false,
+//     columns: [
+//       {
+//         title: "Name",
+//         dataIndex: "name",
+//         key: "name",
+//       },
+//     ],
+//   },
+//   {
+//     title: "Groups",
+//     data: sortingByParameters("item_group"),
+//     totalUnits: sortingByParameters("item_group").length,
+//     open: false,
+//     routeTitle: "group",
+//     renderMoreOptions: false,
+//     columns: [
+//       {
+//         title: "Name",
+//         dataIndex: "name",
+//         key: "name",
+//       },
+//     ],
+//   },
+//   {
+//     title: "Brands",
+//     data: sortingByParameters("brand"),
+//     totalUnits: sortingByParameters("brand").length,
+//     open: false,
+//     routeTitle: "brand",
+//     renderMoreOptions: false,
+//     columns: [
+//       {
+//         title: "Name",
+//         dataIndex: "name",
+//         key: "name",
+//       },
+//     ],
+//   },
+// ];
+// const deepEqual = (obj1, obj2) => {
+//   const keys1 = Object.keys(obj1);
+//   const keys2 = Object.keys(obj2);
+
+//   if (keys1.length !== keys2.length) return false;
+
+//   return keys1.every((key) => {
+//     const val1 = obj1[key];
+//     const val2 = obj2[key];
+
+//     const areObjects =
+//       val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
+//     return areObjects ? deepEqual(val1, val2) : val1 === val2;
+//   });
+// };
+
+// const compareArraysOfObjects = (arr1, arr2) => {
+//   if (arr1.length !== arr2.length) return false;
+
+//   const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
+//   const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
+
+//   return sortedArr1.every((obj1, index) =>
+//     deepEqual(obj1, sortedArr2[index])
+//   );
+// };
+
+{
+  /* {optionsToRenderInDetailsHtmlTags.map((item) => {
+        return (
+          <Grid
+            key={item.title}
+            display={"flex"}
+            flexDirection={"column"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            margin={"20px 0 0 0"}
+            item
+            xs={12}
+          >
+            <details
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+              open={item.open}
+            >
+              <summary>
+                <p
+                  style={{
+                    ...TextFontsize18LineHeight28,
+                    width: "100%",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  {item.title}&nbsp;{" "}
+                  <span
+                    style={{
+                      ...Subtitle,
+                      // fontWeight: 400,
+                      width: "100%",
+                      textAlign: "left",
+                    }}
+                  >
+                    | Total <strong>{item.totalUnits}</strong> units
+                  </span>{" "}
+                  &nbsp;{" "}
+                  {item.buttonFn &&
+                    !compareArraysOfObjects(
+                      selectedRowKeys,
+                      renderingCardData.preference.inventory_location
+                    ) && (
+                      <button
+                        onClick={() => updateInventoryLocationPreferences()}
+                        style={BlueButton}
+                      >
+                        <p style={BlueButtonText}>
+                          Update locations preferences
+                        </p>
+                      </button>
+                    )}
+                </p>
+              </summary>
+              <Divider />
+              <Grid container>
+                {item.renderedCardData
+                  ? item.renderedCardData.map((opt) => {
+                      return (
+                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
+                          <Popconfirm
+                            title="Do you want to remove this location from your preferences?"
+                            onConfirm={() => ""}
+                          >
+                            <CardInventoryLocationPreference
+                              title={opt.key}
+                              props={`${opt.value} total devices`}
+                              route={`/inventory/${String(
+                                item.routeTitle
+                              ).toLowerCase()}?${decodeURI(opt.key)}`}
+                            />
+                          </Popconfirm>
+                        </Grid>
+                      );
+                    })
+                  : item.data.map((opt) => {
+                      return (
+                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
+                          {" "}
+                          <Link
+                            to={`/inventory/${String(
+                              item.routeTitle
+                            ).toLowerCase()}?${decodeURI(opt.key)}`}
+                          >
+                            <CardLocations
+                              title={opt.key}
+                              props={`${opt.value} total devices`}
+                              optional={null}
+                            />
+                          </Link>
+                        </Grid>
+                      );
+                    })}
+              </Grid>
+              {item.renderMoreOptions && (
+                <Table
+                  pagination={{
+                    position: ["bottomCenter"],
+                    pageSizeOptions: [10, 20, 30, 50, 100],
+                    total: item.data.length,
+                    defaultPageSize: 10,
+                    defaultCurrent: 1,
+                  }}
+                  style={{ width: "100%" }}
+                  rowSelection={item.rowSelection}
+                  columns={item.columns}
+                  dataSource={item.data}
+                  className="table-ant-customized"
+                />
+              )}
+            </details>
+            <Divider />
+          </Grid>
+        );
+      })} */
+}
