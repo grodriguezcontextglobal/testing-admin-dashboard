@@ -1,27 +1,11 @@
-import {
-  Grid,
-  InputLabel,
-  OutlinedInput,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  Card,
-  Divider,
-  Modal,
-  Popconfirm,
-  Select,
-  Space,
-  Tag,
-} from "antd";
+import { Button, Card, Divider, Modal, Popconfirm, Select, Space } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { CheckIcon } from "../../../../../components/icons/Icons";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
@@ -40,7 +24,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [valueItemSelected, setValueItemSelected] = useState({});
-  const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [assignAllDevices, setAssignAllDevices] = useState(false);
   const dispatch = useDispatch();
@@ -113,10 +96,10 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     setValueItemSelected(optionRendering);
   };
 
-  const removeItemSelected = (item) => {
-    const filter = selectedItem.filter((_, index) => index !== item);
-    return setSelectedItem(filter);
-  };
+  // const removeItemSelected = (item) => {
+  //   const filter = selectedItem.filter((_, index) => index !== item);
+  //   return setSelectedItem(filter);
+  // };
 
   const handleUpdateDeviceInEvent = async (props) => {
     const limit = Number(props.quantity) - 1;
@@ -182,21 +165,20 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const createDeviceInEvent = async (data) => {
     setLoadingStatus(true);
     const event_id = event.sql.event_id;
-    const limit = Number(data.quantity) - 1;
     const respoUpdating = await devitrakApi.post("/db_event/event_device", {
       event_id: event_id,
       item_group: valueItemSelected[0].item_group,
       category_name: valueItemSelected[0].category_name,
-      min_serial_number: valueItemSelected[0].serial_number,
-      max_serial_number: valueItemSelected[limit].serial_number,
+      startingNumber: valueItemSelected[0].serial_number,
+      quantity: data.quantity,
     });
     if (respoUpdating.data.ok) {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: false,
         company: user.company,
         item_group: valueItemSelected[0].item_group,
-        min_serial_number: valueItemSelected[0].serial_number,
-        max_serial_number: valueItemSelected[limit].serial_number,
+        startingNumber: valueItemSelected[0].serial_number,
+        quantity: data.quantity,
       });
     }
     await createDeviceRecordInNoSQLDatabase(data);
@@ -206,10 +188,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     return setEditingInventory(false);
   };
 
-  const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (
-    props
-  ) => {
-    // console.log(props);
+  const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (props) => {
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
@@ -220,9 +199,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
     if (selectedDevicesPool.data) {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
-      // console.log("devicesFetchedPool", devicesFetchedPool);
       for (let data of devicesFetchedPool) {
-        // console.log("data for-of", data);
         const deviceSQL = {
           warehouse: 1,
           status: data.status,
@@ -494,64 +471,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                 </Grid>
               </Grid>
             </form>
-
-            <Grid item xs={12} sm={12} md={12} lg={12}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p
-                  style={{
-                    ...Subtitle,
-                    fontWeight: 500,
-                    textTransform: "none",
-                    textAlign: "left",
-                  }}
-                >
-                  Groups selected
-                </p>
-              </InputLabel>
-              <Space
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-                size={[8, 16]}
-                wrap
-              >
-                {selectedItem.map((item, index) => {
-                  return (
-                    <Tooltip
-                      key={`${index}-${item._id}`}
-                      title={`${
-                        item.consumerUses ? "" : "Item set up for internal use."
-                      }`}
-                    >
-                      <Tag
-                        bordered={false}
-                        closable
-                        style={{
-                          display: "flex",
-                          padding: "2px 4px 2px 5px",
-                          justifyContent: "flex-start",
-                          alignItems: "center",
-                          gap: "3px",
-                          borderRadius: "6px",
-                          border: "1px solid var(--gray-300, #D0D5DD)",
-                          background: "var(--base-white, #FFF)",
-                          margin: "5px",
-                        }}
-                        onClose={() => removeItemSelected(index)}
-                        key={`${item._id}${index}`}
-                      >
-                        <CheckIcon />
-                        &nbsp;{item.item_group}
-                        {"      "}&nbsp;Qty: {item.quantity}
-                      </Tag>
-                    </Tooltip>
-                  );
-                })}
-              </Space>
-            </Grid>
           </Grid>
           <Divider />
           <Grid item xs={12} sm={12} md={12} lg={12}>
