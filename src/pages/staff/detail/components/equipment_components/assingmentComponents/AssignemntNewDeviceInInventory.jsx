@@ -161,12 +161,12 @@ const AssignemntNewDeviceInInventory = () => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `Leased equipment: ${profile.firstName} ${
+        event_name: `${profile.firstName} ${
           profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
-        venue_name: `Leased equipment: ${profile.firstName} ${
+        } / ${profile.email} / ${new Date().toLocaleDateString()}`,
+        venue_name: `${profile.firstName} ${
           profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
+        } / ${profile.email} / ${new Date().toLocaleDateString()}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -190,8 +190,8 @@ const AssignemntNewDeviceInInventory = () => {
         event_id: newEventInfo.insertId,
         item_group: data.item_group,
         category_name: data.category_name,
-        min_serial_number: data.min_serial_number,
-        max_serial_number: data.max_serial_number,
+        startingNumber: data.min_serial_number,
+        quantity: data.quantity,
       });
     }
   };
@@ -232,7 +232,7 @@ const AssignemntNewDeviceInInventory = () => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          max_serial_number: deviceInfo[0].serial_number,
+          quantity:props.quantity
         },
       ]);
       await closingProcess();
@@ -249,6 +249,7 @@ const AssignemntNewDeviceInInventory = () => {
       return await option1({
         template: props.template,
         deviceInfo: newAddedItem.data.items,
+        quantity:'1'
       });
     }
   };
@@ -325,6 +326,7 @@ const AssignemntNewDeviceInInventory = () => {
             await retrieveDataNewAddedItem({
               ...data,
               template: template,
+              quantity:'1'
             });
           }
         }
@@ -350,6 +352,7 @@ const AssignemntNewDeviceInInventory = () => {
           await retrieveDataNewAddedItem({
             ...data,
             template: template,
+            quantity:'1'
           });
         }
       }
