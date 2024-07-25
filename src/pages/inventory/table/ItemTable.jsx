@@ -3,7 +3,6 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
 import _ from "lodash";
-// import pkg from "prop-types";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -21,8 +20,7 @@ import "../../../styles/global/ant-table.css";
 import DownloadingXlslFile from "../actions/DownloadXlsx";
 import "../style/details.css";
 import RenderingFilters from "./extras/RenderingFilters";
-// const { PropTypes } = pkg;
-
+import { PropTypes } from "prop-types"
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
   // const dispatch = useDispatch();
@@ -93,6 +91,7 @@ const ItemTable = ({ searchItem }) => {
     return () => {
       controller.abort();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.company]);
 
   const dataToDisplay = () => {
@@ -486,7 +485,9 @@ const ItemTable = ({ searchItem }) => {
 
 export default ItemTable;
 
-
+ItemTable.propTypes = {
+  searchItem: PropTypes.string
+}
 
 // const sortingByParameters = (props) => {
 //   const totalPerLocation = new Map();
