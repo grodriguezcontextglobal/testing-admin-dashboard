@@ -52,6 +52,12 @@ const ModalReturnDeviceFromStaff = ({
       subscription_initial_date: initialDate,
     });
     if (response.data && response.data.ok) {
+      await devitrakApi.post("/db_lease/delete-lease-info", {
+        company_id: deviceInfo.company_id,
+        staff_member_id: deviceInfo.staff_member_id,
+        device_id: deviceInfo.item_id_info.item_id,
+      });
+
       queryClient.invalidateQueries({
         queryKey: ["staffMemberInfo"],
         exact: true,
@@ -64,6 +70,7 @@ const ModalReturnDeviceFromStaff = ({
         queryKey: ["ItemsInventoryCheckingQuery"],
         exact: true,
       });
+
       return closeModal();
     }
   };
