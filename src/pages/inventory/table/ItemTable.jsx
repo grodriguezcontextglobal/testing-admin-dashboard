@@ -213,22 +213,20 @@ const ItemTable = ({ searchItem }) => {
             display: "flex",
             padding: "2px 8px",
             alignItems: "center",
-            background: `${
-              warehouse === 0
+            background: `${warehouse === 0
                 ? "var(--blue-50, #EFF8FF)"
                 : "var(--success-50, #ECFDF3)"
-            }`,
+              }`,
             width: "fit-content",
           }}
         >
           <p
             style={{
               ...Subtitle,
-              color: `${
-                warehouse === 0
+              color: `${warehouse === 0
                   ? "var(--blue-700, #175CD3)"
                   : "var(--success-700, #027A48)"
-              }`,
+                }`,
               textTransform: "capitalize",
             }}
           >
@@ -310,16 +308,25 @@ const ItemTable = ({ searchItem }) => {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
       },
-      render: (data) => (
-        <span style={cellStyle}>
-          <Typography
-            style={{ ...Subtitle, textOverflow: "ellipsis" }}
-            textTransform={"capitalize"}
-          >
-            {data.warehouse === 1 ? data.location : data.event_name}
-          </Typography>
-        </span>
-      ),
+      render: (data) => {
+        let leasing = ""
+        if(String(data.event_name).toLowerCase().includes('leased')){
+          const naming = String(data.event_name).split('/')
+          leasing = naming[0]
+        }else {
+          leasing = data.event_name
+        }
+        return (
+          <span style={cellStyle}>
+            <Typography
+              style={{ ...Subtitle, textOverflow: "ellipsis", width: "100%" }}
+              textTransform={"capitalize"}
+            >
+              {data.warehouse === 1 ? data.location : leasing}
+            </Typography>
+          </span>
+        )
+      },
     },
     {
       title: "Main Serial Number",
@@ -605,41 +612,41 @@ const ItemTable = ({ searchItem }) => {
               <Grid container>
                 {item.renderedCardData
                   ? item.renderedCardData.map((opt) => {
-                      return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
-                          <Popconfirm
-                            title="Do you want to remove this location from your preferences?"
-                            onConfirm={() => ""}
-                          >
-                            <CardInventoryLocationPreference
-                              title={opt.key}
-                              props={`${opt.value} total devices`}
-                              route={`/inventory/${String(
-                                item.routeTitle
-                              ).toLowerCase()}?${decodeURI(opt.key)}`}
-                            />
-                          </Popconfirm>
-                        </Grid>
-                      );
-                    })
-                  : item.data.map((opt) => {
-                      return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
-                          {" "}
-                          <Link
-                            to={`/inventory/${String(
+                    return (
+                      <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
+                        <Popconfirm
+                          title="Do you want to remove this location from your preferences?"
+                          onConfirm={() => ""}
+                        >
+                          <CardInventoryLocationPreference
+                            title={opt.key}
+                            props={`${opt.value} total devices`}
+                            route={`/inventory/${String(
                               item.routeTitle
                             ).toLowerCase()}?${decodeURI(opt.key)}`}
-                          >
-                            <CardLocations
-                              title={opt.key}
-                              props={`${opt.value} total devices`}
-                              optional={null}
-                            />
-                          </Link>
-                        </Grid>
-                      );
-                    })}
+                          />
+                        </Popconfirm>
+                      </Grid>
+                    );
+                  })
+                  : item.data.map((opt) => {
+                    return (
+                      <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
+                        {" "}
+                        <Link
+                          to={`/inventory/${String(
+                            item.routeTitle
+                          ).toLowerCase()}?${decodeURI(opt.key)}`}
+                        >
+                          <CardLocations
+                            title={opt.key}
+                            props={`${opt.value} total devices`}
+                            optional={null}
+                          />
+                        </Link>
+                      </Grid>
+                    );
+                  })}
               </Grid>
               {item.renderMoreOptions && (
                 <Table
