@@ -68,6 +68,7 @@ const ListEquipment = () => {
       "/db_lease/consulting-lease",
       {
         staff_member_id: staffmemberInfo.staff_id,
+        company_id:user.sqlInfo.company_id,
         subscription_current_in_use: 1,
       }
     );
