@@ -212,7 +212,7 @@ const AssignmentFromExistingInventory = () => {
         event_id: newEventInfo.insertId,
         item_group: data.item_group,
         category_name: data.category_name,
-        b: data.min_serial_number,
+        startingNumber: data.min_serial_number,
         quantity: data.quantity,
       });
     }
