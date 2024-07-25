@@ -17,7 +17,6 @@ const EndEventButton = () => {
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
-    // enabled: false,
     refetchOnMount: false,
   });
   const listOfItemsInInventoryQuery = useQuery({
@@ -27,7 +26,6 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInPoolQuery = useQuery({
@@ -37,7 +35,6 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -48,7 +45,6 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -59,7 +55,6 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -70,7 +65,6 @@ const EndEventButton = () => {
         company: user.company,
         warehouse: false,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const sqlDBInventoryEventQuery = useQuery({
@@ -80,7 +74,6 @@ const EndEventButton = () => {
         company: user.company,
         warehouse: false,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -239,10 +232,7 @@ const EndEventButton = () => {
   const checkItemsInUseToUpdateInventory = () => {
     const result = {};
     for (let data of findItemsInPoolEvent()) {
-      if (
-        data.activity ||
-        `${data.status}`.toLowerCase() === "lost"
-      ) {
+      if (data.activity || `${data.status}`.toLowerCase() === "lost") {
         if (!result[data.type]) {
           result[data.type] = 1;
         } else {
@@ -291,6 +281,17 @@ const EndEventButton = () => {
       openNotificationWithIcon("error", `${error.message}`);
     }
   };
+
+  const renderingByConditionTypeof = (props) => {
+    if (typeof props === "string") {
+      return props;
+    } else {
+      if (props) {
+        return "In-Use";
+      }
+      return "Returned";
+    }
+  };
   const addingRecordOfActivityInEvent = async () => {
     try {
       const groupingInventoryByGroupName = _.groupBy(
@@ -303,13 +304,7 @@ const EndEventButton = () => {
         await devitrakApi.post("/db_record/inserting-record", {
           email: data.user,
           serial_number: data.device.serialNumber,
-          status: `${
-            typeof data.device.status === "string"
-              ? data.device.status
-              : data.device.status
-              ? "In-Use"
-              : "Returned"
-          }`,
+          status: renderingByConditionTypeof(data.device.status), 
           activity: data.device.status, ///`${data.device.status ? "YES" : "No"}`,
           payment_id: data.paymentIntent,
           event: event.eventInfoDetail.eventName,

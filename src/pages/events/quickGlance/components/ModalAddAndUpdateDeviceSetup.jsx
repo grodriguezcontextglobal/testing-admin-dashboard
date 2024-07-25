@@ -147,21 +147,21 @@ const ModalAddAndUpdateDeviceSetup = ({
 
   const createDeviceInEvent = async (props) => {
     const event_id = event.sql.event_id;
-    const limit = Number(props.quantity) - 1;
+    // const limit = Number(props.quantity) - 1;
     const respoUpdating = await devitrakApi.post("/db_event/event_device", {
       event_id: event_id,
       item_group: valueItemSelected[0].item_group,
       category_name: valueItemSelected[0].category_name,
-      min_serial_number: valueItemSelected[0].serial_number,
-      max_serial_number: valueItemSelected[limit].serial_number,
+      startingNumber: valueItemSelected[0].serial_number,
+      quantity:props.quantity,
     });
     if (respoUpdating.data.ok) {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: false,
         company: user.company,
         item_group: valueItemSelected[0].item_group,
-        min_serial_number: valueItemSelected[0].serial_number,
-        max_serial_number: valueItemSelected[limit].serial_number,
+        startingNumber: valueItemSelected[0].serial_number,
+        quantity:props.quantity,
       });
     }
     await createDeviceRecordInNoSQLDatabase(props);
@@ -181,7 +181,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
       if (Number(data.quantity) > checkingDiff) {
         return alert(
-          `Quantity assigned is bigger than needed to reach out the quantity set in event. Hint: ${checkingDiff} left.`
+          `Quantity assigned is bigger than needed to reach out the quantity set in event.`
         );
       }
       const result = [
@@ -364,7 +364,7 @@ const ModalAddAndUpdateDeviceSetup = ({
                   <RectangleBluePlusIcon />
                   &nbsp;
                   <Typography textTransform="none" style={LightBlueButtonText}>
-                    Add item
+                    Add qty from location
                   </Typography>
                 </button>
               </div>

@@ -4,27 +4,19 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import "../../../../styles/global/ant-table.css";
+import { useNavigate } from "react-router-dom";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
   const [device, setDevice] = useState([]);
-
+  const navigate = useNavigate();
   const consumersQuery = useQuery({
     queryKey: ["consumersPerCompanyQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
-  // const totalConsumers = useCallback(async () => {
-  //     const response = await devitrakApi.post('db_item/consulting-item', {
-  //         company: user.company
-  //     })
-  //     if (response.data.ok) {
-  //         return sortingDataFetched(response.data.items)
-  //     }
-  // }, [])
 
   const dataFetched = consumersQuery?.data?.data?.items;
   const sortingDataFetched = () => {
@@ -80,6 +72,15 @@ const TableCategories = () => {
         dataSource={formattingData()}
         columns={column}
         className="table-ant-customized"
+        ///inventory/category_name?
+        onRow={(record) => {
+          return {
+            onClick: () => {
+              navigate(`/inventory/category_name?${record.category}`);
+            },
+          };
+        }}
+        style={{ cursor: "pointer" }}
       />
     );
   }

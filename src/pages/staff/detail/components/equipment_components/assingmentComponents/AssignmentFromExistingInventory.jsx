@@ -2,26 +2,24 @@ import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification, Select } from "antd";
 import _ from "lodash";
+import { PropTypes } from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import Loading from "../../../../../../components/animation/Loading";
-import { PlusIcon } from "../../../../../../components/icons/Icons";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
-import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import { formatDate } from "../../../../../inventory/utils/dateFormat";
 const AssignmentFromExistingInventory = () => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -134,22 +132,12 @@ const AssignmentFromExistingInventory = () => {
     const gettingValues = new Set();
     if (valueItemSelected.length > 0) {
       for (let data of valueItemSelected) {
-        gettingValues.add(Number(data.serial_number));
+        gettingValues.add(String(data.serial_number));
       }
       const toArray = Array.from(gettingValues);
-      const maxRange = Math.max(...toArray);
-      const minRange = Math.min(...toArray);
       return {
-        min:
-          String(minRange).padStart(
-            valueItemSelected[0].serial_number?.length,
-            "0"
-          ) ?? 0,
-        max:
-          String(maxRange).padStart(
-            valueItemSelected[0].serial_number?.length,
-            "0"
-          ) ?? 0,
+        min: toArray[0],
+        max: toArray.at(-1),
       };
     }
   };
@@ -174,8 +162,8 @@ const AssignmentFromExistingInventory = () => {
       warehouse: false,
       company: user.company,
       item_group: props.item_group,
-      min_serial_number: props.startingNumber,
-      max_serial_number: props.endingNumber,
+      startingNumber: props.startingNumber,
+      quantity:props.quantity,
     });
   };
 
@@ -195,12 +183,12 @@ const AssignmentFromExistingInventory = () => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `Leased equipment: ${profile.firstName} ${
-          profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
-        venue_name: `Leased equipment: ${profile.firstName} ${
-          profile.lastName
-        } / email:${profile.email} / ${new Date().toLocaleDateString()}`,
+        event_name: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
+        venue_name: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -224,8 +212,8 @@ const AssignmentFromExistingInventory = () => {
         event_id: newEventInfo.insertId,
         item_group: data.item_group,
         category_name: data.category_name,
-        min_serial_number: data.min_serial_number,
-        max_serial_number: data.max_serial_number,
+        startingNumber: data.min_serial_number,
+        quantity: data.quantity,
       });
     }
     queryClient.invalidateQueries({
@@ -257,7 +245,7 @@ const AssignmentFromExistingInventory = () => {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
         startingNumber: deviceInfo[0].serial_number,
-        endingNumber: deviceInfo.at(-1).serial_number,
+        quantity:props.quantity
       });
       await createNewLease({ ...props.template, deviceInfo });
       await addDeviceToEvent([
@@ -265,98 +253,13 @@ const AssignmentFromExistingInventory = () => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          max_serial_number: deviceInfo[0].serial_number,
+          quantity:props.quantity
         },
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
       setLoadingStatus(false);
-      await navigate(`/staff/${profile.adminUserInfo._id}/main`);
+      navigate(`/staff/${profile.adminUserInfo._id}/main`);
     }
-  };
-  const option2 = async (props) => {
-    let newProps = [];
-    const finalList = [
-      ...selectedItem,
-      {
-        item_group: valueItemSelected[0].item_group,
-        quantity: watch("quantity"),
-        startingNumber: watch("startingNumber"),
-      },
-    ];
-    await createEvent(props.template);
-    const groupingByType = _.groupBy(finalList, "item_group");
-    for (let [key, value] of Object.entries(groupingByType)) {
-      for (let data of value) {
-        const indexStart = props.groupingType[data.item_group].findIndex(
-          (element) => element.serial_number == data.startingNumber
-        );
-        const indexEnd = indexStart + Number(data.quantity);
-        const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-        const deviceInfo = dataFound; //*array of existing devices in sql db
-        newProps = [...newProps, deviceInfo];
-        await updateDeviceInWarehouse({
-          item_group: key,
-          startingNumber: data.startingNumber,
-          endingNumber: deviceInfo.at(-1).serial_number,
-        });
-        await addDeviceToEvent([
-          {
-            item_group: deviceInfo[0].item_group,
-            category_name: deviceInfo[0].category_name,
-            min_serial_number: deviceInfo.at(-1).serial_number,
-            max_serial_number: deviceInfo[0].serial_number,
-          },
-        ]);
-      }
-    }
-    await createNewLease({
-      deviceInfo: newProps.flat(),
-      street: props.template.street,
-      city: props.template.city,
-      state: props.template.state,
-      zip: props.template.zip,
-    });
-    openNotificationWithIcon("Equipment assigned to staff member.");
-    setLoadingStatus(false);
-  };
-
-  const option3 = async (props) => {
-    await createEvent(props.template);
-    let newProps = [];
-    const groupingByType = _.groupBy(selectedItem, "item_group");
-    for (let [key, value] of Object.entries(groupingByType)) {
-      for (let data of value) {
-        const indexStart = props.groupingType[data.item_group].findIndex(
-          (element) => element.serial_number == data.startingNumber
-        );
-        const indexEnd = indexStart + Number(data.quantity);
-        const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-        const deviceInfo = dataFound; //*array of existing devices in sql db
-        newProps = [...newProps, deviceInfo];
-        await updateDeviceInWarehouse({
-          item_group: key,
-          startingNumber: deviceInfo[0].serial_number,
-          endingNumber: deviceInfo.at(-1).serial_number,
-        });
-        await addDeviceToEvent([
-          {
-            item_group: deviceInfo[0].item_group,
-            category_name: deviceInfo[0].category_name,
-            min_serial_number: deviceInfo.at(-1).serial_number,
-            max_serial_number: deviceInfo[0].serial_number,
-          },
-        ]);
-      }
-    }
-    await createNewLease({
-      deviceInfo: newProps.flat(),
-      street: props.template.street,
-      city: props.template.city,
-      state: props.template.state,
-      zip: props.template.zip,
-    });
-    openNotificationWithIcon("Equipment assigned to staff member.");
-    setLoadingStatus(false);
   };
 
   const assignDeviceToStaffMember = async () => {
@@ -369,15 +272,10 @@ const AssignmentFromExistingInventory = () => {
     setLoadingStatus(true);
     const groupingType = _.groupBy(dataFound.current, "item_group");
     if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
-      await option1({ groupingType: groupingType, template: template });
-    }
-    if (selectedItem.length > 0 && watch("startingNumber")?.length > 0) {
-      await option2({ groupingType: groupingType, template: template });
-    }
-    if (selectedItem.length > 0 && watch("startingNumber")?.length === 0) {
-      await option3({ groupingType: groupingType, template: template });
+      await option1({ groupingType: groupingType, template: template, quantity:watch("quantity") });
     }
   };
+
   const renderTitle = () => {
     return (
       <>
@@ -565,8 +463,8 @@ const AssignmentFromExistingInventory = () => {
                   item
                   xs={6}
                   sm={6}
-                  md={6}
-                  lg={6}
+                  md={11}
+                  lg={11}
                 >
                   <InputLabel
                     style={{
@@ -608,19 +506,21 @@ const AssignmentFromExistingInventory = () => {
                               textTransform: "capitalize",
                             }}
                           >
-                            <span>
+                            <span style={{ textAlign: "left", width: "50%" }}>
                               <span style={{ fontWeight: 700 }}>
                                 {item[0].category_name}
                               </span>{" "}
                               {item[0].item_group}
                             </span>
-                            <span style={{ textAlign: "left" }}>
+                            <span style={{ textAlign: "left", width: "30%" }}>
                               Location:{" "}
                               <span style={{ fontWeight: 700 }}>
                                 {item[0].location}
                               </span>
                             </span>
-                            <span>Total available: {item.length}</span>
+                            <span style={{ textAlign: "right", width: "20%" }}>
+                              Total available: {item.length}
+                            </span>
                           </p>
                         ), //renderOptionAsNeededFormat(JSON.stringify(option))
                         value: JSON.stringify(item),
@@ -628,7 +528,14 @@ const AssignmentFromExistingInventory = () => {
                     })}
                   />
                 </Grid>
-                <Grid item xs={6} sm={6} md={6} lg={6}>
+                <Grid
+                  item
+                  xs={6}
+                  sm={6}
+                  md={1}
+                  lg={1}
+                  style={{ alignSelf: "baseline" }}
+                >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Quantity</p>
                   </InputLabel>
@@ -657,9 +564,16 @@ const AssignmentFromExistingInventory = () => {
                 md={12}
                 lg={12}
               >
-                <Grid item xs={6} sm={6} md={6} lg={6}>
+                <Grid
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                  style={{ alignSelf: "baseline" }}
+                >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Start serial number</p>
+                    <p style={Subtitle}>Starting serial number</p>
                   </InputLabel>
                   <OutlinedInput
                     disabled={loadingStatus}
@@ -674,32 +588,6 @@ const AssignmentFromExistingInventory = () => {
                     } end: ${substractingRangesSelectedItem()?.max}`}
                     fullWidth
                   />
-                </Grid>
-                <Grid item xs={6} sm={6} md={6} lg={6}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={{ ...Subtitle, color: "transparent" }}>
-                      Quantity
-                    </p>
-                  </InputLabel>
-                  <Button
-                    type="submit"
-                    style={{
-                      ...LightBlueButton,
-                      ...CenteringGrid,
-                      width: "100%",
-                    }}
-                  >
-                    <PlusIcon />
-                    <p
-                      style={{
-                        ...LightBlueButtonText,
-                        border: "transparent",
-                        textTransform: "none",
-                      }}
-                    >
-                      Add item
-                    </p>
-                  </Button>
                 </Grid>
               </Grid>
             </form>
@@ -743,3 +631,103 @@ const AssignmentFromExistingInventory = () => {
 };
 
 export default AssignmentFromExistingInventory;
+
+AssignmentFromExistingInventory.propTypes = {
+  item_group: PropTypes.string,
+  startingNumber: PropTypes.string,
+  quantity: PropTypes.string,
+  deviceInfo: PropTypes.string,
+  street: PropTypes.string,
+  city: PropTypes.string,
+  state: PropTypes.string,
+  zip: PropTypes.string,
+  template: PropTypes.object,
+  groupingType: PropTypes.string,
+};
+
+
+// const option2 = async (props) => {
+//   let newProps = [];
+//   const finalList = [
+//     ...selectedItem,
+//     {
+//       item_group: valueItemSelected[0].item_group,
+//       quantity: watch("quantity"),
+//       startingNumber: watch("startingNumber"),
+//     },
+//   ];
+//   await createEvent(props.template);
+//   const groupingByType = _.groupBy(finalList, "item_group");
+//   for (let [key, value] of Object.entries(groupingByType)) {
+//     for (let data of value) {
+//       const indexStart = props.groupingType[data.item_group].findIndex(
+//         (element) => element.serial_number == data.startingNumber
+//       );
+//       const indexEnd = indexStart + Number(data.quantity);
+//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
+//       const deviceInfo = dataFound; //*array of existing devices in sql db
+//       newProps = [...newProps, deviceInfo];
+//       await updateDeviceInWarehouse({
+//         item_group: key,
+//         startingNumber: data.startingNumber,
+//         endingNumber: deviceInfo.at(-1).serial_number,
+//       });
+//       await addDeviceToEvent([
+//         {
+//           item_group: deviceInfo[0].item_group,
+//           category_name: deviceInfo[0].category_name,
+//           min_serial_number: deviceInfo.at(-1).serial_number,
+//           max_serial_number: deviceInfo[0].serial_number,
+//         },
+//       ]);
+//     }
+//   }
+//   await createNewLease({
+//     deviceInfo: newProps.flat(),
+//     street: props.template.street,
+//     city: props.template.city,
+//     state: props.template.state,
+//     zip: props.template.zip,
+//   });
+//   openNotificationWithIcon("Equipment assigned to staff member.");
+//   setLoadingStatus(false);
+// };
+
+// const option3 = async (props) => {
+//   await createEvent(props.template);
+//   let newProps = [];
+//   const groupingByType = _.groupBy(selectedItem, "item_group");
+//   for (let [key, value] of Object.entries(groupingByType)) {
+//     for (let data of value) {
+//       const indexStart = props.groupingType[data.item_group].findIndex(
+//         (element) => element.serial_number == data.startingNumber
+//       );
+//       const indexEnd = indexStart + Number(data.quantity);
+//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
+//       const deviceInfo = dataFound; //*array of existing devices in sql db
+//       newProps = [...newProps, deviceInfo];
+//       await updateDeviceInWarehouse({
+//         item_group: key,
+//         startingNumber: deviceInfo[0].serial_number,
+//         endingNumber: deviceInfo.at(-1).serial_number,
+//       });
+//       await addDeviceToEvent([
+//         {
+//           item_group: deviceInfo[0].item_group,
+//           category_name: deviceInfo[0].category_name,
+//           min_serial_number: deviceInfo.at(-1).serial_number,
+//           max_serial_number: deviceInfo[0].serial_number,
+//         },
+//       ]);
+//     }
+//   }
+//   await createNewLease({
+//     deviceInfo: newProps.flat(),
+//     street: props.template.street,
+//     city: props.template.city,
+//     state: props.template.state,
+//     zip: props.template.zip,
+//   });
+//   openNotificationWithIcon("Equipment assigned to staff member.");
+//   setLoadingStatus(false);
+// };
