@@ -20,7 +20,7 @@ import "../../../styles/global/ant-table.css";
 import DownloadingXlslFile from "../actions/DownloadXlsx";
 import "../style/details.css";
 import RenderingFilters from "./extras/RenderingFilters";
-import { PropTypes } from "prop-types"
+import { PropTypes } from "prop-types";
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
   // const dispatch = useDispatch();
@@ -31,14 +31,12 @@ const ItemTable = ({ searchItem }) => {
       devitrakApi.post("/db_item/current-inventory", {
         company_name: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -48,7 +46,6 @@ const ItemTable = ({ searchItem }) => {
       devitrakApi.post("/db_item/consulting-item", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
@@ -91,7 +88,7 @@ const ItemTable = ({ searchItem }) => {
     return () => {
       controller.abort();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.company]);
 
   const dataToDisplay = () => {
@@ -287,13 +284,18 @@ const ItemTable = ({ searchItem }) => {
           ("" + a.data.location).localeCompare(b.data.location),
       },
       render: (data) => {
+        let result = data.event_name;
+        if (String(result).toLowerCase().includes("leased equipment")) {
+          const splittingName = String(result).split(":");
+          result = splittingName.slice(1).flat();
+        }
         return (
           <span style={cellStyle}>
             <Typography
               style={{ ...Subtitle, textOverflow: "ellipsis" }}
               textTransform={"capitalize"}
             >
-              {data.warehouse === 1 ? data.location : data.event_name}
+              {data.warehouse > 0 ? data.location : result}
             </Typography>
           </span>
         );
@@ -347,7 +349,6 @@ const ItemTable = ({ searchItem }) => {
       ),
     },
   ];
-
 
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
@@ -486,8 +487,8 @@ const ItemTable = ({ searchItem }) => {
 export default ItemTable;
 
 ItemTable.propTypes = {
-  searchItem: PropTypes.string
-}
+  searchItem: PropTypes.string,
+};
 
 // const sortingByParameters = (props) => {
 //   const totalPerLocation = new Map();
