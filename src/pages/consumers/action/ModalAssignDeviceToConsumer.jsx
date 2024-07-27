@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import "../../../styles/global/ant-select.css";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
 const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
@@ -45,25 +44,7 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
         alignItems={"center"}
         marginY={2}
         key={"settingUp-deviceList-event"}
-      >
-        <p
-          style={{
-            ...Subtitle,
-            textTransform: "none",
-            margin: "0.2rem auto 0.5rem",
-            wordWrap: "break-word",
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          You can select groups of devices from existing inventory in your
-          database and assign to this event. When assigning, you can choose the
-          whole group of devices, or only a range of serial numbers per group.
-          You will see the groups selected as small tags below.
-        </p>
-        <Divider>
+      >        <Divider>
           <Switch
             value={existingOption}
             onChange={() => setExistingOption(!existingOption)}

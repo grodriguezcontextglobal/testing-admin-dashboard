@@ -36,12 +36,12 @@ const Body = () => {
       role: dicRole[Number(profile.role)],
     },
   });
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = () => {
     api.open({
-      message: 'Information updated',
+      message: "Information updated",
     });
   };
   const listOfEvents = () => {
@@ -71,7 +71,22 @@ const Body = () => {
       };
     });
   }
-
+  const updatingEmployeesCompany = (props) => {
+    let employeeCompanyDataCopy = user.companyData.employees;
+    const employeeUpdating = employeeCompanyDataCopy.findIndex(
+      (element) => element.user === profile.user
+    );
+    if (employeeUpdating > -1) {
+      employeeCompanyDataCopy[employeeUpdating] = {
+        ...employeeCompanyDataCopy[employeeUpdating],
+        user: props.email,
+        firstName: props.firstName,
+        lastName: props.lastName,
+      };
+      return employeeCompanyDataCopy;
+    }
+    return employeeCompanyDataCopy;
+  };
   const handleUpdatePersonalInfo = async (data) => {
     let base64;
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -98,11 +113,24 @@ const Body = () => {
             adminUserInfo: {
               ...profile.adminUserInfo,
               phone: data.phone,
-            }
+            },
           })
         );
-         openNotificationWithIcon()
-         return navigate(`/staff/${profile.adminUserInfo.id}/main`)
+        const newDataUpdatedEmployeeCompany = {
+          firstName: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+        };
+        await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            employees: updatingEmployeesCompany(newDataUpdatedEmployeeCompany),
+          }
+        );
+
+        openNotificationWithIcon();
+        return navigate(`/staff/${profile.adminUserInfo.id}/main`);
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -122,11 +150,24 @@ const Body = () => {
             adminUserInfo: {
               ...profile.adminUserInfo,
               phone: data.phone,
-            }
+            },
           })
         );
-        navigate(`/staff/${profile.adminUserInfo.id}/main`)
-        navigate(`/staff/${profile.adminUserInfo.id}/main`)
+        const newDataUpdatedEmployeeCompany = {
+          firstName: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+        };
+        await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            employees: updatingEmployeesCompany(newDataUpdatedEmployeeCompany),
+          }
+        );
+
+        navigate(`/staff/${profile.adminUserInfo.id}/main`);
+        navigate(`/staff/${profile.adminUserInfo.id}/main`);
       }
     }
   };
@@ -161,12 +202,11 @@ const Body = () => {
           >
             <Button
               style={{ ...GrayButton, width: "fit-content" }}
-              onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
+              onClick={() =>
+                navigate(`/staff/${profile.adminUserInfo.id}/main`)
+              }
             >
-              <Typography
-                textTransform={"none"}
-                style={GrayButtonText}
-              >
+              <Typography textTransform={"none"} style={GrayButtonText}>
                 Cancel
               </Typography>
             </Button>
@@ -174,10 +214,7 @@ const Body = () => {
               type="submit"
               style={{ ...BlueButton, width: "fit-content" }}
             >
-              <Typography
-                textTransform={"none"}
-                style={BlueButtonText}
-              >
+              <Typography textTransform={"none"} style={BlueButtonText}>
                 Save
               </Typography>
             </Button>
@@ -334,9 +371,7 @@ const Body = () => {
             md={4}
           >
             <InputLabel style={{ width: "100%" }}>
-              <Typography
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
+              <Typography style={{ ...Subtitle, fontWeight: 500 }}>
                 Your photo
               </Typography>
             </InputLabel>
@@ -367,21 +402,28 @@ const Body = () => {
                 <Avatar
                   style={{
                     width: "5rem",
-                    height: "5rem"
+                    height: "5rem",
                   }}
                 >
-                  <img src={profile?.adminUserInfo?.imageProfile} alt={profile?.adminUserInfo?.imageProfile} style={{
-                    width: "150px",
-                    height: "350px",
-                    objectFit: "contain",
-                  }} />
+                  <img
+                    src={profile?.adminUserInfo?.imageProfile}
+                    alt={profile?.adminUserInfo?.imageProfile}
+                    style={{
+                      width: "150px",
+                      height: "350px",
+                      objectFit: "contain",
+                    }}
+                  />
                 </Avatar>
               ) : (
-                <Avatar style={{
-                  width: "5rem",
-                  height: "5rem"
-                }}>
-                  {!profile?.adminUserInfo?.imageProfile && `${profile?.firstName[0]} ${profile?.lastName[0]}`}
+                <Avatar
+                  style={{
+                    width: "5rem",
+                    height: "5rem",
+                  }}
+                >
+                  {!profile?.adminUserInfo?.imageProfile &&
+                    `${profile?.firstName[0]} ${profile?.lastName[0]}`}
                 </Avatar>
               )}
             </Grid>
@@ -453,8 +495,7 @@ const Body = () => {
                 item
                 xs={12}
               >
-                <Typography
-                  style={{ ...Subtitle, fontWeight: 400 }}>
+                <Typography style={{ ...Subtitle, fontWeight: 400 }}>
                   SVG, PNG, JPG or GIF (max. 1MB)
                 </Typography>
               </Grid>
@@ -491,7 +532,12 @@ const Body = () => {
             sm={6}
             md={6}
           >
-            <OutlinedInput disabled style={{ ...OutlinedInputStyle }} {...register("role")} fullWidth />
+            <OutlinedInput
+              disabled
+              style={{ ...OutlinedInputStyle }}
+              {...register("role")}
+              fullWidth
+            />
           </Grid>
           <Divider />
           <Grid
@@ -525,11 +571,18 @@ const Body = () => {
             sm={6}
             md={6}
           >
-            <Space style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignItems: "center" }} size={[8, 16]} wrap>
+            <Space
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+              size={[8, 16]}
+              wrap
+            >
               {listOfEvents().map((evet) => {
-
                 return (
-
                   <Grid
                     key={evet?.eventInfoDetail?.eventName}
                     display={"flex"}
@@ -545,7 +598,6 @@ const Body = () => {
                       style={OutlinedInputStyle}
                     />
                   </Grid>
-
                 );
               })}
             </Space>
@@ -567,27 +619,18 @@ const Body = () => {
             style={{ ...GrayButton, width: "fit-content" }}
             onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
           >
-            <Typography
-              textTransform={"none"}
-              style={GrayButtonText}
-            >
+            <Typography textTransform={"none"} style={GrayButtonText}>
               Cancel
             </Typography>
           </Button>
-          <Button
-            type="submit"
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <Typography
-              textTransform={"none"}
-              style={BlueButtonText}
-            >
+          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+            <Typography textTransform={"none"} style={BlueButtonText}>
               Save
             </Typography>
           </Button>
         </Grid>
-      </form>    </>
-
+      </form>{" "}
+    </>
   );
 };
 

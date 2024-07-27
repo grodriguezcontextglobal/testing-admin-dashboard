@@ -1,4 +1,5 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Modal } from "antd";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -8,7 +9,6 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
-import { useQueryClient } from "@tanstack/react-query";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -57,21 +57,34 @@ const ModalReturnDeviceFromStaff = ({
         staff_member_id: deviceInfo.staff_member_id,
         device_id: deviceInfo.item_id_info.item_id,
       });
+      const eventInfoForRemovingRow = await devitrakApi.post(
+        "/db_record/checking",
+        {
+          item_id: deviceInfo.device_id,
+          company_assigned_event_id: deviceInfo.company_id,
+        }
+      );
 
-      queryClient.invalidateQueries({
-        queryKey: ["staffMemberInfo"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["imagePerItemList"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInventoryCheckingQuery"],
-        exact: true,
-      });
+      if (eventInfoForRemovingRow.data) {
+       await devitrakApi.post("/db_record/removing-row-item-event-record", {
+          item_id: deviceInfo.device_id,
+          event_id: eventInfoForRemovingRow.data.result[0].event_id,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["staffMemberInfo"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["imagePerItemList"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["ItemsInventoryCheckingQuery"],
+          exact: true,
+        });
 
-      return closeModal();
+        return closeModal();
+      }
     }
   };
 

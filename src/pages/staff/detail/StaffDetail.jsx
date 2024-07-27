@@ -81,7 +81,7 @@ const StaffDetail = () => {
       fn: () => null,
     },
     {
-      label: "Assign to event",
+      label: "Assign user to event",
       route: "assign-staff-events",
       permission: [0, 1],
       disabled: false,
