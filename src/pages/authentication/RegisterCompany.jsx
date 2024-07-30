@@ -179,7 +179,6 @@ const RegisterCompany = () => {
         ...ref.current,
         stripeAccount: checkArray(creatingStripeCustomer.data.companyCustomer),
       };
-      console.log(ref.current);
       return creatingStripeCustomer.data;
     }
   };
@@ -214,20 +213,18 @@ const RegisterCompany = () => {
           status: "confirmed",
           super_user: true,
           role: "0",
-          inventory_location: [],
+          preference: { inventory_location: [] },
         },
       ],
       company_logo: props.company_logo,
     };
     const resp = await devitrakApi.post("/company/new", companyTemplate);
     if (resp.data) {
-      console.log(resp.data.company);
       const companyData = checkArray(resp.data.company);
       ref.current = {
         ...ref.current,
         companyData: companyData,
       };
-      console.log(ref.current);
       return;
     }
   };
@@ -264,8 +261,6 @@ const RegisterCompany = () => {
         newAdminUserTemplate
       );
       if (resp.data) {
-        console.log(resp.data);
-
         localStorage.setItem("admin-token", resp.data.token);
         ref.current = {
           ...ref.current,
@@ -276,13 +271,12 @@ const RegisterCompany = () => {
             lastName: user.lastName,
             email: user.email,
             phone: resp.data.entire.phone,
-            role: '0',
+            role: "0",
             company: user.company,
             token: resp.data.token,
           },
         };
       }
-      console.log(ref.current);
       return resp.data;
     } catch (error) {
       return error;
@@ -300,12 +294,10 @@ const RegisterCompany = () => {
       }
     );
     if (insertingNewMemberInCompany.data) {
-      console.log(insertingNewMemberInCompany.data);
       ref.current = {
         ...ref.current,
         userSQL: insertingNewMemberInCompany.data,
       };
-      console.log(ref.current);
       return insertingNewMemberInCompany.data;
     }
   };
@@ -325,12 +317,10 @@ const RegisterCompany = () => {
       }
     );
     if (insertingCompanyInfo.data) {
-      console.log(insertingCompanyInfo.data);
       ref.current = {
         ...ref.current,
         companySQL: insertingCompanyInfo.data.company.insertId,
       };
-      console.log(ref.current);
       return insertingCompanyInfo.data;
     }
   };
@@ -343,12 +333,10 @@ const RegisterCompany = () => {
       }
     );
     if (insertingStripeCompanyInfo.data) {
-      console.log(insertingStripeCompanyInfo.data);
       ref.current = {
         ...ref.current,
         stripeSQL: insertingStripeCompanyInfo.data,
       };
-      console.log(ref.current);
       return insertingStripeCompanyInfo.data;
     }
   };
@@ -359,9 +347,7 @@ const RegisterCompany = () => {
       { staff_id: ref.current.userSQL.member.insertId }
     );
     if (consultingNewStaffMember.data) {
-      console.log(consultingNewStaffMember.data);
       const sqlMemberInfo = checkArray(consultingNewStaffMember.data.member);
-      console.log(ref.current);
       return (ref.current = {
         ...ref.current,
         sqlMemberInfo: sqlMemberInfo,
@@ -377,12 +363,10 @@ const RegisterCompany = () => {
       }
     );
     if (companyInfo.data) {
-      console.log(companyInfo.data);
       const sqlInfo = {
         ...checkArray(companyInfo.data.company),
         stripeID: ref.current.stripeAccount.stripeID,
       };
-      console.log(ref.current);
       return (ref.current = {
         ...ref.current,
         sqlInfo: sqlInfo,
@@ -391,13 +375,11 @@ const RegisterCompany = () => {
   };
 
   const loginIntoOneCompanyAccount = async () => {
-    console.log(ref.current);
     const respo = await devitrakApiAdmin.post("/login", {
       email: user.email,
       password: user.password,
     });
     if (respo.data) {
-      console.log(respo.data);
       localStorage.setItem("admin-token", respo.data.token);
       dispatch(
         onLogin({
@@ -416,7 +398,7 @@ const RegisterCompany = () => {
           online: true,
           companyData: ref.current.companyData,
           sqlMemberInfo: ref.current.sqlMemberInfo,
-          sqlInfo: {...ref.current.stripeAccount},
+          sqlInfo: { ...ref.current.stripeAccount },
         })
       );
     }
