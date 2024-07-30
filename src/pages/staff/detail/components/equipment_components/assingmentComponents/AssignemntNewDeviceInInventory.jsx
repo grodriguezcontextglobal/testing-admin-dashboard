@@ -34,6 +34,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/Text
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
+import { BlueButton } from "../../../../../../styles/global/BlueButton";
 
 const options = [
   { value: "Select an option" },
@@ -48,6 +49,10 @@ const AssignemntNewDeviceInInventory = () => {
   const [valueSelection, setValueSelection] = useState(options[0].value);
   const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
+  const [moreInfo, setMoreInfo] = useState([]);
+  const [keyObject, setKeyObject] = useState("");
+  const [valueObject, setValueObject] = useState("");
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
   const newEventInfo = {};
@@ -142,6 +147,12 @@ const AssignemntNewDeviceInInventory = () => {
       controller.abort();
     };
   }, [selectedItem]);
+  const handleMoreInfoPerDevice = () => {
+    const result = [...moreInfo, { keyObject, valueObject }];
+    setKeyObject("");
+    setValueObject("");
+    return setMoreInfo(result);
+  };
 
   const createNewLease = async (props) => {
     const staffMember = await devitrakApi.post("/db_staff/consulting-member", {
@@ -161,12 +172,12 @@ const AssignemntNewDeviceInInventory = () => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `${profile.firstName} ${
-          profile.lastName
-        } / ${profile.email} / ${new Date().toLocaleDateString()}`,
-        venue_name: `${profile.firstName} ${
-          profile.lastName
-        } / ${profile.email} / ${new Date().toLocaleDateString()}`,
+        event_name: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
+        venue_name: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -232,7 +243,7 @@ const AssignemntNewDeviceInInventory = () => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          quantity:props.quantity
+          quantity: props.quantity,
         },
       ]);
       await closingProcess();
@@ -249,7 +260,7 @@ const AssignemntNewDeviceInInventory = () => {
       return await option1({
         template: props.template,
         deviceInfo: newAddedItem.data.items,
-        quantity:'1'
+        quantity: "1",
       });
     }
   };
@@ -321,12 +332,13 @@ const AssignemntNewDeviceInInventory = () => {
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
+            extra_serial_number: JSON.stringify(moreInfo),
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
               ...data,
               template: template,
-              quantity:'1'
+              quantity: "1",
             });
           }
         }
@@ -347,12 +359,13 @@ const AssignemntNewDeviceInInventory = () => {
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
+          extra_serial_number: JSON.stringify(moreInfo),
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
             ...data,
             template: template,
-            quantity:'1'
+            quantity: "1",
           });
         }
       }
@@ -858,6 +871,110 @@ const AssignemntNewDeviceInInventory = () => {
           </div>
         </div>
         <Divider />
+        <span
+          onClick={() => setMoreInfoDisplay(true)}
+          style={{
+            ...CenteringGrid,
+            width: "100%",
+            border: `1px solid ${
+              loadingStatus
+                ? "var(--disabled-blue-button)"
+                : "var(--blue-dark-600)"
+            }`,
+            borderRadius: "8px",
+            background: `${
+              loadingStatus
+                ? "var(--disabled-blue-button)"
+                : "var(--blue-dark-600)"
+            }`,
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            padding: "6px 12px",
+            cursor: "pointer",
+          }}
+        >
+          <Icon
+            icon="ic:baseline-plus"
+            color="var(--base-white, #FFF)"
+            width={20}
+            height={20}
+          />
+          &nbsp;
+          <p
+            style={{
+              color: "var(--base-white, #FFF)",
+              fontSize: "14px",
+              fontWeight: "600",
+              fontFamily: "Inter",
+              lineHeight: "20px",
+              textTransform: "none",
+            }}
+          >
+            Add more information
+          </p>
+        </span>
+        {moreInfoDisplay && (
+          <div
+            style={{
+              width: "100%",
+              ...CenteringGrid,
+              justifyContent: "space-between",
+              gap: "5px",
+            }}
+          >
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g IMEI"
+              name="key"
+              value={keyObject}
+              onChange={(e) => setKeyObject(e.target.value)}
+            />
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g YABSDA56AKJ"
+              name="key"
+              value={valueObject}
+              onChange={(e) => setValueObject(e.target.value)}
+            />
+            <Button
+              onClick={() => handleMoreInfoPerDevice()}
+              style={{ ...BlueButton, ...CenteringGrid }}
+            >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF)"
+                width={20}
+                height={20}
+              />{" "}
+            </Button>
+          </div>
+        )}
+        <Divider />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          {moreInfo.length > 0 &&
+            moreInfo.map((item) => (
+              <div
+                style={{
+                  backgroundColor: "var(--whitebase)",
+                  padding: "2.5px 5px",
+                  margin: "0 1px",
+                  border: "solid 0.1px var(--gray900)",
+                  borderRadius: "8px",
+                }}
+                key={`${item.keyObject}-${item.valueObject}`}
+              >
+                {item.keyObject}:{item.valueObject}
+              </div>
+            ))}
+        </div>
+        <Divider />
+
         <div
           style={{
             width: "100%",
