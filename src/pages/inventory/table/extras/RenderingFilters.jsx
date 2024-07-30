@@ -43,9 +43,9 @@ const RenderingFilters = ({ user, dataToDisplay }) => {
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
-  const [selectedRowKeys, setSelectedRowKeys] = useState([
-    ...renderingCardData.preference.inventory_location,
-  ]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState(
+    renderingCardData ? renderingCardData.preference.inventory_location : [],
+  );
   const updateEmployeesPreference = () => {
     let employCopy = user.companyData.employees.map((employee) => ({
       ...employee,

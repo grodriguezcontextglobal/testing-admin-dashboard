@@ -20,12 +20,15 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { QuestionIcon, UploadIcon } from "../../../components/icons/Icons";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-import "../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import "../../../styles/global/ant-select.css";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { formatDate } from "../utils/dateFormat";
+import "../../../styles/global/OutlineInput.css";
+import "../../../styles/global/ant-select.css";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import { BlueButton } from "../../../styles/global/BlueButton";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -33,6 +36,10 @@ const AddNewItem = () => {
   const [valueSelection, setValueSelection] = useState("");
   const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
+  const [moreInfo, setMoreInfo] = useState([]);
+  const [keyObject, setKeyObject] = useState("");
+  const [valueObject, setValueObject] = useState("");
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -148,7 +155,7 @@ const AddNewItem = () => {
         groupingByDeviceType[selectedItem],
         "serial_number"
       );
-      if (dataRef[data.serial_number].length > 0) {
+      if (dataRef[data.serial_number]?.length > 0) {
         return openNotificationWithIcon(
           "warning",
           "Device serial number already exists in company records."
@@ -187,6 +194,7 @@ const AddNewItem = () => {
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
+            extra_serial_number: JSON.stringify(moreInfo),
           });
           if (respNewItem.data.ok) {
             setValue("category_name", "");
@@ -222,6 +230,7 @@ const AddNewItem = () => {
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
+          extra_serial_number: JSON.stringify(moreInfo),
         });
         if (respNewItem.data.ok) {
           setValue("category_name", "");
@@ -231,7 +240,6 @@ const AddNewItem = () => {
           setValue("descript_item", "");
           setValue("ownership", "");
           setValue("serial_number", "");
-
           setValueSelection(options[0]);
           openNotificationWithIcon(
             "success",
@@ -246,6 +254,12 @@ const AddNewItem = () => {
     }
   };
 
+  const handleMoreInfoPerDevice = () => {
+    const result = [...moreInfo, { keyObject, valueObject }];
+    setKeyObject("");
+    setValueObject("");
+    return setMoreInfo(result);
+  };
   const renderTitle = () => {
     return (
       <>
@@ -750,14 +764,11 @@ const AddNewItem = () => {
           <div style={{ width: "100%" }}>
             <InputLabel style={{ width: "100%" }}>
               <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
+                style={{
+                  ...TextFontSize14LineHeight20,
+                  fontWeight: 500,
+                  color: "var(--gray700, #344054)",
+                }}
               >
                 Location{" "}
                 <Tooltip title="Where the item is location physically.">
@@ -778,6 +789,109 @@ const AddNewItem = () => {
               onChange={(value) => setLocationSelection(value)}
             />
           </div>
+        </div>
+        <Divider />
+        <span
+          onClick={() => setMoreInfoDisplay(true)}
+          style={{
+            ...CenteringGrid,
+            width: "100%",
+            border: `1px solid ${
+              loadingStatus
+                ? "var(--disabled-blue-button)"
+                : "var(--blue-dark-600)"
+            }`,
+            borderRadius: "8px",
+            background: `${
+              loadingStatus
+                ? "var(--disabled-blue-button)"
+                : "var(--blue-dark-600)"
+            }`,
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            padding: "6px 12px",
+            cursor: "pointer",
+          }}
+        >
+          <Icon
+            icon="ic:baseline-plus"
+            color="var(--base-white, #FFF)"
+            width={20}
+            height={20}
+          />
+          &nbsp;
+          <Typography
+            textTransform={"none"}
+            style={{
+              color: "var(--base-white, #FFF)",
+              fontSize: "14px",
+              fontWeight: "600",
+              fontFamily: "Inter",
+              lineHeight: "20px",
+            }}
+          >
+            Add more information
+          </Typography>
+        </span>
+        {moreInfoDisplay && (
+          <div
+            style={{
+              width: "100%",
+              ...CenteringGrid,
+              justifyContent: "space-between",
+              gap: "5px",
+            }}
+          >
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g IMEI"
+              name="key"
+              value={keyObject}
+              onChange={(e) => setKeyObject(e.target.value)}
+            />
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g YABSDA56AKJ"
+              name="key"
+              value={valueObject}
+              onChange={(e) => setValueObject(e.target.value)}
+            />
+            <Button
+              onClick={() => handleMoreInfoPerDevice()}
+              style={{ ...BlueButton, ...CenteringGrid }}
+            >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF)"
+                width={20}
+                height={20}
+              />{" "}
+            </Button>
+          </div>
+        )}
+        <Divider />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          {moreInfo.length > 0 &&
+            moreInfo.map((item) => (
+              <div
+                style={{
+                  backgroundColor: "var(--whitebase)",
+                  padding: "2.5px 5px",
+                  margin: "0 1px",
+                  border: "solid 0.1px var(--gray900)",
+                  borderRadius: "8px",
+                }}
+                key={`${item.keyObject}-${item.valueObject}`}
+              >
+                {item.keyObject}:{item.valueObject}
+              </div>
+            ))}
         </div>
         <Divider />
         <div
@@ -807,13 +921,13 @@ const AddNewItem = () => {
                   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 }}
               >
-                <Icon
+                {/* <Icon
                   icon="ri:arrow-go-back-line"
                   color="#344054"
                   width={20}
                   height={20}
                 />
-                &nbsp;
+                &nbsp; */}
                 <Typography
                   textTransform={"none"}
                   style={{
