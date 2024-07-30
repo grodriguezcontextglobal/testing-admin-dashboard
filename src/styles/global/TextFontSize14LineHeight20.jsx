@@ -5,4 +5,5 @@ export const TextFontSize14LineHeight20 = {
   fontSize: "14px",
   fontFamily: "Inter",
   lineHeight: "20px",
+  fontStyle: "normal",
 };
