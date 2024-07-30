@@ -35,6 +35,7 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import _ from "lodash";
 import "../../../styles/global/ant-select.css";
 import { formatDate } from "../utils/dateFormat";
+import { Subtitle } from "../../../styles/global/Subtitle";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -902,14 +903,15 @@ const EditGroup = () => {
         >
           <InputLabel style={{ width: "100%" }}>
             <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
+              style={{ ...Subtitle, fontWeight: 500 }}
+              // textTransform={"none"}
+              // textAlign={"left"}
+              // fontFamily={"Inter"}
+              // fontSize={"14px"}
+              // fontStyle={"normal"}
+              // fontWeight={500}
+              // lineHeight={"20px"}
+              // color={"var(--gray-700, #344054)"}
             >
               Description of the device
             </Typography>
@@ -1000,14 +1002,7 @@ const EditGroup = () => {
             item
             xs={12}
           >
-            <Typography
-              color={"var(--gray-600, #475467)"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
-            >
+            <Typography style={Subtitle}>
               SVG, PNG, JPG or GIF (max. 1MB)
             </Typography>
           </Grid>
