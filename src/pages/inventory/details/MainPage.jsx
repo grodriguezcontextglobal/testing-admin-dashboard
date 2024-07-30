@@ -29,6 +29,8 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import DeleteItem from "./detailComponent/actions/DeleteItem";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import useFetchingDeviceInfoBasedOnFeature from "../utils/useFetchingDeviceInfoBasedOnFeature";
+import CardRendered from "../utils/CardRendered";
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -59,6 +61,11 @@ const MainPage = () => {
     };
   }, [item_id]);
 
+  const props = {
+    variableName: "item_id",
+    value: location.search.split("=")[1],
+  };
+  const extraData = useFetchingDeviceInfoBasedOnFeature(props);
   if (trackingHistoryItemQuery.isLoading)
     return (
       <div style={CenteringGrid}>
@@ -273,6 +280,28 @@ const MainPage = () => {
             <TotalReturnedDevice dataFound={dataFound} />
           </Grid>
         </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          container
+        >
+          {Array.isArray(extraData.items) &&
+            extraData.items.length > 0 &&
+            extraData.items[0].extra_serial_number.length > 0 &&
+            extraData.items[0].extra_serial_number.map((item) => {
+              return (
+                <Grid key={item.valueObject} item xs={12} sm={12} md={3} lg={4}>
+                  <CardRendered
+                    props={item.valueObject}
+                    title={item.keyObject}
+                    optional={null}
+                  />
+                </Grid>
+              );
+            })}
+        </Grid>
+
         <Divider />
         <Grid
           marginY={3}
