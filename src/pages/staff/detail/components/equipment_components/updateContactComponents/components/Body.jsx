@@ -73,9 +73,11 @@ const Body = () => {
   }
   const updatingEmployeesCompany = (props) => {
     let employeeCompanyDataCopy = user.companyData.employees;
+    console.log("employeeCompanyData", employeeCompanyDataCopy);
     const employeeUpdating = employeeCompanyDataCopy.findIndex(
       (element) => element.user === profile.user
     );
+    console.log(employeeUpdating);
     if (employeeUpdating > -1) {
       employeeCompanyDataCopy[employeeUpdating] = {
         ...employeeCompanyDataCopy[employeeUpdating],
@@ -159,10 +161,13 @@ const Body = () => {
           email: data.email,
           phone: data.phone,
         };
+        const newEmployeeData = await updatingEmployeesCompany(
+          newDataUpdatedEmployeeCompany
+        );
         await devitrakApi.patch(
           `/company/update-company/${user.companyData.id}`,
           {
-            employees: updatingEmployeesCompany(newDataUpdatedEmployeeCompany),
+            employees: newEmployeeData,
           }
         );
 
