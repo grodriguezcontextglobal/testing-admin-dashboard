@@ -24,7 +24,7 @@ import "./Body.css";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
-  const roleDefinition = dicRole[Number(user.role)]
+  const roleDefinition = dicRole[Number(user.role)];
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: user.name,
@@ -76,6 +76,23 @@ const Body = () => {
     });
   }
 
+  const updatingEmployeesCompany = (props) => {
+    let employeeCompanyDataCopy = [...user.companyData.employees];
+    const employeeUpdating = employeeCompanyDataCopy.findIndex(
+      (element) => element.user === user.email
+    );
+    if (employeeUpdating > -1) {
+      employeeCompanyDataCopy[employeeUpdating] = {
+        ...employeeCompanyDataCopy[employeeUpdating],
+        user: props.email,
+        firstName: props.name,
+        lastName: props.lastName,
+      };
+      return employeeCompanyDataCopy;
+    }
+    return employeeCompanyDataCopy;
+  };
+
   const handleUpdatePersonalInfo = async (data) => {
     let base64;
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -110,6 +127,22 @@ const Body = () => {
             },
           })
         );
+        const newDataUpdatedEmployeeCompany = {
+          firstName: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+        };
+        const newEmployeeData = updatingEmployeesCompany(
+          newDataUpdatedEmployeeCompany
+        );
+        await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            employees: newEmployeeData,
+          }
+        );
+
         openNotificationWithIcon();
         return triggerRoutes();
       }
@@ -138,6 +171,22 @@ const Body = () => {
             },
           })
         );
+        const newDataUpdatedEmployeeCompany = {
+          firstName: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+        };
+        const newEmployeeData = updatingEmployeesCompany(
+          newDataUpdatedEmployeeCompany
+        );
+        await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            employees: newEmployeeData,
+          }
+        );
+
         openNotificationWithIcon();
         return triggerRoutes();
       }
@@ -466,7 +515,7 @@ const Body = () => {
             md={6}
           >
             <OutlinedInput
-             readOnly
+              readOnly
               style={{ ...OutlinedInputStyle }}
               {...register("role")}
               fullWidth
