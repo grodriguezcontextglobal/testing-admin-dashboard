@@ -22,6 +22,7 @@ import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import "./Body.css";
 import { useNavigate } from "react-router-dom";
 import dicRole from "../../../../../../../components/general/dicRole";
+import { onLogin } from "../../../../../../../store/slices/adminSlice";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -72,12 +73,10 @@ const Body = () => {
     });
   }
   const updatingEmployeesCompany = (props) => {
-    let employeeCompanyDataCopy = user.companyData.employees;
-    console.log("employeeCompanyData", employeeCompanyDataCopy);
+    let employeeCompanyDataCopy = [...user.companyData.employees];
     const employeeUpdating = employeeCompanyDataCopy.findIndex(
       (element) => element.user === profile.user
     );
-    console.log(employeeUpdating);
     if (employeeUpdating > -1) {
       employeeCompanyDataCopy[employeeUpdating] = {
         ...employeeCompanyDataCopy[employeeUpdating],
@@ -155,13 +154,29 @@ const Body = () => {
             },
           })
         );
+        dispatch(
+          onLogin({
+            ...user,
+            data: {
+              ...user.data,
+              name: data.name,
+              lastName: data.lastName,
+              email: data.email,
+              phone: data.phone,
+            },
+            name: data.name,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+          })
+        );
         const newDataUpdatedEmployeeCompany = {
           firstName: data.name,
           lastName: data.lastName,
           email: data.email,
           phone: data.phone,
         };
-        const newEmployeeData = await updatingEmployeesCompany(
+        const newEmployeeData = updatingEmployeesCompany(
           newDataUpdatedEmployeeCompany
         );
         await devitrakApi.patch(
@@ -194,37 +209,6 @@ const Body = () => {
           }}
           container
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            marginY={0}
-            gap={2}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-          >
-            <Button
-              style={{ ...GrayButton, width: "fit-content" }}
-              onClick={() =>
-                navigate(`/staff/${profile.adminUserInfo.id}/main`)
-              }
-            >
-              <Typography textTransform={"none"} style={GrayButtonText}>
-                Cancel
-              </Typography>
-            </Button>
-            <Button
-              type="submit"
-              style={{ ...BlueButton, width: "fit-content" }}
-            >
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Save
-              </Typography>
-            </Button>
-          </Grid>
-          <Divider />
           <Grid
             display={"flex"}
             flexDirection={"column"}
