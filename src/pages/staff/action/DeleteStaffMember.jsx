@@ -4,19 +4,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Modal, Table, Typography, notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import dicRole from "../../../components/general/dicRole";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { onLogin } from "../../../store/slices/adminSlice";
 
 const DeleteStaffMember = ({ modalState, setModalState }) => {
-  const [selectionType, ] = useState("checkbox");
+  const [selectionType] = useState("checkbox");
   const [staffMemberList, setStaffMemberList] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
+  const dispatch = useDispatch();
   const listAdminUsers = useQuery({
     queryKey: ["listOfAdminUsers"],
     queryFn: () =>
@@ -269,6 +271,15 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
         }
       );
       if (response.data) {
+        dispatch(
+          onLogin({
+            ...user,
+            companyData: {
+              ...user.companyData,
+              employees: Array.from(updatedEmployeeList),
+            },
+          })
+        );
         queryClient.invalidateQueries({
           queryKey: ["listOfAdminUsers"],
           exact: true,
@@ -324,8 +335,8 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
         width={1000}
         maskClosable={false}
         style={{
-          zIndex:30,
-          margin:"12dvh 0 0"
+          zIndex: 30,
+          margin: "12dvh 0 0",
         }}
       >
         {contextHolder}
