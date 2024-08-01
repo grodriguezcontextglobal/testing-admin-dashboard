@@ -173,7 +173,10 @@ const RegisterCompany = () => {
       `/stripe/company-account-stripe`,
       {
         company: companyValue,
-      }
+        ownerFirstName: user.name,
+        ownerLastName: user.lastName,
+        ownerEmail: user.email,
+        }
     );
     if (checkExistingStripeAccount.data.companyStripeAccountFound) {
       ref.current = {
