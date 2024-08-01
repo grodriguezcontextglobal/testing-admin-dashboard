@@ -270,11 +270,11 @@ const MainPage = () => {
           container
         >
           <Grid item xs={12} sm={12} md={6} lg={4}>
-            {" "}
-            <TotalDevicesDistributed dataFound={dataFound} />
+            <TotalRequestedDevice dataFound={dataFound} />
           </Grid>
           <Grid item xs={12} sm={12} md={6} lg={4}>
-            <TotalRequestedDevice dataFound={dataFound} />
+            {" "}
+            <TotalDevicesDistributed dataFound={dataFound} />
           </Grid>
           <Grid item xs={12} sm={12} md={6} lg={4}>
             <TotalReturnedDevice dataFound={dataFound} />
@@ -287,8 +287,8 @@ const MainPage = () => {
           container
         >
           {Array.isArray(extraData.items) &&
-            extraData.items.length > 0 &&
-            extraData.items[0].extra_serial_number.length > 0 &&
+            extraData.items?.length > 0 &&
+            extraData.items[0].extra_serial_number?.length > 0 &&
             extraData.items[0].extra_serial_number.map((item) => {
               return (
                 <Grid key={item.valueObject} item xs={12} sm={12} md={3} lg={4}>
