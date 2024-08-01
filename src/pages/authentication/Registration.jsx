@@ -1,11 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import {
-  FormLabel,
-  Grid,
-  OutlinedInput,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { FormLabel, Grid, OutlinedInput, TextField } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, notification } from "antd";
 import { useForm } from "react-hook-form";
@@ -21,14 +15,19 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
+import { devitrakApi } from "../../api/devitrakApi";
+import { useCallback, useEffect, useState } from "react";
+import { isValidEmail } from "../../components/utils/IsValidEmail";
+import { checkArray } from "../../components/utils/checkArray";
 // import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, watch } = useForm({
     defaultValues: {
       firstName: user.name,
       lastName: user.lastName,
       email: user.email,
+      email_confirmation: user.email,
       password: user.password,
       password2: user.password,
     },
@@ -61,6 +60,41 @@ const Registration = () => {
     if (isLargeDevice) return arg3; //"40vw";
     if (isExtraLargeDevice) return arg4; //"50vw";
   };
+  const [userExists, setUserExists] = useState([]);
+  const checkExistingUser = useCallback(async () => {
+    if (isValidEmail(watch("email"))) {
+      const response = await devitrakApi.post(`/staff/admin-users`, {
+        email: watch("email"),
+      });
+      if (response.data) {
+        const result = [...response.data.adminUsers];
+        return setUserExists(result);
+      }
+    }
+  }, isValidEmail(watch("email")));
+
+  useEffect(() => {
+    const controller = new AbortController();
+    checkExistingUser();
+    return () => {
+      controller.abort();
+    };
+  }, [isValidEmail(watch("email"))]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (userExists.length > 0)
+      return openNotificationWithIcon(
+        "success",
+        "Email already exists in our record.",
+        "Please proceed to set up a company account."
+      );
+
+    return () => {
+      controller.abort();
+    };
+  }, [userExists.length > 0]);
+
   const onSubmitRegister = async (data) => {
     if (data.password !== data.password2)
       return openNotificationWithIcon(
@@ -68,6 +102,41 @@ const Registration = () => {
         "Action denied.",
         "Password must match."
       );
+    if (data.email !== data.email_confirmation)
+      return openNotificationWithIcon(
+        "error",
+        "Action denied.",
+        "Emails must match."
+      );
+    if (userExists.length > 0) {
+      openNotificationWithIcon(
+        "success",
+        "Email already exists in our record.",
+        "Please proceed to set up a company account."
+      );
+      const userData = checkArray(userExists);
+      const newAdminUserTemplate = {
+        existing:true,
+        userID: userData.id,
+        name: userData.name,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        role: "0",
+        online: true,
+        imageProfile: userData.imageProfile,
+        rowImageProfile: "",
+        data: {
+          name: userData.name,
+          lastName: userData.lastName,
+          email: userData.email,
+          phone: userData.phone,
+          imageProfile: userData.imageProfile,
+        },
+      };
+      dispatch(onLogin(newAdminUserTemplate));
+      return navigate("/register/company-setup");
+    }
     try {
       let base64 = "";
       if (data.photo.length > 0) {
@@ -76,6 +145,7 @@ const Registration = () => {
         base64 = await convertToBase64(user.rowImageProfile);
       }
       const newAdminUserTemplate = {
+        existing:false,
         name: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -187,30 +257,34 @@ const Registration = () => {
               <OutlinedInput
                 required
                 {...register("email")}
-                // value={email}
-                // onChange={(e) => setEmail(e.target.value)}
                 style={OutlinedInputStyle}
                 placeholder="Enter your email"
                 type="email"
                 fullWidth
               />
+            </Grid>
+            <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
-                <Typography style={Subtitle}>
-                  {" "}
-                  You need to enter a company email if you are creating a new
-                  company.
-                </Typography>
+                Confirm email <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
+              <OutlinedInput
+                disabled={userExists.length > 0}
+                required
+                {...register("email_confirmation")}
+                style={OutlinedInputStyle}
+                placeholder="Repeat your email"
+                type="email_confirmation"
+                fullWidth
+              />
             </Grid>
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Password <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
               <OutlinedInput
+                disabled={userExists.length > 0}
                 required
                 {...register("password")}
-                // value={password}
-                // onChange={(e) => setPassword(e.target.value)}
                 style={OutlinedInputStyle}
                 placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                 type="password"
@@ -222,6 +296,7 @@ const Registration = () => {
                 Repeat password <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
               <OutlinedInput
+                disabled={userExists.length > 0}
                 required
                 {...register("password2")}
                 // value={password2}
@@ -237,6 +312,7 @@ const Registration = () => {
                 First name <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
               <OutlinedInput
+                disabled={userExists.length > 0}
                 required
                 {...register("firstName")}
                 type="text"
@@ -254,6 +330,7 @@ const Registration = () => {
                 Last name <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
               <OutlinedInput
+                disabled={userExists.length > 0}
                 required
                 {...register("lastName")}
                 type="text"
@@ -391,7 +468,8 @@ const Registration = () => {
                     justifyContent={"center"}
                     alignItems={"center"}
                     item
-                    xs={12} sm={10}
+                    xs={12}
+                    sm={10}
                   >
                     <TextField
                       {...register("photo")}
