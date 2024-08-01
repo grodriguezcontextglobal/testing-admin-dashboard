@@ -15,16 +15,15 @@ import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, redirect } from "react-router-dom";
-import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { Link, redirect, useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { CompanyIcon } from "../../components/icons/Icons";
 import { checkArray } from "../../components/utils/checkArray";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
 import {
   onAddErrorMessage,
-  onLogin,
-  onLogout,
+  onLogout
 } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -60,6 +59,7 @@ const RegisterCompany = () => {
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { register, handleSubmit } = useForm();
   const [api, contextHolder] = notification.useNotification();
@@ -169,17 +169,34 @@ const RegisterCompany = () => {
       ownerLastName: user.lastName,
       ownerEmail: user.email,
     };
-    const creatingStripeCustomer = await devitrakApi.post(
-      "/stripe/new-company-account",
-      newCompanyAccountTemplate
+    const checkExistingStripeAccount = await devitrakApi.post(
+      `/stripe/company-account-stripe`,
+      {
+        company: companyValue,
+      }
     );
-    if (creatingStripeCustomer.data) {
-      console.log(creatingStripeCustomer.data.companyCustomer);
+    if (checkExistingStripeAccount.data.companyStripeAccountFound) {
       ref.current = {
         ...ref.current,
-        stripeAccount: checkArray(creatingStripeCustomer.data.companyCustomer),
+        stripeAccount: checkArray(
+          checkExistingStripeAccount.data.companyStripeAccountFound
+        ),
       };
-      return creatingStripeCustomer.data;
+      return checkExistingStripeAccount.data;
+    } else {
+      const creatingStripeCustomer = await devitrakApi.post(
+        "/stripe/new-company-account",
+        newCompanyAccountTemplate
+      );
+      if (creatingStripeCustomer.data) {
+        ref.current = {
+          ...ref.current,
+          stripeAccount: checkArray(
+            creatingStripeCustomer.data.companyCustomer
+          ),
+        };
+        return creatingStripeCustomer.data;
+      }
     }
   };
   const createCompany = async (props) => {
@@ -207,6 +224,7 @@ const RegisterCompany = () => {
       stripe_customer_id: ref.current.stripeAccount.stripeID,
       employees: [
         {
+          userId: user.userID ? user.userID : ref.current.userRegistration.uid,
           user: user.email,
           firstName: user.name,
           lastName: user.lastName,
@@ -218,14 +236,28 @@ const RegisterCompany = () => {
       ],
       company_logo: props.company_logo,
     };
-    const resp = await devitrakApi.post("/company/new", companyTemplate);
-    if (resp.data) {
-      const companyData = checkArray(resp.data.company);
-      ref.current = {
+    const checkingExistingCompany = await devitrakApi.post(
+      `/company/search-company`,
+      {
+        stripe_customer_id: ref.current.stripeAccount.stripeID,
+      }
+    );
+    if (checkingExistingCompany.data.company.length > 0) {
+      const companyData = checkArray(checkingExistingCompany.data.company);
+      return (ref.current = {
         ...ref.current,
         companyData: companyData,
-      };
-      return;
+      });
+    } else {
+      const resp = await devitrakApi.post("/company/new", companyTemplate);
+      if (resp.data) {
+        const companyData = checkArray(resp.data.company);
+        ref.current = {
+          ...ref.current,
+          companyData: companyData,
+        };
+        return;
+      }
     }
   };
 
@@ -261,7 +293,7 @@ const RegisterCompany = () => {
         newAdminUserTemplate
       );
       if (resp.data) {
-        localStorage.setItem("admin-token", resp.data.token);
+        // localStorage.setItem("admin-token", resp.data.token);
         ref.current = {
           ...ref.current,
           userRegistration: {
@@ -273,7 +305,7 @@ const RegisterCompany = () => {
             phone: resp.data.entire.phone,
             role: "0",
             company: user.company,
-            token: resp.data.token,
+            // token: resp.data.token,
           },
         };
       }
@@ -303,28 +335,52 @@ const RegisterCompany = () => {
   };
 
   const insertingNewCompanyInSqlDb = async (props) => {
-    const insertingCompanyInfo = await devitrakApi.post(
-      "/db_company/new_company",
+    const checkingExistingCompany = await devitrakApi.post(
+      `/db_company/consulting-company`,
       {
         company_name: companyValue,
-        street_address: props.street,
-        city_address: props.city,
-        state_address: props.state,
-        zip_address: props.postal_code,
-        phone_number: props.main_phone,
-        email_company: websiteUrl,
-        industry: industry,
       }
     );
-    if (insertingCompanyInfo.data) {
+    if (checkingExistingCompany.data.company.length > 0) {
       ref.current = {
         ...ref.current,
-        companySQL: insertingCompanyInfo.data.company.insertId,
+        companySQL: checkArray(checkingExistingCompany.data.company).company_id,
       };
-      return insertingCompanyInfo.data;
+      return checkArray(checkingExistingCompany.data.company);
+    } else {
+      const insertingCompanyInfo = await devitrakApi.post(
+        "/db_company/new_company",
+        {
+          company_name: companyValue,
+          street_address: props.street,
+          city_address: props.city,
+          state_address: props.state,
+          zip_address: props.postal_code,
+          phone_number: props.main_phone,
+          email_company: websiteUrl,
+          industry: industry,
+        }
+      );
+      if (insertingCompanyInfo.data) {
+        ref.current = {
+          ...ref.current,
+          companySQL: insertingCompanyInfo.data.company.insertId,
+        };
+        return insertingCompanyInfo.data;
+      }
     }
   };
   const insertingStripeAccountInSqlDb = async () => {
+    const checkingExistingData = await devitrakApi.post(
+      "/db_stripe/consulting-stripe",
+      {
+        stripe_id: ref.current.stripeAccount.stripeID,
+        company_id: ref.current.companySQL,
+      }
+    );
+    if (checkingExistingData.data.stripe.length > 0) {
+      return null;
+    }
     const insertingStripeCompanyInfo = await devitrakApi.post(
       "/db_stripe/new_stripe",
       {
@@ -342,16 +398,30 @@ const RegisterCompany = () => {
   };
 
   const consultingUserMemberInSqlDb = async () => {
-    const consultingNewStaffMember = await devitrakApi.post(
-      "/db_staff/consulting-member",
-      { staff_id: ref.current.userSQL.member.insertId }
-    );
-    if (consultingNewStaffMember.data) {
-      const sqlMemberInfo = checkArray(consultingNewStaffMember.data.member);
-      return (ref.current = {
-        ...ref.current,
-        sqlMemberInfo: sqlMemberInfo,
-      });
+    if (ref.current.userSQL) {
+      const consultingNewStaffMember = await devitrakApi.post(
+        "/db_staff/consulting-member",
+        { staff_id: ref.current.userSQL.member.insertId }
+      );
+      if (consultingNewStaffMember.data) {
+        const sqlMemberInfo = checkArray(consultingNewStaffMember.data.member);
+        return (ref.current = {
+          ...ref.current,
+          sqlMemberInfo: sqlMemberInfo,
+        });
+      }
+    } else {
+      const consultingNewStaffMember = await devitrakApi.post(
+        "/db_staff/consulting-member",
+        { email: user.email }
+      );
+      if (consultingNewStaffMember.data) {
+        const sqlMemberInfo = checkArray(consultingNewStaffMember.data.member);
+        return (ref.current = {
+          ...ref.current,
+          sqlMemberInfo: sqlMemberInfo,
+        });
+      }
     }
   };
 
@@ -371,36 +441,6 @@ const RegisterCompany = () => {
         ...ref.current,
         sqlInfo: sqlInfo,
       });
-    }
-  };
-
-  const loginIntoOneCompanyAccount = async () => {
-    const respo = await devitrakApiAdmin.post("/login", {
-      email: user.email,
-      password: user.password,
-    });
-    if (respo.data) {
-      localStorage.setItem("admin-token", respo.data.token);
-      dispatch(
-        onLogin({
-          data: {
-            ...respo.data.entire,
-            online: respo.data.entire.online,
-          },
-          name: user.data.name,
-          lastName: user.data.lastName,
-          uid: respo.data.uid ?? respo.data.entire.id,
-          email: user.email,
-          role: "0",
-          phone: respo.data.phone,
-          company: companyValue,
-          token: respo.data.token,
-          online: true,
-          companyData: ref.current.companyData,
-          sqlMemberInfo: ref.current.sqlMemberInfo,
-          sqlInfo: { ...ref.current.stripeAccount },
-        })
-      );
     }
   };
 
@@ -428,24 +468,49 @@ const RegisterCompany = () => {
           "We're processing your request",
           0
         );
-        await createStripeAccount();
-        await createCompany({ ...data, company_logo: base64 });
-        await userRegistrationProcess();
-        await insertingUserMemberInSqlDb(data.main_phone);
-        await insertingNewCompanyInSqlDb(data);
-        await insertingStripeAccountInSqlDb();
-        await consultingUserMemberInSqlDb();
-        await consultingCompanyInSqlDb();
-        await loginIntoOneCompanyAccount();
-        queryClient.clear();
-        setLoadingStatus(false);
-        openNotificationWithIcon(
-          "success",
-          "Account created.",
-          "Your new account was created.",
-          3
-        );
-        await redirect("/", { replace: true });
+        if (user.existing) {
+          await createStripeAccount();
+          await createCompany({ ...data, company_logo: base64 });
+          await insertingNewCompanyInSqlDb(data);
+          await insertingStripeAccountInSqlDb();
+          await consultingUserMemberInSqlDb();
+          await consultingCompanyInSqlDb();
+          queryClient.clear();
+          setLoadingStatus(false);
+          openNotificationWithIcon(
+            "success",
+            "Account created.",
+            "Your new account was created. Please log in.",
+            3
+          );
+          setTimeout(() => {
+            api.destroy();
+            return navigate("/login", { replace: true });
+          }, 3000);
+          return;
+        } else {
+          await createStripeAccount();
+          await userRegistrationProcess();
+          await createCompany({ ...data, company_logo: base64 });
+          await insertingUserMemberInSqlDb(data.main_phone);
+          await insertingNewCompanyInSqlDb(data);
+          await insertingStripeAccountInSqlDb();
+          await consultingUserMemberInSqlDb();
+          await consultingCompanyInSqlDb();
+          queryClient.clear();
+          setLoadingStatus(false);
+          openNotificationWithIcon(
+            "success",
+            "Account created.",
+            "Your new account was created. Please log in.",
+            3
+          );
+          setTimeout(() => {
+            api.destroy();
+            return redirect("/", { replace: true });
+          }, 3000);
+          return;
+        }
       } catch (error) {
         notification.destroy("info");
         openNotificationWithIcon(
@@ -534,8 +599,7 @@ const RegisterCompany = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Type to select your company{" "}
-                    <span style={{ fontWeight: 800 }}>*</span>
+                    Company name <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <Grid
                     item
@@ -545,6 +609,7 @@ const RegisterCompany = () => {
                     justifyContent={"space-between"}
                   >
                     <OutlinedInput
+                      required
                       type="text"
                       value={companyValue}
                       onChange={(e) => setCompanyValue(e.target.value)}
@@ -570,6 +635,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
                     Main phone number <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
                       {...register("main_phone", { required: true })}
                       style={OutlinedInputStyle}
@@ -595,7 +661,7 @@ const RegisterCompany = () => {
                   </FormLabel>
                   <OutlinedInput
                     disabled={loadingStatus || matchCompany()}
-                    {...register("alternative_phone", { required: true })}
+                    {...register("alternative_phone", { required: false })}
                     style={OutlinedInputStyle}
                     placeholder=""
                     type="text"
@@ -607,6 +673,7 @@ const RegisterCompany = () => {
                     Website <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <OutlinedInput
+                    required
                     disabled={loadingStatus || matchCompany()}
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
@@ -633,7 +700,7 @@ const RegisterCompany = () => {
                     <OutlinedInput
                       required
                       disabled={loadingStatus || matchCompany()}
-                      {...register("country")}
+                      {...register("country", { required: true })}
                       style={OutlinedInputStyle}
                       placeholder="Country name"
                       type="text"
@@ -657,6 +724,7 @@ const RegisterCompany = () => {
                     Address for company headquarters{" "}
                     <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
                       {...register("street", { required: true })}
                       style={{ ...OutlinedInputStyle, margin: "0 0 20px" }}
@@ -691,6 +759,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
                     City <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
                       {...register("city", { required: true })}
                       style={OutlinedInputStyle}
@@ -719,6 +788,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     State <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
                       {...register("state", { required: true })}
                       style={OutlinedInputStyle}
@@ -730,6 +800,7 @@ const RegisterCompany = () => {
                   <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
                     Zip code <span style={{ fontWeight: 800 }}>*</span>
                     <OutlinedInput
+                      required
                       disabled={loadingStatus || matchCompany()}
                       {...register("postal_code", { required: true })}
                       style={OutlinedInputStyle}
@@ -1125,45 +1196,33 @@ RegisterCompany.propTypes = {
 };
 export default RegisterCompany;
 
-// const updatingOnlineStatusUser = async () => {
-//   const onlineStatus = await devitrakApiAdmin.patch(
-//     `/profile/${ref.current.userRegistration.uid}`,
-//     { online: true }
-//   );
-//   if (onlineStatus.data) {
+
+// const loginIntoOneCompanyAccount = async () => {
+//   const respo = await devitrakApiAdmin.post("/login", {
+//     email: user.email,
+//     password: user.password,
+//   });
+//   if (respo.data) {
+//     localStorage.setItem("admin-token", respo.data.token);
 //     dispatch(
 //       onLogin({
-//         ...ref.current,
-//         data: onlineStatus.data.entire,
-//         name: onlineStatus.data.name,
-//         lastName: onlineStatus.data.lastName,
-//         uid: onlineStatus.data.uid,
-//         email: onlineStatus.data.email,
-//         role: onlineStatus.data.role,
-//         phone: onlineStatus.data.phone,
-//         company: onlineStatus.data.company,
-//         token: onlineStatus.data.token,
-//         online: onlineStatus.data.entire.online,
-//         sqlInfo: {
-//           stripeID: ref.current.stripeAccount,
+//         data: {
+//           ...respo.data.entire,
+//           online: respo.data.entire.online,
 //         },
+//         name: user.data.name,
+//         lastName: user.data.lastName,
+//         uid: respo.data.uid ?? respo.data.entire.id,
+//         email: user.email,
+//         role: "0",
+//         phone: respo.data.phone,
+//         company: companyValue,
+//         token: respo.data.token,
+//         online: true,
+//         companyData: ref.current.companyData,
+//         sqlMemberInfo: ref.current.sqlMemberInfo,
+//         sqlInfo: { ...ref.current.stripeAccount },
 //       })
 //     );
-//     ref.current = {
-//       ...ref.current,
-//       userRegistration: {
-//         data: onlineStatus.data.entire,
-//         name: onlineStatus.data.name,
-//         lastName: onlineStatus.data.lastName,
-//         uid: onlineStatus.data.uid,
-//         email: onlineStatus.data.email,
-//         role: onlineStatus.data.role,
-//         phone: onlineStatus.data.phone,
-//         company: onlineStatus.data.company,
-//         token: onlineStatus.data.token,
-//         online: onlineStatus.data.entire.online,
-//       },
-//     };
-//     return onlineStatus;
 //   }
 // };
