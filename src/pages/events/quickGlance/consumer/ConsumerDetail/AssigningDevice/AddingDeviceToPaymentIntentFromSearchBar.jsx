@@ -26,7 +26,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const { user } = useSelector((state) => state.admin);
   const { choice, event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
-  // const { deviceSetup } = event;
+  const { deviceSetup } = event;
   const [submittedAction, setSubmittedAction] = useState(false);
   const refDeviceObjectRetrieve = useRef(null);
   const refDeviceHasRecordInEvent = useRef(null);
@@ -72,24 +72,34 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   let serialNumber = watch("serialNumber");
   const sortAndFilterDeviceListPerCompanyAndEvent = () => {
     if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
-      refDeviceSetInEvent.current = checkDeviceInUseInOtherCustomerInTheSameEventQuery;
+      // refDeviceSetInEvent.current = checkDeviceInUseInOtherCustomerInTheSameEventQuery;
       return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
     }
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
 
-  // const retrieveDeviceInfoSetInEventForConsumers = () => {
-  //   const result = new Set();
-  //   for (let data of deviceSetup) {
-  //     if (data.consumerUses) {
-  //       result.add(data);
-  //     }
-  //   }
-  //   refDeviceSetInEvent.current = Array.from(result);
-  //   return Array.from(result);
-  // };
-  // retrieveDeviceInfoSetInEventForConsumers();
+  const retrieveDeviceInfoSetInEventForConsumers = () => {
+    const sortInventory = _.groupBy(
+      sortAndFilterDeviceListPerCompanyAndEvent(),
+      "type"
+    );
+    const result = new Set();
+    for (let data of deviceSetup) {
+      if (data.consumerUses) {
+        if (sortInventory[data.group]) {
+          result.add({
+            ...data,
+            startingNumber: sortInventory[data.group][0].device,
+            endingNumber: sortInventory[data.group].at(-1).device,
+          });
+        }
+      }
+    }
+    refDeviceSetInEvent.current = Array.from(result);
+    return Array.from(result);
+  };
+  retrieveDeviceInfoSetInEventForConsumers();
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
     const dataToRetrieve = new Set();
     for (let data of refDeviceSetInEvent.current) {
