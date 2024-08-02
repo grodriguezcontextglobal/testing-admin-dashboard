@@ -233,6 +233,7 @@ const AddNewBulkItems = () => {
               created_at: formatDate(new Date()),
               updated_at: formatDate(new Date()),
               company: user.company,
+              extra_serial_number: JSON.stringify([]),
             });
             if (
               !renderLocationOptions().some(
@@ -309,6 +310,7 @@ const AddNewBulkItems = () => {
             created_at: formatDate(new Date()),
             updated_at: formatDate(new Date()),
             company: user.company,
+            extra_serial_number: JSON.stringify([]),
           });
           if (
             !renderLocationOptions().some(
