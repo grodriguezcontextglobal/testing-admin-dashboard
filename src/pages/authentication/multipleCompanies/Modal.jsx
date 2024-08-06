@@ -5,7 +5,12 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
 import renderingTitle from "../../../components/general/renderingTitle";
-import { clearErrorMessage, onLogin } from "../../../store/slices/adminSlice";
+import {
+  clearErrorMessage,
+  onAddErrorMessage,
+  onLogin,
+  onLogout,
+} from "../../../store/slices/adminSlice";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 
@@ -34,61 +39,71 @@ const ModalMultipleCompanies = ({
     return result;
   };
   const loginIntoOneCompanyAccount = async (props) => {
-    const respo = await devitrakApiAdmin.post("/login", {
-      email: dataPassed.email,
-      password: dataPassed.password,
-    });
-    if (respo.data) {
-      localStorage.setItem("admin-token", respo.data.token);
-      const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
-        `/profile/${respo.data.uid}`,
-        {
-          online: true,
-        }
-      );
-      const respoFindMemberInfo = await devitrakApi.post(
-        "/db_staff/consulting-member",
-        {
-          email: dataPassed.email,
-        }
-      );
-      const companyInfoTable = await devitrakApi.post(
-        "/db_company/consulting-company",
-        {
-          company_name: props.company,
-        }
-      );
-      const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: companyInfoTable.data.company.at(-1).company_id,
+    try {
+      const respo = await devitrakApiAdmin.post("/login", {
+        email: dataPassed.email,
+        password: dataPassed.password,
       });
-      dispatch(
-        onLogin({
-          data: {
-            ...respo.data.entire,
+      if (respo.data) {
+        localStorage.setItem("admin-token", respo.data.token);
+        const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
+          `/profile/${respo.data.uid}`,
+          {
+            online: true,
+          }
+        );
+        const respoFindMemberInfo = await devitrakApi.post(
+          "/db_staff/consulting-member",
+          {
+            email: dataPassed.email,
+          }
+        );
+        const companyInfoTable = await devitrakApi.post(
+          "/db_company/consulting-company",
+          {
+            company_name: props.company,
+          }
+        );
+        const stripeSQL = await devitrakApi.post(
+          "/db_stripe/consulting-stripe",
+          {
+            company_id: companyInfoTable.data.company.at(-1).company_id,
+          }
+        );
+        dispatch(
+          onLogin({
+            data: {
+              ...respo.data.entire,
+              online: updatingOnlineStatusResponse.data.entire.online,
+            },
+            name: respo.data.name,
+            lastName: respo.data.lastName,
+            uid: respo.data.uid,
+            email: respo.data.email,
+            role: props.role,
+            phone: respo.data.phone,
+            company: props.company,
+            companyData: findingCompanyInfoBasedOnSelection(props.company),
+            token: respo.data.token,
             online: updatingOnlineStatusResponse.data.entire.online,
-          },
-          name: respo.data.name,
-          lastName: respo.data.lastName,
-          uid: respo.data.uid,
-          email: respo.data.email,
-          role: props.role,
-          phone: respo.data.phone,
-          company: props.company,
-          companyData: findingCompanyInfoBasedOnSelection(props.company),
-          token: respo.data.token,
-          online: updatingOnlineStatusResponse.data.entire.online,
-          sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
-          sqlInfo: {
-            ...companyInfoTable.data.company.at(-1),
-            stripeID: stripeSQL.data.stripe.at(-1),
-          },
-        })
-      );
+            sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
+            sqlInfo: {
+              ...companyInfoTable.data.company.at(-1),
+              stripeID: stripeSQL.data.stripe.at(-1),
+            },
+          })
+        );
 
-      dispatch(clearErrorMessage());
-      queryClient.clear();
-      openNotificationWithIcon("success", "User logged in.");
-      navigate("/");
+        dispatch(clearErrorMessage());
+        queryClient.clear();
+        openNotificationWithIcon("success", "User logged in.");
+        navigate("/");
+      }
+    } catch (error) {
+      openNotificationWithIcon("error", `${error.response.data.msg}`);
+      dispatch(onLogout("Incorrect credentials"));
+      dispatch(onAddErrorMessage(error?.response?.data?.msg));
+      throw error
     }
   };
   return (
