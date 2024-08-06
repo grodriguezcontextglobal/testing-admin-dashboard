@@ -10,9 +10,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Modal, Select } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { RectangleBluePlusIcon } from "../../../../components/icons/Icons";
+import {
+  onAddEventData
+} from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
@@ -21,7 +24,6 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
   setOpenModalDeviceSetup,
@@ -31,6 +33,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const { register, handleSubmit } = useForm();
+  const dispatch = useDispatch();
   const closeModal = () => {
     return setOpenModalDeviceSetup(false);
   };
@@ -129,6 +132,50 @@ const ModalAddAndUpdateDeviceSetup = ({
     setValueItemSelected(optionRendering);
   };
 
+  const orderValuesInPlace = (values) => {
+    return values.sort((a, b) => parseInt(a) - parseInt(b));
+  };
+  const deviceRanging = () => {
+    let ranges = [];
+    for (let item of listOfLocations) {
+      ranges = [
+        ...ranges,
+        item.deviceInfo[0].serial_number,
+        item.deviceInfo[Number(item.quantity) - 1].serial_number,
+      ];
+    }
+    return orderValuesInPlace(ranges);
+  };
+
+  const updateDeviceSetupInEvent = async () => {
+    const ranging = deviceRanging();
+    const updateDeviceInv =[ ...event.deviceSetup];
+    const foundIndex = updateDeviceInv.findIndex(
+      (element) => element.group === listOfLocations[0].deviceInfo[0].item_group
+    );
+    if (foundIndex > -1) {
+      updateDeviceInv[foundIndex] = {
+        ...updateDeviceInv[foundIndex],
+        startingNumber: ranging[0],
+        endingNumber: ranging.at(-1),
+      };
+    }
+    const updatingDeviceInEvent = await devitrakApi.patch(
+      `/event/edit-event/${event.id}`,
+      {
+        deviceSetup: updateDeviceInv,
+      }
+    );
+    if (updatingDeviceInEvent.data) {
+      return dispatch(
+        onAddEventData({
+          ...event,
+          deviceSetup: updateDeviceInv,
+        })
+      );
+    }
+  };
+
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     for (let index = 0; index < Number(props.quantity); index++) {
       await devitrakApi.post("/receiver/receivers-pool", {
@@ -141,10 +188,10 @@ const ModalAddAndUpdateDeviceSetup = ({
         type: props.deviceInfo[index].item_group,
       });
     }
+    await updateDeviceSetupInEvent();
     await closeModal();
     return null;
   };
-
   const createDeviceInEvent = async (props) => {
     const event_id = event.sql.event_id;
     // const limit = Number(props.quantity) - 1;
@@ -153,7 +200,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       item_group: valueItemSelected[0].item_group,
       category_name: valueItemSelected[0].category_name,
       startingNumber: valueItemSelected[0].serial_number,
-      quantity:props.quantity,
+      quantity: props.quantity,
     });
     if (respoUpdating.data.ok) {
       await devitrakApi.post("/db_item/item-out-warehouse", {
@@ -161,7 +208,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         company: user.company,
         item_group: valueItemSelected[0].item_group,
         startingNumber: valueItemSelected[0].serial_number,
-        quantity:props.quantity,
+        quantity: props.quantity,
       });
     }
     await createDeviceRecordInNoSQLDatabase(props);
