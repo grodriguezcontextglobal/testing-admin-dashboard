@@ -133,6 +133,7 @@ const Login = () => {
       email: props.email,
       password: props.password,
     });
+
     if (respo.data) {
       localStorage.setItem("admin-token", respo.data.token);
       const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
@@ -183,12 +184,16 @@ const Login = () => {
             ...checkArray(companyInfoTable.data.company),
             stripeID: checkArray(stripeSQL.data.stripe),
           },
-          subscription:subscriptionCompanyInfo.data ? subscriptionCompanyInfo.data.subscription.subscription : {},
+          subscription: subscriptionCompanyInfo.data
+            ? subscriptionCompanyInfo.data.subscription.subscription
+            : {},
         })
       );
       dispatch(
         onAddSubscription(
-          subscriptionCompanyInfo.data ? subscriptionCompanyInfo.data.subscription.subscription : {}
+          subscriptionCompanyInfo.data
+            ? subscriptionCompanyInfo.data.subscription.subscription
+            : {}
         )
       );
       dispatch(clearErrorMessage());
@@ -249,6 +254,7 @@ const Login = () => {
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
+      throw error
     }
     setValue("email", "");
     setValue("password", "");
