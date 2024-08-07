@@ -25,13 +25,33 @@ const GraphicInventoryEventActivity = () => {
     };
   }, []);
 
+  const checkNonFunctionalDeclaredDevice = (props) => {
+    console.log(props);
+    let result = [];
+    const filteredData = new Set();
+    for (let item of props) {
+      if (item[0] !== "Operational") {
+        result = [...result, item[1].length];
+        filteredData.add(item);
+      }
+    }
+    return {
+      data: Array.from(filteredData).length,
+      value: result,
+    };
+  };
   const sortData = () => {
     const data = deviceStatusInEvent?.data?.data?.receiversInventory;
     const groupingByStatus = _.groupBy(data, "status");
     const groupingByActivity = _.groupBy(data, "activity");
+    const noFunctionalData = Object.entries(groupingByStatus);
+    const nonFunctionalDeclaredDeviceEventData =
+      checkNonFunctionalDeclaredDevice(noFunctionalData);
     return {
-      checkedOut: groupingByActivity[true] ? groupingByActivity[true]?.length : 0,
-      defected: "",
+      checkedOut: groupingByActivity[true]
+        ? groupingByActivity[true]?.length
+        : 0,
+      defected: nonFunctionalDeclaredDeviceEventData.value,
       onHand: groupingByActivity[false] ? groupingByActivity[false]?.length : 0,
       lost: groupingByStatus["Lost"]?.length ?? 0,
       total: data?.length ?? 0,
@@ -43,7 +63,7 @@ const GraphicInventoryEventActivity = () => {
     { name: "Checked out", value: sortData().checkedOut },
     {
       name: "Not-Functional Report",
-      value: 0,
+      value: sortData().defected,
     },
     { name: "On hands", value: sortData().onHand }, //numberDisplayDynamically()
     { name: "Lost", value: sortData().lost },
