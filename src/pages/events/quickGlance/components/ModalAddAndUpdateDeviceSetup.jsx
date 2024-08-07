@@ -189,7 +189,6 @@ const ModalAddAndUpdateDeviceSetup = ({
       });
     }
     await updateDeviceSetupInEvent();
-    await closeModal();
     return null;
   };
   const createDeviceInEvent = async (props) => {
@@ -213,7 +212,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
     await createDeviceRecordInNoSQLDatabase(props);
   };
-
+  
   const addingDeviceFromLocations = (data) => {
     if (
       recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
@@ -224,8 +223,8 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
     } else {
       const checkingDiff =
-        Number(quantity) -
-        recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
+      Number(quantity) -
+      recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
       if (Number(data.quantity) > checkingDiff) {
         return alert(
           `Quantity assigned is bigger than needed to reach out the quantity set in event.`
@@ -242,9 +241,9 @@ const ModalAddAndUpdateDeviceSetup = ({
     for (let data of listOfLocations) {
       await createDeviceInEvent(data);
     }
-    return null;
+    return await closeModal();
   };
-
+  
   const removeItem = (props) => {
     const result = listOfLocations.toSpliced(props, 1);
     return setListOfLocations(result);
