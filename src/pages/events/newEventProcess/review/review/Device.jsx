@@ -40,7 +40,7 @@ const Device = () => {
 
   const totalDevicesAssigned = () => {
     const initial = 0
-    return deviceSetup.reduce((accu, { quantity }) => accu + quantity, initial)
+    return deviceSetup.reduce((accu, { quantity }) => accu + Number(quantity), initial)
   }
   return (
     <Grid
