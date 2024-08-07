@@ -36,11 +36,17 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-select.css";
 import { formatDate } from "../utils/dateFormat";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { LightBlueButton } from "../../../styles/global/LightBlueButton";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState("");
+  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
+  const [moreInfo, setMoreInfo] = useState([]);
+  const [keyObject, setKeyObject] = useState("");
+  const [valueObject, setValueObject] = useState("");
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -54,7 +60,7 @@ const AddNewBulkItems = () => {
     api.open({
       message: msg,
       placement: "bottomRight",
-      duration: 10,
+      duration: 0,
     });
   };
   const [loading, setLoading] = useState(false);
@@ -144,16 +150,18 @@ const AddNewBulkItems = () => {
         "warning",
         "A group of item must be provided."
       );
-    if (taxableLocation === "")
+    if (taxableLocation === "") {
       return openNotificationWithIcon(
         "warning",
         "A taxable location must be provided."
       );
-    if (valueSelection === "")
+    }
+    if (valueSelection === "") {
       return openNotificationWithIcon(
         "warning",
         "Ownership status must be provided."
       );
+    }
     for (
       let index = Number(data.startingNumber);
       index < Number(data.endingNumber);
@@ -233,7 +241,7 @@ const AddNewBulkItems = () => {
               created_at: formatDate(new Date()),
               updated_at: formatDate(new Date()),
               company: user.company,
-              extra_serial_number: JSON.stringify([]),
+              extra_serial_number: JSON.stringify(moreInfo),
             });
             if (
               !renderLocationOptions().some(
@@ -272,6 +280,7 @@ const AddNewBulkItems = () => {
                 "items were created and stored in database."
               );
               setLoading(false);
+              api.destroy();
               await navigate("/inventory");
             }
           } catch (error) {
@@ -310,7 +319,7 @@ const AddNewBulkItems = () => {
             created_at: formatDate(new Date()),
             updated_at: formatDate(new Date()),
             company: user.company,
-            extra_serial_number: JSON.stringify([]),
+            extra_serial_number: JSON.stringify(moreInfo),
           });
           if (
             !renderLocationOptions().some(
@@ -356,6 +365,13 @@ const AddNewBulkItems = () => {
       }
     }
   };
+  const handleMoreInfoPerDevice = () => {
+    const result = [...moreInfo, { keyObject, valueObject }];
+    setKeyObject("");
+    setValueObject("");
+    return setMoreInfo(result);
+  };
+
   const renderTitle = () => {
     return (
       <>
@@ -866,6 +882,105 @@ const AddNewBulkItems = () => {
           </Grid>
         </Grid>
         <Divider />
+        <span
+          onClick={() => setMoreInfoDisplay(true)}
+          style={{
+            ...CenteringGrid,
+            width: "100%",
+            border: `1px solid ${
+              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+            }`,
+            borderRadius: "8px",
+            background: `${
+              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+            }`,
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            padding: "6px 12px",
+            cursor: "pointer",
+          }}
+        >
+          <Icon
+            icon="ic:baseline-plus"
+            color="var(--base-white, #FFF)"
+            width={20}
+            height={20}
+          />
+          &nbsp;
+          <Typography
+            textTransform={"none"}
+            style={{
+              color: "var(--base-white, #FFF)",
+              fontSize: "14px",
+              fontWeight: "600",
+              fontFamily: "Inter",
+              lineHeight: "20px",
+            }}
+          >
+            Add more information
+          </Typography>
+        </span>
+        {moreInfoDisplay && (
+          <div
+            style={{
+              width: "100%",
+              ...CenteringGrid,
+              justifyContent: "space-between",
+              gap: "5px",
+            }}
+          >
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g IMEI"
+              name="key"
+              value={keyObject}
+              onChange={(e) => setKeyObject(e.target.value)}
+            />
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g YABSDA56AKJ"
+              name="key"
+              value={valueObject}
+              onChange={(e) => setValueObject(e.target.value)}
+            />
+            <Button
+              onClick={() => handleMoreInfoPerDevice()}
+              style={{ ...BlueButton, ...CenteringGrid }}
+            >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF)"
+                width={20}
+                height={20}
+              />{" "}
+            </Button>
+          </div>
+        )}
+        <Divider />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          {moreInfo.length > 0 &&
+            moreInfo.map((item) => (
+              <div
+                style={{
+                  backgroundColor: "var(--whitebase)",
+                  padding: "2.5px 5px",
+                  margin: "0 1px",
+                  border: "solid 0.1px var(--gray900)",
+                  borderRadius: "8px",
+                }}
+                key={`${item.keyObject}-${item.valueObject}`}
+              >
+                {item.keyObject}:{item.valueObject}
+              </div>
+            ))}
+        </div>
+        <Divider />
 
         <div
           style={{
@@ -888,13 +1003,6 @@ const AddNewBulkItems = () => {
                 disabled={loading}
                 style={{ ...GrayButton, width: "100%" }}
               >
-                <Icon
-                  icon="ri:arrow-go-back-line"
-                  color="#344054"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
                 <Typography textTransform={"none"} style={GrayButtonText}>
                   Go back
                 </Typography>
@@ -913,6 +1021,11 @@ const AddNewBulkItems = () => {
               style={{
                 ...BlueButton,
                 width: "100%",
+                backgroundColor: `${
+                  loading
+                    ? LightBlueButton.background
+                    : BlueButtonText.background
+                }`,
               }}
             >
               <Icon
@@ -933,3 +1046,12 @@ const AddNewBulkItems = () => {
   );
 };
 export default AddNewBulkItems;
+{
+  /* <Icon
+                  icon="ri:arrow-go-back-line"
+                  color="#344054"
+                  width={20}
+                  height={20}
+                />
+                &nbsp; */
+}
