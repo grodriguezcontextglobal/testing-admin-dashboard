@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, notification } from "antd";
-import { useEffect } from "react";
+import { Button } from "antd";
+// import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import subscriptionsList from "../../../../../components/json/subscriptionList.json";
 import { onAddSubscription } from "../../../../../store/slices/subscriptionSlice";
@@ -8,40 +8,54 @@ const PricingTable = ({
   handleSubmitEventPayment,
   value,
   setTotal,
-  eventsList
+  // eventsList
 }) => {
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotification = (msg, dsc) => {
-    api.open({
-      message: msg,
-      description: dsc,
-      duration: 0,
-    });
-  };
-  useEffect(() => {
-    const controller = new AbortController()
-    if (eventsList?.length > 0) {
-      openNotification("Upgrade to Access More Events", "Your access to the free tier has been disabled due to reaching the event limit. Upgrade your subscription to unlock more events and enjoy enhanced features.")
-    }
-    return () => {
-      controller.abort()
-    }
-  }, [eventsList])
-  const stripeKeyCheck = String(import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY).split("_")[1]
+  // const [api, contextHolder] = notification.useNotification();
+  // const openNotification = (msg, dsc) => {
+  //   api.open({
+  //     message: msg,
+  //     description: dsc,
+  //     duration: 0,
+  //   });
+  // };
+  // useEffect(() => {
+  //   const controller = new AbortController()
+  //   if (eventsList?.length > 0) {
+  //     openNotification("Upgrade to Access More Events", "Your access to the free tier has been disabled due to reaching the event limit. Upgrade your subscription to unlock more events and enjoy enhanced features.")
+  //   }
+  //   return () => {
+  //     controller.abort()
+  //   }
+  // }, [eventsList])
+  const stripeKeyCheck = String(
+    import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY
+  ).split("_")[1];
   const dicList = {
     live: {
-      month: ['price_1OyVdkJAluu3aB96iZmrsxZX', 'price_1OyVeKJAluu3aB96I0rZi4VP'],
-      year: ['price_1OyVeTJAluu3aB96YpTSN6iM', 'price_1OyVelJAluu3aB96MswKnJCg']
+      month: [
+        "price_1OyVdkJAluu3aB96iZmrsxZX",
+        "price_1OyVeKJAluu3aB96I0rZi4VP",
+      ],
+      year: [
+        "price_1OyVeTJAluu3aB96YpTSN6iM",
+        "price_1OyVelJAluu3aB96MswKnJCg",
+      ],
     },
     test: {
-      month: ['price_1NzOBaJAluu3aB96XWZfQrBt', 'price_1O6xsWJAluu3aB96sZsWjLGl'],
-      year: ['price_1O6xtmJAluu3aB96Rbzx7UGg', 'price_1O6xuIJAluu3aB96AcmN6vtH']
-    }
-  }
+      month: [
+        "price_1NzOBaJAluu3aB96XWZfQrBt",
+        "price_1O6xsWJAluu3aB96sZsWjLGl",
+      ],
+      year: [
+        "price_1O6xtmJAluu3aB96Rbzx7UGg",
+        "price_1O6xuIJAluu3aB96AcmN6vtH",
+      ],
+    },
+  };
   return (
     <Grid marginBottom={5} container>
-      {contextHolder}
+      {/* {contextHolder} */}
       <Grid item xs={3}></Grid>
       <Grid
         display={"flex"}
@@ -96,7 +110,7 @@ const PricingTable = ({
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
           </Typography>
           <Button
-            disabled={eventsList?.length > 0}
+            // disabled={eventsList?.length > 0}
             style={{
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
@@ -189,7 +203,7 @@ const PricingTable = ({
           </Typography>
           {/* <Tooltip title="Function still in progress."> */}
           <Button
-            // disabled={true}
+            disabled
             style={{
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
@@ -198,7 +212,13 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? dicList[stripeKeyCheck].month[0] : dicList[stripeKeyCheck].year[0]}`);
+              handleSubmitEventPayment(
+                `${
+                  value === 0
+                    ? dicList[stripeKeyCheck].month[0]
+                    : dicList[stripeKeyCheck].year[0]
+                }`
+              );
               setTotal(`${value === 0 ? "30" : "360"}`);
               dispatch(
                 onAddSubscription({
@@ -221,7 +241,7 @@ const PricingTable = ({
               Get started
             </Typography>
           </Button>
-          <Button disabled={true}>
+          <Button disabled>
             <Typography
               textTransform={"none"}
               style={{
@@ -235,7 +255,6 @@ const PricingTable = ({
               Contact sales
             </Typography>
           </Button>
-          {/* </Tooltip> */}
         </Grid>
         <Grid
           display={"flex"}
@@ -283,7 +302,7 @@ const PricingTable = ({
           </Typography>
           {/* <Tooltip title="Function still in progress."> */}
           <Button
-            // disabled={true}
+            disabled
             style={{
               // width: "fit-content",
               border: "1px solid var(--blue-dark-600, #155EEF)",
@@ -293,7 +312,13 @@ const PricingTable = ({
               margin: "5px 0px",
             }}
             onClick={() => {
-              handleSubmitEventPayment(`${value === 0 ? dicList[stripeKeyCheck].month[1] : dicList[stripeKeyCheck].year[1]}`); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
+              handleSubmitEventPayment(
+                `${
+                  value === 0
+                    ? dicList[stripeKeyCheck].month[1]
+                    : dicList[stripeKeyCheck].year[1]
+                }`
+              ); //*price_1O6xuIJAluu3aB96AcmN6vtH annually
               setTotal(`${value === 0 ? "60" : "720"}`);
               dispatch(
                 onAddSubscription({
@@ -317,7 +342,6 @@ const PricingTable = ({
             </Typography>
           </Button>
           <Button disabled={true}>
-
             <Typography
               textTransform={"none"}
               style={{
