@@ -13,9 +13,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { RectangleBluePlusIcon } from "../../../../components/icons/Icons";
-import {
-  onAddEventData
-} from "../../../../store/slices/eventSlice";
+import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
@@ -24,6 +22,8 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { PropTypes } from "prop-types";
+
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
   setOpenModalDeviceSetup,
@@ -48,7 +48,6 @@ const ModalAddAndUpdateDeviceSetup = ({
         warehouse: true,
         item_group: deviceTitle,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const recordNoSqlDevicesQuery = useQuery({
@@ -59,7 +58,6 @@ const ModalAddAndUpdateDeviceSetup = ({
         type: deviceTitle,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -149,7 +147,7 @@ const ModalAddAndUpdateDeviceSetup = ({
 
   const updateDeviceSetupInEvent = async () => {
     const ranging = deviceRanging();
-    const updateDeviceInv =[ ...event.deviceSetup];
+    const updateDeviceInv = [...event.deviceSetup];
     const foundIndex = updateDeviceInv.findIndex(
       (element) => element.group === listOfLocations[0].deviceInfo[0].item_group
     );
@@ -193,26 +191,22 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
   const createDeviceInEvent = async (props) => {
     const event_id = event.sql.event_id;
-    // const limit = Number(props.quantity) - 1;
-    const respoUpdating = await devitrakApi.post("/db_event/event_device", {
-      event_id: event_id,
+    for (let index = 0; index < Number(props.quantity); index++) {
+      await devitrakApi.post("/db_event/event_device_directly", {
+        event_id: event_id,
+        item_id: props.deviceInfo[index].item_id,
+      });
+    }
+    await devitrakApi.post("/db_item/item-out-warehouse", {
+      warehouse: false,
+      company: user.company,
       item_group: valueItemSelected[0].item_group,
-      category_name: valueItemSelected[0].category_name,
       startingNumber: valueItemSelected[0].serial_number,
       quantity: props.quantity,
     });
-    if (respoUpdating.data.ok) {
-      await devitrakApi.post("/db_item/item-out-warehouse", {
-        warehouse: false,
-        company: user.company,
-        item_group: valueItemSelected[0].item_group,
-        startingNumber: valueItemSelected[0].serial_number,
-        quantity: props.quantity,
-      });
-    }
     await createDeviceRecordInNoSQLDatabase(props);
   };
-  
+
   const addingDeviceFromLocations = (data) => {
     if (
       recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
@@ -223,8 +217,8 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
     } else {
       const checkingDiff =
-      Number(quantity) -
-      recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
+        Number(quantity) -
+        recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
       if (Number(data.quantity) > checkingDiff) {
         return alert(
           `Quantity assigned is bigger than needed to reach out the quantity set in event.`
@@ -243,11 +237,12 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
     return await closeModal();
   };
-  
+
   const removeItem = (props) => {
     const result = listOfLocations.toSpliced(props, 1);
     return setListOfLocations(result);
   };
+
   const blockingButton = () => {
     const initial = 0;
     const checking = listOfLocations.reduce(
@@ -256,6 +251,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     );
     return checking === Number(quantity);
   };
+
   const disablingButton = () => {
     if (
       recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
@@ -266,6 +262,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       return BlueButton;
     }
   };
+
   return (
     <Modal
       open={openModalDeviceSetup}
@@ -453,7 +450,6 @@ const ModalAddAndUpdateDeviceSetup = ({
               Add devices to this event.
             </Typography>
           </Button>
-          {/* </Grid>{" "} */}
         </Grid>
       </Grid>
     </Modal>
@@ -461,3 +457,28 @@ const ModalAddAndUpdateDeviceSetup = ({
 };
 
 export default ModalAddAndUpdateDeviceSetup;
+
+ModalAddAndUpdateDeviceSetup.propTypes = {
+  openModalDeviceSetup: PropTypes.bool,
+  setOpenModalDeviceSetup: PropTypes.func,
+  deviceTitle: PropTypes.string,
+  quantity: PropTypes.string,
+};
+// if (respoUpdating.data.ok) {
+// }
+// const respoUpdating = await devitrakApi.post("/db_event/event_device", {
+//   event_id: event_id,
+//   item_group: valueItemSelected[0].item_group,
+//   category_name: valueItemSelected[0].category_name,
+//   startingNumber: valueItemSelected[0].serial_number,
+//   quantity: props.quantity,
+// });
+// if (respoUpdating.data.ok) {
+//   await devitrakApi.post("/db_item/item-out-warehouse", {
+//     warehouse: false,
+//     company: user.company,
+//     item_group: valueItemSelected[0].item_group,
+//     startingNumber: valueItemSelected[0].serial_number,
+//     quantity: props.quantity,
+//   });
+// }
