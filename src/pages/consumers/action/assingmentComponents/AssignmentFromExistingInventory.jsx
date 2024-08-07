@@ -46,7 +46,6 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   useEffect(() => {
     const controller = new AbortController();
     itemsInInventoryQuery.refetch();
-    // staffMemberQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -282,14 +281,6 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       await option1({ groupingType: groupingType, template: template, quantity:watch("quantity") });
       return closeModal();
     }
-    // if (selectedItem.length > 0 && watch("startingNumber")?.length > 0) {
-    //   await option2({ groupingType: groupingType, template: template });
-    //   return closeModal();
-    // }
-    // if (selectedItem.length > 0 && watch("startingNumber")?.length === 0) {
-    //   await option3({ groupingType: groupingType, template: template });
-    //   return closeModal();
-    // }
   };
   const renderTitle = () => {
     return (
