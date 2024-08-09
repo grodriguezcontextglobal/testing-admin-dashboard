@@ -7,7 +7,15 @@ import { nanoid } from "@reduxjs/toolkit";
 import _ from "lodash";
 import { Card, Select, Space } from "antd";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { Button, Chip, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  Chip,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
@@ -26,8 +34,8 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-        activity:false
+        company: user.companyData.id,
+        activity: false,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -116,6 +124,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
       provider: user.company,
       user: customer.email,
       timeStamp: new Date().getTime(),
+      company: user.companyData.id,
     });
   };
 
@@ -164,6 +173,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           provider: event.company,
           eventSelected: event.eventInfoDetail.eventName,
           date: `${new Date()}`,
+          company: user.companyData.id,
         };
         const grouping = _.groupBy(
           checkDeviceInUseInOtherCustomerInTheSameEventQuery,
@@ -179,8 +189,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
             index < Number(deviceFound) + Number(totalDeviceAssigned);
             index++
           ) {
-            const serialNumber = await checkArray(copiedDeviceData[index])
-              .device;
+            const serialNumber = checkArray(copiedDeviceData[index]).device;
             if (!checkDeviceAvailability(serialNumber)) {
               const createTransactionTemplate = {
                 device: {
@@ -189,6 +198,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
                   status: true,
                 },
                 paymentIntent: reference.current,
+                company: user.companyData.id,
               };
               await createReceiverInTransaction(createTransactionTemplate);
               await createDevicesInPool(serialNumber);
@@ -288,18 +298,6 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
               };
             })}
           />
-          <Typography
-            marginY={2}
-            style={{
-              ...TextFontsize18LineHeight28,
-              width: "80%",
-              opacity: deviceSelection !== null ? 1 : 0,
-            }}
-          >
-            Range of serial number for selected item: <br />
-            {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
-            {subtractRangePerGroupToDisplayItInScreen().max}
-          </Typography>
         </div>
         <div
           style={{
@@ -310,22 +308,45 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
             gap: "3px",
           }}
         >
+          <Typography
+            marginY={2}
+            style={{
+              ...TextFontsize18LineHeight28,
+              width: "60%",
+            }}
+          >
+            {deviceSelection !== null ? (
+              <>
+                Range of serial number for selected item: <br />
+                {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
+                {subtractRangePerGroupToDisplayItInScreen().max}
+              </>
+            ) : (
+              "Please select a device type to display available device range."
+            )}
+          </Typography>
           <OutlinedInput
             disabled={deviceSelection === null}
             {...register("startingNumber")}
             autoFocus={true}
-            style={OutlinedInputStyle}
+            style={{ ...OutlinedInputStyle, width: "70%" }}
             placeholder="Scan or enter the starting serial number here.."
-            fullWidth
           />
-          <OutlinedInput
-            disabled={deviceSelection === null}
-            {...register("quantity")}
-            autoFocus={true}
-            style={OutlinedInputStyle}
-            placeholder="Enter the number of devices to assign in transaction."
-            fullWidth
-          />
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Qty</InputLabel>
+            <OutlinedInput
+              label="Qty"
+              disabled={deviceSelection === null}
+              {...register("quantity")}
+              autoFocus={true}
+              style={{ ...OutlinedInputStyle }}
+              placeholder="e.g 3"
+              fullWidth
+              startAdornment={
+                <InputAdornment position="start"></InputAdornment>
+              }
+            />
+          </FormControl>
         </div>
 
         <Button style={{ ...BlueButton, width: "100%" }} type="submit">

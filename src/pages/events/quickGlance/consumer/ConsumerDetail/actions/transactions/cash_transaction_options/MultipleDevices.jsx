@@ -7,7 +7,15 @@ import { nanoid } from "@reduxjs/toolkit";
 import _ from "lodash";
 import { Card, Select, Space } from "antd";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { Button, Chip, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  Chip,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
@@ -26,8 +34,8 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-        activity:false
+        company: user.companyData.id,
+        activity: false,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -116,6 +124,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
       provider: user.company,
       user: customer.email,
       timeStamp: new Date().getTime(),
+      company: user.companyData.id,
     });
   };
 
@@ -147,6 +156,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           user: customer.uid,
           eventSelected: event.eventInfoDetail.eventName,
           provider: user.company,
+          company: user.companyData.id,
         }
       );
       if (stripeResponse.data) {
@@ -165,6 +175,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           provider: event.company,
           eventSelected: event.eventInfoDetail.eventName,
           date: `${new Date()}`,
+          company: user.companyData.id,
         };
         const grouping = _.groupBy(
           checkDeviceInUseInOtherCustomerInTheSameEventQuery,
@@ -190,6 +201,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
                   status: true,
                 },
                 paymentIntent: reference.current,
+                company: user.companyData.id,
               };
               await createReceiverInTransaction(createTransactionTemplate);
               await createDevicesInPool(serialNumber);
@@ -263,7 +275,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap:"5px"
+            gap: "5px",
           }}
         >
           <Select
@@ -290,18 +302,6 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
               };
             })}
           />
-          <Typography
-            marginY={2}
-            style={{
-              ...TextFontsize18LineHeight28,
-              width: "80%",
-              opacity: deviceSelection !== null ? 1 : 0,
-            }}
-          >
-            Range of serial number for selected item: <br />
-            {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
-            {subtractRangePerGroupToDisplayItInScreen().max}
-          </Typography>
         </div>
         <div
           style={{
@@ -312,29 +312,62 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
             gap: "3px",
           }}
         >
+          <Typography
+            marginY={2}
+            style={{
+              ...TextFontsize18LineHeight28,
+              width: "60%",
+            }}
+          >
+            {deviceSelection !== null ? (
+              <>
+                Range of serial number for selected item: <br />
+                {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
+                {subtractRangePerGroupToDisplayItInScreen().max}
+              </>
+            ) : (
+              "Please select a device type to display available device range."
+            )}
+          </Typography>
           <OutlinedInput
-            disabled={deviceSelection === null}
             {...register("startingNumber")}
             autoFocus={true}
-            style={OutlinedInputStyle}
-            placeholder="Scan or enter starting serial number here."
-            
+            style={{ ...OutlinedInputStyle, width: "90%" }}
+            placeholder="Scan or enter starting serial number"
           />
-          <OutlinedInput
-            disabled={deviceSelection === null}
-            {...register("quantity")}
-            autoFocus={true}
-          style={{...OutlinedInputStyle, width:"20%"}}
-            placeholder="Number of devices"
-            
-          />
-          <OutlinedInput
-            disabled={deviceSelection === null}
-            {...register("amount")}
-            autoFocus={true}
-            style={{ ...OutlinedInputStyle }}
-            placeholder="Amount in cash received"
-          />
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Qty</InputLabel>
+            <OutlinedInput
+              label="Qty"
+              disabled={deviceSelection === null}
+              {...register("quantity")}
+              autoFocus={true}
+              style={{ ...OutlinedInputStyle }}
+              placeholder="e.g 3"
+              fullWidth
+              startAdornment={
+                <InputAdornment position="start"></InputAdornment>
+              }
+            />
+          </FormControl>
+
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+            <OutlinedInput
+              label="Amount"
+              autoFocus={true}
+              required
+              disabled={deviceSelection === null}
+              style={{ ...OutlinedInputStyle }}
+              type="text"
+              fullWidth
+              placeholder="e.g 150"
+              {...register("amount")}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+            />
+          </FormControl>
         </div>
 
         <Button style={{ ...BlueButton, width: "100%" }} type="submit">

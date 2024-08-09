@@ -1,4 +1,11 @@
-import { Button, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select, Tooltip } from "antd";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,11 +23,13 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import _ from "lodash";
+import { checkArray } from "../../../../../../../../components/utils/checkArray";
 
 const SingleDevice = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const [clientSecret, setClientSecret] = useState("");
   const dispatch = useDispatch();
   const [deviceSelection, setDeviceSelection] = useState(null);
@@ -31,7 +40,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
         activity: false,
       }),
     // enabled: false,
@@ -70,7 +79,9 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    return grouping[props].at(-1).activity; // === "YES"
+    console.log("grouping", grouping);
+    console.log("checkArray(grouping[props])", checkArray(grouping[props]));
+    return checkArray(grouping[props]).activity; // === "YES"
   };
 
   const formattingSerialNumberLeadingZero = (num, reference) => {
@@ -112,6 +123,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   subtractRangePerGroupToDisplayItInScreen();
 
   const generatePaymentIntent = async (data) => {
+    console.log("data", data);
     if (checkDeviceAvailability(data.serialNumber)) {
       return alert(
         "device is already assigned to other consumer. Please assign a different serial number."
@@ -125,6 +137,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
         total: data.amount,
       }
     );
+    console.log("response.data", response?.data);
     if (response) {
       setClientSecret(response.data.paymentIntentCustomized.client_secret);
       dispatch(onAddDevicesSelection(1));
@@ -163,7 +176,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
         >
           <Select
             showSearch
-            style={{ ...AntSelectorStyle, width: "80%" }}
+            style={{ ...AntSelectorStyle, width: "100%" }}
             placeholder="Search to Select"
             optionFilterProp="children"
             filterOption={(input, option) =>
@@ -185,18 +198,6 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
               };
             })}
           />
-          <Typography
-            marginY={2}
-            style={{
-              ...TextFontsize18LineHeight28,
-              width: "80%",
-              opacity: deviceSelection !== null ? 1 : 0,
-            }}
-          >
-            Range of serial number for selected item: <br />
-            {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
-            {subtractRangePerGroupToDisplayItInScreen().max}
-          </Typography>
         </div>
         <div
           style={{
@@ -207,20 +208,49 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
             width: "100%",
           }}
         >
+          <Typography
+            marginY={2}
+            style={{
+              ...TextFontsize18LineHeight28,
+              width: "60%",
+              // opacity: deviceSelection !== null ? 1 : 0,
+            }}
+          >
+            {deviceSelection !== null ? (
+              <>
+                Range of serial number for selected item: <br />
+                {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
+                {subtractRangePerGroupToDisplayItInScreen().max}
+              </>
+            ) : (
+              "Please select a device type to display available device range."
+            )}
+          </Typography>
+
           <OutlinedInput
             disabled={clientSecret !== ""}
+            required
             {...register("serialNumber")}
             autoFocus={true}
-            style={{ ...OutlinedInputStyle, width: "90%" }}
+            style={{ ...OutlinedInputStyle, width: "70%" }}
             placeholder="Scan or enter serial number here."
           />
-          <OutlinedInput
-            disabled={clientSecret !== ""}
-            style={{ ...OutlinedInputStyle, width: "90%" }}
-            type="text"
-            placeholder="Amount to authorize."
-            {...register("amount", { required: true })}
-          />
+          <FormControl style={{width:"20%"}}>
+            <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+            <OutlinedInput
+              label="Amount"
+              required
+              disabled={clientSecret !== ""}
+              style={{ ...OutlinedInputStyle }}
+              type="text"
+              fullWidth
+              placeholder="e.g 150"
+              {...register("amount")}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+            />
+          </FormControl>
         </div>
         <Tooltip title="Please submit CC info after assign all devices.">
           <Button style={{ ...BlueButton, width: "100%" }} type="submit">

@@ -20,6 +20,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector(state => state.admin)
   const [clientSecret, setClientSecret] = useState("");
   const dispatch = useDispatch();
   const [deviceSelection, setDeviceSelection] = useState(null);
@@ -30,7 +31,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,
