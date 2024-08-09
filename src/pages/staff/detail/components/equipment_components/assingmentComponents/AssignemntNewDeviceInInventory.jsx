@@ -74,18 +74,16 @@ const AssignemntNewDeviceInInventory = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -197,13 +195,12 @@ const AssignemntNewDeviceInInventory = () => {
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
-      await devitrakApi.post("/db_event/event_device", {
-        event_id: newEventInfo.insertId,
-        item_group: data.item_group,
-        category_name: data.category_name,
-        startingNumber: data.min_serial_number,
-        quantity: data.quantity,
-      });
+      for (let item of data.selectedList) {
+        await devitrakApi.post("/db_event/event_device_directly", {
+          event_id: newEventInfo.insertId,
+          item_id: item.item_id,
+        });
+      }
     }
   };
 
@@ -244,6 +241,7 @@ const AssignemntNewDeviceInInventory = () => {
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
           quantity: props.quantity,
+          selectedList: deviceInfo,
         },
       ]);
       await closingProcess();
@@ -251,7 +249,7 @@ const AssignemntNewDeviceInInventory = () => {
   };
   const retrieveDataNewAddedItem = async (props) => {
     const newAddedItem = await devitrakApi.post("/db_item/consulting-item", {
-      company: user.company,
+      company_id: user.sqlInfo.company_id,
       item_group: selectedItem,
       category_name: props.category_name,
       serial_number: props.serial_number,
@@ -333,6 +331,7 @@ const AssignemntNewDeviceInInventory = () => {
             location: locationSelection,
             current_location: locationSelection,
             extra_serial_number: JSON.stringify(moreInfo),
+            company_id: user.sqlInfo.company_id,
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -360,6 +359,7 @@ const AssignemntNewDeviceInInventory = () => {
           location: locationSelection,
           current_location: locationSelection,
           extra_serial_number: JSON.stringify(moreInfo),
+          company_id: user.sqlInfo.company_id,
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({

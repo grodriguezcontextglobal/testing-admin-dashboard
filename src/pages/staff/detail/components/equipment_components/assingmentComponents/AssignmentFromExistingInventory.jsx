@@ -38,7 +38,7 @@ const AssignmentFromExistingInventory = () => {
     queryKey: ["ItemsInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         warehouse: true,
       }),
     refetchOnMount: false,
@@ -160,7 +160,7 @@ const AssignmentFromExistingInventory = () => {
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: false,
-      company: user.company,
+      company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       startingNumber: props.startingNumber,
       quantity:props.quantity,
@@ -208,13 +208,13 @@ const AssignmentFromExistingInventory = () => {
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
-      await devitrakApi.post("/db_event/event_device", {
-        event_id: newEventInfo.insertId,
-        item_group: data.item_group,
-        category_name: data.category_name,
-        startingNumber: data.min_serial_number,
-        quantity: data.quantity,
-      });
+      for(let item of data.selectedList){
+
+        await devitrakApi.post("/db_event/event_device_directly", {
+          event_id: newEventInfo.insertId,
+          item_id: item.item_id,
+        });
+      }
     }
     queryClient.invalidateQueries({
       queryKey: ["staffMemberInfo"],
@@ -253,7 +253,8 @@ const AssignmentFromExistingInventory = () => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          quantity:props.quantity
+          quantity:props.quantity,
+          selectedList:deviceInfo
         },
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
