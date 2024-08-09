@@ -72,14 +72,16 @@ const MainPage = () => {
     };
   }, []);
 
-  const consumersPerAllowEvents = useMemo(async () => {
+  const consumersPerAllowEvents = async () => {
     setLoadingState(true);
     const result = new Set();
     if (listOfEventsPerAdmin()?.length > 0) {
       for (let data of listOfEventsPerAdmin()) {
         const resp = await devitrakApi.post("/auth/user-query", {
-          provider: data.company,
+          // provider: data.company,
           eventSelected: data.eventInfoDetail.eventName,
+          company_providers: user.companyData.id,
+          // event_providers:data.id
         });
         if (resp.data) {
           const responseData = await resp.data.users;
@@ -100,7 +102,15 @@ const MainPage = () => {
       setLoadingState(false);
       return setResponseData(formattingResponse);
     }
-  }, [listOfEventsPerAdmin().length, user.company]);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    consumersPerAllowEvents();
+    return () => {
+      controller.abort();
+    };
+  }, [leaseListQuery.data]);
 
   const renderActiveAndInactiveCount = (props) => {
     const result = new Map();
@@ -199,7 +209,7 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [user.company]);
+  }, [user.companyData.id]);
 
   return (
     <Grid
@@ -261,7 +271,6 @@ const MainPage = () => {
       <Divider />
       {responseData.length > 0 ? (
         <>
-          {" "}
           <Grid
             display={"flex"}
             justifyContent={"flex-start"}
@@ -317,23 +326,6 @@ const MainPage = () => {
                   number: dataToRenderInComponent?.inactive?.length,
                 }}
               />
-              {/* <p
-                style={{
-                  width: "10%",
-                  position: "absolute",
-                  left: "44vw",
-                  textAlign: "left",
-                  color: "var(--Gray-600, #475467)",
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  fontStyle: "normal",
-                  fontWeight: 400,
-                  lineHeight: "18px",
-                }}
-              >
-                Active consumers refers to those users currently holding one or
-                more devices from the database.
-              </p> */}
               <RenderingConsumersChartsBehavior
                 active={{
                   title: "Event",
@@ -344,25 +336,7 @@ const MainPage = () => {
                   number: leaseListQuery?.data?.data?.lease.length,
                 }}
               />
-              {/* <p
-                style={{
-                  width: "10%",
-                  position: "absolute",
-                  right: "14vw",
-                  textAlign: "left",
-                  color: "var(--Gray-600, #475467)",
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  fontStyle: "normal",
-                  fontWeight: 400,
-                  lineHeight: "18px",
-                }}
-              >
-                Consumers from an event typically spend a shorter time with your
-                devices.
-              </p> */}
             </Grid>
-
             <Grid
               display={"flex"}
               justifyContent={"space-between"}
