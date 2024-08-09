@@ -1,22 +1,19 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
-import { Card, Space } from "antd";
-import DevicesInventoryGraph from "./DevicesInventoryGraph";
+import { Card } from "antd";
+import ChartsRenderer from "../../../../components/utils/ChartsRenderer";
 import { PropTypes } from "prop-types";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+// import DevicesInventoryGraph from "./DevicesInventoryGraph";
+// import CenteringGrid from "../../../../styles/global/CenteringGrid";
 
-const legend = ['Checked out',
-  'Not-Functional Report',
-  'On hands',
-  'Lost']
-const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
+// const legend = ["Checked out", "Not-Functional Report", "On hands", "Lost"];
+// const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
 
 const FormatQuickGlanceCardGraphRender = ({
   dataToRender,
   totalDeviceInRange,
   index,
 }) => {
-
   const style = {
     padding: 0,
   };
@@ -68,27 +65,17 @@ const FormatQuickGlanceCardGraphRender = ({
             "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
         }}
         styles={{
-          body:{
+          body: {
             padding: "10px 10px 0px 10px",
-            height: "19.5rem",  
+            height: "19.5rem",
           },
-          header:{
+          header: {
             width: "100%",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-          }
+          },
         }}
-        // headStyle={{
-        //   width: "100%",
-        //   display: "flex",
-        //   justifyContent: "space-between",
-        //   alignItems: "center",
-        // }}
-        // bodyStyle={{
-        //   padding: "10px 10px 0px 10px",
-        //   height: "19.5rem",
-        // }}
         actions={[
           <Typography
             key={"render-total-device-activity"}
@@ -108,7 +95,7 @@ const FormatQuickGlanceCardGraphRender = ({
       >
         <Grid
           display={"flex"}
-          justifyContent={"space-around"}
+          justifyContent={"center"}
           alignItems={"center"}
           container
         >
@@ -116,15 +103,25 @@ const FormatQuickGlanceCardGraphRender = ({
             display={"flex"}
             justifyContent={"center"}
             alignItems={"center"}
-            padding={"0px 24px"}
-            height={200}
+            // padding={"0px 24px"}
+            // height={200}
             item
             xs={12}
           >
-            <DevicesInventoryGraph dataToRender={dataToRender} />
+            <ChartsRenderer
+              dataToRender={dataToRender}
+              title=""
+              orient="vertical"
+              top="auto"
+              right={0}
+              showLabel={false}
+              legendAlign="right"
+              colors={["#84ADFF","#155EEF","#00359E","#fb6b6b"]}
+            />
+            {/* <DevicesInventoryGraph dataToRender={dataToRender} /> */}
           </Grid>
 
-          <Space size={[8, 16]} wrap>
+          {/* <Space size={[8, 16]} wrap>
             {legend.map((item, index) => {
               return <Typography
                 key={item}
@@ -140,7 +137,7 @@ const FormatQuickGlanceCardGraphRender = ({
                 <Icon icon="tabler:point-filled" width={25} height={25} color={`${COLORS[index]}`}/>{item}
               </Typography>
             })}
-          </Space>
+          </Space> */}
         </Grid>
       </Card>
     </Grid>
