@@ -37,7 +37,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     queryKey: ["ItemsInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         warehouse: true,
       }),
     refetchOnMount: false,
@@ -144,7 +144,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: false,
-      company: user.company,
+      company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       startingNumber: props.startingNumber,
       quantity:props.quantity,
