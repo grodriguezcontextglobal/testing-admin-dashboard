@@ -65,7 +65,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id
       }),
   });
 

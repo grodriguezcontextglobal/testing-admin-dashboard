@@ -63,7 +63,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
           const respo = await devitrakApi.post(
             "/receiver/receiver-assigned-list",
             {
-              provider: parsing.company,
+              company: user.companyData.id,
               user: customer.email,
               eventSelected: parsing.eventInfoDetail.eventName,
             }
@@ -386,33 +386,3 @@ StripeTransactionPerConsumer.propTypes = {
   searchValue: PropTypes.string,
 };
 export default StripeTransactionPerConsumer;
-
-// {/* <button
-// style={
-//   {
-//     width: "fit-content",
-//     outline: "none",
-//     display: "flex",
-//     padding: "16px 28px",
-//     justifyContent: "center",
-//     alignItems: "center",
-//     gap: "12px",
-//     flex: "1 0 0",
-//     borderRadius: "8px",
-//     border: "1px solid var(--Gray-300, #D0D5DD)",
-//     background: "var(--Base-White, #FFF)",
-//     /* Shadow/xs */
-//     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-//   }
-// }
-// >
-// <ReleaseDepositIcon />
-// <p
-//   style={{
-//     ...TextFontsize18LineHeight28,
-//     color: "var(--Gray-700, #344054)",
-//   }}
-// >
-//   Release deposit
-// </p>
-// </button> */}
