@@ -239,7 +239,7 @@ const NavigationBarMain = (props) => {
                 }}
               >
                 <NavLink
-                  key={"DevitrakName"}
+                  key={"devitrakName"}
                   to={`/`}
                   style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
