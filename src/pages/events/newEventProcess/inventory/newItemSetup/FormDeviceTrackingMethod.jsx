@@ -30,6 +30,7 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import "../../../../../styles/global/ant-select.css";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
@@ -38,6 +39,10 @@ const FormDeviceTrackingMethod = ({
   existingData,
 }) => {
   const [taxableLocation, setTaxableLocation] = useState("");
+  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
+  const [moreInfo, setMoreInfo] = useState([]);
+  const [keyObject, setKeyObject] = useState("");
+  const [valueObject, setValueObject] = useState("");
   const [choose, setChoose] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const {
@@ -49,27 +54,16 @@ const FormDeviceTrackingMethod = ({
   const [loading, setLoading] = useState(false);
   const [locationSelection, setLocationSelection] = useState("");
 
-  const companiesQuery = useQuery({
-    queryKey: ["locationOptionsPerCompany"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        company_name: user.company,
-      }),
-    // enabled: false,
-    refetchOnMount: false,
-  });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
     const controller = new AbortController();
-    companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
     return () => {
       controller.abort();
@@ -80,23 +74,20 @@ const FormDeviceTrackingMethod = ({
     const result = new Set();
     if (existingData) {
       for (let [, value] of existingData) {
-        result.add(value.item_group);
+        result.add(value?.item_group);
       }
     }
     return Array.from(result);
   };
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations =
-        companiesQuery?.data?.data?.company?.at(-1)?.location ?? [];
-      const result = new Set();
-      for (let data of locations) {
-        result.add({ value: data });
-      }
-      return Array.from(result);
+    const locations = user.companyData.location;
+    const result = new Set();
+    for (let data of locations) {
+      result.add({ value: data });
     }
-    return [];
+    return Array.from(result);
   };
+
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -203,6 +194,8 @@ const FormDeviceTrackingMethod = ({
               company: user.company,
               quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
               existing: false,
+              extra_serial_number: JSON.stringify(moreInfo),
+              company_id: user.sqlInfo.company_id,
             },
           ];
           setSelectedItem(resulting);
@@ -212,14 +205,9 @@ const FormDeviceTrackingMethod = ({
               (element) => element.value === locationSelection
             )
           ) {
-            let template = [
-              ...companiesQuery.data.data.company.at(-1).location,
-              locationSelection,
-            ];
+            let template = [...user.companyData.location, locationSelection];
             await devitrakApi.patch(
-              `/company/update-company/:${
-                companiesQuery.data.data.company.at(-1).id
-              }`,
+              `/company/update-company/:${user.companyData.id}`,
               {
                 location: template,
               }
@@ -261,6 +249,8 @@ const FormDeviceTrackingMethod = ({
             company: user.company,
             quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
             existing: false,
+            extra_serial_number: JSON.stringify(moreInfo),
+            company_id: user.sqlInfo.company_id,
           },
         ];
         if (
@@ -268,14 +258,9 @@ const FormDeviceTrackingMethod = ({
             (element) => element.value === locationSelection
           )
         ) {
-          let template = [
-            ...companiesQuery.data.data.company.at(-1).location,
-            locationSelection,
-          ];
+          let template = [...user.companyData.location, locationSelection];
           await devitrakApi.patch(
-            `/company/update-company/${
-              companiesQuery.data.data.company.at(-1).id
-            }`,
+            `/company/update-company/${user.companyData.id}`,
             {
               location: template,
             }
@@ -290,6 +275,13 @@ const FormDeviceTrackingMethod = ({
       // }
     }
   };
+  const handleMoreInfoPerDevice = () => {
+    const result = [...moreInfo, { keyObject, valueObject }];
+    setKeyObject("");
+    setValueObject("");
+    return setMoreInfo(result);
+  };
+
   const renderTitle = () => {
     return (
       <>
@@ -421,8 +413,9 @@ const FormDeviceTrackingMethod = ({
               })}
               placeholder="Type the name of the device"
               filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                -1
+                String(option.value)
+                  ?.toUpperCase()
+                  .indexOf(String(inputValue)?.toUpperCase()) !== -1
               }
             />
 
@@ -706,7 +699,6 @@ const FormDeviceTrackingMethod = ({
             aria-invalid={errors.descript_item}
             style={{
               borderRadius: "12px",
-              // border: `${errors.descript_item && "solid 1px #004EEB"}`,
               margin: "0.1rem auto 1rem",
               display: "flex",
               width: "100%",
@@ -788,6 +780,105 @@ const FormDeviceTrackingMethod = ({
           </Grid>
         </Grid>
         <Divider />
+        <span
+          onClick={() => setMoreInfoDisplay(true)}
+          style={{
+            ...CenteringGrid,
+            width: "100%",
+            border: `1px solid ${
+              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+            }`,
+            borderRadius: "8px",
+            background: `${
+              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+            }`,
+            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            padding: "6px 12px",
+            cursor: "pointer",
+          }}
+        >
+          <Icon
+            icon="ic:baseline-plus"
+            color="var(--base-white, #FFF)"
+            width={20}
+            height={20}
+          />
+          &nbsp;
+          <Typography
+            textTransform={"none"}
+            style={{
+              color: "var(--base-white, #FFF)",
+              fontSize: "14px",
+              fontWeight: "600",
+              fontFamily: "Inter",
+              lineHeight: "20px",
+            }}
+          >
+            Add more information
+          </Typography>
+        </span>
+        {moreInfoDisplay && (
+          <div
+            style={{
+              width: "100%",
+              ...CenteringGrid,
+              justifyContent: "space-between",
+              gap: "5px",
+            }}
+          >
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g IMEI"
+              name="key"
+              value={keyObject}
+              onChange={(e) => setKeyObject(e.target.value)}
+            />
+            <OutlinedInput
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="e.g YABSDA56AKJ"
+              name="key"
+              value={valueObject}
+              onChange={(e) => setValueObject(e.target.value)}
+            />
+            <Button
+              onClick={() => handleMoreInfoPerDevice()}
+              style={{ ...BlueButton, ...CenteringGrid }}
+            >
+              <Icon
+                icon="ic:baseline-plus"
+                color="var(--base-white, #FFF)"
+                width={20}
+                height={20}
+              />{" "}
+            </Button>
+          </div>
+        )}
+        <Divider />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          {moreInfo.length > 0 &&
+            moreInfo.map((item) => (
+              <div
+                style={{
+                  backgroundColor: "var(--whitebase)",
+                  padding: "2.5px 5px",
+                  margin: "0 1px",
+                  border: "solid 0.1px var(--gray900)",
+                  borderRadius: "8px",
+                }}
+                key={`${item.keyObject}-${item.valueObject}`}
+              >
+                {item.keyObject}:{item.valueObject}
+              </div>
+            ))}
+        </div>
+        <Divider />
 
         <div
           style={{
@@ -810,13 +901,6 @@ const FormDeviceTrackingMethod = ({
               onClick={() => setDisplayFormToCreateCategory(false)}
               style={{ ...GrayButton, width: "100%" }}
             >
-              <Icon
-                icon="ri:arrow-go-back-line"
-                color="#344054"
-                width={20}
-                height={20}
-              />
-              &nbsp;
               <Typography textTransform={"none"} style={GrayButtonText}>
                 Go back
               </Typography>
