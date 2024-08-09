@@ -57,14 +57,13 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
-    // enabled: false,
     refetchOnMount: false,
   });
   const eventAttendeesParametersQuery = useQuery({
     queryKey: ["listOfAttendeesPerSelectedEvent"],
     queryFn: () =>
       devitrakApi.post("/auth/user-query", {
-        provider: user.company,
+        company: user.companyData.id,
         eventSelected: choice,
       }),
     // enabled: false,
@@ -76,7 +75,7 @@ const MainPageQuickGlance = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event?.eventInfoDetail?.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,
