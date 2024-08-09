@@ -48,6 +48,7 @@ import {
   SettingIcon,
 } from "../icons/Icons";
 import "./style/style.css";
+import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
@@ -125,8 +126,8 @@ const NavigationBarMain = (props) => {
   };
 
   const onChange = (e) => {
-    return setSearchValue(e.target.value)
-  }
+    return setSearchValue(e.target.value);
+  };
   const handleSearch = (e) => {
     e.preventDefault();
     return navigate(`/search-result-page?search=${searchValue}`);
@@ -240,10 +241,38 @@ const NavigationBarMain = (props) => {
                 <NavLink
                   key={"devitrakName"}
                   to={`/`}
-                  style={{ margin: "0 3px 0 0" }}
+                  style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
-                  <DevitrakLogo />
-                  <DevitrakName />
+                  {user.companyData.company_logo.length > 0 ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        borderRadius: "12px",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                      }}
+                    >
+                      <img
+                        width={"35%"}
+                        height={"auto"}
+                        style={{
+                          verticalAlign: "middle",
+                          objectPosition: "50% 50%",
+                          objectFit: "scale-down",
+                          borderRadius: "50px",
+                        }}
+                        src={`${user.companyData.company_logo}`}
+                        alt={`${user.companyData.company_logo}`}
+                      />&nbsp;
+                      <p style={{...TextFontSize14LineHeight20, color:"var(--basewhite)"}}>{user.companyData.company_name}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <DevitrakLogo />
+                      <DevitrakName />
+                    </>
+                  )}
                 </NavLink>
 
                 {navItems.map((item) => {
@@ -291,7 +320,7 @@ const NavigationBarMain = (props) => {
                 // gap: "5px",
               }}
             >
-              <form style={{margin:"0 5px 0 0"}} onSubmit={handleSearch}>
+              <form style={{ margin: "0 5px 0 0" }} onSubmit={handleSearch}>
                 <OutlinedInput
                   placeholder="Search"
                   required
@@ -381,7 +410,10 @@ const NavigationBarMain = (props) => {
                     <div className="content-main-navbar-updated">
                       <article className="nav-item-base-1-main-navbar-updated">
                         <div className="content-2-main-navbar-updated">
-                          <div className="text-1-main-navbar-updated text-mdsemibold" style={{display:"flex"}}>
+                          <div
+                            className="text-1-main-navbar-updated text-mdsemibold"
+                            style={{ display: "flex" }}
+                          >
                             <button
                               style={{
                                 outline: "none",
