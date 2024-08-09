@@ -24,7 +24,7 @@ const ReturningInBulkMethod = ({ openReturnDeviceBulkModal, setOpenReturnDeviceI
         queryKey: ['deviceInTransactionInPool'],
         queryFn: () => devitrakApi.post('/receiver/receiver-pool-list', {
             eventSelected: record.eventSelected,
-            provider: record.provider,
+            company:user.companyData.id,
             activity: true,
             type: record.deviceType
         }),
