@@ -42,7 +42,7 @@ const MainPage = () => {
     queryKey: ["stripe_company_account"],
     queryFn: () =>
       devitrakApi.post(`/stripe/company-account-stripe`, {
-        company: user.company,
+        company: user.companyData.company_name,
       }),
     refetchOnMount: false,
   });
@@ -98,7 +98,7 @@ const MainPage = () => {
     };
     dataPerCompany();
     const renderingDataBasedOnStaffAndActiveEvent = () => {
-      const companyData = dataPerCompany(); 
+      const companyData = dataPerCompany();
 
       if (!companyData) return [];
 
