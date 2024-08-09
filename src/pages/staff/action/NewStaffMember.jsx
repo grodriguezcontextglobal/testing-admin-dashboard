@@ -56,7 +56,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -64,9 +63,8 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     queryKey: ["companyListQuery"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const [messageApi, contextHolder] = message.useMessage();

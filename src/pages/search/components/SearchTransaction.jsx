@@ -30,7 +30,6 @@ const SearchTransaction = ({ searchParams }) => {
         company: user.company,
         paymentIntent: searchParams,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const dispatch = useDispatch();

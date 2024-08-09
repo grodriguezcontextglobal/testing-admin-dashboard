@@ -19,20 +19,11 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const dispatch = useDispatch();
-  const listAdminUsers = useQuery({
-    queryKey: ["listOfAdminUsers"],
-    queryFn: () =>
-      devitrakApi.post("/staff/admin-users", {
-        company: user.company,
-      }),
-    refetchOnMount: false,
-  });
-
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -41,7 +32,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
     queryKey: ["events"],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
-        company: user.company,
+        company: user.companyData.company_name,
         active: true,
       }),
     refetchOnMount: false,
@@ -49,7 +40,6 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    listAdminUsers.refetch();
     companiesEmployees.refetch();
     eventQuery.refetch();
     return () => {
@@ -368,7 +358,6 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
                   backgroundColor: "transparent",
                 }}
                 onClick={() => {
-                  listAdminUsers.refetch();
                   companiesEmployees.refetch();
                 }}
               >
