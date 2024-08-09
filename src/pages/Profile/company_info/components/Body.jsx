@@ -1,13 +1,12 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Grid,
   InputLabel,
   OutlinedInput,
   TextField,
   Typography,
 } from "@mui/material";
-import { Avatar, Divider, Space, notification } from "antd";
+import { Avatar, Divider, Space, notification, Button } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { CompanyIcon } from "../../../../components/icons/Icons";
@@ -15,14 +14,17 @@ import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import "./Body.css";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { onLogin } from "../../../../store/slices/adminSlice";
+import { onLogout } from "../../../../store/slices/adminSlice";
+import "./Body.css";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
+  const [loading, setLoading] = useState(false);
   const openNotificationWithIcon = () => {
     api.open({
       message: "Information updated",
@@ -50,7 +52,6 @@ const Body = () => {
       state: user.companyData.address.state,
       zipCode: user.companyData.address.postal_code,
       website: user.companyData.website,
-      // companyLogo: user.companyData.company_logo,
       email: user.companyData.main_email,
       employees: user.companyData.employees,
     },
@@ -112,115 +113,91 @@ const Body = () => {
       name: "website",
     },
   ];
-  const handleUpdatePersonalInfo = async (data) => {
-    let base64;
-    if (data.companyLogo[0] && data.companyLogo[0].size > 1048576) {
-      return alert(
-        "Image is bigger than 1mb. Please resize the image or select a new one."
-      );
-    } else {
-      if (data.companyLogo[0]) {
-        base64 = await convertToBase64(data.companyLogo[0]);
-      } else {
-        base64 = user.companyData.company_logo;
-      }
-      const resp = await devitrakApi.patch(
-        `/company/update-company/${user.companyData.id}`,
-        {
-          phone: {
-            main: data.mainPhoneNumber,
-            alternative: data.alternativePhoneNumber,
-            fax: "unknown",
-          },
-          company_name: data.companyName,
-          company_logo: base64,
-          address: {
-            street: data.street,
-            city: data.city,
-            state: data.state,
-            postal_code: data.zipCode,
-          },
-          website: data.website,
-          main_email: data.email,
-        }
-      );
-      if (resp) {
-        dispatch(
-          onLogin({
-            ...user,
-            companyData: {
-              ...user.companyData,
-              phone: {
-                main: data.mainPhoneNumber,
-                alternative: data.alternativePhoneNumber,
-                fax: "unknown",
-              },
-              company_name: data.companyName,
-              company_logo: base64,
-              address: {
-                street: data.street,
-                city: data.city,
-                state: data.state,
-                postal_code: data.zipCode,
-              },
-              website: data.website,
-              main_email: data.email,
-            },
-          })
-        );
-        openNotificationWithIcon();
-        return;
+
+  const eventsCompany = useQuery({
+    queryKey: ["allEventsRelatedCompany"],
+    queryFn: () =>
+      devitrakApi.post("/event/event-list", {
+        company: user.companyData.company_name,
+      }),
+    refetchOnMount: false,
+  });
+  useEffect(() => {
+    const controller = new AbortController();
+    eventsCompany.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const updatingAllEventsRelatedCompany = async (props) => {
+    const eventsData = eventsCompany.data.data.list;
+    if (eventsData.length > 0) {
+      for (let data of eventsData) {
+        await devitrakApi.patch(`/event/edit-event/${data.id}`, {
+          ...data,
+          company: props,
+        });
       }
     }
-    // else {
-    // const resp = await devitrakApi.patch(
-    // `/company/update-company/${user.companyData.id}`,
-    // {
-    // phone: {
-    // main: data.mainPhoneNumber,
-    // alternative: data.alternativePhoneNumber,
-    // fax: "unknown",
-    // },
-    // company_name: data.companyName,
-    // company_logo: base64,
-    // address: {
-    // street: data.street,
-    // city: data.city,
-    // state: data.state,
-    // postal_code: data.zipCode,
-    // },
-    // website: data.website,
-    // main_email: data.email,
-    // }
-    // );
-    // if (resp) {
-    // dispatch(
-    // onLogin({
-    // ...user,
-    // companyData: {
-    // ...user.companyData,
-    // phone: {
-    // main: data.mainPhoneNumber,
-    // alternative: data.alternativePhoneNumber,
-    // fax: "unknown",
-    // },
-    // company_name: data.companyName,
-    // company_logo: base64,
-    // address: {
-    // street: data.street,
-    // city: data.city,
-    // state: data.state,
-    // postal_code: data.zipCode,
-    // },
-    // website: data.website,
-    // main_email: data.email,
-    // },
-    // })
-    // );
-    // openNotificationWithIcon();
-    // return;
-    // }
-    // }
+  };
+
+  const handleUpdatePersonalInfo = async (data) => {
+    let base64;
+    setLoading(true);
+    try {
+      if (data.companyLogo[0] && data.companyLogo[0].size > 1048576) {
+        return alert(
+          "Image is bigger than 1mb. Please resize the image or select a new one."
+        );
+      } else {
+        if (data.companyLogo[0]) {
+          base64 = await convertToBase64(data.companyLogo[0]);
+        } else {
+          base64 = user.companyData.company_logo;
+        }
+        const resp = await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            phone: {
+              main: data.mainPhoneNumber,
+              alternative: data.alternativePhoneNumber,
+              fax: "unknown",
+            },
+            company_name: data.companyName,
+            company_logo: base64,
+            address: {
+              street: data.street,
+              city: data.city,
+              state: data.state,
+              postal_code: data.zipCode,
+            },
+            website: data.website,
+            main_email: data.email,
+          }
+        );
+        if (resp.data) {
+          await devitrakApi.post("/db_company/update_company", {
+            company_name: data.companyName,
+            street_address: data.street,
+            city_address: data.city,
+            state_address: data.state,
+            zip_address: data.zipCode,
+            phone_number: data.mainPhoneNumber,
+            email_company: data.email,
+            company_id: user.sqlInfo.company_id,
+          });
+          await updatingAllEventsRelatedCompany(data.companyName);
+          setLoading(false);
+          openNotificationWithIcon();
+          dispatch(onLogout());
+          return window.location.reload(true);
+        }
+      }
+    } catch (error) {
+      alert("Something went wrong. Please try later.");
+      setLoading(false);
+    }
   };
   return (
     <>
@@ -392,15 +369,17 @@ const Body = () => {
               md={4}
             >
               {String(user.companyData.company_logo).length > 0 ? (
-                <Avatar
-                  size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
-                  src={
-                    <img
-                      src={user?.companyData?.company_logo}
-                      alt="company_logo"
-                    />
-                  }
-                />
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <Avatar
+                    size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
+                    src={
+                      <img
+                        src={user?.companyData?.company_logo}
+                        alt="company_logo"
+                      />
+                    }
+                  />
+                </div>
               ) : (
                 <Avatar
                   style={{
@@ -565,11 +544,12 @@ const Body = () => {
             lg={12}
           >
             <Button
-              type="submit"
+              htmlType="submit"
+              loading={loading}
               style={{ ...BlueButton, width: "fit-content" }}
             >
               <Typography textTransform={"none"} style={BlueButtonText}>
-                Save
+                Save and log out.
               </Typography>
             </Button>
           </Grid>
