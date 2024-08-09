@@ -29,7 +29,7 @@ const MainPage = () => {
     queryKey: ["itemsList"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
     refetchOnMount: false,
   });
@@ -61,13 +61,7 @@ const MainPage = () => {
         container
       >
         <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
-          <p
-            style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-            // textAlign={"left"}
-            // fontWeight={600}
-            // fontFamily={"Inter"}
-            // fontSize={"30px"}
-          >
+          <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
             Inventory of {user.company}
           </p>
         </Grid>

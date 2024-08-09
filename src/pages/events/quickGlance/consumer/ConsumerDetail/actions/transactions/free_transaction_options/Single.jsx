@@ -23,7 +23,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -112,6 +112,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
       provider: user.company,
       user: customer.email,
       timeStamp: new Date().getTime(),
+      company: user.companyData.id,
     });
   };
 
@@ -139,6 +140,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             user: customer.uid,
             eventSelected: event.eventInfoDetail.eventName,
             provider: user.company,
+            company: user.companyData.id,
           }
         );
         if (stripeResponse.data) {
@@ -157,6 +159,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
             date: `${new Date()}`,
+            company: user.companyData.id,
           };
           const createTransactionTemplate = {
             device: {
@@ -165,6 +168,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
               status: true,
             },
             paymentIntent: reference.current,
+            company: user.companyData.id,
           };
           await createReceiverInTransaction(createTransactionTemplate);
           await createDevicesInPool(data.serialNumber);
@@ -269,13 +273,19 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             marginY={2}
             style={{
               ...TextFontsize18LineHeight28,
-              width: "80%",
-              opacity: deviceSelection !== null ? 1 : 0,
+              width: "60%",
+              // opacity: deviceSelection !== null ? 1 : 0,
             }}
           >
-            Range of serial number for selected item: <br />
-            {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
-            {subtractRangePerGroupToDisplayItInScreen().max}
+            {deviceSelection !== null ? (
+              <>
+                Range of serial number for selected item: <br />
+                {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
+                {subtractRangePerGroupToDisplayItInScreen().max}
+              </>
+            ) : (
+              "Please select a device type to display available device range."
+            )}
           </Typography>
           <OutlinedInput
             disabled={deviceSelection === null}

@@ -17,6 +17,7 @@ const Confirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [triggerStatus, setTriggerStatus] = useState(true);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const { deviceSelection, deviceSelectionPaidTransaction } = useSelector(
     (state) => state.devicesHandle
   );
@@ -29,7 +30,7 @@ const Confirmation = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
         activity: false,
       }),
     refetchOnMount: false,
@@ -88,6 +89,7 @@ const Confirmation = () => {
           eventSelected: event.eventInfoDetail.eventName,
           provider: event.company,
           user: customer.email,
+          company: user.companyData.id,
         };
         const response = await addingDeviceInTransactionMutation.mutateAsync(
           deviceTemplate

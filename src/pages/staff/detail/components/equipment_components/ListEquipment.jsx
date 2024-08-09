@@ -32,23 +32,19 @@ const ListEquipment = () => {
       devitrakApi.post("/db_staff/consulting-member", {
         email: profile.email,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    // enabled: false,
     refetchOnMount: false,
   });
-
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -68,7 +64,7 @@ const ListEquipment = () => {
       "/db_lease/consulting-lease",
       {
         staff_member_id: staffmemberInfo.staff_id,
-        company_id:user.sqlInfo.company_id,
+        company_id: user.sqlInfo.company_id,
         subscription_current_in_use: 1,
       }
     );
@@ -77,7 +73,6 @@ const ListEquipment = () => {
     }
     return assignedEquipmentList;
   };
-
   useEffect(() => {
     const controller = new AbortController();
     const staffMember = staffMemberQuery?.data;
@@ -168,50 +163,50 @@ const ListEquipment = () => {
         dataIndex: "address",
         key: "address",
         render: (_, record) => (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: "20px",
-            }}
-          >
-            <Button
-              onClick={() => {
-                setDeviceInfo({
-                  ...record,
-                  ...dataSpecificItemInAssignedDevicePerStaffMember(
-                    record.device_id
-                  ),
-                });
-                setOpenReturnDeviceStaffModal(true);
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "20px",
               }}
-              disabled={record.active === 0}
-              style={record.active === 0 ? LightBlueButton : BlueButton}
             >
-              <Typography
-                style={
-                  record.active === 0
-                    ? { ...LightBlueButtonText, color: "#83a9f6" }
-                    : BlueButtonText
-                }
+              <Button
+                onClick={() => {
+                  setDeviceInfo({
+                    ...record,
+                    ...dataSpecificItemInAssignedDevicePerStaffMember(
+                      record.device_id
+                    ),
+                  });
+                  setOpenReturnDeviceStaffModal(true);
+                }}
+                disabled={record.active === 0}
+                style={record.active === 0 ? LightBlueButton : BlueButton}
               >
-                Mark as returned
-              </Typography>
-            </Button>
-            <Button disabled style={GrayButton}>
-              <Typography
-                style={
-                  record.active === 0
-                    ? { ...GrayButtonText, color: "#a5a5a5" }
-                    : GrayButtonText
-                }
-              >
-                Mark as lost
-              </Typography>
-            </Button>
-          </div>
-        ),
+                <Typography
+                  style={
+                    record.active === 0
+                      ? { ...LightBlueButtonText, color: "#83a9f6" }
+                      : BlueButtonText
+                  }
+                >
+                  Mark as returned
+                </Typography>
+              </Button>
+              <Button disabled style={GrayButton}>
+                <Typography
+                  style={
+                    record.active === 0
+                      ? { ...GrayButtonText, color: "#a5a5a5" }
+                      : GrayButtonText
+                  }
+                >
+                  Mark as lost
+                </Typography>
+              </Button>
+            </div>
+          ),
       },
     ];
     if (

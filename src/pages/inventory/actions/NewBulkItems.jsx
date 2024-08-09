@@ -69,18 +69,16 @@ const AddNewBulkItems = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -242,6 +240,7 @@ const AddNewBulkItems = () => {
               updated_at: formatDate(new Date()),
               company: user.company,
               extra_serial_number: JSON.stringify(moreInfo),
+              company_id: user.sqlInfo.company_id,
             });
             if (
               !renderLocationOptions().some(
@@ -320,6 +319,7 @@ const AddNewBulkItems = () => {
             updated_at: formatDate(new Date()),
             company: user.company,
             extra_serial_number: JSON.stringify(moreInfo),
+            company_id: user.sqlInfo.company_id,
           });
           if (
             !renderLocationOptions().some(

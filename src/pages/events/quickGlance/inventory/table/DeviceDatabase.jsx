@@ -6,10 +6,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useEffect } from "react";
 import "../../../../../styles/global/ant-table.css";
 const DeviceDatabase = ({ searchDevice }) => {
   const { user } = useSelector((state) => state.admin);
-  const { choice, event } = useSelector((state) => state.event);
+  const { event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const columns = [
@@ -245,28 +246,30 @@ const DeviceDatabase = ({ searchDevice }) => {
       ),
     },
   ];
-
   const deviceInPoolQuery = useQuery({
-    queryKey: "deviceInPoolList",
+    queryKey: "deviceInPoolListNoSQL",
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
+    refetchOnMount: false,
   });
-  //device inventory in event
-  // const deviceInPoolSQLQuery = useQuery({
-  //     queryKey: 'eventInventory',
-  //     queryFn: () => devitrakApi.post(`/db_event/event-inventory/${event.sql.event_id}`)
-  // })
+  useEffect(() => {
+    const controller = new AbortController();
+    deviceInPoolQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   const sortDataPerEventAndCompany = () => {
     const list = deviceInPoolQuery?.data?.data?.receiversInventory;
     if (list) {
       if (searchDevice?.length > 0) {
         const check = list?.filter(
           (item) =>
-            item.provider === user.company &&
-            item.eventSelected === choice &&
+            item.company === user.companyData.id &&
             `${item.device}`
               .toLowerCase()
               .includes(`${searchDevice}`.toLowerCase())
@@ -277,6 +280,14 @@ const DeviceDatabase = ({ searchDevice }) => {
     }
     return [];
   };
+  useEffect(() => {
+    const controller = new AbortController();
+    sortDataPerEventAndCompany()
+    return () => {
+      controller.abort();
+    };
+  }, [deviceInPoolQuery.data]);
+
   const getInfoNeededToBeRenderedInTable = () => {
     const result = new Set();
     let mapTemplate = {};

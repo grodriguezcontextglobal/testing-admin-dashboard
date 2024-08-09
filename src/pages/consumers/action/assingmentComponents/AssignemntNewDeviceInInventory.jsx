@@ -66,18 +66,16 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -241,7 +239,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   };
   const retrieveDataNewAddedItem = async (props) => {
     const newAddedItem = await devitrakApi.post("/db_item/consulting-item", {
-      company: user.company,
+      company_id:user.sqlInfo.company_id,
       item_group: selectedItem,
       category_name: props.category_name,
       serial_number: props.serial_number,
@@ -321,6 +319,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
+            company_id:user.sqlInfo.company_id
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -346,6 +345,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
+          company_id:user.sqlInfo.company_id
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({

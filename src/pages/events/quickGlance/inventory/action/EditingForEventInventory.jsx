@@ -31,7 +31,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     queryKey: ["listOfItems"],
     queryFn: () =>
       devitrakApi.post("/db_item/warehouse-items", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         warehouse: true,
       }),
   });
@@ -96,11 +96,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     setValueItemSelected(optionRendering);
   };
 
-  // const removeItemSelected = (item) => {
-  //   const filter = selectedItem.filter((_, index) => index !== item);
-  //   return setSelectedItem(filter);
-  // };
-
   const handleUpdateDeviceInEvent = async (props) => {
     const limit = Number(props.quantity) - 1;
     const inventoryEventUpdate = {
@@ -156,6 +151,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         eventSelected: event.eventInfoDetail.eventName,
         provider: user.company,
         type: valueItemSelected[index].item_group,
+        company: user.companyData.id,
       });
     }
     await handleUpdateDeviceInEvent(props);
@@ -175,7 +171,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     if (respoUpdating.data.ok) {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: false,
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         item_group: valueItemSelected[0].item_group,
         startingNumber: valueItemSelected[0].serial_number,
         quantity: data.quantity,
@@ -188,12 +184,15 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     return setEditingInventory(false);
   };
 
-  const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (props) => {
+  const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (
+    props
+  ) => {
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        // provider: event.company,
+        company: user.companyData.id,
         type: props.group,
       }
     );
@@ -233,7 +232,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {
-        provider: props.company,
+        // provider: props.company,
+        company: user.companyData.id,
         eventSelected: event.eventInfoDetail.eventName,
         "device.deviceType": props.group,
         "device.status": true,

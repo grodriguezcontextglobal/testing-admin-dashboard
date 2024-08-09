@@ -47,7 +47,7 @@ const EditItemModal = ({
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,

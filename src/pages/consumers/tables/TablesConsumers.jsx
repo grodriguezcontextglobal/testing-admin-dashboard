@@ -43,7 +43,6 @@ export default function TablesConsumers({
       devitrakApi.post("/event/event-list", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -81,7 +80,7 @@ export default function TablesConsumers({
         "/receiver/receiver-assigned-users-list",
         {
           user: data.email,
-          provider: user.company,
+          company:user.companyData.id
         }
       );
       if (fetching.data.ok) {

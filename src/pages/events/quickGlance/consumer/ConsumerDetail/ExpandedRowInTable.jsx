@@ -111,7 +111,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         "/receiver/receiver-pool-list",
         {
           eventSelected: event.eventInfoDetail.eventName,
-          provider: event.company,
+          company:user.companyData.id,
           device: props.serialNumber,
           type: props.deviceType,
         }
@@ -189,7 +189,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         "/receiver/receiver-pool-list",
         {
           eventSelected: event.eventInfoDetail.eventName,
-          provider: event.company,
+          company:user.companyData.id,
           device: props.serialNumber,
           type: props.deviceType,
         }

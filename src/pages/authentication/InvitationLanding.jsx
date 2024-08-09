@@ -48,7 +48,6 @@ const InvitationLanding = () => {
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.post("/staff/admin-users", { email: email }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const companiesQuery = useQuery({
@@ -57,7 +56,6 @@ const InvitationLanding = () => {
       devitrakApi.post("/company/search-company", {
         company_name: company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const [messageApi, contextHolder] = message.useMessage();

@@ -21,20 +21,11 @@ const MainAdminSettingPage = ({
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
-  const listAdminUsers = useQuery({
-    queryKey: ["listOfAdminUsers"],
-    queryFn: () =>
-      devitrakApi.post("/staff/admin-users", {
-        company: user.company,
-      }),
-    refetchOnMount: false,
-  });
-
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -51,7 +42,6 @@ const MainAdminSettingPage = ({
 
   useEffect(() => {
     const controller = new AbortController();
-    listAdminUsers.refetch();
     companiesEmployees.refetch();
     eventQuery.refetch();
     return () => {
@@ -434,7 +424,6 @@ const MainAdminSettingPage = ({
                 backgroundColor: "transparent",
               }}
               onClick={() => {
-                listAdminUsers.refetch();
                 companiesEmployees.refetch();
               }}
             >

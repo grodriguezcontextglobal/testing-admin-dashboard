@@ -43,7 +43,7 @@ const EndEventButton = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id
       }),
     refetchOnMount: false,
   });
@@ -53,7 +53,7 @@ const EndEventButton = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id
       }),
     refetchOnMount: false,
   });
@@ -62,7 +62,7 @@ const EndEventButton = () => {
     queryKey: ["allDevicesOutOfCompanyStock"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         warehouse: false,
       }),
     refetchOnMount: false,
@@ -90,7 +90,6 @@ const EndEventButton = () => {
       controller.abort();
     };
   }, []);
-
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({

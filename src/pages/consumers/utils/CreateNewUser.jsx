@@ -83,6 +83,8 @@ export const CreateNewConsumer = ({
       category: "Regular",
       provider: [user.company],
       eventSelected: [data.eventAssignedTo],
+      company_providers:[user.companyData.id],
+      event:[data.eventAssignedTo.id]
     };
     const newUser = await devitrakApi.post("/auth/new", newUserProfile);
     if (newUser.data) {
@@ -128,6 +130,8 @@ export const CreateNewConsumer = ({
           data.eventAssignedTo,
         ]),
         provider: zeroDuplications([...provider, user.company]),
+        company_providers:zeroDuplications([...data.consumersList.at(-1).company_providers, user.companyData.id]),
+        event_providers:zeroDuplications([...data.consumersList.at(-1).event_providers, data.eventAssignedTo.id]),
         phoneNumber: contactPhoneNumber,
       };
       const updatingUserInfoQuery = await devitrakApi.patch(

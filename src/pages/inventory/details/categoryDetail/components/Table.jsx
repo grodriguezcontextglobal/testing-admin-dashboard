@@ -21,7 +21,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
       devitrakApi.post("/db_item/current-inventory", {
-        company_name: user.company,
+        company_id: user.sqlInfo.company_id,
         category_name: decodeURI(location.search.slice(1)),
       }),
     // enabled: false,
@@ -39,7 +39,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     queryKey: ["deviceInInventoryPerCategory"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         category_name: decodeURI(location.search.slice(1)),
       }),
     // enabled: false,

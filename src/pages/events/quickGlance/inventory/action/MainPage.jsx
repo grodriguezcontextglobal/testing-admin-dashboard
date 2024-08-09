@@ -31,6 +31,7 @@ const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const { triggerModal } = useSelector((state) => state.helper);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
@@ -47,7 +48,7 @@ const ActionsMainPage = () => {
       "device.status": true,
       "device.deviceType": deviceInfoSelected.entireData.type,
       eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company,
+      company: user.companyData.id,
     });
     if (respo.data.ok) {
       const assignedDevice = respo.data.listOfReceivers.at(-1);

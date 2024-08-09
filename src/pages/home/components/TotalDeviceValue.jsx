@@ -8,7 +8,7 @@ const TotalDevice = () => {
     const [device, setDevice] = useState('')
     const totalConsumers = useCallback(async () => {
         const response = await devitrakApi.post('db_item/consulting-item', {
-            company: user.company
+            company_id: user.sqlInfo.company_id
         })
         if (response.data.ok) {
             sortingDataFetched(response.data.items)

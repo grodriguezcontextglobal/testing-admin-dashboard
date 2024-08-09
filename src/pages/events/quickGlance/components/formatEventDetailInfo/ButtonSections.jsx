@@ -24,7 +24,7 @@ const ButtonSections = () => {
     queryKey: ["listOfInventory"],
     queryFn: () =>
       devitrakApi.get("/inventory/list-inventories", {
-        company: user.company,
+        company: user.companyData.company_name,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -121,10 +121,7 @@ const ButtonSections = () => {
   const checkItemsInUseToUpdateInventory = () => {
     const result = {};
     for (let data of findItemsInPoolEvent()) {
-      if (
-        data.activity ||
-        `${data.status}`.toLowerCase() === "lost"
-      ) {
+      if (data.activity || `${data.status}`.toLowerCase() === "lost") {
         if (!result[data.type]) {
           result[data.type] = 1;
         } else {

@@ -11,7 +11,7 @@ const useFetchingDeviceInfoBasedOnFeature = (props) => {
     queryKey: ["consulting_device_info"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         item_id: value,
       }),
     refetchOnMount: false,

@@ -129,6 +129,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
         onOk={() => handleClose()}
         onCancel={() => handleClose()}
         footer={[]}
+        centered
         maskClosable={false}
       >
         <Grid container>

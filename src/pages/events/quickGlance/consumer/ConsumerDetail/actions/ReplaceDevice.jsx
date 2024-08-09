@@ -78,7 +78,7 @@ export const ReplaceDevice = ({ refetching }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }),
@@ -160,7 +160,7 @@ export const ReplaceDevice = ({ refetching }) => {
       "/receiver/receiver-pool-list",
       {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id,
         device: props.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }

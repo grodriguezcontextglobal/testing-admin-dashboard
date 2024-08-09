@@ -240,7 +240,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           "/receiver/receiver-pool-list",
           {
             eventSelected: props.entireData.eventSelected[0],
-            provider: props.entireData.provider[0],
+            company:user.companyData.id,
             device: props.serial_number,
             type: props.type,
           }

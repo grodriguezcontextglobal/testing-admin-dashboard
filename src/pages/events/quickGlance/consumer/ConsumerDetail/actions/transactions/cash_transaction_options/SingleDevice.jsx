@@ -1,4 +1,11 @@
-import { Button, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select } from "antd";
 import _ from "lodash";
@@ -24,7 +31,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -112,6 +119,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
       provider: user.company,
       user: customer.email,
       timeStamp: new Date().getTime(),
+      company: user.companyData.id,
     });
   };
 
@@ -140,6 +148,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             user: customer.uid,
             eventSelected: event.eventInfoDetail.eventName,
             provider: user.company,
+            company: user.companyData.id,
           }
         );
         if (stripeResponse.data) {
@@ -158,6 +167,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
             date: `${new Date()}`,
+            company: user.companyData.id,
           };
           const createTransactionTemplate = {
             device: {
@@ -263,35 +273,33 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
               };
             })}
           />
-          <OutlinedInput
-            disabled={deviceSelection === null}
-            {...register("amount")}
-            autoFocus={true}
-            style={{ ...OutlinedInputStyle }}
-            placeholder="Amount in cash received"
-            fullWidth
-          />
         </div>
 
         <div
           style={{
-            width: "100%",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: "1px",
+            width: "100%",
           }}
         >
           <Typography
             marginY={2}
             style={{
               ...TextFontsize18LineHeight28,
-              width: "80%",
-              opacity: deviceSelection !== null ? 1 : 0,
+              width: "60%",
             }}
           >
-            Range of serial number for selected item: <br />
-            {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
-            {subtractRangePerGroupToDisplayItInScreen().max}
+            {deviceSelection !== null ? (
+              <>
+                Range of serial number for selected item: <br />
+                {subtractRangePerGroupToDisplayItInScreen().min} -{" "}
+                {subtractRangePerGroupToDisplayItInScreen().max}
+              </>
+            ) : (
+              "Please select a device type to display available device range."
+            )}
           </Typography>
           <OutlinedInput
             disabled={deviceSelection === null}
@@ -299,8 +307,22 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             autoFocus={true}
             style={{ ...OutlinedInputStyle }}
             placeholder="Scan or enter serial number here."
-            fullWidth
           />
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+            <OutlinedInput
+              label="Amount"
+              required
+              style={{ ...OutlinedInputStyle }}
+              type="text"
+              fullWidth
+              placeholder="e.g 150"
+              {...register("amount")}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+            />
+          </FormControl>
         </div>
 
         <Button style={{ ...BlueButton, width: "100%" }} type="submit">

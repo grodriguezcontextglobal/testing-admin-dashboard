@@ -21,7 +21,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
       devitrakApi.post("/db_item/current-inventory", {
-        company_name: user.company,
+        company_id: user.sqlInfo.company_id,
         location: decodeURI(location.search.slice(1)),
       }),
     // enabled: false,
@@ -31,7 +31,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -39,10 +38,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryKey: ["deviceInInventoryPerLocation"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         location: String(decodeURI(location.search.slice(1))).toLowerCase(),
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;

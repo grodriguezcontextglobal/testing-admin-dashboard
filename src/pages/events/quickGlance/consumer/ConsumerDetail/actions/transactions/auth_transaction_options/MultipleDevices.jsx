@@ -1,4 +1,11 @@
-import { Button, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select, Tooltip } from "antd";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,6 +28,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const [clientSecret, setClientSecret] = useState("");
   const dispatch = useDispatch();
   const [deviceSelection, setDeviceSelection] = useState(null);
@@ -31,8 +39,8 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-        activity:false
+        company: user.companyData.id,
+        activity: false,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -117,9 +125,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
     );
     if (response) {
       setClientSecret(response.data.paymentIntentCustomized.client_secret);
-      dispatch(
-        onAddDevicesSelection(data.quantity)
-      );
+      dispatch(onAddDevicesSelection(data.quantity));
       dispatch(
         onAddDevicesSelectionPaidTransactions({
           ...data,
@@ -206,23 +212,40 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             style={{ ...OutlinedInputStyle, width: "90%" }}
             placeholder="Scan or enter starting serial number"
           />
-          <OutlinedInput
-            disabled={deviceSelection === null}
-            {...register("quantity")}
-            autoFocus={true}
-            style={OutlinedInputStyle}
-            placeholder="Enter the number of devices to assign in transaction."
-            fullWidth
-          />
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Qty</InputLabel>
+            <OutlinedInput
+              label="Qty"
+              disabled={deviceSelection === null}
+              {...register("quantity")}
+              autoFocus={true}
+              style={{ ...OutlinedInputStyle }}
+              placeholder="e.g 3"
+              fullWidth
+              startAdornment={
+                <InputAdornment position="start"></InputAdornment>
+              }
+            />
+          </FormControl>
+
+          <FormControl style={{ width: "20%" }}>
+            <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+            <OutlinedInput
+              label="Amount"
+              autoFocus={true}
+              required
+              disabled={clientSecret !== "" || deviceSelection === null}
+              style={{ ...OutlinedInputStyle }}
+              type="text"
+              fullWidth
+              placeholder="e.g 150"
+              {...register("amount")}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+            />
+          </FormControl>
         </div>
-        <OutlinedInput
-          disabled={clientSecret !== ""}
-          style={{ ...OutlinedInputStyle }}
-          type="text"
-          placeholder="Amount to authorize."
-          {...register("amount", { required: true })}
-          fullWidth
-        />
         <Tooltip title="Please submit CC info after assign all devices.">
           <Button style={{ ...BlueButton, width: "100%" }} type="submit">
             <Typography textTransform={"none"} style={BlueButtonText}>

@@ -45,7 +45,7 @@ export const Replace = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: deviceInfoSelected.entireData.eventSelected,
-        provider: deviceInfoSelected.entireData.provider,
+        company: user.companyData.id,
         device: deviceInfoSelected.entireData.device,
         type: deviceInfoSelected.entireData.type,
         activity: deviceInfoSelected.entireData.activity,
@@ -60,7 +60,7 @@ export const Replace = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         eventSelected: deviceInfoSelected.entireData.eventSelected,
-        provider: deviceInfoSelected.entireData.provider,
+        company: user.companyData.id,
         "device.serialNumber": deviceInfoSelected.entireData.device,
         "device.deviceType": deviceInfoSelected.entireData.type,
         "device.status": true,
@@ -122,7 +122,7 @@ export const Replace = () => {
       "/receiver/receiver-pool-list",
       {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
         device: props.serialNumber,
         type: deviceInfoSelected.entireData.type,
       }

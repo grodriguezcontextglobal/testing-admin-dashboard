@@ -16,7 +16,7 @@ const SearchPosts = ({ searchParams }) => {
     queryKey: ["listOfStaffMembers"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
     // enabled: false,
     refetchOnMount: false,
