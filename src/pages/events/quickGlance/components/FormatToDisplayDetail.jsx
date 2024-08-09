@@ -4,31 +4,39 @@ import _ from "lodash";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import CardRendered from "./CardRendered";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
 const FormatToDisplayDetail = () => {
   const [defectedDeviceList, setDefectedDeviceList] = useState(false);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   const receiversNoOperatingInPoolQuery = useQuery({
     queryKey: ["listOfNoOperatingDevices"],
     queryFn: () =>
       devitrakApi.post("/receiver/list-receiver-returned-issue", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    receiversPoolQuery.refetch();
+    receiversNoOperatingInPoolQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {
     const foundAllDevicesGivenInEvent = () => {
@@ -61,7 +69,7 @@ const FormatToDisplayDetail = () => {
           result = [...result, ...data[1]];
         }
       }
-      return result
+      return result;
     };
 
     const foundDevicesOut = () => {
@@ -86,7 +94,11 @@ const FormatToDisplayDetail = () => {
     deviceRangeDisplay();
 
     const numberDisplayDynamically = () => {
-      return deviceRangeDisplay() - foundDevicesOut();
+      const dataRef = receiversPoolQuery?.data?.data?.receiversInventory;
+      if (dataRef.length > 0) {
+        return deviceRangeDisplay() - foundDevicesOut();
+      }
+      return 0;
     };
 
     return (
