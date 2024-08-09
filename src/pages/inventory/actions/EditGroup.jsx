@@ -63,18 +63,16 @@ const EditGroup = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 

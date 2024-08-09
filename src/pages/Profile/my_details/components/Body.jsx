@@ -85,7 +85,7 @@ const Body = () => {
       employeeCompanyDataCopy[employeeUpdating] = {
         ...employeeCompanyDataCopy[employeeUpdating],
         user: props.email,
-        firstName: props.name,
+        firstName: props.name ?? props.firstName,
         lastName: props.lastName,
       };
       return employeeCompanyDataCopy;
@@ -408,6 +408,7 @@ const Body = () => {
                 </Avatar>
               )}
             </Grid>
+
             <Grid
               display={"flex"}
               flexDirection={"column"}
@@ -588,17 +589,9 @@ const Body = () => {
           sm={12}
           md={12}
         >
-          {/* <Button
-            onClick={() => triggerRoutes()}
-            style={{ ...GrayButton, width: "fit-content" }}
-          >
-            <Typography textTransform={"none"} style={GrayButtonText}>
-              Cancel
-            </Typography>
-          </Button> */}
           <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
             <Typography textTransform={"none"} style={BlueButtonText}>
-              Save
+              Save and log out
             </Typography>
           </Button>
         </Grid>

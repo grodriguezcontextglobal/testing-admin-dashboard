@@ -58,18 +58,16 @@ const AddNewItem = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -195,6 +193,7 @@ const AddNewItem = () => {
             location: locationSelection,
             current_location: locationSelection,
             extra_serial_number: JSON.stringify(moreInfo),
+            company_id: user.sqlInfo.company_id,
           });
           if (respNewItem.data.ok) {
             setValue("category_name", "");
@@ -231,6 +230,7 @@ const AddNewItem = () => {
           location: locationSelection,
           current_location: locationSelection,
           extra_serial_number: JSON.stringify(moreInfo),
+          company_id: user.sqlInfo.company_id,
         });
         if (respNewItem.data.ok) {
           setValue("category_name", "");

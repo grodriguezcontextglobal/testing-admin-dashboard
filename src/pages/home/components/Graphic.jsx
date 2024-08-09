@@ -12,8 +12,7 @@ const Graphic = () => {
   const itemInInventoryQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", { company: user.company }),
-    // enabled: false,
+      devitrakApi.post("/db_item/consulting-item", { company_id: user.sqlInfo.company_id }),
     refetchOnMount: false,
   });
 
@@ -95,13 +94,13 @@ const Graphic = () => {
     return 0;
   }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading]);
   const dataToExport = [
+    { name: "On hands (included not-functional)", value: foundDevicesInWarehouse() },
     { name: "Checked out", value: foundDevicesOut() },
     {
       name: "Not-Functional Report",
       value: defectedDeviceList,
     },
-    { name: "On hands", value: foundDevicesInWarehouse() }, //numberDisplayDynamically()
-    { name: "Lost", value: lostDeviceList },
+    { name: "Lost", value: lostDeviceList ?? 0 },
   ];
 
   const dataToMap = [dataToExport];
@@ -120,7 +119,7 @@ const Graphic = () => {
               dataToRender={item}
               totalDeviceInRange={
                 itemInInventoryQuery?.data?.data?.items?.length ?? 0
-              } //deviceRangeDisplay()
+              }
               index={index}
             />
           </Grid>

@@ -9,6 +9,7 @@ import "../../../../../styles/global/ant-table.css";
 const TableDetailPerDevice = ({ searching }) => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -17,7 +18,7 @@ const TableDetailPerDevice = ({ searching }) => {
     const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
       "device.serialNumber": deviceInfoSelected.serialNumber,
       eventSelected: event.eventInfoDetail.eventName,
-      provider: event.company,
+      company: user.companyData.id,
     });
     if (respo.data.ok) {
       const result = [...assignedDeviceList, ...respo.data.listOfReceivers];
@@ -104,7 +105,7 @@ const TableDetailPerDevice = ({ searching }) => {
   };
 
   const displayTernary = (arg1, bg1, bg2, bg3) => {
-    if (typeof arg1 === 'string') {
+    if (typeof arg1 === "string") {
       return bg1;
     } else {
       if (arg1) {
@@ -154,41 +155,39 @@ const TableDetailPerDevice = ({ searching }) => {
       },
       render: (_, record) => (
         // console.log("record", record),
-        (
-          <span
+        <span
+          style={{
+            margin: "auto",
+          }}
+        >
+          <p
             style={{
-              margin: "auto",
+              ...renderRowStyle,
+              backgroundColor: displayTernary(
+                record.device.status,
+                "var(--orange-dark-50, #FFF4ED)",
+                "var(--orange-dark-50, #FFF4ED)",
+                "var(--success-50, #ECFDF3)"
+              ),
+              width: "fit-content",
+              padding: "5px 8px",
+              borderRadius: "8px",
+              color: displayTernary(
+                record.device.status,
+                "var(--orange-700, #B93815)",
+                "var(--orange-700, #B93815)",
+                "var(--success-700, #027A48)"
+              ),
             }}
           >
-            <p
-              style={{
-                ...renderRowStyle,
-                backgroundColor: displayTernary(
-                  record.device.status,
-                  "var(--orange-dark-50, #FFF4ED)",
-                  "var(--orange-dark-50, #FFF4ED)",
-                  "var(--success-50, #ECFDF3)"
-                ),
-                width: "fit-content",
-                padding: "5px 8px",
-                borderRadius: "8px",
-                color: displayTernary(
-                  record.device.status,
-                  "var(--orange-700, #B93815)",
-                  "var(--orange-700, #B93815)",
-                  "var(--success-700, #027A48)"
-                ),
-              }}
-            >
-              {displayTernary(
-                record.device.status,
-                record.device.status,
-                "In-use",
-                "Returned"
-              )}
-            </p>
-          </span>
-        )
+            {displayTernary(
+              record.device.status,
+              record.device.status,
+              "In-use",
+              "Returned"
+            )}
+          </p>
+        </span>
       ),
     },
     {

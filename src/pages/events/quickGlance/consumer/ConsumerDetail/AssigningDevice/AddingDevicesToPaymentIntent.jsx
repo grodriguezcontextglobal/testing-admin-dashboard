@@ -22,7 +22,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const { choice, event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const { deviceSetup } = event;
-  // const [deviceInPoolQuery, setDeviceInPoolQuery] = useState([])
   const refDeviceObjectRetrieve = useRef(null);
   const refDeviceHasRecordInEvent = useRef(null);
   const refDeviceSetInEvent = useRef(null);
@@ -39,11 +38,10 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        // provider: event.company,
+        company:user.companyData.id
       }),
-    // enabled: false,
     refetchOnMount: false,
-    cacheTime: 1000 * 60 * 3,
   });
 
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery =
@@ -207,6 +205,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       eventSelected: choice,
       provider: user.company,
       timeStamp: new Date().getTime(),
+      company:user.companyData.id
     };
     try {
       if (checkDeviceIsAssignedInEvent()) {

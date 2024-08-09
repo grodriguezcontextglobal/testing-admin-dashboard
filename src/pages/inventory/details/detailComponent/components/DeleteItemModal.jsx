@@ -29,7 +29,7 @@ const DeleteItemModal = ({
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -47,9 +47,8 @@ const DeleteItemModal = ({
     queryKey: ["companyInfo_employees"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: user.company,
+        _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const [api, contextHolder] = notification.useNotification();
@@ -138,7 +137,7 @@ const DeleteItemModal = ({
         item_id: device_id,
       });
       if (respAfterDelete.data) {
-        const employees = companyInfoQuery.data.data.company[0].empployees;
+        const employees = companyInfoQuery.data.data.company[0].employees;
         for (let data of employees) {
           if (data.role === "Administrator") {
             const emailNotificationProfile = {

@@ -14,13 +14,18 @@ const Graphic = () => {
     //event_id => /db_item/inventory_event/:id 
     const itemInInventoryQuery = useQuery({
         queryKey: ["listOfreceiverInPool"],
-        queryFn: () => devitrakApi.post("/db_item/consulting-item", { company: user.company }),
+        queryFn: () => devitrakApi.post("/db_item/consulting-item", { company_id: user.sqlInfo.company_id, }),
         refetchOnMount:false,
-        cacheTime:1000 * 60 * 15, //fifteenMinutesInMs
-        staleTime:1000 * 60 * 15,
-        notifyOnChangeProps:['data','dataUpdatedAt']
     });
 
+    useEffect(() => {
+      const controller = new AbortController()
+    itemInInventoryQuery.refetch()
+      return () => {
+        controller.abort()
+      }
+    }, [])
+    
     const foundAllDevicesGivenInEvent = useCallback(() => {
         if (itemInInventoryQuery?.data?.data.ok) {
             const groupingByStatus = _.groupBy(itemInInventoryQuery.data.data.items, "warehouse")

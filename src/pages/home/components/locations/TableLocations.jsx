@@ -14,7 +14,7 @@ const TableLocations = () => {
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
       }),
     refetchOnMount: false,
   });
