@@ -44,7 +44,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     queryKey: ["itemGroupExistingLocationList"],
     queryFn: () =>
       devitrakApi.post("/db_item/warehouse-items", {
-        company: user.company,
+        company_id: user.sqlInfo.company_id,
         warehouse: true,
         item_group: deviceTitle,
       }),
@@ -54,9 +54,10 @@ const ModalAddAndUpdateDeviceSetup = ({
     queryKey: ["recordNoSqlDevices"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
-        provider: user.company,
+        // provider: user.company,
         type: deviceTitle,
         eventSelected: event.eventInfoDetail.eventName,
+        company:user.companyData.id
       }),
     refetchOnMount: false,
   });
@@ -184,6 +185,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         eventSelected: eventInfoDetail.eventName,
         provider: user.company,
         type: props.deviceInfo[index].item_group,
+        company:user.companyData.id
       });
     }
     await updateDeviceSetupInEvent();
@@ -199,7 +201,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: false,
-      company: user.company,
+      company_id: user.sqlInfo.company_id,
       item_group: valueItemSelected[0].item_group,
       startingNumber: valueItemSelected[0].serial_number,
       quantity: props.quantity,

@@ -7,12 +7,13 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import FormatQuickGlanceCardGraphRender from "./graphic/FormatQuickGlanceCardGraphRender";
 const GraphicInventoryEventActivity = () => {
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector(state => state.admin)
   const deviceStatusInEvent = useQuery({
     queryKey: ["devicesInEvent"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company:user.companyData.id
       }),
     refetchOnMount: false,
   });
@@ -26,7 +27,6 @@ const GraphicInventoryEventActivity = () => {
   }, []);
 
   const checkNonFunctionalDeclaredDevice = (props) => {
-    console.log(props);
     let result = [];
     const filteredData = new Set();
     for (let item of props) {
