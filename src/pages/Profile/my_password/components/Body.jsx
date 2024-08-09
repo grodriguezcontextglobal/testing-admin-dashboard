@@ -8,8 +8,7 @@ import {
 import { Divider, notification } from "antd";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
-import _ from "lodash";
+import { useDispatch, useSelector } from "react-redux";
 import "./Body.css";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -20,15 +19,18 @@ import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { compareSync } from "bcryptjs";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { useNavigate } from "react-router-dom";
+import { checkArray } from "../../../../components/utils/checkArray";
+import { onLogout } from "../../../../store/slices/adminSlice";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const reference = useRef("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
-  // const bcrypt = require("bcryptjs");
   const adminUsersStaffQuery = useQuery({
     queryKey: ["adminUser"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
+    queryFn: () =>
+      devitrakApi.post("/staff/admin-users", { email: user.email }),
   });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
@@ -36,19 +38,10 @@ const Body = () => {
       message: msg,
     });
   };
-
   if (adminUsersStaffQuery.data) {
     const foundAdminInfo = () => {
-      const groupingStaffByCompany = _.groupBy(
-        adminUsersStaffQuery?.data?.data?.adminUsers,
-        "company"
-      );
-      const groupingByEmail = _.groupBy(
-        groupingStaffByCompany[user.company],
-        "email"
-      );
-      reference.current = groupingByEmail[user.email][0];
-      return groupingByEmail[user.email][0];
+      reference.current = checkArray(adminUsersStaffQuery.data.data.adminUsers);
+      return checkArray(adminUsersStaffQuery.data.data.adminUsers);
     };
     foundAdminInfo();
     const triggerRoutes = () => {
@@ -57,7 +50,7 @@ const Body = () => {
       }
       return navigate("/");
     };
-  
+
     const handleUpdatePersonalInfo = async (data) => {
       try {
         const isValid = compareSync(
@@ -91,6 +84,8 @@ const Body = () => {
         });
         if ((await resp).data) {
           openNotificationWithIcon("success", "Password updated!");
+          dispatch(onLogout());
+          return window.location.reload(true);
         }
       } catch (error) {
         console.log(
@@ -158,6 +153,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
+                required
                 style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("current_password", {
@@ -208,6 +204,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
+                required
                 style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("password1", {
@@ -256,6 +253,7 @@ const Body = () => {
               md={6}
             >
               <OutlinedInput
+                required
                 style={{ ...OutlinedInputStyle }}
                 fullWidth
                 {...register("password2", {
@@ -286,7 +284,7 @@ const Body = () => {
             </Button>
             <Button type="submit" style={BlueButton}>
               <Typography textTransform={"none"} style={BlueButtonText}>
-                Save
+                Save and log out.
               </Typography>
             </Button>
           </Grid>
