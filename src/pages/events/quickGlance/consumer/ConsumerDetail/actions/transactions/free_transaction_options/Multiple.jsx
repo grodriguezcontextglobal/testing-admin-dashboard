@@ -155,6 +155,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           user: customer.uid,
           eventSelected: event.eventInfoDetail.eventName,
           provider: user.company,
+          company: user.companyData.id,
         }
       );
       if (stripeResponse.data) {
