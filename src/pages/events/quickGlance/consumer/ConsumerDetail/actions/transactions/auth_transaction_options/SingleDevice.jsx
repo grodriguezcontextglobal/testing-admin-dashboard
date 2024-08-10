@@ -79,8 +79,6 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
 
   const checkDeviceAvailability = (props) => {
     const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
-    console.log("grouping", grouping);
-    console.log("checkArray(grouping[props])", checkArray(grouping[props]));
     return checkArray(grouping[props]).activity; // === "YES"
   };
 
@@ -137,7 +135,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
         total: data.amount,
       }
     );
-    console.log("response.data", response?.data);
+
     if (response) {
       setClientSecret(response.data.paymentIntentCustomized.client_secret);
       dispatch(onAddDevicesSelection(1));
