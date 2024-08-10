@@ -129,434 +129,436 @@ const Body = () => {
       controller.abort();
     };
   }, []);
-
-  const updatingAllEventsRelatedCompany = async (props) => {
-    const eventsData = eventsCompany.data.data.list;
-    if (eventsData.length > 0) {
-      for (let data of eventsData) {
-        await devitrakApi.patch(`/event/edit-event/${data.id}`, {
-          ...data,
-          company: props,
-        });
-      }
-    }
-  };
-
-  const handleUpdatePersonalInfo = async (data) => {
-    let base64;
-    setLoading(true);
-    try {
-      if (data.companyLogo[0] && data.companyLogo[0].size > 1048576) {
-        return alert(
-          "Image is bigger than 1mb. Please resize the image or select a new one."
-        );
-      } else {
-        if (data.companyLogo[0]) {
-          base64 = await convertToBase64(data.companyLogo[0]);
-        } else {
-          base64 = user.companyData.company_logo;
-        }
-        const resp = await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
-          {
-            phone: {
-              main: data.mainPhoneNumber,
-              alternative: data.alternativePhoneNumber,
-              fax: "unknown",
-            },
-            company_name: data.companyName,
-            company_logo: base64,
-            address: {
-              street: data.street,
-              city: data.city,
-              state: data.state,
-              postal_code: data.zipCode,
-            },
-            website: data.website,
-            main_email: data.email,
-          }
-        );
-        if (resp.data) {
-          await devitrakApi.post("/db_company/update_company", {
-            company_name: data.companyName,
-            street_address: data.street,
-            city_address: data.city,
-            state_address: data.state,
-            zip_address: data.zipCode,
-            phone_number: data.mainPhoneNumber,
-            email_company: data.email,
-            company_id: user.sqlInfo.company_id,
+  if (eventsCompany.data) {
+    const updatingAllEventsRelatedCompany = async (props) => {
+      const eventsData = eventsCompany?.data?.data?.list;
+      if (eventsData.length > 0) {
+        for (let data of eventsData) {
+          await devitrakApi.patch(`/event/edit-event/${data.id}`, {
+            ...data,
+            company: props,
           });
-          await updatingAllEventsRelatedCompany(data.companyName);
-          setLoading(false);
-          openNotificationWithIcon();
-          dispatch(onLogout());
-          return window.location.reload(true);
         }
       }
-    } catch (error) {
-      alert("Something went wrong. Please try later.");
-      setLoading(false);
-    }
-  };
-  return (
-    <>
-      {contextHolder}
-      <form
-        onSubmit={handleSubmit(handleUpdatePersonalInfo)}
-        style={{
-          width: "100%",
-        }}
-      >
-        <Grid
-          style={{
-            padding: "5px",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-          container
-        >
-          {features.map((item) => {
-            if (!item.object) {
-              return (
-                <>
-                  <Grid
-                    display={"flex"}
-                    flexDirection={"column"}
-                    alignSelf={"stretch"}
-                    marginY={0}
-                    item
-                    xs={4}
-                    sm={4}
-                    md={4}
-                  >
-                    <InputLabel style={{ width: "100%" }}>
-                      <Typography
-                        textTransform={"none"}
-                        style={{ ...Subtitle, fontWeight: 500 }}
-                      >
-                        {item.title}
-                      </Typography>
-                    </InputLabel>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    marginY={0}
-                    gap={2}
-                    item
-                    xs={6}
-                    sm={6}
-                    md={6}
-                  >
-                    <OutlinedInput
-                      style={{ ...OutlinedInputStyle }}
-                      fullWidth
-                      {...register(`${item.name}`)}
-                    />
-                  </Grid>
-                  <Divider />
-                </>
-              );
-            } else if (item.object) {
-              return (
-                <>
-                  <Grid
-                    display={"flex"}
-                    flexDirection={"column"}
-                    alignSelf={"stretch"}
-                    marginY={0}
-                    item
-                    xs={4}
-                    sm={4}
-                    md={4}
-                  >
-                    <InputLabel style={{ width: "100%" }}>
-                      <Typography
-                        textTransform={"none"}
-                        style={{ ...Subtitle, fontWeight: 500 }}
-                      >
-                        {item.title}
-                      </Typography>
-                    </InputLabel>
-                  </Grid>
-                  <Grid
-                    display={"flex"}
-                    flexDirection={"column"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    marginY={0}
-                    gap={2}
-                    item
-                    xs={6}
-                    sm={6}
-                    md={6}
-                  >
-                    <div
-                      style={{ width: "100%", display: "flex", gap: "10px" }}
-                    >
-                      {" "}
-                      <OutlinedInput
-                        style={{ ...OutlinedInputStyle, width: "70%" }}
-                        fullWidth
-                        {...register(`${item.children[0].name}`)}
-                      />
-                      <OutlinedInput
-                        style={{ ...OutlinedInputStyle, width: "30%" }}
-                        fullWidth
-                        {...register(`${item.children[1].name}`)}
-                      />
-                    </div>
-                    <div
-                      style={{ width: "100%", display: "flex", gap: "10px" }}
-                    >
-                      {" "}
-                      <OutlinedInput
-                        style={{ ...OutlinedInputStyle }}
-                        fullWidth
-                        {...register(`${item.children[2].name}`)} // value={item.children[0].value}
-                      />
-                      <OutlinedInput
-                        style={{ ...OutlinedInputStyle }}
-                        fullWidth
-                        {...register(`${item.children[3].name}`)} // value={item.children[0].value}
-                      />
-                    </div>
-                  </Grid>
-                  <Divider />
-                </>
-              );
+    };
+
+    const handleUpdatePersonalInfo = async (data) => {
+      let base64;
+      setLoading(true);
+      try {
+        if (data.companyLogo[0] && data.companyLogo[0].size > 1048576) {
+          return alert(
+            "Image is bigger than 1mb. Please resize the image or select a new one."
+          );
+        } else {
+          if (data.companyLogo[0]) {
+            base64 = await convertToBase64(data.companyLogo[0]);
+          } else {
+            base64 = user.companyData.company_logo;
+          }
+          const resp = await devitrakApi.patch(
+            `/company/update-company/${user.companyData.id}`,
+            {
+              phone: {
+                main: data.mainPhoneNumber,
+                alternative: data.alternativePhoneNumber,
+                fax: "unknown",
+              },
+              company_name: data.companyName,
+              company_logo: base64,
+              address: {
+                street: data.street,
+                city: data.city,
+                state: data.state,
+                postal_code: data.zipCode,
+              },
+              website: data.website,
+              main_email: data.email,
             }
-          })}
+          );
+          if (resp.data) {
+            await devitrakApi.post("/db_company/update_company", {
+              company_name: data.companyName,
+              street_address: data.street,
+              city_address: data.city,
+              state_address: data.state,
+              zip_address: data.zipCode,
+              phone_number: data.mainPhoneNumber,
+              email_company: data.email,
+              company_id: user.sqlInfo.company_id,
+            });
+            await updatingAllEventsRelatedCompany(data.companyName);
+            setLoading(false);
+            openNotificationWithIcon();
+            dispatch(onLogout());
+            return window.location.reload(true);
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        alert("Something went wrong. Please try again.");
+        setLoading(false);
+      }
+    };
+    return (
+      <>
+        {contextHolder}
+        <form
+          onSubmit={handleSubmit(handleUpdatePersonalInfo)}
+          style={{
+            width: "100%",
+          }}
+        >
           <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"stretch"}
-            marginY={0}
-            item
-            xs={4}
-            sm={4}
-            md={4}
+            style={{
+              padding: "5px",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+            container
           >
-            <InputLabel style={{ width: "100%" }}>
-              <Typography style={{ ...Subtitle, fontWeight: 500 }}>
-                Company logo
-              </Typography>
-            </InputLabel>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            marginY={0}
-            gap={2}
-            item
-            xs={6}
-            sm={6}
-            md={6}
-          >
+            {features.map((item) => {
+              if (!item.object) {
+                return (
+                  <>
+                    <Grid
+                      display={"flex"}
+                      flexDirection={"column"}
+                      alignSelf={"stretch"}
+                      marginY={0}
+                      item
+                      xs={4}
+                      sm={4}
+                      md={4}
+                    >
+                      <InputLabel style={{ width: "100%" }}>
+                        <Typography
+                          textTransform={"none"}
+                          style={{ ...Subtitle, fontWeight: 500 }}
+                        >
+                          {item.title}
+                        </Typography>
+                      </InputLabel>
+                    </Grid>
+                    <Grid
+                      display={"flex"}
+                      justifyContent={"flex-start"}
+                      alignItems={"center"}
+                      marginY={0}
+                      gap={2}
+                      item
+                      xs={6}
+                      sm={6}
+                      md={6}
+                    >
+                      <OutlinedInput
+                        style={{ ...OutlinedInputStyle }}
+                        fullWidth
+                        {...register(`${item.name}`)}
+                      />
+                    </Grid>
+                    <Divider />
+                  </>
+                );
+              } else if (item.object) {
+                return (
+                  <>
+                    <Grid
+                      display={"flex"}
+                      flexDirection={"column"}
+                      alignSelf={"stretch"}
+                      marginY={0}
+                      item
+                      xs={4}
+                      sm={4}
+                      md={4}
+                    >
+                      <InputLabel style={{ width: "100%" }}>
+                        <Typography
+                          textTransform={"none"}
+                          style={{ ...Subtitle, fontWeight: 500 }}
+                        >
+                          {item.title}
+                        </Typography>
+                      </InputLabel>
+                    </Grid>
+                    <Grid
+                      display={"flex"}
+                      flexDirection={"column"}
+                      justifyContent={"flex-start"}
+                      alignItems={"center"}
+                      marginY={0}
+                      gap={2}
+                      item
+                      xs={6}
+                      sm={6}
+                      md={6}
+                    >
+                      <div
+                        style={{ width: "100%", display: "flex", gap: "10px" }}
+                      >
+                        {" "}
+                        <OutlinedInput
+                          style={{ ...OutlinedInputStyle, width: "70%" }}
+                          fullWidth
+                          {...register(`${item.children[0].name}`)}
+                        />
+                        <OutlinedInput
+                          style={{ ...OutlinedInputStyle, width: "30%" }}
+                          fullWidth
+                          {...register(`${item.children[1].name}`)}
+                        />
+                      </div>
+                      <div
+                        style={{ width: "100%", display: "flex", gap: "10px" }}
+                      >
+                        {" "}
+                        <OutlinedInput
+                          style={{ ...OutlinedInputStyle }}
+                          fullWidth
+                          {...register(`${item.children[2].name}`)} // value={item.children[0].value}
+                        />
+                        <OutlinedInput
+                          style={{ ...OutlinedInputStyle }}
+                          fullWidth
+                          {...register(`${item.children[3].name}`)} // value={item.children[0].value}
+                        />
+                      </div>
+                    </Grid>
+                    <Divider />
+                  </>
+                );
+              }
+            })}
             <Grid
               display={"flex"}
-              justifyContent={"flex-start"}
+              flexDirection={"column"}
               alignSelf={"stretch"}
               marginY={0}
-              gap={2}
               item
               xs={4}
               sm={4}
               md={4}
             >
-              {String(user.companyData.company_logo).length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Typography style={{ ...Subtitle, fontWeight: 500 }}>
+                  Company logo
+                </Typography>
+              </InputLabel>
+            </Grid>
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              marginY={0}
+              gap={2}
+              item
+              xs={6}
+              sm={6}
+              md={6}
+            >
+              <Grid
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignSelf={"stretch"}
+                marginY={0}
+                gap={2}
+                item
+                xs={4}
+                sm={4}
+                md={4}
+              >
+                {String(user.companyData.company_logo).length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <Avatar
+                      size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
+                      src={
+                        <img
+                          src={user?.companyData?.company_logo}
+                          alt="company_logo"
+                        />
+                      }
+                    />
+                  </div>
+                ) : (
                   <Avatar
-                    size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
-                    src={
-                      <img
-                        src={user?.companyData?.company_logo}
-                        alt="company_logo"
-                      />
-                    }
-                  />
-                </div>
-              ) : (
-                <Avatar
-                  style={{
-                    xs: 24,
-                    sm: 32,
-                    md: 40,
-                    lg: 64,
-                    xl: 80,
-                    xxl: 100,
-                    padding: "40px",
-                  }}
+                    style={{
+                      xs: 24,
+                      sm: 32,
+                      md: 40,
+                      lg: 64,
+                      xl: 80,
+                      xxl: 100,
+                      padding: "40px",
+                    }}
+                  >
+                    <CompanyIcon />{" "}
+                  </Avatar>
+                )}
+              </Grid>
+              <Grid
+                display={"flex"}
+                flexDirection={"column"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                marginBottom={2}
+                style={{
+                  width: "100%",
+                  borderRadius: "12px",
+                  border: "1px solid var(--gray-200, #EAECF0)",
+                  background: "var(--base-white, #FFF)",
+                }}
+                item
+                xs={12}
+              >
+                <Grid
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  marginTop={2}
+                  item
+                  xs={12}
                 >
-                  <CompanyIcon />{" "}
-                </Avatar>
-              )}
+                  <Avatar
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      border: "6px solid var(--gray-50, #F9FAFB)",
+                      background: "6px solid var(--gray-50, #F9FAFB)",
+                      borderRadius: "28px",
+                    }}
+                  >
+                    {" "}
+                    <Icon
+                      icon="tabler:cloud-upload"
+                      color="#475467"
+                      width={20}
+                      height={20}
+                    />
+                  </Avatar>
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  item
+                  xs={12}
+                >
+                  <TextField
+                    {...register(`companyLogo`)}
+                    id="file-upload"
+                    type="file"
+                    accept=".jpeg, .png, .jpg"
+                    style={{
+                      outline: "none",
+                      border: "transparent",
+                    }}
+                  />
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  marginBottom={2}
+                  item
+                  xs={12}
+                >
+                  <Typography style={{ ...Subtitle, fontWeight: 400 }}>
+                    SVG, PNG, JPG or GIF (max. 1MB)
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Divider />
+            <Grid
+              display={"flex"}
+              flexDirection={"column"}
+              alignSelf={"stretch"}
+              marginY={0}
+              item
+              xs={4}
+              sm={4}
+              md={4}
+            >
+              <InputLabel style={{ width: "100%" }}>
+                <Typography
+                  textTransform={"none"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
+                >
+                  Employees
+                </Typography>
+              </InputLabel>
             </Grid>
             <Grid
               display={"flex"}
               flexDirection={"column"}
-              justifyContent={"center"}
+              justifyContent={"flex-start"}
               alignItems={"center"}
-              marginBottom={2}
-              style={{
-                width: "100%",
-                borderRadius: "12px",
-                border: "1px solid var(--gray-200, #EAECF0)",
-                background: "var(--base-white, #FFF)",
-              }}
+              marginY={0}
+              gap={2}
+              item
+              xs={6}
+              sm={6}
+              md={6}
+            >
+              <Space size={[16, 24]} wrap>
+                {user.companyData.employees.map((employee) => {
+                  return (
+                    <Grid
+                      key={employee.user}
+                      display={"flex"}
+                      justifyContent={"flex-start"}
+                      alignItems={"center"}
+                      padding={"5px"}
+                      item
+                      xs={12}
+                      sm={12}
+                      md={4}
+                      lg={2}
+                    >
+                      <CardSearchStaffFound
+                        props={{
+                          status: employee.status,
+                          name: employee.firstName,
+                          lastName: employee.lastName,
+                          email: employee.user,
+                          phoneNumber: "",
+                        }}
+                        fn={null}
+                      />
+                    </Grid>
+                  );
+                })}
+              </Space>
+            </Grid>
+            <Divider />
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-end"}
+              alignItems={"center"}
               item
               xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                marginTop={2}
-                item
-                xs={12}
+              <Button
+                htmlType="submit"
+                loading={loading}
+                style={{ ...BlueButton, width: "fit-content" }}
               >
-                <Avatar
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    border: "6px solid var(--gray-50, #F9FAFB)",
-                    background: "6px solid var(--gray-50, #F9FAFB)",
-                    borderRadius: "28px",
-                  }}
-                >
-                  {" "}
-                  <Icon
-                    icon="tabler:cloud-upload"
-                    color="#475467"
-                    width={20}
-                    height={20}
-                  />
-                </Avatar>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <TextField
-                  {...register(`companyLogo`)}
-                  id="file-upload"
-                  type="file"
-                  accept=".jpeg, .png, .jpg"
-                  style={{
-                    outline: "none",
-                    border: "transparent",
-                  }}
-                />
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                marginBottom={2}
-                item
-                xs={12}
-              >
-                <Typography style={{ ...Subtitle, fontWeight: 400 }}>
-                  SVG, PNG, JPG or GIF (max. 1MB)
+                <Typography textTransform={"none"} style={BlueButtonText}>
+                  Save and log out.
                 </Typography>
-              </Grid>
+              </Button>
             </Grid>
           </Grid>
-          <Divider />
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"stretch"}
-            marginY={0}
-            item
-            xs={4}
-            sm={4}
-            md={4}
-          >
-            <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Employees
-              </Typography>
-            </InputLabel>
-          </Grid>
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            marginY={0}
-            gap={2}
-            item
-            xs={6}
-            sm={6}
-            md={6}
-          >
-            <Space size={[16, 24]} wrap>
-              {user.companyData.employees.map((employee) => {
-                return (
-                  <Grid
-                    key={employee.user}
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    padding={"5px"}
-                    item
-                    xs={12}
-                    sm={12}
-                    md={4}
-                    lg={2}
-                  >
-                    <CardSearchStaffFound
-                      props={{
-                        status: employee.status,
-                        name: employee.firstName,
-                        lastName: employee.lastName,
-                        email: employee.user,
-                        phoneNumber: "",
-                      }}
-                      fn={null}
-                    />
-                  </Grid>
-                );
-              })}
-            </Space>
-          </Grid>
-          <Divider />
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <Button
-              htmlType="submit"
-              loading={loading}
-              style={{ ...BlueButton, width: "fit-content" }}
-            >
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Save and log out.
-              </Typography>
-            </Button>
-          </Grid>
-        </Grid>
-      </form>{" "}
-    </>
-  );
+        </form>{" "}
+      </>
+    );
+  }
 };
 
 export default Body;
