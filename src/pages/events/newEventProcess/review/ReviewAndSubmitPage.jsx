@@ -149,18 +149,16 @@ const ReviewAndSubmitEvent = () => {
     return Array.from(result);
   };
   const staffDetail = () => {
-    // const admin = staff.adminUser?.map((member) => member);
-    // const headset = staff.headsetAttendees?.map((member) => member);
     const profileStaffList = {
-      adminUser: checkAndAddRootAdministratorAsAdminStaff()['Administrator'],
-      headsetAttendees: checkAndAddRootAdministratorAsAdminStaff()['HeadsetAttendees'],
+      adminUser: checkAndAddRootAdministratorAsAdminStaff()["Administrator"],
+      headsetAttendees:
+        checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"],
     };
     return profileStaffList;
   };
   const createEventNoSQLDatabase = async () => {
-    const companyLink = user.company.replace(/ /g, "%20");
     const eventLink = eventInfoDetail.eventName.replace(/ /g, "%20");
-    await devitrakApi.post("/event/create-event", {
+    const newEventInfo = await devitrakApi.post("/event/create-event", {
       user: user.email,
       company: user.company,
       subscription: subscription,
@@ -169,8 +167,14 @@ const ReviewAndSubmitEvent = () => {
       deviceSetup: deviceSetupNoSQL(),
       active: true,
       contactInfo: contactInfo,
-      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${companyLink}`,
+      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
     });
+    if (newEventInfo.data.ok) {
+      const eventId = checkArray(newEventInfo.data.event)
+      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      });
+    }
   };
 
   const createEvent = async () => {
