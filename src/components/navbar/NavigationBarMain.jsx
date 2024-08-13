@@ -14,10 +14,10 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import { Dropdown } from "antd";
 import pkg from "prop-types";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -32,7 +32,6 @@ import {
 import { onResetEventInfo } from "../../store/slices/eventSlice";
 import {
   onResetHelpers,
-  // onSwitchingCompany,
 } from "../../store/slices/helperSlice";
 import { onResetResult } from "../../store/slices/searchBarResultSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
@@ -40,15 +39,15 @@ import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 import {
   DevitrakLogo,
   DevitrakName,
+  LogoutIcon,
   MagnifyIcon,
-  ProfileIcon,
-  SettingIcon,
+  ProfileIcon
 } from "../icons/Icons";
 import "./style/style.css";
-import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
@@ -438,7 +437,7 @@ const NavigationBarMain = (props) => {
                                   justifyContent: "center",
                                 }}
                               >
-                                <SettingIcon />
+                                <LogoutIcon />
                               </p>
                             </button>
                           </div>
