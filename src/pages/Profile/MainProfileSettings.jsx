@@ -27,11 +27,11 @@ const MainProfileSettings = () => {
       route: "notifications",
       permission: [0, 1],
     },
-    {
-      label: "Staff activity",
-      route: "staff-activity",
-      permission: [0, 1],
-    },
+    // {
+    //   label: "Staff activity",
+    //   route: "staff-activity",
+    //   permission: [0, 1],
+    // },
     {
       label: "Company info",
       route: "company-info",
