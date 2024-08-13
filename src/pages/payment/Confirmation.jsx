@@ -221,8 +221,7 @@ const Confirmation = () => {
           "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
           error
         );
-        openNotification("error", "Error.", "Please try again later.");
-        setLoadingStatus(false);
+        setLoadingStatus(false)
       }
     };
 

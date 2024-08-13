@@ -52,6 +52,9 @@ const MainPageQuickGlance = () => {
     "only screen and (min-width : 1201px)"
   );
   const sum = (a, b) => {
+    if (!a || !b) {
+      return 0
+    }
     return a + b;
   };
   const eventAttendeesQuery = useQuery({
@@ -568,8 +571,8 @@ const MainPageQuickGlance = () => {
                 }}
               >
                 {sum(
-                  event.staff.adminUser.length ?? 0,
-                  event.staff.headsetAttendees.length ?? 0
+                  (event?.staff?.adminUser?.length - 1) ?? 0,
+                  event?.staff?.headsetAttendees?.length ?? 0
                 )}{" "}
                 total
               </p>
