@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Table } from "antd";
-import _ from "lodash";
+import _, { groupBy } from "lodash";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,6 +15,8 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceCategory = ({ searchItem, referenceData }) => {
   const location = useLocation();
+  const categoryName = location.search.split("&");
+  const searchParameter = decodeURI(categoryName[1].split("=")[1]);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
@@ -22,7 +24,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     queryFn: () =>
       devitrakApi.post("/db_item/current-inventory", {
         company_id: user.sqlInfo.company_id,
-        category_name: decodeURI(location.search.slice(1)),
+        category_name: decodeURI(categoryName[0].slice(1)),
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -40,7 +42,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
-        category_name: decodeURI(location.search.slice(1)),
+        category_name: decodeURI(categoryName[0].slice(1)),
       }),
     // enabled: false,
     refetchOnMount: false,
@@ -87,16 +89,22 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   }, [user.company, location.key]);
 
   const dataToDisplay = () => {
-    if (!searchItem || searchItem === "") {
+    if ((!searchItem || searchItem === "") && (searchParameter ==="undefined" || searchParameter === "")) {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
       return [];
-    } else {
+    } else if (String(searchItem).length > 0) {
       return dataStructuringFormat()?.filter((item) =>
         JSON.stringify(item)
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
+      );
+    } else if (String(searchParameter) !== "") {
+      return dataStructuringFormat()?.filter((item) =>
+        JSON.stringify(item)
+          .toLowerCase()
+          .includes(String(searchParameter).toLowerCase())
       );
     }
   };
@@ -108,11 +116,16 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     }
     return result;
   };
+  const totalAvailable = () => {
+    const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
+    return itemList[1]?.length;
+  };
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
       totalDevices: dataStructuringFormat().length,
       totalValue: calculatingValue(),
+      totalAvailable: totalAvailable(),
     });
 
     return () => {
