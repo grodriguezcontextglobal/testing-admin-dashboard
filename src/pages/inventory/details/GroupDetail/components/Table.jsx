@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Table } from "antd";
-import _ from "lodash";
+import _, { groupBy } from "lodash";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,6 +15,8 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();
+  const groupName = location.search.split("&");
+  const searchParameter = decodeURI(groupName[1].split("=")[1]);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
@@ -22,7 +24,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryFn: () =>
       devitrakApi.post("/db_item/current-inventory", {
         company_id: user.sqlInfo.company_id,
-        item_group: decodeURI(location.search.slice(1)),
+        item_group: decodeURI(groupName[0].slice(1)),
       }),
     refetchOnMount: false,
   });
@@ -38,7 +40,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
-        item_group: decodeURI(location.search.slice(1)),
+        item_group: decodeURI(groupName[0].slice(1)),
       }),
     refetchOnMount: false,
   });
@@ -84,29 +86,23 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [user.company]);
 
   const dataToDisplay = () => {
-    if (!searchItem || searchItem === "") {
+    if ((!searchItem || searchItem === "") && (searchParameter ==="undefined" || searchParameter === "")) {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
       return [];
-    } else {
+    } else if (String(searchItem).length > 0) {
       return dataStructuringFormat()?.filter((item) =>
         JSON.stringify(item)
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
       );
-      // String(item.serial_number).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.location).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.category_name).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.item_group).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.event_name).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.state_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.street_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.city_address).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.ownership).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.cost).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.brand).toLowerCase().includes(String(searchItem).toLowerCase()) ||
-      // String(item.descript_item).toLowerCase().includes(String(searchItem).toLowerCase()))
+    } else if (String(searchParameter) !== "") {
+      return dataStructuringFormat()?.filter((item) =>
+        JSON.stringify(item)
+          .toLowerCase()
+          .includes(String(searchParameter).toLowerCase())
+      );
     }
   };
 
@@ -116,14 +112,18 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       result += Number(data.cost);
     }
     return result;
+  };  
+  const totalAvailable = () => {
+    const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
+    return itemList[1]?.length;
   };
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
       totalDevices: dataStructuringFormat().length,
       totalValue: calculatingValue(),
+      totalAvailable: totalAvailable(),
     });
-
     return () => {
       controller.abort();
     };
