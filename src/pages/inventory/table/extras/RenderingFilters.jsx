@@ -13,7 +13,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CardLocations from "../../utils/CardLocations";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { PropTypes } from "prop-types";
-const RenderingFilters = ({ user, dataToDisplay }) => {
+const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const sortingByParameters = (props) => {
@@ -142,7 +142,11 @@ const RenderingFilters = ({ user, dataToDisplay }) => {
               }}
             >
               <button
-                onClick={() => navigate(`/inventory/location?${record.key}`)}
+                onClick={() =>
+                  navigate(
+                    `/inventory/location?${record.key}&search=${searchItem && searchItem}`
+                  )
+                }
                 style={{
                   backgroundColor: "transparent",
                   outline: "none",
@@ -308,7 +312,9 @@ const RenderingFilters = ({ user, dataToDisplay }) => {
                               props={`${opt.value} total devices`}
                               route={`/inventory/${String(
                                 item.routeTitle
-                              ).toLowerCase()}?${decodeURI(opt.key)}`}
+                              ).toLowerCase()}?${decodeURI(opt.key)}&search=${
+                                searchItem && searchItem
+                              }`}
                             />
                           </Popconfirm>
                         </Grid>
@@ -321,7 +327,9 @@ const RenderingFilters = ({ user, dataToDisplay }) => {
                           <Link
                             to={`/inventory/${String(
                               item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}`}
+                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${
+                              searchItem && searchItem
+                            }`}
                           >
                             <CardLocations
                               title={opt.key}
