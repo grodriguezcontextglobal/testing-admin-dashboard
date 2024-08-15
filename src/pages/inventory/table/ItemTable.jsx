@@ -463,6 +463,7 @@ const ItemTable = ({ searchItem }) => {
       </Grid>
       <RenderingFilters
         dataToDisplay={dataToDisplay}
+        searchItem={searchItem}
         user={user}
       />
       <Divider />
