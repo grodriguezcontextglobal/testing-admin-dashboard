@@ -30,9 +30,7 @@ import {
   onResetDevicesHandle,
 } from "../../store/slices/devicesHandleSlice";
 import { onResetEventInfo } from "../../store/slices/eventSlice";
-import {
-  onResetHelpers,
-} from "../../store/slices/helperSlice";
+import { onResetHelpers } from "../../store/slices/helperSlice";
 import { onResetResult } from "../../store/slices/searchBarResultSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
@@ -45,7 +43,7 @@ import {
   DevitrakName,
   LogoutIcon,
   MagnifyIcon,
-  ProfileIcon
+  ProfileIcon,
 } from "../icons/Icons";
 import "./style/style.css";
 const { PropTypes } = pkg;
@@ -263,8 +261,16 @@ const NavigationBarMain = (props) => {
                         }}
                         src={`${user.companyData.company_logo}`}
                         alt={`${user.companyData.company_logo}`}
-                      />&nbsp;
-                      <p style={{...TextFontSize14LineHeight20, color:"var(--basewhite)"}}>{user.companyData.company_name}</p>
+                      />
+                      &nbsp;
+                      <p
+                        style={{
+                          ...TextFontSize14LineHeight20,
+                          color: "var(--basewhite)",
+                        }}
+                      >
+                        {user.companyData.company_name}
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -406,27 +412,29 @@ const NavigationBarMain = (props) => {
                     autoAdjustOverflow
                     placement="bottom"
                   >
-                    <div className="content-main-navbar-updated">
-                      <article className="nav-item-base-1-main-navbar-updated">
-                        <div className="content-2-main-navbar-updated">
-                          <div
-                            className="text-1-main-navbar-updated text-mdsemibold"
-                            style={{ display: "flex" }}
-                          >
-                            <button
-                              style={{
-                                outline: "none",
-                                backgroundColor: "transparent",
-                                padding: 0,
-                                margin: 0,
-                              }}
-                              onClick={() =>
-                                scrollTo({
-                                  left: 0,
-                                  top: 0,
-                                  behavior: "smooth",
-                                })
-                              }
+                    <button
+                      style={{
+                        outline: "none",
+                        border: "transparent",
+                        margin: 0,
+                        padding: 0,
+                        backgroundColor: "transparent",
+                      }}
+                      key={"authenticated"}
+                      onClick={() =>
+                        scrollTo({
+                          left: 0,
+                          top: 0,
+                          behavior: "smooth",
+                        })
+                      }
+                    >
+                      <div className="content-main-navbar-updated">
+                        <article className="nav-item-base-1-main-navbar-updated">
+                          <div className="content-2-main-navbar-updated">
+                            <div
+                              className="text-1-main-navbar-updated text-mdsemibold"
+                              style={{ display: "flex" }}
                             >
                               <p
                                 style={{
@@ -439,11 +447,11 @@ const NavigationBarMain = (props) => {
                               >
                                 <LogoutIcon />
                               </p>
-                            </button>
+                            </div>
                           </div>
-                        </div>
-                      </article>
-                    </div>
+                        </article>
+                      </div>
+                    </button>
                   </Dropdown>
                 </NavLink>
               )}
