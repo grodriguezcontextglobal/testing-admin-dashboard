@@ -20,14 +20,16 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 import TableDeviceCategory from "./components/Table";
 import TotalInventoryCard from "./components/TotalInventoryCard";
 import TotalValueDevicesLocation from "./components/TotalValueDevices";
+import TotalAvailableItem from "../../utils/TotalAvailableItem";
 
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
     totalValue: 0,
+    totalAvailable: 0,
   });
   const location = useLocation();
-  // console.log(location);
+  const categoryName = location.search.split("&")[0];
   const { register, watch } = useForm();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -128,7 +130,7 @@ const MainPage = () => {
               color={"var(--gray-900, #101828)"}
             >
               <Icon icon="mingcute:right-line" />
-              {decodeURI(location.search.slice(1))}
+              {decodeURI(categoryName.slice(1))}
             </Typography>
           </Grid>
         </Grid>
@@ -155,7 +157,7 @@ const MainPage = () => {
           lg={6}
         >
           <Typography style={TextFontSize30LineHeight38}>
-            {decodeURI(location.search.slice(1))}
+            {decodeURI(categoryName.slice(1))}
           </Typography>
         </Grid>
         <Grid
@@ -183,7 +185,7 @@ const MainPage = () => {
           <TotalInventoryCard props={referenceData.totalDevices} />
         </Grid>
         <Grid item xs={12} sm={12} md={3} lg={4}>
-          <TotalInventoryCard props={referenceData.totalDevices} />
+          <TotalAvailableItem props={referenceData.totalAvailable} />
         </Grid>
         <Grid item xs={12} sm={12} md={3} lg={4}>
           <TotalValueDevicesLocation props={referenceData.totalValue} />
@@ -207,7 +209,7 @@ const MainPage = () => {
           md={8}
         >
           <Typography style={TextFontSize30LineHeight38}>
-            Inventory at this location
+            Inventory of {decodeURI(categoryName.slice(1))}
           </Typography>
         </Grid>
         <Grid

@@ -14,11 +14,13 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 import TableDeviceLocation from "./components/Table";
 import TotalInventoryCard from "./components/TotalInventoryCard";
 import TotalValueDevicesLocation from "./components/TotalValueDevices";
+import TotalAvailableItem from "../../utils/TotalAvailableItem";
 
 const MainPage = () => {
     const [referenceData, setReferenceData] = useState({
         totalDevices: 0,
-        totalValue: 0
+        totalValue: 0,
+        totalAvailable:0
     })
     const location = useLocation()
     const { register, watch } = useForm()
@@ -26,7 +28,8 @@ const MainPage = () => {
     const isMediumDevice = useMediaQuery(
         "only screen and (min-width : 769px) and (max-width : 992px)"
     )
-    const navigate = useNavigate()
+     const navigate = useNavigate()
+     const locationName = location.search.split("&")[0]
     return (
         <Grid
             style={{
@@ -114,7 +117,7 @@ const MainPage = () => {
                             color={"var(--gray-900, #101828)"}
                         >
                             <Icon icon="mingcute:right-line" />
-                            {decodeURI(location.search.slice(1))}
+                            {decodeURI(locationName.slice(1))}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -139,7 +142,7 @@ const MainPage = () => {
                     <Typography
                         style={TextFontSize30LineHeight38}
                     >
-                        {decodeURI(location.search.slice(1))}
+                        {decodeURI(locationName.slice(1))}
                     </Typography>
                 </Grid>
                 <Grid
@@ -167,7 +170,7 @@ const MainPage = () => {
                     <TotalInventoryCard props={referenceData.totalDevices} />
                 </Grid>
                 <Grid item xs={12} sm={12} md={3} lg={4}>
-                    <TotalInventoryCard props={referenceData.totalDevices} />
+                    <TotalAvailableItem props={referenceData.totalAvailable} />
                 </Grid>
                 <Grid item xs={12} sm={12} md={3} lg={4}>
                     <TotalValueDevicesLocation props={referenceData.totalValue} />
@@ -193,7 +196,7 @@ const MainPage = () => {
                     <Typography
                         style={TextFontSize30LineHeight38}
                     >
-                        Inventory at this location
+                        Inventory at {decodeURI(locationName.slice(1))}
                     </Typography>
                 </Grid>
                 <Grid
