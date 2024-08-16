@@ -186,20 +186,22 @@ const ItemTable = ({ searchItem }) => {
             display: "flex",
             padding: "2px 8px",
             alignItems: "center",
-            background: `${warehouse === 0
+            background: `${
+              warehouse === 0
                 ? "var(--blue-50, #EFF8FF)"
                 : "var(--success-50, #ECFDF3)"
-              }`,
+            }`,
             width: "fit-content",
           }}
         >
           <p
             style={{
               ...Subtitle,
-              color: `${warehouse === 0
+              color: `${
+                warehouse === 0
                   ? "var(--blue-700, #175CD3)"
                   : "var(--success-700, #027A48)"
-                }`,
+              }`,
               textTransform: "capitalize",
             }}
           >
@@ -350,6 +352,11 @@ const ItemTable = ({ searchItem }) => {
 
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
+      <RenderingFilters
+        dataToDisplay={dataToDisplay}
+        searchItem={searchItem}
+        user={user}
+      />
       <Divider />
       <Grid
         display={"flex"}
@@ -461,11 +468,6 @@ const ItemTable = ({ searchItem }) => {
           </Grid>
         </details>
       </Grid>
-      <RenderingFilters
-        dataToDisplay={dataToDisplay}
-        searchItem={searchItem}
-        user={user}
-      />
       <Divider />
       {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && (
         <BannerMsg
