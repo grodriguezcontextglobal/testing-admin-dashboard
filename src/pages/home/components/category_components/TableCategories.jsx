@@ -76,7 +76,7 @@ const TableCategories = () => {
         onRow={(record) => {
           return {
             onClick: () => {
-              navigate(`/inventory/category_name?${record.category}`);
+              navigate(`/inventory/category_name?${record.category}&search=`);
             },
           };
         }}

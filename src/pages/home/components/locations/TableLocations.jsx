@@ -59,7 +59,7 @@ const TableLocations = () => {
       onRow={(record) => {
         return {
           onClick: () => {
-            navigate(`/inventory/location?${record.key}`);
+            navigate(`/inventory/location?${record.key}&search=`);
           },
         };
       }}
