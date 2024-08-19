@@ -1,12 +1,13 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "antd";
+import { Avatar, Card } from "antd";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import { CardStyle } from "../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GeneralDeviceIcon } from "../../../../components/icons/Icons";
 
 const DeviceInformationDetail = ({ dataFound }) => {
   const { user } = useSelector((state) => state.admin);
@@ -71,7 +72,7 @@ const DeviceInformationDetail = ({ dataFound }) => {
                 }}
               >
                 <div style={{ width: "100px", height: "100px" }}>
-                  {listImagePerItemQuery.data.data.item.length > 0 && (
+                  {listImagePerItemQuery.data.data.item.length > 0 ? (
                     <img
                       style={{
                         objectFit: "contain",
@@ -86,6 +87,12 @@ const DeviceInformationDetail = ({ dataFound }) => {
                       width={250}
                       height={360}
                     />
+                  ) : (
+                    <Avatar size={100}>
+                      <GeneralDeviceIcon
+                        dimensions={{ width: "150px", height: "auto" }}
+                      />
+                    </Avatar>
                   )}
                 </div>
               </div>
