@@ -2,17 +2,25 @@ import {
   Button,
   Chip,
   Grid,
+  InputAdornment,
   InputLabel,
   OutlinedInput,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, Select } from "antd";
+import { Modal, Select, Tooltip } from "antd";
+import { groupBy } from "lodash";
+import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { RectangleBluePlusIcon } from "../../../../components/icons/Icons";
+import {
+  BorderedCloseIcon,
+  CheckIcon,
+  QuestionIcon,
+  RectangleBluePlusIcon,
+} from "../../../../components/icons/Icons";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -22,7 +30,6 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import { PropTypes } from "prop-types";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -32,13 +39,13 @@ const ModalAddAndUpdateDeviceSetup = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, watch } = useForm();
   const dispatch = useDispatch();
   const closeModal = () => {
     return setOpenModalDeviceSetup(false);
   };
   const eventInfoDetail = event.eventInfoDetail;
-  const [valueItemSelected, setValueItemSelected] = useState({});
+  const [valueItemSelected, setValueItemSelected] = useState([]);
   const [listOfLocations, setListOfLocations] = useState([]);
   const itemQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList"],
@@ -56,7 +63,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       devitrakApi.post("/receiver/receiver-pool-list", {
         type: deviceTitle,
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -68,68 +75,19 @@ const ModalAddAndUpdateDeviceSetup = ({
     return () => {
       controller.abort();
     };
-  }, [deviceTitle]);
+  }, []);
 
   const dataFound = itemQuery?.data?.data?.items ?? [];
-  const groupingItemByCategoriesToRenderThemInSelector = () => {
-    const result = new Map();
-    for (let data of dataFound) {
-      if (!result.has(data.category_name)) {
-        result.set(data.category_name, [data]);
-      } else {
-        result.set(data.category_name, [
-          ...result.get(data.category_name),
-          data,
-        ]);
-      }
-    }
-    return result;
-  };
+  const existingDevice =
+    recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
   const optionsToRenderInSelector = () => {
-    const result = new Set();
-    for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
-      result.add(value);
-    }
-    const checkLocation = new Map();
-    for (let data of Array.from(result)) {
-      for (let item of data) {
-        if (
-          !checkLocation.has(
-            `${item.category_name}-${item.item_group}-${item.location}`
-          )
-        ) {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [item]
-          );
-        } else {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [
-              ...checkLocation.get(
-                `${item.category_name}-${item.item_group}-${item.location}`
-              ),
-              item,
-            ]
-          );
-        }
-      }
-    }
-    let finalResultAfterSortValueByLocation = [];
-    for (const [, value] of checkLocation) {
-      finalResultAfterSortValueByLocation = [
-        ...finalResultAfterSortValueByLocation,
-        value,
-      ];
-    }
-    return finalResultAfterSortValueByLocation;
+    const locations = groupBy(dataFound, "location");
+    return locations;
   };
-
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
     setValueItemSelected(optionRendering);
   };
-
   const orderValuesInPlace = (values) => {
     return values.sort((a, b) => parseInt(a) - parseInt(b));
   };
@@ -184,15 +142,28 @@ const ModalAddAndUpdateDeviceSetup = ({
         eventSelected: eventInfoDetail.eventName,
         provider: user.company,
         type: props.deviceInfo[index].item_group,
-        company:user.companyData.id
+        company: user.companyData.id,
       });
     }
     await updateDeviceSetupInEvent();
     return null;
   };
+
+  const findSerialNumberIndexInLocation = (props) => {
+    const database = [...props.deviceInfo];
+    const checkIndex = database.findIndex(
+      (element) => element?.serial_number === props?.startingNumber
+    );
+    if (checkIndex > -1) {
+      return checkIndex;
+    }
+    return 0;
+  };
+
   const createDeviceInEvent = async (props) => {
     const event_id = event.sql.event_id;
-    for (let index = 0; index < Number(props.quantity); index++) {
+    const initial = findSerialNumberIndexInLocation(props);
+    for (let index = initial; index < Number(props.quantity); index++) {
       await devitrakApi.post("/db_event/event_device_directly", {
         event_id: event_id,
         item_id: props.deviceInfo[index].item_id,
@@ -209,17 +180,12 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
 
   const addingDeviceFromLocations = (data) => {
-    if (
-      recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
-      Number(quantity)
-    ) {
+    if (existingDevice.length === Number(quantity)) {
       return alert(
         "Device type had reached out the quantity set when event was created."
       );
     } else {
-      const checkingDiff =
-        Number(quantity) -
-        recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length;
+      const checkingDiff = Number(quantity) - existingDevice.length;
       if (Number(data.quantity) > checkingDiff) {
         return alert(
           `Quantity assigned is bigger than needed to reach out the quantity set in event.`
@@ -227,13 +193,18 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
       const result = [
         ...listOfLocations,
-        { quantity: data.quantity, deviceInfo: valueItemSelected },
+        {
+          quantity: data.quantity,
+          deviceInfo: valueItemSelected,
+          startingNumber: data.serial_number,
+        },
       ];
       return setListOfLocations(result);
     }
   };
   const handleDevicesInEvent = async () => {
     for (let data of listOfLocations) {
+      console.log(data);
       await createDeviceInEvent(data);
     }
     return await closeModal();
@@ -254,16 +225,18 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
 
   const disablingButton = () => {
-    if (
-      recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
-      Number(quantity)
-    ) {
+    if (existingDevice.length === Number(quantity)) {
       return LightBlueButton;
     } else {
       return BlueButton;
     }
   };
-
+  const checkIfSerialNumberExists = () => {
+    if (valueItemSelected.length > 0)
+      return valueItemSelected.some(
+        (elem) => elem.serial_number === watch("serial_number")
+      );
+  };
   return (
     <Modal
       open={openModalDeviceSetup}
@@ -315,33 +288,33 @@ const ModalAddAndUpdateDeviceSetup = ({
                 optionFilterProp="children"
                 style={{ ...AntSelectorStyle, width: "100%" }}
                 onChange={onChange}
-                options={optionsToRenderInSelector().map((item) => {
-                  return {
-                    label: (
-                      <Typography
-                        textTransform={"capitalize"}
-                        style={{
-                          ...Subtitle,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          width: "100%",
-                        }}
-                      >
-                        <span style={{ textAlign: "left", width: "50%" }}>
-                          Location:{" "}
-                          <span style={{ fontWeight: 700 }}>
-                            {item[0].location}
+                options={Object.entries(optionsToRenderInSelector())?.map(
+                  (item) => {
+                    return {
+                      label: (
+                        <Typography
+                          textTransform={"capitalize"}
+                          style={{
+                            ...Subtitle,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
+                        >
+                          <span style={{ textAlign: "left", width: "50%" }}>
+                            Location:{" "}
+                            <span style={{ fontWeight: 700 }}>{item[0]}</span>
                           </span>
-                        </span>
-                        <span style={{ textAlign: "right", width: "5 0%" }}>
-                          Available: {item?.length}
-                        </span>
-                      </Typography>
-                    ), //renderOptionAsNeededFormat(JSON.stringify(option))
-                    value: JSON.stringify(item),
-                  };
-                })}
+                          <span style={{ textAlign: "right", width: "5 0%" }}>
+                            Available: {item[1]?.length}
+                          </span>
+                        </Typography>
+                      ), //renderOptionAsNeededFormat(JSON.stringify(option))
+                      value: JSON.stringify(item[1]),
+                    };
+                  }
+                )}
               />
             </div>
             <div
@@ -371,9 +344,9 @@ const ModalAddAndUpdateDeviceSetup = ({
                   </Typography>
                 </InputLabel>
                 <OutlinedInput
-                  {...register("quantity", { required: true })}
+                  {...register("quantity")}
                   style={OutlinedInputStyle}
-                  placeholder="e.g. 150650"
+                  placeholder="e.g. 150"
                 />
               </div>
               <div
@@ -387,32 +360,38 @@ const ModalAddAndUpdateDeviceSetup = ({
                   <Typography
                     textTransform={"none"}
                     textAlign={"left"}
-                    style={{
-                      ...Subtitle,
-                      color: "transparent",
-                      fontWeight: 500,
-                      textWrap: "pretty",
-                    }}
+                    style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
                   >
-                    Qty of devices from {valueItemSelected[0]?.location}
+                    <Tooltip title="A check icon if serial number does exist and xs icon for not existing serial number.">
+                      Starting from serial number <QuestionIcon />
+                    </Tooltip>
                   </Typography>
                 </InputLabel>
-                <button
-                  type="submit"
-                  style={{
-                    ...LightBlueButton,
-                    ...CenteringGrid,
-                    width: "100%",
-                  }}
-                >
-                  <RectangleBluePlusIcon />
-                  &nbsp;
-                  <Typography textTransform="none" style={LightBlueButtonText}>
-                    Add qty from location
-                  </Typography>
-                </button>
+                <OutlinedInput
+                  {...register("serial_number")}
+                  style={OutlinedInputStyle}
+                  placeholder="e.g. 154580"
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <span>
+                        {checkIfSerialNumberExists() ? (
+                          <CheckIcon />
+                        ) : (
+                          <BorderedCloseIcon />
+                        )}
+                      </span>
+                    </InputAdornment>
+                  }
+                />
               </div>
             </div>
+            <span style={{ width: "100%", textAlign: "right" }}>
+              <p style={Subtitle}>
+                series starts: {valueItemSelected[0]?.serial_number} - series
+                ends: {valueItemSelected?.at(-1)?.serial_number}
+              </p>
+            </span>
+
             <div
               style={{
                 width: "100%",
@@ -434,12 +413,45 @@ const ModalAddAndUpdateDeviceSetup = ({
                 );
               })}
             </div>
+            <div
+              style={{
+                textAlign: "left",
+                width: "100%",
+                margin: "0.5rem 0",
+              }}
+            >
+              <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
+                <Typography
+                  textTransform={"none"}
+                  textAlign={"left"}
+                  style={{
+                    ...Subtitle,
+                    color: "transparent",
+                    fontWeight: 500,
+                    textWrap: "pretty",
+                  }}
+                >
+                  Qty of devices from {valueItemSelected[0]?.location}
+                </Typography>
+              </InputLabel>
+              <button
+                type="submit"
+                style={{
+                  ...LightBlueButton,
+                  ...CenteringGrid,
+                  width: "100%",
+                }}
+              >
+                <RectangleBluePlusIcon />
+                &nbsp;
+                <Typography textTransform="none" style={LightBlueButtonText}>
+                  Add qty from location
+                </Typography>
+              </button>
+            </div>
           </form>
           <Button
-            disabled={
-              recordNoSqlDevicesQuery?.data?.data?.receiversInventory.length ===
-              Number(quantity)
-            }
+            disabled={existingDevice.length === Number(quantity)}
             onClick={() => handleDevicesInEvent()}
             style={{
               ...disablingButton(),
@@ -465,21 +477,3 @@ ModalAddAndUpdateDeviceSetup.propTypes = {
   deviceTitle: PropTypes.string,
   quantity: PropTypes.string,
 };
-// if (respoUpdating.data.ok) {
-// }
-// const respoUpdating = await devitrakApi.post("/db_event/event_device", {
-//   event_id: event_id,
-//   item_group: valueItemSelected[0].item_group,
-//   category_name: valueItemSelected[0].category_name,
-//   startingNumber: valueItemSelected[0].serial_number,
-//   quantity: props.quantity,
-// });
-// if (respoUpdating.data.ok) {
-//   await devitrakApi.post("/db_item/item-out-warehouse", {
-//     warehouse: false,
-//     company: user.company,
-//     item_group: valueItemSelected[0].item_group,
-//     startingNumber: valueItemSelected[0].serial_number,
-//     quantity: props.quantity,
-//   });
-// }
