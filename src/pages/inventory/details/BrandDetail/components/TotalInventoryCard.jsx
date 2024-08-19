@@ -38,7 +38,7 @@ const TotalInventoryCard = ({props}) => {
                         <Typography
                             style={{ ...Subtitle, fontWeight: 500 }}
                         >
-                            Total inventory at location
+                            Total device
                         </Typography>
                     </Grid>
                 </Grid>
