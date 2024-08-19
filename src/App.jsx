@@ -18,9 +18,13 @@ import { onResetHelpers } from "./store/slices/helperSlice";
 import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
+// import { BugsIcon } from "./components/icons/Icons";
+import InactivityLogout from "./utils/CheckingInactivityAndTakeAction";
+// import ModalReportBugs from "./components/utils/ModalReportBugs";
 // import useVersionCheck from "../versionChecker";
 
 const App = () => {
+  // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
   const { status } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem("admin-token");
   const dispatch = useDispatch();
@@ -99,10 +103,30 @@ const App = () => {
       {renderNetworkStatusMessage()}
       {contextHolder}
       {status === "authenticated" && adminToken ? (
-        <AuthRoutes />
+        <InactivityLogout>
+          <AuthRoutes />
+        </InactivityLogout>
       ) : (
         <NoAuthRoutes />
       )}
+      {/* {status === "authenticated" && adminToken && (
+        <aside className="bug-report-container">
+          <button
+            className="bugs-button"
+            onClick={() => setDisplayReportBugsModal(true)}
+          >
+            <p>
+              <BugsIcon />
+            </p>
+          </button>
+        </aside>
+      )} */}
+      {/* {displayReportBugsModal && (
+        <ModalReportBugs
+          setDisplayReportBugsModal={setDisplayReportBugsModal}
+          displayReportBugsModal={displayReportBugsModal}
+        />
+      )} */}
     </>
   );
 };
