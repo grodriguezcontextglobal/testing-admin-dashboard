@@ -86,7 +86,10 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [user.company]);
 
   const dataToDisplay = () => {
-    if ((!searchItem || searchItem === "") && (searchParameter ==="undefined" || searchParameter === "")) {
+    if (
+      (!searchItem || searchItem === "") &&
+      (searchParameter === "undefined" || searchParameter === "")
+    ) {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
@@ -112,7 +115,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       result += Number(data.cost);
     }
     return result;
-  };  
+  };
   const totalAvailable = () => {
     const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
     return itemList[1]?.length;

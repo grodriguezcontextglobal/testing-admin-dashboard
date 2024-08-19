@@ -86,7 +86,10 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [user.company]);
 
   const dataToDisplay = () => {
-    if ((!searchItem || searchItem === "") && (searchParameter ==="undefined" || searchParameter === "")) {
+    if (
+      (!searchItem || searchItem === "") &&
+      (searchParameter === "undefined" || searchParameter === "")
+    ) {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
@@ -167,7 +170,8 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
               />
             ) : (
               <Avatar size={"80px"}>
-                <GeneralDeviceIcon />
+                <GeneralDeviceIcon
+                />
               </Avatar>
             )}
           </Avatar>

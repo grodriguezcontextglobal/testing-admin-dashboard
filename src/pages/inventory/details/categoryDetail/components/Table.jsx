@@ -89,7 +89,10 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   }, [user.company, location.key]);
 
   const dataToDisplay = () => {
-    if ((!searchItem || searchItem === "") && (searchParameter ==="undefined" || searchParameter === "")) {
+    if (
+      (!searchItem || searchItem === "") &&
+      (searchParameter === "undefined" || searchParameter === "")
+    ) {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
