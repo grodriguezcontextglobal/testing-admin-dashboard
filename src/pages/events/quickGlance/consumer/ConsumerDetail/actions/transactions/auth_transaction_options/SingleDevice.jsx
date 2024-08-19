@@ -83,13 +83,13 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   };
 
   const formattingSerialNumberLeadingZero = (num, reference) => {
-    return String(num).padStart(reference.length, `${reference[0]}`);
+    return String(num).padStart(reference?.length, `${reference[0]}`);
   };
   const subtractRangePerGroupToDisplayItInScreen = useCallback(() => {
     const devicesInPool = checkIfDeviceIsInUsed();
     const deviceSelectionInfo = JSON.parse(deviceSelection);
     const findingRange = new Set();
-    for (let i = 0; i < devicesInPool.length; i++) {
+    for (let i = 0; i < devicesInPool?.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
           !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&

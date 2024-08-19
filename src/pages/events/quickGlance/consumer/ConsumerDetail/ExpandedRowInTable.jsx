@@ -134,7 +134,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       );
       if (respUpdate.data) {
-        if (deviceInPoolListQuery.data.receiversInventory.length > 0) {
+        if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
           const dateString = new Date().toString();
           const dateRef = dateString.split(" ");
           const checkInPool =
@@ -219,7 +219,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       );
       if (respUpdate.data.ok) {
-        if (deviceInPoolListQuery.data.receiversInventory.length > 0) {
+        if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
           const dateString = new Date().toString();
           const dateRef = dateString.split(" ");
           const devicePoolData =
@@ -522,12 +522,12 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       <div
         style={{
           display: `${
-            checkDevicesInTransaction().length >=
+            checkDevicesInTransaction()?.length >=
               rowRecord.device[0].deviceNeeded && "none"
           }`,
         }}
       >
-        {checkDevicesInTransaction().length !==
+        {checkDevicesInTransaction()?.length !==
           rowRecord.device[0].deviceNeeded && (
           <AddingDevicesToPaymentIntent
             refetchingFn={refetchingFn}

@@ -77,13 +77,13 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
   checkIfDeviceIsInUsed();
 
   const formattingSerialNumberLeadingZero = (num, reference) => {
-    return String(num).padStart(reference.length, `${reference[0]}`);
+    return String(num).padStart(reference?.length, `${reference[0]}`);
   };
   const subtractRangePerGroupToDisplayItInScreen = useCallback(() => {
     const devicesInPool = checkIfDeviceIsInUsed();
     const deviceSelectionInfo = JSON.parse(deviceSelection);
     const findingRange = new Set();
-    for (let i = 0; i < devicesInPool.length; i++) {
+    for (let i = 0; i < devicesInPool?.length; i++) {
       if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
         if (
           !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
@@ -95,7 +95,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
     const result = Array.from(findingRange);
     const max = Math.max(...result);
     const min = Math.min(...result);
-    if (result.length > 0) {
+    if (result?.length > 0) {
       return {
         max: formattingSerialNumberLeadingZero(
           max,
