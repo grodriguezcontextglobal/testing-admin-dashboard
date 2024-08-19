@@ -53,7 +53,7 @@ const MainPage = () => {
                     <Typography
                         style={TextFontSize30LineHeight38}
                     >
-                        Locations
+                        Local inventory
                     </Typography>
                 </Grid>
                 <Grid
