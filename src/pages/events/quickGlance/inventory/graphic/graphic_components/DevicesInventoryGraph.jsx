@@ -2,12 +2,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer} from "recharts";
 
 const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
 const DevicesInventoryGraph = ({ dataToRender }) => {
-  // const style = {
-  //   top: 100,
-  //   left:0,
-  //   transform: "translate(0, -50%)",
-  //   lineHeight: "24px",
-  // };
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart
