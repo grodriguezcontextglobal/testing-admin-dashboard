@@ -284,7 +284,8 @@ const ConsumerDeviceLostFeeCreditCard = () => {
           <p style={{ ...TextFontSize30LineHeight38, textTransform: "none" }}>
             Consumer
           </p>
-          <Link to="/event/new_subscription">
+            {/* /event/new_subscription */}
+            <Link to="/create-event-page/event-detail">
             <button
               style={{
                 width: "fit-content",

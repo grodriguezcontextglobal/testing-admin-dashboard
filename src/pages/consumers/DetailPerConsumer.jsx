@@ -84,7 +84,8 @@ const DetailPerConsumer = () => {
             >
               Consumer
             </Typography>
-            <Link to="/event/new_subscription">
+            {/* /event/new_subscription */}
+            <Link to="/create-event-page/event-detail">
               <Button
                 style={{
                   width: "fit-content",

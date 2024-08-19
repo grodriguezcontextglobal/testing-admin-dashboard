@@ -179,11 +179,12 @@ const MainPage = () => {
             </Typography>
           </Button>
         </Link>
+        {/* /event/new_subscription */}
         <Link
+          to="/create-event-page/event-detail"
           style={{
             width: "fit-content",
           }}
-          to="/event/new_subscription"
         >
           <Button style={GrayButton}>
             <BluePlusIcon />
@@ -320,7 +321,7 @@ const MainPage = () => {
               title: "Create your first event",
               message:
                 "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-              link: "/event/new_subscription",
+              link: "/create-event-page/event-detail",
               button: GrayButton,
               paragraphStyle: GrayButtonText,
               paragraphText: "Create new event",

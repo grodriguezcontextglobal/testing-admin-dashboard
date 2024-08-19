@@ -162,7 +162,8 @@ const MainPageQuickGlance = () => {
           lg={12}
         >
           {checkStaffRoleToDisplayCashReportInfo() && (
-            <Link to="/event/new_subscription">
+            // /event/new_subscription
+            <Link to="/create-event-page/event-detail"> 
               <button
                 style={{
                   ...BlueButton,
@@ -230,7 +231,8 @@ const MainPageQuickGlance = () => {
             md={6}
           >
             {checkStaffRoleToDisplayCashReportInfo() && (
-              <Link to="/event/new_subscription">
+              // /event/new_subscription
+              <Link to="/create-event-page/event-detail">
                 <button style={BlueButton}>
                   <span style={{ ...CenteringGrid, alignSelf: "stretch" }}>
                     <WhitePlusIcon />

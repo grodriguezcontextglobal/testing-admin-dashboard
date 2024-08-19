@@ -312,7 +312,8 @@ const ConfirmationPaymentPage = () => {
             item
             xs={6}
           >
-            <Link to="/event/new_subscription">
+            {/* /event/new_subscription */}
+            <Link to="/create-event-page/event-detail">
               <Button
                 style={{
                   width: "fit-content",

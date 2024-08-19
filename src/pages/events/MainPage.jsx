@@ -193,11 +193,12 @@ const MainPage = () => {
             md={12}
             lg={12}
           >
+            {/* /event/new_subscription */}
             <Link
+              to="/create-event-page/event-detail"
               style={{
                 width: "100%",
               }}
-              to="/event/new_subscription"
             >
               <Button
                 onClick={() =>
@@ -232,7 +233,8 @@ const MainPage = () => {
             >
               Events
             </Typography>
-            <Link to={"/event/new_subscription"}>
+            {/* /event/new_subscription */}
+            <Link to="/create-event-page/event-detail">
               {" "}
               <Button
                 onClick={() =>
