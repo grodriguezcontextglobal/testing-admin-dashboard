@@ -24,7 +24,7 @@ const ModalListOfDefectedDevices = ({
       final.add({
         key: status,
         status: status,
-        qty: value.length,
+        qty: value?.length,
         report: value,
       });
     }

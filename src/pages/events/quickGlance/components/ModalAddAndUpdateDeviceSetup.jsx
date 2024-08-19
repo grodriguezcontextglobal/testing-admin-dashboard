@@ -54,7 +54,6 @@ const ModalAddAndUpdateDeviceSetup = ({
     queryKey: ["recordNoSqlDevices"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
-        // provider: user.company,
         type: deviceTitle,
         eventSelected: event.eventInfoDetail.eventName,
         company:user.companyData.id
@@ -336,7 +335,7 @@ const ModalAddAndUpdateDeviceSetup = ({
                           </span>
                         </span>
                         <span style={{ textAlign: "right", width: "5 0%" }}>
-                          Available: {item.length}
+                          Available: {item?.length}
                         </span>
                       </Typography>
                     ), //renderOptionAsNeededFormat(JSON.stringify(option))

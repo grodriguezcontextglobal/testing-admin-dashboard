@@ -7,13 +7,13 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import FormatQuickGlanceCardGraphRender from "./graphic/FormatQuickGlanceCardGraphRender";
 const GraphicInventoryEventActivity = () => {
   const { event } = useSelector((state) => state.event);
-  const { user } = useSelector(state => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const deviceStatusInEvent = useQuery({
     queryKey: ["devicesInEvent"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -31,12 +31,12 @@ const GraphicInventoryEventActivity = () => {
     const filteredData = new Set();
     for (let item of props) {
       if (item[0] !== "Operational") {
-        result = [...result, item[1].length];
+        result = [...result, item[1]?.length];
         filteredData.add(item);
       }
     }
     return {
-      data: Array.from(filteredData).length,
+      data: Array.from(filteredData)?.length,
       value: result,
     };
   };

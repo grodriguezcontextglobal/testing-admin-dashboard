@@ -22,13 +22,13 @@ const EventDateInformation = () => {
             ? new Date(event?.eventInfoDetail?.dateEnd).getHours() - 12
             : new Date(event?.eventInfoDetail?.dateEnd).getHours();
     const minutesBeginTime =
-        new Date(event?.eventInfoDetail?.dateBegin).getMinutes().toString().length >
+        new Date(event?.eventInfoDetail?.dateBegin).getMinutes().toString()?.length >
             1
             ? new Date(event?.eventInfoDetail?.dateBegin).getMinutes()
             : `0${new Date(event?.eventInfoDetail?.dateBegin).getMinutes()}`;
 
     const minutesEndTime =
-        new Date(event?.eventInfoDetail?.dateEnd).getMinutes().toString().length > 1
+        new Date(event?.eventInfoDetail?.dateEnd).getMinutes().toString()?.length > 1
             ? new Date(event?.eventInfoDetail?.dateEnd).getMinutes()
             : `0${new Date(event?.eventInfoDetail?.dateEnd).getMinutes()}`;
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");

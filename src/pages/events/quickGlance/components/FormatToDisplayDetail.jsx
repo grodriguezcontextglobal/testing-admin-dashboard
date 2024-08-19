@@ -53,7 +53,7 @@ const FormatToDisplayDetail = () => {
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
         if (data[0] !== "Operational") {
-          result = [...result, data[1].length];
+          result = [...result, data[1]?.length];
         }
       }
       return result.reduce((accu, curr) => accu + curr, 0);
@@ -95,7 +95,7 @@ const FormatToDisplayDetail = () => {
 
     const numberDisplayDynamically = () => {
       const dataRef = receiversPoolQuery?.data?.data?.receiversInventory;
-      if (dataRef.length > 0) {
+      if (dataRef?.length > 0) {
         return deviceRangeDisplay() - foundDevicesOut();
       }
       return 0;

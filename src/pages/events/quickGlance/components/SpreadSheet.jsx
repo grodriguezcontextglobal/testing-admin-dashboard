@@ -81,7 +81,7 @@ const SpreadSheet = () => {
         lastName: receivers[0].userInfo.lastName,
         email: user,
         phoneNumber: receivers[0].userInfo.phoneNumber,
-        pendingDevices: receivers.length,
+        pendingDevices: receivers?.length,
       });
     }
     return Array.from(sortedResult);

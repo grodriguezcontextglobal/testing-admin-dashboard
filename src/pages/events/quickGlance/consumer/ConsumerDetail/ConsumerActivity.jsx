@@ -95,7 +95,7 @@ const ConsumerActivity = () => {
       for (let data of receiversAssignedQuery.data.data.listOfReceivers) {
         firstResult.add(data.device);
       }
-      return Array.from(firstResult).length;
+      return Array.from(firstResult)?.length;
     };
 
     const foundAllAssignedDevicesReturnPerConsumer = () => {
@@ -105,7 +105,7 @@ const ConsumerActivity = () => {
           firstResult.add(data.device);
         }
       }
-      return Array.from(firstResult).length;
+      return Array.from(firstResult)?.length;
     };
     return (
       <Grid
