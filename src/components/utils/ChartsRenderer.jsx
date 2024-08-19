@@ -10,8 +10,10 @@ const ChartsRenderer = ({
   right,
   showLabel,
   legendAlign,
-  colors
+  colors,
+  radiusProps,
 }) => {
+  const radiusP = radiusProps ?? ["40%", "60%"];
   const option = {
     color: colors, // Add your custom colors here
     tooltip: {
@@ -22,13 +24,13 @@ const ChartsRenderer = ({
       right: right,
       orient: orient,
       align: legendAlign,
-      textStyle:{Subtitle}
+      textStyle: { Subtitle },
     },
     series: [
       {
         name: title,
         type: "pie",
-        radius: ["40%", "60%"],
+        radius: radiusP,
         avoidLabelOverlap: false,
         label: {
           show: false,
@@ -49,7 +51,7 @@ const ChartsRenderer = ({
     ],
   };
 
-  return <ReactECharts option={option} style={{width:"100%" }} />;
+  return <ReactECharts option={option} style={{ width: "100%" }} />;
 };
 
 ChartsRenderer.propTypes = {
