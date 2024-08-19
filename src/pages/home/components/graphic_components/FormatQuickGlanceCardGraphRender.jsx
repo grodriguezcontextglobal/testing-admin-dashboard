@@ -3,12 +3,6 @@ import { Grid, Typography } from "@mui/material";
 import { Card } from "antd";
 import ChartsRenderer from "../../../../components/utils/ChartsRenderer";
 import { PropTypes } from "prop-types";
-// import DevicesInventoryGraph from "./DevicesInventoryGraph";
-// import CenteringGrid from "../../../../styles/global/CenteringGrid";
-
-// const legend = ["Checked out", "Not-Functional Report", "On hands", "Lost"];
-// const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
-
 const FormatQuickGlanceCardGraphRender = ({
   dataToRender,
   totalDeviceInRange,
@@ -103,8 +97,6 @@ const FormatQuickGlanceCardGraphRender = ({
             display={"flex"}
             justifyContent={"center"}
             alignItems={"center"}
-            // padding={"0px 24px"}
-            // height={200}
             item
             xs={12}
           >
@@ -116,28 +108,10 @@ const FormatQuickGlanceCardGraphRender = ({
               right={0}
               showLabel={false}
               legendAlign="right"
-              colors={["#84ADFF","#155EEF","#00359E","#fb6b6b"]}
+              colors={["#84ADFF", "#155EEF", "#00359E", "#fb6b6b"]}
+              radiusProps={["40%", "55%"]}
             />
-            {/* <DevicesInventoryGraph dataToRender={dataToRender} /> */}
           </Grid>
-
-          {/* <Space size={[8, 16]} wrap>
-            {legend.map((item, index) => {
-              return <Typography
-                key={item}
-                fontFamily={"Inter"}
-                fontSize={"12px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"18px"}
-                textAlign={"right"}
-                color={COLORS[index]}
-                style={CenteringGrid}
-              >
-                <Icon icon="tabler:point-filled" width={25} height={25} color={`${COLORS[index]}`}/>{item}
-              </Typography>
-            })}
-          </Space> */}
         </Grid>
       </Card>
     </Grid>
