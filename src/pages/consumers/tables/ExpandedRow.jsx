@@ -22,29 +22,29 @@ import {
   onSelectCompany,
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import FooterExpandedRow from "./FooterExpandedRow";
 
 const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
   const assignedDevicesQuery = useQuery({
-    queryKey: ["assignedDevicesByTransaction", rowRecord.key], // Include rowRecord.key in queryKey to differentiate queries
+    queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         paymentIntent: rowRecord.key,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
   const eventsRelatedToTransactionQuery = useQuery({
-    queryKey: ["eventsInfoPerTransactionQuery", rowRecord.key], // Include rowRecord.key in queryKey to differentiate queries
+    queryKey: ["eventsInfoPerTransactionQuery", rowRecord.key],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
         "eventInfoDetail.eventName": rowRecord.eventSelected[0],
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -55,7 +55,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     return () => {
       controller.abort();
     };
-  }, [assignedDevicesQuery]);
+  }, []);
 
   const dispatch = useDispatch();
   const [messageApi, contextHolder] = message.useMessage();
@@ -67,7 +67,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   };
 
   const displayTernary = (arg1, bg1, bg2, bg3) => {
-    if (typeof arg1 === 'string') {
+    if (typeof arg1 === "string") {
       return bg1;
     } else {
       if (arg1) {
@@ -78,73 +78,78 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   };
   const columns = [
     {
-      title: "Date",
-      dataIndex: "timeStamp",
-      key: "timeStamp",
-      render: (timeStamp) => <p>{new Date(timeStamp).toUTCString()}</p>,
+      title: "Device name",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => <p style={Subtitle}>{type}</p>,
     },
     {
       title: "Serial number",
       dataIndex: "serial_number",
       key: "serial_number",
-      render: (serial_number) => <p>{serial_number}</p>,
+      render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
     },
+    {
+      title: "Cost of device",
+      dataIndex: "deviceValue",
+      key: "deviceValue",
+      render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
+    },
+
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        (
-          <Badge
+        <Badge
+          style={{
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            borderRadius: "16px",
+            background: displayTernary(
+              status,
+              "#ffb5b5",
+              "var(--Primary-50, #F9F5FF)",
+              "var(--Success-50, #ECFDF3)"
+            ),
+            mixBlendMode: "multiply",
+          }}
+        >
+          <Chip
             style={{
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              borderRadius: "16px",
-              background: displayTernary(
+              backgroundColor: displayTernary(
                 status,
                 "#ffb5b5",
-                "var(--Primary-50, #F9F5FF)",
-                "var(--Success-50, #ECFDF3)"
+                "var(--Success-50, #ECFDF3)",
+                "var(--Primary-50, #F9F5FF)"
               ),
-              mixBlendMode: "multiply",
             }}
-          >
-            <Chip
-              style={{
-                backgroundColor: displayTernary(
-                  status,
-                  "#ffb5b5",
-                  "var(--Success-50, #ECFDF3)",
-                  "var(--Primary-50, #F9F5FF)"
-                ),
-              }}
-              label={
-                <p
-                  style={{
-                    color: displayTernary(
-                      status,
-                      "#f71212",
-                      "var(--success-700, #027A48)",
-                      "var(--Primary-700, #6941C6)"
-                    ),
-                    fontFamily: "Inter",
-                    fontSize: "12px",
-                    fontStyle: "normal",
-                    fontWeight: 500,
-                    lineHeight: "18px",
-                  }}
-                >
-                  {displayTernary(status, status, "Active", "Returned")}
-                </p>
-              }
-            />
-          </Badge>
-        )
+            label={
+              <p
+                style={{
+                  color: displayTernary(
+                    status,
+                    "#f71212",
+                    "var(--success-700, #027A48)",
+                    "var(--Primary-700, #6941C6)"
+                  ),
+                  fontFamily: "Inter",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  fontWeight: 500,
+                  lineHeight: "18px",
+                }}
+              >
+                {displayTernary(status, status, "Active", "Returned")}
+              </p>
+            }
+          />
+        </Badge>
       ),
     },
     {
-      title: "",
+      title: "Actions",
       key: "operation",
       render: (record) => (
         <Space
@@ -209,9 +214,11 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           key: data._id,
           serial_number: data.device.serialNumber,
           type: data.device.deviceType,
+          deviceValue: rowRecord.data.device[0].deviceValue,
           status: data.device.status,
           timeStamp: data.timeStamp,
           entireData: data,
+          transactionData: rowRecord,
         });
       }
       return Array.from(dataForTable);
@@ -240,7 +247,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           "/receiver/receiver-pool-list",
           {
             eventSelected: props.entireData.eventSelected[0],
-            company:user.companyData.id,
+            company: user.companyData.id,
             device: props.serial_number,
             type: props.type,
           }
@@ -346,6 +353,12 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         columns={columns}
         dataSource={dataRendering()}
         pagination={false}
+      />
+      <FooterExpandedRow
+        displayTernary={displayTernary}
+        handleReturnSingleDevice={handleReturnSingleDevice}
+        handleLostSingleDevice={handleLostSingleDevice}
+        dataRendering={rowRecord}
       />
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
