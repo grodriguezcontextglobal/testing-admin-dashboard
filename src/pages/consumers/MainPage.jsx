@@ -71,7 +71,6 @@ const MainPage = () => {
       controller.abort();
     };
   }, []);
-
   const consumersPerAllowEvents = async () => {
     setLoadingState(true);
     const result = new Set();
@@ -81,7 +80,7 @@ const MainPage = () => {
           // provider: data.company,
           eventSelected: data.eventInfoDetail.eventName,
           company_providers: user.companyData.id,
-          // event_providers:data.id
+          event_providers:data.id
         });
         if (resp.data) {
           const responseData = await resp.data.users;
