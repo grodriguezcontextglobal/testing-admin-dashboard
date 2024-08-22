@@ -122,6 +122,7 @@ const Confirmation = () => {
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
             user: customer?.uid,
+            company: user.companyData.id,
           }
         );
         if (resp) {
@@ -138,6 +139,7 @@ const Confirmation = () => {
             consumerInfo: customer,
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
+            company: user.companyData.id,
             date: new Date(),
           };
           const responseTransaction = await devitrakApi.post(
@@ -221,7 +223,7 @@ const Confirmation = () => {
           "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
           error
         );
-        setLoadingStatus(false)
+        setLoadingStatus(false);
       }
     };
 
