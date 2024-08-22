@@ -1,87 +1,40 @@
 import { Space, Table } from "antd";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { useEffect, useState } from "react";
+import { devitrakApi } from "../../../api/devitrakApi";
 import { Subtitle } from "../../../styles/global/Subtitle";
-
+import "../localStyles.css";
 const FooterExpandedRow = ({
-  displayTernary,
   handleReturnSingleDevice,
   handleLostSingleDevice,
   dataRendering,
+  returningDevice,
+  formattedData
 }) => {
-  const footerColumn = [
-    {
-      dataIndex: "deposit",
-      key: "deposit",
-      render: (deposit) => <p style={Subtitle}>{deposit}</p>,
-    },
-    {
-      dataIndex: "serial_number",
-      key: "serial_number",
-      render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
-    },
-    {
-      dataIndex: "status",
-      key: "status",
-    },
-    {
-      key: "operation",
-      render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <button
-            onClick={() => handleReturnSingleDevice(record)}
-            style={{
-              ...BlueButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
-            }}
-          >
-            <p style={BlueButtonText}>Mark as returned</p>
-          </button>
-          <button
-            onClick={() => handleLostSingleDevice(record)}
-            style={{
-              ...GrayButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
-            }}
-          >
-            <p
-              style={{
-                ...GrayButtonText,
-                color: `${
-                  record.status
-                    ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
-                }`,
-              }}
-            >
-              Mark as lost
-            </p>
-          </button>
-        </Space>
-      ),
-    },
-  ];
+  const returningAllAtOnce = () => {
+    for (let data of formattedData) {
+      returningDevice(data);
+    }
+  };
+  const [ccInfo, setCcInfo] = useState([]);
+  const retrieveCCInfo = async () => {
+    const resp = await devitrakApi
+      .get(`/stripe/payment_intents/${dataRendering.paymentIntent}`)
+      .then((response) => response.data);
+    return setCcInfo(resp.paymentIntent);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (
+      dataRendering.paymentIntent.length > 15 &&
+      !String(dataRendering.paymentIntent).includes("cash")
+    ) {
+      retrieveCCInfo();
+    }
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const dataToBeRendered = () => {
     if (dataRendering.paymentIntent.length < 16) {
@@ -92,7 +45,7 @@ const FooterExpandedRow = ({
     ) {
       return "Deposit's method: cash";
     } else {
-      return "Credit card ending in: 4567";
+      return `Credit card ending in: ${ccInfo?.charges?.data[0]?.payment_method_details?.card?.last4}`;
     }
   };
 
@@ -101,6 +54,71 @@ const FooterExpandedRow = ({
       deposit: dataToBeRendered(),
       status: false,
       serial_number: "",
+      data: [],
+    },
+  ];
+  console.log(dataRendering);
+  console.log(formattedData);
+  const footerColumn = [
+    {
+      title: "Deposit",
+      dataIndex: "deposit",
+      key: "deposit",
+      render: (deposit) => (
+        <p style={{ ...Subtitle, height: "0.5dvh" }}>{deposit}</p>
+      ),
+    },
+    {
+      title: "Device",
+      dataIndex: "serial_number",
+      key: "serial_number",
+      render: (serial_number) => (
+        <p style={{ ...Subtitle, height: "0.5dvh" }}>{serial_number}</p>
+      ),
+    },
+    {
+      title: "Cost of device",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <p style={{ ...Subtitle, height: "0.5dvh" }}>{status}</p>
+      ),
+    },
+
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <p style={{ ...Subtitle, height: "0.5dvh" }}>{status}</p>
+      ),
+    },
+    {
+      title: "Action",
+      key: "operation",
+      render: () => (
+        <Space
+          size="middle"
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <p
+            onClick={() => returningAllAtOnce()}
+            style={{ ...Subtitle, color: "var(--blue-dark--800)" }}
+          >
+            Mark all as returned
+          </p>
+          {/* <p
+            onClick={() => handleLostSingleDevice(record)}
+            style={{ ...Subtitle, color: "var(--blue-dark--800)" }}
+          >
+            Mark all as lost
+          </p> */}
+        </Space>
+      ),
     },
   ];
   return (
@@ -109,6 +127,7 @@ const FooterExpandedRow = ({
       columns={footerColumn}
       dataSource={rendering}
       pagination={false}
+      className="footer-expanded-table"
     />
   );
 };
