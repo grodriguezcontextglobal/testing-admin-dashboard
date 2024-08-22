@@ -68,12 +68,15 @@ const DetailPerConsumer = () => {
       navigate("/consumers");
     };
     const substractingNotesAddedForCompany = () => {
-      const result = customer.data.notes.filter(
+      const result = customer?.data?.notes.filter(
         (ele) => ele.company === user.companyData.id
       );
       let note = "";
-      result.map((item) => (note += item.notes));
-      return note;
+      if (result) {
+        result.map((item) => (note += item.notes));
+        return note;
+      }
+      return []
     };
 
     return (
@@ -246,7 +249,7 @@ const DetailPerConsumer = () => {
         <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
           <CardRendered
             title={"Events"}
-            props={`${customer.data.eventSelected.length}`}
+            props={`${customer?.data?.event_providers.length ?? 0}`}
             optional={null}
           />
         </Grid>
@@ -349,21 +352,3 @@ const DetailPerConsumer = () => {
 };
 
 export default DetailPerConsumer;
-{
-  /* <Segmented
-              options={["Events", "Leases"]}
-              onChange={(value) => {
-                return setOptions(value);
-              }}
-              style={{
-                margin: "0 0 5px 0",
-              }}
-            />
-            {options === "Events" ? (
-              <StripeTransactionPerConsumer
-                searchValue={watch("searchEvent")}
-              />
-            ) : (
-              <LeasesTable />
-            )} */
-}
