@@ -31,24 +31,20 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-        "consumerInfo.email": customer.email,
+        company: user.companyData.id,
+        "consumerInfo.uid": customer.uid,
       }),
-    // enabled: false,
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   const deviceAssignedListQuery = useQuery({
     queryKey: ["assginedDeviceList"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         user: customer.email,
-        provider: event.company,
+        company: user.companyData.id,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    // enabled: false,
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   useEffect(() => {
     const controller = new AbortController();
