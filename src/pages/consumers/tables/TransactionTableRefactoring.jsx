@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Table } from "antd";
+import { Table } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -124,19 +124,7 @@ const TransactionTableRefactoring = () => {
       key: "eventSelected",
       width: "20%",
       render: (eventSelected) => {
-        const initials = String(eventSelected).split(" ");
-        return (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            <Avatar>{initials.map((item) => item[0])}</Avatar>&nbsp;
-            <p style={Subtitle}>{eventSelected}</p>
-          </div>
-        );
+        return <p style={Subtitle}>{eventSelected}</p>;
       },
     },
     {
