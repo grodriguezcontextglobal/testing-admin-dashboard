@@ -245,7 +245,7 @@ const EndEventButton = () => {
   const returningItemsInInventoryAfterEndingEvent = () => {
     const totalResult = new Set();
     for (let device of event.deviceSetup) {
-      if (checkItemsInUseToUpdateInventory().length > 0) {
+      if (checkItemsInUseToUpdateInventory()?.length > 0) {
         for (let data of checkItemsInUseToUpdateInventory()) {
           if (device.group === data[0]) {
             const quantityResult = Number(device.quantity) - data[1];
@@ -318,7 +318,7 @@ const EndEventButton = () => {
     }
   };
   const updatingItemInDB = async () => {
-    if (returningItemsInInventoryAfterEndingEvent().length > 0) {
+    if (returningItemsInInventoryAfterEndingEvent()?.length > 0) {
       for (let data of returningItemsInInventoryAfterEndingEvent()) {
         if (itemsPerCompany()[data.group]) {
           const newQty = `${
