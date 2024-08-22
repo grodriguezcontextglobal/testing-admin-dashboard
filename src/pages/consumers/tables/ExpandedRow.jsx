@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Badge, Space, Table, message } from "antd";
+import { Badge, Button, Space, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -24,6 +24,8 @@ import {
 } from "../../../store/slices/eventSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import FooterExpandedRow from "./FooterExpandedRow";
+import { renderingTernary } from "../../../components/utils/renderingTernary";
+import "../localStyles.css";
 
 const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -97,7 +99,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     },
 
     {
-      title: "Status",
+      title: "Status of device",
       dataIndex: "status",
       key: "status",
       render: (status) => (
@@ -107,8 +109,9 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
             padding: "2px 8px",
             alignItems: "center",
             borderRadius: "16px",
-            background: displayTernary(
+            background: renderingTernary(
               status,
+              "string",
               "#ffb5b5",
               "var(--Primary-50, #F9F5FF)",
               "var(--Success-50, #ECFDF3)"
@@ -118,8 +121,9 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         >
           <Chip
             style={{
-              backgroundColor: displayTernary(
+              backgroundColor: renderingTernary(
                 status,
+                "string",
                 "#ffb5b5",
                 "var(--Success-50, #ECFDF3)",
                 "var(--Primary-50, #F9F5FF)"
@@ -128,8 +132,9 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
             label={
               <p
                 style={{
-                  color: displayTernary(
+                  color: renderingTernary(
                     status,
+                    "string",
                     "#f71212",
                     "var(--success-700, #027A48)",
                     "var(--Primary-700, #6941C6)"
@@ -141,7 +146,13 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                   lineHeight: "18px",
                 }}
               >
-                {displayTernary(status, status, "Active", "Returned")}
+                {renderingTernary(
+                  status,
+                  "string",
+                  status,
+                  "Active",
+                  "Returned"
+                )}
               </p>
             }
           />
@@ -152,56 +163,65 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
       title: "Actions",
       key: "operation",
       render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <button
-            onClick={() => handleReturnSingleDevice(record)}
+        (
+          <Space
+            size="middle"
             style={{
-              ...BlueButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
             }}
           >
-            <p style={BlueButtonText}>Mark as returned</p>
-          </button>
-          <button
-            onClick={() => handleLostSingleDevice(record)}
-            style={{
-              ...GrayButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
-            }}
-          >
-            <p
+            <Button
+              onClick={() => handleReturnSingleDevice(record)}
               style={{
-                ...GrayButtonText,
-                color: `${
-                  record.status
-                    ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
-                }`,
+                ...BlueButton,
+                display: renderingTernary(
+                  record.status,
+                  "Lost",
+                  "none",
+                  "flex",
+                  "none"
+                ),
               }}
             >
-              Mark as lost
-            </p>
-          </button>
-        </Space>
+              <p style={BlueButtonText}>Mark as returned</p>
+            </Button>
+            <Button
+              onClick={() => handleLostSingleDevice(record)}
+              style={{
+                ...GrayButton,
+                display: renderingTernary(
+                  record.status,
+                  "Lost",
+                  "none",
+                  "flex",
+                  "none"
+                ),
+              }}
+            >
+              <p
+                style={{
+                  ...GrayButtonText,
+                  color: `${
+                    record.status
+                      ? GrayButtonText.color
+                      : "var(--disabled0gray-button-text)"
+                  }`,
+                  display: renderingTernary(
+                    record.status,
+                    "Lost",
+                    "none",
+                    "flex",
+                    "none"
+                  ),  
+                }}
+              >
+                Mark as lost
+              </p>
+            </Button>
+          </Space>
+        )
       ),
     },
   ];
@@ -359,6 +379,8 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         handleReturnSingleDevice={handleReturnSingleDevice}
         handleLostSingleDevice={handleLostSingleDevice}
         dataRendering={rowRecord}
+        returningDevice={handleReturnSingleDevice}
+        formattedData={dataRendering()}
       />
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
