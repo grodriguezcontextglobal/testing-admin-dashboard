@@ -73,22 +73,19 @@ const MainPage = () => {
         const data = JSON.parse(item);
         const resp = await devitrakApi
           .post("/auth/user-query", {
-            eventSelected: data.eventInfoDetail.eventName,
             company_providers: user.companyData.id,
-            event_providers: item.id,
+            event_providers: data.id,
           })
           .then((response) => response.data);
-          if (resp.ok && resp.users.length > 0) {
-            if (!result.has(resp.users[0].id)) {
-              for (let data of resp.users) {
-                result.set(data.id, data);
-            }
+        if (resp.ok && resp.users.length > 0) {
+          for (let data of resp.users) {
+            result.set(data.id, data);
           }
         }
       }
     }
     const finalReturn = new Set();
-    for (let [_, value] of result) {
+    for (let [ , value] of result) {
       finalReturn.add(value);
     }
     const formattingResponse = [...responseData, ...Array.from(finalReturn)];
