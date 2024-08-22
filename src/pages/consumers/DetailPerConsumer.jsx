@@ -8,13 +8,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, Segmented } from "antd";
+import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { EditIcon } from "../../components/icons/Icons";
+import { BlueButton } from "../../styles/global/BlueButton";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
@@ -23,19 +24,38 @@ import CardRendered from "../inventory/utils/CardRendered";
 import CardActionsButton from "./components/CardActionsButton";
 import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
-import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
-import { useState } from "react";
-import LeasesTable from "./tables/LeasesTable";
+import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
+import { useEffect } from "react";
+import AssigmentAction from "./components/AssigmentAction";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
-  const [options, setOptions] = useState("Events");
+  const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const stripeTransactionsSavedQuery = useQuery({
     queryKey: ["stripeTransactionsList"],
     queryFn: () => devitrakApi.get("/admin/users"),
+    refetchOnMount: false,
   });
+  const transactionsConsumerQuery = useQuery({
+    queryKey: ["transactionsPerCustomer"],
+    queryFn: () =>
+      devitrakApi.post("/transaction/transaction", {
+        company: user.companyData.id,
+        "consumerInfo.uid": customer.uid,
+      }),
+    refetchOnMount: false,
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    stripeTransactionsSavedQuery.refetch();
+    transactionsConsumerQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   if (stripeTransactionsSavedQuery.isLoading)
     return (
@@ -47,13 +67,24 @@ const DetailPerConsumer = () => {
     const handleBackAction = () => {
       navigate("/consumers");
     };
+    const substractingNotesAddedForCompany = () => {
+      const result = customer?.data?.notes.filter(
+        (ele) => ele.company === user.companyData.id
+      );
+      let note = "";
+      if (result) {
+        result.map((item) => (note += item.notes));
+        return note;
+      }
+      return []
+    };
+
     return (
       <Grid
         style={{
           padding: "5px",
           display: "flex",
           justifyContent: "center",
-          // alignItems: "center",
           alignSelf: "stretch",
         }}
         container
@@ -71,6 +102,7 @@ const DetailPerConsumer = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              margin: "0 0 1.5dvh",
             }}
             item
             xs={12}
@@ -88,11 +120,8 @@ const DetailPerConsumer = () => {
             <Link to="/create-event-page/event-detail">
               <Button
                 style={{
-                  width: "fit-content",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  borderRadius: "8px",
-                  background: "var(--blue-dark-600, #155EEF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                  ...BlueButton,
+                  ...CenteringGrid,
                 }}
               >
                 <Icon
@@ -105,11 +134,7 @@ const DetailPerConsumer = () => {
                 <Typography
                   textTransform={"none"}
                   style={{
-                    color: "var(--base-white, #FFF",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
+                    ...BlueButtonText,
                   }}
                 >
                   Add new event
@@ -180,8 +205,8 @@ const DetailPerConsumer = () => {
             item
             xs={12}
             sm={12}
-            md={4}
-            lg={4}
+            md={3}
+            lg={3}
           >
             <ConsumerDetailInformation />
           </Grid>
@@ -200,6 +225,7 @@ const DetailPerConsumer = () => {
           </Grid>
           <Grid
             display={"flex"}
+            flexDirection={"column"}
             justifyContent={"flex-end"}
             alignItems={"center"}
             alignSelf={"flex-start"}
@@ -209,78 +235,58 @@ const DetailPerConsumer = () => {
             md={3}
             lg={3}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              <button
-                style={{
-                  outline: "none",
-                  display: "flex",
-                  padding: "10px 16px",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "8px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--Blue-dark-50, #EFF4FF)",
-                  background: "var(--Blue-dark-50, #EFF4FF)",
-                }}
-              >
-                <EditIcon />
-                <p
-                  style={{
-                    color: "var(--Blue-dark-700, #004EEB)",
-                    fontFamily: "Inter",
-                    fontSize: "14px",
-                    fontStyle: "normal",
-                    fontWeight: "600",
-                    lineHeight: "20px",
-                  }}
-                >
-                  Edit
-                </p>
-              </button>
-            </div>
+            <CardActionsButton />
           </Grid>
         </Grid>
         <Divider />{" "}
-        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
           <CardRendered
-            title={"Group"}
-            props={"No group provided"}
+            title={"Transactions"}
+            props={`${transactionsConsumerQuery?.data?.data?.list.length ?? 0}`}
+            optional={null}
+          />
+        </Grid>{" "}
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
+          <CardRendered
+            title={"Events"}
+            props={`${customer?.data?.event_providers.length ?? 0}`}
             optional={null}
           />
         </Grid>
         <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-          <CardActionsButton />
+          <CardRendered
+            title={"Notes"}
+            props={substractingNotesAddedForCompany()}
+            optional={null}
+          />
         </Grid>
         <Divider />{" "}
+        <p
+          style={{
+            ...TextFontsize18LineHeight28,
+            width: "100%",
+            textAlign: "left",
+            margin: "0 0 1.5dvh",
+          }}
+        >
+          Transactions
+        </p>
         <Grid
           display={"flex"}
-          justifyContent={"flex-start"}
+          justifyContent={"space-between"}
           alignItems={"center"}
           gap={1}
           container
         >
-          <p
-            style={{
-              ...TextFontsize18LineHeight28,
-              width: "100%",
-              textAlign: "left",
-            }}
-          >
-            Events attended
-          </p>
           <Grid
             display={"flex"}
             justifyContent={"flex-start"}
             alignItems={"center"}
+            alignSelf={"flex-start"}
             item
-            xs={3}
+            xs={12}
+            md={4}
+            lg={4}
           >
             <OutlinedInput
               {...register("searchEvent")}
@@ -314,6 +320,18 @@ const DetailPerConsumer = () => {
               }
             />
           </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            md={5}
+            lg={5}
+          >
+            <AssigmentAction />
+          </Grid>
         </Grid>
         <Grid
           marginY={3}
@@ -323,23 +341,8 @@ const DetailPerConsumer = () => {
           gap={1}
           container
         >
-          <Grid item xs={12}>
-            <Segmented
-              options={["Events", "Leases"]}
-              onChange={(value) => {
-                return setOptions(value);
-              }}
-              style={{
-                margin: "0 0 5px 0",
-              }}
-            />
-            {options === "Events" ? (
-              <StripeTransactionPerConsumer
-                searchValue={watch("searchEvent")}
-              />
-            ) : (
-              <LeasesTable />
-            )}
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <TransactionTableRefactoring searchValue={watch("searchEvent")} />
           </Grid>
         </Grid>
         <Outlet />
@@ -349,71 +352,3 @@ const DetailPerConsumer = () => {
 };
 
 export default DetailPerConsumer;
-
-{
-  /* <Grid
-marginY={3}
-display={"flex"}
-justifyContent={"space-between"}
-alignItems={"center"}
-gap={1}
-container
->
-</Grid> */
-}
-
-// {/* <button
-// style={{
-//   width: "80%",
-//   outline: "none",
-//   display: "flex",
-//   padding: "16px 28px",
-//   justifyContent: "center",
-//   alignItems: "center",
-//   gap: "12px",
-//   flex: "1 0 0",
-//   borderRadius: "8px",
-//   border: "1px solid var(--Gray-300, #D0D5DD)",
-//   background: "var(--Base-White, #FFF)",
-//   /* Shadow/xs */
-//   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-// }}
-// >
-// <ReleaseDepositIcon />
-// <p
-//   style={{
-//     ...TextFontsize18LineHeight28,
-//     color: "var(--Gray-700, #344054)",
-//   }}
-// >
-//   Release deposit
-// </p>
-// </button> */}
-
-// {/* <button
-// style={{
-//   width: "80%",
-//   outline: "none",
-//   display: "flex",
-//   padding: "16px 28px",
-//   justifyContent: "center",
-//   alignItems: "center",
-//   gap: "12px",
-//   flex: "1 0 0",
-//   borderRadius: "8px",
-//   border: "1px solid var(--Error-300, #FDA29B)",
-//   background: "var(--Base-White, #FFF)",
-//   /* Shadow/xs */
-//   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-// }}
-// >
-// <CreditCardIcon />
-// <p
-//   style={{
-//     ...TextFontsize18LineHeight28,
-//     color: "var(--Error-700, #B42318)",
-//   }}
-// >
-//   Charge for lost device
-// </p>
-// </button> */}

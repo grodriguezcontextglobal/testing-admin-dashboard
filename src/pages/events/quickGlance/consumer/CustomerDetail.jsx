@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  // Button,
   Grid,
   Typography
 } from "@mui/material";
@@ -10,7 +9,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
-// import { WhitePlusIcon } from "../../../../components/icons/Icons";
 import { onAddCustomerInfo } from "../../../../store/slices/customerSlice";
 import {
   onAddCustomer,
@@ -19,8 +17,6 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../store/slices/stripeSlice";
-// import { BlueButton } from "../../../../styles/global/BlueButton";
-// import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import ConsumerActivity from "./ConsumerDetail/ConsumerActivity";
 import Details from "./ConsumerDetail/Details";
 
@@ -30,47 +26,10 @@ const CustomerDetail = () => {
   const { customer } = useSelector((state) => state.customer);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const stripeTransactionsSavedQuery = useQuery({
-  //   queryKey: ["stripeTransactionsList"],
-  //   queryFn: () => devitrakApi.post("/admin/users", {
-  //     "eventSelected": event.eventInfoDetail.eventName,
-  //     "provider": event.company,
-  //     "user":customer.uid
-  //   }),
-  //   enabled:false,
-  //   refetchOnMount: false,
-  //   notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  // });
-
-  // const striperansactionsSavedQuery = useQuery({
-  //   queryKey: ["striperansactionsList"],
-  //   queryFn: () => devitrakApi.post("/admin/users", {
-  //     "eventSelected": event.eventInfoDetail.eventName,
-  //     "provider": event.company,
-  //     "user":customer.uid
-  //   }),
-  //   enabled:false,
-  //   refetchOnMount: false,
-  //   notifyOnChangeProps: ['data', 'dataUpdatedAt']
-  // });
-  // useEffect(() => {
-  //   const controller = new AbortController()
-  //   stripeTransactionsSavedQuery.refetch();
-  //   return () => {
-  //     controller.abort()
-  //   }
-  // }, [customer.uid])
-  
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  // const isLargeDevice = useMediaQuery(
-  //   "only screen and (min-width : 993px) and (max-width : 1200px)"
-  // );
-  // const isExtraLargeDevice = useMediaQuery(
-  //   "only screen and (min-width : 1201px)"
-  // );
   useEffect(() => {
     const controller = new AbortController()
     const refreshing = async () => {
@@ -84,9 +43,8 @@ const CustomerDetail = () => {
       controller.abort()
     }
   }, [])
-  // if (stripeTransactionsSavedQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>;
-  // if (stripeTransactionsSavedQuery.data) {
-    const handleBackAction = () => {
+
+  const handleBackAction = () => {
       dispatch(onAddNewPaymentIntent([]));
       dispatch(onAddCustomerInfo(undefined));
       dispatch(onAddCustomer(null));
@@ -107,7 +65,6 @@ const CustomerDetail = () => {
       navigate("/events");
     };
     return (
-      <>
         <Grid
           style={{
             padding: "5px",
@@ -126,36 +83,6 @@ const CustomerDetail = () => {
             }}
             container
           >
-            {/* {(isSmallDevice || isMediumDevice) && (
-              <Grid
-                textAlign={"right"}
-                display={"flex"}
-                justifyContent={"flex-end"}
-                alignItems={"center"}
-                marginY={2}
-                style={{
-                  textWrap: "balance",
-                }}
-                gap={1}
-                item
-                xs={12}
-                sm={12}
-              >
-                <Link style={{ width: "100%" }} to="/event/new_subscription">
-                  <Button
-                    style={BlueButton}
-                  >
-                    <WhitePlusIcon />
-                    <Typography
-                      textTransform={"none"}
-                      style={BlueButtonText}
-                    >
-                      Add new event
-                    </Typography>
-                  </Button>
-                </Link>
-              </Grid>
-            )} */}
             <Grid marginY={0} item xs={12} sm={12} md={8}>
               <Typography
                 textTransform={"none"}
@@ -171,52 +98,6 @@ const CustomerDetail = () => {
                 Consumer activity in {event?.eventInfoDetail?.eventName}
               </Typography>
             </Grid>
-            {/* {(isLargeDevice || isExtraLargeDevice) && (
-              <Grid
-                textAlign={"right"}
-                display={"flex"}
-                justifyContent={"flex-end"}
-                alignItems={"center"}
-                style={{
-                  textWrap: "balance",
-                }}
-                gap={1}
-                item
-                xs={4}
-              >
-                <Link to="/event/new_subscription">
-                  <Button
-                    style={{
-                      width: "fit-content",
-                      border: "1px solid var(--blue-dark-600, #155EEF)",
-                      borderRadius: "8px",
-                      background: "var(--blue-dark-600, #155EEF)",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    }}
-                  >
-                    <Icon
-                      icon="ic:baseline-plus"
-                      color="var(--base-white, #FFF"
-                      width={20}
-                      height={20}
-                    />
-                    &nbsp;
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        color: "var(--base-white, #FFF",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        fontFamily: "Inter",
-                        lineHeight: "20px",
-                      }}
-                    >
-                      Add new event
-                    </Typography>
-                  </Button>
-                </Link>
-              </Grid>
-            )} */}
           </Grid>
           <Grid
             style={{
@@ -311,8 +192,6 @@ const CustomerDetail = () => {
           <Divider />
           <Outlet />
         </Grid >
-        {/* <ModalToAssignDeviceFromSearch /> */}
-      </>
     );
   // }
 };

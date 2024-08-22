@@ -11,13 +11,14 @@ import { useEffect } from "react";
 const ConsumerActivity = () => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
+  const { user } = useSelector((state) => state.admin);
   const stripeTransactionsSavedQuery = useQuery({
     queryKey: ["transactionsList"],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-        "consumerInfo.email": customer.email,
+        company: user.companyData.id,
+        "consumerInfo.uid": customer.uid,
       }),
     refetchOnMount: false,
   });
@@ -26,7 +27,7 @@ const ConsumerActivity = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
         user: customer.email,
       }),
     refetchOnMount: false,

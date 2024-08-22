@@ -24,7 +24,7 @@ const InactivityLogout = ({ children }) => {
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
         handleLogout();
-      }, 5 * 60 * 1000);
+      }, 15 * 60 * 1000);
     };
 
     // Function to handle logout

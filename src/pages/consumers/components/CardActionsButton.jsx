@@ -1,20 +1,17 @@
 import { Card } from "antd";
-import {
-  AlarmIcon,
-  WhiteCirclePlusIcon,
-} from "../../../components/icons/Icons";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { useState } from "react";
+import { AlarmIcon } from "../../../components/icons/Icons";
+import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
+import { CardStyle } from "../../../styles/global/CardStyle";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
-import { CardStyle } from "../../../styles/global/CardStyle";
-import { useState } from "react";
-import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
-import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";
+import { LightBlueButton } from "../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
+import EditConsumerInfoModal from "./EditCOnsumerInfoModal";
 
 const CardActionsButton = () => {
   const [notificationActivation, setNotificationActivation] = useState(false);
-  const [assignDevice, setAssignDevice] = useState(false);
+  const [openEditConsumerModal, setOpenEditConsumerModal] = useState(false);
   return (
     <>
       <Card
@@ -26,23 +23,6 @@ const CardActionsButton = () => {
         }}
       >
         <div style={{ width: "100%", alignSelf: "stretch" }}>
-          <button
-            onClick={() => setAssignDevice(true)}
-            style={{
-              ...BlueButton,
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              margin: "0 0 12.5px 0",
-            }}
-          >
-            <WhiteCirclePlusIcon />
-            &nbsp;
-            <p style={{ ...BlueButtonText, textAlign: "center" }}>
-              Assign more devices
-            </p>
-          </button>
           <button
             onClick={() => setNotificationActivation(true)}
             style={{
@@ -61,6 +41,30 @@ const CardActionsButton = () => {
             </p>
           </button>
         </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            alignSelf: "stretch",
+            margin: "1.5dvh 0",
+          }}
+        >
+          <button
+            onClick={() => setOpenEditConsumerModal(true)}
+            style={{
+              ...LightBlueButton,
+              width: "fit-content",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              margin: "0",
+            }}
+          >
+            <p style={{ ...LightBlueButtonText, textAlign: "center" }}>Edit</p>
+          </button>
+        </div>
       </Card>
       {notificationActivation && (
         <SingleEmailNotification
@@ -68,7 +72,12 @@ const CardActionsButton = () => {
           setCustomizedEmailNotificationModal={setNotificationActivation}
         />
       )}
-      {assignDevice && <ModalAssignDeviceToConsumer assignDevice={assignDevice} setAssignDevice={setAssignDevice}/>}
+      {openEditConsumerModal && (
+        <EditConsumerInfoModal
+          openEditConsumerModal={openEditConsumerModal}
+          setOpenEditConsumerModal={setOpenEditConsumerModal}
+        />
+      )}
     </>
   );
 };

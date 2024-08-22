@@ -106,7 +106,7 @@ export default function TablesConsumers({
     };
   }, [
     Array.isArray(getInfoNeededToBeRenderedInTable),
-    getInfoNeededToBeRenderedInTable.length,
+    getInfoNeededToBeRenderedInTable?.length,
   ]);
 
   const renderingStyle = {
@@ -255,7 +255,7 @@ export default function TablesConsumers({
       width: "7%",
       render: (currentActivity) => (
         <p style={{ ...renderingStyle, width: "fit-content" }}>
-          {currentActivity.length}
+          {currentActivity?.length}
         </p>
       ),
     },
@@ -268,13 +268,13 @@ export default function TablesConsumers({
         <>
           <Chip
             style={{ background: "var(--Indigo-50, #EEF4FF)" }}
-            label={renderingStyleInChip(entireData.eventSelected.at(-1))}
+            label={renderingStyleInChip(entireData?.eventSelected?.at(-1))}
           />
           &nbsp;
-          {entireData.eventSelected.length > 1 && (
+          {entireData.eventSelected?.length > 1 && (
             <Chip
               label={renderingRowStyling(
-                `+${Number(entireData.eventSelected.length) - 1}`
+                `+${Number(entireData.eventSelected?.length) - 1}`
               )}
             />
           )}

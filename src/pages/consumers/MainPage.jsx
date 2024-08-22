@@ -7,8 +7,9 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -22,10 +23,10 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import RenderingConsumersChartsBehavior from "./components/RenderingConsumersChartsBehavior";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
-import { useQuery } from "@tanstack/react-query";
 const MainPage = () => {
   const [loadingState, setLoadingState] = useState(false);
   const [createUserButton, setCreateUserButton] = useState(false);
@@ -42,30 +43,22 @@ const MainPage = () => {
         company_id: user.sqlInfo.company_id,
         subscription_current_in_use: 1,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
   let counter = 0;
-  const listOfEventsPerAdmin = useCallback(() => {
-    let activeEvents = [];
-    let completedEvents = [];
-    if (eventsPerAdmin.active) {
-      activeEvents = Object.values(eventsPerAdmin.active);
-    } else {
-      activeEvents = [];
+  const listOfEventsPerAdmin = () => {
+    let events = [...eventsPerAdmin.active, ...eventsPerAdmin.completed];
+    const result = new Set();
+    for (let data of events) {
+      result.add(JSON.stringify(data));
     }
-    if (eventsPerAdmin.completed) {
-      completedEvents = Object.values(eventsPerAdmin.completed);
-    } else {
-      completedEvents = [];
-    }
-    return [...activeEvents, ...completedEvents];
-  }, [user.company]);
-  listOfEventsPerAdmin();
+    return Array.from(result);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
+    listOfEventsPerAdmin();
     leaseListQuery.refetch();
     return () => {
       controller.abort();
@@ -73,35 +66,33 @@ const MainPage = () => {
   }, []);
   const consumersPerAllowEvents = async () => {
     setLoadingState(true);
-    const result = new Set();
+    const result = new Map();
     if (listOfEventsPerAdmin()?.length > 0) {
-      for (let data of listOfEventsPerAdmin()) {
-        const resp = await devitrakApi.post("/auth/user-query", {
-          // provider: data.company,
-          eventSelected: data.eventInfoDetail.eventName,
-          company_providers: user.companyData.id,
-          event_providers:data.id
-        });
-        if (resp.data) {
-          const responseData = await resp.data.users;
-          for (let data of responseData) {
-            const toString = JSON.stringify(data);
-            if (!result.has(toString)) {
-              result.add(toString);
-            }
+      for (let item of listOfEventsPerAdmin()) {
+        const data = JSON.parse(item);
+        const resp = await devitrakApi
+          .post("/auth/user-query", {
+            company_providers: user.companyData.id,
+            event_providers: data.id,
+          })
+          .then((response) => response.data);
+        if (resp.ok && resp.users.length > 0) {
+          for (let data of resp.users) {
+            result.set(data.id, data);
           }
         }
       }
-      const finalReturn = new Set();
-      for (let data of Array.from(result)) {
-        const toJson = JSON.parse(data);
-        finalReturn.add(toJson);
-      }
-      const formattingResponse = [...responseData, ...Array.from(finalReturn)];
-      setLoadingState(false);
-      return setResponseData(formattingResponse);
     }
+    const finalReturn = new Set();
+    for (let [ , value] of result) {
+      finalReturn.add(value);
+    }
+    const formattingResponse = [...responseData, ...Array.from(finalReturn)];
+    setLoadingState(false);
+    return setResponseData(formattingResponse);
   };
+
+  // }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -109,7 +100,7 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [leaseListQuery.data]);
+  }, []);
 
   const renderActiveAndInactiveCount = (props) => {
     const result = new Map();
@@ -161,17 +152,10 @@ const MainPage = () => {
   };
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
-      const check = responseData?.filter(
-        (item) =>
-          String(item?.name)
-            .toLowerCase()
-            .includes(String(searching).toLowerCase()) ||
-          String(item?.lastName)
-            ?.toLowerCase()
-            .includes(String(searching).toLowerCase()) ||
-          String(item?.email)
-            ?.toLowerCase()
-            .includes(String(searching).toLowerCase())
+      const check = responseData?.filter((item) =>
+        JSON.stringify(item)
+          .toLowerCase()
+          .includes(String(searching).toLowerCase())
       );
       return check;
     }
@@ -208,7 +192,7 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [user.companyData.id]);
+  }, []);
 
   return (
     <Grid
@@ -233,13 +217,9 @@ const MainPage = () => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
+              ...TextFontSize30LineHeight38,
+              // color: "var(--gray-900, #101828)",
             }}
-            textAlign={"left"}
-            fontWeight={600}
-            fontFamily={"Inter"}
-            fontSize={"30px"}
           >
             Consumers
           </Typography>

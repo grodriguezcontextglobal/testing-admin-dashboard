@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Badge, Space, Table, message } from "antd";
+import { Badge, Button, Space, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -22,29 +22,31 @@ import {
   onSelectCompany,
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import FooterExpandedRow from "./FooterExpandedRow";
+import { renderingTernary } from "../../../components/utils/renderingTernary";
+import "../localStyles.css";
 
 const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
   const assignedDevicesQuery = useQuery({
-    queryKey: ["assignedDevicesByTransaction", rowRecord.key], // Include rowRecord.key in queryKey to differentiate queries
+    queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         paymentIntent: rowRecord.key,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
   const eventsRelatedToTransactionQuery = useQuery({
-    queryKey: ["eventsInfoPerTransactionQuery", rowRecord.key], // Include rowRecord.key in queryKey to differentiate queries
+    queryKey: ["eventsInfoPerTransactionQuery", rowRecord.key],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
         "eventInfoDetail.eventName": rowRecord.eventSelected[0],
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -55,7 +57,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     return () => {
       controller.abort();
     };
-  }, [assignedDevicesQuery]);
+  }, []);
 
   const dispatch = useDispatch();
   const [messageApi, contextHolder] = message.useMessage();
@@ -67,7 +69,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   };
 
   const displayTernary = (arg1, bg1, bg2, bg3) => {
-    if (typeof arg1 === 'string') {
+    if (typeof arg1 === "string") {
       return bg1;
     } else {
       if (arg1) {
@@ -78,125 +80,148 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   };
   const columns = [
     {
-      title: "Date",
-      dataIndex: "timeStamp",
-      key: "timeStamp",
-      render: (timeStamp) => <p>{new Date(timeStamp).toUTCString()}</p>,
+      title: "Device name",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => <p style={Subtitle}>{type}</p>,
     },
     {
       title: "Serial number",
       dataIndex: "serial_number",
       key: "serial_number",
-      render: (serial_number) => <p>{serial_number}</p>,
+      render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
     },
     {
-      title: "Status",
+      title: "Cost of device",
+      dataIndex: "deviceValue",
+      key: "deviceValue",
+      render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
+    },
+
+    {
+      title: "Status of device",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        (
-          <Badge
+        <Badge
+          style={{
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            borderRadius: "16px",
+            background: renderingTernary(
+              status,
+              "string",
+              "#ffb5b5",
+              "var(--Primary-50, #F9F5FF)",
+              "var(--Success-50, #ECFDF3)"
+            ),
+            mixBlendMode: "multiply",
+          }}
+        >
+          <Chip
             style={{
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              borderRadius: "16px",
-              background: displayTernary(
+              backgroundColor: renderingTernary(
                 status,
+                "string",
                 "#ffb5b5",
-                "var(--Primary-50, #F9F5FF)",
-                "var(--Success-50, #ECFDF3)"
+                "var(--Success-50, #ECFDF3)",
+                "var(--Primary-50, #F9F5FF)"
               ),
-              mixBlendMode: "multiply",
             }}
-          >
-            <Chip
-              style={{
-                backgroundColor: displayTernary(
+            label={
+              <p
+                style={{
+                  color: renderingTernary(
+                    status,
+                    "string",
+                    "#f71212",
+                    "var(--success-700, #027A48)",
+                    "var(--Primary-700, #6941C6)"
+                  ),
+                  fontFamily: "Inter",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  fontWeight: 500,
+                  lineHeight: "18px",
+                }}
+              >
+                {renderingTernary(
                   status,
-                  "#ffb5b5",
-                  "var(--Success-50, #ECFDF3)",
-                  "var(--Primary-50, #F9F5FF)"
-                ),
-              }}
-              label={
-                <p
-                  style={{
-                    color: displayTernary(
-                      status,
-                      "#f71212",
-                      "var(--success-700, #027A48)",
-                      "var(--Primary-700, #6941C6)"
-                    ),
-                    fontFamily: "Inter",
-                    fontSize: "12px",
-                    fontStyle: "normal",
-                    fontWeight: 500,
-                    lineHeight: "18px",
-                  }}
-                >
-                  {displayTernary(status, status, "Active", "Returned")}
-                </p>
-              }
-            />
-          </Badge>
-        )
+                  "string",
+                  status,
+                  "Active",
+                  "Returned"
+                )}
+              </p>
+            }
+          />
+        </Badge>
       ),
     },
     {
-      title: "",
+      title: "Actions",
       key: "operation",
       render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <button
-            onClick={() => handleReturnSingleDevice(record)}
+        (
+          <Space
+            size="middle"
             style={{
-              ...BlueButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
             }}
           >
-            <p style={BlueButtonText}>Mark as returned</p>
-          </button>
-          <button
-            onClick={() => handleLostSingleDevice(record)}
-            style={{
-              ...GrayButton,
-              display: `${
-                record.status === "Lost"
-                  ? "none"
-                  : record.status
-                  ? "flex"
-                  : "none"
-              }`,
-            }}
-          >
-            <p
+            <Button
+              onClick={() => handleReturnSingleDevice(record)}
               style={{
-                ...GrayButtonText,
-                color: `${
-                  record.status
-                    ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
-                }`,
+                ...BlueButton,
+                display: renderingTernary(
+                  record.status,
+                  "Lost",
+                  "none",
+                  "flex",
+                  "none"
+                ),
               }}
             >
-              Mark as lost
-            </p>
-          </button>
-        </Space>
+              <p style={BlueButtonText}>Mark as returned</p>
+            </Button>
+            <Button
+              onClick={() => handleLostSingleDevice(record)}
+              style={{
+                ...GrayButton,
+                display: renderingTernary(
+                  record.status,
+                  "Lost",
+                  "none",
+                  "flex",
+                  "none"
+                ),
+              }}
+            >
+              <p
+                style={{
+                  ...GrayButtonText,
+                  color: `${
+                    record.status
+                      ? GrayButtonText.color
+                      : "var(--disabled0gray-button-text)"
+                  }`,
+                  display: renderingTernary(
+                    record.status,
+                    "Lost",
+                    "none",
+                    "flex",
+                    "none"
+                  ),  
+                }}
+              >
+                Mark as lost
+              </p>
+            </Button>
+          </Space>
+        )
       ),
     },
   ];
@@ -209,9 +234,11 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           key: data._id,
           serial_number: data.device.serialNumber,
           type: data.device.deviceType,
+          deviceValue: rowRecord.data.device[0].deviceValue,
           status: data.device.status,
           timeStamp: data.timeStamp,
           entireData: data,
+          transactionData: rowRecord,
         });
       }
       return Array.from(dataForTable);
@@ -240,7 +267,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           "/receiver/receiver-pool-list",
           {
             eventSelected: props.entireData.eventSelected[0],
-            company:user.companyData.id,
+            company: user.companyData.id,
             device: props.serial_number,
             type: props.type,
           }
@@ -346,6 +373,14 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         columns={columns}
         dataSource={dataRendering()}
         pagination={false}
+      />
+      <FooterExpandedRow
+        displayTernary={displayTernary}
+        handleReturnSingleDevice={handleReturnSingleDevice}
+        handleLostSingleDevice={handleLostSingleDevice}
+        dataRendering={rowRecord}
+        returningDevice={handleReturnSingleDevice}
+        formattedData={dataRendering()}
       />
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
