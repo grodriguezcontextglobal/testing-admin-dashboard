@@ -234,6 +234,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       centered
       maskClosable={false}
       footer={[]}
+      width={1000}
     >
       <Grid
         display={"flex"}
