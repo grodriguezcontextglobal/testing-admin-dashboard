@@ -149,31 +149,21 @@ const ModalAddAndUpdateDeviceSetup = ({
     return null;
   };
 
-  const findSerialNumberIndexInLocation = (props) => {
-    const database = [...props.deviceInfo];
-    const checkIndex = database.findIndex(
-      (element) => element?.serial_number === props?.startingNumber
-    );
-    if (checkIndex > -1) {
-      return checkIndex;
-    }
-    return 0;
-  };
-
   const createDeviceInEvent = async (props) => {
     const event_id = event.sql.event_id;
-    const initial = findSerialNumberIndexInLocation(props);
-    for (let index = initial; index < Number(props.quantity); index++) {
-      await devitrakApi.post("/db_event/event_device_directly", {
-        event_id: event_id,
-        item_id: props.deviceInfo[index].item_id,
-      });
-    }
+    const database = [...props.deviceInfo];
+    await devitrakApi.post("/db_event/event_device", {
+      event_id: event_id,
+      item_group: database[0].item_group,
+      startingNumber: database[0].serial_number,
+      quantity: props.quantity,
+      category_name:database[0].category_name
+  });
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: false,
       company_id: user.sqlInfo.company_id,
-      item_group: valueItemSelected[0].item_group,
-      startingNumber: valueItemSelected[0].serial_number,
+      item_group: database[0].item_group,
+      startingNumber: database[0].serial_number,
       quantity: props.quantity,
     });
     await createDeviceRecordInNoSQLDatabase(props);
