@@ -9,9 +9,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import dicRole from "../../../../components/general/dicRole";
 import { PointFilled, WhitePlusIcon } from "../../../../components/icons/Icons";
-import {
-  onResetStaffProfile
-} from "../../../../store/slices/staffDetailSlide";
+import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
@@ -52,16 +50,18 @@ const HeaderStaffDetail = () => {
     const filterActiveEventsPerStaffMember = () => {
       const data = eventQuery?.data?.data?.list;
       const findingEvent = new Set();
-      for (let item of data) {
-        const staffMembers = [
-          ...item.staff.adminUser,
-          ...item.staff.headsetAttendees,
-        ];
-        if (staffMembers.some((element) => element.email === profile.email)) {
-          findingEvent.add({
-            eventName: item.eventInfoDetail.eventName,
-            startingDate: item.eventInfoDetail.dateBegin,
-          });
+      if (data.length > 0) {
+        for (let item of data) {
+          const staffMembers = [
+            ...item.staff.adminUser,
+            ...item.staff.headsetAttendees ?? [],
+          ];
+          if (staffMembers.some((element) => element.email === profile.email)) {
+            findingEvent.add({
+              eventName: item.eventInfoDetail.eventName,
+              startingDate: item.eventInfoDetail.dateBegin,
+            });
+          }
         }
       }
       const sortedResultValue = Array.from(findingEvent);
@@ -296,38 +296,40 @@ const HeaderStaffDetail = () => {
                   }}
                 >
                   {Number(user.role) < 2 && (
-                    <button style={{ background: "transparent", cursor:"default" }}>
-                        <p
-                          style={{
-                            ...BlueButtonText,
-                            fontWeight: 400,
-                            width: "fit-content",
-                            margin: "auto",
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                            borderRadius: "12px",
-                            padding: "1px 5px",
-                            backgroundColor: `${
-                              !profile.status
-                                ? "var(--blue-50, #EFF8FF)"
-                                : "var(--success-50, #ECFDF3)"
-                            }`,
-                            color: `${
-                              !profile.status
-                                ? "var(--blue-700, #175CD3)"
-                                : "var(--success-700, #027A48)"
-                            }`,
-                            textTransform: "none",
-                          }}
-                        >
-                          {profile.status ? (
-                            <PointFilled style={{ color: "#12b76a" }} />
-                          ) : (
-                            <PointFilled style={{ color: "#D0D5DD" }} />
-                          )}
-                          {profile.status ? "Active" : "Inactive"}
-                        </p>
+                    <button
+                      style={{ background: "transparent", cursor: "default" }}
+                    >
+                      <p
+                        style={{
+                          ...BlueButtonText,
+                          fontWeight: 400,
+                          width: "fit-content",
+                          margin: "auto",
+                          display: "flex",
+                          justifyContent: "flex-start",
+                          alignItems: "center",
+                          borderRadius: "12px",
+                          padding: "1px 5px",
+                          backgroundColor: `${
+                            !profile.status
+                              ? "var(--blue-50, #EFF8FF)"
+                              : "var(--success-50, #ECFDF3)"
+                          }`,
+                          color: `${
+                            !profile.status
+                              ? "var(--blue-700, #175CD3)"
+                              : "var(--success-700, #027A48)"
+                          }`,
+                          textTransform: "none",
+                        }}
+                      >
+                        {profile.status ? (
+                          <PointFilled style={{ color: "#12b76a" }} />
+                        ) : (
+                          <PointFilled style={{ color: "#D0D5DD" }} />
+                        )}
+                        {profile.status ? "Active" : "Inactive"}
+                      </p>
                     </button>
                   )}
                 </div>
