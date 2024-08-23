@@ -29,6 +29,10 @@ import "../../../styles/global/OutlineInput.css";
 import "../../../styles/global/ant-select.css";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import { BlueButton } from "../../../styles/global/BlueButton";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../styles/global/reactInput.css";
+
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -40,6 +44,7 @@ const AddNewItem = () => {
   const [moreInfo, setMoreInfo] = useState([]);
   const [keyObject, setKeyObject] = useState("");
   const [valueObject, setValueObject] = useState("");
+  const [returningDate, setReturningDate] = useState(new Date());
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -66,7 +71,7 @@ const AddNewItem = () => {
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id
+        company_id: user.sqlInfo.company_id,
       }),
     refetchOnMount: false,
   });
@@ -194,6 +199,7 @@ const AddNewItem = () => {
             current_location: locationSelection,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
+            return_date: `${valueSelection === "Rent" ? returningDate : null}`,
           });
           if (respNewItem.data.ok) {
             setValue("category_name", "");
@@ -231,6 +237,9 @@ const AddNewItem = () => {
           current_location: locationSelection,
           extra_serial_number: JSON.stringify(moreInfo),
           company_id: user.sqlInfo.company_id,
+          return_date: `${
+            valueSelection === "Rent" ? formatDate(returningDate) : null
+          }`,
         });
         if (respNewItem.data.ok) {
           setValue("category_name", "");
@@ -495,7 +504,13 @@ const AddNewItem = () => {
                 lineHeight={"20px"}
                 color={"var(--gray-700, #344054)"}
               >
-                <Tooltip title="Address where tax deduction for equipment will be applied.">
+                <Tooltip
+                  placement="top"
+                  title="Address where tax deduction for equipment will be applied."
+                  style={{
+                    width: "100%",
+                  }}
+                >
                   Taxable location <QuestionIcon />
                 </Tooltip>
               </Typography>
@@ -761,8 +776,24 @@ const AddNewItem = () => {
               options={options}
             />
           </InputLabel>
-          <div style={{ width: "100%" }}>
-            <InputLabel style={{ width: "100%" }}>
+          <div
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              display: `${
+                valueSelection === "Rent" || valueSelection === ""
+                  ? "flex"
+                  : "none"
+              }`,
+            }}
+          >
+            <Tooltip
+              placement="top"
+              title="Where the item is location physically."
+              style={{
+                width: "100%",
+              }}
+            >
               <Typography
                 style={{
                   ...TextFontSize14LineHeight20,
@@ -770,11 +801,45 @@ const AddNewItem = () => {
                   color: "var(--gray700, #344054)",
                 }}
               >
-                Location{" "}
-                <Tooltip title="Where the item is location physically.">
-                  <QuestionIcon />
-                </Tooltip>
+                Returning date <QuestionIcon />
               </Typography>
+            </Tooltip>
+            <DatePicker
+              id="calender-event"
+              autoComplete="checking"
+              showTimeSelect
+              dateFormat="Pp"
+              minDate={new Date()}
+              selected={returningDate}
+              openToDate={new Date()}
+              startDate={new Date()}
+              onChange={(date) => setReturningDate(date)}
+              style={{
+                ...OutlinedInputStyle,
+                width: "100%",
+              }}
+            />
+          </div>
+
+          <div style={{ width: "100%" }}>
+            <InputLabel style={{ width: "100%" }}>
+              <Tooltip
+                title="Where the item is location physically."
+                placement="top"
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize14LineHeight20,
+                    fontWeight: 500,
+                    color: "var(--gray700, #344054)",
+                  }}
+                >
+                  Location <QuestionIcon />
+                </Typography>
+              </Tooltip>
             </InputLabel>
             <AutoComplete
               className="custom-autocomplete"

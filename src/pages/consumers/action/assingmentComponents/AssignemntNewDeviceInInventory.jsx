@@ -6,6 +6,7 @@ import {
   InputLabel,
   OutlinedInput,
   TextField,
+  Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -31,6 +32,10 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../inventory/utils/dateFormat";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../styles/global/reactInput.css";
+import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 
 const options = [
   { value: "Select an option" },
@@ -46,6 +51,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   const [valueSelection, setValueSelection] = useState(options[0].value);
   const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [returningDate, setReturningDate] = useState(new Date());
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const newEventInfo = {};
@@ -239,7 +245,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   };
   const retrieveDataNewAddedItem = async (props) => {
     const newAddedItem = await devitrakApi.post("/db_item/consulting-item", {
-      company_id:user.sqlInfo.company_id,
+      company_id: user.sqlInfo.company_id,
       item_group: selectedItem,
       category_name: props.category_name,
       serial_number: props.serial_number,
@@ -319,7 +325,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
-            company_id:user.sqlInfo.company_id
+            company_id: user.sqlInfo.company_id,
+            return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -345,7 +352,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
-          company_id:user.sqlInfo.company_id
+          company_id: user.sqlInfo.company_id,
+          return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
@@ -832,6 +840,51 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
               options={options}
             />
           </InputLabel>
+          <div
+              style={{
+                width: "100%",
+                flexDirection: "column",
+                display: `${
+                  (valueSelection === "Rent" || valueSelection === "")
+                    ? "flex"
+                    : "none"
+                }`,
+              }}
+            >
+              <Tooltip
+                placement="top"
+                title="Where the item is location physically."
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize14LineHeight20,
+                    fontWeight: 500,
+                    color: "var(--gray700, #344054)",
+                  }}
+                >
+                  Returning date <QuestionIcon />
+                </Typography>
+              </Tooltip>
+              <DatePicker
+                id="calender-event"
+                autoComplete="checking"
+                showTimeSelect
+                dateFormat="Pp"
+                minDate={new Date()}
+                selected={returningDate}
+                openToDate={new Date()}
+                startDate={new Date()}
+                onChange={(date) => setReturningDate(date)}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                }}
+              />
+            </div>
+
           <div style={{ width: "100%" }}>
             <InputLabel style={{ width: "100%" }}>
               <p style={{ ...Subtitle, textAlign: "left" }}>

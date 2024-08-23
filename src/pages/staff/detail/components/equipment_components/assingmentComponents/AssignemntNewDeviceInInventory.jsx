@@ -6,6 +6,7 @@ import {
   InputLabel,
   OutlinedInput,
   TextField,
+  Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -35,6 +36,10 @@ import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/Text
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../../../styles/global/reactInput.css";
+import { TextFontSize14LineHeight20 } from "../../../../../../styles/global/TextFontSize14LineHeight20";
 
 const options = [
   { value: "Select an option" },
@@ -44,6 +49,7 @@ const options = [
 ];
 
 const AssignemntNewDeviceInInventory = () => {
+  const [returningDate, setReturningDate] = useState(new Date());
   const [selectedItem, setSelectedItem] = useState("");
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState(options[0].value);
@@ -332,6 +338,7 @@ const AssignemntNewDeviceInInventory = () => {
             current_location: locationSelection,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
+            return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -360,6 +367,7 @@ const AssignemntNewDeviceInInventory = () => {
           current_location: locationSelection,
           extra_serial_number: JSON.stringify(moreInfo),
           company_id: user.sqlInfo.company_id,
+          return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
@@ -847,6 +855,50 @@ const AssignemntNewDeviceInInventory = () => {
               options={options}
             />
           </InputLabel>
+          <div
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              display: `${
+                valueSelection === "Rent" || valueSelection === ""
+                  ? "flex"
+                  : "none"
+              }`,
+            }}
+          >
+            <Tooltip
+              placement="top"
+              title="Where the item is location physically."
+              style={{
+                width: "100%",
+              }}
+            >
+              <Typography
+                style={{
+                  ...TextFontSize14LineHeight20,
+                  fontWeight: 500,
+                  color: "var(--gray700, #344054)",
+                }}
+              >
+                Returning date <QuestionIcon />
+              </Typography>
+            </Tooltip>
+            <DatePicker
+              id="calender-event"
+              autoComplete="checking"
+              showTimeSelect
+              dateFormat="Pp"
+              minDate={new Date()}
+              selected={returningDate}
+              openToDate={new Date()}
+              startDate={new Date()}
+              onChange={(date) => setReturningDate(date)}
+              style={{
+                ...OutlinedInputStyle,
+                width: "100%",
+              }}
+            />
+          </div>
           <div style={{ width: "100%" }}>
             <InputLabel style={{ width: "100%" }}>
               <p style={{ ...Subtitle, textAlign: "left" }}>
