@@ -42,7 +42,10 @@ const eventSlice = createSlice({
     deviceSetup: [],
     contactInfo: undefined,
     qrCodeLink: undefined,
-    eventsPerAdmin: [],
+    eventsPerAdmin: {
+      adminUser: [],
+      headsetAttendees: [],
+    },
     existingDevicesInDBToBeUpdatedAfterSelectedInEvent: []
   },
   reducers: {
