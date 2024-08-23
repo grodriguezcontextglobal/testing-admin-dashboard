@@ -578,7 +578,6 @@ export const UploadIcon = () => {
 };
 
 export const GeneralDeviceIcon = ({ dimensions }) => {
-  console.log(dimensions);
   if (!dimensions?.width) {
     return (
       <svg
