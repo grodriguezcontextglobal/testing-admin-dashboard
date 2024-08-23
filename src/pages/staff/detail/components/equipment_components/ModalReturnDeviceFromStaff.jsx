@@ -9,6 +9,7 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import { useSelector } from "react-redux";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -16,6 +17,7 @@ const ModalReturnDeviceFromStaff = ({
   setOpenReturnDeviceStaffModal,
   deviceInfo,
 }) => {
+  const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit, watch } = useForm();
   const queryClient = useQueryClient();
   const handleReturnDevice = async (data) => {
@@ -28,7 +30,7 @@ const ModalReturnDeviceFromStaff = ({
         serial_number: deviceInfo.item_id_info.serial_number,
         category_name: deviceInfo.item_id_info.category_name,
         item_group: deviceInfo.item_id_info.item_group,
-        company: deviceInfo.item_id_info.company,
+        company_id: user.sqlInfo.company_id,
       }
     );
     if (respoUpdateDeviceInStock.data) {
@@ -66,7 +68,7 @@ const ModalReturnDeviceFromStaff = ({
       );
 
       if (eventInfoForRemovingRow.data) {
-       await devitrakApi.post("/db_record/removing-row-item-event-record", {
+        await devitrakApi.post("/db_record/removing-row-item-event-record", {
           item_id: deviceInfo.device_id,
           event_id: eventInfoForRemovingRow.data.result[0].event_id,
         });

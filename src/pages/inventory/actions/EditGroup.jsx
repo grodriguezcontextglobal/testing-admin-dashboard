@@ -36,8 +36,14 @@ import _ from "lodash";
 import "../../../styles/global/ant-select.css";
 import { formatDate } from "../utils/dateFormat";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../styles/global/reactInput.css";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
+  const [returningDate, setReturningDate] = useState(new Date());
   const [selectedItem, setSelectedItem] = useState("");
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState("");
@@ -63,7 +69,7 @@ const EditGroup = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id
+        _id: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -71,7 +77,7 @@ const EditGroup = () => {
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id
+        company_id: user.sqlInfo.company_id,
       }),
     refetchOnMount: false,
   });
@@ -121,6 +127,7 @@ const EditGroup = () => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(selectedItem)) {
       const dataToRetrieve = retrieveItemDataSelected().get(selectedItem);
+      console.log('data', dataToRetrieve)
       setValue("category_name", `${dataToRetrieve.category_name}`);
       setValue("cost", `${dataToRetrieve.cost}`);
       setValue("brand", `${dataToRetrieve.brand}`);
@@ -242,6 +249,9 @@ const EditGroup = () => {
               current_location: submitRef.current.location,
               updated_at: formatDate(new Date()),
               company: user.company,
+              return_date: `${
+                submitRef.current.ownership === "Rent" ? formatDate(returningDate) : null
+              }`,
             });
             if (
               !renderLocationOptions().some(
@@ -327,6 +337,9 @@ const EditGroup = () => {
             current_location: submitRef.current.location,
             updated_at: formatDate(new Date()),
             company: user.company,
+            return_date: `${
+              submitRef.current.ownership === "Rent" ? formatDate(returningDate) : null
+            }`,
           });
           if (
             !renderLocationOptions().some(
@@ -754,6 +767,50 @@ const EditGroup = () => {
                   options={options}
                 />
               </InputLabel>
+              <div
+              style={{
+                width: "100%",
+                flexDirection: "column",
+                display: `${
+                  (valueSelection === "Rent" || valueSelection === "")
+                    ? "flex"
+                    : "none"
+                }`,
+              }}
+            >
+              <Tooltip
+                placement="top"
+                title="Where the item is location physically."
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize14LineHeight20,
+                    fontWeight: 500,
+                    color: "var(--gray700, #344054)",
+                  }}
+                >
+                  Returning date <QuestionIcon />
+                </Typography>
+              </Tooltip>
+              <DatePicker
+                id="calender-event"
+                autoComplete="checking"
+                showTimeSelect
+                dateFormat="Pp"
+                minDate={new Date()}
+                selected={returningDate}
+                openToDate={new Date()}
+                startDate={new Date()}
+                onChange={(date) => setReturningDate(date)}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                }}
+              />
+            </div>
             </div>
           </div>
         </div>

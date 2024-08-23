@@ -31,6 +31,10 @@ import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFon
 import "../../../../../styles/global/ant-select.css";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../../styles/global/reactInput.css";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
@@ -38,6 +42,7 @@ const FormDeviceTrackingMethod = ({
   setDisplayFormToCreateCategory,
   existingData,
 }) => {
+  const [returningDate, setReturningDate] = useState(new Date());
   const [taxableLocation, setTaxableLocation] = useState("");
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -196,6 +201,7 @@ const FormDeviceTrackingMethod = ({
               existing: false,
               extra_serial_number: JSON.stringify(moreInfo),
               company_id: user.sqlInfo.company_id,
+              return_date: formatDate(returningDate),
             },
           ];
           setSelectedItem(resulting);
@@ -251,6 +257,7 @@ const FormDeviceTrackingMethod = ({
             existing: false,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
+            return_date: formatDate(returningDate),
           },
         ];
         if (
@@ -544,29 +551,30 @@ const FormDeviceTrackingMethod = ({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: "5px",
             }}
           >
             <div
               style={{
                 textAlign: "left",
-                width: "100%",
+                width: "50%",
                 display: "flex",
                 alignSelf: "flex-start",
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Tooltip title="Device added from this option would be set as rented Device.">
                 <Typography
                   textTransform={"none"}
                   textAlign={"left"}
                   style={{ ...Subtitle, fontWeight: 500 }}
                 >
                   Ownership status of items{" "}
-                  <Tooltip title="Device added from this option would be set as rented Device.">
-                    <strong>
+                    {/* <strong>
                       <QuestionIcon />
-                    </strong>
-                  </Tooltip>
+                    </strong> */}
                 </Typography>
+                  </Tooltip>
                 <OutlinedInput
                   disabled
                   style={OutlinedInputStyle}
@@ -575,6 +583,48 @@ const FormDeviceTrackingMethod = ({
                   fullWidth
                 />
               </InputLabel>
+            </div>
+            <div
+              style={{
+                textAlign: "left",
+                width: "50%",
+                display: "flex",
+                flexDirection: "column",
+                alignSelf: "flex-start",
+              }}
+            >
+              <Tooltip
+                placement="top"
+                title="Where the item is location physically."
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize14LineHeight20,
+                    fontWeight: 500,
+                    color: "var(--gray700, #344054)",
+                  }}
+                >
+                  Returning date <QuestionIcon />
+                </Typography>
+              </Tooltip>
+              <DatePicker
+                id="calender-event"
+                autoComplete="checking"
+                showTimeSelect
+                dateFormat="Pp"
+                minDate={new Date()}
+                selected={returningDate}
+                openToDate={new Date()}
+                startDate={new Date()}
+                onChange={(date) => setReturningDate(date)}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "90%",
+                }}
+              />
             </div>
           </div>
         </div>

@@ -9,15 +9,14 @@ import BannerMsg from "../../events/utils/BannerMsg";
 import { useEffect } from "react";
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
-
   const dispatch = useDispatch();
+
   const eventQuery = useQuery({
     queryKey: ["events"],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
-        company: user.company,
+        company: user.companyData.company_name,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -27,14 +26,21 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [user.company]);
+  }, []);
 
   const dataPerCompany = () => {
     const groupOfCompanies = eventQuery?.data?.data?.list;
     if (groupOfCompanies) return groupOfCompanies;
     return undefined;
   };
-  dataPerCompany();
+  useEffect(() => {
+    const controller = new AbortController();
+    dataPerCompany();
+    return () => {
+      controller.abort();
+    };
+  }, [eventQuery.data]);
+
   if (eventQuery.data) {
     const renderingDataBasedOnStaffAndActiveEvent = () => {
       let checking = [];

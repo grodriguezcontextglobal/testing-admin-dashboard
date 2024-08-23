@@ -206,7 +206,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           serial_number: data.device,
           category_name: props.category,
           item_group: data.type,
-          company: event.company,
+          company_id: user.sqlInfo.company_id,
         };
         await devitrakApi.post("/db_event/returning-item", deviceSQL);
         await devitrakApi.delete(`/receiver/delete-device-pool/${data.id}`);

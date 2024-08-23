@@ -38,9 +38,15 @@ import "../../../styles/global/ant-select.css";
 import { formatDate } from "../utils/dateFormat";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../styles/global/LightBlueButton";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../styles/global/reactInput.css";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");
+  const [returningDate, setReturningDate] = useState(new Date());
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState("");
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
@@ -69,7 +75,7 @@ const AddNewBulkItems = () => {
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id
+        _id: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -77,7 +83,7 @@ const AddNewBulkItems = () => {
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id
+        company_id: user.sqlInfo.company_id,
       }),
     refetchOnMount: false,
   });
@@ -241,6 +247,7 @@ const AddNewBulkItems = () => {
               company: user.company,
               extra_serial_number: JSON.stringify(moreInfo),
               company_id: user.sqlInfo.company_id,
+              return_date: `${valueSelection === "Rent" ? returningDate : null}`,
             });
             if (
               !renderLocationOptions().some(
@@ -320,6 +327,7 @@ const AddNewBulkItems = () => {
             company: user.company,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
+            return_date: `${valueSelection === "Rent" ? returningDate : null}`,
           });
           if (
             !renderLocationOptions().some(
@@ -642,6 +650,7 @@ const AddNewBulkItems = () => {
                 width: "100%",
                 display: "flex",
                 alignSelf: "flex-start",
+                gap:"5px"
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -676,6 +685,51 @@ const AddNewBulkItems = () => {
                   options={options}
                 />
               </InputLabel>
+              <div
+              style={{
+                width: "100%",
+                flexDirection: "column",
+                display: `${
+                  (valueSelection === "Rent" || valueSelection === "")
+                    ? "flex"
+                    : "none"
+                }`,
+              }}
+            >
+              <Tooltip
+                placement="top"
+                title="Where the item is location physically."
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize14LineHeight20,
+                    fontWeight: 500,
+                    color: "var(--gray700, #344054)",
+                  }}
+                >
+                  Returning date <QuestionIcon />
+                </Typography>
+              </Tooltip>
+              <DatePicker
+                id="calender-event"
+                autoComplete="checking"
+                showTimeSelect
+                dateFormat="Pp"
+                minDate={returningDate}
+                selected={returningDate}
+                openToDate={returningDate}
+                startDate={returningDate}
+                onChange={(date) => setReturningDate(date)}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                }}
+              />
+            </div>
+
             </div>
           </div>
         </div>

@@ -170,7 +170,7 @@ const ReviewAndSubmitEvent = () => {
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
     });
     if (newEventInfo.data.ok) {
-      const eventId = checkArray(newEventInfo.data.event)
+      const eventId = checkArray(newEventInfo.data.event);
       await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
         qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
       });
@@ -250,6 +250,7 @@ const ReviewAndSubmitEvent = () => {
               company: data.company,
               extra_serial_number: data.extra_serial_number,
               company_id: data.company_id,
+              return_date: data.return_date,
             });
           }
         }
@@ -369,35 +370,3 @@ const ReviewAndSubmitEvent = () => {
 };
 
 export default ReviewAndSubmitEvent;
-
-// const createDeviceRecordInNoSQLDatabase = async () => {
-//   for (let data of deviceSetup) {
-//     for (let index = Number(data.startingNumber); index <= Number(data.endingNumber); index++) {
-//       await devitrakApi.post('/receiver/receivers-pool', {
-//         device: String(index).padStart(data.startingNumber.length, `${data.startingNumber[0]}`), status: "Operational", activity: "NO", comment: "No comment", eventSelected: eventInfoDetail.eventName, provider: user.company, type: data.item_group,
-//       })
-//     }
-//   }
-// }
-
-// const createDeviceInEvent = async (newEventId) => {
-//   for (let data of deviceSetup) {
-//     const respoUpdating = await devitrakApi.post('/db_event/event_device', {
-//       event_id: newEventId,
-//       item_group: data.item_group,
-//       category_name: data.category_name,
-//       min_serial_number: data.startingNumber,
-//       max_serial_number: data.endingNumber
-//     })
-//     if (respoUpdating.data.ok) {
-//       await devitrakApi.post('/db_item/item-out-warehouse', {
-//         warehouse: false,
-//         company: user.company,
-//         item_group: data.item_group,
-//         min_serial_number: data.startingNumber,
-//         max_serial_number: data.endingNumber
-//       })
-//     }
-//   }
-//   await createDeviceRecordInNoSQLDatabase()
-// }

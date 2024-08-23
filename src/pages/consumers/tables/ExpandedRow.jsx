@@ -167,7 +167,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
           <Space
             size="middle"
             style={{
-              display: "flex",
+              display: `${typeof record.status !== 'string' && record.status && "flex"}`,
               justifyContent: "flex-end",
               alignItems: "center",
             }}

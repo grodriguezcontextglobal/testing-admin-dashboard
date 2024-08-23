@@ -11,6 +11,7 @@ import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
 const UpdatingConsumerLease = ({
@@ -19,6 +20,7 @@ const UpdatingConsumerLease = ({
   deviceInfo,
   refetching,
 }) => {
+  const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit, watch } = useForm();
   const queryClient = useQueryClient();
   const handleReturnDevice = async (data) => {
@@ -31,7 +33,7 @@ const UpdatingConsumerLease = ({
         serial_number: deviceInfo.item_id_info.serial_number,
         category_name: deviceInfo.item_id_info.category_name,
         item_group: deviceInfo.item_id_info.item_group,
-        company: deviceInfo.item_id_info.company,
+        company_id: user.sqlInfo.company_id,
       }
     );
     if (respoUpdateDeviceInStock.data) {

@@ -71,7 +71,7 @@ const EndEventButton = () => {
     queryKey: ["allInventoryOfSpecificEvent"],
     queryFn: () =>
       devitrakApi.post(`/db_event/event-inventory/${event.sql.event_id}`, {
-        company: user.company,
+        company: user.companyData.company_name,
         warehouse: false,
       }),
     refetchOnMount: false,
@@ -170,7 +170,7 @@ const EndEventButton = () => {
           serial_number: data.serial_number,
           category_name: data.category_name,
           item_group: data.item_group,
-          company: event.company,
+          company_id: user.sqlInfo.company_id,
         });
       } else {
         await devitrakApi.post("/db_event/returning-item", {
@@ -180,7 +180,7 @@ const EndEventButton = () => {
           serial_number: data.serial_number,
           category_name: data.category_name,
           item_group: data.item_group,
-          company: event.company,
+          company_id: user.sqlInfo.company_id
         });
       }
     }

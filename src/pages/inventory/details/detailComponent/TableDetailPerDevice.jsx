@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onAddStaffProfile } from "../../../../store/slices/staffDetailSlide";
-import '../../../../styles/global/ant-table.css';
 import { onAddEventData, onAddQRCodeLink, onSelectCompany, onSelectEvent } from "../../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
+import '../../../../styles/global/ant-table.css';
 const TableDetailPerDevice = ({ dataFound }) => {
     const { user } = useSelector((state) => state.admin)
     const { eventsPerAdmin } = useSelector((state) => state.event)
@@ -72,7 +72,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         
     }
     const checkIfEventShowedExistsInAdminEventList = (event_name) => {
-        if(eventsPerAdmin.length === 0) return alert("You're not assigned as staff to this event.");
+        if(eventsPerAdmin.active.length === 0) return alert("You're not assigned as staff to this event.");
         if(eventsPerAdmin.active.some(element => element.eventInfoDetail.eventName === event_name)){
             const eventInfo = eventsPerAdmin.active.find(element => element.eventInfoDetail.eventName === event_name)
             return storeEvntInfoFound(eventInfo);
