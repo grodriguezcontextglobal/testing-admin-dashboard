@@ -38,7 +38,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        // provider: event.company,
         company:user.companyData.id
       }),
     refetchOnMount: false,
@@ -63,17 +62,18 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       placement: "bottomRight",
     });
   };
-  //!refactoring functions to assign devices
   let serialNumber = watch("serialNumber");
   const sortAndFilterDeviceListPerCompanyAndEvent = () => {
     if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
-      // refDeviceSetInEvent.current =
-      //   checkDeviceInUseInOtherCustomerInTheSameEventQuery;
       return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
     }
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
+  const sortedByDevice = _.groupBy(
+    sortAndFilterDeviceListPerCompanyAndEvent(),
+    "device"
+  );
   const retrieveDeviceInfoSetInEventForConsumers = () => {
     const sortInventory = _.groupBy(
       sortAndFilterDeviceListPerCompanyAndEvent(),
@@ -97,21 +97,12 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   retrieveDeviceInfoSetInEventForConsumers();
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
     const dataToRetrieve = new Set();
-    for (let data of refDeviceSetInEvent.current) {
-      if (serialNumber?.length === data.startingNumber?.length) {
-        const start = data.startingNumber;
-        const end = data.endingNumber;
-        if (serialNumber >= start && serialNumber <= end) {
-          dataToRetrieve.add({
-            ...data,
-            deviceType: data.group,
-          });
-        }
-      } else {
-        return;
-      }
+    if (sortedByDevice[serialNumber]) {
+      refDeviceObjectRetrieve.current = sortedByDevice[serialNumber];
+      return sortedByDevice[serialNumber];
     }
     refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
+
     return Array.from(dataToRetrieve);
   };
   if (serialNumber?.length > 0) {
