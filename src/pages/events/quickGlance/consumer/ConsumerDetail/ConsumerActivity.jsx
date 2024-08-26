@@ -18,7 +18,7 @@ const ConsumerActivity = () => {
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
-        "consumerInfo.uid": customer.uid,
+        "consumerInfo.id": customer.id,
       }),
     refetchOnMount: false,
   });
