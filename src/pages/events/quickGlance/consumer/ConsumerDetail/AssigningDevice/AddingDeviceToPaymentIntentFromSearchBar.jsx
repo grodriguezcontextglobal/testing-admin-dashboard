@@ -50,13 +50,10 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        // provider: event.company,        
-        company:user.companyData.id,
+        company: user.companyData.id,
         activity: false,
       }),
-    // enabled: false,
     refetchOnMount: false,
-    cacheTime: 1000 * 60 * 3,
   });
 
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery =
@@ -69,16 +66,22 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       placement: "bottomRight",
     });
   };
-  //!refactoring functions to assign devices
   let serialNumber = watch("serialNumber");
   const sortAndFilterDeviceListPerCompanyAndEvent = () => {
     if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
-      // refDeviceSetInEvent.current = checkDeviceInUseInOtherCustomerInTheSameEventQuery;
       return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
     }
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
+  console.log(
+    "sortAndFilterDeviceListPerCompanyAndEvent()",
+    sortAndFilterDeviceListPerCompanyAndEvent()
+  );
+  const sortedByDevice = _.groupBy(
+    sortAndFilterDeviceListPerCompanyAndEvent(),
+    "device"
+  );
 
   const retrieveDeviceInfoSetInEventForConsumers = () => {
     const sortInventory = _.groupBy(
@@ -103,27 +106,17 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   retrieveDeviceInfoSetInEventForConsumers();
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
     const dataToRetrieve = new Set();
-    for (let data of refDeviceSetInEvent.current) {
-      if (serialNumber.length === data.startingNumber.length) {
-        const start = data.startingNumber;
-        const end = data.endingNumber;
-        if (serialNumber >= start && serialNumber <= end) {
-          dataToRetrieve.add({
-            ...data,
-            deviceType: data.group,
-          });
-        }
-      } else {
-        return;
-      }
+    if (sortedByDevice[serialNumber]) {
+      refDeviceObjectRetrieve.current = sortedByDevice[serialNumber];
+      return sortedByDevice[serialNumber];
     }
     refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
+
     return Array.from(dataToRetrieve);
   };
   if (serialNumber?.length > 0) {
     retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
   }
-
   const checkDeviceIsAssignedInEvent = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = _.groupBy(
@@ -132,10 +125,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       );
       if (deviceCheck[serialNumber]) {
         for (let data of deviceCheck[serialNumber]) {
-          if (
-            data.activity || //String(data.activity).toLowerCase() === "yes" ||
-            String(data.status).toLowerCase() === "lost"
-          ) {
+          if (data.activity || String(data.status).toLowerCase() === "lost") {
             openNotificationWithIcon(
               "info",
               `device ${serialNumber} is already assigned to other customer`
@@ -151,7 +141,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     }
   };
   checkDeviceIsAssignedInEvent();
-
   const retrieveDeviceDataInPoolToUpdateIt = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = _.groupBy(
@@ -167,7 +156,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       return [];
     }
   };
-
   const saveAndUpdateDeviceInPool = async () => {
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${
@@ -197,14 +185,16 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       !retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() ||
       retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
     ) {
-      return openNotificationWithIcon(
+      openNotificationWithIcon(
         "warning",
         `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`
       );
+      setValue("serialNumber", "");
+      return setSubmittedAction(false);
     }
     const newDeviceObject = {
       serialNumber: data.serialNumber,
-      deviceType: refDeviceObjectRetrieve.current.at(-1).deviceType,
+      deviceType: refDeviceObjectRetrieve.current.at(-1).type,
       status: true,
     };
 
@@ -216,6 +206,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       eventSelected: choice,
       provider: user.company,
       timeStamp: new Date().getTime(),
+      company:user.companyData.id
     };
     try {
       if (checkDeviceIsAssignedInEvent()) {
