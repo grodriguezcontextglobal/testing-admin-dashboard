@@ -21,7 +21,7 @@ import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
 const { PropTypes } = pkg;
 
-const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
+const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
     useState(false);
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
@@ -43,9 +43,8 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
-        "consumerInfo.uid": customer.uid,
+        "consumerInfo.id": customer.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
@@ -67,7 +66,7 @@ const StripeTransactionTable = ({ searchValue, refetchingTrigger }) => {
     return () => {
       controller.abort();
     };
-  }, [refetchingTrigger]);
+  }, [triggering]);
 
   const refetchingFn = () => {
     return deviceAssignedListQuery.refetch();

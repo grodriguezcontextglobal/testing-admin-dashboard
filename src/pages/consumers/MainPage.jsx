@@ -84,15 +84,14 @@ const MainPage = () => {
       }
     }
     const finalReturn = new Set();
-    for (let [ , value] of result) {
+    for (let [, value] of result) {
       finalReturn.add(value);
     }
-    const formattingResponse = [...responseData, ...Array.from(finalReturn)];
+
+    const formattingResponse = [...Array.from(finalReturn)];
     setLoadingState(false);
     return setResponseData(formattingResponse);
   };
-
-  // }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -122,6 +121,7 @@ const MainPage = () => {
       active: [],
       inactive: [],
     };
+
     if (result.has(true)) {
       returnValues.active = result.get(true);
     }
@@ -129,7 +129,8 @@ const MainPage = () => {
       returnValues.inactive = [...result.get(false)];
     }
     if (result.has("Lost")) {
-      returnValues.inactive = [...result.get(false), ...result.get("Lost")];
+      const lost = [...returnValues.inactive, ...result.get("Lost")];
+      returnValues.inactive = [...lost];
     }
     return setDataToRenderInComponent(returnValues);
   };

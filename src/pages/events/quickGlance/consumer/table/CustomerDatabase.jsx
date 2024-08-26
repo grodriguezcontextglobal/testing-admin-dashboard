@@ -17,11 +17,6 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   const { choice, event } = useSelector((state) => state.event);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const attendeesQuery = useQuery({
-  //   queryKey: ["consumersList"],
-  //   queryFn: () => devitrakApi.get("/auth/users"),
-  //   refetchOnMount: false,
-  // });
   const attendeesEventQuery = useQuery({
     queryKey: ["consumersList"],
     queryFn: () =>
@@ -41,11 +36,8 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   const queryClient = useQueryClient();
   const handleDataDetailUser = (record) => {
     let userFormatData = {
-      uid: record?.key,
-      name: record?.entireData?.name,
-      lastName: record?.entireData?.lastName,
-      email: record?.entireData?.email,
-      phoneNumber: record?.entireData?.phoneNumber,
+      ...record.entireData,
+      uid: record.entireData.id ?? record.entireData.uid,
     };
     dispatch(onAddCustomerInfo(userFormatData));
     dispatch(onAddCustomer(userFormatData));
@@ -160,16 +152,16 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     // const notElementToDelete = 0;
     let mapTemplate = {};
     for (let data of checkEventsPerCompany()) {
-        mapTemplate = {
-          company: [choice, user.company],
-          user: [data.name, data.lastName],
-          email: data.email,
-          key: data.id,
-          entireData: data,
-        };
-        result = [...result, mapTemplate]
-        // result.splice(index, notElementToDelete, mapTemplate);
-        // index--;
+      mapTemplate = {
+        company: [choice, user.company],
+        user: [data.name, data.lastName],
+        email: data.email,
+        key: data.id,
+        entireData: data,
+      };
+      result = [...result, mapTemplate];
+      // result.splice(index, notElementToDelete, mapTemplate);
+      // index--;
     }
     dispatch(onAddUsersOfEventList(result));
     return result;
