@@ -63,7 +63,7 @@ export const CreateNewConsumer = ({
   const [contactPhoneNumber, setContactPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin, event } = useSelector((state) => state.event);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
   const [api, contextHolder] = notification.useNotification();
   const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active];
   const openNotificationWithIcon = (type, msg) => {
@@ -74,6 +74,7 @@ export const CreateNewConsumer = ({
   };
   const queryClient = useQueryClient();
   const newConsumerAfterBeingCheck = async (data) => {
+    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo)
     const newUserProfile = {
       name: data.firstName,
       lastName: data.lastName,
@@ -82,9 +83,11 @@ export const CreateNewConsumer = ({
       privacyPolicy: true,
       category: "Regular",
       provider: [user.company],
-      eventSelected: [data.eventAssignedTo],
-      company_providers:[user.companyData.id],
-      event:[data.eventAssignedTo.id]
+      eventSelected: [
+        newEventToAddConsumer.eventInfoDetail.eventName,
+      ],
+      company_providers: [user.companyData.id],
+      event_providers: [newEventToAddConsumer.id],
     };
     const newUser = await devitrakApi.post("/auth/new", newUserProfile);
     if (newUser.data) {
@@ -112,11 +115,11 @@ export const CreateNewConsumer = ({
     return Array.from(result);
   };
   const updateExistingUserInRecord = async (data) => {
-    const { eventSelected, provider, id } = data.consumersList.at(-1);
+    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
+    const { event_providers, company_providers, eventSelected, provider, id } =
+      data.consumersList.at(-1);
     if (
-      eventSelected.some(
-        (element) => element === event.eventInfoDetail.eventName
-      )
+      event_providers.some((element) => element === newEventToAddConsumer.id)
     ) {
       alert(
         `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
@@ -127,11 +130,17 @@ export const CreateNewConsumer = ({
         id: id,
         eventSelected: zeroDuplications([
           ...eventSelected,
-          data.eventAssignedTo,
+          newEventToAddConsumer.eventInfoDetail.eventName,
         ]),
         provider: zeroDuplications([...provider, user.company]),
-        company_providers:zeroDuplications([...data.consumersList.at(-1).company_providers, user.companyData.id]),
-        event_providers:zeroDuplications([...data.consumersList.at(-1).event_providers, data.eventAssignedTo.id]),
+        company_providers: zeroDuplications([
+          ...company_providers,
+          user.companyData.id,
+        ]),
+        event_providers: zeroDuplications([
+          ...data.consumersList.at(-1).event_providers,
+          newEventToAddConsumer.id,
+        ]),
         phoneNumber: contactPhoneNumber,
       };
       const updatingUserInfoQuery = await devitrakApi.patch(
@@ -372,7 +381,7 @@ export const CreateNewConsumer = ({
                       {listOfAvailableEventsPerAdmin?.map((event) => {
                         return (
                           <MenuItem
-                            value={event?.eventInfoDetail?.eventName}
+                            value={JSON.stringify(event)}
                             key={event?.id}
                           >
                             <p style={paragraphStyle}>
