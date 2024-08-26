@@ -74,10 +74,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
-  console.log(
-    "sortAndFilterDeviceListPerCompanyAndEvent()",
-    sortAndFilterDeviceListPerCompanyAndEvent()
-  );
   const sortedByDevice = _.groupBy(
     sortAndFilterDeviceListPerCompanyAndEvent(),
     "device"
