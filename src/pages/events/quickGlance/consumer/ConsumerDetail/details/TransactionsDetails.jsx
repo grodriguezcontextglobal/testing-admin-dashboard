@@ -131,6 +131,7 @@ const TransactionsDetails = () => {
           <StripeTransactionTable
             searchValue={searchValue}
             refetchingTrigger={refetchingTrigger}
+            triggering={trigger}
           />
         </Grid>
       </Grid>
