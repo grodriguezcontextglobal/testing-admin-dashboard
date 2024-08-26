@@ -32,7 +32,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
-        "consumerInfo.uid": customer.uid,
+        "consumerInfo.id": customer.id,
       }),
     refetchOnMount: false,
   });
@@ -107,7 +107,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         "/receiver/receiver-pool-list",
         {
           eventSelected: event.eventInfoDetail.eventName,
-          company:user.companyData.id,
+          company: user.companyData.id,
           device: props.serialNumber,
           type: props.deviceType,
         }
@@ -185,7 +185,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         "/receiver/receiver-pool-list",
         {
           eventSelected: event.eventInfoDetail.eventName,
-          company:user.companyData.id,
+          company: user.companyData.id,
           device: props.serialNumber,
           type: props.deviceType,
         }
