@@ -52,24 +52,26 @@ const StaffTable = ({ searching }) => {
           });
         }
       }
-      for (let data of event.staff.headsetAttendees) {
-        if (groupingEmployees[data.email]) {
+      if (event.staff.headsetAttendees) {
+        for (let data of event.staff.headsetAttendees) {
+          if (groupingEmployees[data.email]) {
+            if (!result.has(data.email)) {
+              result.set(data.email, {
+                name: `${data.firstName} ${data.lastName}`,
+                role: "Assistant",
+                online: groupingEmployees[data.email].at(-1).online,
+                email: data.email,
+              });
+            }
+          }
           if (!result.has(data.email)) {
             result.set(data.email, {
               name: `${data.firstName} ${data.lastName}`,
               role: "Assistant",
-              online: groupingEmployees[data.email].at(-1).online,
+              online: false,
               email: data.email,
             });
           }
-        }
-        if (!result.has(data.email)) {
-          result.set(data.email, {
-            name: `${data.firstName} ${data.lastName}`,
-            role: "Assistant",
-            online: false,
-            email: data.email,
-          });
         }
       }
     };
