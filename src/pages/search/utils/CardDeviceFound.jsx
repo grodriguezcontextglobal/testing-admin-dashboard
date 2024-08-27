@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { GeneralDeviceIcon } from "../../../components/icons/Icons";
 const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
   return (
     <Card
@@ -32,7 +33,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
             style={{ objectFit: "cover", height: "auto", width: "70%" }}
           />
         ) : (
-          ""
+          <GeneralDeviceIcon dimensions={{width:"150px", height:"auto"}}/>
         )}
       </div>
       <div
@@ -65,7 +66,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
       >
         {props?.type}
       </div>
-      <Divider style={{margin:"5px 0 10px"}} />
+      <Divider style={{ margin: "5px 0 10px" }} />
       <div
         style={{
           width: "100%",
