@@ -92,16 +92,10 @@ const AssignemntNewDeviceInInventory = () => {
       }),
     refetchOnMount: false,
   });
-  const check = async () => {
-    await devitrakApi.post("/db_staff/consulting-member", {
-      email: profile.email,
-    });
-  };
   useEffect(() => {
     const controller = new AbortController();
     companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
-    check();
     return () => {
       controller.abort();
     };
