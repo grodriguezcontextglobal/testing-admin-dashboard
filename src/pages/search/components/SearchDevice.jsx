@@ -29,11 +29,21 @@ const SearchDevice = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const eventInventoryQuery = useQuery({
+    queryKey: ["eventInventoryQuery"],
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        company: user.companyData.id,
+        device: searchParams,
+      }),
+    refetchOnMount: false,
+  });
+
   const staffMembersQuery = useQuery({
     queryKey: ["listOfAssignedReceivers"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
-        company: user.company,
+        company: user.companyData.id,
         "device.serialNumber": searchParams,
         "device.status": true,
       }),
@@ -44,7 +54,8 @@ const SearchDevice = ({ searchParams }) => {
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
-        warehouse: 0,
+        warehouse: 1,
+        serial_number: searchParams,
       }),
     refetchOnMount: false,
   });
@@ -57,7 +68,6 @@ const SearchDevice = ({ searchParams }) => {
       }),
     refetchOnMount: false,
   });
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -69,7 +79,7 @@ const SearchDevice = ({ searchParams }) => {
       const fetchingDataPerEvent = await devitrakApi.post(
         "/receiver/receiver-assigned-users-list",
         {
-          company: user.company,
+          company: user.companyData.id,
           "device.serialNumber": searchParams,
           "device.status": true,
           eventSelected: data.eventInfoDetail.eventName,
@@ -79,7 +89,10 @@ const SearchDevice = ({ searchParams }) => {
         Array.isArray(fetchingDataPerEvent.data.listOfReceivers) &&
         fetchingDataPerEvent.data.listOfReceivers.length > 0
       ) {
-        result.add(fetchingDataPerEvent.data.listOfReceivers.at(-1));
+        result.add({
+          ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
+          eventInfo: data,
+        });
       }
     }
     return setFoundDeviceData(Array.from(result));
@@ -88,16 +101,16 @@ const SearchDevice = ({ searchParams }) => {
     const controller = new AbortController();
     staffMembersQuery.refetch();
     imageDeviceQuery.refetch();
+    eventInventoryQuery.refetch();
     deviceInUseStaffMemberQuery.refetch();
+    console.log(eventInventoryQuery?.data?.data);
     fetchActiveAssignedDevicesPerEvent();
     return () => {
       controller.abort();
     };
   }, [searchParams]);
-
   const sortAndRenderFoundData = () => {
     if (staffMembersQuery.data && deviceInUseStaffMemberQuery.data) {
-      // const foundData = [...staffMembersQuery.data.data.listOfReceivers];
       const foundData = [...foundDeviceData];
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
@@ -140,10 +153,10 @@ const SearchDevice = ({ searchParams }) => {
         user: userProfile,
         device: respTransaction.data.list[0].device[0].deviceNeeded,
       };
-     const eventInfo = await devitrakApi.post("/event/event-list", {
+      const eventInfo = await devitrakApi.post("/event/event-list", {
         company: user.company,
-        "eventInfoDetail.eventName":record.event,
-      })
+        "eventInfoDetail.eventName": record.event,
+      });
 
       const eventInfoSqlDB = await devitrakApi.post(
         "/db_event/events_information",
@@ -246,11 +259,7 @@ const SearchDevice = ({ searchParams }) => {
               transaction: record.data.paymentIntent,
               date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
-              link: `https://app.devitrak.net/authentication/${encodeURI(
-                record.data.eventSelected[0]
-              )}/${encodeURI(record.data.provider[0])}/${
-                record.data.userInfo.id
-              }`,
+              link: `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`,
             }
           );
           setLoadingStatus(false);
