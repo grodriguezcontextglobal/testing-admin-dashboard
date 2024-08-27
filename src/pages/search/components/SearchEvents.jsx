@@ -27,7 +27,6 @@ const SearchEvents = ({ searchParams }) => {
         company: user.company,
         active: true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -77,9 +76,7 @@ const SearchEvents = ({ searchParams }) => {
     dispatch(
       onAddQRCodeLink(
         record.data.qrCodeLink ??
-          `https://app.devitrak.net/?event=${encodeURI(
-            record.eventInfoDetail.eventName
-          )}&company=${encodeURI(record.company)}`
+          `https://app.devitrak.net/?event=${record.id}&company=${user.companyData.id}`
       )
     );
     return navigate("/events/event-quickglance");
@@ -143,6 +140,7 @@ const SearchEvents = ({ searchParams }) => {
           <Grid container gap={1}>
             {sortAndRenderFoundData()?.length > 0 ? (
               sortAndRenderFoundData()?.map((item) => (
+                console.log(item),
                 <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                   {" "}
                   <CardEventsFound

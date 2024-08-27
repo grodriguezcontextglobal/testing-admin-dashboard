@@ -167,9 +167,7 @@ const ConsumerDeviceLostFeeCash = () => {
           },
           transaction:
             checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
-          link: `https://app.devitrak.net/authentication/${encodeURI(
-            event.eventInfoDetail.eventName
-          )}/${encodeURI(event.company)}/${customer.uid}`,
+          link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
         });
         await messageApi.destroy;
         navigator(`/consumers/${customer.uid}`);

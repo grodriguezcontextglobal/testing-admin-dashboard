@@ -221,9 +221,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
         time: dateSplitting[4],
         transaction:
           verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
-        link: `https://app.devitrak.net/authentication/${encodeURI(
-          event.eventInfoDetail.eventName
-        )}/${encodeURI(event.company)}/${customer.uid}`,
+        link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
       });
       navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
     }
