@@ -41,7 +41,7 @@ const DeviceDatabase = ({ searchDevice }) => {
                   fontWeight: `${index === 0 ? "500" : null}`,
                 }}
               >
-                <Typography textTransform={"capitalize"}>{detail}</Typography>
+                <Typography textTransform={"none"}>{detail}</Typography>
               </div>
             );
           })}
