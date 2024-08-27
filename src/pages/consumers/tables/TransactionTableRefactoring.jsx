@@ -21,7 +21,7 @@ const TransactionTableRefactoring = () => {
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
-        "consumerInfo.uid": customer.uid,
+        "consumerInfo.id": customer.id,
       }),
     refetchOnMount: false,
   });

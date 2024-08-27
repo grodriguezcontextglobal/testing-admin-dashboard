@@ -80,7 +80,7 @@ export default function TablesConsumers({
         "/receiver/receiver-assigned-users-list",
         {
           user: data.email,
-          company:user.companyData.id
+          company: user.companyData.id,
         }
       );
       if (fetching.data.ok) {
