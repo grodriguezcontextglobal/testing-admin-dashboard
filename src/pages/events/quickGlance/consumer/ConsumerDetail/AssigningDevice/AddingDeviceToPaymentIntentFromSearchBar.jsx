@@ -254,7 +254,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
               date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
               transaction: paymentIntentDetailSelected.paymentIntent,
-              link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`,
+              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
             });
           }
 
