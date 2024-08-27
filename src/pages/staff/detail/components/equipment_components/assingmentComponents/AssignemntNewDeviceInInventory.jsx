@@ -92,14 +92,21 @@ const AssignemntNewDeviceInInventory = () => {
       }),
     refetchOnMount: false,
   });
+  const check = async () => {
+    await devitrakApi.post("/db_staff/consulting-member", {
+      email: profile.email,
+    });
+  };
   useEffect(() => {
     const controller = new AbortController();
     companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
+    check();
     return () => {
       controller.abort();
     };
   }, []);
+
   const retrieveItemOptions = () => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
@@ -162,15 +169,37 @@ const AssignemntNewDeviceInInventory = () => {
     const staffMember = await devitrakApi.post("/db_staff/consulting-member", {
       email: profile.email,
     });
-    for (let data of props.deviceInfo) {
-      await devitrakApi.post("/db_lease/new-lease", {
-        staff_admin_id: user.sqlMemberInfo.staff_id,
-        company_id: user.sqlInfo.company_id,
-        subscription_expected_return_data: formatDate(new Date()),
-        location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
-        staff_member_id: staffMember.data.member.at(-1).staff_id,
-        device_id: data.item_id,
+    if (staffMember.data.member.length > 0) {
+      for (let data of props.deviceInfo) {
+        await devitrakApi.post("/db_lease/new-lease", {
+          staff_admin_id: user.sqlMemberInfo.staff_id,
+          company_id: user.sqlInfo.company_id,
+          subscription_expected_return_data: formatDate(new Date()),
+          location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
+          staff_member_id: staffMember.data.member.at(-1).staff_id,
+          device_id: data.item_id,
+        });
+      }
+    } else {
+      const newStaffMember = await devitrakApi.post("/db_staff/new_member", {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        email: profile.email,
+        phone_number: "000-000-0000",
       });
+      if(newStaffMember.data.result.insertId){
+        for (let data of props.deviceInfo) {
+          await devitrakApi.post("/db_lease/new-lease", {
+            staff_admin_id: user.sqlMemberInfo.staff_id,
+            company_id: user.sqlInfo.company_id,
+            subscription_expected_return_data: formatDate(new Date()),
+            location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
+            staff_member_id: newStaffMember.data.result.insertId,
+            device_id: data.item_id,
+          });
+        }
+  
+      }
     }
   };
   const createEvent = async (props) => {
@@ -338,7 +367,9 @@ const AssignemntNewDeviceInInventory = () => {
             current_location: locationSelection,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
-            return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
+            return_date: `${
+              valueSelection === "Rent" ? formatDate(returningDate) : null
+            }`,
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -367,7 +398,9 @@ const AssignemntNewDeviceInInventory = () => {
           current_location: locationSelection,
           extra_serial_number: JSON.stringify(moreInfo),
           company_id: user.sqlInfo.company_id,
-          return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
+          return_date: `${
+            valueSelection === "Rent" ? formatDate(returningDate) : null
+          }`,
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
