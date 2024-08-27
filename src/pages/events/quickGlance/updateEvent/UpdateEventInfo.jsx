@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Modal, notification } from "antd";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
@@ -12,8 +12,27 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { useQuery } from "@tanstack/react-query";
 
 const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
+  const { user } = useSelector((state) => state.admin);
+  const eventInventoryQuery = useQuery({
+    queryKey: ["eventInventoryQuery"],
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        company: user.companyData.id,
+        eventSelected: event.eventInfoDetail.eventName,
+      }),
+    refetchOnMount: false,
+  });
+  useEffect(() => {
+    const controller = new AbortController();
+    eventInventoryQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   const { event } = useSelector((state) => state.event);
   const [begin, setBegin] = useState(
     new Date(event?.eventInfoDetail?.dateBegin) ?? new Date()
@@ -23,7 +42,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
   );
   const cityAndState = event.eventInfoDetail.eventLocation.split(",");
   const street = event.eventInfoDetail.address.split(",");
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -84,7 +103,9 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
       setTimeout(() => {
         setLoading(false);
         reset({});
-        dispatch(onAddEventData({ ...event, eventInfoDetail: eventInfoProfile }));
+        dispatch(
+          onAddEventData({ ...event, eventInfoDetail: eventInfoProfile })
+        );
 
         openNotificationWithIcon(
           "success",
@@ -92,14 +113,12 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
         );
         closeModal();
       }, 2500);
-      
     }
     setTimeout(() => {
       setLoading(false);
       reset({});
       closeModal();
     }, 2500);
-    
   };
   const renderTitle = () => {
     return (
@@ -155,6 +174,10 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
           </InputLabel>
           <OutlinedInput
             id="eventName"
+            required
+            disabled={
+              eventInventoryQuery?.data?.data?.receiversInventory.length > 0
+            }
             {...register("eventName", { required: true })}
             aria-invalid={errors.eventName}
             style={{
@@ -165,11 +188,6 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
             placeholder="Event name"
             fullWidth
           />
-          <div style={{ width: "100%" }}>
-            {errors?.eventName && (
-              <Typography>This field is required</Typography>
-            )}
-          </div>
           <div
             style={{
               width: "100%",
@@ -365,7 +383,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
               alignItems: "center",
               textAlign: "left",
               gap: "10px",
-              margin: "0 0 0.5rem"
+              margin: "0 0 0.5rem",
             }}
           >
             <div
@@ -443,7 +461,11 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
               />
             </div>
           </div>
-          <Button htmlType="submit" loading={loading} style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
+          <Button
+            htmlType="submit"
+            loading={loading}
+            style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+          >
             <Typography style={BlueButtonText}>Update</Typography>
           </Button>
         </form>
