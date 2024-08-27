@@ -103,7 +103,6 @@ const SearchDevice = ({ searchParams }) => {
     imageDeviceQuery.refetch();
     eventInventoryQuery.refetch();
     deviceInUseStaffMemberQuery.refetch();
-    console.log(eventInventoryQuery?.data?.data);
     fetchActiveAssignedDevicesPerEvent();
     return () => {
       controller.abort();
