@@ -50,6 +50,12 @@ const InvitationLanding = () => {
     queryFn: () => devitrakApi.post("/staff/admin-users", { email: email }),
     refetchOnMount: false,
   });
+  const sqlSavedStaffQuery = useQuery({
+    queryKey: ["sqlStaffMember"],
+    queryFn: () => devitrakApi.post("/db_staff/consulting-member", { email: email }),
+    refetchOnMount: false,
+  });
+
   const companiesQuery = useQuery({
     queryKey: ["companyListQuery"],
     queryFn: () =>
@@ -73,6 +79,7 @@ const InvitationLanding = () => {
     const controller = new AbortController();
     allStaffSavedQuery.refetch();
     companiesQuery.refetch();
+    sqlSavedStaffQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -81,6 +88,20 @@ const InvitationLanding = () => {
   const newUser = useRef(null);
   if (allStaffSavedQuery.data && companiesQuery.data) {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
+    const createNewStaffSQL = async () => {
+      return await devitrakApi.post("/db_staff/new_member", {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone_number: "000-000-0000",
+      });
+    };
+    const checkStaffInSQLDatabase = () => {
+      if (sqlSavedStaffQuery.data.data.member.length === 0) {
+        return createNewStaffSQL();
+      }
+    };
+
     const checkIfUserExistsInOtherCompany = () => {
       if (
         allStaffSavedQuery.data.data.adminUsers &&
@@ -179,20 +200,22 @@ const InvitationLanding = () => {
             employees: employeesInCompany,
           }
         );
+        await createNewStaffSQL();
       }
     };
     const completeSubmitInfo = async (data) => {
       try {
         setLoadingStatus(true);
         if (checkIfUserExistsInOtherCompany()) {
-          updateExistingUser();
+          await updateExistingUser();
         } else {
           if (data.password !== data.password2) {
             setLoadingStatus(false);
             return warning("error", "passwords must match.");
           }
-          createNewUser(data);
+          await createNewUser(data);
         }
+        await checkStaffInSQLDatabase()
         warning(
           "success",
           "Process completed successfully. Please go to log in to log in into your account."

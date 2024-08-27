@@ -48,7 +48,9 @@ const MainPage = () => {
 
   let counter = 0;
   const listOfEventsPerAdmin = () => {
-    let events = [...eventsPerAdmin.active, ...eventsPerAdmin.completed];
+    const active = eventsPerAdmin.active ?? [];
+    const completed = eventsPerAdmin.completed ?? [];
+    let events = [...active, ...completed];
     const result = new Set();
     for (let data of events) {
       result.add(JSON.stringify(data));

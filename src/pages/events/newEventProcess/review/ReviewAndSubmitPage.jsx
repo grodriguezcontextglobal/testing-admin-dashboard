@@ -161,7 +161,7 @@ const ReviewAndSubmitEvent = () => {
     const newEventInfo = await devitrakApi.post("/event/create-event", {
       user: user.email,
       company: user.company,
-      subscription: subscription,
+      subscription: [],
       eventInfoDetail: eventInfoDetail,
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),

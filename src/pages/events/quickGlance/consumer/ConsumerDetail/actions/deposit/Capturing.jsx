@@ -41,6 +41,7 @@ const Capturing = ({
     (state) => state.stripe
   );
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector(state => state.admin)
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
@@ -119,9 +120,7 @@ const Capturing = ({
             date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
             time: dateRef[4],
             company: event.company,
-            link: `https://app.devitrak.net/authentication/${encodeURI(
-              event.eventInfoDetail.eventName
-            )}/${encodeURI(event.company)}/${customer.uid}`,
+            link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
           });
           queryClient.invalidateQueries({
             queryKey: ["transactionPerConsumerListQuery"],

@@ -169,9 +169,7 @@ const Cash = () => {
           date: dateSplitting.slice(0, 4),
           time: dateSplitting[4],
           transaction: checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
-          link: `https://app.devitrak.net/authentication/${encodeURI(
-              event.eventInfoDetail.eventName
-            )}/${encodeURI(event.company)}/${customer.uid}`
+          link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`
 
         });
         await messageApi.destroy

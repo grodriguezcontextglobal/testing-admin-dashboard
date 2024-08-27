@@ -6,13 +6,13 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
 import _ from "lodash";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { devitrakApi, devitrakApiAdmin } from "../../../../../../api/devitrakApi";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
@@ -33,27 +33,24 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     setValue,
   } = useForm();
   const queryClient = useQueryClient();
-  const deviceInPoolQuery = useQuery({
+  const saveDevicesAssignedListInDataBasedMutation = useMutation({
+    mutationFn: (template) => {
+      devitrakApiAdmin.post("/receiver-assignation", template);
+    },
+  });
+const deviceInPoolQuery = useQuery({
     queryKey: ["poolInfoQuery"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
+        activity: false,
       }),
     refetchOnMount: false,
   });
 
   const checkDeviceInUseInOtherCustomerInTheSameEventQuery =
     deviceInPoolQuery?.data?.data?.receiversInventory;
-
-  useEffect(() => {
-    const controller = new AbortController();
-    deviceInPoolQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, message) => {
     api.open({
@@ -74,6 +71,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     sortAndFilterDeviceListPerCompanyAndEvent(),
     "device"
   );
+
   const retrieveDeviceInfoSetInEventForConsumers = () => {
     const sortInventory = _.groupBy(
       sortAndFilterDeviceListPerCompanyAndEvent(),
@@ -108,16 +106,15 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   if (serialNumber?.length > 0) {
     retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
   }
-
   const checkDeviceIsAssignedInEvent = () => {
-    if (sortAndFilterDeviceListPerCompanyAndEvent()?.length > 0) {
+    if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = _.groupBy(
         sortAndFilterDeviceListPerCompanyAndEvent(),
         "device"
       );
       if (deviceCheck[serialNumber]) {
         for (let data of deviceCheck[serialNumber]) {
-          if (data.activity || data.status === "Lost") {
+          if (data.activity || String(data.status).toLowerCase() === "lost") {
             openNotificationWithIcon(
               "info",
               `device ${serialNumber} is already assigned to other customer`
@@ -133,9 +130,8 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     }
   };
   checkDeviceIsAssignedInEvent();
-
   const retrieveDeviceDataInPoolToUpdateIt = () => {
-    if (sortAndFilterDeviceListPerCompanyAndEvent()?.length > 0) {
+    if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = _.groupBy(
         sortAndFilterDeviceListPerCompanyAndEvent(),
         "device"
@@ -163,7 +159,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   };
   const createEventInTransactionLog = async () => {
     await devitrakApi.post("/transaction-audit-log/create-audit", {
-      transaction: record?.paymentIntent,
+      transaction: record.paymentIntent,
       user: user.email,
       actionTaken: `Receivers ${serialNumber} were assigned to transaction`,
       time: `${new Date()}`,
@@ -171,20 +167,23 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       company: user.company,
     });
   };
+
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true);
     if (
       !retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() ||
-      retrieveDeviceSetupValueBaseOnTypeOfSerialNumber()?.length < 1
+      retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
     ) {
-      return openNotificationWithIcon(
+      openNotificationWithIcon(
         "warning",
-        `Serial number ${serialNumber} is out of valid range for this event, please review and try another serial number.`
+        `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`
       );
+      setValue("serialNumber", "");
+      return setSubmittedAction(false);
     }
     const newDeviceObject = {
       serialNumber: data.serialNumber,
-      deviceType: refDeviceObjectRetrieve.current.at(-1).deviceType,
+      deviceType: refDeviceObjectRetrieve.current.at(-1).type,
       status: true,
     };
 
@@ -200,16 +199,17 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     };
     try {
       if (checkDeviceIsAssignedInEvent()) {
-        const resp = await devitrakApi.post(
-          "/receiver/receiver-assignation",
+        const resp = await devitrakApiAdmin.post(
+          "/receiver-assignation",
           template
         );
         saveAndUpdateDeviceInPool();
         await createEventInTransactionLog();
+
         if (resp.data.ok) {
           dispatch(
             onAddDevicesAssignedInPaymentIntent(
-              resp.data.receiversAssignedPerUser
+              saveDevicesAssignedListInDataBasedMutation.data
             )
           );
           queryClient.invalidateQueries({
@@ -230,25 +230,26 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           });
           deviceInPoolQuery.refetch();
           refetchingFn();
-          const dateString = new Date().toString();
-          const dateRef = dateString.split(" ");
-          //* check if reach device requested to notify
-          await devitrakApi.post("/nodemailer/assignig-device-notification", {
-            consumer: {
-              name: `${customer.name} ${customer.lastName}`,
-              email: customer.email,
-            },
-            device: {
-              serialNumber: newDeviceObject.serialNumber,
-              deviceType: newDeviceObject.deviceType,
-            },
-            event: event.eventInfoDetail.eventName,
-            company: event.company,
-            date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            time: dateRef[4],
-            transaction: record.paymentIntent,
-            link: `https://app.devitrak.net/authentication/${event.eventInfoDetail.eventName}/${event.company}/${customer.uid}`,
-          });
+          if (record.device[0].deviceNeeded == 1) {
+            const dateString = new Date().toString();
+            const dateRef = dateString.split(" ");
+            await devitrakApi.post("/nodemailer/assignig-device-notification", {
+              consumer: {
+                name: `${customer.name} ${customer.lastName}`,
+                email: customer.email,
+              },
+              device: {
+                serialNumber: newDeviceObject.serialNumber,
+                deviceType: newDeviceObject.deviceType,
+              },
+              event: event.eventInfoDetail.eventName,
+              company: event.company,
+              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              time: dateRef[4],
+              transaction: record.paymentIntent,
+              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.id ?? customer.iud}`,
+            });
+          }
 
           openNotificationWithIcon(
             "success",

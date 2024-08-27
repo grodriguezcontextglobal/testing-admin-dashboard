@@ -31,6 +31,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
   const assignedDevicesQuery = useQuery({
     queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
@@ -301,9 +302,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                 transaction: props.entireData.paymentIntent,
                 date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                 time: dateRef[4],
-                link: `https://app.devitrak.net/authentication/${encodeURI(
-                  props.entireData.eventSelected[0]
-                )}/${encodeURI(props.entireData.provider[0])}/${customer.uid}`,
+                link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
               }
             );
             await assignedDevicesQuery.refetch();

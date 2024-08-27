@@ -2,16 +2,16 @@ import { Icon } from "@iconify/react";
 import { Button, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Table, Typography } from "antd";
-import { useEffect, useRef } from "react";
+import { PropTypes } from "prop-types";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
+import dicRole from "../../components/general/dicRole";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/ant-table.css";
-import dicRole from "../../components/general/dicRole";
-import { PropTypes } from "prop-types";
 const MainAdminSettingPage = ({
   searchAdmin,
   modalState,
@@ -20,7 +20,7 @@ const MainAdminSettingPage = ({
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const location = useLocation();
+  const [employeeListPerCompany, setEmployeeListPerCompany] = useState([]);
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
@@ -47,7 +47,7 @@ const MainAdminSettingPage = ({
     return () => {
       controller.abort();
     };
-  }, [location.key, user.company, modalState, deletingStaffMembers]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); //location.key, user.company, modalState, deletingStaffMembers
 
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record.entireData));
@@ -65,7 +65,6 @@ const MainAdminSettingPage = ({
     justifyContent: "flex-start",
     color: "var(--gray-600, #475467)",
   };
-  const employeeListRef = useRef([]);
 
   const employees = async () => {
     const result = new Set();
@@ -92,7 +91,7 @@ const MainAdminSettingPage = ({
         });
       }
     }
-    return (employeeListRef.current = Array.from(result));
+    return setEmployeeListPerCompany([...Array.from(result)]);
   };
   useEffect(() => {
     const controller = new AbortController();
@@ -100,12 +99,7 @@ const MainAdminSettingPage = ({
     return () => {
       controller.abort();
     };
-  }, [
-    location.key,
-    companiesEmployees.data,
-    searchAdmin?.length,
-    deletingStaffMembers,
-  ]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companiesEmployees.data, modalState, deletingStaffMembers]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const renderTernary = (props) => {
     if (typeof props === "string") {
@@ -358,26 +352,17 @@ const MainAdminSettingPage = ({
 
     const sortDataAdminUser = () => {
       if (!searchAdmin || String(searchAdmin)?.length > 0) {
-        const check = employeeListRef.current.filter(
-          (item) =>
-            String(item?.name)
-              ?.toLowerCase()
-              .includes(`${searchAdmin}`.toLowerCase()) ||
-            String(item?.lastName)
-              ?.toLowerCase()
-              .includes(`${searchAdmin}`.toLowerCase()) ||
-            String(item?.email)
-              ?.toLowerCase()
-              .includes(`${searchAdmin}`.toLowerCase())
+        const check = employeeListPerCompany.filter((item) =>
+          JSON.stringify(item)
+            .toLowerCase()
+            .includes(`${searchAdmin}`.toLowerCase())
         );
         return check;
       }
-      return employeeListRef.current;
+      return employeeListPerCompany;
     };
     const getInfoNeededToBeRenderedInTable = () => {
       let result = [];
-      let index = sortDataAdminUser().length - 1;
-      const notElementToDelete = 0;
       let mapTemplate = {};
       for (let data of sortDataAdminUser()) {
         mapTemplate = {
@@ -389,8 +374,7 @@ const MainAdminSettingPage = ({
           entireData: data,
           key: data.email,
         };
-        result.splice(index, notElementToDelete, mapTemplate);
-        index--;
+        result = [...result, mapTemplate];
       }
       return result;
     };

@@ -27,6 +27,7 @@ import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
 import { useEffect } from "react";
 import AssigmentAction from "./components/AssigmentAction";
+import NotesRendering from "./components/NotesCard";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
@@ -71,13 +72,16 @@ const DetailPerConsumer = () => {
       const result = customer?.data?.notes.filter(
         (ele) => ele.company === user.companyData.id
       );
-      let note = "";
       if (result) {
-        result.map((item) => (note += item.notes));
-        return note;
+        let final = []
+        final = [...final, ...result.map((item) => item.notes)];
+        // (note += item.notes)
+        return final;
       }
-      return []
+      return [];
     };
+
+    console.log('substracting ', substractingNotesAddedForCompany())
 
     return (
       <Grid
@@ -254,11 +258,15 @@ const DetailPerConsumer = () => {
           />
         </Grid>
         <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-          <CardRendered
+          <NotesRendering
+            title={"Notes"}
+            props={substractingNotesAddedForCompany()}
+          />
+          {/* <CardRendered
             title={"Notes"}
             props={substractingNotesAddedForCompany()}
             optional={null}
-          />
+          /> */}
         </Grid>
         <Divider />{" "}
         <p

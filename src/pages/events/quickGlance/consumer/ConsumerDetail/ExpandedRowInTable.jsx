@@ -163,9 +163,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
               transaction: rowRecord.paymentIntent,
               date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
-              link: `https://app.devitrak.net/authentication/${encodeURI(
-                event.eventInfoDetail.eventName
-              )}/${encodeURI(event.company)}/${customer.uid}`,
+              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
             }
           );
           openNotificationWithIcon("Device returned.");
@@ -246,9 +244,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             transaction: rowRecord.paymentIntent,
             date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
             time: dateRef[4],
-            link: `https://app.devitrak.net/authentication/${encodeURI(
-              event.eventInfoDetail.eventName
-            )}/${encodeURI(event.company)}/${customer.uid}`,
+            link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
           });
           openNotificationWithIcon("Device assigned.");
         }

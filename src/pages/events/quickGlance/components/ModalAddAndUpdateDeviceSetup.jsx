@@ -1,11 +1,10 @@
 import {
   Button,
   Chip,
-  Grid,
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Modal, Select, Tooltip } from "antd";
@@ -234,9 +233,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       centered
       maskClosable={false}
       footer={[]}
-      width={1000}
+      width={700}
     >
-      <Grid
+      {/* <Grid
         display={"flex"}
         flexDirection={"column"}
         justifyContent={"space-around"}
@@ -255,7 +254,7 @@ const ModalAddAndUpdateDeviceSetup = ({
           sm={12}
           md={12}
           lg={12}
-        >
+        > */}
           <form
             style={{
               width: "100%",
@@ -312,7 +311,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "flex-start",
+                justifyContent: "space-between",
                 alignItems: "center",
                 textAlign: "left",
                 gap: "10px",
@@ -321,7 +320,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               <div
                 style={{
                   textAlign: "left",
-                  width: "50%",
+                  width: "100%",
                   margin: "0.5rem 0",
                 }}
               >
@@ -343,7 +342,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               <div
                 style={{
                   textAlign: "left",
-                  width: "50%",
+                  width: "100%",
                   margin: "0.5rem 0",
                 }}
               >
@@ -454,8 +453,8 @@ const ModalAddAndUpdateDeviceSetup = ({
               Add devices to this event.
             </Typography>
           </Button>
-        </Grid>
-      </Grid>
+        {/* </Grid>
+      </Grid> */}
     </Modal>
   );
 };
