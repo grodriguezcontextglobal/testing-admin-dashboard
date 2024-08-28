@@ -41,6 +41,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../../../styles/global/reactInput.css";
 import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditItemModal = ({
@@ -713,14 +715,7 @@ const EditItemModal = ({
                 item
                 xs={12}
               >
-                <Typography
-                  color={"var(--gray-600, #475467)"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                >
+                <Typography style={Subtitle}>
                   SVG, PNG, JPG or GIF (max. 1MB)
                 </Typography>
               </Grid>
@@ -857,11 +852,8 @@ const EditItemModal = ({
                     onClick={() => closeModal()}
                     disabled={loadingStatus}
                     style={{
+                      ...GrayButton,
                       width: "100%",
-                      border: "1px solid var(--gray-300, #D0D5DD)",
-                      borderRadius: "8px",
-                      background: "var(--base-white, #FFF)",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                     }}
                   >
                     <Icon
@@ -874,11 +866,7 @@ const EditItemModal = ({
                     <Typography
                       textTransform={"none"}
                       style={{
-                        color: "#344054",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        fontFamily: "Inter",
-                        lineHeight: "20px",
+                        ...GrayButtonText,
                       }}
                     >
                       Go back
