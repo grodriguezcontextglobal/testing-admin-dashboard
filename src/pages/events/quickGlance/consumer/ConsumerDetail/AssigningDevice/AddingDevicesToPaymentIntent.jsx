@@ -12,9 +12,13 @@ import _ from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { devitrakApi, devitrakApiAdmin } from "../../../../../../api/devitrakApi";
+import {
+  devitrakApi,
+  devitrakApiAdmin,
+} from "../../../../../../api/devitrakApi";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const [submittedAction, setSubmittedAction] = useState(false);
   const { customer } = useSelector((state) => state.stripe);
@@ -38,7 +42,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       devitrakApiAdmin.post("/receiver-assignation", template);
     },
   });
-const deviceInPoolQuery = useQuery({
+  const deviceInPoolQuery = useQuery({
     queryKey: ["poolInfoQuery"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
@@ -170,6 +174,7 @@ const deviceInPoolQuery = useQuery({
 
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true);
+
     if (
       !retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() ||
       retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
@@ -186,22 +191,32 @@ const deviceInPoolQuery = useQuery({
       deviceType: refDeviceObjectRetrieve.current.at(-1).type,
       status: true,
     };
+    const template = new DeviceAssigned(
+      record.paymentIntent,
+      newDeviceObject,
+      record.consumerInfo.email,
+      true,
+      choice,
+      user.company,
+      new Date().getTime(),
+      user.companyData.id
+    );
 
-    const template = {
-      paymentIntent: record.paymentIntent,
-      device: newDeviceObject,
-      user: record.consumerInfo.email,
-      active: true,
-      eventSelected: choice,
-      provider: user.company,
-      timeStamp: new Date().getTime(),
-      company:user.companyData.id
-    };
+    // const template = {
+    //   paymentIntent: record.paymentIntent,
+    //   device: newDeviceObject,
+    //   user: record.consumerInfo.email,
+    //   active: true,
+    //   eventSelected: choice,
+    //   provider: user.company,
+    //   timeStamp: new Date().getTime(),
+    //   company: user.companyData.id,
+    // };
     try {
       if (checkDeviceIsAssignedInEvent()) {
         const resp = await devitrakApiAdmin.post(
           "/receiver-assignation",
-          template
+          template.render()
         );
         saveAndUpdateDeviceInPool();
         await createEventInTransactionLog();
@@ -247,7 +262,9 @@ const deviceInPoolQuery = useQuery({
               date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
               transaction: record.paymentIntent,
-              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.id ?? customer.iud}`,
+              link: `https://app.devitrak.net/authentication/${event.id}/${
+                user.companyData.id
+              }/${customer.id ?? customer.iud}`,
             });
           }
 
