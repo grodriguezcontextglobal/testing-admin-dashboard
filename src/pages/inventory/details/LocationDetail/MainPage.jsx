@@ -23,13 +23,17 @@ const MainPage = () => {
         totalAvailable:0
     })
     const location = useLocation()
-    const { register, watch } = useForm()
+    const locationName = location.search.split("&")[0]
+    const { register, watch } = useForm({
+        defaultValues:{
+            searchDevice:location.search.split("&")[1].split("=")[1]
+        }
+    })
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
     const isMediumDevice = useMediaQuery(
         "only screen and (min-width : 769px) and (max-width : 992px)"
     )
      const navigate = useNavigate()
-     const locationName = location.search.split("&")[0]
     return (
         <Grid
             style={{

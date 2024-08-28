@@ -30,7 +30,11 @@ const MainPageBrand = () => {
   });
   const location = useLocation();
   const brandName = location.search.split("&");
-  const { register, watch } = useForm();
+  const { register, watch } = useForm({
+    defaultValues: {
+      searchDevice: decodeURI(brandName[1].split("=")[1]),
+    },
+  });
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -245,6 +249,7 @@ const MainPageBrand = () => {
           <TableDeviceLocation
             searchItem={watch("searchDevice")}
             referenceData={setReferenceData}
+            // searchParameter={searchParameter}
           />
         </Grid>
       </Grid>
