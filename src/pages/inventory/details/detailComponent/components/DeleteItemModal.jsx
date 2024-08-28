@@ -13,12 +13,17 @@ import { Divider, Modal, notification } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { QuestionIcon } from "../../../../../components/icons/Icons";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const DeleteItemModal = ({
   dataFound,
@@ -31,7 +36,6 @@ const DeleteItemModal = ({
       devitrakApi.post("/company/search-company", {
         _id: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const itemsInInventoryQuery = useQuery({
@@ -40,7 +44,6 @@ const DeleteItemModal = ({
       devitrakApi.post("/db_item/consulting-item", {
         item_id: dataFound[0].item_id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const companyInfoQuery = useQuery({
@@ -51,6 +54,7 @@ const DeleteItemModal = ({
       }),
     refetchOnMount: false,
   });
+  const navigate = useNavigate()
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -63,7 +67,6 @@ const DeleteItemModal = ({
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
   } = useForm({
     defaultValues: {
       category_name: dataFound[0].category_name,
@@ -139,7 +142,7 @@ const DeleteItemModal = ({
       if (respAfterDelete.data) {
         const employees = companyInfoQuery.data.data.company[0].employees;
         for (let data of employees) {
-          if (data.role === "Administrator") {
+          if (Number(data.role) < 2) {
             const emailNotificationProfile = {
               staff: data.email,
               subject: "Device deleted in company records.",
@@ -150,7 +153,6 @@ const DeleteItemModal = ({
               } at Date ${new Date().toString()}`,
               company: user.company,
             };
-            // const respNotif = await devitrakApi.post(
             await devitrakApi.post(
               "/nodemailer/internal-single-email-notification",
               emailNotificationProfile
@@ -158,7 +160,7 @@ const DeleteItemModal = ({
           }
         }
         openNotificationWithIcon("success", "Device was deleted.");
-        closeModal();
+        navigate('/inventory');
       }
     } catch (error) {
       setLoadingStatus(false);
@@ -261,40 +263,19 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Category
                 </Typography>
               </InputLabel>
               <OutlinedInput
+                required
                 disabled
                 {...register("category_name")}
                 style={OutlinedInputStyle}
                 fullWidth
               />
-              {errors?.category_name && (
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={400}
-                  lineHeight={"20px"}
-                  color={"red"}
-                  width={"100%"}
-                  padding={"0.5rem 0"}
-                >
-                  {errors.category_name.type}
-                </Typography>
-              )}
               <div
                 style={{
                   textAlign: "left",
@@ -310,14 +291,8 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Device name
                 </Typography>
@@ -348,14 +323,8 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Brand
                 </Typography>
@@ -375,14 +344,8 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Taxable location
                 </Typography>
@@ -413,14 +376,8 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Cost of replace device
                 </Typography>
@@ -432,14 +389,8 @@ const DeleteItemModal = ({
                 startAdornment={
                   <InputAdornment position="start">
                     <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontStyle={"normal"}
-                      fontWeight={400}
-                      lineHeight={"20px"}
-                      color={"var(--gray-700, #344054)"}
+                      style={{ ...Subtitle, fontWeight: 400 }}
+                      fontWeight={500}
                     >
                       $
                     </Typography>
@@ -456,14 +407,8 @@ const DeleteItemModal = ({
             >
               <InputLabel style={{ width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Serial number
                 </Typography>
@@ -488,14 +433,8 @@ const DeleteItemModal = ({
           >
             <InputLabel style={{ width: "100%", marginBottom: "6px" }}>
               <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
+                style={{ ...Subtitle, fontWeight: 500 }}
                 fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
               >
                 Description of the device
               </Typography>
@@ -529,14 +468,8 @@ const DeleteItemModal = ({
             <div style={{ width: "100%" }}>
               <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Ownership status of item
                 </Typography>
@@ -551,14 +484,8 @@ const DeleteItemModal = ({
             <div style={{ width: "100%" }}>
               <InputLabel style={{ width: "100%" }}>
                 <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                   fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
                 >
                   Location{" "}
                   <Tooltip title="Where the item is location physically.">
@@ -596,11 +523,9 @@ const DeleteItemModal = ({
                   onClick={() => closeModal()}
                   disabled={loadingStatus}
                   style={{
+                    ...GrayButton,
+                    ...CenteringGrid,
                     width: "100%",
-                    border: "1px solid var(--gray-300, #D0D5DD)",
-                    borderRadius: "8px",
-                    background: "var(--base-white, #FFF)",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                   }}
                 >
                   <Icon
@@ -613,11 +538,7 @@ const DeleteItemModal = ({
                   <Typography
                     textTransform={"none"}
                     style={{
-                      color: "#344054",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
+                      ...GrayButtonText,
                     }}
                   >
                     Go back
@@ -653,11 +574,7 @@ const DeleteItemModal = ({
                 <Typography
                   textTransform={"none"}
                   style={{
-                    color: "var(--base-white, #FFF)",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
+                    ...DangerButtonText,
                   }}
                 >
                   Delete item
