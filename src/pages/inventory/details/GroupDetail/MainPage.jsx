@@ -30,7 +30,10 @@ const MainPageGrouping = () => {
   });
   const location = useLocation();
   const groupName = location.search.split("&");
-  const { register, watch } = useForm();
+  const { register, watch } = useForm({defaultValues:{
+    searchDevice: decodeURI(groupName[1].split("=")[1])
+
+  }});
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"

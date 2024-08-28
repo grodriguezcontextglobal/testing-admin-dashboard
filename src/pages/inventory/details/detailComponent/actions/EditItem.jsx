@@ -3,6 +3,8 @@ import { useWindowScroll } from "@uidotdev/usehooks";
 import { useState } from "react";
 import { EditIcon } from "../../../../../components/icons/Icons";
 import EditItemModal from "../components/EditItemModal";
+import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 
 const EditItem = ({ dataFound }) => {
   const [{ x, y }, scrollTo] = useWindowScroll();
@@ -15,30 +17,15 @@ const EditItem = ({ dataFound }) => {
           setOpenEditItemModal(true);
         }}
         style={{
-          outline: "none",
+          ...LightBlueButton,
+          width: "fit-content",
           display: "flex",
-          padding: "10px 16px",
           justifyContent: "center",
           alignItems: "center",
-          gap: "8px",
-          borderRadius: "8px",
-          border: "1px solid var(--Blue-dark-50, #EFF4FF)",
-          background: "var(--Blue-dark-50, #EFF4FF)",
+          margin: "0",
         }}
       >
-        <EditIcon />
-        <p
-          style={{
-            color: "var(--Blue-dark-700, #004EEB)",
-            fontFamily: "Inter",
-            fontSize: "14px",
-            fontStyle: "normal",
-            fontWeight: 600,
-            lineHeight: "20px",
-          }}
-        >
-          Edit
-        </p>
+        <p style={{ ...LightBlueButtonText, textAlign: "center" }}>Edit</p>
       </button>
       {openEditItemModal && (
         <EditItemModal

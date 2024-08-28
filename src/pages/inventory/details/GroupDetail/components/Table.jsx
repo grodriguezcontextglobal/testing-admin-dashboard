@@ -16,7 +16,6 @@ import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();
   const groupName = location.search.split("&");
-  const searchParameter = decodeURI(groupName[1].split("=")[1]);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
@@ -86,10 +85,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [user.company]);
 
   const dataToDisplay = () => {
-    if (
-      (!searchItem || searchItem === "") &&
-      (searchParameter === "undefined" || searchParameter === "")
-    ) {
+    if (!searchItem || searchItem === "") {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
@@ -100,13 +96,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
       );
-    } else if (String(searchParameter) !== "") {
-      return dataStructuringFormat()?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searchParameter).toLowerCase())
-      );
-    }
+    } 
   };
 
   const calculatingValue = () => {

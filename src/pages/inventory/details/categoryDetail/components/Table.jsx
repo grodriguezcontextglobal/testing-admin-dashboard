@@ -16,7 +16,6 @@ import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceCategory = ({ searchItem, referenceData }) => {
   const location = useLocation();
   const categoryName = location.search.split("&");
-  const searchParameter = decodeURI(categoryName[1].split("=")[1]);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
@@ -89,10 +88,10 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   }, [user.company, location.key]);
 
   const dataToDisplay = () => {
-    if (
-      (!searchItem || searchItem === "") &&
-      (searchParameter === "undefined" || searchParameter === "")
-    ) {
+    if 
+      (!searchItem || searchItem === "") 
+      // &&(searchParameter === "undefined" || searchParameter === "")
+ {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
@@ -102,12 +101,6 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
         JSON.stringify(item)
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
-      );
-    } else if (String(searchParameter) !== "") {
-      return dataStructuringFormat()?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searchParameter).toLowerCase())
       );
     }
   };
@@ -338,22 +331,6 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
         </span>
       ),
     },
-    // {
-    //   title: "Value",
-    //   dataIndex: "cost",
-    //   key: "cost",
-    //   sorter: {
-    //     compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
-    //   },
-    //   render: (cost) => (
-    //     <span style={cellStyle}>
-    //       {" "}
-    //       <Typography style={Subtitle} textTransform={"capitalize"}>
-    //         ${cost}
-    //       </Typography>
-    //     </span>
-    //   ),
-    // },
     {
       title: "",
       dataIndex: "data",
