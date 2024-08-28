@@ -14,7 +14,7 @@ const UpperBanner = () => {
                 }} component="nav">
                     <Toolbar>
                         <Typography
-                            style={{...Subtitle, color:"var(--gray300)", textAlign:"center", textTransform:"capitalize"}}
+                            style={{...Subtitle, color:"var(--gray300)", textAlign:"center", textTransform:"none"}}
                             padding={'0.8rem auto'}
                         >
                             {user.company}

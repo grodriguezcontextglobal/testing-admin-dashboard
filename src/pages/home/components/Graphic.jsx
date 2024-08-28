@@ -12,17 +12,19 @@ const Graphic = () => {
   const itemInInventoryQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", { company_id: user.sqlInfo.company_id }),
+      devitrakApi.post("/db_item/consulting-item", {
+        company_id: user.sqlInfo.company_id,
+      }),
     refetchOnMount: false,
   });
 
-  const foundAllDevicesGivenInEvent = useCallback(() => {
+  const foundAllDevicesGivenInEvent = () => {
     if (itemInInventoryQuery?.data?.data.ok) {
       const groupingByStatus = _.groupBy(
         itemInInventoryQuery.data.data.items,
         "warehouse"
       );
-      if (groupingByStatus[1]) {
+      if (groupingByStatus[0] || groupingByStatus[1]) {
         return {
           out: groupingByStatus[0] ?? [],
           in: groupingByStatus[1] ?? [],
@@ -31,7 +33,7 @@ const Graphic = () => {
       return [];
     }
     return [];
-  }, [itemInInventoryQuery.data]);
+  };
 
   const foundAllNoOperatingDeviceInEvent = useCallback(async () => {
     const result = new Map();
@@ -76,25 +78,33 @@ const Graphic = () => {
   useEffect(() => {
     const controller = new AbortController();
     foundAllNoOperatingDeviceInEvent();
-    foundAllDevicesGivenInEvent();
+    foundAllDevicesGivenInEvent()
+    console.log(foundAllDevicesGivenInEvent());
     lostDeviceInEvent();
     itemInInventoryQuery.refetch();
     return () => {
       controller.abort();
     };
   }, []);
-  const foundDevicesOut = useCallback(() => {
-    const check = foundAllDevicesGivenInEvent()["out"];
+
+  const foundDevicesOut = () => {
+    const check = foundAllDevicesGivenInEvent()['out'];
+    console.log("check", check);
     if (check) return check.length;
     return 0;
-  }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading]);
-  const foundDevicesInWarehouse = useCallback(() => {
-    const check = foundAllDevicesGivenInEvent()["in"];
+  };
+
+  const foundDevicesInWarehouse = () => {
+    const check = foundAllDevicesGivenInEvent()['in'];
     if (check) return check.length;
     return 0;
-  }, [itemInInventoryQuery.data, itemInInventoryQuery.isLoading]);
+  };
+
   const dataToExport = [
-    { name: "On hands (included not-functional)", value: foundDevicesInWarehouse() },
+    {
+      name: "On hands (included not-functional)",
+      value: foundDevicesInWarehouse(),
+    },
     { name: "Checked out", value: foundDevicesOut() },
     {
       name: "Not-Functional Report",
