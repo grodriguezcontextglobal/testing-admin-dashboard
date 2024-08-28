@@ -79,7 +79,6 @@ const Graphic = () => {
     const controller = new AbortController();
     foundAllNoOperatingDeviceInEvent();
     foundAllDevicesGivenInEvent()
-    console.log(foundAllDevicesGivenInEvent());
     lostDeviceInEvent();
     itemInInventoryQuery.refetch();
     return () => {
@@ -89,7 +88,6 @@ const Graphic = () => {
 
   const foundDevicesOut = () => {
     const check = foundAllDevicesGivenInEvent()['out'];
-    console.log("check", check);
     if (check) return check.length;
     return 0;
   };
