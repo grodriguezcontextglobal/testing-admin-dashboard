@@ -25,7 +25,7 @@ const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const roleDefinition = dicRole[Number(user.role)];
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, watch } = useForm({
     defaultValues: {
       name: user.name,
       lastName: user.lastName,
@@ -37,11 +37,31 @@ const Body = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = () => {
+  const openNotificationWithIcon = (msg, dur) => {
     api.open({
-      message: "Information updated",
+      message: msg,
+      duration: dur,
     });
   };
+  const originalDataRef = {
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone ?? "000-000-0000",
+    role: roleDefinition,
+  };
+  const checkIfOriginalDataHasChange = (props) => {
+    if (
+      originalDataRef[props] !== "" &&
+      originalDataRef[props] !== watch(`${props}`)
+    ) {
+      return openNotificationWithIcon(
+        "Please save updates before leave this tab.",
+        0
+      );
+    }
+  };
+
   const triggerRoutes = () => {
     if (Number(user.role) === Number("4")) {
       return navigate("/events");
@@ -143,7 +163,7 @@ const Body = () => {
           }
         );
 
-        openNotificationWithIcon();
+        openNotificationWithIcon({"Information updated": 3});
         return triggerRoutes();
       }
     } else {
@@ -187,7 +207,7 @@ const Body = () => {
           }
         );
 
-        openNotificationWithIcon();
+        openNotificationWithIcon({"Information updated": 3});
         return triggerRoutes();
       }
     }
@@ -252,6 +272,7 @@ const Body = () => {
               sm={6}
               md={6}
             >
+              {checkIfOriginalDataHasChange("name")}
               <OutlinedInput
                 style={{ ...OutlinedInputStyle }}
                 {...register("name", { required: true })}
@@ -269,6 +290,7 @@ const Body = () => {
               sm={6}
               md={6}
             >
+              {checkIfOriginalDataHasChange("lastName")}
               <OutlinedInput
                 style={{ ...OutlinedInputStyle }}
                 {...register("lastName", { required: true })}
@@ -307,6 +329,7 @@ const Body = () => {
             sm={6}
             md={6}
           >
+            {checkIfOriginalDataHasChange("phone")}
             <OutlinedInput
               style={{ ...OutlinedInputStyle }}
               {...register("phone", { required: true })}
@@ -344,6 +367,7 @@ const Body = () => {
             sm={6}
             md={6}
           >
+            {checkIfOriginalDataHasChange("email")}
             <OutlinedInput
               style={{ ...OutlinedInputStyle }}
               {...register("email", { required: true })}
@@ -459,6 +483,7 @@ const Body = () => {
                 item
                 xs={12}
               >
+                {checkIfOriginalDataHasChange("phone")}
                 <TextField
                   {...register("photo")}
                   id="file-upload"
@@ -515,6 +540,7 @@ const Body = () => {
             sm={6}
             md={6}
           >
+            {checkIfOriginalDataHasChange("role")}
             <OutlinedInput
               readOnly
               style={{ ...OutlinedInputStyle }}

@@ -38,9 +38,17 @@ const MainPage = () => {
   const trackingHistoryItemQuery = useQuery({
     queryKey: ["trackingItemActivity"],
     queryFn: () => devitrakApi.post(`/db_item/tracking_item/${item_id}`),
-    // enabled: false,
     refetchOnMount: false,
   });
+  const infoItemQuery = useQuery({
+    queryKey: ["infoItemSql"],
+    queryFn: () =>
+      devitrakApi.post(`/db_item/consulting-item`, {
+        item_id: item_id,
+      }),
+    refetchOnMount: false,
+  });
+
   const { register } = useForm();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -56,6 +64,7 @@ const MainPage = () => {
   useEffect(() => {
     const controller = new AbortController();
     trackingHistoryItemQuery.refetch();
+    infoItemQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -77,6 +86,7 @@ const MainPage = () => {
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
         data: { ...trackingHistoryItemQuery.data.data.result[0] },
+        itemInfo: { ...infoItemQuery.data.data.items[0] },
       },
     ];
     return (

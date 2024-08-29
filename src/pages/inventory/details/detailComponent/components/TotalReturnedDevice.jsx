@@ -4,6 +4,7 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
 
 const TotalReturnedDevice = ({ dataFound }) => {
+  console.log(dataFound);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -14,7 +15,11 @@ const TotalReturnedDevice = ({ dataFound }) => {
   return (
     <Grid
       padding={`${
-        isSmallDevice || isMediumDevice ? "10px 0px" : isLargeDevice ? "10px 10px 10px 0" : "10px 0 10px 10px"
+        isSmallDevice || isMediumDevice
+          ? "10px 0px"
+          : isLargeDevice
+          ? "10px 10px 10px 0"
+          : "10px 0 10px 10px"
       }`}
       item
       xs={12}
@@ -96,7 +101,7 @@ const TotalReturnedDevice = ({ dataFound }) => {
               lineHeight={"38px"}
               color={"var(--gray-900, #101828)"}
             >
-              {dataFound[0]?.condition ?? "Operational"}
+              {dataFound[0]?.itemInfo?.status ?? "Operational"}
             </Typography>
           </Grid>
         </Grid>

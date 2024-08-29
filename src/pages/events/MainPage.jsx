@@ -104,11 +104,20 @@ const MainPage = () => {
 
       const groupByActive = _.groupBy(companyData, "active");
 
-      const filterEventsByEmail = (events, key) =>
-        events?.filter((event) =>
-          event.staff?.[key]?.some((member) => member.email === user.email)
-        ) || [];
-
+      const filterEventsByEmail = (events, key) => {
+        if (
+          user.companyData.employees.filter(
+            (employee) => employee.user === user.email
+          )[0].role < 1
+        ) {
+          return events ?? [];
+        }
+        return (
+          events?.filter((event) =>
+            event.staff?.[key]?.some((member) => member.email === user.email)
+          ) || []
+        );
+      };
       const activeAdminEvents = filterEventsByEmail(
         groupByActive.true,
         "adminUser"

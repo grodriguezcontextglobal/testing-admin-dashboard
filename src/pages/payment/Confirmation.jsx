@@ -12,6 +12,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { checkArray } from "../../components/utils/checkArray";
+import DeviceAssigned from "../../classes/deviceAssigned";
 
 const Confirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -77,22 +78,38 @@ const Confirmation = () => {
     const formatToDeviceInAssignedReceiverInDocumentInDB = async (props) => {
       let sequency = true;
       if (sequency) {
-        const deviceTemplate = {
-          paymentIntent: payment_intent,
-          device: {
-            serialNumber: props,
-            deviceType: deviceSelectionPaidTransaction.deviceType.group,
-            status: true,
-          },
-          active: true,
-          timeStamp: new Date().getTime(),
-          eventSelected: event.eventInfoDetail.eventName,
-          provider: event.company,
-          user: customer.email,
-          company: user.companyData.id,
+        const deviceInfo = {
+          serialNumber: props,
+          deviceType: deviceSelectionPaidTransaction.deviceType.group,
+          status: true,
         };
+
+        const deviceTemplate = new DeviceAssigned(
+          payment_intent,
+          deviceInfo,
+          customer.email,
+          true,
+          event.eventInfoDetail.eventName,
+          event.company,
+          new Date().getTime(),
+          user.companyData.id
+        );
+        // const deviceTemplate = {
+        //   paymentIntent: payment_intent,
+        //   device: {
+        //     serialNumber: props,
+        //     deviceType: deviceSelectionPaidTransaction.deviceType.group,
+        //     status: true,
+        //   },
+        //   active: true,
+        //   timeStamp: new Date().getTime(),
+        //   eventSelected: event.eventInfoDetail.eventName,
+        //   provider: event.company,
+        //   user: customer.email,
+        //   company: user.companyData.id,
+        // };
         const response = await addingDeviceInTransactionMutation.mutateAsync(
-          deviceTemplate
+          deviceTemplate.render()
         );
         if (response.data.ok) return (sequency = false);
       }

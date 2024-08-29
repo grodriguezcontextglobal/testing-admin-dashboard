@@ -22,6 +22,7 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { CardStyle } from "../../../../../../../../styles/global/CardStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import { checkArray } from "../../../../../../../../components/utils/checkArray";
+import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
 const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -116,16 +117,18 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     // return grouping[props].length > 0;
   };
   const createReceiverInTransaction = async (props) => {
-    await devitrakApi.post("/receiver/receiver-assignation", {
-      paymentIntent: props.paymentIntent,
-      device: props.device,
-      active: true,
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: user.company,
-      user: customer.email,
-      timeStamp: new Date().getTime(),
-      company: user.companyData.id,
-    });
+    const transaction = new DeviceAssigned(
+      props.paymentIntent,
+      props.device,
+      customer.email,
+      true,
+      event.eventInfoDetail.eventName,
+      user.company,
+      new Date().getTime(),
+      user.companyData.id
+    );
+
+    await devitrakApi.post("/receiver/receiver-assignation", transaction.render());
   };
 
   const createDevicesInPool = async (props) => {

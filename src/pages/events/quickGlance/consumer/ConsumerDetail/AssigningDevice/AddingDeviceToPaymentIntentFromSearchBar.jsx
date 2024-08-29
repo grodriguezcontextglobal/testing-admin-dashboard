@@ -19,6 +19,7 @@ import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/sli
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const { paymentIntentDetailSelected, customer } = useSelector(
     (state) => state.stripe
@@ -194,21 +195,32 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       status: true,
     };
 
-    const template = {
-      paymentIntent: paymentIntentDetailSelected.paymentIntent,
-      device: newDeviceObject,
-      user: paymentIntentDetailSelected.consumerInfo.email,
-      active: true,
-      eventSelected: choice,
-      provider: user.company,
-      timeStamp: new Date().getTime(),
-      company:user.companyData.id
-    };
+    const template = new DeviceAssigned(
+      paymentIntentDetailSelected.paymentIntent,
+      newDeviceObject,
+      paymentIntentDetailSelected.consumerInfo.email,
+      true,
+      choice,
+      user.company,
+      new Date().getTime(),
+      user.companyData.id
+    );
+
+    // const template = {
+    //   paymentIntent: paymentIntentDetailSelected.paymentIntent,
+    //   device: newDeviceObject,
+    //   user: paymentIntentDetailSelected.consumerInfo.email,
+    //   active: true,
+    //   eventSelected: choice,
+    //   provider: user.company,
+    //   timeStamp: new Date().getTime(),
+    //   company: user.companyData.id,
+    // };
     try {
       if (checkDeviceIsAssignedInEvent()) {
         const resp = await devitrakApiAdmin.post(
           "/receiver-assignation",
-          template
+          template.render()
         );
         saveAndUpdateDeviceInPool();
         await createEventInTransactionLog();

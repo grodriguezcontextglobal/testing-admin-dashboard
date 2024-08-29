@@ -69,6 +69,7 @@ const UpdateRoleInCompany = () => {
   };
 
   const options = [
+    { label: "Root administrator", value: 0 },
     { label: "Administrator", value: 1 },
     { label: "Manager", value: 2 },
     { label: "Support", value: 3 },

@@ -19,6 +19,7 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { nanoid } from "@reduxjs/toolkit";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
+import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
 
 const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
@@ -111,16 +112,20 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
     return grouping[props].at(-1).activity; // === "YES"
   };
   const createReceiverInTransaction = async (props) => {
-    await devitrakApi.post("/receiver/receiver-assignation", {
-      paymentIntent: props.paymentIntent,
-      device: props.device,
-      active: true,
-      eventSelected: event.eventInfoDetail.eventName,
-      provider: user.company,
-      user: customer.email,
-      timeStamp: new Date().getTime(),
-      company: user.companyData.id,
-    });
+    const transaction = new DeviceAssigned(
+      props.paymentIntent,
+      props.device,
+      customer.email,
+      true,
+      event.eventInfoDetail.eventName,
+      user.company,
+      new Date().getTime(),
+      user.companyData.id
+    );
+    await devitrakApi.post(
+      "/receiver/receiver-assignation",
+      transaction.render()
+    );
   };
 
   const createDevicesInPool = async (props) => {
