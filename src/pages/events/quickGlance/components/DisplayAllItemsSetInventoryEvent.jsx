@@ -1,18 +1,53 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Space } from "antd";
 import CardRendered from "./CardRenderedDeviceSetup";
+import { useState } from "react";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import {
+  onAddDeviceSetup,
+  onAddEventData,
+} from "../../../../store/slices/eventSlice";
 
 const DisplayAllItemsSetInventoryEvent = () => {
   const { event } = useSelector((state) => state.event);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const dispatch = useDispatch();
+  const onChange = async (props) => {
+    setLoadingStatus(true);
+    const deviceInventoryUpdated = [...event.deviceSetup];
+    console.log(deviceInventoryUpdated);
+    deviceInventoryUpdated[props.index] = {
+      ...deviceInventoryUpdated[props.index],
+      consumerUses: props.checked,
+    }
+    console.log(deviceInventoryUpdated[props.index]);
+    const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+      deviceSetup: deviceInventoryUpdated,
+    })
+    if (response.data.ok) {
+    dispatch(
+      onAddEventData({
+        ...event,
+        deviceSetup: deviceInventoryUpdated,
+      })
+    );
+    dispatch(onAddDeviceSetup(deviceInventoryUpdated));
+
+      return setLoadingStatus(false);
+    }
+    return setLoadingStatus(false);
+  };
 
   return (
     <Space size={[16, 12]} wrap>
-      {event.deviceSetup.map((item, index) => {
+      {event?.deviceSetup?.map((item, index) => {
         return (
           <CardRendered
             key={`${item._id}${index}`}
-            props={item.quantity}
+            props={{ quantity: item.quantity, consumerUses: item.consumerUses }}
             title={item.group}
+            onChange={(e) => onChange({ index: index, checked: e })}
+            loadingStatus={loadingStatus}
           />
         );
       })}
