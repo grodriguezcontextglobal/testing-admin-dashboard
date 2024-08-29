@@ -13,6 +13,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CardLocations from "../../utils/CardLocations";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { PropTypes } from "prop-types";
+import { groupBy } from "lodash";
 const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -20,9 +21,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     const totalPerLocation = new Map();
     const parameter = props;
     if (dataToDisplay().length > 0) {
-      //itemsInInventoryQuery.data) {
       for (let data of dataToDisplay()) {
-        //itemsInInventoryQuery.data.data.items) {
         if (totalPerLocation.has(data[parameter])) {
           totalPerLocation.set(
             data[parameter],
@@ -39,7 +38,39 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     }
     return Array.from(result);
   };
+  const renderingTotalAvailableDevices = (props) => {
+    const result = groupBy(props, "warehouse");
+    if (result[1]) {
+      return result[1].length;
+    }
+    return 0;
+  };
 
+  const displayTotalDevicesAndTotalAvailbalePerLocation = (props) => {
+    const totalPerLocation = new Map();
+    const parameter = props;
+    if (dataToDisplay().length > 0) {
+      for (let data of dataToDisplay()) {
+        if (totalPerLocation.has(data[parameter])) {
+          totalPerLocation.set(data[parameter], [
+            ...totalPerLocation.get(data[parameter]),
+            data,
+          ]);
+        } else {
+          totalPerLocation.set(data[parameter], [data]);
+        }
+      }
+    }
+    const result = new Set();
+    for (let [key, value] of totalPerLocation) {
+      const valueParameter = {
+        total: value.length,
+        available: renderingTotalAvailableDevices(value),
+      };
+      result.add({ key, valueParameter });
+    }
+    return Array.from(result);
+  };
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
@@ -77,6 +108,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     }
   };
   const onSelectChange = async (newSelectedRowKeys) => {
+    console.log(newSelectedRowKeys);
     if (
       selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
     ) {
@@ -99,11 +131,12 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     }
     return result;
   };
+
   const optionsToRenderInDetailsHtmlTags = [
     {
       title: `Locations`,
       buttonFn: true,
-      data: sortingByParameters("location"),
+      data: displayTotalDevicesAndTotalAvailbalePerLocation("location"), //sortingByParameters
       totalUnits: renderingTotalUnits(sortingByParameters("location")),
       renderedCardData: selectedRowKeys,
       open: true,
@@ -124,10 +157,21 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
         },
         {
           title: "Total device",
-          dataIndex: "value",
-          key: "value",
-          render: (value) => <p style={Subtitle}>{value}</p>,
+          dataIndex: "valueParameter",
+          key: "valueParameter",
+          render: (valueParameter) => (
+            <p style={Subtitle}>{valueParameter.total}</p>
+          ),
         },
+        {
+          title: "Total available devices",
+          dataIndex: "valueParameter",
+          key: "valueParameter",
+          render: (valueParameter) => (
+            <p style={Subtitle}>{valueParameter.available}</p>
+          ),
+        },
+
         {
           title: "",
           dataIndex: "action",
@@ -144,7 +188,9 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
               <button
                 onClick={() =>
                   navigate(
-                    `/inventory/location?${record.key}&search=${searchItem && searchItem}`
+                    `/inventory/location?${record.key}&search=${
+                      searchItem && searchItem
+                    }`
                   )
                 }
                 style={{
