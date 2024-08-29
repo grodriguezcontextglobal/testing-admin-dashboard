@@ -6,29 +6,43 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Avatar, Divider, Space, notification, Button } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, Button, Divider, Space, notification } from "antd";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../../api/devitrakApi";
 import { CompanyIcon } from "../../../../components/icons/Icons";
+import { onLogout } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const [loading, setLoading] = useState(false);
-  const openNotificationWithIcon = () => {
+  const openNotificationWithIcon = (msg, time) => {
     api.open({
-      message: "Information updated",
+      message: msg,
+      duration: time,
     });
+  };
+  const originalDataRef = {
+    companyName: user.companyData.company_name,
+    mainPhoneNumber: user.companyData.phone.main,
+    alternativePhoneNumber: user.companyData.phone.alternative,
+    street: user.companyData.address.street,
+    city: user.companyData.address.city,
+    state: user.companyData.address.state,
+    zipCode: user.companyData.address.postal_code,
+    website: user.companyData.website,
+    email: user.companyData.main_email,
+    employees: user.companyData.employees,
+    companyLogo: user.companyData.company_logo,
   };
   function convertToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -42,7 +56,7 @@ const Body = () => {
       };
     });
   }
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, watch } = useForm({
     defaultValues: {
       companyName: user.companyData.company_name,
       mainPhoneNumber: user.companyData.phone.main,
@@ -56,7 +70,14 @@ const Body = () => {
       employees: user.companyData.employees,
     },
   });
-
+  const checkIfOriginalDataHasChange = (props) => {
+    if (originalDataRef[props] !== "" && originalDataRef[props] !== watch(`${props}`)) {
+      return openNotificationWithIcon(
+        "Please save updates before leave this tab.",
+        0
+      );
+    }
+  };
   const features = [
     {
       title: "Company name",
@@ -189,13 +210,13 @@ const Body = () => {
             });
             await updatingAllEventsRelatedCompany(data.companyName);
             setLoading(false);
-            openNotificationWithIcon();
+            openNotificationWithIcon("Information updated", 3);
             dispatch(onLogout());
             return window.location.reload(true);
           }
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         alert("Something went wrong. Please try again.");
         setLoading(false);
       }
@@ -223,6 +244,7 @@ const Body = () => {
                 return (
                   <>
                     <Grid
+                    key={item.title}
                       display={"flex"}
                       flexDirection={"column"}
                       alignSelf={"stretch"}
@@ -242,6 +264,7 @@ const Body = () => {
                       </InputLabel>
                     </Grid>
                     <Grid
+                    key={item.name}
                       display={"flex"}
                       justifyContent={"flex-start"}
                       alignItems={"center"}
@@ -252,6 +275,7 @@ const Body = () => {
                       sm={6}
                       md={6}
                     >
+                      {checkIfOriginalDataHasChange(item.name)}
                       <OutlinedInput
                         style={{ ...OutlinedInputStyle }}
                         fullWidth
@@ -264,7 +288,7 @@ const Body = () => {
               } else if (item.object) {
                 return (
                   <>
-                    <Grid
+                    <Grid     
                       display={"flex"}
                       flexDirection={"column"}
                       alignSelf={"stretch"}
@@ -299,11 +323,13 @@ const Body = () => {
                         style={{ width: "100%", display: "flex", gap: "10px" }}
                       >
                         {" "}
+                        {checkIfOriginalDataHasChange(item.children[0].name)}
                         <OutlinedInput
                           style={{ ...OutlinedInputStyle, width: "70%" }}
                           fullWidth
                           {...register(`${item.children[0].name}`)}
                         />
+                        {checkIfOriginalDataHasChange(item.children[1].name)}
                         <OutlinedInput
                           style={{ ...OutlinedInputStyle, width: "30%" }}
                           fullWidth
@@ -314,11 +340,13 @@ const Body = () => {
                         style={{ width: "100%", display: "flex", gap: "10px" }}
                       >
                         {" "}
+                        {checkIfOriginalDataHasChange(item.children[2].name)}
                         <OutlinedInput
                           style={{ ...OutlinedInputStyle }}
                           fullWidth
                           {...register(`${item.children[2].name}`)} // value={item.children[0].value}
                         />
+                        {checkIfOriginalDataHasChange(item.children[3].name)}
                         <OutlinedInput
                           style={{ ...OutlinedInputStyle }}
                           fullWidth
@@ -372,7 +400,14 @@ const Body = () => {
                 {String(user.companyData.company_logo).length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <Avatar
-                      size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
+                      size={{
+                        xs: 24,
+                        sm: 32,
+                        md: 40,
+                        lg: 64,
+                        xl: 80,
+                        xxl: 100,
+                      }}
                       src={
                         <img
                           src={user?.companyData?.company_logo}
@@ -446,6 +481,7 @@ const Body = () => {
                   item
                   xs={12}
                 >
+                  {checkIfOriginalDataHasChange('companyLogo')}
                   <TextField
                     {...register(`companyLogo`)}
                     id="file-upload"
