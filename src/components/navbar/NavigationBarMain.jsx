@@ -125,6 +125,10 @@ const NavigationBarMain = (props) => {
   const onChange = (e) => {
     return setSearchValue(e.target.value);
   };
+  const handleResetSearchValue = () => {
+    setSearchValue("");
+    return dispatch(onResetResult());
+  };
   const handleSearch = (e) => {
     e.preventDefault();
     return navigate(`/search-result-page?search=${searchValue}`);
@@ -179,10 +183,6 @@ const NavigationBarMain = (props) => {
     return "1228px";
   };
 
-  const handleResetSearchValue = () => {
-    setSearchValue("");
-    return dispatch(onResetResult());
-  };
   return (
     <Grid
       container
@@ -241,18 +241,10 @@ const NavigationBarMain = (props) => {
                   style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
                   {user.companyData.company_logo.length > 0 ? (
-                    <div
-                      style={{
-                        width: "100%",
-                        borderRadius: "12px",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                      }}
-                    >
+                    <div style={{  display: "flex" }}>
                       <img
-                        width={"35%"}
-                        height={"auto"}
+                        width={"40px"}
+                        // height={"auto"}
                         style={{
                           verticalAlign: "middle",
                           objectPosition: "50% 50%",
@@ -263,14 +255,25 @@ const NavigationBarMain = (props) => {
                         alt={`${user.companyData.company_logo}`}
                       />
                       &nbsp;
-                      <p
-                        style={{
-                          ...TextFontSize14LineHeight20,
-                          color: "var(--basewhite)",
-                        }}
-                      >
-                        {user.companyData.company_name}
-                      </p>
+                      <div className="content-main-navbar-updated">
+                        <article
+                          className={"nav-item-base-main-navbar-updated"}
+                          style={{border:"transparent"}}
+                        >
+                          <div className="content-2-main-navbar-updated">
+                            <div className="text-1-main-navbar-updated text-mdsemibold">
+                              <p
+                                style={{
+                                  ...TextFontSize14LineHeight20,
+                                  color: "var(--basewhite)",
+                                }}
+                              >
+                                {user.companyData.company_name}
+                              </p>
+                            </div>
+                          </div>
+                        </article>
+                      </div>
                     </div>
                   ) : (
                     <>
@@ -331,6 +334,8 @@ const NavigationBarMain = (props) => {
                   required
                   sx={OutlinedInputStyle}
                   onChange={(e) => onChange(e)}
+                  name={"searchValue"}
+                  value={searchValue}
                   endAdornment={
                     <InputAdornment position="end">
                       <Icon
@@ -343,7 +348,7 @@ const NavigationBarMain = (props) => {
                         display={`${
                           String(searchValue)?.length > 0 ? "auto" : "none"
                         }`}
-                        onClick={(e) => handleResetSearchValue(e)}
+                        onClick={() => handleResetSearchValue()}
                       />
                     </InputAdornment>
                   }
