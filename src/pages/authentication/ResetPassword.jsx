@@ -120,7 +120,7 @@ const ResetPassword = () => {
                                         }}
                                         variant="subtitle1"
                                     >
-                                        Please enter your info
+                                        Please enter your new password
                                     </Typography>
                                 </Grid>
                                 {new Date(
@@ -140,7 +140,7 @@ const ResetPassword = () => {
                                             xs={12} sm={12} md
                                         >
                                             <FormLabel style={{ marginBottom: "0.5rem" }}>
-                                                Password
+                                                New password
                                             </FormLabel>
                                             <OutlinedInput
                                                 {...register("password", {
@@ -162,7 +162,7 @@ const ResetPassword = () => {
                                             xs={12}
                                         >
                                             <FormLabel style={{ marginBottom: "0.5rem" }}>
-                                                Repeat password
+                                                Repeat new password
                                             </FormLabel>
                                             <OutlinedInput
                                                 {...register("password2")}
