@@ -166,6 +166,13 @@ const AddNewBulkItems = () => {
         "Ownership status must be provided."
       );
     }
+    if (Number(data.startingNumber) > Number(data.endingNumber)) {
+      return openNotificationWithIcon(
+        "warning",
+        "Sequence of serial number must be in ascending order."
+      );
+    }
+
     for (
       let index = Number(data.startingNumber);
       index < Number(data.endingNumber);
