@@ -8,7 +8,12 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import { PlusIcon, WhitePlusIcon } from "../../../components/icons/Icons";
+import {
+  DownNarrow,
+  PlusIcon,
+  UpNarrowIcon,
+  WhitePlusIcon,
+} from "../../../components/icons/Icons";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -398,9 +403,10 @@ const MainPageQuickGlance = () => {
                   justifyContent: "flex-start",
                   alignItems: "center",
                   cursor: "pointer",
-                  margin: showInventoryTypes ? "0px" : "0 0 15px 0",
+                  margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
                 }}
               >
+                {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
                 Inventory assigned to event:&nbsp;
                 <div
                   style={{
@@ -437,7 +443,7 @@ const MainPageQuickGlance = () => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 display: user.role === "4" ? "none" : "flex",
-                margin: showInventoryTypes ? "0px" : "0 0 15px 0",
+                margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
               }}
             >
               <p style={{ ...BlueButtonText }}>Update inventory</p>

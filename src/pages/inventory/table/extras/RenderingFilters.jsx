@@ -159,6 +159,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "Total device",
           dataIndex: "valueParameter",
           key: "valueParameter",
+          width:"20%",
           render: (valueParameter) => (
             <p style={Subtitle}>{valueParameter.total}</p>
           ),
@@ -167,6 +168,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "Total available devices",
           dataIndex: "valueParameter",
           key: "valueParameter",
+          width:"20%",
           render: (valueParameter) => (
             <p style={Subtitle}>{valueParameter.available}</p>
           ),
@@ -176,6 +178,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "",
           dataIndex: "action",
           key: "action",
+          width:"10%",
           render: (_, record) => (
             <div
               style={{
