@@ -105,7 +105,14 @@ const FormatToDisplayDetail = () => {
       <Grid container spacing={1}>
         <Grid item xs={12} sm={12} md={12} lg={4}>
           <CardRendered
-            key={"Total devices on hand"}
+            key={"Total devices of event."}
+            props={receiversPoolQuery?.data?.data?.receiversInventory.length ?? 0}
+            title={"Total inventory of event."}
+          />
+        </Grid>
+        <Grid item xs={12} sm={12} md={12} lg={4}>
+          <CardRendered
+            key={"Total devices on hand for consumer use"}
             props={numberDisplayDynamically()}
             title={"Total devices on hand, including not functional"}
           />
