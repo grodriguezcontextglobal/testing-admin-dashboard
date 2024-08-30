@@ -140,11 +140,11 @@ const DeleteItemModal = ({
         item_id: device_id,
       });
       if (respAfterDelete.data) {
-        const employees = companyInfoQuery.data.data.company[0].employees;
+        const employees = user.companyData.employees;
         for (let data of employees) {
           if (Number(data.role) < 2) {
             const emailNotificationProfile = {
-              staff: data.email,
+              staff: data.user,
               subject: "Device deleted in company records.",
               message: `The device with serial number ${
                 itemsInInventoryQuery?.data?.data?.items[0]?.serial_number
