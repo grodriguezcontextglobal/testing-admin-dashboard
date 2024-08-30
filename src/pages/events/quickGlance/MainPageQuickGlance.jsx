@@ -36,6 +36,7 @@ const MainPageQuickGlance = () => {
   const { choice, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
+  const [showInventoryTypes, setShowInventoryTypes] = useState(false);
   const [editingStaff, setEditingStaff] = useState(false);
   const [editingInventory, setEditingInventory] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState(
@@ -53,7 +54,7 @@ const MainPageQuickGlance = () => {
   );
   const sum = (a, b) => {
     if (!a || !b) {
-      return 0
+      return 0;
     }
     return a + b;
   };
@@ -163,7 +164,7 @@ const MainPageQuickGlance = () => {
         >
           {checkStaffRoleToDisplayCashReportInfo() && (
             // /event/new_subscription
-            <Link to="/create-event-page/event-detail"> 
+            <Link to="/create-event-page/event-detail">
               <button
                 style={{
                   ...BlueButton,
@@ -378,42 +379,56 @@ const MainPageQuickGlance = () => {
             md={12}
             lg={12}
           >
-            <p
+            <button
               style={{
-                ...Title,
-                fontSize: "25px",
+                background: "transparent",
+                outline: "none",
+                border: "transparent",
+                margin: 0,
                 padding: 0,
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
               }}
+              onClick={() => setShowInventoryTypes(!showInventoryTypes)}
             >
-              Inventory assigned to event:&nbsp;
-              <div
+              <p
                 style={{
-                  borderRadius: "16px",
-                  background: "var(--blue-dark-50, #EFF4FF)",
-                  mixBlendMode: "multiply",
-                  width: "fit-content",
-                  height: "fit-content",
+                  ...Title,
+                  fontSize: "25px",
+                  padding: 0,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  margin: showInventoryTypes ? "0px" : "0 0 15px 0",
                 }}
               >
-                <p
+                Inventory assigned to event:&nbsp;
+                <div
                   style={{
-                    textTransform: "none",
-                    textAlign: "left",
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    fontFamily: "Inter",
-                    lineHeight: "28px",
-                    color: "var(--blue-dark-700, #004EEB)",
-                    padding: "0px 8px",
+                    borderRadius: "16px",
+                    background: "var(--blue-dark-50, #EFF4FF)",
+                    mixBlendMode: "multiply",
+                    width: "fit-content",
+                    height: "fit-content",
                   }}
                 >
-                  {foundAllDevicesGivenInEvent()?.length} total
-                </p>
-              </div>
-            </p>
+                  <p
+                    style={{
+                      textTransform: "none",
+                      textAlign: "left",
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      fontFamily: "Inter",
+                      lineHeight: "28px",
+                      color: "var(--blue-dark-700, #004EEB)",
+                      padding: "0px 8px",
+                    }}
+                  >
+                    {foundAllDevicesGivenInEvent()?.length} total
+                  </p>
+                </div>
+              </p>
+            </button>
+
             <button
               onClick={() => setEditingInventory(true)}
               style={{
@@ -422,12 +437,15 @@ const MainPageQuickGlance = () => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 display: user.role === "4" ? "none" : "flex",
+                margin: showInventoryTypes ? "0px" : "0 0 15px 0",
               }}
             >
-              <p style={BlueButtonText}>Update inventory</p>
+              <p style={{ ...BlueButtonText }}>Update inventory</p>
             </button>
           </Grid>
-          <DisplayAllItemsSetInventoryEvent />
+          <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
+            <DisplayAllItemsSetInventoryEvent />
+          </div>
           <DevicesInformationSection
             foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
           />
@@ -573,7 +591,7 @@ const MainPageQuickGlance = () => {
                 }}
               >
                 {sum(
-                  (event?.staff?.adminUser?.length - 1) ?? 0,
+                  event?.staff?.adminUser?.length - 1 ?? 0,
                   event?.staff?.headsetAttendees?.length ?? 0
                 )}{" "}
                 total
