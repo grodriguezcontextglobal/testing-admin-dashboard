@@ -36,6 +36,7 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
+import { checkArray } from "../../../components/utils/checkArray";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -142,6 +143,16 @@ const MainPageQuickGlance = () => {
         .toLocaleString()
         .toUpperCase()
         .replaceAll(",", "");
+    };
+    const displayElementsBasedOnRole = () => {
+      if (
+        event.staff.adminUser.some((element) => element.email === user.email) ||
+        checkArray(
+          user.companyData.employees.filter((ele) => ele.user === user.email)
+        ).role < 1
+      ) {
+        return true;
+      }
     };
     return (
       <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container>
@@ -373,7 +384,7 @@ const MainPageQuickGlance = () => {
           </Grid>
           <Grid
             style={{
-              display: "flex",
+              display: `${displayElementsBasedOnRole() ? "flex" : "none"}`,
               justifyContent: "space-between",
               alignItems: "center",
               margin: "2rem auto 0.2rem",
