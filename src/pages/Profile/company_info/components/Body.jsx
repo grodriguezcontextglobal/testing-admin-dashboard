@@ -71,7 +71,10 @@ const Body = () => {
     },
   });
   const checkIfOriginalDataHasChange = (props) => {
-    if (originalDataRef[props] !== "" && originalDataRef[props] !== watch(`${props}`)) {
+    if (
+      originalDataRef[props] !== "" &&
+      originalDataRef[props] !== watch(`${props}`)
+    ) {
       return openNotificationWithIcon(
         "Please save updates before leave this tab.",
         0
@@ -221,6 +224,21 @@ const Body = () => {
         setLoading(false);
       }
     };
+
+    const removingCompanyLogo = async () => {
+      setLoading(true);
+        const resp = await devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          {
+            company_logo: "",
+          }
+        );
+        api.destroy();
+        if (resp.data) {
+          setLoading(false);
+          return openNotificationWithIcon("Company logo removed. Please log out and log in to see the changes.", 3);
+        }
+    }
     return (
       <>
         {contextHolder}
@@ -244,7 +262,7 @@ const Body = () => {
                 return (
                   <>
                     <Grid
-                    key={item.title}
+                      key={item.title}
                       display={"flex"}
                       flexDirection={"column"}
                       alignSelf={"stretch"}
@@ -264,7 +282,7 @@ const Body = () => {
                       </InputLabel>
                     </Grid>
                     <Grid
-                    key={item.name}
+                      key={item.name}
                       display={"flex"}
                       justifyContent={"flex-start"}
                       alignItems={"center"}
@@ -288,7 +306,7 @@ const Body = () => {
               } else if (item.object) {
                 return (
                   <>
-                    <Grid     
+                    <Grid
                       display={"flex"}
                       flexDirection={"column"}
                       alignSelf={"stretch"}
@@ -415,21 +433,23 @@ const Body = () => {
                         />
                       }
                     />
+                    <br />
+                    <p onClick={()=> removingCompanyLogo()} style={{textDecoration:"underline", color:"var(--danger-action)", cursor:"pointer"}}>remove</p>
                   </div>
                 ) : (
-                  <Avatar
-                    style={{
-                      xs: 24,
-                      sm: 32,
-                      md: 40,
-                      lg: 64,
-                      xl: 80,
-                      xxl: 100,
-                      padding: "40px",
-                    }}
-                  >
-                    <CompanyIcon />{" "}
-                  </Avatar>
+                    <Avatar
+                      style={{
+                        xs: 24,
+                        sm: 32,
+                        md: 40,
+                        lg: 64,
+                        xl: 80,
+                        xxl: 100,
+                        padding: "40px",
+                      }}
+                    >
+                      <CompanyIcon />{" "}
+                    </Avatar>
                 )}
               </Grid>
               <Grid
@@ -481,7 +501,7 @@ const Body = () => {
                   item
                   xs={12}
                 >
-                  {checkIfOriginalDataHasChange('companyLogo')}
+                  {checkIfOriginalDataHasChange("companyLogo")}
                   <TextField
                     {...register(`companyLogo`)}
                     id="file-upload"
