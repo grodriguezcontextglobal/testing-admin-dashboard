@@ -5,7 +5,6 @@ import { CardStyle } from "../../../../styles/global/CardStyle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 
 const DeviceDescriptionTags = ({ dataFound }) => {
-  console.log("dataFound", dataFound);
   const dic = {
     Permanent: {
       label: "Owned",

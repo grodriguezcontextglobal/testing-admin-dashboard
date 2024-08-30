@@ -6,8 +6,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Select, Space, Tag, Tooltip } from "antd";
-import { useState } from "react";
+import { notification, Select, Space, Tag, Tooltip } from "antd";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,10 +27,14 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import "../../../../styles/global/ant-select.css";
 import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 const Form = () => {
   const { register, handleSubmit, setValue } = useForm();
   const { user } = useSelector((state) => state.admin);
-  const { deviceSetup } = useSelector((state) => state.event);
+  const { deviceSetup, staff } = useSelector((state) => state.event);
   const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
     useState(false);
   const [valueItemSelected, setValueItemSelected] = useState({});
@@ -46,6 +50,23 @@ const Form = () => {
         warehouse: true,
       }),
   });
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (msg, duration) => {
+    api.open({
+      description: msg,
+      duration: duration,
+    });
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (staff.adminUser.length === 0) {
+      openNotificationWithIcon("Please add at least one admin staff member to continue", 3);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const groupingItemByCategoriesToRenderThemInSelector = () => {
@@ -70,25 +91,13 @@ const Form = () => {
     const checkLocation = new Map();
     for (let data of Array.from(result)) {
       for (let item of data) {
-        if (
-          !checkLocation.has(
-            `${item.category_name}-${item.item_group}-${item.location}`
-          )
-        ) {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [item]
-          );
+        if (!checkLocation.has(`${item.category_name}-${item.item_group}`)) {
+          checkLocation.set(`${item.category_name}-${item.item_group}`, [item]);
         } else {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [
-              ...checkLocation.get(
-                `${item.category_name}-${item.item_group}-${item.location}`
-              ),
-              item,
-            ]
-          );
+          checkLocation.set(`${item.category_name}-${item.item_group}`, [
+            ...checkLocation.get(`${item.category_name}-${item.item_group}`),
+            item,
+          ]);
         }
       }
     }
@@ -131,6 +140,34 @@ const Form = () => {
     dispatch(onAddDeviceSetup(selectedItem));
     return navigate("/create-event-page/review-submit");
   };
+  const renderingStyle = () => {
+    if (staff.adminUser.length === 0) {
+      return {
+        button: {
+          ...BlueButton,
+          background: "var(--disabled-blue-button)",
+          width: "100%",
+          border: "transparent",
+        },
+        text: {
+          ...BlueButtonText,
+          color: "var(--disabled-gray-button-text)",
+          textTransform: "none",
+        },
+      };
+    } else {
+      return {
+        button: {
+          ...BlueButton,
+          width: "100%",
+        },
+        text: {
+          ...BlueButtonText,
+          textTransform: "none",
+        },
+      };
+    }
+  };
   return (
     <Grid
       container
@@ -139,6 +176,7 @@ const Form = () => {
       alignItems={"center"}
       key={"settingUp-deviceList-event"}
     >
+      {contextHolder}
       <InputLabel
         style={{
           width: "100%",
@@ -249,10 +287,10 @@ const Form = () => {
                     </span>{" "}
                     {item[0].item_group}
                   </span>
-                  <span style={{ textAlign: "left", width: "30%" }}>
+                  {/* <span style={{ textAlign: "left", width: "30%" }}>
                     Location:{" "}
                     <span style={{ fontWeight: 700 }}>{item[0].location}</span>
-                  </span>
+                  </span> */}
                   <span style={{ textAlign: "right", width: "20%" }}>
                     Total available: {item.length}
                   </span>
@@ -294,6 +332,8 @@ const Form = () => {
                   <input
                     type="checkbox"
                     value={assignAllDevices}
+                    name="assignAllDevices"
+                    defaultChecked={assignAllDevices}
                     onChange={(e) => setAssignAllDevices(e.target.checked)}
                   />
                 </Typography>
@@ -504,60 +544,31 @@ const Form = () => {
         lg={12}
       >
         <Button
+          disabled={staff.adminUser.length === 0}
           onClick={() => navigate("/create-event-page/review-submit")}
           style={{
-            display: "flex",
-            padding: "12px 20px",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "8px",
-            flex: "1 0 0",
-            borderRadius: "8px",
-            border: "1px solid var(--gray-300, #D0D5DD)",
-            background: "var(--base-white, #FFF)",
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            ...GrayButton,
             width: "100%",
           }}
         >
           <Typography
-            textTransform={"none"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"24px"}
-            color={"var(--gray-700, #344054)"}
+            style={{
+              ...GrayButtonText,
+              color:
+                staff.adminUser.length === 0 &&
+                "var(--disabled-gray-button-text)",
+              textTransform: "none",
+            }}
           >
             Skip this step
           </Typography>
         </Button>
         <Button
+          disabled={staff.adminUser.length === 0}
           onClick={(e) => handleNextStepEventSetup(e)}
-          style={{
-            display: "flex",
-            padding: "12px 20px",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "8px",
-            flex: "1 0 0",
-            borderRadius: "8px",
-            border: "1px solid var(--blue-dark-600, #155EEF)",
-            background: "var(--blue-dark-600, #155EEF)",
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            width: "100%",
-          }}
+          style={renderingStyle().button}
         >
-          <Typography
-            textTransform={"none"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"24px"}
-            color={"var(--base-white, #FFF)"}
-          >
-            Next step
-          </Typography>
+          <Typography style={renderingStyle().text}>Next step</Typography>
         </Button>
       </Grid>
     </Grid>

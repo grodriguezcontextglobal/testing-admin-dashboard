@@ -41,16 +41,13 @@ const ReviewAndSubmitEvent = () => {
 
   let dataRef = [...staff.adminUser, ...staff.headsetAttendees];
   const checkAndAddRootAdministratorAsAdminStaff = () => {
-    const rooter = user.companyData.employees.filter(
-      (element) => element.role === "0"
-    );
-    if (!dataRef.some((element) => element.email === checkArray(rooter).user)) {
+    if (!dataRef.some((element) => element.email === user.email)) {
       dataRef = [
         ...dataRef,
         {
-          firstName: checkArray(rooter).firstName,
-          lastName: checkArray(rooter).lastName,
-          email: checkArray(rooter).user,
+          firstName: user.name,
+          lastName: user.lastName,
+          email: user.email,
           role: "Administrator",
         },
       ];

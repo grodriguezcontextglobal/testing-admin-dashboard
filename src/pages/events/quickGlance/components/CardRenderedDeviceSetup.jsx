@@ -61,16 +61,19 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
               alignItems={"center"}
               item
               xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
               <Typography paddingTop={"8px"} style={TextFontSize30LineHeight38}>
                 {props.quantity}
               </Typography>
-              <Tooltip title={`${props.consumerUses ? "For consumers.": "For internal use."}`}>
-                <Switch
+              <Tooltip title={`${props.consumerUses ? "For consumers.": "For internal use."}`} style={{width:"100%"}}>
+                <div style={{transform:"rotate(-90deg)"}}><Switch
                 checked={props.consumerUses}
                 loading={loadingStatus}
                 onChange={onChange}
-              /></Tooltip>
+              /></div></Tooltip>
             </Grid>
           </Grid>
         </Card>
@@ -80,7 +83,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
           openModalDeviceSetup={openModalDeviceSetup}
           setOpenModalDeviceSetup={setOpenModalDeviceSetup}
           deviceTitle={title}
-          quantity={props}
+          quantity={props.quantity}
         />
       )}
     </>
