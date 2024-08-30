@@ -4,7 +4,7 @@ import {
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Modal, Select, Tooltip } from "antd";
@@ -156,8 +156,8 @@ const ModalAddAndUpdateDeviceSetup = ({
       item_group: database[0].item_group,
       startingNumber: database[0].serial_number,
       quantity: props.quantity,
-      category_name:database[0].category_name
-  });
+      category_name: database[0].category_name,
+    });
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: false,
       company_id: user.sqlInfo.company_id,
@@ -193,7 +193,6 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
   const handleDevicesInEvent = async () => {
     for (let data of listOfLocations) {
-      console.log(data);
       await createDeviceInEvent(data);
     }
     return await closeModal();
@@ -235,225 +234,205 @@ const ModalAddAndUpdateDeviceSetup = ({
       footer={[]}
       width={700}
     >
-      {/* <Grid
-        display={"flex"}
-        flexDirection={"column"}
-        justifyContent={"space-around"}
-        alignItems={"center"}
-        gap={2}
-        container
+      <form
+        style={{
+          width: "100%",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          textAlign: "left",
+          padding: "0",
+        }}
+        onSubmit={handleSubmit(addingDeviceFromLocations)}
+        className="form"
       >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          gap={2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        > */}
-          <form
-            style={{
-              width: "100%",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              textAlign: "left",
-              padding: "0 25px 0 10px",
-            }}
-            onSubmit={handleSubmit(addingDeviceFromLocations)}
-            className="form"
-          >
-            <Typography style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-              Enter serial number range for <strong>{deviceTitle}</strong> to
-              assign to this event.
-            </Typography>
-            <div style={{ margin: "0px auto 1rem", width: "100%" }}>
-              <Select
-                className="custom-autocomplete"
-                showSearch
-                placeholder="Search item to add to inventory."
-                optionFilterProp="children"
-                style={{ ...AntSelectorStyle, width: "100%" }}
-                onChange={onChange}
-                options={Object.entries(optionsToRenderInSelector())?.map(
-                  (item) => {
-                    return {
-                      label: (
-                        <Typography
-                          textTransform={"capitalize"}
-                          style={{
-                            ...Subtitle,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            width: "100%",
-                          }}
-                        >
-                          <span style={{ textAlign: "left", width: "50%" }}>
-                            Location:{" "}
-                            <span style={{ fontWeight: 700 }}>{item[0]}</span>
-                          </span>
-                          <span style={{ textAlign: "right", width: "5 0%" }}>
-                            Available: {item[1]?.length}
-                          </span>
-                        </Typography>
-                      ), //renderOptionAsNeededFormat(JSON.stringify(option))
-                      value: JSON.stringify(item[1]),
-                    };
-                  }
-                )}
-              />
-            </div>
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                textAlign: "left",
-                gap: "10px",
-              }}
-            >
-              <div
-                style={{
-                  textAlign: "left",
-                  width: "100%",
-                  margin: "0.5rem 0",
-                }}
-              >
-                <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-                  >
-                    Qty of devices from {valueItemSelected[0]?.location}
-                  </Typography>
-                </InputLabel>
-                <OutlinedInput
-                  {...register("quantity")}
-                  style={OutlinedInputStyle}
-                  placeholder="e.g. 150"
-                />
-              </div>
-              <div
-                style={{
-                  textAlign: "left",
-                  width: "100%",
-                  margin: "0.5rem 0",
-                }}
-              >
-                <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-                  >
-                    <Tooltip title="A check icon if serial number does exist and xs icon for not existing serial number.">
-                      Starting from serial number <QuestionIcon />
-                    </Tooltip>
-                  </Typography>
-                </InputLabel>
-                <OutlinedInput
-                  {...register("serial_number")}
-                  style={OutlinedInputStyle}
-                  placeholder="e.g. 154580"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <span>
-                        {checkIfSerialNumberExists() ? (
-                          <CheckIcon />
-                        ) : (
-                          <BorderedCloseIcon />
-                        )}
+        <Typography style={{ ...Subtitle, margin: "0px auto 1rem" }}>
+          Enter serial number range for <strong>{deviceTitle}</strong> to assign
+          to this event.
+        </Typography>
+        <div style={{ margin: "0px auto 1rem", width: "100%" }}>
+          <Select
+            className="custom-autocomplete"
+            showSearch
+            placeholder="Search item to add to inventory."
+            optionFilterProp="children"
+            style={{ ...AntSelectorStyle, width: "100%" }}
+            onChange={onChange}
+            options={Object.entries(optionsToRenderInSelector())?.map(
+              (item) => {
+                return {
+                  label: (
+                    <Typography
+                      textTransform={"capitalize"}
+                      style={{
+                        ...Subtitle,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                      }}
+                    >
+                      <span style={{ textAlign: "left", width: "50%" }}>
+                        Location:{" "}
+                        <span style={{ fontWeight: 700 }}>{item[0]}</span>
                       </span>
-                    </InputAdornment>
-                  }
-                />
-              </div>
-            </div>
-            <span style={{ width: "100%", textAlign: "right" }}>
-              <p style={Subtitle}>
-                series starts: {valueItemSelected[0]?.serial_number} - series
-                ends: {valueItemSelected?.at(-1)?.serial_number}
-              </p>
-            </span>
-
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              {listOfLocations.map((item, index) => {
-                return (
-                  <Chip
-                    key={`${item.quantity}${item.deviceInfo.at(-1).item_id}`}
-                    label={`${item.deviceInfo.at(-1).location} - ${
-                      item.quantity
-                    }`}
-                    onDelete={() => removeItem(index)}
-                  />
-                );
-              })}
-            </div>
-            <div
-              style={{
-                textAlign: "left",
-                width: "100%",
-                margin: "0.5rem 0",
-              }}
-            >
-              <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{
-                    ...Subtitle,
-                    color: "transparent",
-                    fontWeight: 500,
-                    textWrap: "pretty",
-                  }}
-                >
-                  Qty of devices from {valueItemSelected[0]?.location}
-                </Typography>
-              </InputLabel>
-              <button
-                type="submit"
-                style={{
-                  ...LightBlueButton,
-                  ...CenteringGrid,
-                  width: "100%",
-                }}
-              >
-                <RectangleBluePlusIcon />
-                &nbsp;
-                <Typography textTransform="none" style={LightBlueButtonText}>
-                  Add qty from location
-                </Typography>
-              </button>
-            </div>
-          </form>
-          <Button
-            disabled={existingDevice.length === Number(quantity)}
-            onClick={() => handleDevicesInEvent()}
+                      <span style={{ textAlign: "right", width: "5 0%" }}>
+                        Available: {item[1]?.length}
+                      </span>
+                    </Typography>
+                  ), //renderOptionAsNeededFormat(JSON.stringify(option))
+                  value: JSON.stringify(item[1]),
+                };
+              }
+            )}
+          />
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
+          }}
+        >
+          <div
             style={{
-              ...disablingButton(),
-              display: `${blockingButton() ? "flex" : "none"}`,
+              textAlign: "left",
+              width: "100%",
+              margin: "0.5rem 0",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
+              >
+                Qty of devices from {valueItemSelected[0]?.location}
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              {...register("quantity")}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 150"
+            />
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "100%",
+              margin: "0.5rem 0",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
+              >
+                <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
+                  Starting from serial number <QuestionIcon />
+                </Tooltip>
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              {...register("serial_number")}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 154580"
+              endAdornment={
+                <InputAdornment position="end">
+                  <span>
+                    {checkIfSerialNumberExists() ? (
+                      <CheckIcon />
+                    ) : (
+                      <BorderedCloseIcon />
+                    )}
+                  </span>
+                </InputAdornment>
+              }
+            />
+          </div>
+        </div>
+        <span style={{ width: "100%", textAlign: "right" }}>
+          <p style={Subtitle}>
+            series starts: {valueItemSelected[0]?.serial_number} - series ends:{" "}
+            {valueItemSelected?.at(-1)?.serial_number}
+          </p>
+        </span>
+
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            margin: "0.5rem 0",
+            gap: "5px",
+          }}
+        >
+          {listOfLocations.map((item, index) => {
+            return (
+              <Chip
+                key={`${item.quantity}${item.deviceInfo.at(-1).item_id}`}
+                label={`${item.deviceInfo.at(-1).location} - ${item.quantity}`}
+                onDelete={() => removeItem(index)}
+              />
+            );
+          })}
+        </div>
+        <div
+          style={{
+            textAlign: "left",
+            width: "100%",
+            margin: "0.5rem 0",
+          }}
+        >
+          <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              style={{
+                ...Subtitle,
+                color: "transparent",
+                fontWeight: 500,
+                textWrap: "pretty",
+              }}
+            >
+              Qty of devices from {valueItemSelected[0]?.location}
+            </Typography>
+          </InputLabel>
+          <button
+            type="submit"
+            style={{
+              ...LightBlueButton,
+              ...CenteringGrid,
               width: "100%",
             }}
           >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Add devices to this event.
+            <RectangleBluePlusIcon />
+            &nbsp;
+            <Typography textTransform="none" style={LightBlueButtonText}>
+              Add qty from location
             </Typography>
-          </Button>
-        {/* </Grid>
+          </button>
+        </div>
+      </form>
+      <Button
+        disabled={existingDevice.length === Number(quantity)}
+        onClick={() => handleDevicesInEvent()}
+        style={{
+          ...disablingButton(),
+          ...CenteringGrid,
+          display: `${blockingButton() ? "flex" : "none"}`,
+          width: "100%",
+        }}
+      >
+        <Typography textTransform={"none"} style={BlueButtonText}>
+          Add devices to this event.
+        </Typography>
+      </Button>
+      {/* </Grid>
       </Grid> */}
     </Modal>
   );
