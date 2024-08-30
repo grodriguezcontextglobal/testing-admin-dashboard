@@ -1,7 +1,7 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, Divider, Modal, Popconfirm, Select, Space } from "antd";
+import { Button, Card, Divider, Modal, Popconfirm, Select, Space, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,6 +36,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }),
   });
 
+  const [api, contextHolder] = notification.useNotification();
+  const openNotification = (msg) => {
+    api.open({
+      message: msg,
+    });
+  };
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const groupingItemByCategoriesToRenderThemInSelector = () => {
     const result = new Map();
@@ -118,7 +124,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       } ${new Date().toString()} ${true} ${
         valueItemSelected[0].startingNumber
       } ${valueItemSelected[0].endingNumber}`,
-      consumerUses: true,
+      consumerUses: false,//change this to false to force company to set device for consumer and others to set device for staff
       startingNumber: valueItemSelected[0].serial_number,
       endingNumber: valueItemSelected[limit].serial_number,
       existing: true,
@@ -178,6 +184,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       });
     }
     await createDeviceRecordInNoSQLDatabase(data);
+    await openNotification("Device type and devices  range of serial number added to inventory.");
   };
 
   const closeModal = () => {
@@ -268,6 +275,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }}
       footer={[]}
     >
+    {contextHolder}
       <Grid width={"70vw"} container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <Grid
