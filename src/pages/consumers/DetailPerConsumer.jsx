@@ -74,15 +74,12 @@ const DetailPerConsumer = () => {
       );
       if (result) {
         let final = []
-        final = [...final, ...result.map((item) => item.notes)];
+        final = [...final, ...result.map((item) => item)];
         // (note += item.notes)
         return final;
       }
       return [];
     };
-
-    console.log('substracting ', substractingNotesAddedForCompany())
-
     return (
       <Grid
         style={{
@@ -262,11 +259,6 @@ const DetailPerConsumer = () => {
             title={"Notes"}
             props={substractingNotesAddedForCompany()}
           />
-          {/* <CardRendered
-            title={"Notes"}
-            props={substractingNotesAddedForCompany()}
-            optional={null}
-          /> */}
         </Grid>
         <Divider />{" "}
         <p
