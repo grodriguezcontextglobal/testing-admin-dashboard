@@ -125,7 +125,7 @@ const EditConsumerInfoModal = ({
       value: customer.phoneNumber ?? "",
     },
     {
-      title: "Notes",
+      title: "Add new Note",
       feature: "notes",
       type: "text",
       textArea: true,

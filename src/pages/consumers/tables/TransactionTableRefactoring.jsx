@@ -16,6 +16,7 @@ const TransactionTableRefactoring = () => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const [responsedData, setResponsedData] = useState([]);
+  const [sqlLeasePerConsumer, setSqlLeasePerConsumer] = useState([]);
   const transactionsPerConsumer = useQuery({
     queryKey: ["transactionsPerConsumer"],
     queryFn: () =>
@@ -25,14 +26,42 @@ const TransactionTableRefactoring = () => {
       }),
     refetchOnMount: false,
   });
+  const consumerInfoSqlQuery = useQuery({
+    queryKey: ["consumerInfoSql"],
+    queryFn: () =>
+      devitrakApi.post("/db_consumer/consulting-consumer", {
+        email: customer.email,
+      }),
+    refetchOnMount: false,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
     transactionsPerConsumer.refetch();
+    consumerInfoSqlQuery.refetch();
     return () => {
       controller.abort();
     };
   }, []);
+
+  const leasePerConsumer = async () => {
+    const response = await devitrakApi
+      .post("/db_lease/consulting-consumer-lease", {
+        consumer_member_id:
+        consumerInfoSqlQuery.data.data.consumer[0].consumer_id,
+        company_id: user.sqlInfo.company_id,
+      })
+      .then((response) => response.data);
+    if (response.ok) return setSqlLeasePerConsumer([...response.lease]);
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+    leasePerConsumer();
+    return () => {
+      controller.abort();
+    };
+  }, [consumerInfoSqlQuery.data]);
+
   const retrievedData = useRef();
   const gettingAllDeviceFromTransactionFound = (props) => {
     const result = new Set();
@@ -51,7 +80,8 @@ const TransactionTableRefactoring = () => {
   };
   const formatting = async () => {
     if (transactionsPerConsumer.data) {
-      const data = transactionsPerConsumer?.data?.data?.list;
+      const dataTransactions = transactionsPerConsumer?.data?.data?.list;
+      const data = [...dataTransactions, ...sqlLeasePerConsumer];
       const result = new Set();
       for (let item of data) {
         retrieveData(item.paymentIntent);
@@ -77,7 +107,7 @@ const TransactionTableRefactoring = () => {
     return () => {
       controller.abort();
     };
-  }, [transactionsPerConsumer.data]);
+  }, [transactionsPerConsumer.data, consumerInfoSqlQuery.data]);
 
   const columns = [
     {
