@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, Modal, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -13,6 +13,8 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
+import { onAddCustomer } from "../../../store/slices/stripeSlice";
 const EditConsumerInfoModal = ({
   openEditConsumerModal,
   setOpenEditConsumerModal,
@@ -21,6 +23,7 @@ const EditConsumerInfoModal = ({
   const [loading, setLoading] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
+  const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -42,7 +45,11 @@ const EditConsumerInfoModal = ({
           phoneNumber: data.phoneNumber,
           notes: [
             ...customer.data.notes,
-            { company: user.companyData.id, notes: data.notes, date:new Date().getTime()},
+            {
+              company: user.companyData.id,
+              notes: data.notes,
+              date: new Date().getTime(),
+            },
           ],
         }
       );
@@ -55,6 +62,17 @@ const EditConsumerInfoModal = ({
           queryKey: ["consumersList"],
           exact: true,
         });
+        let userFormatData = {
+          uid: customer.data.id,
+          name: updatingUserInfoQuery.data.name,
+          lastName: updatingUserInfoQuery.data.lastName,
+          email: updatingUserInfoQuery.data.email,
+          phoneNumber: updatingUserInfoQuery.data.userUpdated.phoneNumber,
+          data: updatingUserInfoQuery.data.userUpdated,
+        };
+        dispatch(onAddCustomerInfo(userFormatData));
+        dispatch(onAddCustomer(userFormatData));
+
         openNotificationWithIcon("success", "Consumer information updated.");
         setLoading(false);
         closeDeviceModal();
@@ -222,7 +240,7 @@ const EditConsumerInfoModal = ({
               </Typography>
             </Button>
             <Button
-            onClick={()=> closeDeviceModal()}
+              onClick={() => closeDeviceModal()}
               htmlType="reset"
               style={{
                 ...GrayButton,
