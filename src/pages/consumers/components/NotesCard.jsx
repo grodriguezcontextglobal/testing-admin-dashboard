@@ -1,9 +1,9 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Card } from "antd";
+import { Card, Input } from "antd";
 import { Subtitle } from "../../../styles/global/Subtitle";
-
-const NotesRendering = ({ props, title}) => {
+const { TextArea } = Input;
+const NotesRendering = ({ props, title }) => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -11,7 +11,18 @@ const NotesRendering = ({ props, title}) => {
   const isLargeDevice = useMediaQuery(
     "only screen and (min-width : 993px) and (max-width : 1200px)"
   );
-  return (
+
+  const renderingNotesPerCustomer = () => {
+    let notes = "";
+    props.slice().reverse().map((item, index) => {
+      notes += `${new Date(item.date).toString().split(" ").slice(1, 5).toString().replaceAll(",", " ")}:  ${item.notes}`;
+      if (index !== props.length - 1) {
+        notes += "\n";
+      }
+    });
+    return notes;
+  };
+    return (
     <Grid
       padding={`${
         isSmallDevice || isMediumDevice || isLargeDevice
@@ -59,27 +70,19 @@ const NotesRendering = ({ props, title}) => {
         <Grid container>
           <Grid
             display={"flex"}
+            flexDirection={"column"}
             justifyContent={"flex-start"}
             alignItems={"center"}
             item
             xs={12}
           >
-            {props.map((item, index) => {
-              return (
-                <div key={index} style={{ width: "100%", margin:"0 0 1dvh" }}>
-                  {
-                    <Typography
-                      style={{
-                        ...Subtitle,
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {item}
-                    </Typography>
-                  }
-                </div>
-              );
-            })}
+            <TextArea
+              disabled
+              rows={4}
+              style={{ ...Subtitle, border: "transparent", background: "transparent" }}
+              placeholder="Add a note"
+              value={renderingNotesPerCustomer()}
+            />
           </Grid>
         </Grid>
       </Card>
