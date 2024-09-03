@@ -57,8 +57,6 @@ const FooterExpandedRow = ({
       data: [],
     },
   ];
-  console.log(dataRendering);
-  console.log(formattedData);
   const footerColumn = [
     {
       title: "Deposit",
