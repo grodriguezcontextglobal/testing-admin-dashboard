@@ -18,7 +18,6 @@ const ModalAddingDeviceFromSearchbar = () => {
       devitrakApi.post("/receiver/receiver-assigned", {
         paymentIntent: paymentIntentSelected,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
