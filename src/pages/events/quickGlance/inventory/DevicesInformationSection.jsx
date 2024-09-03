@@ -8,7 +8,7 @@ import { Title } from "../../../../styles/global/Title";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { MagnifyIcon } from "../../../../components/icons/Icons";
 
-const DevicesInformationSection = () => {
+const DevicesInformationSection = (dataToRenderInComponent) => {
   const { register, watch } = useForm();
   const queryClient = useQueryClient()
   return (
@@ -88,7 +88,7 @@ const DevicesInformationSection = () => {
           </div>
         </Grid>
         <Grid item xs={12}>
-          <DeviceDatabase searchDevice={watch("searchDevice")} />
+          <DeviceDatabase searchDevice={watch("searchDevice")} eventInventoryData={dataToRenderInComponent} />
         </Grid>
       </Grid>
     </>
