@@ -26,6 +26,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import FooterExpandedRow from "./FooterExpandedRow";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import "../localStyles.css";
+import axios from "axios";
 
 const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -164,19 +165,52 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
       title: "Actions",
       key: "operation",
       render: (record) => (
-        (
-          <Space
-            size="middle"
+        <Space
+          size="middle"
+          style={{
+            display: `${
+              typeof record.status !== "string" && record.status && "flex"
+            }`,
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <Button
+            onClick={() => handleReturnSingleDevice(record)}
             style={{
-              display: `${typeof record.status !== 'string' && record.status && "flex"}`,
-              justifyContent: "flex-end",
-              alignItems: "center",
+              ...BlueButton,
+              display: renderingTernary(
+                record.status,
+                "Lost",
+                "none",
+                "flex",
+                "none"
+              ),
             }}
           >
-            <Button
-              onClick={() => handleReturnSingleDevice(record)}
+            <p style={BlueButtonText}>Mark as returned</p>
+          </Button>
+          <Button
+            onClick={() => handleLostSingleDevice(record)}
+            style={{
+              ...GrayButton,
+              display: renderingTernary(
+                record.status,
+                "Lost",
+                "none",
+                "flex",
+                "none"
+              ),
+            }}
+          >
+            <p
               style={{
-                ...BlueButton,
+                ...GrayButtonText,
+                color: `${
+                  record.status
+                    ? GrayButtonText.color
+                    : "var(--disabled0gray-button-text)"
+                }`,
                 display: renderingTernary(
                   record.status,
                   "Lost",
@@ -186,43 +220,10 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                 ),
               }}
             >
-              <p style={BlueButtonText}>Mark as returned</p>
-            </Button>
-            <Button
-              onClick={() => handleLostSingleDevice(record)}
-              style={{
-                ...GrayButton,
-                display: renderingTernary(
-                  record.status,
-                  "Lost",
-                  "none",
-                  "flex",
-                  "none"
-                ),
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  color: `${
-                    record.status
-                      ? GrayButtonText.color
-                      : "var(--disabled0gray-button-text)"
-                  }`,
-                  display: renderingTernary(
-                    record.status,
-                    "Lost",
-                    "none",
-                    "flex",
-                    "none"
-                  ),  
-                }}
-              >
-                Mark as lost
-              </p>
-            </Button>
-          </Space>
-        )
+              Mark as lost
+            </p>
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -286,8 +287,8 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
             deviceInPoolProfile
           );
           if (returningInPool.data) {
-            await devitrakApi.post(
-              "/nodemailer/confirm-returned-device-notification",
+            await axios.post(
+              "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",
               {
                 consumer: {
                   name: `${customer.name} ${customer.lastName}`,
@@ -303,8 +304,39 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                 date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                 time: dateRef[4],
                 link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  "Access-Control-Allow-Methods": "OPTIONS,POST",
+                  "Access-Control-Allow-Headers":
+                    "Origin, Content-Type, Accept",
+                  "Access-Control-Expose-Headers":
+                    "Content-Length,Content-Range",
+                },
               }
             );
+            // await devitrakApi.post(
+            //   "/nodemailer/confirm-returned-device-notification",
+            //   {
+            //     consumer: {
+            //       name: `${customer.name} ${customer.lastName}`,
+            //       email: customer.email,
+            //     },
+            //     device: {
+            //       serialNumber: props.serial_number,
+            //       deviceType: props.type,
+            //     },
+            //     event: props.entireData.eventSelected[0],
+            //     company: props.entireData.provider[0],
+            //     transaction: props.entireData.paymentIntent,
+            //     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            //     time: dateRef[4],
+            //     link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+            //   }
+            // );
             await assignedDevicesQuery.refetch();
             await refetching();
             return success();
