@@ -38,7 +38,6 @@ const ConfirmSubscription = () => {
     stripeCustomerInfoQuery.refetch();
   }, [setup_intent, setup_intent_client_secret]);
 
-  console.log(stripeCustomerInfoQuery?.data?.data);
 
   const renderingStatus = (props) => {
     const status = {
