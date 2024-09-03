@@ -18,7 +18,7 @@ const TransactionTableRefactoring = () => {
   const [responsedData, setResponsedData] = useState([]);
   const [sqlLeasePerConsumer, setSqlLeasePerConsumer] = useState([]);
   const transactionsPerConsumer = useQuery({
-    queryKey: ["transactionsPerConsumer"],
+    queryKey: ["transactionsPerConsumerInTable"],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
