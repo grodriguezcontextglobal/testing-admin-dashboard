@@ -34,7 +34,7 @@ const CustomerInformationSection = () => {
           <Typography style={{ ...Title, fontSize: "28px", padding: 0, width: "fit-content" }}>Search consumers:&nbsp;</Typography>
           <Grid item xs sm md lg>
             <OutlinedInput
-              {...register("searchDevice")}
+              {...register("searchCustomer")}
               style={OutlinedInputStyle}
               fullWidth
               placeholder="Search device here"
@@ -89,7 +89,7 @@ const CustomerInformationSection = () => {
           </div>
         </Grid>
         <Grid item xs={12}>
-          <CustomerDatabase searchAttendees={watch("searchEvent")} />
+          <CustomerDatabase searchAttendees={watch("searchCustomer")} />
         </Grid>
       </Grid>
     </>
