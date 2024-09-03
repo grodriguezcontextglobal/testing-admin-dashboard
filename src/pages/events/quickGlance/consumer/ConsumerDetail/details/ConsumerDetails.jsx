@@ -5,16 +5,12 @@ import { CardStyle } from "../../../../../../styles/global/CardStyle"
 const ConsumerDetails = ({ props }) => {
     return (
         <Card
-            //   id="card-contact-person"
             style={CardStyle}
             styles={{
                 body:{
                     padding: "24px 24px 24px 0" 
                 }
             }}
-            // bodyStyle={{
-            //     padding: "24px 24px 24px 0"
-            // }}
         >
             <Grid
                 display={"flex"}
