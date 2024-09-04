@@ -25,7 +25,7 @@ import CardActionsButton from "./components/CardActionsButton";
 import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
 
@@ -34,37 +34,56 @@ const DetailPerConsumer = () => {
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const stripeTransactionsSavedQuery = useQuery({
-    queryKey: ["stripeTransactionsList"],
-    queryFn: () => devitrakApi.get("/admin/users"),
-    refetchOnMount: false,
-  });
+  const rowRef = useRef();
+  const customerInfoTemplate = {
+    ...customer,
+    id: customer.id ?? customer.uid,
+  }
+
   const transactionsConsumerQuery = useQuery({
-    queryKey: ["transactionsPerCustomer"],
+    queryKey: ["transactionsPerCustomer", customerInfoTemplate.id],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
-        "consumerInfo.uid": customer.uid,
+        "consumerInfo.id": customerInfoTemplate.id,
       }),
     refetchOnMount: false,
   });
-
   useEffect(() => {
     const controller = new AbortController();
-    stripeTransactionsSavedQuery.refetch();
     transactionsConsumerQuery.refetch();
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [customerInfoTemplate.id, user.companyData.id, user.id]);
 
-  if (stripeTransactionsSavedQuery.isLoading)
+  const [eventsAttendedForCustomer, setEventsAttendedForCustomer] = useState(0);
+  const renderingNumberOfEventsConsumerAttended = async () => {
+    const result = new Map();
+    const dataPerEvent = transactionsConsumerQuery.data.data.list;
+    for (let data of dataPerEvent) {
+      if (!result.has(data.eventSelected)) {
+        result.set(data.eventSelected, data);
+      }
+    }
+    return setEventsAttendedForCustomer(result.size);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    renderingNumberOfEventsConsumerAttended();
+    return () => {
+      controller.abort();
+    };
+  }, [user.id, user.companyData.id, transactionsConsumerQuery.data]);
+
+  if (transactionsConsumerQuery.isLoading)
     return (
       <div style={CenteringGrid}>
         <Loading />
       </div>
     );
-  if (stripeTransactionsSavedQuery.data) {
+  if (transactionsConsumerQuery.data) {
     const handleBackAction = () => {
       navigate("/consumers");
     };
@@ -72,16 +91,18 @@ const DetailPerConsumer = () => {
       const result = customer?.data?.notes.filter(
         (ele) => ele.company === user.companyData.id
       );
-      if (result) {
-        let final = []
+      if (result.length > 0) {
+        let final = [];
         final = [...final, ...result.map((item) => item)];
         // (note += item.notes)
         return final;
       }
       return [];
     };
+
     return (
       <Grid
+        key={customer.id}
         style={{
           padding: "5px",
           display: "flex",
@@ -89,6 +110,7 @@ const DetailPerConsumer = () => {
           alignSelf: "stretch",
         }}
         container
+        ref={rowRef}
       >
         <Grid
           style={{
@@ -250,7 +272,7 @@ const DetailPerConsumer = () => {
         <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
           <CardRendered
             title={"Events"}
-            props={`${customer?.data?.event_providers.length ?? 0}`}
+            props={`${eventsAttendedForCustomer}`}
             optional={null}
           />
         </Grid>
