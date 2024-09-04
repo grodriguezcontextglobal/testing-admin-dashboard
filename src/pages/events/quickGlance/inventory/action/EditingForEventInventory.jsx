@@ -235,7 +235,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
   };
   const handleRemoveItemFromInventoryEvent = async (props) => {
-    // console.log("handleRemoveItemFromInventoryEvent", props);
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {

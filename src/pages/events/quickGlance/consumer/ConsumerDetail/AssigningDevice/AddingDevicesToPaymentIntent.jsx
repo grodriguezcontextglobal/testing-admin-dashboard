@@ -19,6 +19,7 @@ import {
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
+import axios from "axios";
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const [submittedAction, setSubmittedAction] = useState(false);
   const { customer } = useSelector((state) => state.stripe);
@@ -202,16 +203,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       user.companyData.id
     );
 
-    // const template = {
-    //   paymentIntent: record.paymentIntent,
-    //   device: newDeviceObject,
-    //   user: record.consumerInfo.email,
-    //   active: true,
-    //   eventSelected: choice,
-    //   provider: user.company,
-    //   timeStamp: new Date().getTime(),
-    //   company: user.companyData.id,
-    // };
     try {
       if (checkDeviceIsAssignedInEvent()) {
         const resp = await devitrakApiAdmin.post(
@@ -248,24 +239,46 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           if (record.device[0].deviceNeeded == 1) {
             const dateString = new Date().toString();
             const dateRef = dateString.split(" ");
-            await devitrakApi.post("/nodemailer/assignig-device-notification", {
-              consumer: {
-                name: `${customer.name} ${customer.lastName}`,
-                email: customer.email,
-              },
-              device: {
-                serialNumber: newDeviceObject.serialNumber,
-                deviceType: newDeviceObject.deviceType,
-              },
-              event: event.eventInfoDetail.eventName,
-              company: event.company,
-              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              time: dateRef[4],
-              transaction: record.paymentIntent,
-              link: `https://app.devitrak.net/authentication/${event.id}/${
-                user.companyData.id
-              }/${customer.id ?? customer.iud}`,
-            });
+            await axios.post(
+              "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/assigned_device",
+              {
+                consumer: {
+                  name: `${customer.name} ${customer.lastName}`,
+                  email: customer.email,
+                },
+                device: {
+                  serialNumber: newDeviceObject.serialNumber,
+                  deviceType: newDeviceObject.deviceType,
+                },
+                event: event.eventInfoDetail.eventName,
+                company: event.company,
+                date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+                time: dateRef[4],
+                transaction: record.paymentIntent,
+                link: `https://app.devitrak.net/authentication/${event.id}/${
+                  user.companyData.id
+                }/${customer.id ?? customer.iud}`,
+              }
+            );
+
+            // await devitrakApi.post("/nodemailer/assignig-device-notification", {
+            //   consumer: {
+            //     name: `${customer.name} ${customer.lastName}`,
+            //     email: customer.email,
+            //   },
+            //   device: {
+            //     serialNumber: newDeviceObject.serialNumber,
+            //     deviceType: newDeviceObject.deviceType,
+            //   },
+            //   event: event.eventInfoDetail.eventName,
+            //   company: event.company,
+            //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            //   time: dateRef[4],
+            //   transaction: record.paymentIntent,
+            //   link: `https://app.devitrak.net/authentication/${event.id}/${
+            //     user.companyData.id
+            //   }/${customer.id ?? customer.iud}`,
+            // });
           }
 
           openNotificationWithIcon(

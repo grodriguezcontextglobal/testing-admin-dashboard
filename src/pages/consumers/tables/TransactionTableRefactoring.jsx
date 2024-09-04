@@ -15,22 +15,26 @@ import ExpandedRow from "./ExpandedRow";
 const TransactionTableRefactoring = () => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
+  const customerInfoTemplate = {
+    ...customer,
+    id: customer.id ?? customer.uid,
+  }
   const [responsedData, setResponsedData] = useState([]);
   const [sqlLeasePerConsumer, setSqlLeasePerConsumer] = useState([]);
   const transactionsPerConsumer = useQuery({
-    queryKey: ["transactionsPerConsumer"],
+    queryKey: ["transactionsPerConsumerInTable", customerInfoTemplate.id],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
-        "consumerInfo.id": customer.id,
+        "consumerInfo.id": customerInfoTemplate.id,
       }),
     refetchOnMount: false,
   });
   const consumerInfoSqlQuery = useQuery({
-    queryKey: ["consumerInfoSql"],
+    queryKey: ["consumerInfoSql", customerInfoTemplate.email],
     queryFn: () =>
       devitrakApi.post("/db_consumer/consulting-consumer", {
-        email: customer.email,
+        email: customerInfoTemplate.email,
       }),
     refetchOnMount: false,
   });
@@ -42,7 +46,7 @@ const TransactionTableRefactoring = () => {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [customerInfoTemplate.id]);
 
   const leasePerConsumer = async () => {
     const response = await devitrakApi
@@ -81,7 +85,7 @@ const TransactionTableRefactoring = () => {
   const formatting = async () => {
     if (transactionsPerConsumer.data) {
       const dataTransactions = transactionsPerConsumer?.data?.data?.list;
-      const data = [...dataTransactions, ...sqlLeasePerConsumer];
+      const data = [...dataTransactions, ...sqlLeasePerConsumer]; 
       const result = new Set();
       for (let item of data) {
         retrieveData(item.paymentIntent);

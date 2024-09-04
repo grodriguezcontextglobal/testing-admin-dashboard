@@ -101,7 +101,11 @@ const MainPageQuickGlance = () => {
     };
   }, []);
 
-  if (eventAttendeesQuery.isLoading)
+  if (
+    eventAttendeesQuery.isLoading ||
+    receiversPoolQuery.isLoading ||
+    eventAttendeesParametersQuery.isLoading
+  )
     return (
       <div style={{ ...CenteringGrid, width: "100%" }}>
         {" "}
@@ -465,6 +469,9 @@ const MainPageQuickGlance = () => {
           </div>
           <DevicesInformationSection
             foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
+            dataToRenderInComponent={
+              receiversPoolQuery?.data?.data?.receiversInventory
+            }
           />
           <Grid item xs={12}>
             <FormatToDisplayDetail />

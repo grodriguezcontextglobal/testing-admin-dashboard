@@ -15,12 +15,10 @@ const DisplayAllItemsSetInventoryEvent = () => {
   const onChange = async (props) => {
     setLoadingStatus(true);
     const deviceInventoryUpdated = [...event.deviceSetup];
-    console.log(deviceInventoryUpdated);
     deviceInventoryUpdated[props.index] = {
       ...deviceInventoryUpdated[props.index],
       consumerUses: props.checked,
     }
-    console.log(deviceInventoryUpdated[props.index]);
     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
       deviceSetup: deviceInventoryUpdated,
     })

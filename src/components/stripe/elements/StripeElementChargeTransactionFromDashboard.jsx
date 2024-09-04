@@ -29,7 +29,6 @@ export const StripeElementChargeTransactionFromDashboard = ({
    * @property {Object} variables - variables of css for teh entires elements
    * @property {Object} rules - variables of css applied based on criterios
    */
-  console.log("client secret", clientSecret);
   return (
     <>
       {clientSecret && (
