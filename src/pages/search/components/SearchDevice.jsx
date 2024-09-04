@@ -24,6 +24,7 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 import { checkArray } from "../../../components/utils/checkArray";
+import axios from "axios";
 const SearchDevice = ({ searchParams }) => {
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
@@ -74,7 +75,7 @@ const SearchDevice = ({ searchParams }) => {
 
   const fetchActiveAssignedDevicesPerEvent = async () => {
     const rowEventsData = [...eventsPerAdmin.active];
-    const result = new Set();
+    const result = new Map();
     for (let data of rowEventsData) {
       const fetchingDataPerEvent = await devitrakApi.post(
         "/receiver/receiver-assigned-users-list",
@@ -89,14 +90,26 @@ const SearchDevice = ({ searchParams }) => {
         Array.isArray(fetchingDataPerEvent.data.listOfReceivers) &&
         fetchingDataPerEvent.data.listOfReceivers.length > 0
       ) {
-        result.add({
-          ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
-          eventInfo: data,
-        });
+        if (
+          !result.has(checkArray(fetchingDataPerEvent.data.listOfReceivers).id)
+        ) {
+          result.set(checkArray(fetchingDataPerEvent.data.listOfReceivers).id, {
+            ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
+            eventInfo: data,
+          });
+        }
+        // result.add({
+        //   ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
+        //   eventInfo: data,
+        // });
       }
     }
-    return setFoundDeviceData(Array.from(result));
-  };
+    const finalResult = new Set();
+    for (let [ , value] of result) {
+      finalResult.add(value);
+    }
+    return setFoundDeviceData(Array.from(finalResult));
+  } 
   useEffect(() => {
     const controller = new AbortController();
     staffMembersQuery.refetch();
@@ -242,8 +255,27 @@ const SearchDevice = ({ searchParams }) => {
               activity: false,
             }
           );
-          await devitrakApi.post(
-            "/nodemailer/confirm-returned-device-notification",
+          await axios.patch(
+            "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+            {
+              ref: {
+                device: checkArray(
+                  deviceInPoolListQuery.data.receiversInventory
+                ).device,
+                type: checkArray(deviceInPoolListQuery.data.receiversInventory)
+                  .type,
+                activity: true,
+                company: user.companyData.id,
+              },
+              newInfo: {
+                activity: false,
+              },
+              collection: "receiverspools",
+            }
+          );
+
+          await axios.post(
+            "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",
             {
               consumer: {
                 name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
@@ -259,8 +291,39 @@ const SearchDevice = ({ searchParams }) => {
               date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
               time: dateRef[4],
               link: `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`,
-            }
+            },
+            // {
+            //   headers: {
+            //     "Content-Type": "application/json",
+            //     Accept: "application/json",
+            //     "Access-Control-Allow-Origin": "*",
+            //     "Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT",
+            //     "Access-Control-Allow-Headers":
+            //       "Origin, X-Requested-With, Content-Type, Accept",
+            //     "Access-Control-Expose-Headers": "Content-Length,Content-Range",
+            //   },
+            // }
           );
+
+          // await devitrakApi.post(
+          //   "/nodemailer/confirm-returned-device-notification",
+          //   {
+          //     consumer: {
+          //       name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
+          //       email: record.data.userInfo.email,
+          //     },
+          //     device: {
+          //       serialNumber: record.data.device.serialNumber,
+          //       deviceType: record.data.device.deviceType,
+          //     },
+          //     event: record.data.eventSelected[0],
+          //     company: record.data.provider[0],
+          //     transaction: record.data.paymentIntent,
+          //     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+          //     time: dateRef[4],
+          //     link: `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`,
+          //   }
+          // );
           setLoadingStatus(false);
           await handleDeviceSearch(record);
         }
@@ -334,7 +397,6 @@ const SearchDevice = ({ searchParams }) => {
             All devices matching the search keywords.
           </Typography>
         </Grid>
-
         <Grid item xs={12} sm={12} md={8} lg={8}>
           <Grid container gap={1}>
             {sortAndRenderFoundData()?.length > 0 ? (
