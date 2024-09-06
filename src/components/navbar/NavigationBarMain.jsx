@@ -37,7 +37,7 @@ import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
+// import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 import {
   DevitrakLogo,
   DevitrakName,
@@ -240,7 +240,10 @@ const NavigationBarMain = (props) => {
                   to={`/`}
                   style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
-                  {user.companyData.company_logo.length > 0 ? (
+                  <DevitrakLogo />
+                  <DevitrakName />
+
+                  {/* {user.companyData.company_logo.length > 0 ? (
                     <div style={{  display: "flex" }}>
                       <img
                         width={"40px"}
@@ -280,7 +283,7 @@ const NavigationBarMain = (props) => {
                       <DevitrakLogo />
                       <DevitrakName />
                     </>
-                  )}
+                  )} */}
                 </NavLink>
 
                 {navItems.map((item) => {

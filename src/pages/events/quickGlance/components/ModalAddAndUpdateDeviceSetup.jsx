@@ -403,6 +403,7 @@ const ModalAddAndUpdateDeviceSetup = ({
             </Typography>
           </InputLabel>
           <button
+          disabled={blockingButton()}  
             type="submit"
             style={{
               ...LightBlueButton,
