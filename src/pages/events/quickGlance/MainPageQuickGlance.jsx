@@ -3,7 +3,7 @@ import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -67,6 +67,7 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
+    staleTime: Infinity,
     refetchOnMount: false,
   });
   const eventAttendeesParametersQuery = useQuery({
@@ -76,9 +77,8 @@ const MainPageQuickGlance = () => {
         company: user.companyData.id,
         eventSelected: choice,
       }),
-    // enabled: false,
+    staleTime: Infinity,
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
@@ -87,19 +87,19 @@ const MainPageQuickGlance = () => {
         eventSelected: event?.eventInfoDetail?.eventName,
         company: user.companyData.id,
       }),
-    // enabled: false,
+    staleTime: Infinity,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
-  useEffect(() => {
-    const controller = new AbortController();
-    eventAttendeesQuery.refetch();
-    receiversPoolQuery.refetch();
-    eventAttendeesParametersQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   eventAttendeesQuery.refetch();
+  //   receiversPoolQuery.refetch();
+  //   eventAttendeesParametersQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   if (
     eventAttendeesQuery.isLoading ||
@@ -117,8 +117,9 @@ const MainPageQuickGlance = () => {
     receiversPoolQuery.data &&
     eventAttendeesParametersQuery.data
   ) {
+    const parsingData = receiversPoolQuery?.data?.data?.receiversInventory;
     const foundAllDevicesGivenInEvent = () => {
-      const check = receiversPoolQuery?.data?.data?.receiversInventory;
+      const check = parsingData;
       return check;
     };
     const checkStaffRoleToDisplayCashReportInfo = () => {
@@ -469,9 +470,7 @@ const MainPageQuickGlance = () => {
           </div>
           <DevicesInformationSection
             foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
-            dataToRenderInComponent={
-              receiversPoolQuery?.data?.data?.receiversInventory
-            }
+            dataToRenderInComponent={parsingData}
           />
           <Grid item xs={12}>
             <FormatToDisplayDetail />

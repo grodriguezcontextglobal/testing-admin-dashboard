@@ -80,14 +80,10 @@ const StaffTable = ({ searching }) => {
       if (!searching || String(searching).length < 1) {
         return [...result.values()];
       } else {
-        const responding = [...result.values()].filter(
-          (staff) =>
-            String(staff.name)
-              .toLowerCase()
-              .includes(String(searching).toLowerCase()) ||
-            String(staff.email)
-              .toLowerCase()
-              .includes(String(searching).toLowerCase())
+        const responding = [...result.values()].filter((staff) =>
+          JSON.stringify(staff)
+            .toLowerCase()
+            .includes(String(searching).toLowerCase())
         );
         return responding;
       }

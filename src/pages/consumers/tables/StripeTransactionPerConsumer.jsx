@@ -69,8 +69,9 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
             }
           );
           if (respo.data) {
-            if (respo.data.listOfReceivers.length > 0) {
-              for (let data of respo.data.listOfReceivers) {
+            const inventory =respo.data.listOfReceivers;
+            if (inventory.length > 0) {
+              for (let data of inventory) {
                 if (!result.has(data.paymentIntent)) {
                   result.set(data.paymentIntent, [data]);
                 } else {
