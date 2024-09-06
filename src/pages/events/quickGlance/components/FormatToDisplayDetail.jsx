@@ -39,16 +39,15 @@ const FormatToDisplayDetail = () => {
   }, []);
 
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {
+    const inventoryEventData = receiversPoolQuery.data.data.receiversInventory;
     const foundAllDevicesGivenInEvent = () => {
-      const receiversPoolData =
-        receiversPoolQuery?.data?.data?.receiversInventory;
+      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
       if (receiversPoolData?.length > 0) return receiversPoolData;
       return [];
     };
 
     const foundAllNoOperatingDeviceInEvent = () => {
-      const receiversPoolData =
-        receiversPoolQuery?.data?.data?.receiversInventory;
+      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
       const groupingByReturnedStatus = _.groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
@@ -60,8 +59,7 @@ const FormatToDisplayDetail = () => {
     };
 
     const foundAllNoOperatingDeviceListInEvent = () => {
-      const receiversPoolData =
-        receiversPoolQuery?.data?.data?.receiversInventory;
+      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
       const groupingByReturnedStatus = _.groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
@@ -94,7 +92,7 @@ const FormatToDisplayDetail = () => {
     deviceRangeDisplay();
 
     const numberDisplayDynamically = () => {
-      const dataRef = receiversPoolQuery?.data?.data?.receiversInventory;
+      const dataRef = receiversPoolQuery.data.data.receiversInventory;
       if (dataRef?.length > 0) {
         return deviceRangeDisplay() - foundDevicesOut();
       }
@@ -106,7 +104,7 @@ const FormatToDisplayDetail = () => {
         <Grid item xs={12} sm={12} md={12} lg={4}>
           <CardRendered
             key={"Total devices of event."}
-            props={receiversPoolQuery?.data?.data?.receiversInventory?.length ?? 0}
+            props={inventoryEventData?.length ?? 0}
             title={"Total inventory of event."}
           />
         </Grid>
