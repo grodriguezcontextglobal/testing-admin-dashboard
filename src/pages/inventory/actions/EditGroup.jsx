@@ -127,7 +127,6 @@ const EditGroup = () => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(selectedItem)) {
       const dataToRetrieve = retrieveItemDataSelected().get(selectedItem);
-      console.log('data', dataToRetrieve)
       setValue("category_name", `${dataToRetrieve.category_name}`);
       setValue("cost", `${dataToRetrieve.cost}`);
       setValue("brand", `${dataToRetrieve.brand}`);
