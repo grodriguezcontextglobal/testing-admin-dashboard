@@ -26,6 +26,8 @@ import CardActionsButton from "../CardActionsButton";
 import ConsumerDetailInformation from "../ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "../ConsumerDetailinfoContact";
 import NotesRendering from "../NotesCard";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { GrayButton } from "../../../../styles/global/GrayButton";
 
 const ConsumerDeviceLostFeeCash = () => {
   const navigator = useNavigate();
@@ -541,12 +543,12 @@ const ConsumerDeviceLostFeeCash = () => {
                   <button
                     type="reset"
                     style={{
-                      ...BlueButton,
+                      ...GrayButton,
                       width: "fit-content",
                     }}
                     onClick={() => handleBackAction()}
                   >
-                    <p style={{ ...BlueButtonText, textTransform: "none" }}>
+                    <p style={{ ...GrayButtonText, textTransform: "none" }}>
                       Cancel
                     </p>
                   </button>{" "}

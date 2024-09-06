@@ -580,6 +580,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                       </p>
                     </InputLabel>
                     <OutlinedInput
+                      disabled={blocking}
                       label="Amount"
                       type="text"
                       required
@@ -605,7 +606,6 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                   lg={4}
                 >
                   <button
-                    disabled={blocking}
                     style={GrayButton}
                     onClick={() => handleBackAction()}
                   >
