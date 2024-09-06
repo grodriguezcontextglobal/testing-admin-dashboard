@@ -617,6 +617,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                 </Grid>
               </Grid>
             </form>
+            <Divider />
             <Grid item xs={12}>
               {clientSecret !== "" && (
                 <LostDeviceStripeElement
