@@ -89,7 +89,6 @@ const MainPageQuickGlance = () => {
       }),
     staleTime: Infinity,
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
   // useEffect(() => {
   //   const controller = new AbortController();
@@ -118,10 +117,21 @@ const MainPageQuickGlance = () => {
     eventAttendeesParametersQuery.data
   ) {
     const parsingData = receiversPoolQuery?.data?.data?.receiversInventory;
+
+    const inventoryEventAssignedCount = () => {
+      let result = 0;
+      const { deviceSetup } = event;
+      for (let data of deviceSetup) {
+        result += Number(data.quantity);
+      }
+      return result;
+    };
+
     const foundAllDevicesGivenInEvent = () => {
       const check = parsingData;
       return check;
     };
+
     const checkStaffRoleToDisplayCashReportInfo = () => {
       return event?.staff?.adminUser?.some((member) => member === user.email);
     };
@@ -445,7 +455,7 @@ const MainPageQuickGlance = () => {
                       padding: "0px 8px",
                     }}
                   >
-                    {foundAllDevicesGivenInEvent()?.length} total
+                    {inventoryEventAssignedCount()} total
                   </p>
                 </div>
               </p>
