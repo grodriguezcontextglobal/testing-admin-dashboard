@@ -86,20 +86,21 @@ const SearchDevice = ({ searchParams }) => {
           eventSelected: data.eventInfoDetail.eventName,
         }
       );
+      const responseData = fetchingDataPerEvent.data.listOfReceivers;
       if (
-        Array.isArray(fetchingDataPerEvent.data.listOfReceivers) &&
-        fetchingDataPerEvent.data.listOfReceivers.length > 0
+        Array.isArray(responseData) &&
+        responseData.length > 0
       ) {
         if (
-          !result.has(checkArray(fetchingDataPerEvent.data.listOfReceivers).id)
+          !result.has(checkArray(responseData).id)
         ) {
-          result.set(checkArray(fetchingDataPerEvent.data.listOfReceivers).id, {
-            ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
+          result.set(checkArray(responseData).id, {
+            ...responseData.at(-1),
             eventInfo: data,
           });
         }
         // result.add({
-        //   ...fetchingDataPerEvent.data.listOfReceivers.at(-1),
+        //   ...responseData.at(-1),
         //   eventInfo: data,
         // });
       }
