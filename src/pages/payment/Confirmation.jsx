@@ -153,7 +153,7 @@ const Confirmation = () => {
                 deviceValue: deviceSelectionPaidTransaction.deviceType.value,
               },
             ],
-            consumerInfo: customer,
+            consumerInfo: {...customer, uid: customer.uid ?? customer.id, id:customer.id ?? customer.uid},
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
             company: user.companyData.id,
