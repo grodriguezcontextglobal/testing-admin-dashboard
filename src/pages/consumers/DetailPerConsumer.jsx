@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -38,7 +38,7 @@ const DetailPerConsumer = () => {
   const customerInfoTemplate = {
     ...customer,
     id: customer.id ?? customer.uid,
-  }
+  };
 
   const transactionsConsumerQuery = useQuery({
     queryKey: ["transactionsPerCustomer", customerInfoTemplate.id],
@@ -367,7 +367,6 @@ const DetailPerConsumer = () => {
             <TransactionTableRefactoring searchValue={watch("searchEvent")} />
           </Grid>
         </Grid>
-        <Outlet />
       </Grid>
     );
   }
