@@ -1,28 +1,37 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import {
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Alert, Button, Divider } from "antd";
+import { Button, Divider } from "antd";
+import _ from "lodash";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { EditIcon } from "../../../../components/icons/Icons";
+import { LostDeviceStripeElement } from "../../../../components/stripe/elements/LostDeviceStripeElement";
 import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import CardRendered from "../../../inventory/utils/CardRendered";
+import AssigmentAction from "../AssigmentAction";
 import CardActionsButton from "../CardActionsButton";
 import ConsumerDetailInformation from "../ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "../ConsumerDetailinfoContact";
-import { LostDeviceStripeElement } from "../../../../components/stripe/elements/LostDeviceStripeElement";
-import { useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import _ from "lodash";
+import NotesRendering from "../NotesCard";
 const ConsumerDeviceLostFeeCreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [blocking, setBlocking] = useState(false);
@@ -50,12 +59,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     );
     return result;
   };
-  const {
-    handleSubmit,
-    register,
-    watch,
-    formState: { errors },
-  } = useForm({
+  const { handleSubmit, register, watch } = useForm({
     defaultValues: {
       total: `${returnDeviceValue().value}`,
     },
@@ -65,7 +69,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
   });
 
@@ -80,6 +84,18 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
   );
+  const substractingNotesAddedForCompany = () => {
+    const result = customer?.data?.notes.filter(
+      (ele) => ele.company === user.companyData.id
+    );
+    if (result?.length > 0) {
+      let final = [];
+      final = [...final, ...result.map((item) => item)];
+      return final;
+    }
+    return [];
+  };
+
   const findRightDataInEvent = () => {
     const eventCompanyData = groupingByCompany[user.company];
 
@@ -97,19 +113,6 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-
-  //! missing some props to pass
-  // const reportActivityInLog = async () => {
-  //   await devitrakApi.post("/transaction-audit-log/create-audit", {
-  //     transaction: paymentIntentReceiversAssigned.at(-1).paymentIntent,
-  //     user: user.email,
-  //     actionTaken: `Device:${receiverToReplaceObject.serialNumber}, type: ${receiverToReplaceObject.deviceType
-  //       } lost and a total lost fee of:$${localStorage.getItem(
-  //         "total"
-  //       )} was collected in cash by ${user.email}`,
-  //     time: new Date(),
-  //   });
-  // };
   const changeStatusInPool = async () => {
     let findTheOneInUsed;
     let findDeviceInPool = _.groupBy(findRightDataInEvent(), "device");
@@ -261,9 +264,10 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     >
       <Grid
         style={{
+          padding: "5px",
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          justifyContent: "center",
+          alignSelf: "stretch",
         }}
         container
       >
@@ -273,75 +277,72 @@ const ConsumerDeviceLostFeeCreditCard = () => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
+          container
         >
-          <p style={{ ...TextFontSize30LineHeight38, textTransform: "none" }}>
-            Consumer
-          </p>
-            {/* /event/new_subscription */}
-            <Link to="/create-event-page/event-detail">
-            <button
-              style={{
-                width: "fit-content",
-                border: "1px solid var(--blue-dark-600, #155EEF)",
-                borderRadius: "8px",
-                background: "var(--blue-dark-600, #155EEF)",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-              }}
-            >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF"
-                width={20}
-                height={20}
-              />
-              &nbsp;
-              <p
-                style={{
-                  color: "var(--base-white, #FFF",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
-              >
-                Add new event
-              </p>
-            </button>
-          </Link>
-        </Grid>
-      </Grid>
-      <Grid
-        style={{
-          paddingTop: "0px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        container
-      >
-        <Grid marginY={0} item xs={8}>
           <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              margin: "0 0 1.5dvh",
+            }}
             item
             xs={12}
+            sm={12}
+            md={12}
+            lg={12}
           >
-            <button
-              style={{
-                backgroundColor: "transparent",
-                outline: "none",
-                margin: 0,
-                padding: 0,
-              }}
-              onClick={() => handleBackAction()}
+            <Typography
+              textTransform={"none"}
+              style={TextFontSize30LineHeight38}
             >
-              <p
+              Consumer
+            </Typography>
+            {/* /event/new_subscription */}
+            <Link to="/create-event-page/event-detail">
+              <Button
+                style={{
+                  ...BlueButton,
+                  ...CenteringGrid,
+                }}
+              >
+                <Icon
+                  icon="ic:baseline-plus"
+                  color="var(--base-white, #FFF"
+                  width={20}
+                  height={20}
+                />
+                &nbsp;
+                <Typography
+                  textTransform={"none"}
+                  style={{
+                    ...BlueButtonText,
+                  }}
+                >
+                  Add new event
+                </Typography>
+              </Button>
+            </Link>
+          </Grid>
+        </Grid>
+        <Grid
+          style={{
+            paddingTop: "0px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          container
+        >
+          <Grid marginY={0} item xs={8}>
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              item
+              xs={12}
+            >
+              <Typography
                 style={{
                   ...TextFontsize18LineHeight28,
                   textTransform: "capitalize",
@@ -350,250 +351,284 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                   color: "var(--blue-dark-600, #155EEF)",
                   cursor: "pointer",
                 }}
+                onClick={() => handleBackAction()}
               >
                 All consumers
-              </p>
-            </button>
-            <p
-              style={{
-                ...TextFontsize18LineHeight28,
-                textTransform: "capitalize",
-                textAlign: "left",
-                fontWeight: 600,
-                color: "var(--gray-900, #101828)",
-              }}
-            >
-              <Icon icon="mingcute:right-line" />
-              {customer?.name} {customer?.lastName}
-            </p>{" "}
-          </Grid>
-        </Grid>
-        <Grid textAlign={"right"} item xs={4}></Grid>
-      </Grid>
-      <Divider />
-      <Grid
-        gap={"5px"}
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        alignSelf={"flex-start"}
-        container
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={4}
-          lg={4}
-        >
-          <ConsumerDetailInformation />
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          alignSelf={"flex-start"}
-          item
-          xs={12}
-          sm={12}
-          md={4}
-          lg={4}
-        >
-          <ConsumerDetailInfoCntact />
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
-          alignSelf={"flex-start"}
-          item
-          xs={12}
-          sm={12}
-          md={3}
-          lg={3}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: "5px",
-            }}
-          >
-            <button
-              style={{
-                outline: "none",
-                display: "flex",
-                padding: "10px 16px",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "8px",
-                borderRadius: "8px",
-                border: "1px solid var(--Blue-dark-50, #EFF4FF)",
-                background: "var(--Blue-dark-50, #EFF4FF)",
-              }}
-            >
-              <EditIcon />
-              <p
+              </Typography>
+              <Typography
                 style={{
-                  color: "var(--Blue-dark-700, #004EEB)",
-                  fontFamily: "Inter",
-                  fontSize: "14px",
-                  fontStyle: "normal",
-                  fontWeight: "600",
-                  lineHeight: "20px",
+                  ...TextFontsize18LineHeight28,
+                  textTransform: "capitalize",
+                  textAlign: "left",
+                  fontWeight: 600,
+                  color: "var(--gray-900, #101828)",
                 }}
               >
-                Edit
-              </p>
-            </button>
-          </div>
+                <Icon icon="mingcute:right-line" />
+                {customer?.name} {customer?.lastName}
+              </Typography>{" "}
+            </Grid>
+          </Grid>
+          <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
-      </Grid>
-      <Divider />{" "}
-      <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-        <CardRendered
-          title={"Group"}
-          props={"No group provided"}
-          optional={null}
-        />
-      </Grid>
-      <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
-        <CardActionsButton />
-      </Grid>
-      <Divider />{" "}
-      <form
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "10px",
-        }}
-        onSubmit={handleSubmit(triggerStripePaymentIntent)}
-      >
+        <Divider />
         <Grid
+          gap={"5px"}
           display={"flex"}
-          alignItems={"center"}
           justifyContent={"space-between"}
+          alignItems={"center"}
+          alignSelf={"flex-start"}
           container
         >
           <Grid
             display={"flex"}
-            alignItems={"center"}
             justifyContent={"flex-start"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={3}
-          >
-            <p style={TextFontsize18LineHeight28}>
-              Credit card transaction for lost device
-            </p>
-          </Grid>
-          <Grid
-            display={"flex"}
             alignItems={"center"}
-            justifyContent={"flex-end"}
-            gap={"10px"}
-            margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={3}
-          >
-            <p
-              style={{
-                width: "fit-content",
-                color: "#000",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-                textTransform: "none",
-              }}
-            >
-              Serial number
-            </p>
-
-            <OutlinedInput
-              disabled
-              value={receiverToReplaceObject.serialNumber}
-              style={OutlinedInputStyle}
-            />
-          </Grid>
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"flex-end"}
-            gap={"10px"}
-            margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={3}
-          >
-            <p
-              style={{
-                color: "#000",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-                textTransform: "none",
-              }}
-            >
-              Amount
-            </p>
-            <OutlinedInput
-              disabled={blocking}
-              id="outlined-adornment-amount"
-              style={OutlinedInputStyle}
-              startAdornment={
-                <InputAdornment position="start">$</InputAdornment>
-              }
-              {...register("total", { required: true })}
-              name="total"
-            />
-            {errors?.total && (
-              <Alert message="Amount is required" type="error" />
-            )}
-          </Grid>
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"flex-end"}
-            gap={2}
             item
             xs={12}
             sm={12}
             md={3}
-            lg={2}
+            lg={3}
           >
-            <Button style={GrayButton} onClick={() => handleBackAction()}>
-              <p style={GrayButtonText}>Cancel</p>
-            </Button>{" "}
-            <Button style={BlueButton} type="submit">
-              <p style={BlueButtonText}>Add CC information</p>
-            </Button>
+            <ConsumerDetailInformation />
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={4}
+          >
+            <ConsumerDetailInfoCntact />
+          </Grid>
+          <Grid
+            display={"flex"}
+            flexDirection={"column"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            sm={12}
+            md={3}
+            lg={3}
+          >
+            <CardActionsButton />
           </Grid>
         </Grid>
-      </form>
-      <Grid item xs={12}>
-        {clientSecret !== "" && (
-          <LostDeviceStripeElement
-            clientSecret={clientSecret}
-            total={watch("total")}
-            customerStripeId={customer.uid}
-            customer={customer}
+        <Divider />{" "}
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
+          <CardRendered title={"Transactions"} props={`${0}`} optional={null} />
+        </Grid>{" "}
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
+          <CardRendered title={"Events"} props={0} optional={null} />
+        </Grid>
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={6} lg={6}>
+          <NotesRendering
+            title={"Notes"}
+            props={substractingNotesAddedForCompany()}
           />
-        )}
+        </Grid>
+        <Divider />{" "}
+        <p
+          style={{
+            ...TextFontsize18LineHeight28,
+            width: "100%",
+            textAlign: "left",
+            margin: "0 0 1.5dvh",
+          }}
+        >
+          Transactions
+        </p>
+        <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          gap={1}
+          container
+        >
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            md={4}
+            lg={4}
+          >
+            <OutlinedInput
+              style={OutlinedInputStyle}
+              fullWidth
+              placeholder="Search a transaction here"
+              startAdornment={
+                <InputAdornment position="start">
+                  <Icon
+                    icon="radix-icons:magnifying-glass"
+                    color="#344054"
+                    width={20}
+                    height={19}
+                  />
+                </InputAdornment>
+              }
+            />
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            md={5}
+            lg={5}
+          >
+            <AssigmentAction />
+          </Grid>
+        </Grid>
+        <Grid
+          marginY={3}
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          container
+        >
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <form
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+              }}
+              onSubmit={handleSubmit(triggerStripePaymentIntent)}
+            >
+              <Grid
+                display={"flex"}
+                alignItems={"center"}
+                justifyContent={"space-between"}
+                container
+              >
+                <Grid
+                  display={"flex"}
+                  alignItems={"center"}
+                  justifyContent={"flex-start"}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={3}
+                  lg={3}
+                >
+                  <p
+                    style={{
+                      ...TextFontSize30LineHeight38,
+                      textTransform: "none",
+                    }}
+                  >
+                    Credit card method
+                  </p>
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  alignItems={"center"}
+                  justifyContent={"center"}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={4}
+                  lg={3}
+                >
+                  <OutlinedInput
+                    disabled
+                    value={receiverToReplaceObject.serialNumber}
+                    style={{ ...OutlinedInputStyle, margin: "0 5px 0 0" }}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  alignItems={"center"}
+                  justifyContent={"center"}
+                  margin={`${
+                    (isSmallDevice || isMediumDevice) && "0 0 2dvh 0"
+                  }`}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={2}
+                  lg={2}
+                >
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="outlined-adornment-amount">
+                      <p
+                        style={{
+                          color: "#000",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          fontFamily: "Inter",
+                          lineHeight: "20px",
+                          textTransform: "none",
+                        }}
+                      >
+                        Amount
+                      </p>
+                    </InputLabel>
+                    <OutlinedInput
+                      label="Amount"
+                      type="text"
+                      required
+                      id="outlined-adornment-amount"
+                      style={OutlinedInputStyle}
+                      startAdornment={
+                        <InputAdornment position="start">$</InputAdornment>
+                      }
+                      {...register("total")}
+                      name="total"
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid
+                  display={"flex"}
+                  alignItems={"center"}
+                  justifyContent={"flex-end"}
+                  gap={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={3}
+                  lg={4}
+                >
+                  <button
+                    disabled={blocking}
+                    style={GrayButton}
+                    onClick={() => handleBackAction()}
+                  >
+                    <p style={GrayButtonText}>Cancel</p>
+                  </button>
+                  <button disabled={blocking} style={BlueButton} type="submit">
+                    <p style={BlueButtonText}>Add CC info</p>
+                  </button>
+                </Grid>
+              </Grid>
+            </form>
+            <Grid item xs={12}>
+              {clientSecret !== "" && (
+                <LostDeviceStripeElement
+                  clientSecret={clientSecret}
+                  total={watch("total")}
+                  customerStripeId={customer.uid}
+                  customer={customer}
+                />
+              )}
+            </Grid>{" "}
+          </Grid>
+        </Grid>
       </Grid>{" "}
     </Grid>
   );
