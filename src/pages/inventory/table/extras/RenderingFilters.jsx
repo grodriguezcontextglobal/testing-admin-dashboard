@@ -108,7 +108,6 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     }
   };
   const onSelectChange = async (newSelectedRowKeys) => {
-    console.log(newSelectedRowKeys);
     if (
       selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
     ) {

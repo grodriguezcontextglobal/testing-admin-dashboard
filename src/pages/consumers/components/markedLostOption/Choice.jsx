@@ -1,11 +1,12 @@
+import { Grid } from "@mui/material";
 import { Divider, Modal } from "antd";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { Link } from "react-router-dom";
-import { Grid } from "@mui/material";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../../styles/global/Subtitle";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 
 const Choice = ({ openModal, setOpenModal }) => {
   // const { customer } = useSelector((state) => state.stripe);
@@ -57,9 +58,9 @@ const Choice = ({ openModal, setOpenModal }) => {
       </Grid>
 
       <Divider />
-      <button onClick={handleClose} style={{ width: "100%" }}>
+      <button onClick={handleClose} style={{ ...GrayButton, width: "100%" }}>
         <p
-          style={{...Subtitle, color:"var(--whitebase)", ...CenteringGrid}}
+          style={{...GrayButtonText,...CenteringGrid, textTransform: "none" }}
         >
           Go back
         </p>

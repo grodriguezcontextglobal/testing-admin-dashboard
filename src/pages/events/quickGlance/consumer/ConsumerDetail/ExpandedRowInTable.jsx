@@ -140,31 +140,31 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             exact: true,
           });
           deviceAssignedListQuery.refetch();
-          // const deviceInPoolProfile = {
-          //   id: checkInPool.id,
-          //   activity: false,
-          // };
-          await axios.patch(
-            "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-            {
-              ref: {
-                device: checkInPool.device,
-                type: checkInPool.type,
-                activity: true,
-                company: user.companyData.id,
-              },
-              newInfo: {
-                activity: false,
-              },
-              collection: "receiverspools",
-            }
-          );
-    
-    
-          // await devitrakApi.patch(
-          //   `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
-          //   deviceInPoolProfile
+          const deviceInPoolProfile = {
+            id: checkInPool.id,
+            activity: false,
+          };
+          // await axios.patch(
+          //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+          //   {
+          //     ref: {
+          //       device: checkInPool.device,
+          //       type: checkInPool.type,
+          //       activity: true,
+          //       company: user.companyData.id,
+          //     },
+          //     newInfo: {
+          //       activity: false,
+          //     },
+          //     collection: "receiverspools",
+          //   }
           // );
+    
+    
+          await devitrakApi.patch(
+            `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
+            deviceInPoolProfile
+          );
           await axios.post(
             "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",
             {
@@ -260,30 +260,30 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             exact: true,
           });
           deviceAssignedListQuery.refetch();
-          // const deviceInPoolProfile = {
-          //   ...devicePoolData,
-          //   activity: true,
-          // };
-          await axios.patch(
-            "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-            {
-              ref: {
-                device: devicePoolData.device,
-                type: devicePoolData.type,
-                activity: false,
-                company: user.companyData.id,
-              },
-              newInfo: {
-                activity: true,
-              },
-              collection: "receiverspools",
-            }
-          );
-
-          // await devitrakApi.patch(
-          //   `/receiver/receivers-pool-update/${devicePoolData.id}`,
-          //   deviceInPoolProfile
+          const deviceInPoolProfile = {
+            ...devicePoolData,
+            activity: true,
+          };
+          // await axios.patch(
+          //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+          //   {
+          //     ref: {
+          //       device: devicePoolData.device,
+          //       type: devicePoolData.type,
+          //       activity: false,
+          //       company: user.companyData.id,
+          //     },
+          //     newInfo: {
+          //       activity: true,
+          //     },
+          //     collection: "receiverspools",
+          //   }
           // );
+
+          await devitrakApi.patch(
+            `/receiver/receivers-pool-update/${devicePoolData.id}`,
+            deviceInPoolProfile
+          );
           await axios.post(
             "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/assigned_device",
             {

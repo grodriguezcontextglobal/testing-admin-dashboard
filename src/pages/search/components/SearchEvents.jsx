@@ -140,7 +140,6 @@ const SearchEvents = ({ searchParams }) => {
           <Grid container gap={1}>
             {sortAndRenderFoundData()?.length > 0 ? (
               sortAndRenderFoundData()?.map((item) => (
-                console.log(item),
                 <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                   {" "}
                   <CardEventsFound

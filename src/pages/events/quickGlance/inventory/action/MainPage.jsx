@@ -27,7 +27,6 @@ import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import Choice from "../lostFee/Choice";
 import { Replace } from "./Replace";
-import axios from "axios";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -61,50 +60,76 @@ const ActionsMainPage = () => {
           timeStamp: new Date().getTime(),
         }
       );
-      await axios.patch(
-        "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-        {
-          ref: {
-            device: deviceInfoSelected.entireData.device,
-            type: deviceInfoSelected.entireData.type,
-            activity: true,
-            company: user.companyData.id,
-          },
-          newInfo: {
-            activity: false,
-          },
-          collection: "receiverspools",
-        }
-      );
-
-      openNotificationWithIcon("success", "Device returned.");
-      queryClient.invalidateQueries({
-        queryKey: ["assignedDeviceListQuery"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["deviceInPoolList"],
-        exact: true,
-      });
-      dispatch(
-        onAddDeviceToDisplayInQuickGlance({
-          ...deviceInfoSelected,
-          activity: false,
-          entireData: {
-            ...deviceInfoSelected.entireData,
-            activity: true,
-          },
-        })
-      );
-
-      // const respoPool = await devitrakApi.post("/receiver/receiver-pool-list", {
-      //   device: deviceInfoSelected.entireData.device,
-      //   type: deviceInfoSelected.entireData.type,
-      //   activity: true,
-      //   eventSelected: event.eventInfoDetail.eventName,
-      //   provider: event.company,
+      // await axios.patch(
+      //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+      //   {
+      //     ref: {
+      //       device: deviceInfoSelected.entireData.device,
+      //       type: deviceInfoSelected.entireData.type,
+      //       activity: true,
+      //       company: user.companyData.id,
+      //     },
+      //     newInfo: {
+      //       activity: false,
+      //     },
+      //     collection: "receiverspools",
+      //   }
+      // );
+      // openNotificationWithIcon("success", "Device returned.");
+      // queryClient.invalidateQueries({
+      //   queryKey: ["assignedDeviceListQuery"],
+      //   exact: true,
       // });
-      // if (respoPool.data.ok) {
+      // queryClient.invalidateQueries({
+      //   queryKey: ["deviceInPoolList"],
+      //   exact: true,
+      // });
+      // dispatch(
+      //   onAddDeviceToDisplayInQuickGlance({
+      //     ...deviceInfoSelected,
+      //     activity: false,
+      //     entireData: {
+      //       ...deviceInfoSelected.entireData,
+      //       activity: true,
+      //     },
+      //   })
+      // );
+
+      const respoPool = await devitrakApi.post("/receiver/receiver-pool-list", {
+        device: deviceInfoSelected.entireData.device,
+        type: deviceInfoSelected.entireData.type,
+        activity: true,
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      });
+      if (respoPool.data.ok) {
+        const poolDevice = respoPool.data.receiversInventory.at(-1);
+        await devitrakApi.patch(
+          `/receiver/receivers-pool-update/${poolDevice.id}`,
+          {
+            id: poolDevice.id,
+            activity: false,
+          }
+        );
+        openNotificationWithIcon("success", "Device returned.");
+        queryClient.invalidateQueries({
+          queryKey: ["assignedDeviceListQuery"],
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["deviceInPoolList"],
+          exact: true,
+        });
+        dispatch(
+          onAddDeviceToDisplayInQuickGlance({
+            ...deviceInfoSelected,
+            activity: false,
+            entireData: {
+              ...deviceInfoSelected.entireData,
+              activity: true,
+            },
+          })
+        );
       //   await axios.patch(
       //     "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
       //     {
@@ -121,34 +146,7 @@ const ActionsMainPage = () => {
       //     }
       //   );
   
-      //   // const poolDevice = respoPool.data.receiversInventory.at(-1);
-      //   // await devitrakApi.patch(
-      //   //   `/receiver/receivers-pool-update/${poolDevice.id}`,
-      //   //   {
-      //   //     id: poolDevice.id,
-      //   //     activity: false,
-      //   //   }
-      //   // );
-      //   openNotificationWithIcon("success", "Device returned.");
-      //   queryClient.invalidateQueries({
-      //     queryKey: ["assignedDeviceListQuery"],
-      //     exact: true,
-      //   });
-      //   queryClient.invalidateQueries({
-      //     queryKey: ["deviceInPoolList"],
-      //     exact: true,
-      //   });
-      //   dispatch(
-      //     onAddDeviceToDisplayInQuickGlance({
-      //       ...deviceInfoSelected,
-      //       activity: false,
-      //       entireData: {
-      //         ...deviceInfoSelected.entireData,
-      //         activity: true,
-      //       },
-      //     })
-      //   );
-      // }
+       }
     }
   };
   const handleLostSingleDevice = async () => {

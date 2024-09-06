@@ -256,24 +256,24 @@ const SearchDevice = ({ searchParams }) => {
               activity: false,
             }
           );
-          await axios.patch(
-            "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-            {
-              ref: {
-                device: checkArray(
-                  deviceInPoolListQuery.data.receiversInventory
-                ).device,
-                type: checkArray(deviceInPoolListQuery.data.receiversInventory)
-                  .type,
-                activity: true,
-                company: user.companyData.id,
-              },
-              newInfo: {
-                activity: false,
-              },
-              collection: "receiverspools",
-            }
-          );
+          // await axios.patch(
+          //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+          //   {
+          //     ref: {
+          //       device: checkArray(
+          //         deviceInPoolListQuery.data.receiversInventory
+          //       ).device,
+          //       type: checkArray(deviceInPoolListQuery.data.receiversInventory)
+          //         .type,
+          //       activity: true,
+          //       company: user.companyData.id,
+          //     },
+          //     newInfo: {
+          //       activity: false,
+          //     },
+          //     collection: "receiverspools",
+          //   }
+          // );
 
           await axios.post(
             "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",

@@ -47,7 +47,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
-        "eventInfoDetail.eventName": rowRecord.eventSelected[0],
+        "eventInfoDetail.eventName": rowRecord.eventSelected,
       }),
     refetchOnMount: false,
   });
@@ -181,7 +181,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
               ...BlueButton,
               display: renderingTernary(
                 record.status,
-                "Lost",
+                "string",
                 "none",
                 "flex",
                 "none"
@@ -191,12 +191,13 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
             <p style={BlueButtonText}>Mark as returned</p>
           </Button>
           <Button
+            // disabled
             onClick={() => handleLostSingleDevice(record)}
             style={{
               ...GrayButton,
               display: renderingTernary(
                 record.status,
-                "Lost",
+                "string",
                 "none",
                 "flex",
                 "none"
@@ -213,7 +214,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                 }`,
                 display: renderingTernary(
                   record.status,
-                  "Lost",
+                  "string",
                   "none",
                   "flex",
                   "none"
@@ -304,18 +305,6 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
                 date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
                 time: dateRef[4],
                 link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-              },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                  "Access-Control-Allow-Methods": "OPTIONS,POST",
-                  "Access-Control-Allow-Headers":
-                    "Origin, Content-Type, Accept",
-                  "Access-Control-Expose-Headers":
-                    "Content-Length,Content-Range",
-                },
               }
             );
             // await devitrakApi.post(
