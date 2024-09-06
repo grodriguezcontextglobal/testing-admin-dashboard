@@ -32,8 +32,10 @@ const GraphicInventoryEventActivity = () => {
       const filteredData = new Set();
       for (let item of props) {
         if (item[0] !== "Operational") {
-          result = [...result, item[1]?.length];
-          filteredData.add(item);
+          if (item[0] !== "Lost") {
+            result = [...result, item[1]?.length];
+            filteredData.add(item);
+          }
         }
       }
       return {
@@ -42,9 +44,7 @@ const GraphicInventoryEventActivity = () => {
       };
     };
     const sortData = () => {
-      const data = 
-        deviceStatusInEvent.data.data.receiversInventory
-      ;
+      const data = deviceStatusInEvent.data.data.receiversInventory;
       const groupingByStatus = _.groupBy(data, "status");
       const groupingByActivity = _.groupBy(data, "activity");
       const noFunctionalData = Object.entries(groupingByStatus);
