@@ -286,9 +286,12 @@ const ItemTable = ({ searchItem }) => {
       render: (data) => {
         let result = data.event_name;
         if (String(result).toLowerCase().includes("leased equipment")) {
-          const splittingName = String(result).split(":");
-          result = splittingName.slice(1).flat();
-        }
+          const splittingName = String(result).split(" / ");
+          result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
+        } else if (String(result).toLowerCase().split(" / ").length === 3) {
+          const splittingName = String(result).split(" / ");
+          result = splittingName.slice(0, 2).flat().toLocaleString().replaceAll(",", " ");
+        } 
         return (
           <span style={cellStyle}>
             <Typography
