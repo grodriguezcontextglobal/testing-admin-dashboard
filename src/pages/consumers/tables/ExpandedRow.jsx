@@ -105,7 +105,6 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        console.log(status),
         <Badge
           style={{
             display: "flex",
