@@ -42,9 +42,10 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   const { choice, company, event } = useSelector((state) => state.event);
   const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
-  const { customer, paymentIntentReceiversAssigned } = useSelector(
+  const { paymentIntentReceiversAssigned } = useSelector(
     (state) => state.stripe
   );
+  const { customer } = useSelector((state) => state.customer);
 
   let transactionStatus = new URLSearchParams(window.location.search).get(
     "redirect_status"
