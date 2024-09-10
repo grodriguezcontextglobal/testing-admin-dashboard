@@ -177,7 +177,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `${customer.name} ${customer.lastName} / ${
+        event_name: `Leased equipment: ${customer.name} ${customer.lastName} / ${
           customer.email
         } / ${new Date().toLocaleDateString()}`,
         venue_name: `${customer.name} ${customer.lastName} / ${
