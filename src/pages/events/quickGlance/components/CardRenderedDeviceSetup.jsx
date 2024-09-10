@@ -68,12 +68,20 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
               <Typography paddingTop={"8px"} style={TextFontSize30LineHeight38}>
                 {props.quantity}
               </Typography>
-              <Tooltip title={`${props.consumerUses ? "For consumers.": "For internal use."}`} style={{width:"100%"}}>
-                <div style={{transform:"rotate(-90deg)"}}><Switch
-                checked={props.consumerUses}
-                loading={loadingStatus}
-                onChange={onChange}
-              /></div></Tooltip>
+              <Tooltip
+                title={`${
+                  props.consumerUses ? "For consumers." : "For internal use."
+                }`}
+                style={{ width: "100%" }}
+              >
+                <div style={{ margin:"0 0 0 15px" }}>
+                  <Switch
+                    checked={props.consumerUses}
+                    loading={loadingStatus}
+                    onChange={onChange}
+                  />
+                </div>
+              </Tooltip>
             </Grid>
           </Grid>
         </Card>
