@@ -26,7 +26,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import FooterExpandedRow from "./FooterExpandedRow";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import "../localStyles.css";
-import axios from "axios";
+import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
 
 const ExpandedRow = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -288,44 +288,39 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
             deviceInPoolProfile
           );
           if (returningInPool.data) {
-            await axios.post(
-              "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",
-              {
-                consumer: {
-                  name: `${customer.name} ${customer.lastName}`,
-                  email: customer.email,
-                },
-                device: {
-                  serialNumber: props.serial_number,
-                  deviceType: props.type,
-                },
-                event: props.entireData.eventSelected[0],
-                company: props.entireData.provider[0],
-                transaction: props.entireData.paymentIntent,
-                date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-                time: dateRef[4],
-                link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-              }
+            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            const emailStructure = new EmailStructureUpdateItem(
+              customer.name,
+              customer.lastName,
+              customer.email,
+              props.serial_number,
+              props.type,
+              event.eventInfoDetail.eventName,
+              event.company,
+              rowRecord.paymentIntent,
+              String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              dateRef[4],
+              linkStructure
             );
-            // await devitrakApi.post(
-            //   "/nodemailer/confirm-returned-device-notification",
-            //   {
-            //     consumer: {
-            //       name: `${customer.name} ${customer.lastName}`,
-            //       email: customer.email,
-            //     },
-            //     device: {
-            //       serialNumber: props.serial_number,
-            //       deviceType: props.type,
-            //     },
-            //     event: props.entireData.eventSelected[0],
-            //     company: props.entireData.provider[0],
-            //     transaction: props.entireData.paymentIntent,
-            //     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //     time: dateRef[4],
-            //     link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-            //   }
-            // );
+            await devitrakApi.post(
+              "/nodemailer/confirm-returned-device-notification",emailStructure.render()
+              // {
+              //   consumer: {
+              //     name: `${customer.name} ${customer.lastName}`,
+              //     email: customer.email,
+              //   },
+              //   device: {
+              //     serialNumber: props.serial_number,
+              //     deviceType: props.type,
+              //   },
+              //   event: props.entireData.eventSelected[0],
+              //   company: props.entireData.provider[0],
+              //   transaction: props.entireData.paymentIntent,
+              //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              //   time: dateRef[4],
+              //   link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+              // }
+            );
             await assignedDevicesQuery.refetch();
             await refetching();
             return success();
