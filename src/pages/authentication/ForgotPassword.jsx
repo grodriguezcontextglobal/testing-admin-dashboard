@@ -1,22 +1,21 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Typography,
-  Grid,
+  Button,
   FormControl,
   FormLabel,
+  Grid,
   OutlinedInput,
-  Button,
+  Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useRef, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import _ from "lodash";
-import { devitrakApi } from "../../api/devitrakApi";
 import { PropTypes } from "prop-types";
+import { useCallback, useRef } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { devitrakApi } from "../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import axios from "axios";
 
 const schema = yup.object().shape({
   email: yup
@@ -61,38 +60,22 @@ const ForgotPassword = ({ open, close }) => {
   const handleSubmitEmailLink = async (data) => {
     if (adminUserInfoRef.current) {
       const stampTime = `${new Date()}`;
-      const emailResponse = await axios.post(
-        "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/staff_notification/reset_password",
-        {
-          adminUser: {
-            firstName: adminUserInfoRef.current.at(-1).name,
-            lastName: adminUserInfoRef.current.at(-1).lastName,
-          },
-          linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-            adminUserInfoRef.current.at(-1).id
-          }&stamp-time=${encodeURI(stampTime)}`,
-          contactInfo: {
-            email: data.email,
-            company: adminUserInfoRef.current.at(-1).company,
-          },
-        }
-      );
-      // const resp = await devitrakApi.post("/nodemailer/reset-admin-password", {
-      //   adminUser: {
-      //     firstName: adminUserInfoRef.current.at(-1).name,
-      //     lastName: adminUserInfoRef.current.at(-1).lastName,
-      //   },
-      //   linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-      //     adminUserInfoRef.current.at(-1).id
-      //   }&stamp-time=${encodeURI(stampTime)}`,
-      //   contactInfo: {
-      //     email: data.email,
-      //     company: adminUserInfoRef.current.at(-1).company,
-      //   },
-      // });
-      const resp = JSON.parse(emailResponse.data.body);
-      if (resp.ok) {
-        openNotificationWithIcon("success", `${resp.message}`);
+      const resp = await devitrakApi.post("/nodemailer/reset-admin-password", {
+        adminUser: {
+          firstName: adminUserInfoRef.current.at(-1).name,
+          lastName: adminUserInfoRef.current.at(-1).lastName,
+        },
+        linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
+          adminUserInfoRef.current.at(-1).id
+        }&stamp-time=${encodeURI(stampTime)}`,
+        contactInfo: {
+          email: data.email,
+          company: adminUserInfoRef.current.at(-1).company,
+        },
+      });
+      if (resp.data.ok) {
+        console.log(resp.data);
+        openNotificationWithIcon("success", `Email sent to ${data.email}`);
         setTimeout(async () => {
           await handleClose();
         }, 1500);
