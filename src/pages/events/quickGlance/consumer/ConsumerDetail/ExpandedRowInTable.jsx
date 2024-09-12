@@ -18,7 +18,7 @@ import "../../../../../styles/global/ant-table.css";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
-import axios from "axios";
+import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({ rowRecord }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
@@ -144,66 +144,28 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             id: checkInPool.id,
             activity: false,
           };
-          // await axios.patch(
-          //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-          //   {
-          //     ref: {
-          //       device: checkInPool.device,
-          //       type: checkInPool.type,
-          //       activity: true,
-          //       company: user.companyData.id,
-          //     },
-          //     newInfo: {
-          //       activity: false,
-          //     },
-          //     collection: "receiverspools",
-          //   }
-          // );
-    
-    
           await devitrakApi.patch(
             `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
             deviceInPoolProfile
           );
-          await axios.post(
-            "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/returned_device",
-            {
-              consumer: {
-                name: `${customer.name} ${customer.lastName}`,
-                email: customer.email,
-              },
-              device: {
-                serialNumber: returnedItem.serialNumber,
-                deviceType: returnedItem.deviceType,
-              },
-              event: event.eventInfoDetail.eventName,
-              company: event.company,
-              transaction: rowRecord.paymentIntent,
-              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              time: dateRef[4],
-              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-            }
+          const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+          const emailStructure = new EmailStructureUpdateItem(
+            customer.name,
+            customer.lastName,
+            customer.email,
+            returnedItem.serialNumber,
+            returnedItem.deviceType,
+            event.eventInfoDetail.eventName,
+            event.company,
+            rowRecord.paymentIntent,
+            String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            dateRef[4],
+            linkStructure
           );
-
-          // await devitrakApi.post(
-          //   "/nodemailer/confirm-returned-device-notification",
-          //   {
-          //     consumer: {
-          //       name: `${customer.name} ${customer.lastName}`,
-          //       email: customer.email,
-          //     },
-          //     device: {
-          //       serialNumber: returnedItem.serialNumber,
-          //       deviceType: returnedItem.deviceType,
-          //     },
-          //     event: event.eventInfoDetail.eventName,
-          //     company: event.company,
-          //     transaction: rowRecord.paymentIntent,
-          //     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-          //     time: dateRef[4],
-          //     link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-          //   }
-          // );
+          await devitrakApi.post(
+            "/nodemailer/confirm-returned-device-notification",
+            emailStructure.render()
+          );
           openNotificationWithIcon("Device returned.");
         }
       }
@@ -226,10 +188,6 @@ const ExpandedRowInTable = ({ rowRecord }) => {
           type: props.deviceType,
         }
       );
-      // String(
-      //   deviceInPoolListQuery.data.receiversInventory.at(-1).activity
-      // ).toLowerCase() === "yes"
-
       if (deviceInPoolListQuery.data.receiversInventory.at(-1).activity)
         return alert(
           `Device is already in use for another consumer. Please assign another device serial number.`
@@ -264,62 +222,30 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             ...devicePoolData,
             activity: true,
           };
-          // await axios.patch(
-          //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-          //   {
-          //     ref: {
-          //       device: devicePoolData.device,
-          //       type: devicePoolData.type,
-          //       activity: false,
-          //       company: user.companyData.id,
-          //     },
-          //     newInfo: {
-          //       activity: true,
-          //     },
-          //     collection: "receiverspools",
-          //   }
-          // );
 
           await devitrakApi.patch(
             `/receiver/receivers-pool-update/${devicePoolData.id}`,
             deviceInPoolProfile
           );
-          await axios.post(
-            "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/assigned_device",
-            {
-              consumer: {
-                name: `${customer.name} ${customer.lastName}`,
-                email: customer.email,
-              },
-              device: {
-                serialNumber: assignedItem.serialNumber,
-                deviceType: assignedItem.deviceType,
-              },
-              event: event.eventInfoDetail.eventName,
-              company: event.company,
-              transaction: rowRecord.paymentIntent,
-              date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              time: dateRef[4],
-              link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-                }
-          );
+          const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
 
-          // await devitrakApi.post("/nodemailer/assignig-device-notification", {
-          //   consumer: {
-          //     name: `${customer.name} ${customer.lastName}`,
-          //     email: customer.email,
-          //   },
-          //   device: {
-          //     serialNumber: assignedItem.serialNumber,
-          //     deviceType: assignedItem.deviceType,
-          //   },
-          //   event: event.eventInfoDetail.eventName,
-          //   company: event.company,
-          //   transaction: rowRecord.paymentIntent,
-          //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-          //   time: dateRef[4],
-          //   link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-          // });
+          const emailStructure = new EmailStructureUpdateItem(
+            customer.name,
+            customer.lastName,
+            customer.email,
+            assignedItem.serialNumber,
+            assignedItem.deviceType,
+            event.eventInfoDetail.eventName,
+            event.company,
+            rowRecord.paymentIntent,
+            String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            dateRef[4],
+            linkStructure
+          );
+          await devitrakApi.post(
+            "/nodemailer/assignig-device-notification",
+            emailStructure.render()
+          );
           openNotificationWithIcon("Device assigned.");
         }
       }

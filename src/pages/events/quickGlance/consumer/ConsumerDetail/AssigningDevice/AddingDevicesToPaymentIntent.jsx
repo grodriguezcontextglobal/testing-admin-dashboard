@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,7 +19,8 @@ import {
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
-import axios from "axios";
+import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
+
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const [submittedAction, setSubmittedAction] = useState(false);
   const { customer } = useSelector((state) => state.stripe);
@@ -72,13 +73,13 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
-  const sortedByDevice = _.groupBy(
+  const sortedByDevice = groupBy(
     sortAndFilterDeviceListPerCompanyAndEvent(),
     "device"
   );
 
   const retrieveDeviceInfoSetInEventForConsumers = () => {
-    const sortInventory = _.groupBy(
+    const sortInventory = groupBy(
       sortAndFilterDeviceListPerCompanyAndEvent(),
       "type"
     );
@@ -113,7 +114,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   }
   const checkDeviceIsAssignedInEvent = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-      const deviceCheck = _.groupBy(
+      const deviceCheck = groupBy(
         sortAndFilterDeviceListPerCompanyAndEvent(),
         "device"
       );
@@ -137,7 +138,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   checkDeviceIsAssignedInEvent();
   const retrieveDeviceDataInPoolToUpdateIt = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-      const deviceCheck = _.groupBy(
+      const deviceCheck = groupBy(
         sortAndFilterDeviceListPerCompanyAndEvent(),
         "device"
       );
@@ -236,31 +237,27 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           });
           deviceInPoolQuery.refetch();
           refetchingFn();
-          if (record.device[0].deviceNeeded == 1) {
+          if (Number(record.device[0].deviceNeeded) === 1) {
             const dateString = new Date().toString();
             const dateRef = dateString.split(" ");
-            await axios.post(
-              "https://e78twzb8z4.execute-api.us-east-1.amazonaws.com/dev/emailnotifications/assigned_device",
-              {
-                consumer: {
-                  name: `${customer.name} ${customer.lastName}`,
-                  email: customer.email,
-                },
-                device: {
-                  serialNumber: newDeviceObject.serialNumber,
-                  deviceType: newDeviceObject.deviceType,
-                },
-                event: event.eventInfoDetail.eventName,
-                company: event.company,
-                date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-                time: dateRef[4],
-                transaction: record.paymentIntent,
-                link: `https://app.devitrak.net/authentication/${event.id}/${
-                  user.companyData.id
-                }/${customer.id ?? customer.iud}`,
-              }
+            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            const emailStructure = new EmailStructureUpdateItem(
+              customer.name,
+              customer.lastName,
+              customer.email,
+              newDeviceObject.serialNumber,
+              newDeviceObject.deviceType,
+              event.eventInfoDetail.eventName,
+              event.company,
+              record.paymentIntent,
+              String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              dateRef[4],
+              linkStructure
             );
-
+            await devitrakApi.post(
+              "/nodemailer/assignig-device-notification",
+              emailStructure.render()
+            );
             // await devitrakApi.post("/nodemailer/assignig-device-notification", {
             //   consumer: {
             //     name: `${customer.name} ${customer.lastName}`,
@@ -277,7 +274,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             //   transaction: record.paymentIntent,
             //   link: `https://app.devitrak.net/authentication/${event.id}/${
             //     user.companyData.id
-            //   }/${customer.id ?? customer.iud}`,
+            //   }/${customer.id ?? customer.iud}`
             // });
           }
 
@@ -369,3 +366,24 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
 };
 
 export default AddingDevicesToPaymentIntent;
+// await axios.post(
+//   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/assign_item",
+//   {
+//     consumer: {
+//       name: `${customer.name} ${customer.lastName}`,
+//       email: customer.email,
+//     },
+//     device: {
+//       serialNumber: newDeviceObject.serialNumber,
+//       deviceType: newDeviceObject.deviceType,
+//     },
+//     event: event.eventInfoDetail.eventName,
+//     company: event.company,
+//     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
+//     time: dateRef[4],
+//     transaction: record.paymentIntent,
+//     link: `https://app.devitrak.net/authentication/${event.id}/${
+//       user.companyData.id
+//     }/${customer.id ?? customer.iud}`,
+//   }
+// );
