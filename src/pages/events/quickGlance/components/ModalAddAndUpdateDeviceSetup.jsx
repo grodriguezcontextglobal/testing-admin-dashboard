@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, Select, Tooltip } from "antd";
+import { Modal, Select, Space, Tooltip } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -38,7 +38,7 @@ const ModalAddAndUpdateDeviceSetup = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
-  const { register, handleSubmit, watch } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
   const dispatch = useDispatch();
   const closeModal = () => {
     return setOpenModalDeviceSetup(false);
@@ -188,6 +188,8 @@ const ModalAddAndUpdateDeviceSetup = ({
           startingNumber: data.serial_number,
         },
       ];
+      setValue("quantity", "");
+      setValue("serial_number", "");
       return setListOfLocations(result);
     }
   };
@@ -371,15 +373,17 @@ const ModalAddAndUpdateDeviceSetup = ({
             gap: "5px",
           }}
         >
-          {listOfLocations.map((item, index) => {
-            return (
-              <Chip
-                key={`${item.quantity}${item.deviceInfo.at(-1).item_id}`}
-                label={`${item.deviceInfo.at(-1).location} - ${item.quantity}`}
-                onDelete={() => removeItem(index)}
-              />
-            );
-          })}
+          <Space size={[8, 16]} wrap>
+            {listOfLocations.map((item, index) => {
+              return (
+                <Chip
+                  key={`${item.quantity}${item.deviceInfo.at(-1).item_id}`}
+                  label={`${item.deviceInfo.at(-1).location} - ${item.quantity}`}
+                  onDelete={() => removeItem(index)}
+                />
+              );
+            })}
+          </Space>
         </div>
         <div
           style={{
@@ -408,6 +412,7 @@ const ModalAddAndUpdateDeviceSetup = ({
             style={{
               ...LightBlueButton,
               ...CenteringGrid,
+              display: `${blockingButton() ? "none" : "flex"}`,
               width: "100%",
             }}
           >
