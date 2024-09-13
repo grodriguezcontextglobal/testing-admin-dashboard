@@ -70,6 +70,7 @@ const Body = () => {
       employees: user.companyData.employees,
     },
   });
+
   const checkIfOriginalDataHasChange = (props) => {
     if (
       originalDataRef[props] !== "" &&
@@ -77,10 +78,11 @@ const Body = () => {
     ) {
       return openNotificationWithIcon(
         "Please save updates before leave this tab.",
-        0
+        2
       );
     }
   };
+
   const features = [
     {
       title: "Company name",
@@ -227,18 +229,21 @@ const Body = () => {
 
     const removingCompanyLogo = async () => {
       setLoading(true);
-        const resp = await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
-          {
-            company_logo: "",
-          }
-        );
-        api.destroy();
-        if (resp.data) {
-          setLoading(false);
-          return openNotificationWithIcon("Company logo removed. Please log out and log in to see the changes.", 3);
+      const resp = await devitrakApi.patch(
+        `/company/update-company/${user.companyData.id}`,
+        {
+          company_logo: "",
         }
-    }
+      );
+      api.destroy();
+      if (resp.data) {
+        setLoading(false);
+        return openNotificationWithIcon(
+          "Company logo removed. Please log out and log in to see the changes.",
+          3
+        );
+      }
+    };
     return (
       <>
         {contextHolder}
@@ -248,6 +253,27 @@ const Body = () => {
             width: "100%",
           }}
         >
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <Button
+              htmlType="submit"
+              loading={loading}
+              style={{ ...BlueButton, width: "fit-content" }}
+            >
+              <Typography textTransform={"none"} style={BlueButtonText}>
+                Save and log out.
+              </Typography>
+            </Button>
+          </Grid>
+          <Divider />
           <Grid
             style={{
               padding: "5px",
@@ -434,22 +460,31 @@ const Body = () => {
                       }
                     />
                     <br />
-                    <p onClick={()=> removingCompanyLogo()} style={{textDecoration:"underline", color:"var(--danger-action)", cursor:"pointer"}}>remove</p>
-                  </div>
-                ) : (
-                    <Avatar
+                    <p
+                      onClick={() => removingCompanyLogo()}
                       style={{
-                        xs: 24,
-                        sm: 32,
-                        md: 40,
-                        lg: 64,
-                        xl: 80,
-                        xxl: 100,
-                        padding: "40px",
+                        textDecoration: "underline",
+                        color: "var(--danger-action)",
+                        cursor: "pointer",
                       }}
                     >
-                      <CompanyIcon />{" "}
-                    </Avatar>
+                      remove
+                    </p>
+                  </div>
+                ) : (
+                  <Avatar
+                    style={{
+                      xs: 24,
+                      sm: 32,
+                      md: 40,
+                      lg: 64,
+                      xl: 80,
+                      xxl: 100,
+                      padding: "40px",
+                    }}
+                  >
+                    <CompanyIcon />{" "}
+                  </Avatar>
                 )}
               </Grid>
               <Grid
@@ -528,7 +563,73 @@ const Body = () => {
               </Grid>
             </Grid>
             <Divider />
-            <Grid
+            <details
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <summary>
+                <p
+                  style={{
+                    ...Subtitle,
+                    width: "100%",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  Employees
+                </p>
+              </summary>
+              <Divider />
+              <Grid container>
+                <Grid
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <Space size={[8, 16]} wrap>
+                    {user.companyData.employees.map((employee) => {
+                      return (
+                        // <Grid
+                        //   key={employee.user}
+                        //   item
+                        //   xs={12}
+                        //   sm={12}
+                        //   md={4}
+                        //   lg={4}
+                        // >
+                        <CardSearchStaffFound
+                          key={employee.user}
+                          props={{
+                            status: employee.status,
+                            name: employee.firstName,
+                            lastName: employee.lastName,
+                            email: employee.user,
+                            phoneNumber: "",
+                          }}
+                          fn={null}
+                        />
+                        // </Grid>
+                      );
+                    })}
+                  </Space>
+                </Grid>
+              </Grid>
+            </details>
+            {/* <Grid
               display={"flex"}
               flexDirection={"column"}
               alignSelf={"stretch"}
@@ -588,7 +689,7 @@ const Body = () => {
                   );
                 })}
               </Space>
-            </Grid>
+            </Grid> */}
             <Divider />
             <Grid
               display={"flex"}
