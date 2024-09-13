@@ -159,7 +159,7 @@ const ReviewAndSubmitEvent = () => {
       user: user.email,
       company: user.company,
       subscription: [],
-      eventInfoDetail: {...eventInfoDetail, dateBeginTime: new Date(eventInfoDetail.dateBeginTime).getTime()},
+      eventInfoDetail: {...eventInfoDetail, dateBeginTime: new Date(eventInfoDetail.dateBegin).getTime()},
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),
       active: true,
