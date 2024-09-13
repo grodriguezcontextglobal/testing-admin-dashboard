@@ -318,7 +318,7 @@ const Form = () => {
         <OutlinedInput
           required
           id="eventName"
-          {...register("eventName", { required: true, maxLength: 50 })}
+          {...register("eventName")}
           aria-invalid={errors.eventName}
           style={{
             ...OutlinedInputStyle,

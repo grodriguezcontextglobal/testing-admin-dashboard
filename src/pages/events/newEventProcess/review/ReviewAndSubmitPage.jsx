@@ -56,62 +56,35 @@ const ReviewAndSubmitEvent = () => {
     return groupBy(dataRef, "role");
   };
   const createStaffInEvent = async (newEventId) => {
-    if (staff.adminUser.length > 0) {
-      const adminStaff = [
-        ...checkAndAddRootAdministratorAsAdminStaff()["Administrator"],
-      ];
-      for (let data of adminStaff) {
-        const respo = await devitrakApi.post("/db_staff/consulting-member", {
-          email: data.email,
-        });
-        if (respo.data.member.length > 0) {
-          await devitrakApi.post("/db_event/event_staff", {
-            event_id: newEventId,
-            staff_id: respo.data.member.at(-1).staff_id,
-            role: data.role,
-          });
-        } else {
-          const newMember = await devitrakApi.post("/db_staff/new_member", {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            email: data.email,
-            phone_number: "0000000000",
-          });
-          await devitrakApi.post("/db_event/event_staff", {
-            event_id: newEventId,
-            staff_id: newMember.data.member.insertId,
-            role: data.role,
-          });
-        }
+    const employeeStaff = [...staff.adminUser, ...staff.headsetAttendees];
+    const staffRoleDate = new Map();
+    for (let [key, value] of employeeStaff.entries()) {
+      if (!staffRoleDate.has(key)) {
+        staffRoleDate.set(key, value);
       }
     }
-    if (staff.headsetAttendees.length > 0) {
-      const assistance = [
-        ...checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"],
-      ];
-      for (let data of assistance) {
-        const respo = await devitrakApi.post("/db_staff/consulting-member", {
-          email: data.email,
+    for (let [key, value] of staffRoleDate.entries()) {
+      const respo = await devitrakApi.post("/db_staff/consulting-member", {
+        email: key,
+      });
+      if (respo.data.member.length > 0) {
+        await devitrakApi.post("/db_event/event_staff", {
+          event_id: newEventId,
+          staff_id: respo.data.member.at(-1).staff_id,
+          role: value.role,
         });
-        if (respo.data.member.length > 0) {
-          await devitrakApi.post("/db_event/event_staff", {
-            event_id: newEventId,
-            staff_id: respo.data.member.at(-1).staff_id,
-            role: data.role,
-          });
-        } else {
-          const newMember = await devitrakApi.post("/db_staff/new_member", {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            email: data.email,
-            phone_number: "0000000000",
-          });
-          await devitrakApi.post("/db_event/event_staff", {
-            event_id: newEventId,
-            staff_id: newMember.data.member.insertId,
-            role: data.role,
-          });
-        }
+      } else {
+        const newMember = await devitrakApi.post("/db_staff/new_member", {
+          first_name: value.firstName,
+          last_name: value.lastName,
+          email: key,
+          phone_number: "0000000000",
+        });
+        await devitrakApi.post("/db_event/event_staff", {
+          event_id: newEventId,
+          staff_id: newMember.data.member.insertId,
+          role: value.role,
+        });
       }
     }
   };
@@ -137,7 +110,7 @@ const ReviewAndSubmitEvent = () => {
         } ${new Date().toString()} ${true} ${data.startingNumber} ${
           data.endingNumber
         }`,
-        consumerUses: false,//change this to false to force company to set device for consumer and others to set device for staff
+        consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
         startingNumber: "000000", //data.startingNumber
         endingNumber: "000000", //data.endingNumber,
         existing: data.existing,
@@ -159,7 +132,10 @@ const ReviewAndSubmitEvent = () => {
       user: user.email,
       company: user.company,
       subscription: [],
-      eventInfoDetail: {...eventInfoDetail, dateBeginTime: new Date(eventInfoDetail.dateBegin).getTime()},
+      eventInfoDetail: {
+        ...eventInfoDetail,
+        dateBeginTime: new Date(eventInfoDetail.dateBegin).getTime(),
+      },
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),
       active: true,
@@ -367,3 +343,63 @@ const ReviewAndSubmitEvent = () => {
 };
 
 export default ReviewAndSubmitEvent;
+
+
+// if (staff.adminUser.length > 0) {
+//   const adminStaff = [
+//     ...checkAndAddRootAdministratorAsAdminStaff()["Administrator"],
+//   ];
+//   for (let data of adminStaff) {
+//     const respo = await devitrakApi.post("/db_staff/consulting-member", {
+//       email: data.email,
+//     });
+//     if (respo.data.member.length > 0) {
+//       await devitrakApi.post("/db_event/event_staff", {
+//         event_id: newEventId,
+//         staff_id: respo.data.member.at(-1).staff_id,
+//         role: data.role,
+//       });
+//     } else {
+//       const newMember = await devitrakApi.post("/db_staff/new_member", {
+//         first_name: data.firstName,
+//         last_name: data.lastName,
+//         email: data.email,
+//         phone_number: "0000000000",
+//       });
+//       await devitrakApi.post("/db_event/event_staff", {
+//         event_id: newEventId,
+//         staff_id: newMember.data.member.insertId,
+//         role: data.role,
+//       });
+//     }
+//   }
+// }
+// if (staff.headsetAttendees.length > 0) {
+//   const assistance = [
+//     ...checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"],
+//   ];
+//   for (let data of assistance) {
+//     const respo = await devitrakApi.post("/db_staff/consulting-member", {
+//       email: data.email,
+//     });
+//     if (respo.data.member.length > 0) {
+//       await devitrakApi.post("/db_event/event_staff", {
+//         event_id: newEventId,
+//         staff_id: respo.data.member.at(-1).staff_id,
+//         role: data.role,
+//       });
+//     } else {
+//       const newMember = await devitrakApi.post("/db_staff/new_member", {
+//         first_name: data.firstName,
+//         last_name: data.lastName,
+//         email: data.email,
+//         phone_number: "0000000000",
+//       });
+//       await devitrakApi.post("/db_event/event_staff", {
+//         event_id: newEventId,
+//         staff_id: newMember.data.member.insertId,
+//         role: data.role,
+//       });
+//     }
+//   }
+// }
