@@ -1,3 +1,6 @@
 #root > div > div > div > div > div.MuiGrid-root.MuiGrid-container.css-11lq3yg-MuiGrid-root > div > div > form > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-6.MuiGrid-grid-sm-6.MuiGrid-grid-md-6.css-5b82f3-MuiGrid-root > div.ant-select.ant-select-lg.css-dev-only-do-not-override-12jzuas.ant-select-single.ant-select-show-arrow > div{
     border:none
 }
+summary::marker{
+    color: transparent;
+}

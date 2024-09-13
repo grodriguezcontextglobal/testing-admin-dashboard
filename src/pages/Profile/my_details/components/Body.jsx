@@ -163,7 +163,7 @@ const Body = () => {
           }
         );
 
-        openNotificationWithIcon({"Information updated": 3});
+        openNotificationWithIcon({ "Information updated": 3 });
         return triggerRoutes();
       }
     } else {
@@ -207,7 +207,7 @@ const Body = () => {
           }
         );
 
-        openNotificationWithIcon({"Information updated": 3});
+        openNotificationWithIcon({ "Information updated": 3 });
         return triggerRoutes();
       }
     }
@@ -221,6 +221,24 @@ const Body = () => {
           width: "100%",
         }}
       >
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-end"}
+          alignItems={"center"}
+          marginY={0}
+          gap={2}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+        >
+          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+            <Typography textTransform={"none"} style={BlueButtonText}>
+              Save and log out
+            </Typography>
+          </Button>
+        </Grid>
+        <Divider />
         <Grid
           style={{
             padding: "5px",
@@ -549,7 +567,62 @@ const Body = () => {
             />
           </Grid>
           <Divider />
-          <Grid
+          <details
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <summary style={{ width: "30%" }}>
+              <Typography
+                textTransform={"none"}
+                style={{ ...Subtitle, fontWeight: 500, cursor: "pointer" }}
+              >
+                Events
+              </Typography>
+            </summary>
+            <Grid container>
+              <Grid
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  margin:"2dvh 0 0"
+                }}
+                item
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
+              >
+                <Space size={[8, 16]} wrap>
+                  {listOfEvents().map((evet) => {
+                    return (
+                      // <Grid
+                      //   key={evet?.eventInfoDetail?.eventName}
+                      //   display={"flex"}
+                      //   justifyContent={"flex-start"}
+                      //   alignItems={"center"}
+                      //   padding={"5px"}
+                      //   item
+                      //   xs
+                      // >
+                      <Chip
+                        key={evet?.eventInfoDetail?.eventName}
+                        label={evet?.eventInfoDetail?.eventName}
+                        variant="outlined"
+                        style={OutlinedInputStyle}
+                      />
+                      // </Grid>
+                    );
+                  })}
+                </Space>
+              </Grid>
+            </Grid>
+          </details>
+          {/* <Grid
             display={"flex"}
             flexDirection={"column"}
             alignSelf={"stretch"}
@@ -567,8 +640,8 @@ const Body = () => {
                 Events
               </Typography>
             </InputLabel>
-          </Grid>
-          <Grid
+          </Grid> */}
+          {/* <Grid
             display={"flex"}
             justifyContent={"flex-start"}
             flexDirection={"column"}
@@ -579,29 +652,30 @@ const Body = () => {
             xs={6}
             sm={6}
             md={6}
-          >
-            <Space size={[8, 16]} wrap>
+          > */}
+          {/* <Space size={[8, 16]} wrap>
               {listOfEvents().map((evet) => {
                 return (
-                  <Grid
+                  // <Grid
+                  //   key={evet?.eventInfoDetail?.eventName}
+                  //   display={"flex"}
+                  //   justifyContent={"flex-start"}
+                  //   alignItems={"center"}
+                  //   padding={"5px"}
+                  //   item
+                  //   xs
+                  // >
+                  <Chip
                     key={evet?.eventInfoDetail?.eventName}
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    padding={"5px"}
-                    item
-                    xs
-                  >
-                    <Chip
-                      label={evet?.eventInfoDetail?.eventName}
-                      variant="outlined"
-                      style={OutlinedInputStyle}
-                    />
-                  </Grid>
+                    label={evet?.eventInfoDetail?.eventName}
+                    variant="outlined"
+                    style={OutlinedInputStyle}
+                  />
+                  // </Grid>
                 );
               })}
             </Space>
-          </Grid>
+          </Grid> */}
         </Grid>{" "}
         <Divider />
         <Grid

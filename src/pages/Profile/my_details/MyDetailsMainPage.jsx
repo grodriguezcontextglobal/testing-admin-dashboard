@@ -16,7 +16,7 @@ const MyDetailsMainPage = () => {
       container
     >
       <Header />
-      <Divider />
+      {/* <Divider /> */}
       <Body />
       <Divider />
     </Grid>

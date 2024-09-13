@@ -16,7 +16,7 @@ const CompanyInfo = () => {
       container
     >
       <Header />
-      <Divider />
+      {/* <Divider /> */}
       <Body />
       <Divider />
     </Grid>
