@@ -261,7 +261,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       ],
     },
     {
-      title: "Leased",
+      title: "Ownership",
       data: sortingByParameters("ownership"),
       totalUnits: sortingByParameters("ownership").length,
       open: false,
