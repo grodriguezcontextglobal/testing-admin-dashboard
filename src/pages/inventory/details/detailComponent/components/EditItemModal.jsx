@@ -218,6 +218,16 @@ const EditItemModal = ({
   if (itemsInInventoryQuery.data) {
     const savingNewItem = async (data) => {
       setLoadingStatus(true);
+      if (
+        String(valueSelection).toLowerCase() === "rent" &&
+        (!returningDate)
+      ) {
+        return openNotificationWithIcon(
+          "warning",
+          "As ownership was set as 'Rent', returning date must be provided."
+        );
+      }
+  
       try {
         let base64;
         if (data.photo.length > 0 && data.photo[0].size > 1048576) {
