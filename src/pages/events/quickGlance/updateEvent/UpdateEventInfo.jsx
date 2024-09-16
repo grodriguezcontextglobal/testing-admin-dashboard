@@ -175,7 +175,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
           <OutlinedInput
             id="eventName"
             required
-            disabled={
+            readOnly={
               eventInventoryQuery?.data?.data?.receiversInventory.length > 0
             }
             {...register("eventName", { required: true })}
