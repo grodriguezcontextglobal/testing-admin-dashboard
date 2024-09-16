@@ -227,7 +227,7 @@ const TableDeviceLocation = ({
                 ? "var(--blue-700, #175CD3)"
                 : "var(--success-700, #027A48)"
             }`}
-            style={Subtitle}
+            style={{...Subtitle, fontSize:"13px"}}
             textTransform={"capitalize"}
           >
             <Icon
