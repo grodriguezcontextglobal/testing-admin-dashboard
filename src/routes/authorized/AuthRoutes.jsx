@@ -40,6 +40,8 @@ import ConsumerDeviceLostFeeCreditCard from "../../pages/consumers/components/ma
 import CompanyInfo from "../../pages/Profile/company_info/MainPage";
 import SubscriptionMainPage from "../../pages/subscription/MainPage";
 import ConfirmSubscription from "../../components/stripe/payment/ConfirmSubscription";
+import MainPageOwnership from "../../pages/inventory/details/OwnershipDetail/MainPage";
+import MainPageWarehouse from "../../pages/inventory/details/WarehouseDetail/MainPage";
 const AuthRoutes = () => {
   const Home = lazy(() => import("../../pages/home/MainPage"));
   const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
@@ -145,6 +147,8 @@ const AuthRoutes = () => {
                 element={<MainPageCategory />}
               />
               <Route path="/inventory/brand" element={<MainPageBrand />} />
+              <Route path="/inventory/ownership" element={<MainPageOwnership />} />
+              <Route path="/inventory/warehouse" element={<MainPageWarehouse />} />
               <Route path="/inventory/:id" element={<InventoryDetail />} />
               <Route
                 path="/inventory/event-inventory"
