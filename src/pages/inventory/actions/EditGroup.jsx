@@ -196,6 +196,18 @@ const EditGroup = () => {
         "warning",
         "Ownership status must be provided."
       );
+      if (
+        String(valueSelection).toLowerCase() === "rent" &&
+        (!returningDate.getDate() ||
+          !returningDate.getFullYear() ||
+          !returningDate.getMonth())
+      ) {
+        return openNotificationWithIcon(
+          "warning",
+          "As ownership was set as 'Rent', returning date must be provided."
+        );
+      }
+  
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
       setLoading(false);
       return alert(

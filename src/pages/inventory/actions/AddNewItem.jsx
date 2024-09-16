@@ -153,6 +153,16 @@ const AddNewItem = () => {
         "warning",
         "Ownership status must be provided."
       );
+    if (
+      String(valueSelection).toLowerCase() === "rent" &&
+      (!returningDate)
+    ) {
+      return openNotificationWithIcon(
+        "warning",
+        "As ownership was set as 'Rent', returning date must be provided."
+      );
+    }
+
     if (groupingByDeviceType[selectedItem]) {
       const dataRef = _.groupBy(
         groupingByDeviceType[selectedItem],
@@ -470,22 +480,6 @@ const AddNewItem = () => {
               placeholder="e.g. Apple"
               fullWidth
             />
-            {errors?.brand && (
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.brand.type}
-              </Typography>
-            )}
           </div>
           <div
             style={{
@@ -613,9 +607,6 @@ const AddNewItem = () => {
               placeholder="e.g. 300"
               fullWidth
             />
-            {errors?.serial_number && (
-              <Typography>{errors.serial_number.type}</Typography>
-            )}
           </div>
         </div>
         <div
@@ -659,9 +650,6 @@ const AddNewItem = () => {
             }}
             placeholder="Please provide a brief description of the new device to be added."
           />
-          {errors?.descript_item && (
-            <Typography>{errors.descript_item.type}</Typography>
-          )}
         </div>
         <Grid
           display={"flex"}
@@ -789,7 +777,7 @@ const AddNewItem = () => {
           >
             <Tooltip
               placement="top"
-              title="Where the item is location physically."
+              title="Date when the leased equipment will be returned."
               style={{
                 width: "100%",
               }}

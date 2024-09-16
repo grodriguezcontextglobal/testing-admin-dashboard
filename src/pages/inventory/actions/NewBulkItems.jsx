@@ -166,6 +166,16 @@ const AddNewBulkItems = () => {
         "Ownership status must be provided."
       );
     }
+
+    if (
+      String(valueSelection).toLowerCase() === "rent" &&
+      (!returningDate)
+    ) {
+      return openNotificationWithIcon(
+        "warning",
+        "As ownership was set as 'Rent', returning date must be provided."
+      );
+    }
     if (Number(data.startingNumber) > Number(data.endingNumber)) {
       return openNotificationWithIcon(
         "warning",
@@ -254,7 +264,9 @@ const AddNewBulkItems = () => {
               company: user.company,
               extra_serial_number: JSON.stringify(moreInfo),
               company_id: user.sqlInfo.company_id,
-              return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+              return_date: `${
+                valueSelection === "Rent" ? returningDate : null
+              }`,
             });
             if (
               !renderLocationOptions().some(
@@ -657,7 +669,7 @@ const AddNewBulkItems = () => {
                 width: "100%",
                 display: "flex",
                 alignSelf: "flex-start",
-                gap:"5px"
+                gap: "5px",
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -693,50 +705,49 @@ const AddNewBulkItems = () => {
                 />
               </InputLabel>
               <div
-              style={{
-                width: "100%",
-                flexDirection: "column",
-                display: `${
-                  (valueSelection === "Rent" || valueSelection === "")
-                    ? "flex"
-                    : "none"
-                }`,
-              }}
-            >
-              <Tooltip
-                placement="top"
-                title="Where the item is location physically."
                 style={{
                   width: "100%",
+                  flexDirection: "column",
+                  display: `${
+                    valueSelection === "Rent" || valueSelection === ""
+                      ? "flex"
+                      : "none"
+                  }`,
                 }}
               >
-                <Typography
+                <Tooltip
+                  placement="top"
+                  title="Date when the leased equipment will be returned."
                   style={{
-                    ...TextFontSize14LineHeight20,
-                    fontWeight: 500,
-                    color: "var(--gray700, #344054)",
+                    width: "100%",
                   }}
                 >
-                  Returning date <QuestionIcon />
-                </Typography>
-              </Tooltip>
-              <DatePicker
-                id="calender-event"
-                autoComplete="checking"
-                showTimeSelect
-                dateFormat="Pp"
-                minDate={returningDate}
-                selected={returningDate}
-                openToDate={returningDate}
-                startDate={returningDate}
-                onChange={(date) => setReturningDate(date)}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-              />
-            </div>
-
+                  <Typography
+                    style={{
+                      ...TextFontSize14LineHeight20,
+                      fontWeight: 500,
+                      color: "var(--gray700, #344054)",
+                    }}
+                  >
+                    Returning date <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+                <DatePicker
+                  id="calender-event"
+                  autoComplete="checking"
+                  showTimeSelect
+                  dateFormat="Pp"
+                  minDate={returningDate}
+                  selected={returningDate}
+                  openToDate={returningDate}
+                  startDate={returningDate}
+                  onChange={(date) => setReturningDate(date)}
+                  style={{
+                    ...OutlinedInputStyle,
+                    width: "100%",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
