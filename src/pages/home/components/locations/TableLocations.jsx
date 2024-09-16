@@ -33,7 +33,7 @@ const TableLocations = () => {
       dataIndex: "key",
     },
     {
-      title: "Total untis",
+      title: "Total units",
       dataIndex: "total",
     },
   ];
