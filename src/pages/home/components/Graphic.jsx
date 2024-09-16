@@ -1,14 +1,14 @@
 import { Grid } from "@mui/material";
-import FormatQuickGlanceCardGraphRender from "./graphic_components/FormatQuickGlanceCardGraphRender";
-import _ from "lodash";
+import { useQuery } from "@tanstack/react-query";
+import { groupBy } from "lodash";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import FormatQuickGlanceCardGraphRender from "./graphic_components/FormatQuickGlanceCardGraphRender";
 const Graphic = () => {
   const { user } = useSelector((state) => state.admin);
-  const [defectedDeviceList, setDefectedDeviceList] = useState(0);
-  const [lostDeviceList, setLostDeviceList] = useState(0);
+  // const [defectedDeviceList, setDefectedDeviceList] = useState(0);
+  // const [lostDeviceList, setLostDeviceList] = useState(0);
   const itemInInventoryQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
@@ -20,7 +20,7 @@ const Graphic = () => {
 
   const foundAllDevicesGivenInEvent = () => {
     if (itemInInventoryQuery?.data?.data.ok) {
-      const groupingByStatus = _.groupBy(
+      const groupingByStatus = groupBy(
         itemInInventoryQuery.data.data.items,
         "warehouse"
       );
@@ -35,51 +35,51 @@ const Graphic = () => {
     return [];
   };
 
-  const foundAllNoOperatingDeviceInEvent = useCallback(async () => {
-    const result = new Map();
-    const checkDefectedDeviceList = await devitrakApi.post(
-      "/receiver/list-receiver-returned-issue",
-      { provider: user.company }
-    );
-    if (checkDefectedDeviceList?.data?.ok) {
-      const groupingByStatus = _.groupBy(
-        checkDefectedDeviceList.data.record,
-        "status"
-      );
-      for (let [key, value] of Object.entries(groupingByStatus)) {
-        if (String(key).toLowerCase() !== "lost") {
-          if (!result.has(key)) {
-            result.set(key, value);
-          } else {
-            result.set(key, [...value, ...result.get(key)]);
-          }
-        }
-      }
-    }
-    const finalResult = new Set();
-    for (let [, value] of result) {
-      finalResult.add(value.length);
-    }
-    return setDefectedDeviceList(
-      Array.from(finalResult).reduce((accu, curr) => accu + curr, 0)
-    );
-  }, []);
+  // const foundAllNoOperatingDeviceInEvent = useCallback(async () => {
+  //   const result = new Map();
+  //   const checkDefectedDeviceList = await devitrakApi.post(
+  //     "/receiver/list-receiver-returned-issue",
+  //     { provider: user.company }
+  //   );
+  //   if (checkDefectedDeviceList?.data?.ok) {
+  //     const groupingByStatus = groupBy(
+  //       checkDefectedDeviceList.data.record,
+  //       "status"
+  //     );
+  //     for (let [key, value] of Object.entries(groupingByStatus)) {
+  //       if (String(key).toLowerCase() !== "lost") {
+  //         if (!result.has(key)) {
+  //           result.set(key, value);
+  //         } else {
+  //           result.set(key, [...value, ...result.get(key)]);
+  //         }
+  //       }
+  //     }
+  //   }
+  //   const finalResult = new Set();
+  //   for (let [, value] of result) {
+  //     finalResult.add(value.length);
+  //   }
+  //   return setDefectedDeviceList(
+  //     Array.from(finalResult).reduce((accu, curr) => accu + curr, 0)
+  //   );
+  // }, []);
 
-  const lostDeviceInEvent = useCallback(async () => {
-    const checkDefectedDeviceList = await devitrakApi.post(
-      "/receiver/list-receiver-returned-issue",
-      { provider: user.company, status: "Lost" }
-    );
-    if (checkDefectedDeviceList?.data?.ok)
-      return setLostDeviceList(checkDefectedDeviceList.length);
-    return 0;
-  }, []);
+  // const lostDeviceInEvent = useCallback(async () => {
+  //   const checkDefectedDeviceList = await devitrakApi.post(
+  //     "/receiver/list-receiver-returned-issue",
+  //     { provider: user.company, status: "Lost" }
+  //   );
+  //   if (checkDefectedDeviceList?.data?.ok)
+  //     return setLostDeviceList(checkDefectedDeviceList.length);
+  //   return 0;
+  // }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    foundAllNoOperatingDeviceInEvent();
+    // foundAllNoOperatingDeviceInEvent();
     foundAllDevicesGivenInEvent()
-    lostDeviceInEvent();
+    // lostDeviceInEvent();
     itemInInventoryQuery.refetch();
     return () => {
       controller.abort();
@@ -100,15 +100,15 @@ const Graphic = () => {
 
   const dataToExport = [
     {
-      name: "On hands (included not-functional)",
-      value: foundDevicesInWarehouse(),
+      name: "In stock",
+      value: foundDevicesInWarehouse()
     },
     { name: "Checked out", value: foundDevicesOut() },
-    {
-      name: "Not-Functional Report",
-      value: defectedDeviceList,
-    },
-    { name: "Lost", value: lostDeviceList ?? 0 },
+    // {
+    //   name: "Not-Functional Report",
+    //   value: defectedDeviceList,
+    // },
+    // { name: "Lost", value: lostDeviceList ?? 0 },
   ];
 
   const dataToMap = [dataToExport];
