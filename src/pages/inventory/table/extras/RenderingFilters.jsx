@@ -428,6 +428,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                 />
               )}
             </details>
+            <Divider />
           </Grid>
         );
       })}

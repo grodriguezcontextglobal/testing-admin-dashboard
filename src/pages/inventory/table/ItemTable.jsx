@@ -196,7 +196,6 @@ const ItemTable = ({ searchItem }) => {
         >
           <p
             style={{
-              ...Subtitle,
               color: `${
                 warehouse === 0
                   ? "var(--blue-700, #175CD3)"
@@ -360,7 +359,6 @@ const ItemTable = ({ searchItem }) => {
         searchItem={searchItem}
         user={user}
       />
-      <Divider />
       <Grid
         display={"flex"}
         flexDirection={"column"}
