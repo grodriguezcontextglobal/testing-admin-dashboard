@@ -17,6 +17,12 @@ import { groupBy } from "lodash";
 const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dictionary = {
+    Permanent: "Owned",
+    Rent: "Leased",
+    Sale: "For sale",
+  };
+
   const sortingByParameters = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
@@ -254,6 +260,22 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
         },
       ],
     },
+    {
+      title: "Leased",
+      data: sortingByParameters("ownership"),
+      totalUnits: sortingByParameters("ownership").length,
+      open: false,
+      routeTitle: "ownership",
+      renderMoreOptions: false,
+      columns: [
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ],
+    },
+
   ];
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
@@ -380,7 +402,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                             }`}
                           >
                             <CardLocations
-                              title={opt.key}
+                              title={dictionary[opt.key] ?? opt.key}
                               props={`${opt.value} total devices`}
                               optional={null}
                             />
@@ -406,7 +428,6 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                 />
               )}
             </details>
-            <Divider />
           </Grid>
         );
       })}
