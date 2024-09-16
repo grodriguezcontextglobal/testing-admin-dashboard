@@ -74,7 +74,7 @@ const MainPageOwnership = () => {
           sm={12}
           md={6}
         >
-          <Typography style={TextFontSize30LineHeight38}>Brands</Typography>
+          <Typography style={TextFontSize30LineHeight38}>Ownership</Typography>
         </Grid>
         <Grid
           textAlign={"right"}
@@ -139,7 +139,7 @@ const MainPageOwnership = () => {
               color={"var(--gray-900, #101828)"}
             >
               <Icon icon="mingcute:right-line" />
-              {decodeURI(ownership[0].slice(1))}
+              {dictionary[decodeURI(ownership[0].slice(1))]}
             </Typography>
           </Grid>
         </Grid>
