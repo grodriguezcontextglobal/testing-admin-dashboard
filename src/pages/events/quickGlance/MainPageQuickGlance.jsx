@@ -478,10 +478,6 @@ const MainPageQuickGlance = () => {
           <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
             <DisplayAllItemsSetInventoryEvent />
           </div>
-          <DevicesInformationSection
-            foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
-            dataToRenderInComponent={parsingData}
-          />
           <Grid item xs={12}>
             <FormatToDisplayDetail />
           </Grid>
@@ -508,8 +504,12 @@ const MainPageQuickGlance = () => {
           >
             <Report />
           </Grid>
+          <Divider />
+          <DevicesInformationSection
+            foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
+            dataToRenderInComponent={parsingData}
+          />
         </Grid>
-        <Divider />
         <Grid
           style={{
             display: "flex",

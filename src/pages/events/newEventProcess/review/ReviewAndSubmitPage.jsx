@@ -41,6 +41,13 @@ const ReviewAndSubmitEvent = () => {
 
   let dataRef = [...staff.adminUser, ...staff.headsetAttendees];
   const checkAndAddRootAdministratorAsAdminStaff = () => {
+    const checkDouble = new Map();
+    for (let data of dataRef) {
+      if (!checkDouble.has(data.email)) {
+        checkDouble.set(data.email, data);
+      }
+    }
+    dataRef = [...checkDouble.values()];
     if (!dataRef.some((element) => element.email === user.email)) {
       dataRef = [
         ...dataRef,
@@ -53,6 +60,7 @@ const ReviewAndSubmitEvent = () => {
       ];
       return groupBy(dataRef, "role");
     }
+
     return groupBy(dataRef, "role");
   };
   const createStaffInEvent = async (newEventId) => {

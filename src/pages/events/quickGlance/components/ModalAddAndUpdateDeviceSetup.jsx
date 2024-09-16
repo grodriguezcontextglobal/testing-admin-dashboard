@@ -1,5 +1,4 @@
 import {
-  Button,
   Chip,
   InputAdornment,
   InputLabel,
@@ -7,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, Select, Space, Tooltip } from "antd";
+import { Button, Modal, Select, Space, Tooltip } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -46,6 +45,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   const eventInfoDetail = event.eventInfoDetail;
   const [valueItemSelected, setValueItemSelected] = useState([]);
   const [listOfLocations, setListOfLocations] = useState([]);
+  const [loading, setLoading] = useState(false);
   const itemQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList"],
     queryFn: () =>
@@ -122,6 +122,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
     );
     if (updatingDeviceInEvent.data) {
+      setLoading(false);
       return dispatch(
         onAddEventData({
           ...event,
@@ -194,9 +195,11 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
   };
   const handleDevicesInEvent = async () => {
+    setLoading(true);
     for (let data of listOfLocations) {
       await createDeviceInEvent(data);
     }
+    setLoading(false);
     return await closeModal();
   };
 
@@ -426,6 +429,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       </form>
       <Button
         disabled={existingDevice.length === Number(quantity)}
+        loading={loading}
         onClick={() => handleDevicesInEvent()}
         style={{
           ...disablingButton(),

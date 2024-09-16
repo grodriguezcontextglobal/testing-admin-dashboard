@@ -63,7 +63,7 @@ const TableCategories = () => {
         dataIndex: "category",
       },
       {
-        title: "Total device",
+        title: "Total devices",
         dataIndex: "total",
       },
     ];
