@@ -18,12 +18,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { onAddSubscriptionRecord } from "../../store/slices/subscriptionSlice";
 import BannerMsg from "./utils/bannerMsg";
-// import SelectCompanyToView from "./components/selectCompany/SelectCompanyToView"
 const MainPage = () => {
   const [inventory, setInventory] = useState([]);
-  const [notificationStatus, setNotificationStatus] = useState(
-    inventory.length === 0
-  );
+  const [notificationStatus, setNotificationStatus] = useState(false);
+  const [
+    leasedEquipmentNotificationStatus,
+    setLeasedEquipmentNotificationStatus,
+  ] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
@@ -39,11 +40,12 @@ const MainPage = () => {
       }),
     refetchOnMount: false,
   });
-  const totalConsumers = useCallback(async () => {
+  const totalConsumers = async () => {
     if (inventoryQuery.data) {
+      setNotificationStatus(inventoryQuery.data.data.items.length < 1);
       return setInventory(inventoryQuery.data.data.items);
     }
-  }, []);
+  };
 
   const subscriptionPerCompanyQuery = useQuery({
     queryKey: ["checkingSubscriptionPerCompanyQuery"],
@@ -70,18 +72,11 @@ const MainPage = () => {
     inventoryQuery.refetch();
     companiesCheck.refetch();
     subscriptionPerCompanyQuery.refetch();
-
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    notificationStatus,
-    // inventoryQuery.data,
-    // inventoryQuery.isLoading,
-    // inventory.length,
-    user.company,
-  ]);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -89,7 +84,24 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, [inventoryQuery.data, inventoryQuery.isLoading]);
+  }, [inventoryQuery.data]);
+
+  const displayingLeasedInventory = () => {
+    const checking = inventory.filter(
+      (item) =>
+        String(item.ownership).toLowerCase() === "rent" &&
+        new Date(`${item.return_date}`).getTime() > new Date().getTime()
+    );
+    return setLeasedEquipmentNotificationStatus(checking.length > 0);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    displayingLeasedInventory();
+    return () => {
+      controller.abort();
+    };
+  }, [inventory.length > 0]);
 
   const checkUserAssignedCompanies = () => {
     const result = new Set();
@@ -133,6 +145,23 @@ const MainPage = () => {
             body={
               "Explore the sections in the top navigation menu to get acquainted with the app and how it can best meet your needs. The search bar will is the easiest way to find any records, including user profiles, transactions, devices, etc. You can also update your settings by clicking the cogwheel button on the right of the search bar."
             }
+          />
+        </Grid>
+      )}
+      {leasedEquipmentNotificationStatus && (
+        <Grid
+          style={{ display: "flex" }}
+          margin={"0.5rem 0 1rem"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <BannerNotificationTemplate
+            setNotificationStatus={setLeasedEquipmentNotificationStatus}
+            title={"Reminder from Devitrak!"}
+            body={`Please note that the company has pending leased equipment to be returned, please go to the inventory section to view the list of leased items and their return dates to avoid any inconvenience.`}
           />
         </Grid>
       )}
