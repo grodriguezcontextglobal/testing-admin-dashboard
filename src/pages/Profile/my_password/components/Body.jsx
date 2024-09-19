@@ -106,6 +106,28 @@ const Body = () => {
           }}
         >
           <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            alignItems={"center"}
+            marginY={0}
+            gap={2}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+          >
+            <Button onClick={() => triggerRoutes()} style={GrayButton}>
+              <Typography textTransform={"none"} style={GrayButtonText}>
+                Cancel
+              </Typography>
+            </Button>
+            <Button type="submit" style={BlueButton}>
+              <Typography textTransform={"none"} style={BlueButtonText}>
+                Save and log out
+              </Typography>
+            </Button>
+          </Grid>
+          <Grid
             style={{
               padding: "5px",
               display: "flex",
@@ -284,7 +306,7 @@ const Body = () => {
             </Button>
             <Button type="submit" style={BlueButton}>
               <Typography textTransform={"none"} style={BlueButtonText}>
-                Save and log out.
+                Save and log out
               </Typography>
             </Button>
           </Grid>
