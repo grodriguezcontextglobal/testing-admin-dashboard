@@ -48,6 +48,7 @@ const Form = () => {
       devitrakApi.post("/db_item/warehouse-items", {
         company_id: user.sqlInfo.company_id,
         warehouse: true,
+        enableAssignFeature: 1,
       }),
   });
   const [api, contextHolder] = notification.useNotification();

@@ -53,6 +53,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         company_id: user.sqlInfo.company_id,
         warehouse: true,
         item_group: deviceTitle,
+        enableAssignFeature: 1,
       }),
     refetchOnMount: false,
   });
