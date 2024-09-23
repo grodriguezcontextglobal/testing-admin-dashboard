@@ -11,11 +11,9 @@ import {
   ListItem,
   ListItemButton,
   OutlinedInput,
-  Toolbar,
-  Typography,
+  Toolbar
 } from "@mui/material";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
-import { Dropdown } from "antd";
 import pkg from "prop-types";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -86,7 +84,7 @@ const NavigationBarMain = (props) => {
     return;
   };
 
-  const items = [
+  // const items = [
     // {
     //   key: "1",
     //   label: (
@@ -103,20 +101,20 @@ const NavigationBarMain = (props) => {
     //     </Typography>
     //   ),
     // },
-    {
-      key: "3",
-      label: (
-        <Typography
-          onClick={() => {
-            logout();
-          }}
-        >
-          Logout
-        </Typography>
-      ),
-      danger: true,
-    },
-  ];
+  //   {
+  //     key: "3",
+  //     label: (
+  //       <Typography
+  //         onClick={() => {
+  //           logout();
+  //         }}
+  //       >
+  //         Logout
+  //       </Typography>
+  //     ),
+  //     danger: true,
+  //   },
+  // ];
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
@@ -412,44 +410,55 @@ const NavigationBarMain = (props) => {
               </NavLink>
               {status === "authenticated" && (
                 <NavLink>
-                  <Dropdown
-                    menu={{
-                      items,
+                  {/* <button
+                    style={{
+                      outline: "none",
+                      border: "transparent",
+                      margin: 0,
+                      padding: 0,
+                      backgroundColor: "transparent",
                     }}
-                    trigger={["click"]}
-                    autoAdjustOverflow
-                    placement="bottom"
-                  >
-                    <button
-                      style={{
-                        outline: "none",
-                        border: "transparent",
-                        margin: 0,
-                        padding: 0,
-                        backgroundColor: "transparent",
-                      }}
-                      key={"authenticated"}
-                      onClick={() =>
-                        scrollTo({
-                          left: 0,
-                          top: 0,
-                          behavior: "smooth",
-                        })
-                      }
-                    >
-                      <div className="content-main-navbar-updated">
-                        <article
-                          className="nav-item-base-1-main-navbar-updated"
-                          style={{ backgroundColor: "var(--danger-action)" }}
-                        >
-                          <div className="content-2-main-navbar-updated">
-                            <div
-                              className="text-1-main-navbar-updated text-mdsemibold"
+                    key={"authenticated"}
+                    onClick={() =>
+                      scrollTo({
+                        left: 0,
+                        top: 0,
+                        behavior: "smooth",
+                      })
+                    }
+                  > */}
+                    <div className="content-main-navbar-updated">
+                      <article
+                        className="nav-item-base-1-main-navbar-updated"
+                        style={{ backgroundColor: "var(--danger-action)" }}
+                      >
+                        <div className="content-2-main-navbar-updated">
+                          <div
+                            className="text-1-main-navbar-updated text-mdsemibold"
+                            style={{
+                              display: "flex",
+                              backgroundColor: "var(--danger-action)",
+                              borderRadius: "50%",
+                            }}
+                          >
+                            {" "}
+                            <button
                               style={{
-                                display: "flex",
-                                backgroundColor: "var(--danger-action)",
-                                borderRadius: "50%",
+                                outline: "none",
+                                border: "transparent",
+                                margin: 0,
+                                padding: 0,
+                                backgroundColor: "transparent",
                               }}
+                              key={"authenticated"}
+                              onClick={() => logout()}
+                              // onClick={() =>
+                              //   scrollTo({
+                              //     left: 0,
+                              //     top: 0,
+                              //     behavior: "smooth",
+                              //   })
+                              // }
                             >
                               <p
                                 style={{
@@ -462,12 +471,22 @@ const NavigationBarMain = (props) => {
                               >
                                 <LogoutIcon />
                               </p>
-                            </div>
+                            </button>
                           </div>
-                        </article>
-                      </div>
-                    </button>
-                  </Dropdown>
+                        </div>
+                      </article>
+                    </div>
+                  {/* </button> */}
+
+                  {/* <Dropdown
+                    menu={{
+                      items,
+                    }}
+                    trigger={["click"]}
+                    autoAdjustOverflow
+                    placement="bottom"
+                  >
+                  </Dropdown> */}
                 </NavLink>
               )}
             </Grid>
