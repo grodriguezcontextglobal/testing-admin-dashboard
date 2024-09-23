@@ -3,7 +3,7 @@ import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Divider } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -67,7 +67,6 @@ const MainPageQuickGlance = () => {
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
-    staleTime: Infinity,
     refetchOnMount: false,
   });
   const eventAttendeesParametersQuery = useQuery({
@@ -77,7 +76,6 @@ const MainPageQuickGlance = () => {
         company: user.companyData.id,
         eventSelected: choice,
       }),
-    staleTime: Infinity,
     refetchOnMount: false,
   });
   const receiversPoolQuery = useQuery({
@@ -87,18 +85,17 @@ const MainPageQuickGlance = () => {
         eventSelected: event?.eventInfoDetail?.eventName,
         company: user.companyData.id,
       }),
-    staleTime: Infinity,
     refetchOnMount: false,
   });
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   eventAttendeesQuery.refetch();
-  //   receiversPoolQuery.refetch();
-  //   eventAttendeesParametersQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    eventAttendeesQuery.refetch();
+    receiversPoolQuery.refetch();
+    eventAttendeesParametersQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   if (
     eventAttendeesQuery.isLoading ||
