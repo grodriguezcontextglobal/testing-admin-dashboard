@@ -50,7 +50,7 @@ const ItemTable = ({ searchItem }) => {
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = _.groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data.result;
+  const renderedListItems = listItemsQuery?.data?.data?.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = _.groupBy(
