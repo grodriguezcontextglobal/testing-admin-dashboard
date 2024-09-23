@@ -5,13 +5,22 @@ import { Modal, Table } from "antd";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
-import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
+import {
+  onAddDeviceToDisplayInQuickGlance,
+  onOpenDeviceAssignmentModalFromSearchPage,
+} from "../../../../../../../store/slices/devicesHandleSlice";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
+import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
+import { useNavigate } from "react-router-dom";
+import { checkArray } from "../../../../../../../components/utils/checkArray";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
     useSelector((state) => state.stripe);
+  const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const findindAssignedInPaymentIntentQuery = useQuery({
     queryKey: ["assignedDeviceInPaymentIntent"],
     queryFn: () =>
@@ -28,8 +37,6 @@ const ModalAddingDeviceFromSearchbar = () => {
       controller.abort();
     };
   }, []);
-
-  const dispatch = useDispatch();
   const { openModalToAssignDevice } = useSelector(
     (state) => state.devicesHandle
   );
@@ -157,6 +164,49 @@ const ModalAddingDeviceFromSearchbar = () => {
         </p>
       );
     };
+
+    const navigateToDeviceDetailPage = async (record) => {
+      const deviceInPoolListQuery = await devitrakApi.post(
+        "/receiver/receiver-pool-list",
+        {
+          eventSelected: event.eventInfoDetail.eventName,
+          company: user.companyData.id,
+          device: record.serialNumber,
+          type: record.deviceType,
+          activity: true,
+        }
+      );
+      if (deviceInPoolListQuery.data) {
+        const format = {
+          company: [`${record.deviceType}`, `${event.company}`],
+          activity: record.status,
+          status: checkArray(deviceInPoolListQuery.data.receiversInventory)
+            .status,
+          serialNumber: record.serialNumber,
+          user: true,
+          entireData: {
+            eventSelected: `${event.eventInfoDetail.eventName}`,
+            device: `${record.serialNumber}`,
+            type: `${record.deviceType}`,
+            status: `${
+              checkArray(deviceInPoolListQuery.data.receiversInventory).status
+            }`,
+            activity: record.status,
+            comment: `${
+              checkArray(deviceInPoolListQuery.data.receiversInventory).comment
+            }`,
+            provider: `${event.company}`,
+            company: `${user.companyData.id}`,
+            id: `${
+              checkArray(deviceInPoolListQuery.data.receiversInventory).id
+            }`,
+          },
+        };
+
+        dispatch(onAddDeviceToDisplayInQuickGlance(format));
+        navigate("/device-quick-glance");
+      }
+    };
     return (
       <Modal
         title={renderTitle()}
@@ -195,6 +245,14 @@ const ModalAddingDeviceFromSearchbar = () => {
                 pagination={{
                   position: ["bottomLeft"],
                 }}
+                onRow={(record) => {
+                  return {
+                    onClick: () => {
+                      navigateToDeviceDetailPage(record);
+                    },
+                  };
+                }}
+                style={{ cursor: "pointer" }}
               />
             )}
           </Grid>
