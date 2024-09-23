@@ -43,7 +43,7 @@ const EndEventButton = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -53,7 +53,7 @@ const EndEventButton = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
   });
@@ -98,34 +98,27 @@ const EndEventButton = () => {
   };
 
   const removingAccessFromStaffMemberOnly = async () => {
-    const checkCompanyUserSet = await devitrakApi.post(
-      "/company/search-company",
-      { company_name: event.company }
-    );
-    if (checkCompanyUserSet.data.ok) {
-      const employeesCompany = [
-        ...checkCompanyUserSet.data.company[0].employees,
-      ];
-      const employeesEvent = [
-        ...event.staff.adminUser,
-        ...event.staff.headsetAttendees,
-      ];
-      for (let data of employeesEvent) {
-        const checkRole = employeesCompany.findIndex(
-          (element) => element.user === data.email
-        );
-        if (Number(employeesCompany[checkRole].role) === 4) {
-          employeesCompany[checkRole].active = false;
-        }
-      }
-      await devitrakApi.patch(
-        `/company/update-company/${checkCompanyUserSet.data.company[0].id}`,
-        {
-          employees: employeesCompany,
-        }
+    const checkCompanyUserSet = user.companyData.employees;
+    const employeesCompany = [...checkCompanyUserSet];
+    const employeesEvent = [
+      ...event.staff.adminUser,
+      ...event.staff.headsetAttendees,
+    ];
+    for (let data of employeesEvent) {
+      const checkRole = employeesCompany.findIndex(
+        (element) => element.user === data.email
       );
-      return window.location.reload();
+      if (Number(employeesCompany[checkRole].role) === 4) {
+        employeesCompany[checkRole].active = false;
+      }
     }
+    await devitrakApi.patch(
+      `/company/update-company/${checkCompanyUserSet.id}`,
+      {
+        employees: employeesCompany,
+      }
+    );
+    return window.location.reload();
   };
 
   const groupingByCompany = _.groupBy(
@@ -180,7 +173,7 @@ const EndEventButton = () => {
           serial_number: data.serial_number,
           category_name: data.category_name,
           item_group: data.item_group,
-          company_id: user.sqlInfo.company_id
+          company_id: user.sqlInfo.company_id,
         });
       }
     }
@@ -303,7 +296,7 @@ const EndEventButton = () => {
         await devitrakApi.post("/db_record/inserting-record", {
           email: data.user,
           serial_number: data.device.serialNumber,
-          status: renderingByConditionTypeof(data.device.status), 
+          status: renderingByConditionTypeof(data.device.status),
           activity: data.device.status, ///`${data.device.status ? "YES" : "No"}`,
           payment_id: data.paymentIntent,
           event: event.eventInfoDetail.eventName,
