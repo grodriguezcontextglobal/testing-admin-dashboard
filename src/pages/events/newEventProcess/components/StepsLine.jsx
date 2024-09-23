@@ -6,7 +6,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useSelector } from "react-redux";
 
 const StepsLine = () => {
-  const { eventInfoDetail, staff, deviceSetup } = useSelector((state) => state.event)
+  const { eventInfoDetail, staff } = useSelector((state) => state.event)
   const pathCheck = useLocation()
   const [current, setCurrent] = useState(0)
   const navigate = useNavigate()
@@ -79,7 +79,7 @@ const StepsLine = () => {
   const onChange = (value) => {
     setCurrent(value);
     if (value === 3) {
-      if (eventInfoDetail.eventName && staff.adminUser.length > 0 && deviceSetup.length > 0) return navigate(`/${step[value].current}`)
+      if (eventInfoDetail.eventName && staff.adminUser.length > 0 ) return navigate(`/${step[value].current}`)
       return error();
     }
     return navigate(`/${step[value].current}`)
