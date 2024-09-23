@@ -263,7 +263,7 @@ const RegisterCompany = () => {
             "Your new account was created. Please log in.",
             3
           );
-          setTimeout(async() => {
+          setTimeout(async () => {
             await api.destroy();
             return redirect("/", { replace: true });
           }, 1500);
@@ -288,7 +288,7 @@ const RegisterCompany = () => {
       {contextHolder}
       <Grid
         style={{
-          backgroundColor: "var(--whitebase)",
+          backgroundColor: "var(--basewhite)",
           height: "100dvh",
           margin: 0,
           width: "100vw",
