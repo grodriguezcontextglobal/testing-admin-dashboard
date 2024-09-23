@@ -167,10 +167,7 @@ const AddNewBulkItems = () => {
       );
     }
 
-    if (
-      String(valueSelection).toLowerCase() === "rent" &&
-      (!returningDate)
-    ) {
+    if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
         "warning",
         "As ownership was set as 'Rent', returning date must be provided."
@@ -1040,7 +1037,7 @@ const AddNewBulkItems = () => {
             moreInfo.map((item) => (
               <div
                 style={{
-                  backgroundColor: "var(--whitebase)",
+                  backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
                   margin: "0 1px",
                   border: "solid 0.1px var(--gray900)",

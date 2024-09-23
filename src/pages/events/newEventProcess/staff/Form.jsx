@@ -1,12 +1,7 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { onAddEventStaff } from "../../../../store/slices/eventSlice";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Icon } from "@iconify/react";
 import {
   Button,
-  Chip,
   FormControl,
   Grid,
   InputLabel,
@@ -15,17 +10,25 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import { Divider } from "antd";
+import { Card, Divider, Space } from "antd";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import {
+  EmailIcon,
+  ProfileIcon
+} from "../../../../components/icons/Icons";
+import { onAddEventStaff } from "../../../../store/slices/eventSlice";
 import "../../../../styles/global/ant-select.css";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 const schema = yup.object().shape({
   firstName: yup.string(),
   lastName: yup.string(),
@@ -276,7 +279,9 @@ const Form = () => {
               height={20}
             />
             &nbsp;
-            <Typography style={{ ...LightBlueButtonText, textTransform: "none" }}>
+            <Typography
+              style={{ ...LightBlueButtonText, textTransform: "none" }}
+            >
               {" "}
               Save and add more staff
             </Typography>
@@ -323,20 +328,45 @@ const Form = () => {
             }}
           >
             Admin staff &nbsp;
-            <Typography>
-              Admin spots {checkAdminSpots()}
-            </Typography>
+            <Typography>Admin spots {checkAdminSpots()}</Typography>
           </InputLabel>
-
-          {adminStaff?.map((member) => {
-            return (
-              <Chip
-                key={member.email}
-                label={member.email}
-                onDelete={() => handleDeleteMember(member.email)}
-              />
-            );
-          })}
+          <Space size={[8, 16]} wrap>
+            {adminStaff?.map((member) => {
+              return (
+                <Card key={member.email}>
+                  <label>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <ProfileIcon />{" "}{member.firstName} {member.lastName}
+                      </div>{" "}
+                      <button
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          borderRadius: "8px",
+                          border: "1px solid var(--gray-300, #D0D5DD)",
+                          background: "var(--gray-100, #F2F4F7)",
+                          color: "var(--danger-action)",
+                          padding: "4px 8px",
+                          width: "fit-content",
+                        }}
+                        onClick={() => handleDeleteMember(member.email)}
+                      >
+                        x
+                      </button>
+                    </div>
+                    <EmailIcon />{" "}{member.email}
+                  </label>
+                </Card>
+              );
+            })}
+          </Space>
         </Grid>
         <Divider
           style={{
@@ -372,15 +402,43 @@ const Form = () => {
             Assistant staff&nbsp;
             <Typography>Assistant spots {checkAssistantsSpots()}</Typography>
           </InputLabel>
-          {headsetAttendeesStaff?.map((member) => {
-            return (
-              <Chip
-                key={member.email}
-                label={member.email}
-                onDelete={() => handleHeadsetAttendeeDeleteMember(member.email)}
-              />
-            );
-          })}
+          <Space size={[8, 16]} wrap>
+            {headsetAttendeesStaff?.map((member) => {
+              return (
+                <Card style={{padding: "4px 2px"}} key={member.email}>
+                  <label>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <ProfileIcon />{" "}{member.firstName} {member.lastName}
+                      </div>{" "}
+                      <button
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          borderRadius: "8px",
+                          border: "1px solid var(--gray-300, #D0D5DD)",
+                          background: "var(--gray-100, #F2F4F7)",
+                          color: "var(--danger-action)",
+                          padding: "4px 8px",
+                          width: "fit-content",
+                        }}
+                        onClick={() => handleHeadsetAttendeeDeleteMember(member.email)}
+                      >
+                        x
+                      </button>
+                    </div>
+                    <EmailIcon />{" "}{member.email}
+                  </label>
+                </Card>
+              );
+            })}
+          </Space>
         </Grid>
       </Grid>
     </Grid>

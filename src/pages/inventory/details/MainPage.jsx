@@ -85,8 +85,8 @@ const MainPage = () => {
     const dataFound = [
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
-        data: { ...trackingHistoryItemQuery.data.data.result[0] },
-        itemInfo: { ...infoItemQuery.data.data.items[0] },
+        data: { ...trackingHistoryItemQuery?.data?.data?.result[0] },
+        itemInfo: { ...infoItemQuery?.data?.data?.items[0] },
       },
     ];
     return (

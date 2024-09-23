@@ -269,7 +269,7 @@ const Body = () => {
               style={{ ...BlueButton, width: "fit-content" }}
             >
               <Typography textTransform={"none"} style={BlueButtonText}>
-                Save and log out.
+                Save and log out
               </Typography>
             </Button>
           </Grid>
@@ -707,7 +707,7 @@ const Body = () => {
                 style={{ ...BlueButton, width: "fit-content" }}
               >
                 <Typography textTransform={"none"} style={BlueButtonText}>
-                  Save and log out.
+                  Save and log out
                 </Typography>
               </Button>
             </Grid>

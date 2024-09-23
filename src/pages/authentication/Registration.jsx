@@ -116,7 +116,7 @@ const Registration = () => {
       );
       const userData = checkArray(userExists);
       const newAdminUserTemplate = {
-        existing:true,
+        existing: true,
         userID: userData.id,
         name: userData.name,
         lastName: userData.lastName,
@@ -145,7 +145,7 @@ const Registration = () => {
         base64 = await convertToBase64(user.rowImageProfile);
       }
       const newAdminUserTemplate = {
-        existing:false,
+        existing: false,
         name: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -181,7 +181,7 @@ const Registration = () => {
         id="container-checking"
         container
         style={{
-          backgroundColor: "var(--whitebase)",
+          backgroundColor: "var(--basewhite)",
           height: "100dvh",
           margin: 0,
           width: "100vw",

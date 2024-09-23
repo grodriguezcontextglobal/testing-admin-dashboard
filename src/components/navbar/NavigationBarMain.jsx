@@ -438,11 +438,18 @@ const NavigationBarMain = (props) => {
                       }
                     >
                       <div className="content-main-navbar-updated">
-                        <article className="nav-item-base-1-main-navbar-updated">
+                        <article
+                          className="nav-item-base-1-main-navbar-updated"
+                          style={{ backgroundColor: "var(--danger-action)" }}
+                        >
                           <div className="content-2-main-navbar-updated">
                             <div
                               className="text-1-main-navbar-updated text-mdsemibold"
-                              style={{ display: "flex" }}
+                              style={{
+                                display: "flex",
+                                backgroundColor: "var(--danger-action)",
+                                borderRadius: "50%",
+                              }}
                             >
                               <p
                                 style={{

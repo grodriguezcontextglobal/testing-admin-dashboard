@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { notification, Select, Space, Tag, Tooltip } from "antd";
+import { Select, Space, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,18 +19,19 @@ import {
 } from "../../../../components/icons/Icons";
 import { onAddDeviceSetup } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import "../../../../styles/global/ant-select.css";
+import AddingEventCreated from "../staff/components/AddingEventCreated";
 import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 const Form = () => {
   const { register, handleSubmit, setValue } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -40,6 +41,7 @@ const Form = () => {
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState(deviceSetup);
   const [assignAllDevices, setAssignAllDevices] = useState(false);
+  const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const itemQuery = useQuery({
@@ -48,20 +50,14 @@ const Form = () => {
       devitrakApi.post("/db_item/warehouse-items", {
         company_id: user.sqlInfo.company_id,
         warehouse: true,
+        enableAssignFeature: 1,
       }),
   });
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg, duration) => {
-    api.open({
-      description: msg,
-      duration: duration,
-    });
-  };
 
   useEffect(() => {
     const controller = new AbortController();
     if (staff.adminUser.length === 0) {
-      openNotificationWithIcon("Please add at least one admin staff member to continue", 3);
+      return setTriggerAddingAdminStaff(true);
     }
     return () => {
       controller.abort();
@@ -176,7 +172,7 @@ const Form = () => {
       alignItems={"center"}
       key={"settingUp-deviceList-event"}
     >
-      {contextHolder}
+      {triggerAddingAdminStaff && <AddingEventCreated />}
       <InputLabel
         style={{
           width: "100%",
