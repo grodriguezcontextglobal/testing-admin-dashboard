@@ -4,6 +4,8 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GeneralDeviceIcon } from "../../../components/icons/Icons";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
   return (
     <Card
@@ -33,7 +35,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
             style={{ objectFit: "cover", height: "auto", width: "70%" }}
           />
         ) : (
-          <GeneralDeviceIcon dimensions={{width:"150px", height:"auto"}}/>
+          <GeneralDeviceIcon dimensions={{ width: "150px", height: "auto" }} />
         )}
       </div>
       <div
@@ -85,9 +87,9 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
         <Button
           loading={loadingStatus}
           onClick={() => returnFn(props)}
-          style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+          style={{ ...DangerButton, ...CenteringGrid, width: "100%" }}
         >
-          <p style={BlueButtonText}>Return</p>
+          <p style={DangerButtonText}>Return</p>
         </Button>
       </div>
     </Card>

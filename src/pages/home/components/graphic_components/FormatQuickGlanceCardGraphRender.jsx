@@ -1,8 +1,7 @@
-import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { Card } from "antd";
-import ChartsRenderer from "../../../../components/utils/ChartsRenderer";
 import { PropTypes } from "prop-types";
+import ChartsRenderer from "../../../../components/utils/ChartsRenderer";
 const FormatQuickGlanceCardGraphRender = ({
   dataToRender,
   totalDeviceInRange,
@@ -38,19 +37,19 @@ const FormatQuickGlanceCardGraphRender = ({
     <Grid key={index + 1} style={style} item xs={12}>
       <Card
         title={renderTitle()}
-        extra={
-          <Typography
-            fontFamily={"Inter"}
-            fontSize={"14px"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"20px"}
-            textAlign={"right"}
-            color={"var(--gray-600, #475467)"}
-          >
-            <Icon icon="simple-line-icons:options-vertical" color="#98A2B3" />
-          </Typography>
-        }
+        // extra={
+        //   <Typography
+        //     fontFamily={"Inter"}
+        //     fontSize={"14px"}
+        //     fontStyle={"normal"}
+        //     fontWeight={500}
+        //     lineHeight={"20px"}
+        //     textAlign={"right"}
+        //     color={"var(--gray-600, #475467)"}
+        //   >
+        //     <Icon icon="simple-line-icons:options-vertical" color="#98A2B3" />
+        //   </Typography>
+        // }
         style={{
           borderRadius: "12px",
           border: "1px solid var(--gray-200, #EAECF0)",
