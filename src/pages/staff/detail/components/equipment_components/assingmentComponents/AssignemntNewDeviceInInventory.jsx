@@ -181,7 +181,7 @@ const AssignemntNewDeviceInInventory = () => {
         email: profile.email,
         phone_number: "000-000-0000",
       });
-      if(newStaffMember.data.result.insertId){
+      if (newStaffMember.data.result.insertId) {
         for (let data of props.deviceInfo) {
           await devitrakApi.post("/db_lease/new-lease", {
             staff_admin_id: user.sqlMemberInfo.staff_id,
@@ -192,7 +192,6 @@ const AssignemntNewDeviceInInventory = () => {
             device_id: data.item_id,
           });
         }
-  
       }
     }
   };
@@ -1040,7 +1039,7 @@ const AssignemntNewDeviceInInventory = () => {
             moreInfo.map((item) => (
               <div
                 style={{
-                  backgroundColor: "var(--whitebase)",
+                  backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
                   margin: "0 1px",
                   border: "solid 0.1px var(--gray900)",

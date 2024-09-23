@@ -175,6 +175,7 @@ export const PointFilled = () => {
     </svg>
   );
 };
+
 export const DevitrakLogo = () => {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="47" height="22" fill="none">
@@ -765,6 +766,7 @@ export const UploadImagePlaceholder = () => {
     </svg>
   );
 };
+
 export const ProfileIcon = () => {
   return (
     <svg
@@ -780,6 +782,7 @@ export const ProfileIcon = () => {
     </svg>
   );
 };
+
 export const CompanyIcon = () => {
   return (
     <svg
