@@ -254,7 +254,7 @@ const Login = () => {
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
-      throw error
+      throw error;
     }
     setValue("email", "");
     setValue("password", "");
@@ -285,7 +285,7 @@ const Login = () => {
       <Grid
         container
         style={{
-          backgroundColor: "var(--whitebase)",
+          backgroundColor: "var(--basewhite)",
           height: "100dvh",
           margin: "auto",
           // width: "100vw",
