@@ -7,80 +7,121 @@ import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/T
 import MultipleDevices from "./auth_transaction_options/MultipleDevices";
 import SingleDevice from "./auth_transaction_options/SingleDevice";
 const AuthorizedTransaction = ({
-    createTransactionPaid,
-    setCreateTransactionPaid,
+  createTransactionPaid,
+  setCreateTransactionPaid,
 }) => {
-    const [optionToRender, setOptionToRender] = useState(0)
+  const [optionToRender, setOptionToRender] = useState(0);
 
-    function closeModal() {
-        setCreateTransactionPaid(false);
-    }
+  function closeModal() {
+    setCreateTransactionPaid(false);
+  }
 
-
-    const renderTitle = () => {
-        return (
-            <Typography
-                textTransform={"none"}
-                marginY={2}
-                style={{
-                    ...TextFontSize30LineHeight38,
-                    textWrap: "balance",
-                }}
-            >
-                New transaction with authorized deposit for devices
-            </Typography>
-        );
-    };
+  const renderTitle = () => {
     return (
-        <Modal
-            title={renderTitle()}
-            open={createTransactionPaid}
-            onOk={() => closeModal()}
-            onCancel={() => closeModal()}
-            maskClosable={false}
-            centered
-            footer={[]}
-            width={1000}
-        >
-            <div
-                style={{
-                    minWidth: "fit-content",
-                    backgroundColor: "#ffffff",
-                    padding: "20px",
-                }}
-            >
-                <Typography
-                    textTransform={"none"}
-                    color={"var(--gray-900, #101828)"}
-                    lineHeight={"26px"}
-                    textAlign={"left"}
-                    fontWeight={400}
-                    fontFamily={"Inter"}
-                    fontSize={"18px"}
-                    marginY={2}
-                >
-                    Please scan device for free transaction:
-                </Typography>
-                <Divider />
-                <Box style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "5px" }}>
-                    <Button style={{ ...BlueButton, width: "100%" }} onClick={() => setOptionToRender(0)}><Typography style={{ ...BlueButtonText, textDecoration: `${optionToRender === 0 ? "underline" : "none"}`, textTransform: `${optionToRender === 0 ? "uppercase" : "none"}` }}>single device</Typography></Button>
-                    <Button style={{ ...BlueButton, width: "100%" }} onClick={() => setOptionToRender(1)}><Typography style={{ ...BlueButtonText, textDecoration: `${optionToRender === 1 ? "underline" : "none"}`, textTransform: `${optionToRender === 1 ? "uppercase" : "none"}` }}>multiple device</Typography></Button>
-                </Box>
-                <Divider />
-                <Typography>{
-                    optionToRender === 0 ? "Single device" : "Multiple devices"
-                }
-                </Typography>
-                {
-                    optionToRender === 0 ? <SingleDevice setCreateTransactionPaid={setCreateTransactionPaid} /> : <MultipleDevices setCreateTransactionPaid={setCreateTransactionPaid} />
-                }
-            </div>
-        </Modal>
+      <Typography
+        textTransform={"none"}
+        marginY={2}
+        style={{
+          ...TextFontSize30LineHeight38,
+          textWrap: "balance",
+        }}
+      >
+        New transaction with authorized deposit for devices
+      </Typography>
     );
+  };
+  return (
+    <Modal
+      title={renderTitle()}
+      open={createTransactionPaid}
+      onOk={() => closeModal()}
+      onCancel={() => closeModal()}
+      maskClosable={false}
+      centered
+      footer={[]}
+      width={1000}
+      style={{
+        top: "5dvh",
+      }}
+    >
+      <div
+        style={{
+          minWidth: "fit-content",
+          backgroundColor: "#ffffff",
+          padding: "20px",
+        }}
+      >
+        <Typography
+          textTransform={"none"}
+          color={"var(--gray-900, #101828)"}
+          lineHeight={"26px"}
+          textAlign={"left"}
+          fontWeight={400}
+          fontFamily={"Inter"}
+          fontSize={"18px"}
+          marginY={2}
+        >
+          Please scan device for free transaction:
+        </Typography>
+        <Divider />
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "5px",
+          }}
+        >
+          <Button
+            style={{ ...BlueButton, width: "100%" }}
+            onClick={() => setOptionToRender(0)}
+          >
+            <Typography
+              style={{
+                ...BlueButtonText,
+                textDecoration: `${
+                  optionToRender === 0 ? "underline" : "none"
+                }`,
+                textTransform: `${optionToRender === 0 ? "uppercase" : "none"}`,
+              }}
+            >
+              single device
+            </Typography>
+          </Button>
+          <Button
+            style={{ ...BlueButton, width: "100%" }}
+            onClick={() => setOptionToRender(1)}
+          >
+            <Typography
+              style={{
+                ...BlueButtonText,
+                textDecoration: `${
+                  optionToRender === 1 ? "underline" : "none"
+                }`,
+                textTransform: `${optionToRender === 1 ? "uppercase" : "none"}`,
+              }}
+            >
+              multiple device
+            </Typography>
+          </Button>
+        </Box>
+        <Divider />
+        <Typography>
+          {optionToRender === 0 ? "Single device" : "Multiple devices"}
+        </Typography>
+        {optionToRender === 0 ? (
+          <SingleDevice setCreateTransactionPaid={setCreateTransactionPaid} />
+        ) : (
+          <MultipleDevices
+            setCreateTransactionPaid={setCreateTransactionPaid}
+          />
+        )}
+      </div>
+    </Modal>
+  );
 };
 
-export default AuthorizedTransaction
-
+export default AuthorizedTransaction;
 
 // const { register, handleSubmit, setValue } = useForm()
 // const { customer } = useSelector((state) => state.customer);

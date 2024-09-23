@@ -38,6 +38,9 @@ const FreeTransaction = ({
       footer={[]}
       width={1000}
       maskClosable={false}
+      style={{
+        top:"5dvh"
+      }}
     >
       <div
         style={{
