@@ -90,7 +90,7 @@ const TableDetailPerDevice = ({ searching }) => {
       };
       dispatch(onAddCustomerInfo(userFormatData));
       dispatch(onAddCustomer(userFormatData));
-      await navigate(
+      navigate(
         `/events/event-attendees/${userFormatData.uid}/transactions-details`
       );
     }
@@ -154,7 +154,6 @@ const TableDetailPerDevice = ({ searching }) => {
         compare: (a, b) => ("" + a.status).localeCompare(b.status),
       },
       render: (_, record) => (
-        // console.log("record", record),
         <span
           style={{
             margin: "auto",

@@ -28,6 +28,7 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { checkArray } from "../../../../components/utils/checkArray";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -68,15 +69,25 @@ const ModalAddAndUpdateDeviceSetup = ({
     refetchOnMount: false,
   });
 
+  const eventInfoSqlDB = useQuery({
+    queryKey: ["eventInfoSqlDB"],
+    queryFn: () =>
+      devitrakApi.post("/db_event/consulting-event", {
+        company_assigned_event_id: user.sqlInfo.company_id,
+        event_name: event.eventInfoDetail.eventName,
+      }),
+    refetchOnMount: false,
+  });
   useEffect(() => {
     const controller = new AbortController();
     itemQuery.refetch();
     recordNoSqlDevicesQuery.refetch();
+    eventInfoSqlDB.refetch();
     return () => {
       controller.abort();
     };
   }, []);
-
+console.log(eventInfoSqlDB?.data);
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
@@ -149,9 +160,8 @@ const ModalAddAndUpdateDeviceSetup = ({
     await updateDeviceSetupInEvent();
     return null;
   };
-
   const createDeviceInEvent = async (props) => {
-    const event_id = event.sql.event_id;
+    const event_id = checkArray(eventInfoSqlDB?.data?.data?.event).event_id;
     const database = [...props.deviceInfo];
     await devitrakApi.post("/db_event/event_device", {
       event_id: event_id,
@@ -382,7 +392,9 @@ const ModalAddAndUpdateDeviceSetup = ({
               return (
                 <Chip
                   key={`${item.quantity}${item.deviceInfo.at(-1).item_id}`}
-                  label={`${item.deviceInfo.at(-1).location} - ${item.quantity}`}
+                  label={`${item.deviceInfo.at(-1).location} - ${
+                    item.quantity
+                  }`}
                   onDelete={() => removeItem(index)}
                 />
               );
@@ -411,7 +423,7 @@ const ModalAddAndUpdateDeviceSetup = ({
             </Typography>
           </InputLabel>
           <button
-          disabled={blockingButton()}  
+            disabled={blockingButton()}
             type="submit"
             style={{
               ...LightBlueButton,

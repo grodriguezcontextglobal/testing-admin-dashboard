@@ -134,6 +134,13 @@ const ButtonSections = () => {
   checkItemsInUseToUpdateInventory();
   const checkUserIsAssignedAsAdminInEvent = () => {
     const staffList = [...event.staff.adminUser];
+    if (!staffList.some((element) => element.email === user.email)) {
+      const companyEmployees = [...user.companyData.employees];
+      const checkRoleInCompany = companyEmployees.findIndex(
+        (element) => element.user === user.email
+      );
+      return companyEmployees[checkRoleInCompany].role < 2;
+    }
     const check = staffList.findIndex(
       (element) => element.email === user.email
     );

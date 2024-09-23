@@ -8,7 +8,6 @@ import { useState } from "react";
 
 const DeviceDescriptionTags = ({ dataFound }) => {
   const [returningModal, setReturningModal] = useState(false);
-  console.log(dataFound)
   const dic = {
     Permanent: {
       label: "Owned",
@@ -63,7 +62,14 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                 borderRadius: "16px",
               }}
             >
-              <Tooltip title="Click to return leased equipment and adding returning infomration.">
+              <Tooltip
+                title={`${
+                  dataFound[0]?.warehouse < 1 ||
+                  dataFound[0]?.warehouse === false
+                    ? "This item is being used in an event."
+                    : "Click to return leased equipment and adding returning infomration."
+                }`}
+              >
                 <button
                   style={{
                     background: "transparent",
@@ -71,6 +77,10 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                     outline: "none",
                     width: "100%",
                   }}
+                  disabled={
+                    dataFound[0]?.warehouse < 1 ||
+                    dataFound[0]?.warehouse === false
+                  }
                   onClick={() => setReturningModal(true)}
                 >
                   <Typography
@@ -89,7 +99,8 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                       padding: "2px 8px",
                     }}
                   >
-                    {(dataFound[0]?.enabledAssignFeature > 0 || !dataFound[0]?.enabledAssignFeature)
+                    {dataFound[0]?.enabledAssignFeature > 0 ||
+                    !dataFound[0]?.enabledAssignFeature
                       ? "Returning date"
                       : "Returned equipment date"}
                     <br />{" "}
@@ -183,13 +194,15 @@ const DeviceDescriptionTags = ({ dataFound }) => {
           </Grid>
         </Card>
       </Grid>
-      {returningModal && (dataFound[0].enabledAssignFeature > 0 || !dataFound[0].enabledAssignFeature)&& (
-        <ReturningLeasedEquipModal
-          dataFound={dataFound}
-          openReturningModal={returningModal}
-          setOpenReturningModal={setReturningModal}
-        />
-      )}
+      {returningModal &&
+        (dataFound[0].enabledAssignFeature > 0 ||
+          !dataFound[0].enabledAssignFeature) && (
+          <ReturningLeasedEquipModal
+            dataFound={dataFound}
+            openReturningModal={returningModal}
+            setOpenReturningModal={setReturningModal}
+          />
+        )}
     </>
   );
 };

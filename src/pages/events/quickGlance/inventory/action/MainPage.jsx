@@ -60,40 +60,6 @@ const ActionsMainPage = () => {
           timeStamp: new Date().getTime(),
         }
       );
-      // await axios.patch(
-      //   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-      //   {
-      //     ref: {
-      //       device: deviceInfoSelected.entireData.device,
-      //       type: deviceInfoSelected.entireData.type,
-      //       activity: true,
-      //       company: user.companyData.id,
-      //     },
-      //     newInfo: {
-      //       activity: false,
-      //     },
-      //     collection: "receiverspools",
-      //   }
-      // );
-      // openNotificationWithIcon("success", "Device returned.");
-      // queryClient.invalidateQueries({
-      //   queryKey: ["assignedDeviceListQuery"],
-      //   exact: true,
-      // });
-      // queryClient.invalidateQueries({
-      //   queryKey: ["deviceInPoolList"],
-      //   exact: true,
-      // });
-      // dispatch(
-      //   onAddDeviceToDisplayInQuickGlance({
-      //     ...deviceInfoSelected,
-      //     activity: false,
-      //     entireData: {
-      //       ...deviceInfoSelected.entireData,
-      //       activity: true,
-      //     },
-      //   })
-      // );
 
       const respoPool = await devitrakApi.post("/receiver/receiver-pool-list", {
         device: deviceInfoSelected.entireData.device,
@@ -130,23 +96,7 @@ const ActionsMainPage = () => {
             },
           })
         );
-      //   await axios.patch(
-      //     "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-      //     {
-      //       ref: {
-      //         device: deviceInfoSelected.entireData.device,
-      //         type: deviceInfoSelected.entireData.type,
-      //         activity: true,
-      //         company: user.companyData.id,
-      //       },
-      //       newInfo: {
-      //         activity: false,
-      //       },
-      //       collection: "receiverspools",
-      //     }
-      //   );
-  
-       }
+      }
     }
   };
   const handleLostSingleDevice = async () => {
@@ -338,3 +288,56 @@ const ActionsMainPage = () => {
 };
 
 export default ActionsMainPage;
+
+//notfications
+      // await axios.patch(
+      //   "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+      //   {
+      //     ref: {
+      //       device: deviceInfoSelected.entireData.device,
+      //       type: deviceInfoSelected.entireData.type,
+      //       activity: true,
+      //       company: user.companyData.id,
+      //     },
+      //     newInfo: {
+      //       activity: false,
+      //     },
+      //     collection: "receiverspools",
+      //   }
+      // );
+      // openNotificationWithIcon("success", "Device returned.");
+      // queryClient.invalidateQueries({
+      //   queryKey: ["assignedDeviceListQuery"],
+      //   exact: true,
+      // });
+      // queryClient.invalidateQueries({
+      //   queryKey: ["deviceInPoolList"],
+      //   exact: true,
+      // });
+      // dispatch(
+      //   onAddDeviceToDisplayInQuickGlance({
+      //     ...deviceInfoSelected,
+      //     activity: false,
+      //     entireData: {
+      //       ...deviceInfoSelected.entireData,
+      //       activity: true,
+      //     },
+      //   })
+      // );
+
+      //update
+        //   await axios.patch(
+        //     "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+        //     {
+        //       ref: {
+        //         device: deviceInfoSelected.entireData.device,
+        //         type: deviceInfoSelected.entireData.type,
+        //         activity: true,
+        //         company: user.companyData.id,
+        //       },
+        //       newInfo: {
+        //         activity: false,
+        //       },
+        //       collection: "receiverspools",
+        //     }
+        //   );
