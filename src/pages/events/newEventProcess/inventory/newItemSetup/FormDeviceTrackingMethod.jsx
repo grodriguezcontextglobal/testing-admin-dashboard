@@ -563,18 +563,18 @@ const FormDeviceTrackingMethod = ({
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Tooltip title="Device added from this option would be set as rented Device.">
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Ownership status of items{" "}
+                <Tooltip title="Device added from this option would be set as rented Device.">
+                  <Typography
+                    textTransform={"none"}
+                    textAlign={"left"}
+                    style={{ ...Subtitle, fontWeight: 500 }}
+                  >
+                    Ownership status of items{" "}
                     {/* <strong>
                       <QuestionIcon />
                     </strong> */}
-                </Typography>
-                  </Tooltip>
+                  </Typography>
+                </Tooltip>
                 <OutlinedInput
                   disabled
                   style={OutlinedInputStyle}
@@ -916,7 +916,7 @@ const FormDeviceTrackingMethod = ({
             moreInfo.map((item) => (
               <div
                 style={{
-                  backgroundColor: "var(--whitebase)",
+                  backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
                   margin: "0 1px",
                   border: "solid 0.1px var(--gray900)",
