@@ -1,18 +1,19 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Popconfirm, notification } from "antd";
-import _ from "lodash";
-import { useEffect } from "react";
+import { groupBy } from "lodash";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { formatDate } from "../../../../../components/utils/dateFormat";
+import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { onAddEventData } from "../../../../../store/slices/eventSlice";
-
+import ModalToDisplayFunctionInProgress from "./endEvent/ModalToDisplayFunctionInProgress";
 const EndEventButton = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const [openEndingEventModal, setOpenEndingEventModal] = useState(false);
   const dispatch = useDispatch();
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
@@ -96,14 +97,12 @@ const EndEventButton = () => {
       message: msg,
     });
   };
-
   const removingAccessFromStaffMemberOnly = async () => {
     const checkCompanyUserSet = user.companyData.employees;
     const employeesCompany = [...checkCompanyUserSet];
-    const employeesEvent = [
-      ...event.staff.adminUser,
-      ...event.staff.headsetAttendees,
-    ];
+    const adminStaff = event.staff.adminUser ?? [];
+    const headsetStaff = event.staff.headsetAttendees ?? [];
+    const employeesEvent = [...adminStaff, ...headsetStaff];
     for (let data of employeesEvent) {
       const checkRole = employeesCompany.findIndex(
         (element) => element.user === data.email
@@ -112,26 +111,21 @@ const EndEventButton = () => {
         employeesCompany[checkRole].active = false;
       }
     }
-    await devitrakApi.patch(
-      `/company/update-company/${checkCompanyUserSet.id}`,
-      {
-        employees: employeesCompany,
-      }
-    );
+    await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
+      employees: employeesCompany,
+    });
+    setOpenEndingEventModal(false);
     return window.location.reload();
   };
 
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfInventoryQuery?.data?.data?.listOfItems,
     "company"
   );
 
   const findInventoryStored = () => {
     if (groupingByCompany[user.company]) {
-      const groupingByEvent = _.groupBy(
-        groupingByCompany[user.company],
-        "event"
-      );
+      const groupingByEvent = groupBy(groupingByCompany[user.company], "event");
       if (groupingByEvent[event.eventInfoDetail.eventName]) {
         return groupingByEvent[event.eventInfoDetail.eventName];
       }
@@ -152,7 +146,7 @@ const EndEventButton = () => {
   const sqlDeviceReturnedToCompanyStock = async () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
-    const groupingDevicesFromNoSQL = _.groupBy(listOfDevicesInEvent, "device");
+    const groupingDevicesFromNoSQL = groupBy(listOfDevicesInEvent, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
     for (let data of allInventoryOfEvent) {
       if (groupingDevicesFromNoSQL[data.serial_number]) {
@@ -182,7 +176,7 @@ const EndEventButton = () => {
   const sqlDeviceFinalStatusAtEventFinished = async () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
-    const groupingDevicesFromNoSQL = _.groupBy(listOfDevicesInEvent, "device");
+    const groupingDevicesFromNoSQL = groupBy(listOfDevicesInEvent, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
     for (let data of allInventoryOfEvent) {
       if (groupingDevicesFromNoSQL[data.serial_number]) {
@@ -205,14 +199,14 @@ const EndEventButton = () => {
     }
   };
 
-  const groupingItemsByCompany = _.groupBy(
+  const groupingItemsByCompany = groupBy(
     listOfItemsInInventoryQuery?.data?.data?.listOfItems,
     "company"
   );
 
   const itemsPerCompany = () => {
     if (groupingItemsByCompany[user.company]) {
-      const groupingByGroup = _.groupBy(
+      const groupingByGroup = groupBy(
         groupingItemsByCompany[user.company],
         "group"
       );
@@ -286,10 +280,7 @@ const EndEventButton = () => {
   };
   const addingRecordOfActivityInEvent = async () => {
     try {
-      const groupingInventoryByGroupName = _.groupBy(
-        event.deviceSetup,
-        "group"
-      );
+      const groupingInventoryByGroupName = groupBy(event.deviceSetup, "group");
       const dataToStoreAsRecord =
         transactionsRecordQuery?.data?.data?.listOfReceivers;
       for (let data of dataToStoreAsRecord) {
@@ -311,6 +302,7 @@ const EndEventButton = () => {
     }
   };
   const updatingItemInDB = async () => {
+    setOpenEndingEventModal(true);
     if (returningItemsInInventoryAfterEndingEvent()?.length > 0) {
       for (let data of returningItemsInInventoryAfterEndingEvent()) {
         if (itemsPerCompany()[data.group]) {
@@ -356,6 +348,10 @@ const EndEventButton = () => {
             disabled={!event.active}
             title="Are you sure? This action can not be reversed."
             onConfirm={() => updatingItemInDB()}
+            overlayInnerStyle={{
+              display: openEndingEventModal ? "none" : "flex",
+            }}
+            className="popconfirm-event-end"
           >
             <Button
               style={{
@@ -375,44 +371,13 @@ const EndEventButton = () => {
           </Popconfirm>
         </Grid>
       </Grid>
+      {openEndingEventModal && (
+        <ModalToDisplayFunctionInProgress
+          openEndingEventModal={openEndingEventModal}
+        />
+      )}
     </>
   );
 };
 
 export default EndEventButton;
-
-// const response = await eventInventoryQuery?.data?.data?.receiversInventory
-// const groupingByDevice = _.groupBy(response, 'device')
-// const deviceList = event.deviceSetup
-// for (let data of deviceList) {
-//     for (let i = Number(data.startingNumber); i <= Number(data.endingNumber); i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
-//         if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
-//             await devitrakApi.post('/db_event/returning-item', {
-//                 warehouse: 1,
-//                 status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-//                 update_at: formatDate(new Date()),
-//                 serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
-//                 category_name: data.category,
-//                 item_group: data.group,
-//                 company: event.company,
-//             })
-//         }
-//     }
-// }
-
-// const response = await eventInventoryQuery?.data?.data?.receiversInventory
-// const groupingByDevice = _.groupBy(response, 'device')
-// const deviceList = event.deviceSetup
-// for (let data of deviceList) {
-//     for (let i = data.startingNumber; i <= data.endingNumber; i++) { // Number(data.startingNumber); i <= Number(data.endingNumber); i++
-//         if (groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)]) {
-//             await devitrakApi.post('/db_event/device-final-status', {
-//                 status: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-//                 condition: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).status,
-//                 updated_at: formatDate(new Date()),
-//                 serial_number: groupingByDevice[String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)].at(-1).device,
-//                 event_id: event.sql.event_id,
-//             })
-//         }
-//     }
-// }
