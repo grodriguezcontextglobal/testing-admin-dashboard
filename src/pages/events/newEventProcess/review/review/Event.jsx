@@ -160,7 +160,9 @@ const Event = () => {
             lineHeight={"24px"}
             color={"var(--gray-600, #475467)"}
           >
-            {address.slice(0, -3).toString().replaceAll(",",' ')}
+            {eventInfoDetail.floor}
+            <br />
+            {address.slice(0, -3).toString().replaceAll(",", " ")}
             <br />
             {address.at(-3)} {address.at(-2)} {address.at(-1)}
           </Typography>
