@@ -30,6 +30,8 @@ const SearchDevice = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
+
   const eventInventoryQuery = useQuery({
     queryKey: ["eventInventoryQuery"],
     queryFn: () =>
@@ -73,6 +75,17 @@ const SearchDevice = ({ searchParams }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    const controller = new AbortController();
+    if (searchParams) {
+      setTimeout(() => {
+        return setLoadingSearchingResult(false);
+      }, 3500);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [searchParams]);
   const fetchActiveAssignedDevicesPerEvent = async () => {
     const rowEventsData = [...eventsPerAdmin.active];
     const result = new Map();
@@ -266,7 +279,8 @@ const SearchDevice = ({ searchParams }) => {
             linkStructure
           );
           await devitrakApi.post(
-            "/nodemailer/confirm-returned-device-notification", emailStructure.render()
+            "/nodemailer/confirm-returned-device-notification",
+            emailStructure.render()
             // {
             //   consumer: {
             //     name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
@@ -381,6 +395,8 @@ const SearchDevice = ({ searchParams }) => {
                   />
                 </Grid>
               ))
+            ) : loadingSearchingResult ? (
+              <Loading />
             ) : (
               <NoDataFound />
             )}
