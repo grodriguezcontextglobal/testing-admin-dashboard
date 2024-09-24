@@ -11,29 +11,18 @@ import {
 import { Avatar, Divider, Space, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import dicRole from "../../../../components/general/dicRole";
-import { onLogin } from "../../../../store/slices/adminSlice";
+import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "./Body.css";
 import { useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 const Body = () => {
-  const allEventsWhereEmailIsAssignedTo = useQuery({
-    queryKey: ["allEventsWhereEmailIsAssignedTo"],
-    queryFn: () =>
-      devitrakApi.post("/event/staff-all-events", {
-        email: user.email,
-      }),
-    refetchOnMount: false,
-  });
-
-  console.log(allEventsWhereEmailIsAssignedTo);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const roleDefinition = dicRole[Number(user.role)];
   const { register, handleSubmit, watch } = useForm({
@@ -46,13 +35,6 @@ const Body = () => {
     },
   });
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const emailRef = useRef({
-    name: user.name,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone ?? "000-000-0000",
-  });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg, dur) => {
     api.open({
@@ -60,18 +42,19 @@ const Body = () => {
       duration: dur,
     });
   };
-  const originalDataRef = {
+  const originalDataRef = useRef({
     name: user.name,
     lastName: user.lastName,
     email: user.email,
     phone: user.phone ?? "000-000-0000",
     role: roleDefinition,
-  };
+  });
   const checkIfOriginalDataHasChange = (props) => {
     if (
-      originalDataRef[props] !== "" &&
-      originalDataRef[props] !== watch(`${props}`)
+      originalDataRef.current[props] !== "" &&
+      originalDataRef.current[props] !== watch(`${props}`)
     ) {
+      api.destroy();
       return openNotificationWithIcon(
         "Please save updates before leave this tab.",
         0
@@ -79,27 +62,48 @@ const Body = () => {
     }
   };
 
-  const triggerRoutes = () => {
-    if (Number(user.role) === Number("4")) {
-      return navigate("/events");
-    }
-    return null; //navigate("/");
-  };
-  const listOfEvents = () => {
-    const events = new Map();
-    if (allEventsWhereEmailIsAssignedTo.data) {
-      const allEvents = [...allEventsWhereEmailIsAssignedTo.data.data.events];
-      for (let data of allEvents) {
-        if (!events.has(data.id)) {
-          events.set(data.id, data);
-        }
+  const updatedStaffInEvent = async (props) => {
+    const eventsToUpdateStaffInfo = [...listOfEvents()];
+    for (let data of eventsToUpdateStaffInfo) {
+      const adminStaff = data.staff.adminUser ?? [];
+      const headsetStaff = data.staff.headsetAttendees ?? [];
+      let staff = [...adminStaff, ...headsetStaff];
+      const indexStaff = staff.findIndex(
+        (element) => element.email === originalDataRef.current.email
+      );
+      if (indexStaff > -1) {
+        staff[indexStaff] = {
+          ...staff[indexStaff],
+          email: props.email,
+          firstName: props.name,
+          lastName: props.lastName,
+        };
+        await devitrakApi.patch(`/event/edit-event/${data.id}`, {
+          staff: {
+            adminUser: staff.filter(
+              (element) => element.role === "Administrator"
+            ),
+            headsetAttendees: staff.filter(
+              (element) => element.role === "HeadsetAttendees"
+            ),
+          },
+        });
       }
     }
-    const result = new Set();
-    for (let [, value] of events) {
-      result.add(value);
+  };
+  const listOfEvents = () => {
+    const events = new Set();
+    if (eventsPerAdmin["active"]) {
+      for (let data of eventsPerAdmin["active"]) {
+        events.add(data);
+      }
     }
-    return Array.from(result);
+    if (eventsPerAdmin["completed"]) {
+      for (let data of eventsPerAdmin["completed"]) {
+        events.add(data);
+      }
+    }
+    return Array.from(events);
   };
 
   function convertToBase64(file) {
@@ -132,33 +136,6 @@ const Body = () => {
     return employeeCompanyDataCopy;
   };
 
-  const updateStaffInEvent = async (props) => {
-    const eventsToUpdateStaffInfo = [...listOfEvents()];
-    for (let data of eventsToUpdateStaffInfo) {
-      const adminStaff = data.staff.adminUser ?? [];
-      const headsetStaff = data.staff.headsetAttendees ?? [];
-      let staff = [...adminStaff, ...headsetStaff];
-      const indexStaff = staff.findIndex(
-        (element) => element.email === emailRef.current.email
-      );
-      if (indexStaff > -1) {
-        staff[indexStaff] = {
-          ...staff[indexStaff],
-          email: props.email,
-          firstName: props.name,
-          lastName: props.lastName,
-        };
-        await devitrakApi.patch(`/event/edit-event/${data.id}`, {
-          staff: {
-            adminUser: staff.filter((element) => element.role === "Administrator"),
-            headsetAttendees: staff.filter(
-              (element) => element.role === "HeadsetAttendees"
-            ),
-          },
-        });
-      }
-    }
-  };
   const handleUpdatePersonalInfo = async (data) => {
     let base64;
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -208,9 +185,11 @@ const Body = () => {
             employees: newEmployeeData,
           }
         );
-
+        await updatedStaffInEvent(data);
         openNotificationWithIcon({ "Information updated": 3 });
-        return triggerRoutes();
+        openNotificationWithIcon({ "Information updated": 3 });
+        dispatch(onLogout());
+        return window.location.reload(true);
       }
     } else {
       const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -252,9 +231,13 @@ const Body = () => {
             employees: newEmployeeData,
           }
         );
-        await updateStaffInEvent(data);
+        await updatedStaffInEvent(data);
         openNotificationWithIcon({ "Information updated": 3 });
-        return triggerRoutes();
+        openNotificationWithIcon({ "Information updated": 3 });
+        dispatch(onLogout());
+        return window.location.reload(true);
+
+        // return triggerRoutes();
       }
     }
   };
@@ -652,7 +635,6 @@ const Body = () => {
                         variant="outlined"
                         style={OutlinedInputStyle}
                       />
-                      // </Grid>
                     );
                   })}
                 </Space>
