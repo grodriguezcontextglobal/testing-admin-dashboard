@@ -20,9 +20,20 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "./Body.css";
+import { useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const Body = () => {
-  const { eventsPerAdmin } = useSelector((state) => state.event);
+  const allEventsWhereEmailIsAssignedTo = useQuery({
+    queryKey: ["allEventsWhereEmailIsAssignedTo"],
+    queryFn: () =>
+      devitrakApi.post("/event/staff-all-events", {
+        email: user.email,
+      }),
+    refetchOnMount: false,
+  });
+
+  console.log(allEventsWhereEmailIsAssignedTo);
   const { user } = useSelector((state) => state.admin);
   const roleDefinition = dicRole[Number(user.role)];
   const { register, handleSubmit, watch } = useForm({
@@ -36,6 +47,12 @@ const Body = () => {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const emailRef = useRef({
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone ?? "000-000-0000",
+  });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg, dur) => {
     api.open({
@@ -69,18 +86,20 @@ const Body = () => {
     return null; //navigate("/");
   };
   const listOfEvents = () => {
-    const events = new Set();
-    if (eventsPerAdmin["active"]) {
-      for (let data of eventsPerAdmin["active"]) {
-        events.add(data);
+    const events = new Map();
+    if (allEventsWhereEmailIsAssignedTo.data) {
+      const allEvents = [...allEventsWhereEmailIsAssignedTo.data.data.events];
+      for (let data of allEvents) {
+        if (!events.has(data.id)) {
+          events.set(data.id, data);
+        }
       }
     }
-    if (eventsPerAdmin["completed"]) {
-      for (let data of eventsPerAdmin["completed"]) {
-        events.add(data);
-      }
+    const result = new Set();
+    for (let [, value] of events) {
+      result.add(value);
     }
-    return Array.from(events);
+    return Array.from(result);
   };
 
   function convertToBase64(file) {
@@ -113,6 +132,33 @@ const Body = () => {
     return employeeCompanyDataCopy;
   };
 
+  const updateStaffInEvent = async (props) => {
+    const eventsToUpdateStaffInfo = [...listOfEvents()];
+    for (let data of eventsToUpdateStaffInfo) {
+      const adminStaff = data.staff.adminUser ?? [];
+      const headsetStaff = data.staff.headsetAttendees ?? [];
+      let staff = [...adminStaff, ...headsetStaff];
+      const indexStaff = staff.findIndex(
+        (element) => element.email === emailRef.current.email
+      );
+      if (indexStaff > -1) {
+        staff[indexStaff] = {
+          ...staff[indexStaff],
+          email: props.email,
+          firstName: props.name,
+          lastName: props.lastName,
+        };
+        await devitrakApi.patch(`/event/edit-event/${data.id}`, {
+          staff: {
+            adminUser: staff.filter((element) => element.role === "Administrator"),
+            headsetAttendees: staff.filter(
+              (element) => element.role === "HeadsetAttendees"
+            ),
+          },
+        });
+      }
+    }
+  };
   const handleUpdatePersonalInfo = async (data) => {
     let base64;
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -206,7 +252,7 @@ const Body = () => {
             employees: newEmployeeData,
           }
         );
-
+        await updateStaffInEvent(data);
         openNotificationWithIcon({ "Information updated": 3 });
         return triggerRoutes();
       }
@@ -589,7 +635,7 @@ const Body = () => {
                   display: "flex",
                   justifyContent: "flex-end",
                   alignItems: "center",
-                  margin:"2dvh 0 0"
+                  margin: "2dvh 0 0",
                 }}
                 item
                 xs={12}
@@ -600,15 +646,6 @@ const Body = () => {
                 <Space size={[8, 16]} wrap>
                   {listOfEvents().map((evet) => {
                     return (
-                      // <Grid
-                      //   key={evet?.eventInfoDetail?.eventName}
-                      //   display={"flex"}
-                      //   justifyContent={"flex-start"}
-                      //   alignItems={"center"}
-                      //   padding={"5px"}
-                      //   item
-                      //   xs
-                      // >
                       <Chip
                         key={evet?.eventInfoDetail?.eventName}
                         label={evet?.eventInfoDetail?.eventName}
@@ -622,60 +659,6 @@ const Body = () => {
               </Grid>
             </Grid>
           </details>
-          {/* <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"stretch"}
-            marginY={0}
-            item
-            xs={4}
-            sm={4}
-            md={4}
-          >
-            <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Events
-              </Typography>
-            </InputLabel>
-          </Grid> */}
-          {/* <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            flexDirection={"column"}
-            alignItems={"center"}
-            marginY={0}
-            gap={2}
-            item
-            xs={6}
-            sm={6}
-            md={6}
-          > */}
-          {/* <Space size={[8, 16]} wrap>
-              {listOfEvents().map((evet) => {
-                return (
-                  // <Grid
-                  //   key={evet?.eventInfoDetail?.eventName}
-                  //   display={"flex"}
-                  //   justifyContent={"flex-start"}
-                  //   alignItems={"center"}
-                  //   padding={"5px"}
-                  //   item
-                  //   xs
-                  // >
-                  <Chip
-                    key={evet?.eventInfoDetail?.eventName}
-                    label={evet?.eventInfoDetail?.eventName}
-                    variant="outlined"
-                    style={OutlinedInputStyle}
-                  />
-                  // </Grid>
-                );
-              })}
-            </Space>
-          </Grid> */}
         </Grid>{" "}
         <Divider />
         <Grid
