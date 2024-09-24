@@ -76,6 +76,7 @@ const Body = () => {
       originalDataRef[props] !== "" &&
       originalDataRef[props] !== watch(`${props}`)
     ) {
+      api.destroy()
       return openNotificationWithIcon(
         "Please save updates before leave this tab.",
         2
