@@ -621,7 +621,7 @@ const MainPageQuickGlance = () => {
                 }}
               >
                 {sum(
-                  event?.staff?.adminUser?.length - 1 ?? 0,
+                  event?.staff?.adminUser?.length ?? 0,
                   event?.staff?.headsetAttendees?.length ?? 0
                 )}{" "}
                 total
