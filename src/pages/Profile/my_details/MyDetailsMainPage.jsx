@@ -1,7 +1,6 @@
 import { Grid } from "@mui/material";
-import { Divider } from "antd";
-import Header from "./components/Header";
 import Body from "./components/Body";
+import Header from "./components/Header";
 
 const MyDetailsMainPage = () => {
   return (
@@ -18,7 +17,6 @@ const MyDetailsMainPage = () => {
       <Header />
       {/* <Divider /> */}
       <Body />
-      <Divider />
     </Grid>
   );
 };
