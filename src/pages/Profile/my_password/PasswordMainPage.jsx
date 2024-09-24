@@ -1,7 +1,6 @@
 import { Grid } from "@mui/material";
-import Header from "./components/Header";
-import { Divider } from "antd";
 import Body from "./components/Body";
+import Header from "./components/Header";
 
 const PasswordMainPage = () => {
   return (
@@ -16,9 +15,7 @@ const PasswordMainPage = () => {
       container
     >
       <Header />
-      <Divider />
       <Body />
-      <Divider />
     </Grid>
   );
 };

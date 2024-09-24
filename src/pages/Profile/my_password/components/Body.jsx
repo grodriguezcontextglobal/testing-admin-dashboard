@@ -99,6 +99,7 @@ const Body = () => {
     return (
       <>
         {contextHolder}
+
         <form
           onSubmit={handleSubmit(handleUpdatePersonalInfo)}
           style={{
@@ -127,6 +128,7 @@ const Body = () => {
               </Typography>
             </Button>
           </Grid>
+          <Divider />
           <Grid
             style={{
               padding: "5px",
@@ -285,7 +287,6 @@ const Body = () => {
                 placeholder="Repeat the new password to confirm."
               />
             </Grid>
-            <Divider />
           </Grid>{" "}
           <Divider />
           <Grid
