@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Chip,
   Grid,
   InputLabel,
@@ -8,7 +7,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Avatar, Divider, Space, notification } from "antd";
+import { Avatar, Divider, Space, notification, Button } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -19,11 +18,12 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "./Body.css";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const [loading, setLoading] = useState(false);
   const roleDefinition = dicRole[Number(user.role)];
   const { register, handleSubmit, watch } = useForm({
     defaultValues: {
@@ -137,108 +137,112 @@ const Body = () => {
   };
 
   const handleUpdatePersonalInfo = async (data) => {
-    let base64;
-    if (data.photo.length > 0 && data.photo[0].size > 1048576) {
-      return alert(
-        "Image is bigger than 1mb. Please resize the image or select a new one."
-      );
-    } else if (data.photo.length > 0) {
-      base64 = await convertToBase64(data.photo[0]);
-      const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
-        name: data.name,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        imageProfile: base64,
-      });
-      if (resp) {
-        const dataUser = user.data;
-        dispatch(
-          onLogin({
-            ...user,
-            name: data.name,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            data: {
-              ...dataUser,
+    setLoading(true);
+    try {
+      let base64;
+      if (data.photo.length > 0 && data.photo[0].size > 1048576) {
+        return alert(
+          "Image is bigger than 1mb. Please resize the image or select a new one."
+        );
+      } else if (data.photo.length > 0) {
+        base64 = await convertToBase64(data.photo[0]);
+        const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
+          name: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          imageProfile: base64,
+        });
+        if (resp) {
+          const dataUser = user.data;
+          dispatch(
+            onLogin({
+              ...user,
               name: data.name,
               lastName: data.lastName,
               email: data.email,
               phone: data.phone,
-              imageProfile: base64,
-            },
-          })
-        );
-        const newDataUpdatedEmployeeCompany = {
-          firstName: data.name,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
-        };
-        const newEmployeeData = updatingEmployeesCompany(
-          newDataUpdatedEmployeeCompany
-        );
-        await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
-          {
-            employees: newEmployeeData,
-          }
-        );
-        await updatedStaffInEvent(data);
-        openNotificationWithIcon({ "Information updated": 3 });
-        openNotificationWithIcon({ "Information updated": 3 });
-        dispatch(onLogout());
-        return window.location.reload(true);
-      }
-    } else {
-      const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
-        name: data.name,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-      });
-      if (resp) {
-        const dataUser = user.data;
-        dispatch(
-          onLogin({
-            ...user,
-            name: data.name,
+              data: {
+                ...dataUser,
+                name: data.name,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone,
+                imageProfile: base64,
+              },
+            })
+          );
+          const newDataUpdatedEmployeeCompany = {
+            firstName: data.name,
             lastName: data.lastName,
             email: data.email,
             phone: data.phone,
-            data: {
-              ...dataUser,
+          };
+          const newEmployeeData = updatingEmployeesCompany(
+            newDataUpdatedEmployeeCompany
+          );
+          await devitrakApi.patch(
+            `/company/update-company/${user.companyData.id}`,
+            {
+              employees: newEmployeeData,
+            }
+          );
+          await updatedStaffInEvent(data);
+          openNotificationWithIcon({ "Information updated": 3 });
+          openNotificationWithIcon({ "Information updated": 3 });
+          dispatch(onLogout());
+          return window.location.reload(true);
+        }
+      } else {
+        const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
+          name: data.name,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+        });
+        if (resp) {
+          const dataUser = user.data;
+          dispatch(
+            onLogin({
+              ...user,
               name: data.name,
               lastName: data.lastName,
               email: data.email,
               phone: data.phone,
-            },
-          })
-        );
-        const newDataUpdatedEmployeeCompany = {
-          firstName: data.name,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
-        };
-        const newEmployeeData = updatingEmployeesCompany(
-          newDataUpdatedEmployeeCompany
-        );
-        await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
-          {
-            employees: newEmployeeData,
-          }
-        );
-        await updatedStaffInEvent(data);
-        openNotificationWithIcon({ "Information updated": 3 });
-        openNotificationWithIcon({ "Information updated": 3 });
-        dispatch(onLogout());
-        return window.location.reload(true);
-
-        // return triggerRoutes();
+              data: {
+                ...dataUser,
+                name: data.name,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone,
+              },
+            })
+          );
+          const newDataUpdatedEmployeeCompany = {
+            firstName: data.name,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+          };
+          const newEmployeeData = updatingEmployeesCompany(
+            newDataUpdatedEmployeeCompany
+          );
+          await devitrakApi.patch(
+            `/company/update-company/${user.companyData.id}`,
+            {
+              employees: newEmployeeData,
+            }
+          );
+          await updatedStaffInEvent(data);
+          openNotificationWithIcon({ "Information updated": 3 });
+          openNotificationWithIcon({ "Information updated": 3 });
+          dispatch(onLogout());
+          return window.location.reload(true);
+        }
       }
+    } catch (error) {
+      setLoading(false);
+      throw new Error(error);
     }
   };
   return (
@@ -261,7 +265,11 @@ const Body = () => {
           sm={12}
           md={12}
         >
-          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+          <Button
+            loading={loading}
+            htmlType="submit"
+            style={{ ...BlueButton, width: "fit-content" }}
+          >
             <Typography textTransform={"none"} style={BlueButtonText}>
               Save and log out
             </Typography>
@@ -654,7 +662,11 @@ const Body = () => {
           sm={12}
           md={12}
         >
-          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+          <Button
+            loading={loading}
+            htmlType="submit"
+            style={{ ...BlueButton, width: "fit-content" }}
+          >
             <Typography textTransform={"none"} style={BlueButtonText}>
               Save and log out
             </Typography>
