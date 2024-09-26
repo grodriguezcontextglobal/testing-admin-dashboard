@@ -7,7 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Checkbox, Typography, notification } from "antd";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -32,11 +32,12 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
-import ForgotPassword from "./ForgotPassword";
-import ModalMultipleCompanies from "./multipleCompanies/Modal";
 import "./style/authStyle.css";
 import PropTypes from "prop-types";
 import { checkArray } from "../../components/utils/checkArray";
+import Loading from "../../components/animation/Loading";
+const ForgotPassword = lazy(() => import("./ForgotPassword"));
+const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
 const Login = () => {
   const { register, handleSubmit, setValue } = useForm();
@@ -280,7 +281,13 @@ const Login = () => {
     }
   };
   return (
-    <>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       {contextHolder}
       <Grid
         container
@@ -521,7 +528,7 @@ const Login = () => {
           close={setUpdatePasswordModalState}
         />
       )}
-    </>
+    </Suspense>
   );
 };
 

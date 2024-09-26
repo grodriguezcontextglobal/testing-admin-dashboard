@@ -1,26 +1,39 @@
+import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
-import CardRendered from "../../events/quickGlance/components/CardRendered";
+// import CardRendered from "../../events/quickGlance/components/CardRendered";
 import { useNavigate } from "react-router-dom";
-
+import Loading from "../../../components/animation/Loading";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+const CardRendered = lazy(() =>
+  import("../../events/quickGlance/components/CardRendered")
+);
 const TotalConsumer = () => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   return (
-    <button
-      style={{
-        backgroundColor: "transparent",
-        outline: "none",
-        margin: 0,
-        padding: 0,
-        width:"100%"
-      }}
-      onClick={() => navigate(`/staff`)}
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
     >
-      <CardRendered
-        props={user.companyData.employees.length}
-        title={"Total staff members"}
-      />
-    </button>
+      <button
+        style={{
+          backgroundColor: "transparent",
+          outline: "none",
+          margin: 0,
+          padding: 0,
+          width: "100%",
+        }}
+        onClick={() => navigate(`/staff`)}
+      >
+        <CardRendered
+          props={user.companyData.employees.length}
+          title={"Total staff members"}
+        />
+      </button>
+    </Suspense>
   );
 };
 

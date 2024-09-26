@@ -2,14 +2,18 @@ import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Popconfirm, notification } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import ModalToDisplayFunctionInProgress from "./endEvent/ModalToDisplayFunctionInProgress";
+import Loading from "../../../../../components/animation/Loading";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+const ModalToDisplayFunctionInProgress = lazy(() =>
+  import("./endEvent/ModalToDisplayFunctionInProgress")
+);
 const EndEventButton = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
@@ -324,7 +328,13 @@ const EndEventButton = () => {
     return await removingAccessFromStaffMemberOnly();
   };
   return (
-    <>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       {contextHolder}
       <Grid
         display={"flex"}
@@ -376,7 +386,7 @@ const EndEventButton = () => {
           openEndingEventModal={openEndingEventModal}
         />
       )}
-    </>
+    </Suspense>
   );
 };
 

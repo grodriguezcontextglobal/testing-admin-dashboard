@@ -2,8 +2,8 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
-import _ from "lodash";
-import { useEffect } from "react";
+import { groupBy} from "lodash";
+import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -11,16 +11,18 @@ import {
   GeneralDeviceIcon,
   RightNarrowInCircle,
 } from "../../../components/icons/Icons";
-import BannerMsg from "../../../components/utils/BannerMsg";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import "../../../styles/global/ant-table.css";
-import DownloadingXlslFile from "../actions/DownloadXlsx";
-import "../style/details.css";
-import RenderingFilters from "./extras/RenderingFilters";
 import { PropTypes } from "prop-types";
+import "../../../styles/global/ant-table.css";
+import "../style/details.css";
+import Loading from "../../../components/animation/Loading";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
+const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
+const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
   // const dispatch = useDispatch();
@@ -49,11 +51,11 @@ const ItemTable = ({ searchItem }) => {
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = _.groupBy(imageSource, "item_group");
+  const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = _.groupBy(
+    const groupingBySerialNumber = groupBy(
       itemsInInventoryQuery?.data?.data?.items,
       "serial_number"
     );
@@ -289,8 +291,12 @@ const ItemTable = ({ searchItem }) => {
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
         } else if (String(result).toLowerCase().split(" / ").length === 3) {
           const splittingName = String(result).split(" / ");
-          result = splittingName.slice(0, 2).flat().toLocaleString().replaceAll(",", " ");
-        } 
+          result = splittingName
+            .slice(0, 2)
+            .flat()
+            .toLocaleString()
+            .replaceAll(",", " ");
+        }
         return (
           <span style={cellStyle}>
             <Typography
@@ -353,140 +359,148 @@ const ItemTable = ({ searchItem }) => {
   ];
 
   return (
-    <Grid margin={"15px 0 0 0"} padding={0} container>
-      <RenderingFilters
-        dataToDisplay={dataToDisplay}
-        searchItem={searchItem}
-        user={user}
-      />
-      <Grid
-        display={"flex"}
-        flexDirection={"column"}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        margin={"20px 0 0 0"}
-        item
-        xs={12}
-      >
-        <details
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          open
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
+      <Grid margin={"15px 0 0 0"} padding={0} container>
+        <RenderingFilters
+          dataToDisplay={dataToDisplay}
+          searchItem={searchItem}
+          user={user}
+        />
+        <Grid
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          margin={"20px 0 0 0"}
+          item
+          xs={12}
         >
-          <summary open>
-            <p
-              style={{
-                ...TextFontsize18LineHeight28,
-                width: "100%",
-                textAlign: "left",
-                cursor: "pointer",
-              }}
-            >
-              All devices
-            </p>
-          </summary>
-          <Divider />
-          <Grid container>
-            <Grid
-              border={"1px solid var(--gray-200, #eaecf0)"}
-              borderRadius={"12px 12px 0 0"}
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignItems={"center"}
-              marginBottom={-1}
-              paddingBottom={-1}
-              item
-              xs={12}
-            >
-              <div
+          <details
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+            open
+          >
+            <summary open>
+              <p
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginRight: "5px",
-                  padding: "0 0 0 0",
+                  ...TextFontsize18LineHeight28,
+                  width: "100%",
+                  textAlign: "left",
+                  cursor: "pointer",
                 }}
               >
-                <Button
+                All devices
+              </p>
+            </summary>
+            <Divider />
+            <Grid container>
+              <Grid
+                border={"1px solid var(--gray-200, #eaecf0)"}
+                borderRadius={"12px 12px 0 0"}
+                display={"flex"}
+                justifyContent={"space-between"}
+                alignItems={"center"}
+                marginBottom={-1}
+                paddingBottom={-1}
+                item
+                xs={12}
+              >
+                <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    borderTop: "transparent",
-                    borderLeft: "transparent",
-                    borderBottom: "transparent",
-                    borderRadius: "8px 8px 0 0",
-                  }}
-                  onClick={() => {
-                    listImagePerItemQuery.refetch();
-                    listItemsQuery.refetch();
-                    itemsInInventoryQuery.refetch();
+                    marginRight: "5px",
+                    padding: "0 0 0 0",
                   }}
                 >
-                  <p
+                  <Button
                     style={{
-                      textTransform: "none",
-                      textAlign: "left",
-                      fontWeight: 500,
-                      fontSize: "12px",
-                      fontFamily: "Inter",
-                      lineHeight: "28px",
-                      color: "var(--blue-dark-700, #004EEB)",
-                      padding: "0px",
+                      display: "flex",
+                      alignItems: "center",
+                      borderTop: "transparent",
+                      borderLeft: "transparent",
+                      borderBottom: "transparent",
+                      borderRadius: "8px 8px 0 0",
+                    }}
+                    onClick={() => {
+                      listImagePerItemQuery.refetch();
+                      listItemsQuery.refetch();
+                      itemsInInventoryQuery.refetch();
                     }}
                   >
-                    <Icon icon="jam:refresh" /> Refresh
-                  </p>
-                </Button>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginRight: "5px",
-                  padding: "0 0 0 0",
-                }}
-              >
-                <DownloadingXlslFile props={dataToDisplay()} />
-              </div>
-            </Grid>
+                    <p
+                      style={{
+                        textTransform: "none",
+                        textAlign: "left",
+                        fontWeight: 500,
+                        fontSize: "12px",
+                        fontFamily: "Inter",
+                        lineHeight: "28px",
+                        color: "var(--blue-dark-700, #004EEB)",
+                        padding: "0px",
+                      }}
+                    >
+                      <Icon icon="jam:refresh" /> Refresh
+                    </p>
+                  </Button>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginRight: "5px",
+                    padding: "0 0 0 0",
+                  }}
+                >
+                  <DownloadingXlslFile props={dataToDisplay()} />
+                </div>
+              </Grid>
 
-            <Table
-              pagination={{
-                position: ["bottomCenter"],
-                pageSizeOptions: [10, 20, 30, 50, 100],
-                total: dataToDisplay().length,
-                defaultPageSize: 10,
-                defaultCurrent: 1,
-              }}
-              style={{ width: "100%" }}
-              columns={columns}
-              dataSource={dataToDisplay()}
-              className="table-ant-customized"
-            />
-          </Grid>
-        </details>
-      </Grid>
-      <Divider />
-      {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && (
-        <BannerMsg
-          props={{
-            title: "Add new item",
-            message: `Add new devices to your inventory and assign categories and groups
+              <Table
+                pagination={{
+                  position: ["bottomCenter"],
+                  pageSizeOptions: [10, 20, 30, 50, 100],
+                  total: dataToDisplay().length,
+                  defaultPageSize: 10,
+                  defaultCurrent: 1,
+                }}
+                style={{ width: "100%" }}
+                columns={columns}
+                dataSource={dataToDisplay()}
+                className="table-ant-customized"
+              />
+            </Grid>
+          </details>
+        </Grid>
+        <Divider />
+        {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && (
+          <BannerMsg
+            props={{
+              title: "Add new item",
+              message: `Add new devices to your inventory and assign categories and groups
             for easier management. Devices in your inventory can be assigned to
             staff or consumers permanently or temporarily. You can also mark
             devices with different statuses for condition and location. Include
             a device value to track deposits and fees.`,
-            link: "/inventory/new-item",
-            button: BlueButton,
-            paragraphStyle: BlueButtonText,
-            paragraphText: "Add new item",
-          }}
-        />
-      )}
-    </Grid>
+              link: "/inventory/new-item",
+              button: BlueButton,
+              paragraphStyle: BlueButtonText,
+              paragraphText: "Add new item",
+            }}
+          />
+        )}
+      </Grid>
+    </Suspense>
   );
 };
 

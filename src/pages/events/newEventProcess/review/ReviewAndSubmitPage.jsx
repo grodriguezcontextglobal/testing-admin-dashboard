@@ -1,6 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { Button, notification } from "antd";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -12,15 +12,19 @@ import {
   onSelectEvent,
 } from "../../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
-import Device from "./review/Device";
-import Event from "./review/Event";
-import Staff from "./review/Staff";
+// import Device from "./review/Device";
+// import Event from "./review/Event";
+// import Staff from "./review/Staff";
 import { nanoid } from "@reduxjs/toolkit";
 // import { formatDate } from "../../../inventory/utils/dateFormat";
 import "./blurring.css";
 import { formatDate } from "../../../inventory/utils/dateFormat";
 import { checkArray } from "../../../../components/utils/checkArray";
 import { groupBy } from "lodash";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+const Device = lazy(() => import("./review/Device"));
+const Event = lazy(() => import("./review/Event"));
+const Staff = lazy(() => import("./review/Staff"));
 const ReviewAndSubmitEvent = () => {
   const { subscription } = useSelector((state) => state.subscription);
   const { eventInfoDetail, staff, deviceSetup, contactInfo } = useSelector(
@@ -262,152 +266,100 @@ const ReviewAndSubmitEvent = () => {
     }
   };
   return (
-    <Grid
-      display={"flex"}
-      flexDirection={"column"}
-      justifyContent={"space-between"}
-      alignItems={"center"}
-      gap={2}
-      container
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
     >
-      {contextHolder}
       <Grid
         display={"flex"}
         flexDirection={"column"}
-        justifyContent={"flex-start"}
-        alignItems={"stretch"}
-        className={`${loadingStatus ? "blur-container" : ""}`}
+        justifyContent={"space-between"}
+        alignItems={"center"}
         gap={2}
-        item
-        xs={12}
-        sm={12}
-        md={12}
-        lg={12}
+        container
       >
-        <InputLabel style={{ width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Review all the information below
-          </Typography>
-        </InputLabel>
-        <Event />
-        <Staff />
-        <Device />
-        <Button
-          type="primary"
-          icon={() => Loading}
-          disabled={buttonDisable}
-          loading={loadingStatus}
-          onClick={() => processOfCreatingInformationOfNewEvent()}
-          style={{
-            display: "flex",
-            padding: "12px 20px",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "8px",
-            alignSelf: "stretch",
-            borderRadius: "8px",
-            border: `${
-              buttonDisable
-                ? "1px solid var(--base-white, #FFF)"
-                : "1px solid var(--blue-dark-600, #155EEF)"
-            }`,
-            background: `${
-              buttonDisable
-                ? "var(--base-white, #FFF)"
-                : "var(--blue-dark-600, #155EEF)"
-            }`,
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-          }}
+        {contextHolder}
+        <Grid
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"flex-start"}
+          alignItems={"stretch"}
+          className={`${loadingStatus ? "blur-container" : ""}`}
+          gap={2}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <Typography
-            textTransform={"none"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"24px"}
-            color={`${
-              buttonDisable
-                ? "var(--blue-dark-600, #155EEF)"
-                : "var(--base-white, #FFF)"
-            }`}
+          <InputLabel style={{ width: "100%" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              fontFamily={"Inter"}
+              fontSize={"20px"}
+              fontStyle={"normal"}
+              fontWeight={600}
+              lineHeight={"30px"}
+              color={"var(--gray-600, #475467)"}
+              alignSelf={"stretch"}
+            >
+              Review all the information below
+            </Typography>
+          </InputLabel>
+          <Event />
+          <Staff />
+          <Device />
+          <Button
+            type="primary"
+            icon={() => Loading}
+            disabled={buttonDisable}
+            loading={loadingStatus}
+            onClick={() => processOfCreatingInformationOfNewEvent()}
+            style={{
+              display: "flex",
+              padding: "12px 20px",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px",
+              alignSelf: "stretch",
+              borderRadius: "8px",
+              border: `${
+                buttonDisable
+                  ? "1px solid var(--base-white, #FFF)"
+                  : "1px solid var(--blue-dark-600, #155EEF)"
+              }`,
+              background: `${
+                buttonDisable
+                  ? "var(--base-white, #FFF)"
+                  : "var(--blue-dark-600, #155EEF)"
+              }`,
+              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            }}
           >
-            Create and save
-          </Typography>
-        </Button>
+            <Typography
+              textTransform={"none"}
+              fontFamily={"Inter"}
+              fontSize={"16px"}
+              fontStyle={"normal"}
+              fontWeight={600}
+              lineHeight={"24px"}
+              color={`${
+                buttonDisable
+                  ? "var(--blue-dark-600, #155EEF)"
+                  : "var(--base-white, #FFF)"
+              }`}
+            >
+              Create and save
+            </Typography>
+          </Button>
+        </Grid>
       </Grid>
-    </Grid>
+    </Suspense>
   );
 };
 
 export default ReviewAndSubmitEvent;
-
-
-// if (staff.adminUser.length > 0) {
-//   const adminStaff = [
-//     ...checkAndAddRootAdministratorAsAdminStaff()["Administrator"],
-//   ];
-//   for (let data of adminStaff) {
-//     const respo = await devitrakApi.post("/db_staff/consulting-member", {
-//       email: data.email,
-//     });
-//     if (respo.data.member.length > 0) {
-//       await devitrakApi.post("/db_event/event_staff", {
-//         event_id: newEventId,
-//         staff_id: respo.data.member.at(-1).staff_id,
-//         role: data.role,
-//       });
-//     } else {
-//       const newMember = await devitrakApi.post("/db_staff/new_member", {
-//         first_name: data.firstName,
-//         last_name: data.lastName,
-//         email: data.email,
-//         phone_number: "0000000000",
-//       });
-//       await devitrakApi.post("/db_event/event_staff", {
-//         event_id: newEventId,
-//         staff_id: newMember.data.member.insertId,
-//         role: data.role,
-//       });
-//     }
-//   }
-// }
-// if (staff.headsetAttendees.length > 0) {
-//   const assistance = [
-//     ...checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"],
-//   ];
-//   for (let data of assistance) {
-//     const respo = await devitrakApi.post("/db_staff/consulting-member", {
-//       email: data.email,
-//     });
-//     if (respo.data.member.length > 0) {
-//       await devitrakApi.post("/db_event/event_staff", {
-//         event_id: newEventId,
-//         staff_id: respo.data.member.at(-1).staff_id,
-//         role: data.role,
-//       });
-//     } else {
-//       const newMember = await devitrakApi.post("/db_staff/new_member", {
-//         first_name: data.firstName,
-//         last_name: data.lastName,
-//         email: data.email,
-//         phone_number: "0000000000",
-//       });
-//       await devitrakApi.post("/db_event/event_staff", {
-//         event_id: newEventId,
-//         staff_id: newMember.data.member.insertId,
-//         role: data.role,
-//       });
-//     }
-//   }
-// }
