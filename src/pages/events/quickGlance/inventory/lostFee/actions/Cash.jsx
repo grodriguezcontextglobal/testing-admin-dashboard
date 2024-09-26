@@ -10,7 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert, message } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -78,14 +78,14 @@ const Cash = () => {
       return paymentIntentReceiversAssigned[0];
     return paymentIntentReceiversAssigned;
   };
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
   );
   const findRightDataInEvent = () => {
     const eventCompanyData = groupingByCompany[user.company];
     if (eventCompanyData) {
-      const eventGroup = _.groupBy(eventCompanyData, "eventSelected");
+      const eventGroup = groupBy(eventCompanyData, "eventSelected");
       const eventData = eventGroup[event.eventInfoDetail.eventName];
       if (eventData) {
         return eventData;
@@ -106,7 +106,7 @@ const Cash = () => {
   if (listOfDeviceInPool.data) {
     const changeStatusInPool = async () => {
       let findTheOneInUsed;
-      let findDeviceInPool = _.groupBy(findRightDataInEvent(), "device");
+      let findDeviceInPool = groupBy(findRightDataInEvent(), "device");
       if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
         findTheOneInUsed = findDeviceInPool[
           receiverToReplaceObject.serialNumber

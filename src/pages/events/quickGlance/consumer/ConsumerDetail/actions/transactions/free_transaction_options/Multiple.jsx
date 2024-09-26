@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import { nanoid } from "@reduxjs/toolkit";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { Card, Select, Space } from "antd";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import {
@@ -112,7 +112,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
   subtractRangePerGroupToDisplayItInScreen();
 
   const checkDeviceAvailability = (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     return grouping[props].at(-1).activity;
     // return grouping[props].length > 0;
   };
@@ -128,11 +128,14 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
       user.companyData.id
     );
 
-    await devitrakApi.post("/receiver/receiver-assignation", transaction.render());
+    await devitrakApi.post(
+      "/receiver/receiver-assignation",
+      transaction.render()
+    );
   };
 
   const createDevicesInPool = async (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
       { activity: true, status: "Operational" }
@@ -179,7 +182,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           date: `${new Date()}`,
           company: user.companyData.id,
         };
-        const grouping = _.groupBy(
+        const grouping = groupBy(
           checkDeviceInUseInOtherCustomerInTheSameEventQuery,
           "type"
         );

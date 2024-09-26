@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Popconfirm, Space, Table, notification } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -72,7 +72,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     const assignedDevices =
       deviceAssignedListQuery?.data?.data?.listOfReceivers;
     if (assignedDevices?.length > 0) {
-      const groupByPaymentIntent = _.groupBy(assignedDevices, "paymentIntent");
+      const groupByPaymentIntent = groupBy(assignedDevices, "paymentIntent");
       if (groupByPaymentIntent) return groupByPaymentIntent;
       return [];
     }
@@ -117,7 +117,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         ...props,
         status: false,
       };
-      const assignedDeviceData = _.groupBy(
+      const assignedDeviceData = groupBy(
         foundTransactionAndDevicesAssigned(),
         "device.serialNumber"
       );
@@ -197,7 +197,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         ...props,
         status: true,
       };
-      const findData = _.groupBy(
+      const findData = groupBy(
         foundTransactionAndDevicesAssigned(),
         "device.serialNumber"
       );
@@ -258,7 +258,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
   };
   const handleLostSingleDevice = (props) => {
     try {
-      const findData = _.groupBy(
+      const findData = groupBy(
         foundTransactionAndDevicesAssigned(),
         "device.serialNumber"
       );

@@ -2,8 +2,8 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Table } from "antd";
-import _, { groupBy } from "lodash";
-import { useEffect } from "react";
+import { groupBy } from "lodash";
+import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -12,7 +12,10 @@ import {
   RightNarrowInCircle,
 } from "../../../../../components/icons/Icons";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import DownloadingXlslFile from "../../../actions/DownloadXlsx";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import Loading from "../../../../../components/animation/Loading";
+// import DownloadingXlslFile from "../../../actions/DownloadXlsx";
+const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();
   const locationName = location.search.split("&");
@@ -44,11 +47,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = _.groupBy(imageSource, "item_group");
+  const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = _.groupBy(
+    const groupingBySerialNumber = groupBy(
       itemsInInventoryQuery?.data?.data?.items,
       "serial_number"
     );
@@ -97,7 +100,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
       );
-    } 
+    }
   };
 
   const calculatingValue = () => {
@@ -222,7 +225,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
                 ? "var(--blue-700, #175CD3)"
                 : "var(--success-700, #027A48)"
             }`}
-            style={{...Subtitle, fontSize:"13px"}}
+            style={{ ...Subtitle, fontSize: "13px" }}
             textTransform={"capitalize"}
           >
             <Icon
@@ -361,80 +364,88 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     },
   ];
   return (
-    <Grid margin={"15px 0 0 0"} padding={0} container>
-      <Grid
-        border={"1px solid var(--gray-200, #eaecf0)"}
-        borderRadius={"12px 12px 0 0"}
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        marginBottom={-1}
-        paddingBottom={-1}
-        item
-        xs={12}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginRight: "5px",
-            padding: "0 0 0 0",
-          }}
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
+      <Grid margin={"15px 0 0 0"} padding={0} container>
+        <Grid
+          border={"1px solid var(--gray-200, #eaecf0)"}
+          borderRadius={"12px 12px 0 0"}
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          marginBottom={-1}
+          paddingBottom={-1}
+          item
+          xs={12}
         >
-          <Button
+          <div
             style={{
               display: "flex",
               alignItems: "center",
-              borderTop: "transparent",
-              borderLeft: "transparent",
-              borderBottom: "transparent",
-              borderRadius: "8px 8px 0 0",
-            }}
-            onClick={() => {
-              listImagePerItemQuery.refetch();
-              listItemsQuery.refetch();
-              itemsInInventoryQuery.refetch();
+              marginRight: "5px",
+              padding: "0 0 0 0",
             }}
           >
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontWeight={500}
-              fontSize={"12px"}
-              fontFamily={"Inter"}
-              lineHeight={"28px"}
-              color={"var(--blue-dark-700, #004EEB)"}
-              padding={"0px"}
+            <Button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                borderTop: "transparent",
+                borderLeft: "transparent",
+                borderBottom: "transparent",
+                borderRadius: "8px 8px 0 0",
+              }}
+              onClick={() => {
+                listImagePerItemQuery.refetch();
+                listItemsQuery.refetch();
+                itemsInInventoryQuery.refetch();
+              }}
             >
-              <Icon icon="jam:refresh" /> Refresh
-            </Typography>
-          </Button>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginRight: "5px",
-            padding: "0 0 0 0",
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                fontWeight={500}
+                fontSize={"12px"}
+                fontFamily={"Inter"}
+                lineHeight={"28px"}
+                color={"var(--blue-dark-700, #004EEB)"}
+                padding={"0px"}
+              >
+                <Icon icon="jam:refresh" /> Refresh
+              </Typography>
+            </Button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginRight: "5px",
+              padding: "0 0 0 0",
+            }}
+          >
+            <DownloadingXlslFile props={dataToDisplay()} />
+          </div>
+        </Grid>
+        <Table
+          pagination={{
+            position: ["bottomCenter"],
+            pageSizeOptions: [10, 20, 30, 50, 100],
+            total: dataToDisplay().length,
+            defaultPageSize: 10,
+            defaultCurrent: 1,
           }}
-        >
-          <DownloadingXlslFile props={dataToDisplay()} />
-        </div>
+          style={{ width: "100%" }}
+          columns={columns}
+          dataSource={dataToDisplay()}
+          className="table-ant-customized"
+        />
       </Grid>
-      <Table
-        pagination={{
-          position: ["bottomCenter"],
-          pageSizeOptions: [10, 20, 30, 50, 100],
-          total: dataToDisplay().length,
-          defaultPageSize: 10,
-          defaultCurrent: 1,
-        }}
-        style={{ width: "100%" }}
-        columns={columns}
-        dataSource={dataToDisplay()}
-        className="table-ant-customized"
-      />
-    </Grid>
+    </Suspense>
   );
 };
 

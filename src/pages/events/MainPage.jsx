@@ -1,7 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import _ from "lodash";
-import { useEffect } from "react";
+import { groupBy } from "lodash";
+import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -21,10 +21,16 @@ import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
-import CardEventDisplay from "./components/CardEventDisplay";
-import PastEventsTable from "./components/PastEventsTable";
-import BannerMsg from "./utils/BannerMsg";
-import BannerNoEventStaffOnly from "../../components/utils/BannerNoEventStaffOnly";
+// import CardEventDisplay from "./components/CardEventDisplay";
+// import PastEventsTable from "./components/PastEventsTable";
+// import BannerMsg from "./utils/BannerMsg";
+// import BannerNoEventStaffOnly from "../../components/utils/BannerNoEventStaffOnly";
+const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
+const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
+const BannerMsg = lazy(() => import("./utils/BannerMsg"));
+const BannerNoEventStaffOnly = lazy(() =>
+  import("../../components/utils/BannerNoEventStaffOnly")
+);
 const MainPage = () => {
   const { watch } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -102,9 +108,9 @@ const MainPage = () => {
 
       if (!companyData) return [];
 
-      const groupByActive = _.groupBy(companyData, "active");
+      const groupByActive = groupBy(companyData, "active");
 
-      const filterEventsByEmail = (events, key) => {
+      const filterEventsByEmail = (events, key = null) => {
         if (
           user.companyData.employees.filter(
             (employee) => employee.user === user.email
@@ -112,22 +118,23 @@ const MainPage = () => {
         ) {
           return events ?? [];
         }
+        if (!key) {
+          return (
+            events?.filter((event) =>
+              event.staff[key].some((member) => member.email === user.email)
+            ) || []
+          );
+        }
         return (
           events?.filter((event) =>
-            event.staff?.[key]?.some((member) => member.email === user.email)
+            [...event.staff.adminUser, ...event.staff.headsetAttendees].some(
+              (member) => member.email === user.email
+            )
           ) || []
         );
       };
-      const activeAdminEvents = filterEventsByEmail(
-        groupByActive.true,
-        "adminUser"
-      );
-      const activeHeadsetEvents = filterEventsByEmail(
-        groupByActive.true,
-        "headsetAttendees"
-      );
-      const activeEvents = [...activeAdminEvents, ...activeHeadsetEvents];
-
+      const activeAdminEvents = filterEventsByEmail(groupByActive.true);
+      const activeEvents = [...activeAdminEvents];
       const inactiveAdminEvents = filterEventsByEmail(
         groupByActive.false,
         "adminUser"
@@ -141,11 +148,7 @@ const MainPage = () => {
       );
 
       const combinedEvents = [...activeEvents, ...inactiveAdminEvents];
-      const uniqueEvents = _.uniqBy(combinedEvents, (event) =>
-        JSON.stringify(event)
-      );
-
-      return uniqueEvents;
+      return combinedEvents;
     };
     renderingDataBasedOnStaffAndActiveEvent();
 
@@ -169,196 +172,218 @@ const MainPage = () => {
     };
 
     return (
-      <Grid
-        alignSelf={"flex-start"}
-        style={{
-          padding: "px",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        container
+      <Suspense
+        fallback={
+          <div style={CenteringGrid}>
+            <Loading />
+          </div>
+        }
       >
         <Grid
+          alignSelf={"flex-start"}
           style={{
+            padding: "px",
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "row",
+            justifyContent: "center",
             alignItems: "center",
           }}
           container
         >
           <Grid
-            sx={{ display: { xs: "flex", sm: "flex", md: "none", lg: "none" } }}
-            textAlign={"center"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            margin={"0.5rem auto 0"}
-            gap={1}
-            marginY={2}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+            container
           >
-            {/* /event/new_subscription */}
-            <Link
-              to="/create-event-page/event-detail"
-              style={{
-                width: "100%",
+            <Grid
+              sx={{
+                display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
               }}
+              textAlign={"center"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              margin={"0.5rem auto 0"}
+              gap={1}
+              marginY={2}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <Button
-                onClick={() =>
-                  dispatch(
+              {/* /event/new_subscription */}
+              <Link
+                to="/create-event-page/event-detail"
+                style={{
+                  width: "100%",
+                }}
+              >
+                <Button
+                  onClick={() =>
                     dispatch(
-                      onAddCompanyAccountStripe(
-                        companyAccountStripeQuery.data.data
-                          .companyAccountStripeFound
+                      dispatch(
+                        onAddCompanyAccountStripe(
+                          companyAccountStripeQuery.data.data
+                            .companyAccountStripeFound
+                        )
                       )
                     )
-                  )
-                }
-                style={{ ...BlueButton, width: "100%" }}
+                  }
+                  style={{ ...BlueButton, width: "100%" }}
+                >
+                  <WhitePlusIcon />
+                  <Typography style={BlueButtonText}>Add new event</Typography>
+                </Button>
+              </Link>
+            </Grid>
+            <Grid
+              sx={{
+                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+              }}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <Typography
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
               >
-                <WhitePlusIcon />
-                <Typography style={BlueButtonText}>Add new event</Typography>
-              </Button>
-            </Link>
+                Events
+              </Typography>
+              {/* /event/new_subscription */}
+              <Link to="/create-event-page/event-detail">
+                {" "}
+                <Button
+                  onClick={() =>
+                    dispatch(
+                      dispatch(
+                        onAddCompanyAccountStripe(
+                          companyAccountStripeQuery.data.data
+                            .companyAccountStripeFound
+                        )
+                      )
+                    )
+                  }
+                  style={{
+                    ...BlueButton,
+                    display: user.role === "4" && "none",
+                  }}
+                >
+                  <WhitePlusIcon />
+                  <Typography style={BlueButtonText}>Add new event</Typography>
+                </Button>
+              </Link>
+            </Grid>
           </Grid>
           <Grid
-            sx={{ display: { xs: "none", sm: "none", md: "flex", lg: "flex" } }}
-            justifyContent={"space-between"}
+            marginY={3}
+            display={"flex"}
+            justifyContent={"flex-start"}
             alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+            gap={1}
+            container
           >
-            <Typography
-              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-            >
-              Events
-            </Typography>
-            {/* /event/new_subscription */}
-            <Link to="/create-event-page/event-detail">
-              {" "}
-              <Button
-                onClick={() =>
-                  dispatch(
-                    dispatch(
-                      onAddCompanyAccountStripe(
-                        companyAccountStripeQuery.data.data
-                          .companyAccountStripeFound
-                      )
-                    )
-                  )
-                }
-                style={{ ...BlueButton, display: user.role === "4" && "none" }}
+            <Grid marginY={0} item xs={12} sm={6} md={12} lg={12}>
+              <Typography
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
               >
-                <WhitePlusIcon />
-                <Typography style={BlueButtonText}>Add new event</Typography>
-              </Button>
-            </Link>
+                Scheduled events
+              </Typography>
+              <Typography
+                style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
+              >
+                Here are all the upcoming and active events.
+              </Typography>
+            </Grid>
           </Grid>
-        </Grid>
-        <Grid
-          marginY={3}
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          gap={1}
-          container
-        >
-          <Grid marginY={0} item xs={12} sm={6} md={12} lg={12}>
-            <Typography
-              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-            >
-              Scheduled events
-            </Typography>
-            <Typography
-              style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
-            >
-              Here are all the upcoming and active events.
-            </Typography>
+          <Grid marginY={3} container spacing={1}>
+            {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
+              dataToBeRenderedInUpcomingSection()?.map((event) => {
+                return (
+                  <Grid
+                    key={event.id}
+                    padding={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={12}
+                    lg={6}
+                  >
+                    <CardEventDisplay props={event} />
+                  </Grid>
+                );
+              })
+            ) : (
+              <>
+                {Number(user.role) < 4 ? (
+                  <BannerMsg />
+                ) : (
+                  <BannerNoEventStaffOnly
+                    props={{
+                      title: "No event",
+                      message:
+                        "There is not active events where you are assigned as staff member.",
+                    }}
+                  />
+                )}
+              </>
+            )}
           </Grid>
-        </Grid>
-        <Grid marginY={3} container spacing={1}>
-          {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
-            dataToBeRenderedInUpcomingSection()?.map((event) => {
-              return (
+          {renderingDataBasedOnStaffAndActiveEvent()?.length > 0 && (
+            <>
+              {" "}
+              <Grid
+                marginY={3}
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignItems={"center"}
+                gap={1}
+                container
+              >
+                <Grid marginY={0} item xs={12} sm={6} md={6} lg={6}>
+                  <Typography
+                    style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+                  >
+                    Past events
+                  </Typography>
+                  <Typography
+                    style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
+                  >
+                    Here are all the past events that have now concluded.
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Grid
+                marginY={3}
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignItems={"center"}
+                gap={1}
+                container
+              >
                 <Grid
-                  key={event.id}
-                  padding={1}
+                  style={CenteringGrid}
                   item
                   xs={12}
                   sm={12}
                   md={12}
-                  lg={6}
+                  lg={12}
                 >
-                  <CardEventDisplay props={event} />
+                  <PastEventsTable
+                    events={renderingDataBasedOnStaffAndActiveEvent()}
+                  />
                 </Grid>
-              );
-            })
-          ) : (
-            <>
-              {Number(user.role) < 4 ? (
-                <BannerMsg />
-              ) : (
-                <BannerNoEventStaffOnly
-                  props={{
-                    title: "No event",
-                    message:
-                      "There is not active events where you are assigned as staff member.",
-                  }}
-                />
-              )}
+              </Grid>
             </>
-          )}
+          )}{" "}
         </Grid>
-        {renderingDataBasedOnStaffAndActiveEvent()?.length > 0 && (
-          <>
-            {" "}
-            <Grid
-              marginY={3}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              gap={1}
-              container
-            >
-              <Grid marginY={0} item xs={12} sm={6} md={6} lg={6}>
-                <Typography
-                  style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-                >
-                  Past events
-                </Typography>
-                <Typography
-                  style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
-                >
-                  Here are all the past events that have now concluded.
-                </Typography>
-              </Grid>
-            </Grid>
-            <Grid
-              marginY={3}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              gap={1}
-              container
-            >
-              <Grid style={CenteringGrid} item xs={12} sm={12} md={12} lg={12}>
-                <PastEventsTable
-                  events={renderingDataBasedOnStaffAndActiveEvent()}
-                />
-              </Grid>
-            </Grid>
-          </>
-        )}{" "}
-      </Grid>
+      </Suspense>
     );
   }
 };

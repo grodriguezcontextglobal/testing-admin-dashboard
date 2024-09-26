@@ -11,6 +11,7 @@ import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ExpandedRow from "./ExpandedRow";
+import { groupBy } from "lodash";
 
 const TransactionTableRefactoring = () => {
   const { user } = useSelector((state) => state.admin);
@@ -18,9 +19,10 @@ const TransactionTableRefactoring = () => {
   const customerInfoTemplate = {
     ...customer,
     id: customer.id ?? customer.uid,
-  }
+  };
   const [responsedData, setResponsedData] = useState([]);
   const [sqlLeasePerConsumer, setSqlLeasePerConsumer] = useState([]);
+  const [sqlItemInventory, setSqlItemInventory] = useState([]);
   const transactionsPerConsumer = useQuery({
     queryKey: ["transactionsPerConsumerInTable", customerInfoTemplate.id],
     queryFn: () =>
@@ -49,14 +51,15 @@ const TransactionTableRefactoring = () => {
   }, [customerInfoTemplate.id]);
 
   const leasePerConsumer = async () => {
-    const response = await devitrakApi
-      .post("/db_lease/consulting-consumer-lease", {
-        consumer_member_id:
-        consumerInfoSqlQuery.data.data.consumer[0].consumer_id,
-        company_id: user.sqlInfo.company_id,
-      })
-      .then((response) => response.data);
-    if (response.ok) return setSqlLeasePerConsumer([...response.lease]);
+    if (consumerInfoSqlQuery.data) {
+      const consumerInfo = consumerInfoSqlQuery?.data?.data.consumer[0];
+      const response = await devitrakApi
+        .post("/db_lease/consulting-consumer-lease", {
+          consumer_member_id: consumerInfo.consumer_id,
+          company_id: user.sqlInfo.company_id,
+        })
+      if (response.data.ok) return setSqlLeasePerConsumer([...response.data.lease]);
+    }
   };
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +69,9 @@ const TransactionTableRefactoring = () => {
     };
   }, [consumerInfoSqlQuery.data]);
 
+  const refetchingQueries = () => {
+    return transactionsPerConsumer.refetch();
+  };
   const retrievedData = useRef();
   const gettingAllDeviceFromTransactionFound = (props) => {
     const result = new Set();
@@ -82,10 +88,83 @@ const TransactionTableRefactoring = () => {
       .then((response) => response.data);
     return await gettingAllDeviceFromTransactionFound(resp.listOfReceivers);
   };
+  const fetchingItemsInInventorySQL = async () => {
+    const response = await devitrakApi.post("/db_item/consulting-item", {
+      company_id: user.sqlInfo.company_id,
+    });
+    return setSqlItemInventory(response.data.items);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchingItemsInInventorySQL();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+  const formattingSqlLease = () => {
+    const result = new Set();
+    const itemsInfo = groupBy(sqlItemInventory, "item_id");
+    for (let data of sqlLeasePerConsumer) {
+      if (itemsInfo[data.device_id]) {
+        const formatProp = {
+          key: itemsInfo[data.device_id].at(-1).item_id,
+          date: data.subscription_initial_date,
+          paymentIntent: "Lease",
+          eventSelected: `${customer.name} ${customer.lastName}`,
+          device: [
+            {
+              deviceNeeded: 1,
+              deviceType: itemsInfo[data.device_id].at(-1).item_group,
+              deviceValue: itemsInfo[data.device_id].at(-1).cost,
+            },
+          ],
+          data: {
+            device: [
+              {
+                deviceNeeded: 1,
+                deviceValue: itemsInfo[data.device_id].at(-1).cost,
+              },
+            ],
+            paymentIntent: "Lease",
+            clientSecret: "_client_secret=Lease",
+            consumerInfo: customer,
+            transaction: "Lease",
+            eventSelected: `${customer.name} ${customer.lastName}`,
+            provider: user.companyData.company_name,
+            date: data.subscription_initial_date,
+            active: data.active > 0,
+            company: user.companyData.id,
+            created_at: data.created_at,
+            id: data.id,
+          },
+          transaction: [
+            {
+              device: {
+                serialNumber: itemsInfo[data.device_id].at(-1).serial_number,
+                deviceType: itemsInfo[data.device_id].at(-1).item_group,
+                status: data.active,
+              },
+              paymentIntent: "Lease",
+              user: customer.email,
+              active: data.active,
+              eventSelected: [`${customer.name} ${customer.lastName}`],
+              provider: [`${user.companyData.company_name}`],
+              company: user.companyData.id,
+              timeStamp: data.created_at,
+              id: data.id,
+            },
+          ],
+        };
+        result.add(formatProp);
+      }
+    }
+    return Array.from(result);
+  };
   const formatting = async () => {
     if (transactionsPerConsumer.data) {
       const dataTransactions = transactionsPerConsumer?.data?.data?.list;
-      const data = [...dataTransactions, ...sqlLeasePerConsumer]; 
+      const data = [...dataTransactions, ...formattingSqlLease()];
       const result = new Set();
       for (let item of data) {
         retrieveData(item.paymentIntent);
@@ -96,7 +175,10 @@ const TransactionTableRefactoring = () => {
           eventSelected: item.eventSelected,
           device: item.device[0].deviceNeeded,
           data: item,
-          transaction: retrievedData.current,
+          transaction:
+            item.paymentIntent === "Lease"
+              ? item.transaction
+              : retrievedData.current,
         });
       }
       const gottenData = Array.from(result);
@@ -197,7 +279,7 @@ const TransactionTableRefactoring = () => {
                 ...CenteringGrid,
                 outline: "none",
                 display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
                     : "flex"
                 }`,
@@ -208,7 +290,7 @@ const TransactionTableRefactoring = () => {
                   ...DangerButtonText,
                   display: `${
                     checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1].length < 13
+                    checkPaymentID[1]?.length < 13
                       ? "none"
                       : "flex"
                   }`,
@@ -226,7 +308,7 @@ const TransactionTableRefactoring = () => {
                 ...CenteringGrid,
                 outline: "none",
                 display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
                     : "flex"
                 }`,
@@ -237,7 +319,7 @@ const TransactionTableRefactoring = () => {
                   ...BlueButtonText,
                   display: `${
                     checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1].length < 13
+                    checkPaymentID[1]?.length < 13
                       ? "none"
                       : "flex"
                   }`,
@@ -272,7 +354,7 @@ const TransactionTableRefactoring = () => {
         },
         expandRowByClick: true,
         expandedRowRender: (record) => (
-          <ExpandedRow rowRecord={record} refetching={null} />
+          <ExpandedRow rowRecord={record} refetching={refetchingQueries} />
         ),
       }}
       dataSource={responsedData}

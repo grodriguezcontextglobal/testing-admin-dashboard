@@ -1,7 +1,7 @@
 import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification, Select } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -147,7 +147,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       startingNumber: props.startingNumber,
-      quantity:props.quantity,
+      quantity: props.quantity,
     });
   };
 
@@ -177,9 +177,9 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `Leased equipment: ${customer.name} ${customer.lastName} / ${
-          customer.email
-        } / ${new Date().toLocaleDateString()}`,
+        event_name: `Leased equipment: ${customer.name} ${
+          customer.lastName
+        } / ${customer.email} / ${new Date().toLocaleDateString()}`,
         venue_name: `${customer.name} ${customer.lastName} / ${
           customer.email
         } / ${new Date().toLocaleDateString()}`,
@@ -239,7 +239,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
         startingNumber: deviceInfo[0].serial_number,
-        quantity:props.quantity
+        quantity: props.quantity,
       });
       await createNewLease({ ...props.template, deviceInfo });
       await addDeviceToEvent([
@@ -247,7 +247,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          quantity:props.quantity
+          quantity: props.quantity,
         },
       ]);
       openNotificationWithIcon("Equipment assigned to consumer.");
@@ -276,9 +276,13 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       customerSqlDb.current = newCustomerSqlDb.consumer;
     }
     setLoadingStatus(true);
-    const groupingType = _.groupBy(dataFound.current, "item_group");
+    const groupingType = groupBy(dataFound.current, "item_group");
     if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
-      await option1({ groupingType: groupingType, template: template, quantity:watch("quantity") });
+      await option1({
+        groupingType: groupingType,
+        template: template,
+        quantity: watch("quantity"),
+      });
       return closeModal();
     }
   };
@@ -663,90 +667,90 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
 
 export default AssignmentFromExistingInventory;
 
-  // const option2 = async (props) => {
-  //   let newProps = [];
-  //   const finalList = [
-  //     ...selectedItem,
-  //     {
-  //       item_group: valueItemSelected[0].item_group,
-  //       quantity: watch("quantity"),
-  //       startingNumber: watch("startingNumber"),
-  //     },
-  //   ];
-  //   await createEvent(props.template);
-  //   const groupingByType = _.groupBy(finalList, "item_group");
-  //   for (let [key, value] of Object.entries(groupingByType)) {
-  //     for (let data of value) {
-  //       const indexStart = props.groupingType[data.item_group].findIndex(
-  //         (element) => element.serial_number == data.startingNumber
-  //       );
-  //       const indexEnd = indexStart + Number(data.quantity);
-  //       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-  //       const deviceInfo = dataFound; //*array of existing devices in sql db
-  //       newProps = [...newProps, deviceInfo];
-  //       await updateDeviceInWarehouse({
-  //         item_group: key,
-  //         startingNumber: data.startingNumber,
-  //         endingNumber: deviceInfo.at(-1).serial_number,
-  //       });
-  //       await addDeviceToEvent([
-  //         {
-  //           item_group: deviceInfo[0].item_group,
-  //           category_name: deviceInfo[0].category_name,
-  //           min_serial_number: deviceInfo.at(-1).serial_number,
-  //           max_serial_number: deviceInfo[0].serial_number,
-  //         },
-  //       ]);
-  //     }
-  //   }
-  //   await createNewLease({
-  //     deviceInfo: newProps.flat(),
-  //     street: props.template.street,
-  //     city: props.template.city,
-  //     state: props.template.state,
-  //     zip: props.template.zip,
-  //   });
-  //   openNotificationWithIcon("Equipment assigned to staff member.");
-  //   setLoadingStatus(false);
-  //   return;
-  // };
+// const option2 = async (props) => {
+//   let newProps = [];
+//   const finalList = [
+//     ...selectedItem,
+//     {
+//       item_group: valueItemSelected[0].item_group,
+//       quantity: watch("quantity"),
+//       startingNumber: watch("startingNumber"),
+//     },
+//   ];
+//   await createEvent(props.template);
+//   const groupingByType = groupBy(finalList, "item_group");
+//   for (let [key, value] of Object.entries(groupingByType)) {
+//     for (let data of value) {
+//       const indexStart = props.groupingType[data.item_group].findIndex(
+//         (element) => element.serial_number == data.startingNumber
+//       );
+//       const indexEnd = indexStart + Number(data.quantity);
+//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
+//       const deviceInfo = dataFound; //*array of existing devices in sql db
+//       newProps = [...newProps, deviceInfo];
+//       await updateDeviceInWarehouse({
+//         item_group: key,
+//         startingNumber: data.startingNumber,
+//         endingNumber: deviceInfo.at(-1).serial_number,
+//       });
+//       await addDeviceToEvent([
+//         {
+//           item_group: deviceInfo[0].item_group,
+//           category_name: deviceInfo[0].category_name,
+//           min_serial_number: deviceInfo.at(-1).serial_number,
+//           max_serial_number: deviceInfo[0].serial_number,
+//         },
+//       ]);
+//     }
+//   }
+//   await createNewLease({
+//     deviceInfo: newProps.flat(),
+//     street: props.template.street,
+//     city: props.template.city,
+//     state: props.template.state,
+//     zip: props.template.zip,
+//   });
+//   openNotificationWithIcon("Equipment assigned to staff member.");
+//   setLoadingStatus(false);
+//   return;
+// };
 
-  // const option3 = async (props) => {
-  //   await createEvent(props.template);
-  //   let newProps = [];
-  //   const groupingByType = _.groupBy(selectedItem, "item_group");
-  //   for (let [key, value] of Object.entries(groupingByType)) {
-  //     for (let data of value) {
-  //       const indexStart = props.groupingType[data.item_group].findIndex(
-  //         (element) => element.serial_number == data.startingNumber
-  //       );
-  //       const indexEnd = indexStart + Number(data.quantity);
-  //       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-  //       const deviceInfo = dataFound; //*array of existing devices in sql db
-  //       newProps = [...newProps, deviceInfo];
-  //       await updateDeviceInWarehouse({
-  //         item_group: key,
-  //         startingNumber: deviceInfo[0].serial_number,
-  //         endingNumber: deviceInfo.at(-1).serial_number,
-  //       });
-  //       await addDeviceToEvent([
-  //         {
-  //           item_group: deviceInfo[0].item_group,
-  //           category_name: deviceInfo[0].category_name,
-  //           min_serial_number: deviceInfo.at(-1).serial_number,
-  //           max_serial_number: deviceInfo[0].serial_number,
-  //         },
-  //       ]);
-  //     }
-  //   }
-  //   await createNewLease({
-  //     deviceInfo: newProps.flat(),
-  //     street: props.template.street,
-  //     city: props.template.city,
-  //     state: props.template.state,
-  //     zip: props.template.zip,
-  //   });
-  //   openNotificationWithIcon("Equipment assigned to staff member.");
-  //   setLoadingStatus(false);
-  //   return;
-  // };
+// const option3 = async (props) => {
+//   await createEvent(props.template);
+//   let newProps = [];
+//   const groupingByType = groupBy(selectedItem, "item_group");
+//   for (let [key, value] of Object.entries(groupingByType)) {
+//     for (let data of value) {
+//       const indexStart = props.groupingType[data.item_group].findIndex(
+//         (element) => element.serial_number == data.startingNumber
+//       );
+//       const indexEnd = indexStart + Number(data.quantity);
+//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
+//       const deviceInfo = dataFound; //*array of existing devices in sql db
+//       newProps = [...newProps, deviceInfo];
+//       await updateDeviceInWarehouse({
+//         item_group: key,
+//         startingNumber: deviceInfo[0].serial_number,
+//         endingNumber: deviceInfo.at(-1).serial_number,
+//       });
+//       await addDeviceToEvent([
+//         {
+//           item_group: deviceInfo[0].item_group,
+//           category_name: deviceInfo[0].category_name,
+//           min_serial_number: deviceInfo.at(-1).serial_number,
+//           max_serial_number: deviceInfo[0].serial_number,
+//         },
+//       ]);
+//     }
+//   }
+//   await createNewLease({
+//     deviceInfo: newProps.flat(),
+//     street: props.template.street,
+//     city: props.template.city,
+//     state: props.template.state,
+//     zip: props.template.zip,
+//   });
+//   openNotificationWithIcon("Equipment assigned to staff member.");
+//   setLoadingStatus(false);
+//   return;
+// };

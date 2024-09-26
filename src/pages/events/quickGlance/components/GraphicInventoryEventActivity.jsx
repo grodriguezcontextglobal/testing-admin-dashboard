@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -45,8 +45,8 @@ const GraphicInventoryEventActivity = () => {
     };
     const sortData = () => {
       const data = deviceStatusInEvent.data.data.receiversInventory;
-      const groupingByStatus = _.groupBy(data, "status");
-      const groupingByActivity = _.groupBy(data, "activity");
+      const groupingByStatus = groupBy(data, "status");
+      const groupingByActivity = groupBy(data, "activity");
       const noFunctionalData = Object.entries(groupingByStatus);
       const nonFunctionalDeclaredDeviceEventData =
         checkNonFunctionalDeclaredDevice(noFunctionalData);

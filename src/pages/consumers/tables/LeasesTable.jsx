@@ -6,7 +6,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { checkArray } from "../../../components/utils/checkArray";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import Loading from "../../../components/animation/Loading";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { Button, Table } from "antd";
 import { LightBlueButton } from "../../../styles/global/LightBlueButton";
@@ -93,11 +93,11 @@ const LeasesTable = () => {
       </div>
     );
   if (itemsInInventoryQuery.data && listImagePerItemQuery.data) {
-    const groupingImage = _.groupBy(
+    const groupingImage = groupBy(
       listImagePerItemQuery.data.data.item,
       "item_group"
     );
-    const groupSerialNumber = _.groupBy(
+    const groupSerialNumber = groupBy(
       itemsInInventoryQuery.data.data.items,
       "item_id"
     );

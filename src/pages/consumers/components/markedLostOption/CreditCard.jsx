@@ -10,7 +10,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Divider } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -81,7 +81,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
         updatedObjectToPass
       ),
   });
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
   );
@@ -101,7 +101,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     const eventCompanyData = groupingByCompany[user.company];
 
     if (eventCompanyData) {
-      const eventGroup = _.groupBy(eventCompanyData, "eventSelected");
+      const eventGroup = groupBy(eventCompanyData, "eventSelected");
       const eventData = eventGroup[event.eventInfoDetail.eventName];
 
       if (eventData) {
@@ -116,7 +116,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   );
   const changeStatusInPool = async () => {
     let findTheOneInUsed;
-    let findDeviceInPool = _.groupBy(findRightDataInEvent(), "device");
+    let findDeviceInPool = groupBy(findRightDataInEvent(), "device");
     if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
       findTheOneInUsed = findDeviceInPool[
         receiverToReplaceObject.serialNumber
@@ -606,10 +606,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                   md={3}
                   lg={4}
                 >
-                  <button
-                    style={GrayButton}
-                    onClick={() => handleBackAction()}
-                  >
+                  <button style={GrayButton} onClick={() => handleBackAction()}>
                     <p style={GrayButtonText}>Cancel</p>
                   </button>
                   <button disabled={blocking} style={BlueButton} type="submit">

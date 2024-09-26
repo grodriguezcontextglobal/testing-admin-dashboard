@@ -17,7 +17,7 @@ import {
   notification,
   Select,
 } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -298,7 +298,7 @@ const AssignemntNewDeviceInInventory = () => {
       zip: data.zip,
     };
     const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     if (selectedItem === "")
       return openNotificationWithIcon(
         "warning",
@@ -315,7 +315,7 @@ const AssignemntNewDeviceInInventory = () => {
         "Ownership status must be provided."
       );
     if (groupingByDeviceType[selectedItem]) {
-      const dataRef = _.groupBy(
+      const dataRef = groupBy(
         groupingByDeviceType[selectedItem],
         "serial_number"
       );

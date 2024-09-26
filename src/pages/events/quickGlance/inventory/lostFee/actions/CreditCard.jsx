@@ -1,8 +1,16 @@
-import { Button, FormControl, Grid, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert } from "antd";
-import _ from 'lodash';
+import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,7 +68,11 @@ const CreditCard = () => {
   });
   const listOfDeviceInPool = useQuery({
     queryKey: ["deviceListOfPool"],
-    queryFn: () => devitrakApi.post("/receiver/receiver-pool-list", { eventSelected: event.eventInfoDetail.eventName, provider: event.company }),
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-pool-list", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
   });
 
   const updateAssignedDeviceMutation = useMutation({
@@ -70,7 +82,7 @@ const CreditCard = () => {
         updatedObjectToPass
       ),
   });
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
   );
@@ -78,7 +90,7 @@ const CreditCard = () => {
     const eventCompanyData = groupingByCompany[user.company];
 
     if (eventCompanyData) {
-      const eventGroup = _.groupBy(eventCompanyData, "eventSelected");
+      const eventGroup = groupBy(eventCompanyData, "eventSelected");
       const eventData = eventGroup[event.eventInfoDetail.eventName];
 
       if (eventData) {
@@ -107,7 +119,7 @@ const CreditCard = () => {
     // };
     const changeStatusInPool = async () => {
       let findTheOneInUsed;
-      let findDeviceInPool = _.groupBy(findRightDataInEvent(), "device");
+      let findDeviceInPool = groupBy(findRightDataInEvent(), "device");
       if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
         findTheOneInUsed = findDeviceInPool[
           receiverToReplaceObject.serialNumber
@@ -119,9 +131,9 @@ const CreditCard = () => {
           id: findTheOneInUsed.id,
           activity: false,
           comment: "Device lost",
-          status: "Lost"
+          status: "Lost",
         }
-      )
+      );
 
       const objectReturnIssueProfile = {
         ...findTheOneInUsed,
@@ -139,11 +151,11 @@ const CreditCard = () => {
 
     const verifyPaymentIntentReceiversAssignedFormat = () => {
       if (Array.isArray(paymentIntentReceiversAssigned)) {
-        return paymentIntentReceiversAssigned
+        return paymentIntentReceiversAssigned;
       } else {
-        return [paymentIntentReceiversAssigned]
+        return [paymentIntentReceiversAssigned];
       }
-    }
+    };
     const changeStatusInDeviceAssignedData = async () => {
       // const checkIndex = verifyPaymentIntentReceiversAssignedFormat()[0]?.device.findIndex(
       //   (item) => item.serialNumber === receiverToReplaceObject.serialNumber
@@ -211,8 +223,8 @@ const CreditCard = () => {
         cashReportProfile
       );
       if (respo) {
-        const stringDate = new Date().toString()
-        const dateSplitting = stringDate.split(" ")
+        const stringDate = new Date().toString();
+        const dateSplitting = stringDate.split(" ");
         await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
           consumer: {
             name: `${customer.name} ${customer.lastName}`,
@@ -224,7 +236,8 @@ const CreditCard = () => {
           date: dateSplitting.slice(0, 4),
           time: dateSplitting[4],
           amount: refTotal.current,
-          transaction: verifyPaymentIntentReceiversAssignedFormat().paymentIntent
+          transaction:
+            verifyPaymentIntentReceiversAssignedFormat().paymentIntent,
         });
         await navigator(`/events/event-attendees/${customer.uid}`);
       }
@@ -254,7 +267,6 @@ const CreditCard = () => {
     };
     return (
       <>
-
         <form
           style={{
             width: "100%",
@@ -265,9 +277,12 @@ const CreditCard = () => {
           }}
           onSubmit={handleSubmit(triggerStripePaymentIntent)}
         >
-          <Grid display={"flex"}
+          <Grid
+            display={"flex"}
             alignItems={"center"}
-            justifyContent={"space-between"} container>
+            justifyContent={"space-between"}
+            container
+          >
             <Grid
               display={"flex"}
               alignItems={"center"}
@@ -356,25 +371,13 @@ const CreditCard = () => {
               md={3}
               lg={2}
             >
-              <Button
-                style={BlueButton}
-                onClick={() => handleBackAction()}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+              <Button style={BlueButton} onClick={() => handleBackAction()}>
+                <Typography textTransform={"none"} style={BlueButtonText}>
                   Cancel
                 </Typography>
               </Button>{" "}
-              <Button
-                style={BlueButton}
-                type="submit"
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
+              <Button style={BlueButton} type="submit">
+                <Typography textTransform={"none"} style={BlueButtonText}>
                   Submit
                 </Typography>
               </Button>
@@ -396,4 +399,4 @@ const CreditCard = () => {
   }
 };
 
-export default CreditCard
+export default CreditCard;

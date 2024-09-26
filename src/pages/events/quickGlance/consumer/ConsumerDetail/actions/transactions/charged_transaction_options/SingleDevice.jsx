@@ -15,12 +15,12 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { StripeElementChargeTransactionFromDashboard } from "../../../../../../../../components/stripe/elements/StripeElementChargeTransactionFromDashboard";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
-import _ from "lodash";
+import { groupBy } from "lodash";
 const SingleDevice = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
-  const { user } = useSelector(state => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const [clientSecret, setClientSecret] = useState("");
   const dispatch = useDispatch();
   const [deviceSelection, setDeviceSelection] = useState(null);
@@ -68,7 +68,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   checkIfDeviceIsInUsed();
 
   const checkDeviceAvailability = (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     return grouping[props].at(-1).activity; // === "YES"
   };
 

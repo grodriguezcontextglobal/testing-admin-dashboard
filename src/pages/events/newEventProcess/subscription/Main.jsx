@@ -1,7 +1,7 @@
 import { Box, Grid, Tab, Tabs, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -119,7 +119,7 @@ const Main = () => {
   };
   const eventsList = checkEventsPerCompany?.data?.data?.list;
   const checkSubscriptionRecordAfterCheckInStripe = useCallback(() => {
-    const groupingByActiveSubscription = _.groupBy(
+    const groupingByActiveSubscription = groupBy(
       searchingExistingSubscriptionRecord.current.record,
       "active"
     );

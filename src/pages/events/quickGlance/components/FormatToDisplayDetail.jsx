@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import CardRendered from "./CardRendered";
@@ -48,7 +48,7 @@ const FormatToDisplayDetail = () => {
 
     const foundAllNoOperatingDeviceInEvent = () => {
       const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
-      const groupingByReturnedStatus = _.groupBy(receiversPoolData, "status");
+      const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
         if (data[0] !== "Operational") {
@@ -60,7 +60,7 @@ const FormatToDisplayDetail = () => {
 
     const foundAllNoOperatingDeviceListInEvent = () => {
       const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
-      const groupingByReturnedStatus = _.groupBy(receiversPoolData, "status");
+      const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
         if (data[0] !== "Operational") {

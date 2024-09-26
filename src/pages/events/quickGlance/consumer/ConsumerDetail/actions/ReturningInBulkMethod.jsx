@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { Button, Modal, notification } from "antd";
 import { useForm } from "react-hook-form";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
@@ -66,7 +66,7 @@ const ReturningInBulkMethod = ({
   };
 
   const returnDevicesInTransaction = async ({ device }) => {
-    const findTransaction = _.groupBy(
+    const findTransaction = groupBy(
       deviceInTransactionQuery.data.data.listOfReceivers,
       "device.serialNumber"
     );
@@ -87,7 +87,7 @@ const ReturningInBulkMethod = ({
   };
 
   const returnDeviceInPool = async (props) => {
-    const deviceInPoolData = _.groupBy(
+    const deviceInPoolData = groupBy(
       deviceInPoolQuery.data.data.receiversInventory,
       "device"
     );

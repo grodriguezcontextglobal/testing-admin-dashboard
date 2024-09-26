@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
@@ -49,7 +49,6 @@ const Capturing = ({
         `/stripe/payment_intents/${paymentIntentDetailSelected.paymentIntent}`
       ),
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
@@ -59,7 +58,6 @@ const Capturing = ({
         active: true,
       }),
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   const queryClient = useQueryClient();
   const {
@@ -70,6 +68,12 @@ const Capturing = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
+
+  useEffect(() => {
+    stripeTransactionQuery.refetch();
+    transactionQuery.refetch();
+  },[])
+  
   const maxAmount = stripeTransactionQuery?.data?.data?.paymentIntent?.amount;
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
   const initalValue = useCallback(() => {

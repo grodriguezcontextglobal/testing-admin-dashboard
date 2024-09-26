@@ -1,11 +1,11 @@
 import { notification } from "antd";
 import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import "./App.css";
-import AuthRoutes from "./routes/authorized/AuthRoutes";
-import NoAuthRoutes from "./routes/no-authorized/NoAuthRoutes";
+// import AuthRoutes from "./routes/authorized/AuthRoutes";
+// import NoAuthRoutes from "./routes/no-authorized/NoAuthRoutes";
 import { onLogout } from "./store/slices/adminSlice";
 import { onResetArticleEdited } from "./store/slices/articleSlide";
 import { onResetCustomer } from "./store/slices/customerSlice";
@@ -18,10 +18,14 @@ import { onResetHelpers } from "./store/slices/helperSlice";
 import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
+import Loading from "./components/animation/Loading";
 // import { BugsIcon } from "./components/icons/Icons";
-import InactivityLogout from "./utils/CheckingInactivityAndTakeAction";
+// import InactivityLogout from "./utils/CheckingInactivityAndTakeAction";
 // import ModalReportBugs from "./components/utils/ModalReportBugs";
 // import useVersionCheck from "../versionChecker";
+const InactivityLogout = lazy(() => import("./utils/CheckingInactivityAndTakeAction"));
+const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
+const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes")); 
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -99,7 +103,7 @@ const App = () => {
   }, [status, adminToken, location.pathname]);
 
   return (
-    <>
+    <Suspense fallback={<div><Loading /></div>}>
       {renderNetworkStatusMessage()}
       {contextHolder}
       {status === "authenticated" && adminToken ? (
@@ -109,25 +113,7 @@ const App = () => {
       ) : (
         <NoAuthRoutes />
       )}
-      {/* {status === "authenticated" && adminToken && (
-        <aside className="bug-report-container">
-          <button
-            className="bugs-button"
-            onClick={() => setDisplayReportBugsModal(true)}
-          >
-            <p>
-              <BugsIcon />
-            </p>
-          </button>
-        </aside>
-      )} */}
-      {/* {displayReportBugsModal && (
-        <ModalReportBugs
-          setDisplayReportBugsModal={setDisplayReportBugsModal}
-          displayReportBugsModal={displayReportBugsModal}
-        />
-      )} */}
-    </>
+    </Suspense>
   );
 };
 

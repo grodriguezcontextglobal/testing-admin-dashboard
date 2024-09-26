@@ -14,6 +14,7 @@ import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { PropTypes } from "prop-types";
+import { useEffect } from "react";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -39,7 +40,6 @@ const Releasing = ({
         `/stripe/payment_intents/${paymentIntentDetailSelected.paymentIntent}`
       ),
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
@@ -49,12 +49,15 @@ const Releasing = ({
         active: true,
       }),
     refetchOnMount: false,
-    staleTime: Infinity,
   });
   const queryClient = useQueryClient();
   const maxAmount = stripeTransactionQuery?.data?.data?.paymentIntent?.amount;
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
 
+  useEffect(() => {
+    stripeTransactionQuery.refetch();
+    transactionQuery.refetch();
+  },[])
   const renderingTitle = () => {
     return (
       <Typography

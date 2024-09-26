@@ -8,7 +8,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useQuery } from "@tanstack/react-query";
 import {
   AutoComplete,
@@ -146,7 +146,7 @@ const AddNewBulkItems = () => {
 
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     let checkExistingDevice = [];
     let base64;
     if (selectedItem === "")
@@ -186,7 +186,7 @@ const AddNewBulkItems = () => {
       index++
     ) {
       if (groupingByDeviceType[selectedItem]) {
-        const dataRef = _.groupBy(
+        const dataRef = groupBy(
           groupingByDeviceType[selectedItem],
           "serial_number"
         );

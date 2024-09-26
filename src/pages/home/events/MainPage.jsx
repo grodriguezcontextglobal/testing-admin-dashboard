@@ -1,12 +1,16 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
-import CardEventDisplay from "../../events/components/CardEventDisplay";
-import BannerMsg from "../../events/utils/BannerMsg";
-import { useEffect } from "react";
+// import CardEventDisplay from "../../events/components/CardEventDisplay";
+// import BannerMsg from "../../events/utils/BannerMsg";
+import { lazy, Suspense, useEffect } from "react";
+import Loading from "../../../components/animation/Loading";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+const CardEventDisplay = lazy(() => import("../../events/utils/BannerMsg"));
+const BannerMsg = lazy(() => import("../../events/utils/BannerMsg"));
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -45,7 +49,7 @@ const MainPage = () => {
     const renderingDataBasedOnStaffAndActiveEvent = () => {
       let checking = [];
       if (dataPerCompany()?.length > 0) {
-        const group_by_active = _.groupBy(dataPerCompany(), "active");
+        const group_by_active = groupBy(dataPerCompany(), "active");
         if (group_by_active[true]) {
           const activeAndAdminMember = group_by_active.true?.filter(
             (adminMember) =>
@@ -111,28 +115,36 @@ const MainPage = () => {
       return Array.from(result);
     };
     return (
-      <Grid container>
-        {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
-          dataToBeRenderedInUpcomingSection()?.map((event) => {
-            return (
-              <Grid
-                key={event.id}
-                padding={1}
-                alignSelf={"flex-start"}
-                item
-                xs={12}
-                sm={12}
-                md={6}
-                lg={6}
-              >
-                <CardEventDisplay props={event} />
-              </Grid>
-            );
-          })
-        ) : (
-          <BannerMsg />
-        )}
-      </Grid>
+      <Suspense
+        fallback={
+          <div style={CenteringGrid}>
+            <Loading />
+          </div>
+        }
+      >
+        <Grid container>
+          {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
+            dataToBeRenderedInUpcomingSection()?.map((event) => {
+              return (
+                <Grid
+                  key={event.id}
+                  padding={1}
+                  alignSelf={"flex-start"}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={6}
+                  lg={6}
+                >
+                  <CardEventDisplay props={event} />
+                </Grid>
+              );
+            })
+          ) : (
+            <BannerMsg />
+          )}
+        </Grid>
+      </Suspense>
     );
   }
 };

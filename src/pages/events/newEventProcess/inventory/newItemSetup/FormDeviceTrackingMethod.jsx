@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Tooltip } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -123,7 +123,7 @@ const FormDeviceTrackingMethod = ({
 
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     let checkExistingDevice = [];
     let base64;
     if (choose === "") return alert("A group of item must be provided.");
@@ -135,10 +135,7 @@ const FormDeviceTrackingMethod = ({
       index++
     ) {
       if (groupingByDeviceType[choose]) {
-        const dataRef = _.groupBy(
-          groupingByDeviceType[choose],
-          "serial_number"
-        );
+        const dataRef = groupBy(groupingByDeviceType[choose], "serial_number");
         if (
           dataRef[
             String(index).padStart(

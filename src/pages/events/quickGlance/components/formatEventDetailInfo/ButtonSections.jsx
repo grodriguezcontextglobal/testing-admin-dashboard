@@ -1,18 +1,24 @@
 import { Button, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "antd";
-import _ from "lodash";
-import { useEffect, useState } from "react";
+import { groupBy } from "lodash";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { EmailIcon, PrinterIcon } from "../../../../../components/icons/Icons";
-import EmailNotification from "../../../../../components/notification/email/EmailNotification";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import SpreadSheet from "../SpreadSheet";
-import EndEventButton from "./EndEventButton";
-
+import Loading from "../../../../../components/animation/Loading";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+// import EmailNotification from "../../../../../components/notification/email/EmailNotification";
+// import SpreadSheet from "../SpreadSheet";
+// import EndEventButton from "./EndEventButton";
+const EmailNotification = lazy(() =>
+  import("../../../../../components/notification/email/EmailNotification")
+);
+const SpreadSheet = lazy(() => import("../SpreadSheet"));
+const EndEventButton = lazy(() => import("./EndEventButton"));
 const ButtonSections = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
@@ -72,17 +78,14 @@ const ButtonSections = () => {
     },
   ];
 
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfInventoryQuery?.data?.data?.listOfItems,
     "company"
   );
 
   const findInventoryStored = () => {
     if (groupingByCompany[user.company]) {
-      const groupingByEvent = _.groupBy(
-        groupingByCompany[user.company],
-        "event"
-      );
+      const groupingByEvent = groupBy(groupingByCompany[user.company], "event");
       if (groupingByEvent[event.eventInfoDetail.eventName]) {
         return groupingByEvent[event.eventInfoDetail.eventName];
       }
@@ -101,14 +104,14 @@ const ButtonSections = () => {
   };
   findItemsInPoolEvent();
 
-  const groupingItemsByCompany = _.groupBy(
+  const groupingItemsByCompany = groupBy(
     listOfItemsInInventoryQuery?.data?.data?.listOfItems,
     "company"
   );
 
   const itemsPerCompany = () => {
     if (groupingItemsByCompany[user.company]) {
-      const groupingByGroup = _.groupBy(
+      const groupingByGroup = groupBy(
         groupingItemsByCompany[user.company],
         "group"
       );
@@ -148,7 +151,13 @@ const ButtonSections = () => {
   };
 
   return (
-    <>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       <Card
         style={{
           borderRadius: "12px",
@@ -262,7 +271,7 @@ const ButtonSections = () => {
           }
         />
       )}
-    </>
+    </Suspense>
   );
 };
 

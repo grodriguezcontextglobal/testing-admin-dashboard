@@ -1,11 +1,15 @@
+import { lazy, Suspense, useState } from "react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card, Switch, Tooltip } from "antd";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { DropDownIcon } from "../../../../components/icons/Icons";
-import ModalAddAndUpdateDeviceSetup from "./ModalAddAndUpdateDeviceSetup";
-import { useState } from "react";
+const ModalAddAndUpdateDeviceSetup = lazy(() =>
+  import("./ModalAddAndUpdateDeviceSetup")
+);
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import Loading from "../../../../components/animation/Loading";
 const CardRendered = ({ props, title, onChange, loadingStatus }) => {
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -16,7 +20,13 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
     return setOpenModalDeviceSetup(true);
   };
   return (
-    <>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       <Grid padding={"0 0 10px"} item xs={12}>
         <Card
           style={{
@@ -74,7 +84,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
                 }`}
                 style={{ width: "100%" }}
               >
-                <div style={{ margin:"0 0 0 15px" }}>
+                <div style={{ margin: "0 0 0 15px" }}>
                   <Switch
                     checked={props.consumerUses}
                     loading={loadingStatus}
@@ -94,7 +104,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
           quantity={props.quantity}
         />
       )}
-    </>
+    </Suspense>
   );
 };
 

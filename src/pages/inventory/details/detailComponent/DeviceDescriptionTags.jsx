@@ -3,9 +3,13 @@ import { Grid, Typography } from "@mui/material";
 import { Card, Tooltip } from "antd";
 import { CardStyle } from "../../../../styles/global/CardStyle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
-import ReturningLeasedEquipModal from "./components/ReturningLeasedEquipModal";
-import { useState } from "react";
-
+// import ReturningLeasedEquipModal from "./components/ReturningLeasedEquipModal";
+import { lazy, Suspense, useState } from "react";
+import Loading from "../../../../components/animation/Loading";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+const ReturningLeasedEquipModal = lazy(() =>
+  import("./components/ReturningLeasedEquipModal")
+);
 const DeviceDescriptionTags = ({ dataFound }) => {
   const [returningModal, setReturningModal] = useState(false);
   const dic = {
@@ -23,7 +27,13 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     },
   };
   return (
-    <>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       <Grid
         padding={"0px 0px 0px 10px"}
         display={"flex"}
@@ -203,7 +213,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
             setOpenReturningModal={setReturningModal}
           />
         )}
-    </>
+    </Suspense>
   );
 };
 
