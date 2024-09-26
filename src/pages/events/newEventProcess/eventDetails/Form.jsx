@@ -8,12 +8,9 @@ import {
 } from "@mui/material";
 import { Space, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
-import "react-clock/dist/Clock.css";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -26,13 +23,16 @@ import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import "../../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import { InputLabelStyle } from "../style/InputLabelStyle";
+// import "react-clock/dist/Clock.css";
+import "react-phone-number-input/style.css";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../styles/global/OutlineInput.css";
 import "../../../../styles/global/ant-select.css";
 import "../../../../styles/global/reactInput.css";
-import { InputLabelStyle } from "../style/InputLabelStyle";
 import "../style/NewEventInfoSetup.css";
 const Form = () => {
   const { subscriptionJSON } = useSelector(
