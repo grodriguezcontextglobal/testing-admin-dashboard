@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -108,7 +108,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   subtractRangePerGroupToDisplayItInScreen();
 
   const checkDeviceAvailability = (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     return grouping[props].at(-1).activity; // === "YES"
   };
   const createReceiverInTransaction = async (props) => {
@@ -129,7 +129,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   };
 
   const createDevicesInPool = async (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
       { activity: true, status: "Operational" }

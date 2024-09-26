@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
 import { useEffect } from "react";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const StaffTable = ({ searching }) => {
@@ -16,8 +16,8 @@ const StaffTable = ({ searching }) => {
     queryFn: () => devitrakApi.get("/staff/admin-users"),
     // enabled: false,
     refetchOnMount: false,
-    staleTime: Infinity,
-    cacheTime: 1000 * 60 * 60, //oneHourInMs
+    // staleTime: Infinity,
+    // cacheTime: 1000 * 60 * 60, //oneHourInMs
   });
   useEffect(() => {
     const controller = new AbortController();
@@ -29,7 +29,7 @@ const StaffTable = ({ searching }) => {
 
   if (staffEventQuery.data) {
     const employees = staffEventQuery.data.data.adminUsers;
-    const groupingEmployees = _.groupBy(employees, "email");
+    const groupingEmployees = groupBy(employees, "email");
     const result = new Map();
     const mergeStaffInEvent2 = async () => {
       for (let data of event.staff.adminUser) {

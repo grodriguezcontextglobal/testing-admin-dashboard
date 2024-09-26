@@ -32,7 +32,7 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import "../../../styles/global/ant-select.css";
 import { formatDate } from "../utils/dateFormat";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -133,7 +133,7 @@ const EditGroup = () => {
       setValue("descript_item", `${dataToRetrieve.descript_item}`);
       setLocationSelection(`${dataToRetrieve.location}`);
       setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
-      const grouopingByItemGroup = _.groupBy(
+      const grouopingByItemGroup = groupBy(
         itemsInInventoryQuery.data.data.items,
         "item_group"
       );
@@ -196,18 +196,18 @@ const EditGroup = () => {
         "warning",
         "Ownership status must be provided."
       );
-      if (
-        String(valueSelection).toLowerCase() === "rent" &&
-        (!returningDate.getDate() ||
-          !returningDate.getFullYear() ||
-          !returningDate.getMonth())
-      ) {
-        return openNotificationWithIcon(
-          "warning",
-          "As ownership was set as 'Rent', returning date must be provided."
-        );
-      }
-  
+    if (
+      String(valueSelection).toLowerCase() === "rent" &&
+      (!returningDate.getDate() ||
+        !returningDate.getFullYear() ||
+        !returningDate.getMonth())
+    ) {
+      return openNotificationWithIcon(
+        "warning",
+        "As ownership was set as 'Rent', returning date must be provided."
+      );
+    }
+
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
       setLoading(false);
       return alert(
@@ -261,7 +261,9 @@ const EditGroup = () => {
               updated_at: formatDate(new Date()),
               company: user.company,
               return_date: `${
-                submitRef.current.ownership === "Rent" ? formatDate(returningDate) : null
+                submitRef.current.ownership === "Rent"
+                  ? formatDate(returningDate)
+                  : null
               }`,
             });
             if (
@@ -349,7 +351,9 @@ const EditGroup = () => {
             updated_at: formatDate(new Date()),
             company: user.company,
             return_date: `${
-              submitRef.current.ownership === "Rent" ? formatDate(returningDate) : null
+              submitRef.current.ownership === "Rent"
+                ? formatDate(returningDate)
+                : null
             }`,
           });
           if (
@@ -779,49 +783,49 @@ const EditGroup = () => {
                 />
               </InputLabel>
               <div
-              style={{
-                width: "100%",
-                flexDirection: "column",
-                display: `${
-                  (valueSelection === "Rent" || valueSelection === "")
-                    ? "flex"
-                    : "none"
-                }`,
-              }}
-            >
-              <Tooltip
-                placement="top"
-                title="Where the item is location physically."
                 style={{
                   width: "100%",
+                  flexDirection: "column",
+                  display: `${
+                    valueSelection === "Rent" || valueSelection === ""
+                      ? "flex"
+                      : "none"
+                  }`,
                 }}
               >
-                <Typography
+                <Tooltip
+                  placement="top"
+                  title="Where the item is location physically."
                   style={{
-                    ...TextFontSize14LineHeight20,
-                    fontWeight: 500,
-                    color: "var(--gray700, #344054)",
+                    width: "100%",
                   }}
                 >
-                  Returning date <QuestionIcon />
-                </Typography>
-              </Tooltip>
-              <DatePicker
-                id="calender-event"
-                autoComplete="checking"
-                showTimeSelect
-                dateFormat="Pp"
-                minDate={new Date()}
-                selected={returningDate}
-                openToDate={new Date()}
-                startDate={new Date()}
-                onChange={(date) => setReturningDate(date)}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-              />
-            </div>
+                  <Typography
+                    style={{
+                      ...TextFontSize14LineHeight20,
+                      fontWeight: 500,
+                      color: "var(--gray700, #344054)",
+                    }}
+                  >
+                    Returning date <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+                <DatePicker
+                  id="calender-event"
+                  autoComplete="checking"
+                  showTimeSelect
+                  dateFormat="Pp"
+                  minDate={new Date()}
+                  selected={returningDate}
+                  openToDate={new Date()}
+                  startDate={new Date()}
+                  onChange={(date) => setReturningDate(date)}
+                  style={{
+                    ...OutlinedInputStyle,
+                    width: "100%",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

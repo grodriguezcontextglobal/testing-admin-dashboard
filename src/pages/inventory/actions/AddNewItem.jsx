@@ -9,7 +9,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Avatar, Divider, Select, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -137,7 +137,7 @@ const AddNewItem = () => {
   }, [selectedItem]);
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     if (selectedItem === "")
       return openNotificationWithIcon(
         "warning",
@@ -161,7 +161,7 @@ const AddNewItem = () => {
     }
 
     if (groupingByDeviceType[selectedItem]) {
-      const dataRef = _.groupBy(
+      const dataRef = groupBy(
         groupingByDeviceType[selectedItem],
         "serial_number"
       );

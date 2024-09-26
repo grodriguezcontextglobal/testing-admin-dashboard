@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -145,7 +145,7 @@ const SearchDevice = ({ searchParams }) => {
   const imagesDeviceFoundData = () => {
     if (imageDeviceQuery.data) {
       const foundData = imageDeviceQuery?.data?.data?.item;
-      const grouping = _.groupBy(foundData, "item_group");
+      const grouping = groupBy(foundData, "item_group");
       return grouping;
     }
   };

@@ -22,7 +22,7 @@ import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { checkArray } from "../../../../../../../../components/utils/checkArray";
 
 const SingleDevice = ({ setCreateTransactionPaid }) => {
@@ -78,7 +78,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
   checkIfDeviceIsInUsed();
 
   const checkDeviceAvailability = (props) => {
-    const grouping = _.groupBy(checkIfDeviceIsInUsed(), "device");
+    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
     return checkArray(grouping[props]).activity; // === "YES"
   };
 
@@ -232,7 +232,7 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
             style={{ ...OutlinedInputStyle, width: "70%" }}
             placeholder="Scan or enter serial number here."
           />
-          <FormControl style={{width:"20%"}}>
+          <FormControl style={{ width: "20%" }}>
             <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
             <OutlinedInput
               label="Amount"

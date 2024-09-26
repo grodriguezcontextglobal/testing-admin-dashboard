@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -90,11 +90,11 @@ const ListEquipment = () => {
       </div>
     );
   if (itemsInInventoryQuery.data && listImagePerItemQuery.data) {
-    const groupingImage = _.groupBy(
+    const groupingImage = groupBy(
       listImagePerItemQuery.data.data.item,
       "item_group"
     );
-    const groupSerialNumber = _.groupBy(
+    const groupSerialNumber = groupBy(
       itemsInInventoryQuery.data.data.items,
       "item_id"
     );
@@ -163,50 +163,50 @@ const ListEquipment = () => {
         dataIndex: "address",
         key: "address",
         render: (_, record) => (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: "20px",
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              gap: "20px",
+            }}
+          >
+            <Button
+              onClick={() => {
+                setDeviceInfo({
+                  ...record,
+                  ...dataSpecificItemInAssignedDevicePerStaffMember(
+                    record.device_id
+                  ),
+                });
+                setOpenReturnDeviceStaffModal(true);
               }}
+              disabled={record.active === 0}
+              style={record.active === 0 ? LightBlueButton : BlueButton}
             >
-              <Button
-                onClick={() => {
-                  setDeviceInfo({
-                    ...record,
-                    ...dataSpecificItemInAssignedDevicePerStaffMember(
-                      record.device_id
-                    ),
-                  });
-                  setOpenReturnDeviceStaffModal(true);
-                }}
-                disabled={record.active === 0}
-                style={record.active === 0 ? LightBlueButton : BlueButton}
+              <Typography
+                style={
+                  record.active === 0
+                    ? { ...LightBlueButtonText, color: "#83a9f6" }
+                    : BlueButtonText
+                }
               >
-                <Typography
-                  style={
-                    record.active === 0
-                      ? { ...LightBlueButtonText, color: "#83a9f6" }
-                      : BlueButtonText
-                  }
-                >
-                  Mark as returned
-                </Typography>
-              </Button>
-              <Button disabled style={GrayButton}>
-                <Typography
-                  style={
-                    record.active === 0
-                      ? { ...GrayButtonText, color: "#a5a5a5" }
-                      : GrayButtonText
-                  }
-                >
-                  Mark as lost
-                </Typography>
-              </Button>
-            </div>
-          ),
+                Mark as returned
+              </Typography>
+            </Button>
+            <Button disabled style={GrayButton}>
+              <Typography
+                style={
+                  record.active === 0
+                    ? { ...GrayButtonText, color: "#a5a5a5" }
+                    : GrayButtonText
+                }
+              >
+                Mark as lost
+              </Typography>
+            </Button>
+          </div>
+        ),
       },
     ];
     if (

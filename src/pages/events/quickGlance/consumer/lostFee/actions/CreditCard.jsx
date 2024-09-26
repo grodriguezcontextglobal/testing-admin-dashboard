@@ -8,7 +8,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -84,7 +84,7 @@ const CreditCard = () => {
         updatedObjectToPass
       ),
   });
-  const groupingByCompany = _.groupBy(
+  const groupingByCompany = groupBy(
     listOfDeviceInPool.data?.data?.receiversInventory,
     "provider"
   );
@@ -92,7 +92,7 @@ const CreditCard = () => {
     const eventCompanyData = groupingByCompany[user.company];
 
     if (eventCompanyData) {
-      const eventGroup = _.groupBy(eventCompanyData, "eventSelected");
+      const eventGroup = groupBy(eventCompanyData, "eventSelected");
       const eventData = eventGroup[event.eventInfoDetail.eventName];
 
       if (eventData) {
@@ -122,7 +122,7 @@ const CreditCard = () => {
     // };
     const changeStatusInPool = async () => {
       let findTheOneInUsed;
-      let findDeviceInPool = _.groupBy(findRightDataInEvent(), "device");
+      let findDeviceInPool = groupBy(findRightDataInEvent(), "device");
       if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
         findTheOneInUsed = findDeviceInPool[
           receiverToReplaceObject.serialNumber

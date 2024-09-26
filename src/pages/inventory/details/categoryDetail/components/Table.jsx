@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Table } from "antd";
-import _, { groupBy } from "lodash";
+import { groupBy } from "lodash";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -47,11 +47,11 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     refetchOnMount: false,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = _.groupBy(imageSource, "item_group");
+  const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = _.groupBy(
+    const groupingBySerialNumber = groupBy(
       itemsInInventoryQuery?.data?.data?.items,
       "serial_number"
     );
@@ -88,10 +88,8 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   }, [user.company, location.key]);
 
   const dataToDisplay = () => {
-    if 
-      (!searchItem || searchItem === "") 
+    if (!searchItem || searchItem === "") {
       // &&(searchParameter === "undefined" || searchParameter === "")
- {
       if (dataStructuringFormat().length > 0) {
         return dataStructuringFormat();
       }
@@ -227,7 +225,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
                 ? "var(--blue-700, #175CD3)"
                 : "var(--success-700, #027A48)"
             }`}
-            style={{...Subtitle, fontSize:"13px"}}
+            style={{ ...Subtitle, fontSize: "13px" }}
             textTransform={"capitalize"}
           >
             <Icon

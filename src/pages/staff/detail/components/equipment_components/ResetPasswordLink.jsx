@@ -12,7 +12,7 @@ import { useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
@@ -62,7 +62,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
 
   const navigate = useNavigate();
   const findStaff = useCallback(() => {
-    const groupByEmail = _.groupBy(
+    const groupByEmail = groupBy(
       listAdminUsers?.data?.data?.adminUsers,
       "email"
     );

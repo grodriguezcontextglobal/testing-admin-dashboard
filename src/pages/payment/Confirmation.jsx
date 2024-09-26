@@ -1,7 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Result, notification } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -73,7 +73,7 @@ const Confirmation = () => {
     const usedDevices =
       checkDeviceInUseInOtherCustomerInTheSameEventQuery.data.data
         .receiversInventory;
-    const groupingByDevice = _.groupBy(usedDevices, "device");
+    const groupingByDevice = groupBy(usedDevices, "device");
 
     const formatToDeviceInAssignedReceiverInDocumentInDB = async (props) => {
       let sequency = true;
@@ -153,7 +153,11 @@ const Confirmation = () => {
                 deviceValue: deviceSelectionPaidTransaction.deviceType.value,
               },
             ],
-            consumerInfo: {...customer, uid: customer.uid ?? customer.id, id:customer.id ?? customer.uid},
+            consumerInfo: {
+              ...customer,
+              uid: customer.uid ?? customer.id,
+              id: customer.id ?? customer.uid,
+            },
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
             company: user.companyData.id,

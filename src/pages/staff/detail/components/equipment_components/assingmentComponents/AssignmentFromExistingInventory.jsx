@@ -1,7 +1,7 @@
 import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification, Select } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -163,7 +163,7 @@ const AssignmentFromExistingInventory = () => {
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       startingNumber: props.startingNumber,
-      quantity:props.quantity,
+      quantity: props.quantity,
     });
   };
 
@@ -208,8 +208,7 @@ const AssignmentFromExistingInventory = () => {
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
-      for(let item of data.selectedList){
-
+      for (let item of data.selectedList) {
         await devitrakApi.post("/db_event/event_device_directly", {
           event_id: newEventInfo.insertId,
           item_id: item.item_id,
@@ -245,7 +244,7 @@ const AssignmentFromExistingInventory = () => {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
         startingNumber: deviceInfo[0].serial_number,
-        quantity:props.quantity
+        quantity: props.quantity,
       });
       await createNewLease({ ...props.template, deviceInfo });
       await addDeviceToEvent([
@@ -253,8 +252,8 @@ const AssignmentFromExistingInventory = () => {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
           min_serial_number: deviceInfo.at(-1).serial_number,
-          quantity:props.quantity,
-          selectedList:deviceInfo
+          quantity: props.quantity,
+          selectedList: deviceInfo,
         },
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
@@ -271,9 +270,13 @@ const AssignmentFromExistingInventory = () => {
       zip: watch("zip"),
     };
     setLoadingStatus(true);
-    const groupingType = _.groupBy(dataFound.current, "item_group");
+    const groupingType = groupBy(dataFound.current, "item_group");
     if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
-      await option1({ groupingType: groupingType, template: template, quantity:watch("quantity") });
+      await option1({
+        groupingType: groupingType,
+        template: template,
+        quantity: watch("quantity"),
+      });
     }
   };
 
@@ -646,7 +649,6 @@ AssignmentFromExistingInventory.propTypes = {
   groupingType: PropTypes.string,
 };
 
-
 // const option2 = async (props) => {
 //   let newProps = [];
 //   const finalList = [
@@ -658,7 +660,7 @@ AssignmentFromExistingInventory.propTypes = {
 //     },
 //   ];
 //   await createEvent(props.template);
-//   const groupingByType = _.groupBy(finalList, "item_group");
+//   const groupingByType = groupBy(finalList, "item_group");
 //   for (let [key, value] of Object.entries(groupingByType)) {
 //     for (let data of value) {
 //       const indexStart = props.groupingType[data.item_group].findIndex(
@@ -697,7 +699,7 @@ AssignmentFromExistingInventory.propTypes = {
 // const option3 = async (props) => {
 //   await createEvent(props.template);
 //   let newProps = [];
-//   const groupingByType = _.groupBy(selectedItem, "item_group");
+//   const groupingByType = groupBy(selectedItem, "item_group");
 //   for (let [key, value] of Object.entries(groupingByType)) {
 //     for (let data of value) {
 //       const indexStart = props.groupingType[data.item_group].findIndex(

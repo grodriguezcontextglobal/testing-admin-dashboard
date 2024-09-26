@@ -10,7 +10,7 @@ import {
   Space,
   notification,
 } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -88,7 +88,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
 
   if (staffEventQuery.data) {
     const employee = staffEventQuery.data.data.adminUsers;
-    const groupingEmployees = _.groupBy(employee, "email");
+    const groupingEmployees = groupBy(employee, "email");
     const result = new Map();
     const mergeStaffInEvent2 = async () => {
       for (let data of event.staff.adminUser) {

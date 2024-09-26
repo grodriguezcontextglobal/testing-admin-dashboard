@@ -17,7 +17,7 @@ import {
   Select,
   Tooltip,
 } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -265,7 +265,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       zip: data.zip,
     };
     const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = _.groupBy(dataDevices, "item_group");
+    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     if (selectedItem === "")
       return openNotificationWithIcon(
         "warning",
@@ -282,7 +282,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         "Ownership status must be provided."
       );
     if (groupingByDeviceType[selectedItem]) {
-      const dataRef = _.groupBy(
+      const dataRef = groupBy(
         groupingByDeviceType[selectedItem],
         "serial_number"
       );
@@ -326,7 +326,9 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             location: locationSelection,
             current_location: locationSelection,
             company_id: user.sqlInfo.company_id,
-            return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
+            return_date: `${
+              valueSelection === "Rent" ? formatDate(returningDate) : null
+            }`,
           });
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
@@ -353,7 +355,9 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           location: locationSelection,
           current_location: locationSelection,
           company_id: user.sqlInfo.company_id,
-          return_date: `${valueSelection === "Rent" ? formatDate(returningDate) : null}`,
+          return_date: `${
+            valueSelection === "Rent" ? formatDate(returningDate) : null
+          }`,
         });
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
@@ -841,49 +845,49 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             />
           </InputLabel>
           <div
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              display: `${
+                valueSelection === "Rent" || valueSelection === ""
+                  ? "flex"
+                  : "none"
+              }`,
+            }}
+          >
+            <Tooltip
+              placement="top"
+              title="Where the item is location physically."
               style={{
                 width: "100%",
-                flexDirection: "column",
-                display: `${
-                  (valueSelection === "Rent" || valueSelection === "")
-                    ? "flex"
-                    : "none"
-                }`,
               }}
             >
-              <Tooltip
-                placement="top"
-                title="Where the item is location physically."
+              <Typography
                 style={{
-                  width: "100%",
+                  ...TextFontSize14LineHeight20,
+                  fontWeight: 500,
+                  color: "var(--gray700, #344054)",
                 }}
               >
-                <Typography
-                  style={{
-                    ...TextFontSize14LineHeight20,
-                    fontWeight: 500,
-                    color: "var(--gray700, #344054)",
-                  }}
-                >
-                  Returning date <QuestionIcon />
-                </Typography>
-              </Tooltip>
-              <DatePicker
-                id="calender-event"
-                autoComplete="checking"
-                showTimeSelect
-                dateFormat="Pp"
-                minDate={new Date()}
-                selected={returningDate}
-                openToDate={new Date()}
-                startDate={new Date()}
-                onChange={(date) => setReturningDate(date)}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-              />
-            </div>
+                Returning date <QuestionIcon />
+              </Typography>
+            </Tooltip>
+            <DatePicker
+              id="calender-event"
+              autoComplete="checking"
+              showTimeSelect
+              dateFormat="Pp"
+              minDate={new Date()}
+              selected={returningDate}
+              openToDate={new Date()}
+              startDate={new Date()}
+              onChange={(date) => setReturningDate(date)}
+              style={{
+                ...OutlinedInputStyle,
+                width: "100%",
+              }}
+            />
+          </div>
 
           <div style={{ width: "100%" }}>
             <InputLabel style={{ width: "100%" }}>

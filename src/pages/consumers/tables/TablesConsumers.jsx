@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Chip } from "@mui/material";
 import { Avatar, Table } from "antd";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +57,7 @@ export default function TablesConsumers({
     return events;
   };
   const currentStatus = (props) => {
-    const grouping = _.groupBy(props, "device.status");
+    const grouping = groupBy(props, "device.status");
     if (grouping[true]) return true;
     return false;
   };
