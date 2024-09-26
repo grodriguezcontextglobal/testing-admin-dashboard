@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Divider, Result } from "antd";
 import { useInterval } from "interval-hooks";
-import _ from "lodash";
+import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,6 +20,7 @@ import FormatToDisplayDetail from "../../components/admin/Attendees/quickGlanceP
 import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
 import "../../style/pages/admin/confirmedPaymentAdmin.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import DeviceAssigned from "../../../classes/deviceAssigned";
 const ConfirmationPaymentPage = () => {
   const { event } = useSelector((state) => state.event);
   const { deviceSelection, deviceSelectionPaidTransaction } = useSelector(
@@ -64,18 +65,18 @@ const ConfirmationPaymentPage = () => {
   });
   const findingPaymentIntent = () => {
     if (stripePaymentIntentQuery.data) {
-      const groupingByCompany = _.groupBy(
+      const groupingByCompany = groupBy(
         stripePaymentIntentQuery.data.data.stripeTransactions,
         "provider"
       );
       if (groupingByCompany[event.company]) {
-        const groupingByEvent = _.groupBy(
+        const groupingByEvent = groupBy(
           groupingByCompany[event.company],
           "eventSelected"
         );
         const eventData = groupingByEvent[event.eventInfoDetail.eventName];
         if (eventData) {
-          const found = _.groupBy(eventData, "paymentIntent");
+          const found = groupBy(eventData, "paymentIntent");
           return found;
         }
         return [];
@@ -87,18 +88,18 @@ const ConfirmationPaymentPage = () => {
 
   const findingTransaction = () => {
     if (listOfTransactionsQuery.data) {
-      const groupingByCompany = _.groupBy(
+      const groupingByCompany = groupBy(
         listOfTransactionsQuery.data.data.list,
         "provider"
       );
       if (groupingByCompany[event.company]) {
-        const groupingByEvent = _.groupBy(
+        const groupingByEvent = groupBy(
           groupingByCompany[event.company],
           "eventSelected"
         );
         const eventData = groupingByEvent[event.eventInfoDetail.eventName];
         if (eventData) {
-          const found = _.groupBy(eventData, "paymentIntent");
+          const found = groupBy(eventData, "paymentIntent");
           return found;
         }
         return [];
@@ -151,13 +152,13 @@ const ConfirmationPaymentPage = () => {
 
   const checkIfDeviceIsInUsed = () => {
     if (checkDeviceInUseInOtherCustomerInTheSameEventQuery.data) {
-      const groupingByCompany = _.groupBy(
+      const groupingByCompany = groupBy(
         checkDeviceInUseInOtherCustomerInTheSameEventQuery.data.data
           .receiversInventory,
         "provider"
       );
       if (groupingByCompany[event.company]) {
-        const groupingBYEvent = _.groupBy(
+        const groupingBYEvent = groupBy(
           groupingByCompany[event.company],
           "eventSelected"
         );
@@ -172,7 +173,7 @@ const ConfirmationPaymentPage = () => {
   checkIfDeviceIsInUsed();
   const createDevicesInPool = useMemo(async () => {
     if (checkIfDeviceIsInUsed().length > 0) {
-      const groupingByDevice = _.groupBy(checkIfDeviceIsInUsed(), "device");
+      const groupingByDevice = groupBy(checkIfDeviceIsInUsed(), "device");
       for (let data of deviceSelectionPaidTransaction) {
         if (groupingByDevice[data.serialNumber]) {
           await devitrakApi.patch(
