@@ -65,7 +65,7 @@ const ForgotPassword = ({ open, close }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer GHFUTYNCBVLSGHEKNF`,
+          Authorization: `Bearer ${import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN}`,
         },
       };
       let axiosData = {
@@ -82,7 +82,7 @@ const ForgotPassword = ({ open, close }) => {
         },
       };
       const url =
-        "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/staff/reset-password";
+        "https://api.garssoftwaresolutions.link/devitrak/notifications/staff/reset-password";
       const resp = await axios.post(url, axiosData, config);
 
       if (resp.data.statusCode >= 200 && resp.data.statusCode < 300) {
