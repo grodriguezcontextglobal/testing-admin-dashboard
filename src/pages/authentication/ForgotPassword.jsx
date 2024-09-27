@@ -65,7 +65,7 @@ const ForgotPassword = ({ open, close }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer GHFUTYNCBVLSGHEKNF`,
+          Authorization: `Bearer ${import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN}`,
         },
       };
       let axiosData = {
