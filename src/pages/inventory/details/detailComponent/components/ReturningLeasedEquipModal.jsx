@@ -9,7 +9,6 @@ import {
 import { Divider, Modal, notification, Space, Tooltip } from "antd";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
@@ -22,11 +21,13 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import "../../../../../styles/global/reactInput.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import { useSelector } from "react-redux";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../../styles/global/reactInput.css";
+import "../../../../events/newEventProcess/style/NewEventInfoSetup.css";
 
 const ReturningLeasedEquipModal = ({
   dataFound,
@@ -52,16 +53,27 @@ const ReturningLeasedEquipModal = ({
   };
 
   const emailNotificationAdmins = async () => {
-    const response = await devitrakApi.post("/nodemailer/leased-equip-staff-notification", {
-      subject: "Leased device returned in company records.",
-      message: `The device with serial number ${dataFound[0].serial_number} was returned for staff member ${user.name} ${user.lastName} at Date ${new Date().toString()} to original renter company.`,
-      company: user.companyData.company_name,
-      staff:[ ...user.companyData.employees.filter((element) => Number(element.role) < 2).map(ele => ele.user)],
-      contactInfo: {
-        staff: `${user.name} ${user.lastName}`, 
-        email: user.email,
+    const response = await devitrakApi.post(
+      "/nodemailer/leased-equip-staff-notification",
+      {
+        subject: "Leased device returned in company records.",
+        message: `The device with serial number ${
+          dataFound[0].serial_number
+        } was returned for staff member ${user.name} ${
+          user.lastName
+        } at Date ${new Date().toString()} to original renter company.`,
+        company: user.companyData.company_name,
+        staff: [
+          ...user.companyData.employees
+            .filter((element) => Number(element.role) < 2)
+            .map((ele) => ele.user),
+        ],
+        contactInfo: {
+          staff: `${user.name} ${user.lastName}`,
+          email: user.email,
+        },
       }
-    });
+    );
     if (response.data) {
       return openNotification("Item is returned to the company.");
     }
@@ -82,7 +94,7 @@ const ReturningLeasedEquipModal = ({
       );
       setLoadingStatus(false);
       if (response.data.ok) {
-        await emailNotificationAdmins()
+        await emailNotificationAdmins();
         setLoadingStatus(false);
         openNotification("Item is returned to the company.");
         return closeModal();
@@ -202,7 +214,6 @@ const ReturningLeasedEquipModal = ({
                 autoComplete="checking"
                 showTimeSelect
                 dateFormat="Pp"
-                minDate={new Date()}
                 selected={begin}
                 onChange={(date) => setBegin(date)}
                 placeholderText="Event start date"
