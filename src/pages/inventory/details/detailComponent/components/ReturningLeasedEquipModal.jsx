@@ -1,15 +1,17 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
+  Chip,
   Grid,
   InputLabel,
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Divider, Modal, notification, Space, Tooltip } from "antd";
+import { Divider, Modal, notification, Space, Button, Tooltip } from "antd";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
   QuestionIcon,
@@ -20,13 +22,13 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import "../../../../../styles/global/reactInput.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
-import { useSelector } from "react-redux";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../../../../styles/global/reactInput.css";
 import "../../../../events/newEventProcess/style/NewEventInfoSetup.css";
 
 const ReturningLeasedEquipModal = ({
@@ -111,6 +113,9 @@ const ReturningLeasedEquipModal = ({
     setValueObject("");
     return;
   };
+  const renderMoreInfoProps = (props) => {
+    return <p style={{ ...LightBlueButtonText, ...CenteringGrid }}>{props}</p>;
+  };
   const renderTitle = () => {
     return (
       <>
@@ -142,6 +147,11 @@ const ReturningLeasedEquipModal = ({
         </InputLabel>
       </>
     );
+  };
+
+  const handleRemovingMoreInfo = (index) => {
+    const filter = moreInfo.filter((element, i) => i !== index);
+    return setMoreInfo(filter);
   };
   return (
     <Modal
@@ -314,19 +324,16 @@ const ReturningLeasedEquipModal = ({
           >
             <Space size={[8, 16]} wrap>
               {moreInfo.length > 0 &&
-                moreInfo.map((item) => (
-                  <div
-                    style={{
-                      backgroundColor: "var(--basewhite)",
-                      padding: "2.5px 5px",
-                      margin: "0 1px",
-                      border: "solid 0.1px var(--gray900)",
-                      borderRadius: "8px",
-                    }}
+                moreInfo.map((item, index) => (
+                  <Chip
                     key={`${item.keyObject}-${item.valueObject}`}
-                  >
-                    {item.keyObject}:{item.valueObject}
-                  </div>
+                    label={renderMoreInfoProps(
+                      `${item.keyObject}:${item.valueObject}`
+                    )}
+                    style={{ ...LightBlueButton, ...CenteringGrid }}
+                    variant="outlined"
+                    onDelete={() => handleRemovingMoreInfo(index)}
+                  />
                 ))}
             </Space>
           </div>
@@ -352,6 +359,7 @@ const ReturningLeasedEquipModal = ({
                 disabled={loadingStatus}
                 style={{
                   ...GrayButton,
+                  ...CenteringGrid,
                   width: "100%",
                 }}
               >
@@ -380,22 +388,23 @@ const ReturningLeasedEquipModal = ({
             >
               <Button
                 disabled={loadingStatus}
-                type="submit"
-                style={{
-                  width: "100%",
-                  border: `1px solid ${
-                    loadingStatus
-                      ? "var(--disabled-blue-button)"
-                      : "var(--blue-dark-600)"
-                  }`,
-                  borderRadius: "8px",
-                  background: `${
-                    loadingStatus
-                      ? "var(--disabled-blue-button)"
-                      : "var(--blue-dark-600)"
-                  }`,
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                }}
+                htmlType="submit"
+                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+                // style={{
+                //   width: "100%",
+                //   border: `1px solid ${
+                //     loadingStatus
+                //       ? "var(--disabled-blue-button)"
+                //       : "var(--blue-dark-600)"
+                //   }`,
+                //   borderRadius: "8px",
+                //   background: `${
+                //     loadingStatus
+                //       ? "var(--disabled-blue-button)"
+                //       : "var(--blue-dark-600)"
+                //   }`,
+                //   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                // }}
               >
                 <Typography textTransform={"none"} style={BlueButtonText}>
                   Return item
