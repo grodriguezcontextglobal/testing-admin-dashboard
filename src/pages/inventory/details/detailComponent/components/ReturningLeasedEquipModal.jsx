@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { Divider, Modal, notification, Space, Tooltip } from "antd";
 import { useState } from "react";
-import ReactDatePicker from "react-datepicker";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -197,7 +197,7 @@ const ReturningLeasedEquipModal = ({
                   </Typography>
                 </Tooltip>
               </InputLabel>
-              <ReactDatePicker
+              <DatePicker
                 id="calender-event"
                 autoComplete="checking"
                 showTimeSelect
