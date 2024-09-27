@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   FormControl,
   FormLabel,
   Grid,
@@ -8,10 +7,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal, notification, Button } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -27,6 +26,7 @@ const schema = yup.object().shape({
 
 const ForgotPassword = ({ open, close }) => {
   const adminUserInfoRef = useRef(null);
+  const [loading, setLoading] = useState(false);
   const {
     register,
     watch,
@@ -59,13 +59,16 @@ const ForgotPassword = ({ open, close }) => {
   adminUserInfoRef.current = findStaff();
 
   const handleSubmitEmailLink = async (data) => {
+    setLoading(true);
     if (adminUserInfoRef.current) {
       const stampTime = `${new Date()}`;
       let config = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN}`,
+          Authorization: `Bearer ${
+            import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN
+          }`,
         },
       };
       let axiosData = {
@@ -82,17 +85,19 @@ const ForgotPassword = ({ open, close }) => {
         },
       };
       const url =
-        "https://api.garssoftwaresolutions.link/devitrak/notifications/staff/reset-password";
+        "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/staff/reset-password";
       const resp = await axios.post(url, axiosData, config);
 
       if (resp.data.statusCode >= 200 && resp.data.statusCode < 300) {
         openNotificationWithIcon("success", `Email sent to ${data.email}`);
+        setLoading(false);
         setTimeout(async () => {
           await handleClose();
         }, 1500);
       }
     } else {
       openNotificationWithIcon("error", "Email was not found!");
+      return setLoading(false);
     }
   };
   const handleClose = () => {
@@ -213,8 +218,8 @@ const ForgotPassword = ({ open, close }) => {
                     background: "var(--blue-dark-600, #155EEF)",
                     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                   }}
-                  variant="contained"
-                  type="submit"
+                  loading={loading}
+                  htmlType="submit"
                 >
                   <Typography
                     style={{
