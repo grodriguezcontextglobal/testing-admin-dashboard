@@ -12,24 +12,26 @@ import {
   onSelectEvent,
 } from "../../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
-// import Device from "./review/Device";
-// import Event from "./review/Event";
-// import Staff from "./review/Staff";
 import { nanoid } from "@reduxjs/toolkit";
-// import { formatDate } from "../../../inventory/utils/dateFormat";
 import "./blurring.css";
 import { formatDate } from "../../../inventory/utils/dateFormat";
 import { checkArray } from "../../../../components/utils/checkArray";
 import { groupBy } from "lodash";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import Service from "./review/service";
+import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
 const ReviewAndSubmitEvent = () => {
   const { subscription } = useSelector((state) => state.subscription);
-  const { eventInfoDetail, staff, deviceSetup, contactInfo } = useSelector(
-    (state) => state.event
-  );
+  const {
+    eventInfoDetail,
+    staff,
+    deviceSetup,
+    contactInfo,
+    extraServiceListSetup,
+  } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [buttonDisable, setButtonDisable] = useState(false);
@@ -42,7 +44,6 @@ const ReviewAndSubmitEvent = () => {
       duration: 0,
     });
   };
-
   let dataRef = [...staff.adminUser, ...staff.headsetAttendees];
   const checkAndAddRootAdministratorAsAdminStaff = () => {
     const checkDouble = new Map();
@@ -132,9 +133,9 @@ const ReviewAndSubmitEvent = () => {
   };
   const staffDetail = () => {
     const profileStaffList = {
-      adminUser: checkAndAddRootAdministratorAsAdminStaff()["Administrator"],
+      adminUser: checkAndAddRootAdministratorAsAdminStaff()["Administrator"] ?? [],
       headsetAttendees:
-        checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"],
+        checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"] ?? [],
     };
     return profileStaffList;
   };
@@ -150,6 +151,8 @@ const ReviewAndSubmitEvent = () => {
       },
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),
+      extraServicesNeeded: extraServiceListSetup.length > 0,
+      extraServices: extraServiceListSetup,
       active: true,
       contactInfo: contactInfo,
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
@@ -166,7 +169,7 @@ const ReviewAndSubmitEvent = () => {
     const address = eventInfoDetail.address.split(" ");
     const respo = await devitrakApi.post("/db_event/new_event", {
       event_name: eventInfoDetail.eventName,
-      venue_name: eventInfoDetail.eventName,
+      venue_name: eventInfoDetail.floor,
       street_address: address.slice(0, -3).toString().replaceAll(",", " "),
       city_address: address.at(-3),
       state_address: address.at(-2).replace(",", ""),
@@ -313,6 +316,7 @@ const ReviewAndSubmitEvent = () => {
           <Event />
           <Staff />
           <Device />
+          <Service />
           <Button
             type="primary"
             icon={() => Loading}
@@ -357,6 +361,9 @@ const ReviewAndSubmitEvent = () => {
             </Typography>
           </Button>
         </Grid>
+        {loadingStatus && (
+          <ModalCreatingEventInProgress openEndingEventModal={loadingStatus} />
+        )}
       </Grid>
     </Suspense>
   );
