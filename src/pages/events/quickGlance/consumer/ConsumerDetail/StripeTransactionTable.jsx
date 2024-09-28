@@ -14,12 +14,12 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-table.css";
+const { PropTypes } = pkg;
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
@@ -127,6 +127,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   };
   //*nested table starts here
   //!nested table ends
+  const cellStyle = {
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  };
 
   const columns = [
     {
@@ -179,50 +184,77 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       align: "right",
       fixed: "right",
       render: (_, record) => (
+        console.log(record),
         <Grid container spacing={1}>
           <Grid
             item
             xs={12}
             sm={12}
-            md={4}
+            md={12}
             display={"flex"}
+            justifyContent={"flex-end"}
             alignItems={"center"}
           >
-            {record.paymentIntent?.length > 16 && (
-              <Popconfirm
-                title="Releasing deposit? This action can not be reversed."
-                onConfirm={() => {
-                  setOpenCancelingDepositModal(true);
-                  handleRecord(record);
-                }}
-              >
-                <button
-                  disabled={!record.active}
+            {record.paymentIntent?.length > 16 &&
+              record.device[0].deviceNeeded < 1 && (
+                <span
                   style={{
-                    ...CenteringGrid,
-                    width: "100%",
-                    border: `${
-                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
-                    }`,
-                    borderRadius: "8px",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    padding: "5px",
-                    background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
+                    ...cellStyle,
+                    borderRadius: "16px",
+                    justifyContent: "center",
+                    display: "flex",
+                    padding: "2px 8px",
+                    alignItems: "center",
+                    background: `${"var(--success-50, #ECFDF3)"}`,
+                    width: "fit-content",
                   }}
                 >
                   <Typography
-                    textTransform={"none"}
+                    style={{...Subtitle, color: "var(--success-700, #027A48)"}}
+                    textTransform={"capitalize"}
+                  >
+                    {String(record.device[0].deviceType).split(" ").toLocaleString().replaceAll(",", " ")}
+                  </Typography>
+                </span>
+              )}
+            {record.paymentIntent?.length > 16 &&
+              record.device[0].deviceNeeded > 0 && (
+                <Popconfirm
+                  title="Releasing deposit? This action can not be reversed."
+                  onConfirm={() => {
+                    setOpenCancelingDepositModal(true);
+                    handleRecord(record);
+                  }}
+                >
+                  <button
+                    disabled={!record.active}
                     style={{
-                      ...BlueButtonText,
-                      cursor: "pointer",
-                      color: "#fff",
+                      ...CenteringGrid,
+                      width: "100%",
+                      border: `${
+                        !record.active
+                          ? "1px solid #ffbbb6"
+                          : "1px solid #B42318"
+                      }`,
+                      borderRadius: "8px",
+                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                      padding: "5px",
+                      background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
                     }}
                   >
-                    Release
-                  </Typography>
-                </button>
-              </Popconfirm>
-            )}
+                    <Typography
+                      textTransform={"none"}
+                      style={{
+                        ...BlueButtonText,
+                        cursor: "pointer",
+                        color: "#fff",
+                      }}
+                    >
+                      Release
+                    </Typography>
+                  </button>
+                </Popconfirm>
+              )}
           </Grid>
           <Grid
             item
@@ -232,41 +264,44 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
             display={"flex"}
             alignItems={"center"}
           >
-            {record.paymentIntent?.length > 16 && (
-              <Popconfirm
-                title="Capturing deposit? This action can not be reversed."
-                onConfirm={() => {
-                  setOpenCapturingDepositModal(true);
-                  handleRecord(record);
-                }}
-              >
-                <button
-                  disabled={!record.active}
-                  style={{
-                    ...CenteringGrid,
-                    width: "100%",
-                    border: `${
-                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
-                    }`,
-                    borderRadius: "8px",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    padding: "5px",
-                    background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
+            {record.paymentIntent?.length > 16 &&
+              record.device[0].deviceNeeded > 0 && (
+                <Popconfirm
+                  title="Capturing deposit? This action can not be reversed."
+                  onConfirm={() => {
+                    setOpenCapturingDepositModal(true);
+                    handleRecord(record);
                   }}
                 >
-                  <Typography
-                    textTransform={"none"}
+                  <button
+                    disabled={!record.active}
                     style={{
-                      ...BlueButtonText,
-                      cursor: "pointer",
-                      color: "#fff",
+                      ...CenteringGrid,
+                      width: "100%",
+                      border: `${
+                        !record.active
+                          ? "1px solid #ffbbb6"
+                          : "1px solid #B42318"
+                      }`,
+                      borderRadius: "8px",
+                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                      padding: "5px",
+                      background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
                     }}
                   >
-                    Capture
-                  </Typography>
-                </button>
-              </Popconfirm>
-            )}
+                    <Typography
+                      textTransform={"none"}
+                      style={{
+                        ...BlueButtonText,
+                        cursor: "pointer",
+                        color: "#fff",
+                      }}
+                    >
+                      Capture
+                    </Typography>
+                  </button>
+                </Popconfirm>
+              )}
           </Grid>
           <Grid
             item
