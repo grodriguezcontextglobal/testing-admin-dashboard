@@ -34,7 +34,7 @@ import Loading from "../../../../components/animation/Loading";
 // import AddingEventCreated from "../staff/components/AddingEventCreated";
 // import FormDeviceTrackingMethod from "./newItemSetup/FormDeviceTrackingMethod";
 const AddingEventCreated = lazy(() =>
-  import("./newItemSetup/FormDeviceTrackingMethod")
+  import("../staff/components/AddingEventCreated")
 );
 const FormDeviceTrackingMethod = lazy(() =>
   import("./newItemSetup/FormDeviceTrackingMethod")
