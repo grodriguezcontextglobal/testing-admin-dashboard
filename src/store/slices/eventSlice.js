@@ -1,5 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
-
+import { createSlice } from "@reduxjs/toolkit";
 
 const eventSlice = createSlice({
   name: "event",
@@ -34,19 +33,21 @@ const eventSlice = createSlice({
       merchant: false,
       dateBegin: new Date().toUTCString(),
       dateEnd: new Date().toUTCString(),
-  },
+    },
     staff: {
       adminUser: [],
       headsetAttendees: [],
     },
     deviceSetup: [],
+    extraServiceNeeded: false,
+    extraServiceListSetup: [],
     contactInfo: undefined,
     qrCodeLink: undefined,
     eventsPerAdmin: {
       adminUser: [],
       headsetAttendees: [],
     },
-    existingDevicesInDBToBeUpdatedAfterSelectedInEvent: []
+    existingDevicesInDBToBeUpdatedAfterSelectedInEvent: [],
   },
   reducers: {
     onSelectEvent: (state, { payload }) => {
@@ -66,6 +67,13 @@ const eventSlice = createSlice({
     },
     onAddDeviceSetup: (state, { payload }) => {
       state.deviceSetup = payload;
+    },
+    onAddExtraServiceNeeded: (state, { payload }) => {
+      state.extraServiceNeeded = payload;
+    },
+
+    onAddExtraServiceListSetup: (state, { payload }) => {
+      state.extraServiceListSetup = payload;
     },
     onAddContactInfo: (state, { payload }) => {
       state.contactInfo = payload;
@@ -96,14 +104,18 @@ const eventSlice = createSlice({
         headsetAttendees: [],
       };
       state.deviceSetup = [];
+      state.extraServiceNeeded = false;
+      state.extraServiceListSetup = [];
       state.contactInfo = undefined;
       state.qrCodeLink = undefined;
       state.eventsPerAdmin = [];
     },
-    onAddExistingDevicesInDBToBeUpdatedInDBAfterBeingSelectedInEvent: (state, { payload }) => {
+    onAddExistingDevicesInDBToBeUpdatedInDBAfterBeingSelectedInEvent: (
+      state,
+      { payload }
+    ) => {
       state.existingDevicesInDBToBeUpdatedAfterSelectedInEvent = payload;
     },
-
   },
 });
 
@@ -120,7 +132,9 @@ export const {
   onAddQRCodeLink,
   onAddListEventPermitPerAdmin,
   onResetEventInfo,
-  onAddExistingDevicesInDBToBeUpdatedInDBAfterBeingSelectedInEvent
+  onAddExistingDevicesInDBToBeUpdatedInDBAfterBeingSelectedInEvent,
+  onAddExtraServiceNeeded,
+  onAddExtraServiceListSetup,
 } = eventSlice.actions;
 
 export default eventSlice.reducer;
