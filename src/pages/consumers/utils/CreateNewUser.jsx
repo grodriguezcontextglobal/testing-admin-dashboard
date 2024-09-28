@@ -25,6 +25,8 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-select.css";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import "react-phone-number-input/style.css";
+
 const schema = yup
   .object({
     firstName: yup.string().required("first name is required"),
