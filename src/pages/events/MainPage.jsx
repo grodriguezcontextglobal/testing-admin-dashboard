@@ -21,10 +21,6 @@ import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
-// import CardEventDisplay from "./components/CardEventDisplay";
-// import PastEventsTable from "./components/PastEventsTable";
-// import BannerMsg from "./utils/BannerMsg";
-// import BannerNoEventStaffOnly from "../../components/utils/BannerNoEventStaffOnly";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
 const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
 const BannerMsg = lazy(() => import("./utils/BannerMsg"));
@@ -105,11 +101,8 @@ const MainPage = () => {
     dataPerCompany();
     const renderingDataBasedOnStaffAndActiveEvent = () => {
       const companyData = dataPerCompany();
-
       if (!companyData) return [];
-
       const groupByActive = groupBy(companyData, "active");
-
       const filterEventsByEmail = (events, key = null) => {
         if (
           user.companyData.employees.filter(
@@ -118,19 +111,22 @@ const MainPage = () => {
         ) {
           return events ?? [];
         }
-        if (!key) {
+        if (key) {
           return (
-            events?.filter((event) =>
-              event.staff[key].some((member) => member.email === user.email)
-            ) || []
+            events?.filter((event) =>{
+              event?.staff[key]?.some((member) => member.email === user.email)
+            }) || []
           );
         }
         return (
-          events?.filter((event) =>
-            [...event.staff.adminUser, ...event.staff.headsetAttendees].some(
+          events?.filter((event) => {
+          let adminUser = event.staff.adminUser;
+          let headsetAttendees = event.staff.headsetAttendees ?? [];
+          let staff = [...adminUser, ...headsetAttendees];  
+            return staff.some(
               (member) => member.email === user.email
             )
-          ) || []
+          }) || []
         );
       };
       const activeAdminEvents = filterEventsByEmail(groupByActive.true);
@@ -146,7 +142,6 @@ const MainPage = () => {
           completed: inactiveAdminEvents,
         })
       );
-
       const combinedEvents = [...activeEvents, ...inactiveAdminEvents];
       return combinedEvents;
     };
