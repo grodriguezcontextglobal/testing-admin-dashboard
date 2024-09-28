@@ -157,6 +157,9 @@ const MainPageEventCreation = lazy(() =>
 const MainProfileSetting = lazy(() =>
   import("../../pages/Profile/MainProfileSettings")
 );
+const ServicePaymentConfirmation = lazy(() =>
+  import("../../pages/payment/ServicePaymentConfirmation")
+);
 const ErrorPage = lazy(() => import("../../pages/error/ErrorLandingPage"));
 const AuthRoutes = () => {
   const navbarRef = useRef();
@@ -194,6 +197,10 @@ const AuthRoutes = () => {
                   element={<TransactionsDetails />}
                 />
                 <Route path="payment-confirmed" element={<Confirmation />} />
+                <Route
+                  path="payment-service-confirmation"
+                  element={<ServicePaymentConfirmation />}
+                />
                 <Route path="collect-lost-fee/cash-method" element={<Cash />} />
                 <Route
                   path="collect-lost-fee/credit-card-method"

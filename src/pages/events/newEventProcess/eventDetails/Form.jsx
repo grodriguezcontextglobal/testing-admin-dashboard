@@ -440,7 +440,7 @@ const Form = () => {
           style={{
             width: "100%",
             textAlign: "left",
-            marginBottom: "0.5rem",
+            margin: "1.5rem 0 0.5rem",
           }}
         >
           <Typography style={InputLabelStyle}>Date of the event</Typography>

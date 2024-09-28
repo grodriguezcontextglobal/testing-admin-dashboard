@@ -2,7 +2,7 @@ import { Avatar, Table } from "antd"
 import "../../../styles/global/ant-table.css"
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { onAddEventData, onAddQRCodeLink, onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
+import { onAddEventData, onAddExtraServiceListSetup, onAddExtraServiceNeeded, onAddQRCodeLink, onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { RightNarrowInCircle } from "../../../components/icons/Icons";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -42,6 +42,9 @@ const PastEventsTable = ({ events }) => {
                 )}&company=${encodeURI(props.company)}`
             )
         );
+        dispatch(onAddExtraServiceListSetup(props.extraServiceListSetup));
+        dispatch(onAddExtraServiceNeeded(props.extraServiceNeeded));
+  
         navigate("/events/event-quickglance");
     };
     // const quickGlance = (props) => {
