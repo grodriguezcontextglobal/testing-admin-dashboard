@@ -37,7 +37,6 @@ const MainPage = () => {
       devitrakApi.post("/event/event-list", {
         company: user.company,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const companyAccountStripeQuery = useQuery({
@@ -113,23 +112,22 @@ const MainPage = () => {
         }
         if (key) {
           return (
-            events?.filter((event) =>{
-              event?.staff[key]?.some((member) => member.email === user.email)
-            }) || []
+            events?.filter((event) => {
+              event?.staff[key]?.some((member) => member.email === user.email);
+            })
           );
         }
         return (
           events?.filter((event) => {
-          let adminUser = event.staff.adminUser;
-          let headsetAttendees = event.staff.headsetAttendees ?? [];
-          let staff = [...adminUser, ...headsetAttendees];  
-            return staff.some(
-              (member) => member.email === user.email
-            )
-          }) || []
+            let adminUser = event.staff.adminUser;
+            let headsetAttendees = event.staff.headsetAttendees ?? [];
+            let staff = [...adminUser, ...headsetAttendees];
+            return staff.some((member) => member.email === user.email);
+          })
         );
       };
-      const activeAdminEvents = filterEventsByEmail(groupByActive.true);
+
+      const activeAdminEvents = filterEventsByEmail([...groupByActive.true, ...groupByActive.false]);
       const activeEvents = [...activeAdminEvents];
       const inactiveAdminEvents = filterEventsByEmail(
         groupByActive.false,
