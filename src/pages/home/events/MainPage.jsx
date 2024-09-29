@@ -9,7 +9,7 @@ import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
 import { lazy, Suspense, useEffect } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-const CardEventDisplay = lazy(() => import("../../events/utils/BannerMsg"));
+const CardEventDisplay = lazy(() => import("../../events/components/CardEventDisplay"));
 const BannerMsg = lazy(() => import("../../events/utils/BannerMsg"));
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -47,53 +47,46 @@ const MainPage = () => {
 
   if (eventQuery.data) {
     const renderingDataBasedOnStaffAndActiveEvent = () => {
-      let checking = [];
-      if (dataPerCompany()?.length > 0) {
-        const group_by_active = groupBy(dataPerCompany(), "active");
-        if (group_by_active[true]) {
-          const activeAndAdminMember = group_by_active.true?.filter(
-            (adminMember) =>
-              adminMember.staff?.adminUser?.find(
-                (member) => member.email === user.email
-              )
-          );
-          if (activeAndAdminMember) {
-            checking = [...checking, ...activeAndAdminMember];
-          } else {
-            checking = [...checking];
-          }
-
-          const activeAndHeadsetAttendeesMember = group_by_active.true?.filter(
-            (adminMember) =>
-              adminMember.staff.headsetAttendees?.find(
-                (member) => member.email === user?.email
-              )
-          );
-          if (activeAndHeadsetAttendeesMember) {
-            checking = [...checking, ...activeAndHeadsetAttendeesMember];
-          } else {
-            checking = [...checking];
-          }
+      const companyData = dataPerCompany();
+      if (!companyData) return [];
+      const groupByActive = groupBy(companyData, "active");
+      const filterEventsByEmail = (events, key = null) => {
+        if (
+          user.companyData.employees.filter(
+            (employee) => employee.user === user.email
+          )[0].role < 1
+        ) {
+          return events ?? [];
         }
-        const activeEventAndMembers = [...checking];
-
-        if (group_by_active[false]) {
-          const inactiveButAdmin = group_by_active.false?.filter(
-            (adminMember) =>
-              adminMember.staff.adminUser?.find(
-                (member) => member.email === user.email
-              )
-          );
-
-          dispatch(
-            onAddListEventPermitPerAdmin({
-              active: activeEventAndMembers,
-              completed: inactiveButAdmin,
-            })
-          );
+        if (key) {
+          return events?.filter((event) => {
+            event?.staff[key]?.some((member) => member.email === user.email);
+          });
         }
-        return activeEventAndMembers;
-      }
+        return events?.filter((event) => {
+          let adminUser = event.staff.adminUser;
+          let headsetAttendees = event.staff.headsetAttendees ?? [];
+          let staff = [...adminUser, ...headsetAttendees];
+          return staff.some((member) => member.email === user.email);
+        });
+      };
+      const active = groupByActive.true ?? [];
+      const activeAdminEvents = filterEventsByEmail([
+        ...active,
+      ]);
+      const activeEvents = [...activeAdminEvents];
+      const inactiveAdminEvents = filterEventsByEmail(
+        groupByActive.false,
+        "adminUser"
+      );
+
+      dispatch(
+        onAddListEventPermitPerAdmin({
+          active: activeEvents,
+          completed: inactiveAdminEvents,
+        })
+      );
+      return activeEvents;
     };
     renderingDataBasedOnStaffAndActiveEvent();
 
@@ -123,7 +116,7 @@ const MainPage = () => {
         }
       >
         <Grid container>
-          {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
+          {renderingDataBasedOnStaffAndActiveEvent().length > 0 ? (
             dataToBeRenderedInUpcomingSection()?.map((event) => {
               return (
                 <Grid
