@@ -126,8 +126,21 @@ const MainPage = () => {
     return Array.from(result);
   };
   checkUserAssignedCompanies();
+  const leasedEquipmentNotificationBody = () => {
+    return (
+      <p>
+        Please note that the company has&nbsp;<span style={{ textDecoration: "underline", fontWeight:500 }}>pending leased equipment to be returned</span>, please go to the inventory section to view the list of leased itemsand their return dates to avoid any inconvenience.
+      </p>
+    );
+  };
   return (
-    <Suspense fallback={<div style={CenteringGrid}><Loading /></div>}>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       <Grid
         alignSelf={"flex-start"}
         style={{
@@ -168,9 +181,10 @@ const MainPage = () => {
             lg={12}
           >
             <BannerNotificationTemplate
+              category={1}
               setNotificationStatus={setLeasedEquipmentNotificationStatus}
               title={"Reminder from Devitrak!"}
-              body={`Please note that the company has pending leased equipment to be returned, please go to the inventory section to view the list of leased items and their return dates to avoid any inconvenience.`}
+              body={leasedEquipmentNotificationBody()}
             />
           </Grid>
         )}
