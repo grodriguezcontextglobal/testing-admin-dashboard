@@ -129,7 +129,7 @@ const MainPage = () => {
   const leasedEquipmentNotificationBody = () => {
     return (
       <p>
-        Please note that the company has&nbsp;<span style={{ textDecoration: "underline", fontWeight:500 }}>pending leased equipment to be returned</span>, please go to the inventory section to view the list of leased itemsand their return dates to avoid any inconvenience.
+        Please be aware that there is&nbsp;<span style={{ textDecoration: "underline", fontWeight:500 }}>leased equipment pending return.</span> Kindly visit the inventory section to view the list of leased items and their return dates to prevent any inconvenience.
       </p>
     );
   };
