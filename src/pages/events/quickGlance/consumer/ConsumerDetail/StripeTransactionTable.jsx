@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Popconfirm, Table, Tooltip } from "antd";
+import { Popconfirm, Table, Tooltip, Button } from "antd";
 import pkg from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,6 +20,8 @@ import ExpandedRowInTable from "./ExpandedRowInTable";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { DangerButton } from "../../../../../styles/global/DangerButton";
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
@@ -184,13 +186,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       align: "right",
       fixed: "right",
       render: (_, record) => (
-        console.log(record),
         <Grid container spacing={1}>
           <Grid
             item
             xs={12}
             sm={12}
-            md={12}
+            md={record.device[0].deviceNeeded < 1 ? 12 : 4}
             display={"flex"}
             justifyContent={"flex-end"}
             alignItems={"center"}
@@ -210,10 +211,16 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   }}
                 >
                   <Typography
-                    style={{...Subtitle, color: "var(--success-700, #027A48)"}}
+                    style={{
+                      ...Subtitle,
+                      color: "var(--success-700, #027A48)",
+                    }}
                     textTransform={"capitalize"}
                   >
-                    {String(record.device[0].deviceType).split(" ").toLocaleString().replaceAll(",", " ")}
+                    {String(record.device[0].deviceType)
+                      .split(" ")
+                      .toLocaleString()
+                      .replaceAll(",", " ")}
                   </Typography>
                 </span>
               )}
@@ -226,33 +233,33 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     handleRecord(record);
                   }}
                 >
-                  <button
+                  <Button
                     disabled={!record.active}
                     style={{
                       ...CenteringGrid,
+                      ...DangerButton,
                       width: "100%",
                       border: `${
                         !record.active
-                          ? "1px solid #ffbbb6"
-                          : "1px solid #B42318"
+                          ? "1px solid var(--disabled-danger-button)"
+                          : DangerButton.border
                       }`,
-                      borderRadius: "8px",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                      padding: "5px",
-                      background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
+                      background: `${
+                        !record.active
+                          ? "var(--disabled-danger-button)"
+                          : DangerButton.background
+                      }`,
                     }}
                   >
                     <Typography
                       textTransform={"none"}
                       style={{
                         ...BlueButtonText,
-                        cursor: "pointer",
-                        color: "#fff",
                       }}
                     >
                       Release
                     </Typography>
-                  </button>
+                  </Button>
                 </Popconfirm>
               )}
           </Grid>
@@ -273,33 +280,23 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     handleRecord(record);
                   }}
                 >
-                  <button
+                  <Button
                     disabled={!record.active}
                     style={{
                       ...CenteringGrid,
+                      ...BlueButton,
                       width: "100%",
-                      border: `${
+                      background: `${
                         !record.active
-                          ? "1px solid #ffbbb6"
-                          : "1px solid #B42318"
+                          ? "var(--disabled-blue-button)"
+                          : BlueButton.background
                       }`,
-                      borderRadius: "8px",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                      padding: "5px",
-                      background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
                     }}
                   >
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        ...BlueButtonText,
-                        cursor: "pointer",
-                        color: "#fff",
-                      }}
-                    >
+                    <Typography textTransform={"none"} style={BlueButtonText}>
                       Capture
                     </Typography>
-                  </button>
+                  </Button>
                 </Popconfirm>
               )}
           </Grid>
@@ -313,20 +310,24 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           >
             {record.device[0].deviceNeeded > 4 && (
               <Tooltip title="This option is to return bulk of devices">
-                <button
+                <Button
                   onClick={() => handleReturnDeviceInBulk(record)}
                   style={{
                     ...CenteringGrid,
+                    ...DangerButton,
                     width: "100%",
                     border: `${
-                      !record.active ? "1px solid #ffbbb6" : "1px solid #B42318"
+                      !record.active
+                        ? "1px solid var(--disabled-danger-button)"
+                        : DangerButton.border
                     }`,
-                    borderRadius: "8px",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    padding: "5px",
-                    background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
+                    background: `${
+                      !record.active
+                        ? "var(--disabled-danger-button)"
+                        : DangerButton.background
+                    }`,
                   }}
-                >
+              >
                   <Typography
                     textTransform={"none"}
                     style={{
@@ -337,7 +338,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   >
                     Bulk
                   </Typography>
-                </button>
+                </Button>
               </Tooltip>
             )}
           </Grid>
@@ -412,3 +413,13 @@ export default StripeTransactionTable;
 StripeTransactionTable.propTypes = {
   searchValue: PropTypes.string,
 };
+
+// borderRadius: "8px",
+// boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+// padding: "5px",
+// border: `${
+//   !record.active
+//     ? "1px solid #ffbbb6"
+//     : "1px solid #B42318"
+// }`,
+// background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
