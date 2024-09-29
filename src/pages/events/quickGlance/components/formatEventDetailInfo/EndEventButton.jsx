@@ -111,10 +111,11 @@ const EndEventButton = () => {
       const checkRole = employeesCompany.findIndex(
         (element) => element.user === data.email
       );
-      if (Number(employeesCompany[checkRole].role) === 4) {
+      if (Number(employeesCompany[checkRole].role) > 3) {
         employeesCompany[checkRole].active = false;
       }
     }
+    console.log(employeesCompany);
     await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
       employees: employeesCompany,
     });
