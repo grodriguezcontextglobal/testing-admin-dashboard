@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { XLSXIcon } from "../../../../components/icons/Icons";
+import { XLSXIcon } from "../../../../components/icons/XLSXIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 const SpreadSheet = () => {

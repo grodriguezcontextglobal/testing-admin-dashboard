@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { Table } from "antd";
-import { RightNarrowInCircle } from "../../../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useSelector } from "react-redux";

@@ -78,7 +78,7 @@ export const ReplaceDevice = ({ refetching }) => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id,
+        company: user.companyData.id,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }),
@@ -160,7 +160,7 @@ export const ReplaceDevice = ({ refetching }) => {
       "/receiver/receiver-pool-list",
       {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id,
+        company: user.companyData.id,
         device: props.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }
@@ -338,7 +338,7 @@ export const ReplaceDevice = ({ refetching }) => {
 // //*check if device to assign is already assigned to some consumer in event
 // const checkDeviceIsAssignedInEvent = () => {
 //   if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//     const deviceCheck = _.groupBy(
+//     const deviceCheck = groupBy(
 //       sortAndFilterDeviceListPerCompanyAndEvent(),
 //       "device"
 //     );
@@ -370,7 +370,7 @@ export const ReplaceDevice = ({ refetching }) => {
 // //*check if serial number to assign has record in pool
 // const retrieveDeviceDataInPoolToUpdateIt = () => {
 //   if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//     const deviceCheck = _.groupBy(
+//     const deviceCheck = groupBy(
 //       sortAndFilterDeviceListPerCompanyAndEvent(),
 //       "device"
 //     );
@@ -401,7 +401,7 @@ export const ReplaceDevice = ({ refetching }) => {
 
 // //*finding current device to report with defect in DB
 // const currentDeviceToChangeInPool = () => {
-//   const groupingByDevice = _.groupBy(
+//   const groupingByDevice = groupBy(
 //     sortAndFilterDeviceListPerCompanyAndEvent(),
 //     "device"
 //   );

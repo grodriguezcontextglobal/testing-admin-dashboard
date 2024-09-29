@@ -1,6 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { Space, Tag } from "antd";
-import { CheckIcon } from "../../../../../components/icons/Icons";
+import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const SelectedItemsRendered = ({selectedItem, removeItemSelected}) => {

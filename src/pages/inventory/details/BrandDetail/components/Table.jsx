@@ -7,10 +7,8 @@ import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import {
-  GeneralDeviceIcon,
-  RightNarrowInCircle,
-} from "../../../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";

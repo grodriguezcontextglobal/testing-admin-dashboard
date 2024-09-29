@@ -2,10 +2,9 @@ import { Modal } from "antd";
 import Returning from "../../../../../../components/animation/ReturningAnimation";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
-import {
-  DevitrakLogo,
-  DevitrakName,
-} from "../../../../../../components/icons/Icons";
+import { DevitrakLogo } from "../../../../../../components/icons/DevitrakLogo";
+import { DevitrakName } from "../../../../../../components/icons/DevitrakName";
+
 const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
@@ -50,7 +49,8 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
             padding: "1rem",
           }}
         >
-          <DevitrakLogo /><DevitrakName />
+          <DevitrakLogo />
+          <DevitrakName />
         </div>
         <div
           style={{
@@ -79,9 +79,7 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
             borderRadius: "0 0 8px 8px",
             padding: "1rem",
           }}
-        >
-          
-        </div>
+        ></div>
       </div>
     </Modal>
   );

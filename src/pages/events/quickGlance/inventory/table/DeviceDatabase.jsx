@@ -325,7 +325,6 @@ const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
       onRow={(record) => {
         return {
           onClick: () => {
-            console.log(record);
             dispatch(onAddDeviceToDisplayInQuickGlance(record));
             navigate("/device-quick-glance");
           },

@@ -27,6 +27,7 @@ const TableDetailPerDevice = ({ searching }) => {
   }, []);
 
   const [defectedDevicesList, setDefectedDevicesList] = useState([]);
+  
   const defecedDeviceTracking = useCallback(async () => {
     const respo = await devitrakApi.post(
       "/receiver/list-receiver-returned-issue",

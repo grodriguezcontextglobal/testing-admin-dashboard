@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { GeneralDeviceIcon } from "../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {

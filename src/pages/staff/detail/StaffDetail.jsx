@@ -3,13 +3,11 @@ import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import {
-  ChangeRoleStaffIcon,
-  RectanglePlusIcon,
-  UpdateIcon,
-  UpdatePasswordIcon,
-  WhiteCalendarIcon,
-} from "../../../components/icons/Icons";
+import { ChangeRoleStaffIcon } from "../../../components/icons/ChangeRoleStaffIcon";
+import { RectanglePlusIcon } from "../../../components/icons/RectanglePlusIcon";
+import { UpdateIcon } from "../../../components/icons/UpdateIcon";
+import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
+import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -212,7 +210,8 @@ const StaffDetail = () => {
                   style={{
                     ...GrayButton,
                     display: `${
-                      (option.id === 2 && user.email !== profile.user) || (option.id === 5 && user.email === profile.user)
+                      (option.id === 2 && user.email !== profile.user) ||
+                      (option.id === 5 && user.email === profile.user)
                         ? "none"
                         : "flex"
                     }`,

@@ -28,10 +28,8 @@ import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFon
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import {
-  QuestionIcon,
-  UploadIcon,
-} from "../../../../../components/icons/Icons";
+import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
+import { UploadIcon } from "../../../../../components/icons/UploadIcon";
 import { Icon } from "@iconify/react";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
@@ -218,16 +216,13 @@ const EditItemModal = ({
   if (itemsInInventoryQuery.data) {
     const savingNewItem = async (data) => {
       setLoadingStatus(true);
-      if (
-        String(valueSelection).toLowerCase() === "rent" &&
-        (!returningDate)
-      ) {
+      if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
         return openNotificationWithIcon(
           "warning",
           "As ownership was set as 'Rent', returning date must be provided."
         );
       }
-  
+
       try {
         let base64;
         if (data.photo.length > 0 && data.photo[0].size > 1048576) {

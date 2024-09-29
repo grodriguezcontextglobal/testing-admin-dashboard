@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import DeviceDatabase from "./table/DeviceDatabase";
 import { Title } from "../../../../styles/global/Title";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { MagnifyIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 
 const DevicesInformationSection = (dataToRenderInComponent) => {
   const { register, watch } = useForm();

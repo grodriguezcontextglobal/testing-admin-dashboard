@@ -8,12 +8,10 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import {
-  DownNarrow,
-  PlusIcon,
-  UpNarrowIcon,
-  WhitePlusIcon,
-} from "../../../components/icons/Icons";
+import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { PlusIcon } from "../../../components/icons/PlusIcon";
+import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";

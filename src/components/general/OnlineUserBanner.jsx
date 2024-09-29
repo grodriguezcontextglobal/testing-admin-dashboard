@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material"
-import { PointFilled } from "../icons/Icons"
+import { PointFilled } from "../icons/PointFilled"
 
 const OnlineUserBanner = () => {
     return (

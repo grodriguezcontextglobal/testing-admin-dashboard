@@ -7,10 +7,8 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import {
-  GeneralDeviceIcon,
-  RightNarrowInCircle,
-} from "../../../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const TableDeviceCategory = ({ searchItem, referenceData }) => {

@@ -7,7 +7,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import { CardStyle } from "../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GeneralDeviceIcon } from "../../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../../components/icons/GeneralDeviceIcon";
 
 const DeviceInformationDetail = ({ dataFound }) => {
   const { user } = useSelector((state) => state.admin);

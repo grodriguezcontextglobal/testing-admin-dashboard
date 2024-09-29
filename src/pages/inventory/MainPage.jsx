@@ -6,11 +6,9 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import {
-  BluePlusIcon,
-  MagnifyIcon,
-  WhiteCirclePlusIcon,
-} from "../../components/icons/Icons";
+import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
+import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
+import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import Loading from "../../components/animation/Loading";
 import "../../styles/global/ant-select.css";

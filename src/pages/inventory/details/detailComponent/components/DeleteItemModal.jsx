@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { QuestionIcon } from "../../../../../components/icons/Icons";
+import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";

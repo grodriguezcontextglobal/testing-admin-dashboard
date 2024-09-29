@@ -1,6 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import { BluePlusIcon, WhitePlusIcon } from "../../components/icons/Icons";
+import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
+import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";

@@ -1,7 +1,6 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
-
-import { MagnifyIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Title } from "../../../../styles/global/Title";
 import StaffTable from "./table/StaffTable";

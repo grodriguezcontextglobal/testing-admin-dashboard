@@ -1,7 +1,7 @@
 import { Button, Checkbox } from "antd";
 import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/Icons";
+import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";

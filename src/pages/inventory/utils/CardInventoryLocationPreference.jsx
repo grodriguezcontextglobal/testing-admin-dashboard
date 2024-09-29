@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
-import { RightNarrowInCircle } from "../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { useNavigate } from "react-router-dom";
 

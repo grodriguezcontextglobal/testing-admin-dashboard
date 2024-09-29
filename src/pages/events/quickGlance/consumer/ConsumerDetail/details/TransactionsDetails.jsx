@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { MagnifyIcon } from "../../../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../../../components/icons/MagnifyIcon";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import StripeTransactionTable from "../StripeTransactionTable";

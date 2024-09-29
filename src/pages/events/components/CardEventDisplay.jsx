@@ -4,7 +4,8 @@ import { Avatar, Card, Tooltip } from "antd";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { PointFilled, RightBlueNarrow } from "../../../components/icons/Icons";
+import { PointFilled } from "../../../components/icons/PointFilled";
+import { RightBlueNarrow } from "../../../components/icons/RightBlueNarrow";
 import {
   onAddEventData,
   onAddExtraServiceListSetup,

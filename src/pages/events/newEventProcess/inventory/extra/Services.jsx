@@ -9,7 +9,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFon
 import { Button } from "antd";
 import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/Icons";
+import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";

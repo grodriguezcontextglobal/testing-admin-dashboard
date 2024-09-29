@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
-import { PlusIcon } from "../../../../components/icons/Icons";
+import { PlusIcon } from "../../../../components/icons/PlusIcon";
 import {
   onAddDeviceSetup,
   onAddExtraServiceListSetup,

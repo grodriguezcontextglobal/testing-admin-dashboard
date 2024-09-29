@@ -68,7 +68,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
     );
 
     return groupByEmail[watch("email")];
-  }, [listAdminUsers?.data?.data?.adminUsers, watch("email"), _]); //eslint-disable-line react-hooks/exhaustive-deps
+  }, [listAdminUsers?.data?.data?.adminUsers, watch("email")]); //eslint-disable-line react-hooks/exhaustive-deps
 
   adminUserInfoRef.current = findStaff();
 

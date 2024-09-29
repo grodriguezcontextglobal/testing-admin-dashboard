@@ -15,10 +15,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import {
-  QuestionIcon,
-  UploadIcon,
-} from "../../../../../components/icons/Icons";
+import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
+import { UploadIcon } from "../../../../../components/icons/UploadIcon";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";

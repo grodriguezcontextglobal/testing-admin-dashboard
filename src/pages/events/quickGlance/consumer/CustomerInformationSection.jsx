@@ -5,7 +5,7 @@ import { Button } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { CustomerDatabase } from "./table/CustomerDatabase";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { MagnifyIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { Title } from "../../../../styles/global/Title";
 
 const CustomerInformationSection = () => {
