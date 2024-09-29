@@ -111,23 +111,23 @@ const MainPage = () => {
           return events ?? [];
         }
         if (key) {
-          return (
-            events?.filter((event) => {
-              event?.staff[key]?.some((member) => member.email === user.email);
-            })
-          );
+          return events?.filter((event) => {
+            event?.staff[key]?.some((member) => member.email === user.email);
+          });
         }
-        return (
-          events?.filter((event) => {
-            let adminUser = event.staff.adminUser;
-            let headsetAttendees = event.staff.headsetAttendees ?? [];
-            let staff = [...adminUser, ...headsetAttendees];
-            return staff.some((member) => member.email === user.email);
-          })
-        );
+        return events?.filter((event) => {
+          let adminUser = event.staff.adminUser;
+          let headsetAttendees = event.staff.headsetAttendees ?? [];
+          let staff = [...adminUser, ...headsetAttendees];
+          return staff.some((member) => member.email === user.email);
+        });
       };
-
-      const activeAdminEvents = filterEventsByEmail([...groupByActive.true, ...groupByActive.false]);
+      const active = groupByActive.true ?? [];
+      const inactive = groupByActive.false ?? [];
+      const activeAdminEvents = filterEventsByEmail([
+        ...active,
+        ...inactive,
+      ]);
       const activeEvents = [...activeAdminEvents];
       const inactiveAdminEvents = filterEventsByEmail(
         groupByActive.false,
