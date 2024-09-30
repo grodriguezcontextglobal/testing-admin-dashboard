@@ -79,7 +79,7 @@ const NavigationBarMain = (props) => {
     dispatch(onResetSubscriptionInfo());
     localStorage.removeItem("admin-token", "");
     dispatch(onLogout());
-    return;
+    return window.location.reload();
   };
 
   // const items = [
