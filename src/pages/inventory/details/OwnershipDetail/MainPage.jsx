@@ -8,10 +8,11 @@ import {
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MagnifyIcon, WhitePlusIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
@@ -40,7 +41,7 @@ const MainPageOwnership = () => {
   });
   const location = useLocation();
   const ownership = location.search.split("&");
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       searchDevice: decodeURI(ownership[1].split("=")[1]),
     },
@@ -50,6 +51,14 @@ const MainPageOwnership = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (watch("searchDevice") === "undefined") {
+      setValue("searchDevice", "");
+    }
+  }, [ownership]);
+
+
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",

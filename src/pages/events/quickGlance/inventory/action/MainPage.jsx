@@ -4,11 +4,9 @@ import { Button, Card, Popconfirm, notification } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import {
-  ExchangeIcon,
-  LostItem,
-  ReturnIcon,
-} from "../../../../../components/icons/Icons";
+import { ExchangeIcon } from "../../../../../components/icons/ExchangeIcon";
+import { LostItem } from "../../../../../components/icons/LostItem";
+import { ReturnIcon } from "../../../../../components/icons/ReturnIcon";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import {
@@ -290,54 +288,54 @@ const ActionsMainPage = () => {
 export default ActionsMainPage;
 
 //notfications
-      // await axios.patch(
-      //   "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-      //   {
-      //     ref: {
-      //       device: deviceInfoSelected.entireData.device,
-      //       type: deviceInfoSelected.entireData.type,
-      //       activity: true,
-      //       company: user.companyData.id,
-      //     },
-      //     newInfo: {
-      //       activity: false,
-      //     },
-      //     collection: "receiverspools",
-      //   }
-      // );
-      // openNotificationWithIcon("success", "Device returned.");
-      // queryClient.invalidateQueries({
-      //   queryKey: ["assignedDeviceListQuery"],
-      //   exact: true,
-      // });
-      // queryClient.invalidateQueries({
-      //   queryKey: ["deviceInPoolList"],
-      //   exact: true,
-      // });
-      // dispatch(
-      //   onAddDeviceToDisplayInQuickGlance({
-      //     ...deviceInfoSelected,
-      //     activity: false,
-      //     entireData: {
-      //       ...deviceInfoSelected.entireData,
-      //       activity: true,
-      //     },
-      //   })
-      // );
+// await axios.patch(
+//   "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+//   {
+//     ref: {
+//       device: deviceInfoSelected.entireData.device,
+//       type: deviceInfoSelected.entireData.type,
+//       activity: true,
+//       company: user.companyData.id,
+//     },
+//     newInfo: {
+//       activity: false,
+//     },
+//     collection: "receiverspools",
+//   }
+// );
+// openNotificationWithIcon("success", "Device returned.");
+// queryClient.invalidateQueries({
+//   queryKey: ["assignedDeviceListQuery"],
+//   exact: true,
+// });
+// queryClient.invalidateQueries({
+//   queryKey: ["deviceInPoolList"],
+//   exact: true,
+// });
+// dispatch(
+//   onAddDeviceToDisplayInQuickGlance({
+//     ...deviceInfoSelected,
+//     activity: false,
+//     entireData: {
+//       ...deviceInfoSelected.entireData,
+//       activity: true,
+//     },
+//   })
+// );
 
-      //update
-        //   await axios.patch(
-        //     "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-        //     {
-        //       ref: {
-        //         device: deviceInfoSelected.entireData.device,
-        //         type: deviceInfoSelected.entireData.type,
-        //         activity: true,
-        //         company: user.companyData.id,
-        //       },
-        //       newInfo: {
-        //         activity: false,
-        //       },
-        //       collection: "receiverspools",
-        //     }
-        //   );
+//update
+//   await axios.patch(
+//     "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
+//     {
+//       ref: {
+//         device: deviceInfoSelected.entireData.device,
+//         type: deviceInfoSelected.entireData.type,
+//         activity: true,
+//         company: user.companyData.id,
+//       },
+//       newInfo: {
+//         activity: false,
+//       },
+//       collection: "receiverspools",
+//     }
+//   );

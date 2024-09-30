@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { onResetDeviceInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
 // import CreateDevice from "../modal/CreateDevice";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { MagnifyIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";

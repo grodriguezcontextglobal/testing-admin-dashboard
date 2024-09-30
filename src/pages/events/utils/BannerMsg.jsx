@@ -1,5 +1,5 @@
 import { Grid, Typography, Button } from "@mui/material";
-import { WhitePlusIcon } from "../../../components/icons/Icons";
+import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import { Link } from "react-router-dom";
 import { Title } from "../../../styles/global/Title";
 import { BlueButton } from "../../../styles/global/BlueButton";

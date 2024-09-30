@@ -7,7 +7,7 @@ import '../../../../../styles/global/ant-table.css';
 // import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 // import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import { Icon } from "@iconify/react";
-import { RightNarrowInCircle } from "../../../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 const EventInventoryTable = ({ dataFound }) => {
     // const dispatch = useDispatch();

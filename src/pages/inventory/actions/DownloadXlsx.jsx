@@ -2,7 +2,7 @@ import { Typography } from '@mui/material';
 import { Button, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { utils, writeFile } from 'xlsx';
-import { XLSXIcon } from '../../../components/icons/Icons';
+import { XLSXIcon } from '../../../components/icons/XLSXIcon';
 const DownloadingXlslFile = ({ props }) => {
     const [fileName, setFileName] = useState('');
     // const [itemsUsers, setItemsUsers] = useState([]);

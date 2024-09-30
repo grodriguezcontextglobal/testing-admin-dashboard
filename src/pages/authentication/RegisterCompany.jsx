@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, redirect, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
-import { CompanyIcon } from "../../components/icons/Icons";
+import { CompanyIcon } from "../../components/icons/CompanyIcon";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
 import { onAddErrorMessage, onLogout } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";

@@ -13,12 +13,10 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import {
-  BorderedCloseIcon,
-  CheckIcon,
-  QuestionIcon,
-  RectangleBluePlusIcon,
-} from "../../../../components/icons/Icons";
+import { BorderedCloseIcon } from "../../../../components/icons/BorderedCloseIcon";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { RectangleBluePlusIcon } from "../../../../components/icons/RectangleBluePlusIcon";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -87,7 +85,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       controller.abort();
     };
   }, []);
-console.log(eventInfoSqlDB?.data);
+  console.log(eventInfoSqlDB?.data);
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];

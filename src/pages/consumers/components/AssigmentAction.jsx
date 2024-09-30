@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WhiteCirclePlusIcon } from "../../../components/icons/Icons";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";

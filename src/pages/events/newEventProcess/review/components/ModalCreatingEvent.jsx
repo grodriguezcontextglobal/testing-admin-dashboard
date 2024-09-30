@@ -1,6 +1,7 @@
 import { Modal } from "antd";
 import Loading from "../../../../../components/animation/Loading";
-import { DevitrakLogo, DevitrakName } from "../../../../../components/icons/Icons";
+import { DevitrakLogo } from "../../../../../components/icons/DevitrakLogo";
+import { DevitrakName } from "../../../../../components/icons/DevitrakName";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {

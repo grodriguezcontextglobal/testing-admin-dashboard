@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { onAddEventData, onAddExtraServiceListSetup, onAddExtraServiceNeeded, onAddQRCodeLink, onSelectCompany, onSelectEvent } from "../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
-import { RightNarrowInCircle } from "../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { devitrakApi } from "../../../api/devitrakApi";
 const PastEventsTable = ({ events }) => {
     const navigate = useNavigate();

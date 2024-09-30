@@ -182,7 +182,7 @@ const CustomerDetail = () => {
           </Grid>
           <Divider />
           <Grid container>
-            <Grid marginY={`${(isSmallDevice || isMediumDevice) && '3dvh'}`} item xs={12}>
+            <Grid marginY={`${(isSmallDevice || isMediumDevice) && '3dvh'}`} item xs={12} sm={12} md={12} lg={12}>
               <Details />
             </Grid>
             <Grid item xs={12}>

@@ -19,10 +19,7 @@ import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import Loading from "./components/animation/Loading";
-// import { BugsIcon } from "./components/icons/Icons";
-// import InactivityLogout from "./utils/CheckingInactivityAndTakeAction";
-// import ModalReportBugs from "./components/utils/ModalReportBugs";
-// import useVersionCheck from "../versionChecker";
+import CenteringGrid from "./styles/global/CenteringGrid";
 const InactivityLogout = lazy(() => import("./utils/CheckingInactivityAndTakeAction"));
 const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
 const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes")); 
@@ -103,7 +100,7 @@ const App = () => {
   }, [status, adminToken, location.pathname]);
 
   return (
-    <Suspense fallback={<div><Loading /></div>}>
+    <Suspense fallback={<div style={CenteringGrid}><Loading /></div>}>
       {renderNetworkStatusMessage()}
       {contextHolder}
       {status === "authenticated" && adminToken ? (

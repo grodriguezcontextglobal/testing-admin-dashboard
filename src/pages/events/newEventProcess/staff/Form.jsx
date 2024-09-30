@@ -16,10 +16,8 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
-import {
-  EmailIcon,
-  ProfileIcon
-} from "../../../../components/icons/Icons";
+import { EmailIcon } from "../../../../components/icons/EmailIcon";
+import { ProfileIcon } from "../../../../components/icons/ProfileIcon";
 import { onAddEventStaff } from "../../../../store/slices/eventSlice";
 import "../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
@@ -343,7 +341,7 @@ const Form = () => {
                       }}
                     >
                       <div>
-                        <ProfileIcon />{" "}{member.firstName} {member.lastName}
+                        <ProfileIcon /> {member.firstName} {member.lastName}
                       </div>{" "}
                       <button
                         style={{
@@ -361,7 +359,7 @@ const Form = () => {
                         x
                       </button>
                     </div>
-                    <EmailIcon />{" "}{member.email}
+                    <EmailIcon /> {member.email}
                   </label>
                 </Card>
               );
@@ -405,7 +403,7 @@ const Form = () => {
           <Space size={[8, 16]} wrap>
             {headsetAttendeesStaff?.map((member) => {
               return (
-                <Card style={{padding: "4px 2px"}} key={member.email}>
+                <Card style={{ padding: "4px 2px" }} key={member.email}>
                   <label>
                     <div
                       style={{
@@ -415,7 +413,7 @@ const Form = () => {
                       }}
                     >
                       <div>
-                        <ProfileIcon />{" "}{member.firstName} {member.lastName}
+                        <ProfileIcon /> {member.firstName} {member.lastName}
                       </div>{" "}
                       <button
                         style={{
@@ -428,12 +426,14 @@ const Form = () => {
                           padding: "4px 8px",
                           width: "fit-content",
                         }}
-                        onClick={() => handleHeadsetAttendeeDeleteMember(member.email)}
+                        onClick={() =>
+                          handleHeadsetAttendeeDeleteMember(member.email)
+                        }
                       >
                         x
                       </button>
                     </div>
-                    <EmailIcon />{" "}{member.email}
+                    <EmailIcon /> {member.email}
                   </label>
                 </Card>
               );

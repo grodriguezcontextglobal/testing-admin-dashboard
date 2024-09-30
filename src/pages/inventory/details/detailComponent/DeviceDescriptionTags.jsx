@@ -115,7 +115,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                       : "Returned equipment date"}
                     <br />{" "}
                     {dataFound[0]?.return_date
-                      .split(" ")
+                      ?.split(" ")
                       .slice(0, 5)
                       .toString()
                       .replaceAll(",", " ")}

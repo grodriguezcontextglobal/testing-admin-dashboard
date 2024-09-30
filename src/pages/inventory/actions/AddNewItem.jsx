@@ -17,7 +17,8 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { QuestionIcon, UploadIcon } from "../../../components/icons/Icons";
+import { QuestionIcon } from "../../../components/icons/QuestionIcon";
+import { UploadIcon } from "../../../components/icons/UploadIcon";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
@@ -32,6 +33,7 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
+import "./style.css"
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {

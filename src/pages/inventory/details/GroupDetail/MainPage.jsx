@@ -8,10 +8,11 @@ import {
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MagnifyIcon, WhitePlusIcon } from "../../../../components/icons/Icons";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
@@ -31,6 +32,7 @@ const TotalValueDevicesLocation = lazy(() =>
   import("./components/TotalValueDevices")
 );
 const TotalAvailableItem = lazy(() => import("../../utils/TotalAvailableItem"));
+
 const MainPageGrouping = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -39,7 +41,7 @@ const MainPageGrouping = () => {
   });
   const location = useLocation();
   const groupName = location.search.split("&");
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       searchDevice: decodeURI(groupName[1].split("=")[1]),
     },
@@ -49,6 +51,14 @@ const MainPageGrouping = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (watch("searchDevice") === "undefined") {
+      setValue("searchDevice", "");
+    }
+  }, [groupName]);
+
+
   return (
     <Suspense
       fallback={

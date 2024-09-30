@@ -3,18 +3,17 @@ import { Button, Grid, InputAdornment, OutlinedInput, Typography } from "@mui/ma
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { MagnifyIcon, WhitePlusIcon } from "../../../../components/icons/Icons";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../styles/global/BlueButton";
 import Loading from "../../../../components/animation/Loading";
-import EventInventoryTable from "./table/EventInventoryData";
+import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import EventInventoryTable from "./table/EventInventoryData";
 
 const MainPage = () => {
     const event_id = new URLSearchParams(window.location.search).get(
@@ -24,7 +23,7 @@ const MainPage = () => {
         queryKey: ["listOfItemsInStock"],
         queryFn: () => devitrakApi.post(`/db_item/inventory_event/${event_id}`),
     });
-    const [openDeviceModal, setOpenDeviceModal] = useState(false);
+    // const [openDeviceModal, setOpenDeviceModal] = useState(false);
     const { register } = useForm();
     // const dispatch = useDispatch();
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -52,7 +51,6 @@ const MainPage = () => {
                 }}
                 container
             >
-                {/* <Grid item xs={12} sm={12} md={12} lg={10}> */}
                     <Grid
                         style={{
                             display: "flex",
@@ -74,7 +72,7 @@ const MainPage = () => {
                         >
                             <Button
                                 style={{ ...BlueButton }}
-                                onClick={() => setOpenDeviceModal(true)}
+                                // onClick={() => setOpenDeviceModal(true)}
                             >
                                 <WhitePlusIcon />&nbsp; <Typography
                                     textTransform={"none"}
@@ -108,7 +106,7 @@ const MainPage = () => {
                         >
                             <Button
                                 style={{ ...BlueButton }}
-                                onClick={() => setOpenDeviceModal(true)}
+                                // onClick={() => setOpenDeviceModal(true)}
                             >
                                 <WhitePlusIcon />&nbsp; <Typography
                                     textTransform={"none"}

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { WhitePlusIcon } from "../../../../components/icons/Icons";
+import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
 import {
   onAddContactInfo,
   onAddEventData,

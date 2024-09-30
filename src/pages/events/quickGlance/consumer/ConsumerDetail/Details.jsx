@@ -4,7 +4,7 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Card, Dropdown } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { EmailIcon } from "../../../../../components/icons/Icons";
+import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../styles/global/CardStyle";

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { CheckIcon } from "../../../../../components/icons/Icons";
+import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";

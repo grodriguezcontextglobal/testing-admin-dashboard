@@ -1,6 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
-import { BluePlusIcon, WhitePlusIcon } from "../../components/icons/Icons";
+import { Link, useNavigate } from "react-router-dom";
+import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
+import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
@@ -34,6 +35,7 @@ const MainPage = () => {
     setLeasedEquipmentNotificationStatus,
   ] = useState(false);
   const { user } = useSelector((state) => state.admin);
+  const navigate = useNavigate(); 
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
     queryFn: () => devitrakApi.post("/company/companies"),
@@ -129,7 +131,23 @@ const MainPage = () => {
   const leasedEquipmentNotificationBody = () => {
     return (
       <p>
-        Please be aware that there is&nbsp;<span style={{ textDecoration: "underline", fontWeight:500 }}>leased equipment pending return.</span> Kindly visit the inventory section to view the list of leased items and their return dates to prevent any inconvenience.
+        Please be aware that there is&nbsp;
+        <button
+        onClick={() => navigate("/inventory/ownership?Rent&search=")}
+          style={{
+            outline: "none",
+            backgroundColor: "transparent",
+            margin: 0,
+            padding: 0,
+            textDecoration: "underline",
+            color:Subtitle.color,
+            fontWeight: 500,
+          }}
+        >
+          leased equipment pending return.
+        </button>{" "}
+        Kindly visit the inventory section to view the list of leased items and
+        their return dates to prevent any inconvenience.
       </p>
     );
   };

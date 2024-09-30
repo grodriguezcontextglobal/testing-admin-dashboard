@@ -3,7 +3,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { useDispatch } from "react-redux";
-import { RightNarrowInCircle } from "../../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import { Link, useNavigate } from "react-router-dom";
 import { Divider, Popconfirm, Table } from "antd";
 import { Grid } from "@mui/material";

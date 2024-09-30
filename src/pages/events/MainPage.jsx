@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { WhitePlusIcon } from "../../components/icons/Icons";
+import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
   onAddContactInfo,

@@ -2,7 +2,7 @@ import { Grid, Typography } from "@mui/material";
 import { Button, Card, QRCode } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { DownloadIcon } from "../../../../components/icons/Icons";
+import { DownloadIcon } from "../../../../components/icons/DownloadIcon";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 

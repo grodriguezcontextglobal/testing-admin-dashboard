@@ -7,15 +7,14 @@ import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import {
-  GeneralDeviceIcon,
-  RightNarrowInCircle,
-} from "../../../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
 // import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
+
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();
   const groupName = location.search.split("&");

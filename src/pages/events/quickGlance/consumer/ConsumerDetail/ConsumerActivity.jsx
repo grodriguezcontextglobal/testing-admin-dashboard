@@ -2,12 +2,12 @@ import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import TotalDevicesDistributed from "./ConsumerActivity/TotalDeviceDistributed";
-import TotalRequestedDevice from "./ConsumerActivity/TotalRequestedDevice";
-import TotalReturnedDevice from "./ConsumerActivity/TotalReturnedDevice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
 import { useEffect } from "react";
+import TotalDevicesDistributed from "./ConsumerActivity/TotalDeviceDistributed";
+import TotalRequestedDevice from "./ConsumerActivity/TotalRequestedDevice";
+import TotalReturnedDevice from "./ConsumerActivity/TotalReturnedDevice";
 const ConsumerActivity = () => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);

@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { MagnifyIcon } from "../../components/icons/Icons";
+import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BannerMsg from "../../components/utils/BannerMsg";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";

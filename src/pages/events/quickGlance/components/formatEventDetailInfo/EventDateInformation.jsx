@@ -4,11 +4,11 @@ import { Card, Tooltip } from "antd";
 import { useSelector } from "react-redux";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Icon } from "@iconify/react";
-import displayMonth from "./displayMonth";
-import UpdateEventInfo from "../../updateEvent/UpdateEventInfo";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
+import displayMonth from "./displayMonth";
+import UpdateEventInfo from "../../updateEvent/UpdateEventInfo";
 
 const EventDateInformation = () => {
   const [openUpdateEventModal, setOpenUpdateEventModal] = useState(false);

@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { CompanyIcon } from "../../../../components/icons/Icons";
+import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
 import { onLogout } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";

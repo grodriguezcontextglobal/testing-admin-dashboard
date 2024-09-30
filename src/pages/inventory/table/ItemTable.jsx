@@ -2,15 +2,13 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Divider, Table } from "antd";
-import { groupBy} from "lodash";
+import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import {
-  GeneralDeviceIcon,
-  RightNarrowInCircle,
-} from "../../../components/icons/Icons";
+import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";

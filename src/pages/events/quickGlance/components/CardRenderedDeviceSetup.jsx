@@ -4,7 +4,7 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card, Switch, Tooltip } from "antd";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { DropDownIcon } from "../../../../components/icons/Icons";
+import { DropDownIcon } from "../../../../components/icons/DropDownIcon";
 const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
