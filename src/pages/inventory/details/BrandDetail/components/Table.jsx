@@ -7,19 +7,13 @@ import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-// import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
-// import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
+import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
+import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 // import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
-const GeneralDeviceIcon = lazy(() =>
-  import("../../../../../components/icons/GeneralDeviceIcon")
-);
-const RightNarrowInCircle = lazy(() =>
-  import("../../../../../components/icons/RightNarrowInCircle")
-);
 
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();

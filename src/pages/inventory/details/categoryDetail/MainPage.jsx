@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
@@ -40,7 +40,7 @@ const MainPage = () => {
   });
   const location = useLocation();
   const categoryName = location.search.split("&")[0];
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       searchDevice: location.search.split("&")[1].split("=")[1],
     },
@@ -50,6 +50,12 @@ const MainPage = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const navigate = useNavigate();
+  useEffect(() => {
+    if (watch("searchDevice") === "undefined") {
+      setValue("searchDevice", "");
+    }
+  }, [categoryName]);
+
   return (
     <Suspense
       fallback={

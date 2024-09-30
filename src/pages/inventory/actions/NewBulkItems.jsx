@@ -40,10 +40,10 @@ import { formatDate } from "../utils/dateFormat";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../styles/global/LightBlueButton";
 import DatePicker from "react-datepicker";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-
+import "./style.css"
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");

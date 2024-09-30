@@ -41,6 +41,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import "./style.css";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
@@ -743,18 +744,13 @@ const EditGroup = () => {
                 width: "100%",
                 display: "flex",
                 alignSelf: "flex-start",
+                gap: "5px", 
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                 <Typography
                   textTransform={"none"}
-                  textAlign={"left"}
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  color={"var(--gray-700, #344054)"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
                 >
                   Ownership status of items
                 </Typography>
@@ -881,13 +877,7 @@ const EditGroup = () => {
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
+                style={{ ...Subtitle, fontWeight: 500 }}
               >
                 To ending number
               </Typography>
@@ -903,22 +893,6 @@ const EditGroup = () => {
               }`}
               fullWidth
             />
-            {errors?.endingNumber && (
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.endingNumber.type}
-              </Typography>
-            )}
           </div>
         </div>
         <div
@@ -973,17 +947,7 @@ const EditGroup = () => {
           }}
         >
           <InputLabel style={{ width: "100%" }}>
-            <Typography
-              style={{ ...Subtitle, fontWeight: 500 }}
-              // textTransform={"none"}
-              // textAlign={"left"}
-              // fontFamily={"Inter"}
-              // fontSize={"14px"}
-              // fontStyle={"normal"}
-              // fontWeight={500}
-              // lineHeight={"20px"}
-              // color={"var(--gray-700, #344054)"}
-            >
+            <Typography style={{ ...Subtitle, fontWeight: 500 }}>
               Description of the device
             </Typography>
           </InputLabel>
@@ -1006,9 +970,6 @@ const EditGroup = () => {
             }}
             placeholder="Please provide a brief description of the new device to be added."
           />
-          {errors?.descript_item && (
-            <Typography>{errors.descript_item.type}</Typography>
-          )}
         </div>
 
         <Grid

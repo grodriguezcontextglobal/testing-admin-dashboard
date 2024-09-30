@@ -33,6 +33,7 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
+import "./style.css"
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
