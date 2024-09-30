@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { ExchangeIcon } from "../../../../../components/icons/ExchangeIcon";
-import { LostItem } from "../../../../../components/icons/LostItem";
+import { LostIcon } from "../../../../../components/icons/LostIcon";
 import { ReturnIcon } from "../../../../../components/icons/ReturnIcon";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
@@ -211,7 +211,7 @@ const ActionsMainPage = () => {
                   onClick={() => handleLostSingleDevice()}
                   style={{ ...DangerButton, outline: "none" }}
                 >
-                  <LostItem />
+                  <LostIcon />
                   <p
                     style={{
                       ...DangerButtonText,
