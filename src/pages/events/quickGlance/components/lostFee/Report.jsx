@@ -4,7 +4,7 @@ import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrow
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useSelector } from "react-redux";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import "../../../../../styles/global/ant-table.css";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
@@ -14,16 +14,25 @@ const Report = () => {
   const [dataInfo, setDataInfo] = useState([]);
   const [openLostReportDetail, setOpenLostReportModal] = useState(false);
   const { event } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const cashReportQuery = useQuery({
     queryKey: ["cashReportListPerCompany"],
     queryFn: () =>
       devitrakApi.post("/cash-report/cash-reports", {
-        event: event.eventInfoDetail.eventName,
-        company: event.company,
+        event: event.id,
+        company:user.companyData.id,
       }),
     refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    cashReportQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   function handleDetail(props) {
     setOpenLostReportModal(true);
     return setDataInfo(props);
