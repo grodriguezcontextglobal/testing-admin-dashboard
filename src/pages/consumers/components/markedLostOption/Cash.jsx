@@ -152,8 +152,8 @@ const ConsumerDeviceLostFeeCash = () => {
         },
       ],
       amount: data.total,
-      event: event.eventInfoDetail.eventName,
-      company: event.company,
+      event: event.id,
+      company:user.companyData.id,
       typeCollection: "Cash",
     };
     // console.log(cashReportProfile);

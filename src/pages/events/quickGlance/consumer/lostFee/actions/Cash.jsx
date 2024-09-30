@@ -24,7 +24,7 @@ import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInpu
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 const Cash = () => {
   const navigator = useNavigate();
-  const { choice, company, event } = useSelector((state) => state.event);
+  const { event } = useSelector((state) => state.event);
   const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
@@ -163,8 +163,8 @@ const Cash = () => {
           },
         ],
         amount: data.total,
-        event: choice,
-        company: company,
+        event: event.id,
+        company: user.companyData.id,
         typeCollection: "Cash",
       };
       loading();

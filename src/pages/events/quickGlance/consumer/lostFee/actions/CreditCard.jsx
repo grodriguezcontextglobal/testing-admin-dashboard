@@ -30,7 +30,7 @@ const CreditCard = () => {
   const dispatch = useDispatch();
   const refRender = useRef(0);
   const refTotal = useRef(0);
-  const { choice, company, event } = useSelector((state) => state.event);
+  const { event } = useSelector((state) => state.event);
   const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
   const { customer, paymentIntentReceiversAssigned } = useSelector(
@@ -217,8 +217,8 @@ const CreditCard = () => {
           },
         ],
         amount: localStorage.getItem("total"),
-        event: choice,
-        company: company,
+        event: event.id,
+        company: user.companyData.id,
         typeCollection: "Credit Card",
       };
 
