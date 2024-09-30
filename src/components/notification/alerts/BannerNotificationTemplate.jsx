@@ -3,15 +3,17 @@ import { Card } from "antd";
 import { CardStyle } from "../../../styles/global/CardStyle";
 import { Title } from "../../../styles/global/Title";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import {
-  BorderedCloseIcon,
-  CloseIcon,
-  InformationIcon,
-} from "../../icons/Icons";
+import { BorderedCloseIcon } from "../../icons/BorderedCloseIcon";
+import { CloseIcon } from "../../icons/CloseIcon";
+import { InformationIcon } from "../../icons/InformationIcon";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
-const BannerNotificationTemplate = ({ setNotificationStatus, title, body, category = 0 }) => {
-    console.log(category);
+const BannerNotificationTemplate = ({
+  setNotificationStatus,
+  title,
+  body,
+  category = 0,
+}) => {
   return (
     <Card
       style={{
@@ -21,7 +23,10 @@ const BannerNotificationTemplate = ({ setNotificationStatus, title, body, catego
         border: "1px solid var(--gray-200)",
         boxShadow:
           "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-        background: category > 0 ? "var(--pending-leased-equip-alert)" : "var(--basewhite)",
+        background:
+          category > 0
+            ? "var(--pending-leased-equip-alert)"
+            : "var(--basewhite)",
       }}
       styles={{
         body: { ...CenteringGrid, padding: 0 },

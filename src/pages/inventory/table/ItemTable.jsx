@@ -7,8 +7,8 @@ import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+// import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
+// import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -21,6 +21,13 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
+const GeneralDeviceIcon = lazy(() =>
+  import("../../../components/icons/GeneralDeviceIcon")
+);
+const RightNarrowInCircle = lazy(() =>
+  import("../../../components/icons/RightNarrowInCircle")
+);
+
 const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
   // const dispatch = useDispatch();

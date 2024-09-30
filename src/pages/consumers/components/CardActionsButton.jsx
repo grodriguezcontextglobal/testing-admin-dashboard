@@ -1,6 +1,6 @@
 import { Card } from "antd";
 import { useState } from "react";
-import { AlarmIcon } from "../../../components/icons/Icons";
+import { AlarmIcon } from "../../../components/icons/AlarmIcon";
 import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
 import { CardStyle } from "../../../styles/global/CardStyle";
 import { GrayButton } from "../../../styles/global/GrayButton";

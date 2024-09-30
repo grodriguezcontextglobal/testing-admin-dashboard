@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { RightNarrowInCircle } from "../../../components/icons/Icons";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import {
   onAddEventData,
   onSelectCompany,

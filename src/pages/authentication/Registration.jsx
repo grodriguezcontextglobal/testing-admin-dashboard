@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import FooterComponent from "../../components/general/FooterComponent";
-import { UploadImagePlaceholder } from "../../components/icons/Icons";
+import { UploadImagePlaceholder } from "../../components/icons/UploadImagePlaceholder";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
 import { onLogin } from "../../store/slices/adminSlice";
 import { BlueButton } from "../../styles/global/BlueButton";

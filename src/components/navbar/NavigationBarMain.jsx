@@ -11,7 +11,7 @@ import {
   ListItem,
   ListItemButton,
   OutlinedInput,
-  Toolbar
+  Toolbar,
 } from "@mui/material";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -36,13 +36,11 @@ import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 // import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
-import {
-  DevitrakLogo,
-  DevitrakName,
-  LogoutIcon,
-  MagnifyIcon,
-  ProfileIcon,
-} from "../icons/Icons";
+import { DevitrakLogo } from "../icons/DevitrakLogo";
+import { DevitrakName } from "../icons/DevitrakName";
+import { LogoutIcon } from "../icons/LogoutIcon";
+import { MagnifyIcon } from "../icons/MagnifyIcon";
+import { ProfileIcon } from "../icons/ProfileIcon";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -85,22 +83,22 @@ const NavigationBarMain = (props) => {
   };
 
   // const items = [
-    // {
-    //   key: "1",
-    //   label: (
-    //     <NavLink to={"/profile/my_details"}>
-    //       <Typography>Profile</Typography>
-    //     </NavLink>
-    //   ),
-    // },
-    // {
-    //   key: "2",
-    //   label: (
-    //     <Typography onClick={() => dispatch(onSwitchingCompany(true))}>
-    //       Switch company
-    //     </Typography>
-    //   ),
-    // },
+  // {
+  //   key: "1",
+  //   label: (
+  //     <NavLink to={"/profile/my_details"}>
+  //       <Typography>Profile</Typography>
+  //     </NavLink>
+  //   ),
+  // },
+  // {
+  //   key: "2",
+  //   label: (
+  //     <Typography onClick={() => dispatch(onSwitchingCompany(true))}>
+  //       Switch company
+  //     </Typography>
+  //   ),
+  // },
   //   {
   //     key: "3",
   //     label: (
@@ -427,55 +425,55 @@ const NavigationBarMain = (props) => {
                       })
                     }
                   > */}
-                    <div className="content-main-navbar-updated">
-                      <article
-                        className="nav-item-base-1-main-navbar-updated"
-                        style={{ backgroundColor: "var(--danger-action)" }}
-                      >
-                        <div className="content-2-main-navbar-updated">
-                          <div
-                            className="text-1-main-navbar-updated text-mdsemibold"
+                  <div className="content-main-navbar-updated">
+                    <article
+                      className="nav-item-base-1-main-navbar-updated"
+                      style={{ backgroundColor: "var(--danger-action)" }}
+                    >
+                      <div className="content-2-main-navbar-updated">
+                        <div
+                          className="text-1-main-navbar-updated text-mdsemibold"
+                          style={{
+                            display: "flex",
+                            backgroundColor: "var(--danger-action)",
+                            borderRadius: "50%",
+                          }}
+                        >
+                          {" "}
+                          <button
                             style={{
-                              display: "flex",
-                              backgroundColor: "var(--danger-action)",
-                              borderRadius: "50%",
+                              outline: "none",
+                              border: "transparent",
+                              margin: 0,
+                              padding: 0,
+                              backgroundColor: "transparent",
                             }}
+                            key={"authenticated"}
+                            onClick={() => logout()}
+                            // onClick={() =>
+                            //   scrollTo({
+                            //     left: 0,
+                            //     top: 0,
+                            //     behavior: "smooth",
+                            //   })
+                            // }
                           >
-                            {" "}
-                            <button
+                            <p
                               style={{
-                                outline: "none",
-                                border: "transparent",
-                                margin: 0,
-                                padding: 0,
-                                backgroundColor: "transparent",
+                                textTransform: "capitalize",
+                                fontSize: "25px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
-                              key={"authenticated"}
-                              onClick={() => logout()}
-                              // onClick={() =>
-                              //   scrollTo({
-                              //     left: 0,
-                              //     top: 0,
-                              //     behavior: "smooth",
-                              //   })
-                              // }
                             >
-                              <p
-                                style={{
-                                  textTransform: "capitalize",
-                                  fontSize: "25px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <LogoutIcon />
-                              </p>
-                            </button>
-                          </div>
+                              <LogoutIcon />
+                            </p>
+                          </button>
                         </div>
-                      </article>
-                    </div>
+                      </div>
+                    </article>
+                  </div>
                   {/* </button> */}
 
                   {/* <Dropdown
