@@ -142,6 +142,7 @@ const EditConsumerInfoModal = ({
         onOk={() => closeDeviceModal()}
         onCancel={() => closeDeviceModal()}
         footer={[]}
+        width={800}
         maskClosable={false}
       >
         <Grid
