@@ -26,9 +26,10 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import FooterExpandedRow from "./FooterExpandedRow";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import "../localStyles.css";
+import "../../../styles/global/ant-table.css";
 import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
 
-const ExpandedRow = ({ rowRecord, refetching }) => {
+const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
@@ -42,20 +43,15 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
     refetchOnMount: false,
   });
 
-  const eventsRelatedToTransactionQuery = useQuery({
-    queryKey: ["eventsInfoPerTransactionQuery", rowRecord.key],
-    queryFn: () =>
-      devitrakApi.post("/event/event-list", {
-        company: user.company,
-        "eventInfoDetail.eventName": rowRecord.eventSelected,
-      }),
-    refetchOnMount: false,
-  });
-
+  const matchingEventInventoryForValueItems = (props) => {
+    const { deviceSetup } = rowRecord["eventInfo"];
+    return deviceSetup.filter((element) => element.group === props).at(-1)
+      .value;
+  };
   useEffect(() => {
     const controller = new AbortController();
     assignedDevicesQuery.refetch();
-    eventsRelatedToTransactionQuery.refetch();
+    // eventsRelatedToTransactionQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -235,11 +231,13 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
       for (let data of query) {
         dataForTable.add({
           key: data._id,
-          serial_number: data.device.serialNumber,
-          type: data.device.deviceType,
-          deviceValue: rowRecord.data.device[0].deviceValue,
-          status: data.device.status,
-          timeStamp: data.timeStamp,
+          serial_number: data?.device?.serialNumber,
+          type: data?.device?.deviceType,
+          deviceValue:  matchingEventInventoryForValueItems(
+            data?.device?.deviceType
+          ),
+          status: data?.device?.status,
+          timeStamp: data?.timeStamp,
           entireData: data,
           transactionData: rowRecord,
         });
@@ -303,23 +301,8 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
               linkStructure
             );
             await devitrakApi.post(
-              "/nodemailer/confirm-returned-device-notification",emailStructure.render()
-              // {
-              //   consumer: {
-              //     name: `${customer.name} ${customer.lastName}`,
-              //     email: customer.email,
-              //   },
-              //   device: {
-              //     serialNumber: props.serial_number,
-              //     deviceType: props.type,
-              //   },
-              //   event: props.entireData.eventSelected[0],
-              //   company: props.entireData.provider[0],
-              //   transaction: props.entireData.paymentIntent,
-              //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              //   time: dateRef[4],
-              //   link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-              // }
+              "/nodemailer/confirm-returned-device-notification",
+              emailStructure.render()
             );
             await assignedDevicesQuery.refetch();
             await refetching();
@@ -337,25 +320,10 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
   const handleLostSingleDevice = (props) => {
     try {
       setOpenModal(true);
-      dispatch(
-        onAddEventData(eventsRelatedToTransactionQuery.data.data.list[0])
-      );
-      dispatch(
-        onAddEventInfoDetail(
-          eventsRelatedToTransactionQuery.data.data.list[0].eventInfoDetail
-        )
-      );
-      dispatch(
-        onSelectCompany(
-          eventsRelatedToTransactionQuery.data.data.list[0].company
-        )
-      );
-      dispatch(
-        onSelectEvent(
-          eventsRelatedToTransactionQuery.data.data.list[0].eventInfoDetail
-            .eventName
-        )
-      );
+      dispatch(onAddEventData(rowRecord.eventInfo));
+      dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
+      dispatch(onSelectCompany(rowRecord.eventInfo.company));
+      dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
       dispatch(
         onReceiverObjectToReplace({
           serialNumber: props.serial_number,
@@ -388,6 +356,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         columns={columns}
         dataSource={dataRendering()}
         pagination={false}
+        className="table-ant-expanded-row-customized"
       />
       <FooterExpandedRow
         displayTernary={displayTernary}
@@ -396,6 +365,7 @@ const ExpandedRow = ({ rowRecord, refetching }) => {
         dataRendering={rowRecord}
         returningDevice={handleReturnSingleDevice}
         formattedData={dataRendering()}
+        paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
       />
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
