@@ -19,6 +19,8 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../inventory/utils/dateFormat";
+import { nanoid } from "@reduxjs/toolkit";
+import DeviceAssigned from "../../../../classes/deviceAssigned";
 const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -174,6 +176,131 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       }
     }
   };
+  const reference = useRef(null);
+  const transactionDeviceAdded = async (props) => {
+    const id = nanoid(12);
+    const max = 918273645;
+    const transactionGenerated = "pi_" + id;
+    reference.current = transactionGenerated;
+    const newTransaction = await devitrakApi.post(
+      "/stripe/stripe-transaction-no-regular-user",
+      {
+        paymentIntent: transactionGenerated,
+        clientSecret: 1 + customer.uid + Math.floor(Math.random() * max),
+        device: 1,
+        user: customer.uid,
+        eventSelected: customer.id ?? customer.uid,
+        provider: user.company,
+        company: user.companyData.id,
+        type: "lease",
+      }
+    );
+    if (newTransaction.data) {
+      const transactionProfile = {
+        paymentIntent: reference.current,
+        clientSecret:
+          newTransaction.data.stripeTransaction.clientSecret ?? "unknown",
+        device: {
+          serialNumber: props.deviceInfo[0].serial_number,
+          deviceType: props.deviceInfo[0].item_group,
+          status: true,
+        },
+        consumerInfo: customer,
+        provider: user.company,
+        eventSelected: customer.id ?? customer.uid,
+        date: new Date(),
+        company: user.companyData.id,
+        type: "lease",
+      };
+      await devitrakApi.post("/stripe/save-transaction", transactionProfile);
+      const deviceFormat = {
+        serialNumber: props.deviceInfo[0].serial_number,
+        deviceType: props.deviceInfo[0].item_group,
+        status: true,
+      };
+      const transaction = new DeviceAssigned(
+        transactionGenerated,
+        deviceFormat,
+        customer.email,
+        true,
+        customer.id ?? customer.uid,
+        user.company,
+        new Date().getTime(),
+        user.companyData.id
+      );
+      await devitrakApi.post(
+        "/receiver/receiver-assignation",
+        transaction.render()
+      );
+    }
+  };
+  const createEventNoSQLDatabase = async (props) => {
+    const eventLink = customer.name.replace(/ /g, "%20");
+    const newEventInfo = await devitrakApi.post("/event/create-event", {
+      user: user.email,
+      company: user.company,
+      subscription: [],
+      eventInfoDetail: {
+        address: `${props.address.street} ${props.address.city} ${props.address.state} ${props.address.zip}`,
+        eventName: customer.id ?? customer.uid,
+        eventLocation: props.address.city,
+        building: customer.id ?? customer.uid,
+        floor: customer.id ?? customer.uid,
+        phoneNumber: [customer.phoneNumber],
+        merchant: true,
+        dateBegin: new Date().toString(),
+        dateEnd: new Date().toString(),
+        dateBeginTime: new Date().getTime(),
+      },
+      staff: {
+        adminUser: [
+          {
+            firstName: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            role: "Administrator",
+          },
+        ],
+        headsetAttendees: [],
+      },
+      deviceSetup: [
+        {
+          category: props.deviceInfo[0].category_name,
+          group: props.deviceInfo[0].item_group,
+          value: props.deviceInfo[0].cost,
+          description: props.deviceInfo[0].descript_item,
+          company: props.deviceInfo[0].company,
+          quantity: props.quantity,
+          ownership: props.deviceInfo[0].ownership,
+          createdBy: user.email,
+          key: props.deviceInfo[0].category_name,
+          dateCreated: new Date().toString(),
+          resume: props.deviceInfo[0].descript_item,
+          consumerUses: false,
+          startingNumber: props.deviceInfo[0].serial_number,
+          endingNumber: props.deviceInfo.at(-1).serial_number,
+          existing: true,
+        },
+      ],
+      extraServicesNeeded: false,
+      extraServices: [],
+      active: true,
+      contactInfo: {
+        email: customer.email,
+        phone: [customer.phoneNumber],
+        name: customer.name,
+      },
+      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+    });
+    if (newEventInfo.data.ok) {
+      const eventId = checkArray(newEventInfo.data.event);
+      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      });
+      await transactionDeviceAdded(props);
+    }
+  };
+
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
@@ -235,6 +362,12 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       indexEnd
     );
     const deviceInfo = data; //*array of existing devices in sql db
+    console.log(deviceInfo);
+    await createEventNoSQLDatabase({
+      address: props.template,
+      deviceInfo: deviceInfo,
+      quantity: props.quantity,
+    });
     if (newEventInfo.insertId) {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
@@ -600,32 +733,6 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
                     fullWidth
                   />
                 </Grid>
-                {/* <Grid item xs={6} sm={6} md={2} lg={2}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={{ ...Subtitle, color: "transparent" }}>
-                      Quantity
-                    </p>
-                  </InputLabel>
-                  <Button
-                    type="submit"
-                    style={{
-                      ...LightBlueButton,
-                      ...CenteringGrid,
-                      width: "100%",
-                    }}
-                  >
-                    <PlusIcon />
-                    <p
-                      style={{
-                        ...LightBlueButtonText,
-                        border: "transparent",
-                        textTransform: "none",
-                      }}
-                    >
-                      Add item
-                    </p>
-                  </Button>
-                </Grid> */}
               </Grid>
             </form>
           </Grid>
@@ -666,91 +773,3 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
 };
 
 export default AssignmentFromExistingInventory;
-
-// const option2 = async (props) => {
-//   let newProps = [];
-//   const finalList = [
-//     ...selectedItem,
-//     {
-//       item_group: valueItemSelected[0].item_group,
-//       quantity: watch("quantity"),
-//       startingNumber: watch("startingNumber"),
-//     },
-//   ];
-//   await createEvent(props.template);
-//   const groupingByType = groupBy(finalList, "item_group");
-//   for (let [key, value] of Object.entries(groupingByType)) {
-//     for (let data of value) {
-//       const indexStart = props.groupingType[data.item_group].findIndex(
-//         (element) => element.serial_number == data.startingNumber
-//       );
-//       const indexEnd = indexStart + Number(data.quantity);
-//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-//       const deviceInfo = dataFound; //*array of existing devices in sql db
-//       newProps = [...newProps, deviceInfo];
-//       await updateDeviceInWarehouse({
-//         item_group: key,
-//         startingNumber: data.startingNumber,
-//         endingNumber: deviceInfo.at(-1).serial_number,
-//       });
-//       await addDeviceToEvent([
-//         {
-//           item_group: deviceInfo[0].item_group,
-//           category_name: deviceInfo[0].category_name,
-//           min_serial_number: deviceInfo.at(-1).serial_number,
-//           max_serial_number: deviceInfo[0].serial_number,
-//         },
-//       ]);
-//     }
-//   }
-//   await createNewLease({
-//     deviceInfo: newProps.flat(),
-//     street: props.template.street,
-//     city: props.template.city,
-//     state: props.template.state,
-//     zip: props.template.zip,
-//   });
-//   openNotificationWithIcon("Equipment assigned to staff member.");
-//   setLoadingStatus(false);
-//   return;
-// };
-
-// const option3 = async (props) => {
-//   await createEvent(props.template);
-//   let newProps = [];
-//   const groupingByType = groupBy(selectedItem, "item_group");
-//   for (let [key, value] of Object.entries(groupingByType)) {
-//     for (let data of value) {
-//       const indexStart = props.groupingType[data.item_group].findIndex(
-//         (element) => element.serial_number == data.startingNumber
-//       );
-//       const indexEnd = indexStart + Number(data.quantity);
-//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-//       const deviceInfo = dataFound; //*array of existing devices in sql db
-//       newProps = [...newProps, deviceInfo];
-//       await updateDeviceInWarehouse({
-//         item_group: key,
-//         startingNumber: deviceInfo[0].serial_number,
-//         endingNumber: deviceInfo.at(-1).serial_number,
-//       });
-//       await addDeviceToEvent([
-//         {
-//           item_group: deviceInfo[0].item_group,
-//           category_name: deviceInfo[0].category_name,
-//           min_serial_number: deviceInfo.at(-1).serial_number,
-//           max_serial_number: deviceInfo[0].serial_number,
-//         },
-//       ]);
-//     }
-//   }
-//   await createNewLease({
-//     deviceInfo: newProps.flat(),
-//     street: props.template.street,
-//     city: props.template.city,
-//     state: props.template.state,
-//     zip: props.template.zip,
-//   });
-//   openNotificationWithIcon("Equipment assigned to staff member.");
-//   setLoadingStatus(false);
-//   return;
-// };
