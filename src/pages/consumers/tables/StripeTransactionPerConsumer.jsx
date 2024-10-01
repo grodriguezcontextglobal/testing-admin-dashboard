@@ -1,4 +1,5 @@
 import { Chip } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, Badge, Table } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -13,73 +14,78 @@ import {
 } from "../../../store/slices/eventSlice";
 import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 const StripeTransactionPerConsumer = ({ searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
+  const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
+    {}
+  );
   const [responsedData, setResponsedData] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const customerFormat = {
+    ...customer,
+    id: customer.id ?? customer.uid,
+  };
+  const leaseEventTransaction = useQuery({
+    QueryKey: ["leaseEventTransaction"],
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-assigned-list", {
+        company: user.companyData.id,
+        eventSelected: customerFormat.id,
+      }),
+    refetchOnMount: false,
+  });
+  const retrievePaymentIntentInfo = (props) => {
+    return setPaymentIntentInfoRetrieved(props);
+  };
   //refactoring -->>
   const avoidDuplicatedEventsPerAdmin = () => {
-    const result = new Set();
-    if (eventsPerAdmin.active) {
-      for (let data of eventsPerAdmin.active) {
-        const toString = JSON.stringify(data);
-        if (!result.has(toString)) {
-          result.add(toString);
-        }
+    const result = new Map();
+    const active = eventsPerAdmin.active ?? [];
+    const complete = eventsPerAdmin.completed ?? [];
+    const events = [...active, ...complete];
+    for (let data of events) {
+      if (!result.has(data.id)) {
+        result.set(data.id, JSON.stringify(data));
       }
     }
-    if (eventsPerAdmin.completed) {
-      for (let data of eventsPerAdmin.completed) {
-        const toString = JSON.stringify(data);
-        if (!result.has(toString)) {
-          result.add(toString);
-        }
-      }
-    }
-    return Array.from(result);
+    return [...result.values()];
   };
   const fetchingDataPerAllowed = async () => {
     const result = new Map();
     if (avoidDuplicatedEventsPerAdmin().length > 0) {
       for (let data of avoidDuplicatedEventsPerAdmin()) {
         const parsing = JSON.parse(data);
-        if (
-          customer.data.eventSelected.some(
-            (element) => element === parsing.eventInfoDetail.eventName
-          ) &&
-          customer.data.provider.some((element) => element === parsing.company)
-        ) {
-          const respo = await devitrakApi.post(
-            "/receiver/receiver-assigned-list",
-            {
-              company: user.companyData.id,
-              user: customer.email,
-              eventSelected: parsing.eventInfoDetail.eventName,
-            }
-          );
-          if (respo.data) {
-            const inventory =respo.data.listOfReceivers;
-            if (inventory.length > 0) {
-              for (let data of inventory) {
-                if (!result.has(data.paymentIntent)) {
-                  result.set(data.paymentIntent, [data]);
-                } else {
-                  result.set(data.paymentIntent, [
-                    ...result.get(data.paymentIntent),
-                    data,
-                  ]);
-                }
+        const respo = await devitrakApi.post(
+          "/receiver/receiver-assigned-list",
+          {
+            company: user.companyData.id,
+            user: customer.email,
+            eventSelected: parsing.eventInfoDetail.eventName,
+          }
+        );
+        if (respo.data) {
+          const inventory = respo.data.listOfReceivers;
+          if (inventory.length > 0) {
+            for (let data of inventory) {
+              if (!result.has(data.paymentIntent)) {
+                result.set(data.paymentIntent, [
+                  { ...data, eventInfo: parsing },
+                ]);
+              } else {
+                result.set(data.paymentIntent, [
+                  ...result.get(data.paymentIntent),
+                  { ...data, eventInfo: parsing },
+                ]);
               }
             }
           }
@@ -99,7 +105,6 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       controller.abort();
     };
   }, []);
-
   const reformedSourceData = () => {
     const result = new Set();
     responsedData.forEach((value) => {
@@ -112,6 +117,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
             acc + (device.status === false || device.status === "Lost"),
           0
         ),
+        eventInfo: value[0].eventInfo,
       });
     });
     return Array.from(result);
@@ -161,6 +167,19 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     );
   };
 
+  const renderingOptionsBasedOnPaymentIntentStatus = (paymentIntent) => {
+    if (paymentIntent.length < 16) {
+      return "none";
+    } else if (
+      (paymentIntent.length > 15 && String(paymentIntent).includes("cash")) ||
+      (paymentIntent.length > 15 &&
+        paymentIntentInfoRetrieved.status !== "requires_capture")
+    ) {
+      return "none";
+    } else {
+      return "flex";
+    }
+  };
   // *expanded row
   const columns = [
     {
@@ -284,7 +303,9 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         return (
           <div
             style={{
-              display: "flex",
+              display: renderingOptionsBasedOnPaymentIntentStatus(
+                record.paymentIntent
+              ),
               justifyContent: "flex-end",
               alignItems: "center",
               width: "100%",
@@ -359,7 +380,6 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       },
     },
   ];
-
   return (
     <Table
       columns={columns}
@@ -370,6 +390,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
           <ExpandedRow
             rowRecord={record}
             refetching={refetchingAfterReturnDeviceInRow}
+            paymentIntentInfoRetrieved={retrievePaymentIntentInfo}
           />
         ),
       }}
