@@ -4,11 +4,12 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../localStyles.css";
 const FooterExpandedRow = ({
-  handleReturnSingleDevice,
-  handleLostSingleDevice,
+  // handleReturnSingleDevice,
+  // handleLostSingleDevice,
   dataRendering,
   returningDevice,
-  formattedData
+  formattedData,
+  paymentIntentInfoRetrieved,
 }) => {
   const returningAllAtOnce = () => {
     for (let data of formattedData) {
@@ -16,10 +17,12 @@ const FooterExpandedRow = ({
     }
   };
   const [ccInfo, setCcInfo] = useState([]);
+  // const [openModal, setOpenModal] = useState(false);
   const retrieveCCInfo = async () => {
     const resp = await devitrakApi
       .get(`/stripe/payment_intents/${dataRendering.paymentIntent}`)
       .then((response) => response.data);
+    paymentIntentInfoRetrieved(resp.paymentIntent);
     return setCcInfo(resp.paymentIntent);
   };
 
@@ -54,7 +57,7 @@ const FooterExpandedRow = ({
       deposit: dataToBeRendered(),
       status: false,
       serial_number: "",
-      data: [],
+      data: [dataRendering],
     },
   ];
   const footerColumn = [
@@ -68,11 +71,22 @@ const FooterExpandedRow = ({
     },
     {
       title: "Device",
-      dataIndex: "serial_number",
       key: "serial_number",
-      render: (serial_number) => (
-        <p style={{ ...Subtitle, height: "0.5dvh" }}>{serial_number}</p>
-      ),
+      // render: () => (
+      //   <button
+      //     disabled
+      //     style={{
+      //       ...Subtitle,
+      //       color: "var(--blue-dark--800)",
+      //       outline: "none",
+      //       margin: "0",
+      //       backgroundColor: "transparent",
+      //       border: "none",
+      //     }}
+      //   >
+      //     Change card
+      //   </button>
+      // ),
     },
     {
       title: "Cost of device",
@@ -103,30 +117,52 @@ const FooterExpandedRow = ({
             alignItems: "center",
           }}
         >
-          <p
+          <button
             onClick={() => returningAllAtOnce()}
-            style={{ ...Subtitle, color: "var(--blue-dark--800)" }}
+            style={{
+              ...Subtitle,
+              color: "var(--blue-dark--800)",
+              outline: "none",
+              margin: "0",
+              backgroundColor: "transparent",
+              border: "none",
+            }}
           >
             Mark all as returned
-          </p>
-          {/* <p
-            onClick={() => handleLostSingleDevice(record)}
-            style={{ ...Subtitle, color: "var(--blue-dark--800)" }}
-          >
-            Mark all as lost
-          </p> */}
+          </button>
         </Space>
       ),
     },
   ];
   return (
-    <Table
-      showHeader={false}
-      columns={footerColumn}
-      dataSource={rendering}
-      pagination={false}
-      className="footer-expanded-table"
-    />
+    // <>
+      <Table
+        showHeader={false}
+        columns={footerColumn}
+        dataSource={rendering}
+        pagination={false}
+        className="footer-expanded-table"
+      />
+      // {/* {openModal && (
+      //   <>
+      //     <StripeElementUpadatePaymentMethod
+      //       clientSecret={ccInfo.client_secret}
+      //       paymentIntentId={ccInfo.id}
+      //     />
+      //     <button
+      //       onClick={() => setOpenModal(false)}
+      //       style={{ ...GrayButton, margin: "1rem auto", width: "100%" }}
+      //     >
+      //       <span
+      //         style={{ ...GrayButtonText, ...CenteringGrid }}
+      //         id="button-text"
+      //       >
+      //         Cancel
+      //       </span>
+      //     </button>
+      //   </>
+      // )} */}
+    // {/* </> */}
   );
 };
 
