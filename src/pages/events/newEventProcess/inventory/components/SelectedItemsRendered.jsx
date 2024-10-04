@@ -12,7 +12,7 @@ const SelectedItemsRendered = ({selectedItem, removeItemSelected}) => {
         textAlign={"left"}
         style={{ ...Subtitle, fontWeight: 500 }}
       >
-        Groups selected
+        Event inventory selected
       </Typography>
     </InputLabel>
     <Space
