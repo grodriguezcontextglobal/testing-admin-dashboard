@@ -8,11 +8,10 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
-import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { PlusIcon } from "../../../components/icons/PlusIcon";
 import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
+import { checkArray } from "../../../components/utils/checkArray";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -21,9 +20,8 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { Title } from "../../../styles/global/Title";
 import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
-import DisplayAllItemsSetInventoryEvent from "./components/DisplayAllItemsSetInventoryEvent";
+import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
@@ -34,7 +32,6 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
-import { checkArray } from "../../../components/utils/checkArray";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -392,87 +389,15 @@ const MainPageQuickGlance = () => {
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <FormatEventDetailInfo />
           </Grid>
-          <Grid
-            style={{
-              display: `${displayElementsBasedOnRole() ? "flex" : "none"}`,
-              justifyContent: "space-between",
-              alignItems: "center",
-              margin: "2rem auto 0.2rem",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <button
-              style={{
-                background: "transparent",
-                outline: "none",
-                border: "transparent",
-                margin: 0,
-                padding: 0,
-              }}
-              onClick={() => setShowInventoryTypes(!showInventoryTypes)}
-            >
-              <p
-                style={{
-                  ...Title,
-                  fontSize: "25px",
-                  padding: 0,
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
-                }}
-              >
-                {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
-                Inventory assigned to event:&nbsp;
-                <div
-                  style={{
-                    borderRadius: "16px",
-                    background: "var(--blue-dark-50, #EFF4FF)",
-                    mixBlendMode: "multiply",
-                    width: "fit-content",
-                    height: "fit-content",
-                  }}
-                >
-                  <p
-                    style={{
-                      textTransform: "none",
-                      textAlign: "left",
-                      fontWeight: 500,
-                      fontSize: "12px",
-                      fontFamily: "Inter",
-                      lineHeight: "28px",
-                      color: "var(--blue-dark-700, #004EEB)",
-                      padding: "0px 8px",
-                    }}
-                  >
-                    {inventoryEventAssignedCount()} total
-                  </p>
-                </div>
-              </p>
-            </button>
-
-            <button
-              onClick={() => setEditingInventory(true)}
-              style={{
-                ...BlueButton,
-                width: "fit-content",
-                justifyContent: "space-between",
-                alignItems: "center",
-                display: user.role === "4" ? "none" : "flex",
-                margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
-              }}
-            >
-              <p style={{ ...BlueButtonText }}>Update inventory</p>
-            </button>
-          </Grid>
-          <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
-            <DisplayAllItemsSetInventoryEvent />
-          </div>
+          <AlInventoryEventAssigned
+            displayElementsBasedOnRole={displayElementsBasedOnRole}
+            setShowInventoryTypes={setShowInventoryTypes}
+            showInventoryTypes={showInventoryTypes}
+            inventoryEventAssignedCount={inventoryEventAssignedCount}
+            setEditingInventory={setEditingInventory}
+            user={user}
+            AlInventoryEventAssigned
+          />
           <Grid item xs={12}>
             <FormatToDisplayDetail />
           </Grid>
