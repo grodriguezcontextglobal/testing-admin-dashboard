@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Card, Divider, Space } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +36,7 @@ const schema = yup.object().shape({
 
 const Form = () => {
   const { staff } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const { register, setValue, watch, handleSubmit } = useForm({
     resolver: yupResolver(schema),
   });
@@ -47,6 +48,24 @@ const Form = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const addUserCreatingEventAsAdminStaffMember = () => {
+      const newMemberProfile = {
+        firstName: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone ?? "000-000-0000",
+        role: "admin",
+      };
+      return setAdminStaff([...adminStaff, newMemberProfile]);
+    };
+    addUserCreatingEventAsAdminStaffMember();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const addNewMember = (e) => {
     e.preventDefault();
