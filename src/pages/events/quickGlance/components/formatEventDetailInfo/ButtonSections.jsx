@@ -148,9 +148,8 @@ const ButtonSections = () => {
     const check = staffList.findIndex(
       (element) => element.email === user.email
     );
-    return check < 0;
+    return check > -1;
   };
-
   return (
     <Suspense
       fallback={
@@ -250,8 +249,8 @@ const ButtonSections = () => {
           {/* <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}> */}
           <Grid
             display={`${
-              ((!event.active && checkUserIsAssignedAsAdminInEvent()) ||
-                (event.active && checkUserIsAssignedAsAdminInEvent())) &&
+              (!event.active ||
+                (event.active && !checkUserIsAssignedAsAdminInEvent())) &&
               "none"
             }`}
             item
