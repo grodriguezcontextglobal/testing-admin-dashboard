@@ -128,24 +128,57 @@ const Form = () => {
     return null;
   };
 
-  const handleAddingNewItemToDeviceSetupEvent = (data) => {
-    const resulting = [
-      ...selectedItem,
-      {
-        ...data,
-        ...valueItemSelected[0],
-        cost: eventInfoDetail.merchant
-          ? data.deposit
-          : valueItemSelected[0].cost,
-        quantity: assignAllDevices ? valueItemSelected.length : data.quantity,
-        existing: true,
-      },
-    ];
+  const addingQuantity = (a = 0, b = 0) => {
+    return Number(a) + Number(b);
+  };
+  const updateQuantity = (props) => {
+    let resulting = [...selectedItem];
+    let eleIndex = selectedItem.findIndex(
+      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+    );
+    if (eleIndex > -1) {
+      resulting[eleIndex] = {
+        ...resulting[eleIndex],
+        quantity: `${addingQuantity(
+          resulting[eleIndex].quantity,
+          props
+        )}`,
+      };
+    }
     setSelectedItem(resulting);
     dispatch(onAddDeviceSetup(resulting));
     setValue("quantity", "");
     setAssignAllDevices(false);
     return;
+  };
+  const checkIfNewAddedItemAlreadyWasAdded = () => {
+    const check = selectedItem.some(
+      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+    );
+    return check;
+  };
+  const handleAddingNewItemToDeviceSetupEvent = async (data) => {
+    if (checkIfNewAddedItemAlreadyWasAdded()) {
+      return updateQuantity(data.quantity);
+    } else {
+      const resulting = [
+        ...selectedItem,
+        {
+          ...data,
+          ...valueItemSelected[0],
+          cost: eventInfoDetail.merchant
+            ? data.deposit
+            : valueItemSelected[0].cost,
+          quantity: assignAllDevices ? valueItemSelected.length : data.quantity,
+          existing: true,
+        },
+      ];
+      setSelectedItem(resulting);
+      dispatch(onAddDeviceSetup(resulting));
+      setValue("quantity", "");
+      setAssignAllDevices(false);
+      return;
+    }
   };
   const handleNextStepEventSetup = () => {
     dispatch(onAddDeviceSetup(selectedItem));
@@ -284,7 +317,7 @@ const Form = () => {
                 color: "#000",
               }}
             >
-              Select from existing category
+              Select from existing inventory
             </Typography>
           </InputLabel>
           <Select
