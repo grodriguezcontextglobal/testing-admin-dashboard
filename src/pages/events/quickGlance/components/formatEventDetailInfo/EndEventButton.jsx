@@ -103,7 +103,7 @@ const EndEventButton = () => {
   };
   const removingAccessFromStaffMemberOnly = async () => {
     const checkCompanyUserSet = user.companyData.employees;
-    const employeesCompany = [...checkCompanyUserSet];
+    let employeesCompany = [...checkCompanyUserSet];
     const adminStaff = event.staff.adminUser ?? [];
     const headsetStaff = event.staff.headsetAttendees ?? [];
     const employeesEvent = [...adminStaff, ...headsetStaff];
