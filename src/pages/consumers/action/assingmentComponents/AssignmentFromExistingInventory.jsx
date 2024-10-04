@@ -226,11 +226,12 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         customer.id ?? customer.uid,
         user.company,
         new Date().getTime(),
-        user.companyData.id
+        user.companyData.id,
+
       );
       await devitrakApi.post(
         "/receiver/receiver-assignation",
-        transaction.render()
+        {...transaction.render(), type:"lease"}
       );
     }
   };

@@ -36,6 +36,7 @@ const MainPage = () => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
+        type:"event"
       }),
     refetchOnMount: false,
   });

@@ -35,15 +35,26 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     ...customer,
     id: customer.id ?? customer.uid,
   };
+
   const leaseEventTransaction = useQuery({
-    QueryKey: ["leaseEventTransaction"],
+    QueryKey: ["leaseEventTransaction", customerFormat.id],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         company: user.companyData.id,
         eventSelected: customerFormat.id,
+        type:"lease"
       }),
     refetchOnMount: false,
   });
+  useEffect(() => {
+    const controller = new AbortController();
+    leaseEventTransaction.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+
   const retrievePaymentIntentInfo = (props) => {
     return setPaymentIntentInfoRetrieved(props);
   };
@@ -62,9 +73,20 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   };
   const fetchingDataPerAllowed = async () => {
     const result = new Map();
-    if (avoidDuplicatedEventsPerAdmin().length > 0) {
-      for (let data of avoidDuplicatedEventsPerAdmin()) {
-        const parsing = JSON.parse(data);
+    if (
+      avoidDuplicatedEventsPerAdmin().length > 0 &&
+      leaseEventTransaction.data
+    ) {
+      const leasingData = leaseEventTransaction.data.data.list ?? [];
+
+      const blendingData = [
+        ...avoidDuplicatedEventsPerAdmin().map((item) => JSON.parse(item)),
+        ...leasingData,
+      ];
+      console.log("blending", blendingData);
+      for (let data of blendingData) {
+        const parsing = typeof data === "string" ? JSON.parse(data) : data; ///stringifyData(data);
+        console.log(`${parsing.eventInfoDetail.eventName}`, parsing);
         const respo = await devitrakApi.post(
           "/receiver/receiver-assigned-list",
           {
@@ -92,6 +114,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         }
       }
     }
+    console.log(result);
     return setResponsedData(result);
   };
 
