@@ -1,7 +1,7 @@
-import { Button, OutlinedInput, Typography } from "@mui/material";
+import { OutlinedInput, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Select } from "antd";
+import { Select, Button } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
   const [deviceSelection, setDeviceSelection] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const deviceTrackInPoolQuery = useQuery({
     queryKey: ["devicesInPoolListPerEvent"],
     queryFn: () =>
@@ -132,6 +133,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
 
   const onSubmitRegister = async (data) => {
     if (!checkDeviceAvailability(data.serialNumber)) {
+      setIsLoading(true);
       try {
         const id = nanoid(12);
         const max = 918273645;
@@ -207,6 +209,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           alert(
             "Device assigned successfully. If transaction/device are not showed in table, please click 'Refresh button' in header of the transaction table."
           );
+          setIsLoading(false);
           await closeModal();
         }
       } catch (error) {
@@ -214,9 +217,11 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
           error
         );
+        setIsLoading(false);
         alert(error);
       }
     } else {
+      setIsLoading(false);
       return alert(
         "Device in use for other consumer. Please assign a different serial number."
       );
@@ -303,7 +308,11 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           />
         </div>
 
-        <Button style={{ ...BlueButton, width: "100%" }} type="submit">
+        <Button
+          loading={isLoading}
+          style={{ ...BlueButton, width: "100%" }}
+          htmlType="submit"
+        >
           <Typography textTransform={"none"} style={BlueButtonText}>
             Create transaction
           </Typography>

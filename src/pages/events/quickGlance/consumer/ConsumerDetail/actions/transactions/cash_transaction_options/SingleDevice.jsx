@@ -1,5 +1,4 @@
 import {
-  Button,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -7,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Select } from "antd";
+import { Select, Button } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +25,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
+  const [isLoading, setIsLoading] = useState(false);
   const [deviceSelection, setDeviceSelection] = useState(null);
   const deviceTrackInPoolQuery = useQuery({
     queryKey: ["devicesInPoolListPerEvent"],
@@ -139,6 +139,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   const onSubmitRegister = async (data) => {
     if (!checkDeviceAvailability(data.serialNumber)) {
       try {
+        setIsLoading(true);
         const id = nanoid();
         const max = 918273645;
         const transactionGenerated =
@@ -211,6 +212,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             exact: true,
           });
           alert("Device assigned successful");
+          setIsLoading(false);
           closeModal();
         }
       } catch (error) {
@@ -221,6 +223,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
         alert(error);
       }
     } else {
+      setIsLoading(false);
       return alert("Device in use for other consumer");
     }
   };
@@ -330,7 +333,11 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
           </FormControl>
         </div>
 
-        <Button style={{ ...BlueButton, width: "100%" }} type="submit">
+        <Button
+          loading={isLoading}
+          style={{ ...BlueButton, width: "100%" }}
+          htmlType="submit"
+        >
           <Typography textTransform={"none"} style={BlueButtonText}>
             Create transaction
           </Typography>
