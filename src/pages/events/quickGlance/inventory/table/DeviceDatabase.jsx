@@ -243,29 +243,6 @@ const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
       ),
     },
   ];
-  // const deviceInPoolQuery = useQuery({
-  //   queryKey: "deviceInPoolListNoSQL",
-  //   queryFn: () =>
-  //     devitrakApi.post("/receiver/receiver-pool-list", {
-  //       eventSelected: event.eventInfoDetail.eventName,
-  //       company: user.companyData.id,
-  //     }),
-  //   refetchOnMount: false,
-  // });
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   deviceInPoolQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [deviceInPoolQuery.data]);
-
   const sortDataPerEventAndCompany = () => {
     const list = dataFormat;
     if (list) {
