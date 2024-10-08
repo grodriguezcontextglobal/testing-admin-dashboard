@@ -1,18 +1,14 @@
 import { Grid } from "@mui/material";
-import { Title } from "../../../../styles/global/Title";
-import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
+import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { Title } from "../../../../styles/global/Title";
+import DisplayAllItemsSetInventoryEventForCustomers from "./DisplayAllItemsSetInventoryForCustomers";
 
 const AlInventoryEventAssigned = ({
   displayElementsBasedOnRole,
   setShowInventoryTypes,
   showInventoryTypes,
   inventoryEventAssignedCount,
-  setEditingInventory,
-  user,
 }) => {
   return (
     <>
@@ -52,7 +48,7 @@ const AlInventoryEventAssigned = ({
             }}
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
-            Inventory assigned to event:&nbsp;
+            Inventory assigned to event for customer uses:&nbsp;
             <div
               style={{
                 borderRadius: "16px",
@@ -79,23 +75,9 @@ const AlInventoryEventAssigned = ({
             </div>
           </p>
         </button>
-
-        <button
-          onClick={() => setEditingInventory(true)}
-          style={{
-            ...BlueButton,
-            width: "fit-content",
-            justifyContent: "space-between",
-            alignItems: "center",
-            display: user.role === "4" ? "none" : "flex",
-            margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
-          }}
-        >
-          <p style={{ ...BlueButtonText }}>Update inventory</p>
-        </button>
       </Grid>
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
-        <DisplayAllItemsSetInventoryEvent />
+        <DisplayAllItemsSetInventoryEventForCustomers />
       </div>
     </>
   );
