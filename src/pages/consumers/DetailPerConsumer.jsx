@@ -24,10 +24,11 @@ import CardRendered from "../inventory/utils/CardRendered";
 import CardActionsButton from "./components/CardActionsButton";
 import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
-import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
+// import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
 import { useEffect, useRef, useState } from "react";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
+import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
@@ -45,7 +46,7 @@ const DetailPerConsumer = () => {
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
-        "consumerInfo.id": customerInfoTemplate.id,
+        "consumerInfo.email": customer.email,
       }),
     refetchOnMount: false,
   });
@@ -60,10 +61,12 @@ const DetailPerConsumer = () => {
   const [eventsAttendedForCustomer, setEventsAttendedForCustomer] = useState(0);
   const renderingNumberOfEventsConsumerAttended = async () => {
     const result = new Map();
-    const dataPerEvent = transactionsConsumerQuery.data.data.list;
-    for (let data of dataPerEvent) {
-      if (!result.has(data.eventSelected)) {
-        result.set(data.eventSelected, data);
+    if (transactionsConsumerQuery.data) {
+      const dataPerEvent = transactionsConsumerQuery?.data?.data?.list;
+      for (let data of dataPerEvent) {
+        if (!result.has(data.eventSelected)) {
+          result.set(data.eventSelected, data);
+        }
       }
     }
     return setEventsAttendedForCustomer(result.size);
@@ -75,7 +78,7 @@ const DetailPerConsumer = () => {
     return () => {
       controller.abort();
     };
-  }, [user.id, user.companyData.id, transactionsConsumerQuery.data]);
+  }, [user.id, user.companyData.id, transactionsConsumerQuery.data, customer.email]);
 
   if (transactionsConsumerQuery.isLoading)
     return (
@@ -99,7 +102,13 @@ const DetailPerConsumer = () => {
       }
       return [];
     };
-
+    const renderingTransactions = () => {
+      if (transactionsConsumerQuery.data) {
+        const dataPerEvent = transactionsConsumerQuery.data.data.list;
+        return dataPerEvent.length;
+      }
+      return 0;
+    };
     return (
       <Grid
         key={customer.id}
@@ -265,7 +274,7 @@ const DetailPerConsumer = () => {
         <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
           <CardRendered
             title={"Transactions"}
-            props={`${transactionsConsumerQuery?.data?.data?.list.length ?? 0}`}
+            props={renderingTransactions()}
             optional={null}
           />
         </Grid>{" "}
@@ -364,7 +373,7 @@ const DetailPerConsumer = () => {
           container
         >
           <Grid item xs={12} sm={12} md={12} lg={12}>
-            <TransactionTableRefactoring searchValue={watch("searchEvent")} />
+            <StripeTransactionPerConsumer searchValue={watch("searchEvent")} />
           </Grid>
         </Grid>
       </Grid>

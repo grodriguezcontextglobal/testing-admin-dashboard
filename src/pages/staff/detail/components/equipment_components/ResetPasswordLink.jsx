@@ -131,6 +131,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
         footer={[]}
         centered
         maskClosable={false}
+        style={{ zIndex: 30}}
       >
         <Grid container>
           <Grid

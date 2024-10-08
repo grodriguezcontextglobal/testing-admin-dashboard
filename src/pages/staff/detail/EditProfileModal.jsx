@@ -124,6 +124,7 @@ const EditProfileModal = ({ editProfile, setEditProfile }) => {
       title={renderTitle()}
       style={{
         top: 20,
+        zIndex:30
       }}
       open={editProfile}
       onOk={() => closeModal()}

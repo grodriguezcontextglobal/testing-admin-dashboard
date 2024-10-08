@@ -102,6 +102,7 @@ const UpdateEventContactInfo = ({
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
+      style={{zIndex:30}}
     >
       {contextHolder}
       <Grid

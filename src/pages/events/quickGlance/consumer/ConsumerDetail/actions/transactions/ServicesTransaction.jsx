@@ -145,6 +145,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       maskClosable={false}
       style={{
         top: "10dvh",
+        zIndex:30
       }}
     >
       <div

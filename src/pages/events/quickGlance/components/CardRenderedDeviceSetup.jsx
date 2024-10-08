@@ -93,6 +93,25 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
                 </div>
               </Tooltip>
             </Grid>
+            <Grid
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <Typography
+                paddingTop={"8px"}
+                style={{ ...Subtitle, textWrap: "nowrap" }}
+              >
+                {props.startingNumber}
+                &nbsp;-&nbsp;
+                {props.endingNumber}
+              </Typography>
+            </Grid>
           </Grid>
         </Card>
       </Grid>

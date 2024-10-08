@@ -20,6 +20,7 @@ import { groupBy } from "lodash";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import Service from "./review/service";
 import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
+import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -123,7 +124,7 @@ const ReviewAndSubmitEvent = () => {
         } ${new Date().toString()} ${true} ${data.startingNumber} ${
           data.endingNumber
         }`,
-        consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
+        consumerUses: data.consumerUses, //change this to false to force company to set device for consumer and others to set device for staff
         startingNumber: "000000", //data.startingNumber
         endingNumber: "000000", //data.endingNumber,
         existing: data.existing,
@@ -133,7 +134,8 @@ const ReviewAndSubmitEvent = () => {
   };
   const staffDetail = () => {
     const profileStaffList = {
-      adminUser: checkAndAddRootAdministratorAsAdminStaff()["Administrator"] ?? [],
+      adminUser:
+        checkAndAddRootAdministratorAsAdminStaff()["Administrator"] ?? [],
       headsetAttendees:
         checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"] ?? [],
     };
@@ -151,7 +153,7 @@ const ReviewAndSubmitEvent = () => {
       },
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),
-      extraServicesNeeded: extraServiceListSetup.length > 0,
+      extraServicesNeeded: extraServiceListSetup?.length > 0,
       extraServices: extraServiceListSetup,
       active: true,
       contactInfo: contactInfo,
@@ -301,13 +303,7 @@ const ReviewAndSubmitEvent = () => {
           <InputLabel style={{ width: "100%" }}>
             <Typography
               textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"20px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"30px"}
-              color={"var(--gray-600, #475467)"}
+              style={{ ...TextFontSize20LineHeight30, fontWeight: 600, textAlign: "left", color: "var(--gray-600, #475467)" }}
               alignSelf={"stretch"}
             >
               Review all the information below

@@ -22,6 +22,7 @@ const ModalPayment = ({
       onOk={() => closeModal()}
       onCancel={() => closeModal()}
       footer={[]}
+      style={{ zIndex: 30 }}
     >
       <CheckoutElementCompanySubscription
         clientSecret={clientSecret}

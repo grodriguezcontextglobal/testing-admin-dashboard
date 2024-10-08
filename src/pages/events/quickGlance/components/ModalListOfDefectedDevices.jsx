@@ -79,6 +79,7 @@ const ModalListOfDefectedDevices = ({
       width={1000}
       maskClosable={false}
       title="List of Defected Devices"
+      style={{ zIndex: 30 }}
     >
       <Table
         columns={columns}

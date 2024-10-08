@@ -8,7 +8,7 @@ import {
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
 
-const DisplayAllItemsSetInventoryEvent = () => {
+const DisplayAllItemsSetInventoryEventForCustomers = () => {
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const dispatch = useDispatch();
@@ -39,7 +39,7 @@ const DisplayAllItemsSetInventoryEvent = () => {
   return (
     <Space size={[16, 12]} wrap>
       {event?.deviceSetup?.map((item, index) => {
-        if (!item.consumerUses) {
+        if (item.consumerUses) {
           return (
             <CardRendered
               key={`${item._id}${index}`}
@@ -60,4 +60,4 @@ const DisplayAllItemsSetInventoryEvent = () => {
   );
 };
 
-export default DisplayAllItemsSetInventoryEvent;
+export default DisplayAllItemsSetInventoryEventForCustomers;

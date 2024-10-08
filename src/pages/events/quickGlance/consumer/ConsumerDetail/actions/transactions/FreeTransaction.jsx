@@ -39,7 +39,8 @@ const FreeTransaction = ({
       width={1000}
       maskClosable={false}
       style={{
-        top:"5dvh"
+        top:"5dvh",
+        zIndex:30
       }}
     >
       <div

@@ -215,7 +215,7 @@ const DeleteItemModal = ({
       key={dataFound[0].item_id}
       open={openDeleteItemModal}
       onCancel={() => closeModal()}
-      style={{ top: "20dv", zIndex: "7" }}
+      style={{ top: "20dv", zIndex: 30 }}
       width={1000}
       footer={[]}
     >

@@ -130,6 +130,7 @@ const ForgotPassword = ({ open, close }) => {
         title={renderTitle()}
         style={{
           top: 20,
+          zIndex: 30,
         }}
         open={open}
         onOk={() => handleClose()}

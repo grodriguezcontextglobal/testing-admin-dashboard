@@ -1,6 +1,5 @@
 import { Grid, MenuItem, Select } from "@mui/material";
 import { Divider, Modal } from "antd";
-import { PropTypes } from "prop-types";
 import { useEffect } from "react";
 import "../../../styles/global/ant-select.css";
 const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
@@ -20,6 +19,7 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
       onCancel={() => closeModal()}
       width={1000}
       footer={[]}
+      style={{ zIndex: 30 }}
     >
       <Grid
         container

@@ -36,6 +36,7 @@ const MainPage = () => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
+        type: "event",
       }),
     refetchOnMount: false,
   });
@@ -124,10 +125,7 @@ const MainPage = () => {
       };
       const active = groupByActive.true ?? [];
       const inactive = groupByActive.false ?? [];
-      const activeAdminEvents = filterEventsByEmail([
-        ...active,
-        ...inactive,
-      ]);
+      const activeAdminEvents = filterEventsByEmail([...active, ...inactive]);
       const activeEvents = [...activeAdminEvents];
       const inactiveAdminEvents = filterEventsByEmail(
         groupByActive.false,
@@ -137,10 +135,11 @@ const MainPage = () => {
       dispatch(
         onAddListEventPermitPerAdmin({
           active: activeEvents,
-          completed: inactiveAdminEvents,
+          completed: inactiveAdminEvents ?? [],
         })
       );
-      const combinedEvents = [...activeEvents, ...inactiveAdminEvents];
+      const inactiveEvents = inactiveAdminEvents ?? [];
+      const combinedEvents = [...activeEvents, ...inactiveEvents];
       return combinedEvents;
     };
     renderingDataBasedOnStaffAndActiveEvent();

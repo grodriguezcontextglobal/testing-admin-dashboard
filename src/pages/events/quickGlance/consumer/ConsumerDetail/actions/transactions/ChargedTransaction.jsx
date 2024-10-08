@@ -43,6 +43,7 @@ const ChargedTransaction = ({
       width={1000}
       style={{
         top: "5dvh",
+        zIndex: 30,
       }}
     >
       <div

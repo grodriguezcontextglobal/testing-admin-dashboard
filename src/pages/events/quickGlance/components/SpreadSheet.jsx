@@ -7,20 +7,21 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { XLSXIcon } from "../../../../components/icons/XLSXIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { groupBy } from "lodash";
 const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
   const [itemsUsers, setItemsUsers] = useState([]);
+  const [allTransaction, setAllTransaction] = useState([]);
   const [defectedItems, setDefectedItems] = useState([]);
   const { event } = useSelector((state) => state.event);
-  const { user } = useSelector(state => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const transactionDeviceRecordInEvent = useQuery({
     queryKey: ["transactionAndDeviceRecord"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id
+        company: user.companyData.id,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const transactionPlusUserInfo = useQuery({
@@ -29,9 +30,7 @@ const SpreadSheet = () => {
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
-        "device.status": true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
@@ -47,7 +46,12 @@ const SpreadSheet = () => {
   useEffect(() => {
     const controller = new AbortController();
     if (transactionDeviceRecordInEvent.data && transactionPlusUserInfo.data) {
-      setItemsUsers(transactionPlusUserInfo.data.data.listOfReceivers);
+      const grouping = groupBy(
+        transactionPlusUserInfo.data.data.listOfReceivers,
+        "device.status"
+      );
+      setAllTransaction(transactionPlusUserInfo.data.data.listOfReceivers);
+      setItemsUsers(grouping[true]);
       setDefectedItems(
         transactionDeviceRecordInEvent.data.data.receiversInventory
       );
@@ -256,6 +260,55 @@ const SpreadSheet = () => {
     ];
 
     utils.book_append_sheet(wb, wsSheet3, "Defected_and_Lost devices");
+
+    //all transaction and device check out during the event
+    // Your data array
+    const data4 = allTransaction;
+
+    // Sheet2 config (Details)
+    const headers4 = [
+      "User - First name",
+      "User - Last name",
+      "User - Email",
+      "User - Phone number",
+      "Transaction Reference ID",
+      "Payment ID",
+      "Device - Serial number",
+      "Device - Device type",
+      "Device returned",
+      "Device checked out",
+    ];
+
+    // Convert data to worksheet format for Sheet4 (all data in detail)
+    const wsDataDetail4 = [
+      headers4,
+      ...data4.map((item) => [
+        item.userInfo.name,
+        item.userInfo.lastName,
+        item.user,
+        item.userInfo.phoneNumber,
+        item._id,
+        item.paymentIntent,
+        item.device.serialNumber,
+        item.device.deviceType,
+        item.device.status ? "No" : "Yes",
+        Date(item.timeStamp).toString(),
+      ]),
+    ];
+
+    // Add Sheet4 to the workbook
+    const wsSheet4 = utils.aoa_to_sheet(wsDataDetail4);
+
+    // Set cell styles for Sheet1
+    wsSheet4["!cols"] = [
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+    ];
+
+    utils.book_append_sheet(wb, wsSheet4, "All transactions");
 
     // Generate a random file name (you can customize this logic)
     const newFileName = `excel_${Date.now()}.xlsx`;

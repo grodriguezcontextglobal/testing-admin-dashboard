@@ -5,10 +5,9 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import { nanoid } from "@reduxjs/toolkit";
 import { groupBy } from "lodash";
-import { Card, Select, Space } from "antd";
+import { Card, Select, Space, Button } from "antd";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import {
-  Button,
   Chip,
   FormControl,
   InputAdornment,
@@ -28,6 +27,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
+  const [isLoading, setIsLoading] = useState(false);
   const [deviceSelection, setDeviceSelection] = useState(null);
   const [noAssigned, setNoAssigned] = useState([]);
   const deviceTrackInPoolQuery = useQuery({
@@ -144,6 +144,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
 
   const onSubmitRegister = async (data) => {
     try {
+      setIsLoading(true);
       const totalDeviceAssigned = data.quantity;
       const id = nanoid(12);
       const max = 918273645;
@@ -242,6 +243,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           exact: true,
         });
         alert("Devices assigned successfully");
+        setIsLoading(false);
         if (noAssigned.length === 0) {
           return closeModal();
         }
@@ -251,6 +253,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
         "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
         error
       );
+      setIsLoading(false);
       alert(error);
     }
   };
@@ -376,7 +379,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           </FormControl>
         </div>
 
-        <Button style={{ ...BlueButton, width: "100%" }} type="submit">
+        <Button loading={isLoading} style={{ ...BlueButton, width: "100%" }} htmlType="submit">
           <Typography textTransform={"none"} style={BlueButtonText}>
             Create transaction
           </Typography>

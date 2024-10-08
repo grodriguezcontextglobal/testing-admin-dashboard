@@ -145,6 +145,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
+      style={{ zIndex: 30 }}
     >
       {contextHolder}
       <Grid

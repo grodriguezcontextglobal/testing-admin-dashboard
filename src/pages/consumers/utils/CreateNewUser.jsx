@@ -213,6 +213,7 @@ export const CreateNewConsumer = ({
         onCancel={() => closeDeviceModal()}
         footer={[]}
         maskClosable={false}
+        style={{ zIndex: 30 }}
       >
         <Grid
           display={"flex"}

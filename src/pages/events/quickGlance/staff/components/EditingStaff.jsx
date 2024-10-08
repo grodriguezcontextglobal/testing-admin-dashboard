@@ -368,6 +368,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         centered
         width={1000}
         footer={[]}
+        style={{zIndex:30}}
       >
         {contextHolder}
         <Grid container>

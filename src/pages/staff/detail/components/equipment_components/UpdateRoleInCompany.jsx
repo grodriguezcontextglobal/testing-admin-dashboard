@@ -89,6 +89,7 @@ const UpdateRoleInCompany = () => {
         onCancel={() => closeModal()}
         footer={[]}
         maskClosable={false}
+        style={{ zIndex: 30 }}
       >
         {/* {user.role === "Administrator" ? <form */}
         {Number(user.role) < 2 ? (

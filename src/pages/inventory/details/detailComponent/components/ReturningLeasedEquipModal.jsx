@@ -156,7 +156,7 @@ const ReturningLeasedEquipModal = ({
       key={dataFound[0].item_id}
       open={openReturningModal}
       onCancel={() => closeModal()}
-      style={{ top: "20dv" }}
+      style={{ top: "20dv", zIndex:30 }}
       width={1000}
       centered
       footer={[]}
