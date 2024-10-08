@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
 import Loading from "../../../components/animation/Loading";
 import { checkArray } from "../../../components/utils/checkArray";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
-import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../store/slices/devicesHandleSlice";
+import { onAddDeviceToDisplayInQuickGlance } from "../../../store/slices/devicesHandleSlice";
 import {
   onAddEventData,
   onSelectCompany,
@@ -24,7 +25,6 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
-import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
 const SearchDevice = ({ searchParams }) => {
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
@@ -38,6 +38,7 @@ const SearchDevice = ({ searchParams }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         company: user.companyData.id,
         device: searchParams,
+        activity: true,
       }),
     refetchOnMount: false,
   });
@@ -107,10 +108,6 @@ const SearchDevice = ({ searchParams }) => {
             eventInfo: data,
           });
         }
-        // result.add({
-        //   ...responseData.at(-1),
-        //   eventInfo: data,
-        // });
       }
     }
     const finalResult = new Set();
@@ -187,7 +184,17 @@ const SearchDevice = ({ searchParams }) => {
         }
       );
       if (eventInfo.data && eventInfoSqlDB.data) {
-        dispatch(onOpenDeviceAssignmentModalFromSearchPage(true));
+        const formatDeviceSection = {
+          activity:
+            eventInventoryQuery.data.data.receiversInventory[0].activity,
+          company: [record.type, record.data.eventSelected[0]],
+          entireData: {
+            ...eventInventoryQuery.data.data.receiversInventory[0],
+          },
+          serialNumber: record.serialNumber,
+          status: eventInventoryQuery.data.data.receiversInventory[0].status,
+        };
+        // dispatch(onOpenDeviceAssignmentModalFromSearchPage(true));
         dispatch(
           onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile)
         );
@@ -207,9 +214,11 @@ const SearchDevice = ({ searchParams }) => {
           onAddCustomerInfo(paymentIntentDetailSelectedProfile.consumerInfo)
         );
         dispatch(onAddPaymentIntentSelected(record.data.paymentIntent));
-        return navigate(
-          `/events/event-attendees/${userProfile.uid}/transactions-details`
-        );
+        dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection))
+        return navigate('/device-quick-glance')
+        // return navigate(
+        //   `/events/event-attendees/${userProfile.uid}/transactions-details`
+        // );
       }
     }
   };
