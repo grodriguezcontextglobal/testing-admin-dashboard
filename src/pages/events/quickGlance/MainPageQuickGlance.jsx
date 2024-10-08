@@ -32,12 +32,17 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
+import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
   const [showInventoryTypes, setShowInventoryTypes] = useState(false);
+  const [
+    showInventoryTypesForCustomersOnly,
+    setShowInventoryTypesForCustomersOnly,
+  ] = useState(true);
   const [editingStaff, setEditingStaff] = useState(false);
   const [editingInventory, setEditingInventory] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState(
@@ -114,7 +119,20 @@ const MainPageQuickGlance = () => {
       let result = 0;
       const { deviceSetup } = event;
       for (let data of deviceSetup) {
-        result += Number(data.quantity);
+        if (!data.consumerUses) {
+          result += Number(data.quantity);
+        }
+      }
+      return result;
+    };
+
+    const inventoryEventAssignedForCustomersCount = () => {
+      let result = 0;
+      const { deviceSetup } = event;
+      for (let data of deviceSetup) {
+        if (data.consumerUses) {
+          result += Number(data.quantity);
+        }
       }
       return result;
     };
@@ -390,6 +408,7 @@ const MainPageQuickGlance = () => {
             <FormatEventDetailInfo />
           </Grid>
           <AlInventoryEventAssigned
+            key={"AlInventoryEventAssigned"}
             displayElementsBasedOnRole={displayElementsBasedOnRole}
             setShowInventoryTypes={setShowInventoryTypes}
             showInventoryTypes={showInventoryTypes}
@@ -398,6 +417,19 @@ const MainPageQuickGlance = () => {
             user={user}
             AlInventoryEventAssigned
           />
+          <AllInventoryEventForCustomerOnly
+            key={"AllInventoryEventForCustomerOnly"}
+            displayElementsBasedOnRole={displayElementsBasedOnRole}
+            setShowInventoryTypes={setShowInventoryTypesForCustomersOnly}
+            showInventoryTypes={showInventoryTypesForCustomersOnly}
+            inventoryEventAssignedCount={
+              inventoryEventAssignedForCustomersCount
+            }
+            setEditingInventory={setEditingInventory}
+            user={user}
+            AlInventoryEventAssigned
+          />
+
           <Grid item xs={12}>
             <FormatToDisplayDetail />
           </Grid>
