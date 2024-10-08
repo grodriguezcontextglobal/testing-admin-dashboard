@@ -128,9 +128,24 @@ const Form = () => {
     return null;
   };
 
+  const checkItemToAddAndAvailableQuantity = (props) => {
+    const check = selectedItem.some(
+      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+    );
+    if (check) {
+      const item = selectedItem.find(
+        (element) => element.item_group === `${valueItemSelected[0].item_group}`
+      );
+      const checkQuantity = Number(item.quantity) + Number(props);
+      return checkQuantity > valueItemSelected.length;
+    } else {
+      return props > valueItemSelected.length;
+    }
+  };
   const addingQuantity = (a = 0, b = 0) => {
     return Number(a) + Number(b);
   };
+
   const updateQuantity = (props) => {
     let resulting = [...selectedItem];
     let eleIndex = selectedItem.findIndex(
@@ -139,10 +154,7 @@ const Form = () => {
     if (eleIndex > -1) {
       resulting[eleIndex] = {
         ...resulting[eleIndex],
-        quantity: `${addingQuantity(
-          resulting[eleIndex].quantity,
-          props
-        )}`,
+        quantity: `${addingQuantity(resulting[eleIndex].quantity, props)}`,
       };
     }
     setSelectedItem(resulting);
@@ -158,6 +170,9 @@ const Form = () => {
     return check;
   };
   const handleAddingNewItemToDeviceSetupEvent = async (data) => {
+    if (checkItemToAddAndAvailableQuantity(data.quantity)) {
+      return alert("Quantity is not available");
+    }
     if (checkIfNewAddedItemAlreadyWasAdded()) {
       return updateQuantity(data.quantity);
     } else {
@@ -171,6 +186,7 @@ const Form = () => {
             : valueItemSelected[0].cost,
           quantity: assignAllDevices ? valueItemSelected.length : data.quantity,
           existing: true,
+          consumerUses: false,
         },
       ];
       setSelectedItem(resulting);
