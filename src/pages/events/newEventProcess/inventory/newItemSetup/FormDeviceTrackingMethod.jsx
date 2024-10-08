@@ -297,7 +297,7 @@ const FormDeviceTrackingMethod = ({
             style={TextFontSize20LineHeight30}
             color={"var(--gray600, #475467)"}
           >
-            Add a group of devices
+            Add a rental equipment to company inventory.
           </Typography>
         </InputLabel>
         <InputLabel
