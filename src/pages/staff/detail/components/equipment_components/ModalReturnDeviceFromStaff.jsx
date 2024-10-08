@@ -103,6 +103,7 @@ const ModalReturnDeviceFromStaff = ({
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
+      style={{ zIndex: 30}}
     >
       <form
         style={{

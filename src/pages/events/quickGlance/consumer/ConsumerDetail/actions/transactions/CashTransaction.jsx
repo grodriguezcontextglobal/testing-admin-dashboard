@@ -35,6 +35,7 @@ const CashTransaction = ({ openCashTransaction, setOpenCashTransaction }) => {
       maskClosable={false}
       style={{
         top: "5dvh",
+        zIndex:30
       }}
     >
       <div

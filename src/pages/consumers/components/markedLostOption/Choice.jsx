@@ -15,7 +15,7 @@ const Choice = ({ openModal, setOpenModal }) => {
     setOpenModal(false);
   };
   return (
-    <Modal open={openModal} centered onCancel={() => handleClose()} footer={[]}>
+    <Modal open={openModal} centered onCancel={() => handleClose()} footer={[]} style={{ zIndex: 30 }}>
       <p
         style={{
           textTransform: "none",

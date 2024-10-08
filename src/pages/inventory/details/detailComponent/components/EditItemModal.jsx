@@ -372,7 +372,7 @@ const EditItemModal = ({
         key={dataFound[0].item_id}
         open={openEditItemModal}
         onCancel={() => closeModal()}
-        style={{ top: "20dv" }}
+        style={{ top: "20dv", zIndex:30 }}
         width={1000}
         footer={[]}
       >

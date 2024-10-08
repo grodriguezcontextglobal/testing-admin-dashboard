@@ -36,6 +36,7 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
       onCancel={() => closeModal()}
       width={1000}
       footer={[]}
+      style={{ zIndex: 30 }}
     >
       <Grid
         container

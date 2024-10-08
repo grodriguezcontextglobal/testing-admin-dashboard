@@ -88,6 +88,7 @@ const EmailNotification = ({
         footer={[]}
         width={1000}
         maskClosable={false}
+        style={{ zIndex: 30 }}
       >
         <Grid
           display={"flex"}

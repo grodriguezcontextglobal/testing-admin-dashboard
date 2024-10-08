@@ -27,6 +27,7 @@ const ReportDetailModal = ({
         open={openLostReportDetail}
         onCancel={() => closeModal()}
         footer={[]}
+        style={{ zIndex: 30 }}
       >
         <div key={dataInfo.id}>
           <h2>Attendee: {dataInfo.attendee}</h2>

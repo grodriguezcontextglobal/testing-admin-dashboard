@@ -114,6 +114,7 @@ const ModalMultipleCompanies = ({
       // width={1000}
       footer={[]}
       title={renderingTitle("Please select which company you want to log in.")}
+      style={{zIndex: 30}}
     >
       {contextHolder}
       <Grid container>

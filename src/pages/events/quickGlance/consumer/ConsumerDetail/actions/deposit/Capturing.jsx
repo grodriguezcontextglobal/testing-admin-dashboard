@@ -148,6 +148,7 @@ const Capturing = ({
         footer={[]}
         maskClosable={false}
         centered
+        style={{ zIndex: 30 }}
       >
         {contextHolder}
         <Grid

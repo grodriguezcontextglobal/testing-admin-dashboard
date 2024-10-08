@@ -135,6 +135,7 @@ const ReturningInBulkMethod = ({
       footer={[]}
       maskClosable={false}
       width={1000}
+      style={{ zIndex: 30 }}
     >
       {contextHolder}
       <form style={CenteringGrid} onSubmit={handleSubmit(handleReturnDevices)}>

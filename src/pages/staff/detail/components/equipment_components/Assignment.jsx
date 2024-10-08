@@ -16,7 +16,7 @@ const Assignment = () => {
   };
   
   return (
-      <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]}>
+      <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]} style={{ zIndex: 30 }}>
         <Grid
           container
           display={"flex"}

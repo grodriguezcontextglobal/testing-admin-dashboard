@@ -33,6 +33,7 @@ const SelectCompanyToView = ({ data }) => {
         footer={[]}
         centered
         width={1000}
+        style={{ zIndex:30}}
       >
         <Grid
           display={"flex"}

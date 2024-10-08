@@ -42,6 +42,7 @@ const Choice = ({ openModal, setOpenModal }) => {
           timeout: 500,
         },
       }}
+      style={{zIndex:30}}
     >
       <Fade in={openModal}>
         <Box sx={style}>

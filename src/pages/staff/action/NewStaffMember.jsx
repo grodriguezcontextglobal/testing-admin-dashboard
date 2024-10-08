@@ -159,6 +159,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           footer={[]}
           width={1000}
           maskClosable={false}
+          style={{ zIndex: 30 }}
         >
           <form onSubmit={handleSubmit(onSubmitRegister)}>
             <Grid

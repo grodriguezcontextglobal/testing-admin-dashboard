@@ -271,6 +271,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex:30
       }}
       footer={[]}
     >

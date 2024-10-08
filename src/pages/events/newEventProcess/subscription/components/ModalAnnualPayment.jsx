@@ -21,6 +21,7 @@ const ModalAnnualPayment = ({
       onOk={() => closeModal()}
       onCancel={() => closeModal()}
       footer={[]}
+      style={{ zIndex: 30 }}
     >
       <StripeCheckoutElementAdmin clientSecret={clientSecret} total={total} />
     </Modal>

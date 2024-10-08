@@ -247,6 +247,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       maskClosable={false}
       footer={[]}
       width={700}
+      style={{ zIndex: 30 }}
     >
       <form
         style={{

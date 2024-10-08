@@ -217,6 +217,7 @@ const ModalAddingDeviceFromSearchbar = () => {
         width={1000}
         footer={[]}
         maskClosable={false}
+        style={{ zIndex:30}}
       >
         <Grid container>
           {foundTransactionAndDevicesAssigned()?.length ===
