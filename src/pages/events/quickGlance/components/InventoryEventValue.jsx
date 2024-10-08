@@ -9,8 +9,8 @@ const InventoryEventValue = () => {
         const deviceData = event.deviceSetup
         let result = [0]
         for (let data of deviceData) {
-            const totalItems = (data.endingNumber - data.startingNumber)
-            const worth = totalItems * data.value
+            // const totalItems = (data.endingNumber - data.startingNumber)
+            const worth = Number(data.quantity) * Number(data.value)
             result = [...result, worth]
         }
         const total = result.reduce((accu, curr) => accu + curr, 0)
