@@ -10,7 +10,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import { Card, Divider, Space } from "antd";
+import { Card, Space } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -61,7 +61,9 @@ const Form = () => {
       };
       return setAdminStaff([...adminStaff, newMemberProfile]);
     };
-    addUserCreatingEventAsAdminStaffMember();
+    if (!adminStaff.some((item) => item.email === user.email)) {
+      addUserCreatingEventAsAdminStaffMember();
+    }
     return () => {
       controller.abort();
     };
@@ -108,13 +110,13 @@ const Form = () => {
 
   const handleDeleteMember = (props) => {
     const updateAdminMemberList = adminStaff?.filter(
-      (value) => value.email !== props
+      (_, index) => index !== props
     );
     return setAdminStaff(updateAdminMemberList);
   };
   const handleHeadsetAttendeeDeleteMember = (props) => {
     const updateHeadsetMemberList = headsetAttendeesStaff?.filter(
-      (value) => value.email !== props
+      (_, index) => index !== props
     );
     return setHeadsetAttendeesStaff(updateHeadsetMemberList);
   };
@@ -280,6 +282,158 @@ const Form = () => {
               </Grid>
             </Grid>
           </Grid>
+          <div
+            style={{
+              margin: "0.3rem auto",
+              color: "transparent",
+              backgroundColor: "transparent",
+            }}
+          ></div>
+          <Grid
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"flex-start"}
+            alignSelf={"stretch"}
+            gap={"24px"}
+            style={{
+              borderRadius: "8px",
+              border: "1px solid var(--gray-300, #D0D5DD)",
+              background: "var(--gray-100, #F2F4F7)",
+              padding: "24px",
+              width: "100%",
+            }}
+            item
+            xs={12}
+          >
+            <InputLabel
+              fullWidth
+              style={{
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              Admin staff &nbsp;
+              <Typography>Admin spots {checkAdminSpots()}</Typography>
+            </InputLabel>
+            <Space size={[8, 16]} wrap>
+              {adminStaff?.map((member, index) => {
+                return (
+                  <Card key={member.email}>
+                    <label>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <ProfileIcon /> {member.firstName} {member.lastName}
+                        </div>{" "}
+                        <button
+                          type="button"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            borderRadius: "8px",
+                            border: "1px solid var(--gray-300, #D0D5DD)",
+                            background: "var(--gray-100, #F2F4F7)",
+                            color: "var(--danger-action)",
+                            padding: "4px 8px",
+                            width: "fit-content",
+                          }}
+                          onClick={() => handleDeleteMember(index)}
+                        >
+                          x
+                        </button>
+                      </div>
+                      <EmailIcon /> {member.email}
+                    </label>
+                  </Card>
+                );
+              })}
+            </Space>
+          </Grid>
+          <div
+            style={{
+              margin: "0.3rem auto",
+              color: "transparent",
+              backgroundColor: "transparent",
+            }}
+          ></div>
+          <Grid
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"flex-start"}
+            alignSelf={"stretch"}
+            gap={"24px"}
+            style={{
+              borderRadius: "8px",
+              border: "1px solid var(--gray-300, #D0D5DD)",
+              background: "var(--gray-100, #F2F4F7)",
+              padding: "24px",
+              width: "100%",
+            }}
+            item
+            xs={12}
+          >
+            <InputLabel
+              fullWidth
+              style={{
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              Assistant staff&nbsp;
+              <Typography>Assistant spots {checkAssistantsSpots()}</Typography>
+            </InputLabel>
+            <Space size={[8, 16]} wrap>
+              {headsetAttendeesStaff?.map((member, index) => {
+                return (
+                  <Card style={{ padding: "4px 2px" }} key={member.email}>
+                    <label>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <ProfileIcon /> {member.firstName} {member.lastName}
+                        </div>{" "}
+                        <button
+                          type="button"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            borderRadius: "8px",
+                            border: "1px solid var(--gray-300, #D0D5DD)",
+                            background: "var(--gray-100, #F2F4F7)",
+                            color: "var(--danger-action)",
+                            padding: "4px 8px",
+                            width: "fit-content",
+                          }}
+                          onClick={() =>
+                            handleHeadsetAttendeeDeleteMember(index)
+                          }
+                        >
+                          x
+                        </button>
+                      </div>
+                      <EmailIcon /> {member.email}
+                    </label>
+                  </Card>
+                );
+              })}
+            </Space>
+          </Grid>
           <Button
             onClick={(e) => addNewMember(e)}
             style={{
@@ -317,148 +471,6 @@ const Form = () => {
             </Typography>
           </Button>
         </form>
-
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
-          style={{
-            borderRadius: "8px",
-            border: "1px solid var(--gray-300, #D0D5DD)",
-            background: "var(--gray-100, #F2F4F7)",
-            padding: "24px",
-            width: "100%",
-          }}
-          item
-          xs={12}
-        >
-          <InputLabel
-            fullWidth
-            style={{
-              textAlign: "left",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            Admin staff &nbsp;
-            <Typography>Admin spots {checkAdminSpots()}</Typography>
-          </InputLabel>
-          <Space size={[8, 16]} wrap>
-            {adminStaff?.map((member) => {
-              return (
-                <Card key={member.email}>
-                  <label>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div>
-                        <ProfileIcon /> {member.firstName} {member.lastName}
-                      </div>{" "}
-                      <button
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          borderRadius: "8px",
-                          border: "1px solid var(--gray-300, #D0D5DD)",
-                          background: "var(--gray-100, #F2F4F7)",
-                          color: "var(--danger-action)",
-                          padding: "4px 8px",
-                          width: "fit-content",
-                        }}
-                        onClick={() => handleDeleteMember(member.email)}
-                      >
-                        x
-                      </button>
-                    </div>
-                    <EmailIcon /> {member.email}
-                  </label>
-                </Card>
-              );
-            })}
-          </Space>
-        </Grid>
-        <Divider
-          style={{
-            margin: "0.1rem auto",
-          }}
-        />
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
-          style={{
-            borderRadius: "8px",
-            border: "1px solid var(--gray-300, #D0D5DD)",
-            background: "var(--gray-100, #F2F4F7)",
-            padding: "24px",
-            width: "100%",
-          }}
-          item
-          xs={12}
-        >
-          <InputLabel
-            fullWidth
-            style={{
-              textAlign: "left",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            Assistant staff&nbsp;
-            <Typography>Assistant spots {checkAssistantsSpots()}</Typography>
-          </InputLabel>
-          <Space size={[8, 16]} wrap>
-            {headsetAttendeesStaff?.map((member) => {
-              return (
-                <Card style={{ padding: "4px 2px" }} key={member.email}>
-                  <label>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div>
-                        <ProfileIcon /> {member.firstName} {member.lastName}
-                      </div>{" "}
-                      <button
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          borderRadius: "8px",
-                          border: "1px solid var(--gray-300, #D0D5DD)",
-                          background: "var(--gray-100, #F2F4F7)",
-                          color: "var(--danger-action)",
-                          padding: "4px 8px",
-                          width: "fit-content",
-                        }}
-                        onClick={() =>
-                          handleHeadsetAttendeeDeleteMember(member.email)
-                        }
-                      >
-                        x
-                      </button>
-                    </div>
-                    <EmailIcon /> {member.email}
-                  </label>
-                </Card>
-              );
-            })}
-          </Space>
-        </Grid>
       </Grid>
     </Grid>
   );
