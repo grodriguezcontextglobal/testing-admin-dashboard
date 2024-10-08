@@ -33,6 +33,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const recordRef = useRef(null);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
+  console.log(customer);
   const { user } = useSelector((state) => state.admin);
   const { openModalToAssignDevice } = useSelector(
     (state) => state.devicesHandle
@@ -45,10 +46,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
-        "consumerInfo.id": customer.id,
+        "consumerInfo.uid": customer.id ?? customer.uid,
       }),
     refetchOnMount: false,
   });
+  console.log(transactionsQuery?.data?.data?.list);
   const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
   const deviceAssignedListQuery = useQuery({
     queryKey: ["assginedDeviceList"],
@@ -104,6 +106,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
 
   const sourceData = () => {
     const result = new Set();
+    console.log(filterDataBasedOnUserAndEvent());
     if (filterDataBasedOnUserAndEvent()?.length > 0) {
       for (let data of filterDataBasedOnUserAndEvent()) {
         result.add({
