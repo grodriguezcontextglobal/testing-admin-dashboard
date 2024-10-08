@@ -21,7 +21,7 @@ const AllInventoryEventForCustomerOnly = ({
           display: `${displayElementsBasedOnRole() ? "flex" : "none"}`,
           justifyContent: "space-between",
           alignItems: "center",
-          margin: "2rem auto 0.2rem",
+          margin: "2rem auto 0.1rem",
         }}
         item
         xs={12}
@@ -48,7 +48,7 @@ const AllInventoryEventForCustomerOnly = ({
               justifyContent: "flex-start",
               alignItems: "center",
               cursor: "pointer",
-              margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
+              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
             }}
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
@@ -88,7 +88,7 @@ const AllInventoryEventForCustomerOnly = ({
             justifyContent: "space-between",
             alignItems: "center",
             display: user.role === "4" ? "none" : "flex",
-            margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
+            margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
           }}
         >
           <p style={{ ...BlueButtonText }}>Update inventory</p>
