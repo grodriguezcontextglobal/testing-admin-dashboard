@@ -124,7 +124,7 @@ const ReviewAndSubmitEvent = () => {
         } ${new Date().toString()} ${true} ${data.startingNumber} ${
           data.endingNumber
         }`,
-        consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
+        consumerUses: data.consumerUses, //change this to false to force company to set device for consumer and others to set device for staff
         startingNumber: "000000", //data.startingNumber
         endingNumber: "000000", //data.endingNumber,
         existing: data.existing,
@@ -153,7 +153,7 @@ const ReviewAndSubmitEvent = () => {
       },
       staff: staffDetail(),
       deviceSetup: deviceSetupNoSQL(),
-      extraServicesNeeded: extraServiceListSetup.length > 0,
+      extraServicesNeeded: extraServiceListSetup?.length > 0,
       extraServices: extraServiceListSetup,
       active: true,
       contactInfo: contactInfo,
