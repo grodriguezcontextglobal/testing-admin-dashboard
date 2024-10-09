@@ -1,6 +1,6 @@
-import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
+import { Grid, InputLabel, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification, Select } from "antd";
+import { notification, Select, Button } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +20,7 @@ import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
+import { checkArray } from "../../../../../../components/utils/checkArray";
 const AssignmentFromExistingInventory = () => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -205,6 +206,24 @@ const AssignmentFromExistingInventory = () => {
       console.log("🚀 ~ createEvent ~ error:", error);
     }
   };
+  const createDeviceRecordInNoSQLDatabase = async (props) => {
+    const db = props.deviceInfo;
+    for (let index = 0; index < db.length; index++) {
+      await devitrakApi.post("/receiver/receivers-pool", {
+        device: db[index].serial_number,
+        status: "Operational",
+        activity: true,
+        comment: "No comment",
+        eventSelected: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
+        provider: user.company,
+        type: db[index].item_group,
+        company: user.companyData.id,
+      });
+    }
+    return null;
+  };
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
@@ -229,6 +248,85 @@ const AssignmentFromExistingInventory = () => {
     });
   };
 
+  const createEventNoSQL = async (props) => {
+    const eventName = `${profile.firstName} ${profile.lastName} / ${
+      profile.email
+    } / ${new Date().toLocaleDateString()}`;
+    const leasedTime = new Date();
+    leasedTime.setFullYear(leasedTime.getFullYear() + 2);
+    const eventLink = eventName.replace(/ /g, "%20");
+    const eventFormat = {
+      user: user.email,
+      company: user.company,
+      subscription: [],
+      eventInfoDetail: {
+        eventName: eventName,
+        eventLocation: `${props.state}, ${props.zip}`,
+        address: `${props.street}, ${props.city} ${props.state}, ${props.zip}`,
+        building: eventName,
+        floor: "",
+        merchant: false,
+        dateBegin: new Date().toString(),
+        dateEnd: leasedTime.toString(),
+        dateBeginTime: new Date().getTime(),
+      },
+      staff: {
+        adminUser: [
+          {
+            firstName: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            role: "Administrator",
+          },
+        ],
+        headsetAttendees: [],
+      },
+      deviceSetup: [
+        {
+          category: props.deviceInfo[0].category_name,
+          group: props.deviceInfo[0].item_group,
+          value: props.deviceInfo[0].cost,
+          description: props.deviceInfo[0].descript_item,
+          company: props.deviceInfo[0].company_id,
+          ownership: props.deviceInfo[0].ownership,
+          createdBy: user.email,
+          key: props.deviceInfo[0].item_id,
+          dateCreated: props.deviceInfo[0].create_at,
+          resume: props.deviceInfo[0].descript_item,
+          existing: true,
+          quantity: props.quantity,
+          consumerUses: false,
+          startingNumber: props.deviceInfo[0].serial_number,
+          endingNumber: props.deviceInfo.at(-1).serial_number,
+        },
+      ],
+      extraServicesNeeded: false,
+      extraServices: [],
+      active: true,
+      contactInfo: {
+        name: `${user.name} ${user.lastName}`,
+        phone: [user.phone],
+        email: user.email,
+      },
+      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+      type: "lease",
+    };
+    const newEventInfo = await devitrakApi.post(
+      "/event/create-event",
+      eventFormat
+    );
+    if (newEventInfo.data.ok) {
+      const eventId = checkArray(newEventInfo.data.event);
+      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      });
+      await createDeviceRecordInNoSQLDatabase({
+        deviceInfo: props.deviceInfo,
+        event_id: eventId.id,
+      });
+    }
+  };
+
   const option1 = async (props) => {
     await createEvent(props.template);
     const indexStart = props.groupingType[
@@ -247,6 +345,11 @@ const AssignmentFromExistingInventory = () => {
         quantity: props.quantity,
       });
       await createNewLease({ ...props.template, deviceInfo });
+      await createEventNoSQL({
+        ...props.template,
+        quantity: props.quantity,
+        deviceInfo,
+      });
       await addDeviceToEvent([
         {
           item_group: deviceInfo[0].item_group,
@@ -622,6 +725,7 @@ const AssignmentFromExistingInventory = () => {
               </p>
             </Button>
             <Button
+              Loading={loadingStatus}
               onClick={() => assignDeviceToStaffMember()}
               style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
             >
@@ -648,89 +752,3 @@ AssignmentFromExistingInventory.propTypes = {
   template: PropTypes.object,
   groupingType: PropTypes.string,
 };
-
-// const option2 = async (props) => {
-//   let newProps = [];
-//   const finalList = [
-//     ...selectedItem,
-//     {
-//       item_group: valueItemSelected[0].item_group,
-//       quantity: watch("quantity"),
-//       startingNumber: watch("startingNumber"),
-//     },
-//   ];
-//   await createEvent(props.template);
-//   const groupingByType = groupBy(finalList, "item_group");
-//   for (let [key, value] of Object.entries(groupingByType)) {
-//     for (let data of value) {
-//       const indexStart = props.groupingType[data.item_group].findIndex(
-//         (element) => element.serial_number == data.startingNumber
-//       );
-//       const indexEnd = indexStart + Number(data.quantity);
-//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-//       const deviceInfo = dataFound; //*array of existing devices in sql db
-//       newProps = [...newProps, deviceInfo];
-//       await updateDeviceInWarehouse({
-//         item_group: key,
-//         startingNumber: data.startingNumber,
-//         endingNumber: deviceInfo.at(-1).serial_number,
-//       });
-//       await addDeviceToEvent([
-//         {
-//           item_group: deviceInfo[0].item_group,
-//           category_name: deviceInfo[0].category_name,
-//           min_serial_number: deviceInfo.at(-1).serial_number,
-//           max_serial_number: deviceInfo[0].serial_number,
-//         },
-//       ]);
-//     }
-//   }
-//   await createNewLease({
-//     deviceInfo: newProps.flat(),
-//     street: props.template.street,
-//     city: props.template.city,
-//     state: props.template.state,
-//     zip: props.template.zip,
-//   });
-//   openNotificationWithIcon("Equipment assigned to staff member.");
-//   setLoadingStatus(false);
-// };
-
-// const option3 = async (props) => {
-//   await createEvent(props.template);
-//   let newProps = [];
-//   const groupingByType = groupBy(selectedItem, "item_group");
-//   for (let [key, value] of Object.entries(groupingByType)) {
-//     for (let data of value) {
-//       const indexStart = props.groupingType[data.item_group].findIndex(
-//         (element) => element.serial_number == data.startingNumber
-//       );
-//       const indexEnd = indexStart + Number(data.quantity);
-//       const dataFound = props.groupingType[key]?.slice(indexStart, indexEnd);
-//       const deviceInfo = dataFound; //*array of existing devices in sql db
-//       newProps = [...newProps, deviceInfo];
-//       await updateDeviceInWarehouse({
-//         item_group: key,
-//         startingNumber: deviceInfo[0].serial_number,
-//         endingNumber: deviceInfo.at(-1).serial_number,
-//       });
-//       await addDeviceToEvent([
-//         {
-//           item_group: deviceInfo[0].item_group,
-//           category_name: deviceInfo[0].category_name,
-//           min_serial_number: deviceInfo.at(-1).serial_number,
-//           max_serial_number: deviceInfo[0].serial_number,
-//         },
-//       ]);
-//     }
-//   }
-//   await createNewLease({
-//     deviceInfo: newProps.flat(),
-//     street: props.template.street,
-//     city: props.template.city,
-//     state: props.template.state,
-//     zip: props.template.zip,
-//   });
-//   openNotificationWithIcon("Equipment assigned to staff member.");
-//   setLoadingStatus(false);
-// };

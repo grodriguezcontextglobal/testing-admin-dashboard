@@ -38,6 +38,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../../../../styles/global/reactInput.css";
 import { TextFontSize14LineHeight20 } from "../../../../../../styles/global/TextFontSize14LineHeight20";
+import { checkArray } from "../../../../../../components/utils/checkArray";
 
 const options = [
   { value: "Select an option" },
@@ -193,6 +194,105 @@ const AssignemntNewDeviceInInventory = () => {
       }
     }
   };
+  const createDeviceRecordInNoSQLDatabase = async (props) => {
+    const db = props.deviceInfo;
+    for (let index = 0; index < db.length; index++) {
+      await devitrakApi.post("/receiver/receivers-pool", {
+        device: db[index].serial_number,
+        status: "Operational",
+        activity: true,
+        comment: "No comment",
+        eventSelected: `${profile.firstName} ${profile.lastName} / ${
+          profile.email
+        } / ${new Date().toLocaleDateString()}`,
+        provider: user.company,
+        type: db[index].item_group,
+        company: user.companyData.id,
+      });
+    }
+    return null;
+  };
+
+
+  const createEventNoSQL = async (props) => {
+    const eventName = `${profile.firstName} ${profile.lastName} / ${
+      profile.email
+    } / ${new Date().toLocaleDateString()}`;
+    const leasedTime = new Date();
+    leasedTime.setFullYear(leasedTime.getFullYear() + 2);
+    const eventLink = eventName.replace(/ /g, "%20");
+    const eventFormat = {
+      user: user.email,
+      company: user.company,
+      subscription: [],
+      eventInfoDetail: {
+        eventName: eventName,
+        eventLocation: `${props.state}, ${props.zip}`,
+        address: `${props.street}, ${props.city} ${props.state}, ${props.zip}`,
+        building: eventName,
+        floor: "",
+        merchant: false,
+        dateBegin: new Date().toString(),
+        dateEnd: leasedTime.toString(),
+        dateBeginTime: new Date().getTime(),
+      },
+      staff: {
+        adminUser: [
+          {
+            firstName: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            role: "Administrator",
+          },
+        ],
+        headsetAttendees: [],
+      },
+      deviceSetup: [
+        {
+          category: props.deviceInfo[0].category_name,
+          group: props.deviceInfo[0].item_group,
+          value: props.deviceInfo[0].cost,
+          description: props.deviceInfo[0].descript_item,
+          company: props.deviceInfo[0].company_id,
+          ownership: props.deviceInfo[0].ownership,
+          createdBy: user.email,
+          key: props.deviceInfo[0].item_id,
+          dateCreated: props.deviceInfo[0].create_at,
+          resume: props.deviceInfo[0].descript_item,
+          existing: true,
+          quantity: props.quantity,
+          consumerUses: false,
+          startingNumber: props.deviceInfo[0].serial_number,
+          endingNumber: props.deviceInfo.at(-1).serial_number,
+        },
+      ],
+      extraServicesNeeded: false,
+      extraServices: [],
+      active: true,
+      contactInfo: {
+        name: `${user.name} ${user.lastName}`,
+        phone: [user.phone],
+        email: user.email,
+      },
+      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+      type: "lease",
+    };
+    const newEventInfo = await devitrakApi.post(
+      "/event/create-event",
+      eventFormat
+    );
+    if (newEventInfo.data.ok) {
+      const eventId = checkArray(newEventInfo.data.event);
+      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      });
+      await createDeviceRecordInNoSQLDatabase({
+        deviceInfo: props.deviceInfo,
+        event_id: eventId.id,
+      });
+    }
+  };
+
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
@@ -261,6 +361,12 @@ const AssignemntNewDeviceInInventory = () => {
     const deviceInfo = props.deviceInfo; //*array of existing devices in sql db
     if (newEventInfo.insertId) {
       await createNewLease({ ...props.template, deviceInfo });
+      // await createEventNoSQL({
+      //   ...props.template,
+      //   quantity: props.quantity,
+      //   deviceInfo,
+      // });
+
       await addDeviceToEvent([
         {
           item_group: deviceInfo[0].item_group,
