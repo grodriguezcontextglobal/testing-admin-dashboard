@@ -52,6 +52,7 @@ const MainPage = () => {
     queryFn: () => devitrakApi.post(`/db_item/tracking_item/${item_id}`),
     refetchOnMount: false,
   });
+  
   const infoItemQuery = useQuery({
     queryKey: ["infoItemSql"],
     queryFn: () =>
@@ -97,10 +98,11 @@ const MainPage = () => {
     const dataFound = [
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
-        data: { ...trackingHistoryItemQuery?.data?.data?.result[0] },
-        itemInfo: { ...infoItemQuery?.data?.data?.items[0] },
+        data: [ ...trackingHistoryItemQuery.data.data.result],
+        itemInfo: { ...infoItemQuery?.data?.data?.items },
       },
     ];
+
     return (
       <Suspense
         fallback={
