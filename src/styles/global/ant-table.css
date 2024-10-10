@@ -2,6 +2,17 @@
   border: 1px solid var(--gray-200, #eaecf0);
   border-radius: 12px;
 }
-.table-ant-customized > tr {
-  background-color:var(--main-background-color)
+
+.table-ant-expanded-row-customized .ant-table-tbody {
+  background-color: var(--gray-background);
+}
+
+.table-ant-expanded-row-customized .ant-table-tbody > tr > td {
+  border: var(--gray-background);
+}
+
+.table-ant-expanded-row-customized
+  .ant-table-wrapper
+  .footer-expanded-table{
+  background-color: var(--gray-background);
 }
