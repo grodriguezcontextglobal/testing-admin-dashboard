@@ -148,24 +148,24 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
             deviceInPoolProfile
           );
-          const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-          const emailStructure = new EmailStructureUpdateItem(
-            customer.name,
-            customer.lastName,
-            customer.email,
-            returnedItem.serialNumber,
-            returnedItem.deviceType,
-            event.eventInfoDetail.eventName,
-            event.company,
-            rowRecord.paymentIntent,
-            String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            dateRef[4],
-            linkStructure
-          );
-          await devitrakApi.post(
-            "/nodemailer/confirm-returned-device-notification",
-            emailStructure.render()
-          );
+          // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+          // const emailStructure = new EmailStructureUpdateItem(
+          //   customer.name,
+          //   customer.lastName,
+          //   customer.email,
+          //   returnedItem.serialNumber,
+          //   returnedItem.deviceType,
+          //   event.eventInfoDetail.eventName,
+          //   event.company,
+          //   rowRecord.paymentIntent,
+          //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
+          //   dateRef[4],
+          //   linkStructure
+          // );
+          // await devitrakApi.post(
+          //   "/nodemailer/confirm-returned-device-notification",
+          //   emailStructure.render()
+          // );
           openNotificationWithIcon("Device returned.");
         }
       }
@@ -242,10 +242,10 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             dateRef[4],
             linkStructure
           );
-          await devitrakApi.post(
-            "/nodemailer/assignig-device-notification",
-            emailStructure.render()
-          );
+          // await devitrakApi.post(
+          //   "/nodemailer/assignig-device-notification",
+          //   emailStructure.render()
+          // );
           openNotificationWithIcon("Device assigned.");
         }
       }

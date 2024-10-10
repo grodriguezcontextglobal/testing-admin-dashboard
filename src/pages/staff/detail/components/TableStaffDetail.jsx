@@ -16,7 +16,10 @@ const TableStaffDetail = () => {
   const eventQuery = useQuery({
     queryKey: ["events"],
     queryFn: () =>
-      devitrakApi.post("/event/event-list", { company: user.company }),
+      devitrakApi.post("/event/event-list", {
+        company: user.company,
+        type: "event",
+      }),
     // enabled: false,
     refetchOnMount: false,
   });
@@ -26,7 +29,7 @@ const TableStaffDetail = () => {
     return () => {
       controller.abort();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.activeInCompany]);
 
   const columns = [
@@ -221,7 +224,7 @@ const TableStaffDetail = () => {
               alignItems: "center",
             }}
           >
-           Current assigned devices:&nbsp;
+            Current assigned devices:&nbsp;
           </p>
         </Grid>
         <ListEquipment />

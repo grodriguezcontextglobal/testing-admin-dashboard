@@ -28,7 +28,6 @@ const InvitationLanding = () => {
     register,
     setValue,
     handleSubmit,
-    formState: { errors },
   } = useForm({
     defaultValues: {
       firstName,
@@ -52,7 +51,8 @@ const InvitationLanding = () => {
   });
   const sqlSavedStaffQuery = useQuery({
     queryKey: ["sqlStaffMember"],
-    queryFn: () => devitrakApi.post("/db_staff/consulting-member", { email: email }),
+    queryFn: () =>
+      devitrakApi.post("/db_staff/consulting-member", { email: email }),
     refetchOnMount: false,
   });
 
@@ -215,7 +215,7 @@ const InvitationLanding = () => {
           }
           await createNewUser(data);
         }
-        await checkStaffInSQLDatabase()
+        await checkStaffInSQLDatabase();
         warning(
           "success",
           "Process completed successfully. Please go to log in to log in into your account."
@@ -225,10 +225,6 @@ const InvitationLanding = () => {
         warning("error", "Something went wrong.Please try later.");
         setLoadingStatus(false);
       }
-    };
-    const errorDic = {
-      minLength: "Password must be longer than 6 characters",
-      maxLength: "Password must be shorter than 20 characters",
     };
     return (
       <>
@@ -433,16 +429,6 @@ const InvitationLanding = () => {
                       type="password"
                       fullWidth
                     />
-                    {errors?.password && (
-                      <p
-                        style={{
-                          ...Subtitle,
-                          color: "var(--main-colorslobster)",
-                        }}
-                      >
-                        {errorDic[errors.password.type]}
-                      </p>
-                    )}
                   </Grid>
                   <Grid
                     marginY={"20px"}
@@ -474,17 +460,7 @@ const InvitationLanding = () => {
                       placeholder="******"
                       type="password"
                       fullWidth
-                    />
-                    {errors?.password2 && (
-                      <p
-                        style={{
-                          ...Subtitle,
-                          color: "var(--main-colorslobster)",
-                        }}
-                      >
-                        {errorDic[errors.password2.type]}
-                      </p>
-                    )}
+                    />{" "}
                   </Grid>
 
                   <Grid
@@ -523,7 +499,8 @@ const InvitationLanding = () => {
                     >
                       Do you have an account already?{" "}
                       <Link to="/login">
-                        <span
+                        <button
+                          type="button"
                           onClick={() =>
                             dispatch(
                               onLogin({
@@ -543,10 +520,14 @@ const InvitationLanding = () => {
                             fontWeight: "600",
                             lineHeight: "20px",
                             cursor: "pointer",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            padding: "0",
+                            margin: "0",
                           }}
                         >
                           Sign in
-                        </span>
+                        </button>
                       </Link>
                     </Typography>
                   </Grid>

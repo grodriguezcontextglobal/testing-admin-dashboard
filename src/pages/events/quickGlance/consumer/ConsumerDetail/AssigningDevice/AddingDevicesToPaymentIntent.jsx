@@ -254,10 +254,10 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
               dateRef[4],
               linkStructure
             );
-            await devitrakApi.post(
-              "/nodemailer/assignig-device-notification",
-              emailStructure.render()
-            );
+            // await devitrakApi.post(
+            //   "/nodemailer/assignig-device-notification",
+            //   emailStructure.render()
+            // );
             // await devitrakApi.post("/nodemailer/assignig-device-notification", {
             //   consumer: {
             //     name: `${customer.name} ${customer.lastName}`,

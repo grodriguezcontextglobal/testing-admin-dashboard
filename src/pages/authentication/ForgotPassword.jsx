@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { devitrakApi } from "../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import axios from "axios";
+// import axios from "axios";
 
 const schema = yup.object().shape({
   email: yup
@@ -59,44 +59,40 @@ const ForgotPassword = ({ open, close }) => {
   adminUserInfoRef.current = findStaff();
 
   const handleSubmitEmailLink = async (data) => {
-    setLoading(true);
-    if (adminUserInfoRef.current) {
-      const stampTime = `${new Date()}`;
-      let config = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${
-            import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN
-          }`,
-        },
-      };
-      let axiosData = {
-        adminUser: {
-          firstName: adminUserInfoRef.current.at(-1).name,
-          lastName: adminUserInfoRef.current.at(-1).lastName,
-        },
-        linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-          adminUserInfoRef.current.at(-1).id
-        }&stamp-time=${encodeURI(stampTime)}`,
-        contactInfo: {
-          email: data.email,
-          company: adminUserInfoRef.current.at(-1).company,
-        },
-      };
-      const url =
-        "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/staff/reset-password";
-      const resp = await axios.post(url, axiosData, config);
-
-      if (resp.data.statusCode >= 200 && resp.data.statusCode < 300) {
-        openNotificationWithIcon("success", `Email sent to ${data.email}`);
-        setLoading(false);
-        setTimeout(async () => {
-          await handleClose();
-        }, 1500);
+    try {
+      setLoading(true);
+      if (adminUserInfoRef.current) {
+        const stampTime = `${new Date()}`;
+        const checkingEmail = await devitrakApi.post(
+          "/nodemailer/reset-admin-password",
+          {
+            adminUser: {
+              firstName: adminUserInfoRef.current.at(-1).name,
+              lastName: adminUserInfoRef.current.at(-1).lastName,
+            },
+            linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
+              adminUserInfoRef.current.at(-1).id
+            }&stamp-time=${encodeURI(stampTime)}`,
+            contactInfo: {
+              email: data.email,
+              company: adminUserInfoRef.current.at(-1).company,
+            },
+          }
+        );
+        if (checkingEmail.data.ok) {
+          openNotificationWithIcon("success", `Email sent to ${data.email}`);
+          setLoading(false);
+          setTimeout(() => {
+            return handleClose();
+          }, 1500);
+        }
+      } else {
+        openNotificationWithIcon("error", "Email was not found!");
+        return setLoading(false);
       }
-    } else {
-      openNotificationWithIcon("error", "Email was not found!");
+    } catch (error) {
+      console.log(error);
+      openNotificationWithIcon("error", error.response.data.error);
       return setLoading(false);
     }
   };
@@ -252,8 +248,16 @@ ForgotPassword.propTypes = {
   close: PropTypes.bool,
 };
 
-// console.log("test", test);
-// const resp = await devitrakApi.post("/nodemailer/reset-admin-password", {
+// let config = {
+//   method: "POST",
+//   headers: {
+//     "Content-Type": "application/json",
+//     Authorization: `Bearer ${
+//       import.meta.env.VITE_APP_AWS_AUTHORIZER_TOKEN
+//     }`,
+//   },
+// };
+// let axiosData = {
 //   adminUser: {
 //     firstName: adminUserInfoRef.current.at(-1).name,
 //     lastName: adminUserInfoRef.current.at(-1).lastName,
@@ -265,4 +269,9 @@ ForgotPassword.propTypes = {
 //     email: data.email,
 //     company: adminUserInfoRef.current.at(-1).company,
 //   },
-// });
+// };
+// const url =
+//   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/staff/reset-password";
+// const resp = await axios.post(url, axiosData, config);
+// console.log(resp);
+//  if (resp.data.statusCode >= 200 && resp.data.statusCode < 300) {

@@ -201,6 +201,32 @@ const Body = () => {
         }}
       >
         <Grid
+          display={"flex"}
+          justifyContent={"flex-end"}
+          alignItems={"center"}
+          marginY={0}
+          gap={2}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+        >
+          <Button
+            type="button"
+            style={{ ...GrayButton, width: "fit-content" }}
+            onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
+          >
+            <Typography textTransform={"none"} style={GrayButtonText}>
+              Cancel
+            </Typography>
+          </Button>
+          <Button type="submit" style={{ ...BlueButton, width: "fit-content" }}>
+            <Typography textTransform={"none"} style={BlueButtonText}>
+              Save
+            </Typography>
+          </Button>
+        </Grid>
+        <Grid
           style={{
             padding: "5px",
             display: "flex",
@@ -605,6 +631,7 @@ const Body = () => {
           md={12}
         >
           <Button
+            type="button"
             style={{ ...GrayButton, width: "fit-content" }}
             onClick={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
           >

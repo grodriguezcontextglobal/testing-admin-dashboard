@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
 import Loading from "../../../components/animation/Loading";
 import { checkArray } from "../../../components/utils/checkArray";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
@@ -43,16 +42,16 @@ const SearchDevice = ({ searchParams }) => {
     refetchOnMount: false,
   });
 
-  const staffMembersQuery = useQuery({
-    queryKey: ["listOfAssignedReceivers"],
-    queryFn: () =>
-      devitrakApi.post("/receiver/receiver-assigned-users-list", {
-        company: user.companyData.id,
-        "device.serialNumber": searchParams,
-        "device.status": true,
-      }),
-    refetchOnMount: false,
-  });
+  // const staffMembersQuery = useQuery({
+  //   queryKey: ["listOfAssignedReceivers"],
+  //   queryFn: () =>
+  //     devitrakApi.post("/receiver/receiver-assigned-users-list", {
+  //       company: user.companyData.id,
+  //       "device.serialNumber": searchParams,
+  //       "device.status": true,
+  //     }),
+  //   refetchOnMount: false,
+  // });
   const deviceInUseStaffMemberQuery = useQuery({
     queryKey: ["deviceInUseStaffMember"],
     queryFn: () =>
@@ -118,7 +117,7 @@ const SearchDevice = ({ searchParams }) => {
   };
   useEffect(() => {
     const controller = new AbortController();
-    staffMembersQuery.refetch();
+    // staffMembersQuery.refetch();
     imageDeviceQuery.refetch();
     eventInventoryQuery.refetch();
     deviceInUseStaffMemberQuery.refetch();
@@ -128,7 +127,7 @@ const SearchDevice = ({ searchParams }) => {
     };
   }, [searchParams]);
   const sortAndRenderFoundData = () => {
-    if (staffMembersQuery.data && deviceInUseStaffMemberQuery.data) {
+    if (deviceInUseStaffMemberQuery.data) {
       const foundData = [...foundDeviceData];
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
@@ -153,7 +152,7 @@ const SearchDevice = ({ searchParams }) => {
     return () => {
       controller.abort();
     };
-  }, [searchParams, staffMembersQuery.data]);
+  }, [searchParams]);
 
   const handleDeviceSearch = async (record) => {
     const respTransaction = await devitrakApi.post("/transaction/transaction", {
@@ -259,8 +258,8 @@ const SearchDevice = ({ searchParams }) => {
           }
         );
         if (respUpdate.data) {
-          const dateString = new Date().toString();
-          const dateRef = dateString.split(" ");
+          // const dateString = new Date().toString();
+          // const dateRef = dateString.split(" ");
           queryClient.invalidateQueries({
             queryKey: ["assignedDeviceListQuery"],
             exact: true,
@@ -273,23 +272,23 @@ const SearchDevice = ({ searchParams }) => {
               activity: false,
             }
           );
-          const linkStructure = `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`;
-          const emailStructure = new EmailStructureUpdateItem(
-            record.data.userInfo.name,
-            record.data.userInfo.lastName,
-            record.data.userInfo.email,
-            record.data.device.serialNumber,
-            record.data.device.deviceType,
-            record.data.eventSelected[0],
-            record.data.provider[0],
-            record.data.paymentIntent,
-            String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            dateRef[4],
-            linkStructure
-          );
-          await devitrakApi.post(
-            "/nodemailer/confirm-returned-device-notification",
-            emailStructure.render()
+          // const linkStructure = `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`;
+          // const emailStructure = new EmailStructureUpdateItem(
+          //   record.data.userInfo.name,
+          //   record.data.userInfo.lastName,
+          //   record.data.userInfo.email,
+          //   record.data.device.serialNumber,
+          //   record.data.device.deviceType,
+          //   record.data.eventSelected[0],
+          //   record.data.provider[0],
+          //   record.data.paymentIntent,
+          //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
+          //   dateRef[4],
+          //   linkStructure
+          // );
+          // await devitrakApi.post(
+          //   "/nodemailer/confirm-returned-device-notification",
+          //   emailStructure.render()
             // {
             //   consumer: {
             //     name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
@@ -306,7 +305,7 @@ const SearchDevice = ({ searchParams }) => {
             //   time: dateRef[4],
             //   link: `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`,
             // }
-          );
+          // );
           setLoadingStatus(false);
           await handleDeviceSearch(record);
         }
@@ -320,7 +319,7 @@ const SearchDevice = ({ searchParams }) => {
     }
   };
   if (
-    staffMembersQuery.isLoading &&
+    // staffMembersQuery.isLoading &&
     imageDeviceQuery.isLoading &&
     deviceInUseStaffMemberQuery.isLoading
   )
@@ -330,7 +329,7 @@ const SearchDevice = ({ searchParams }) => {
       </div>
     );
   if (
-    staffMembersQuery.data &&
+    // staffMembersQuery.data &&
     imageDeviceQuery.data &&
     deviceInUseStaffMemberQuery.data
   ) {
@@ -416,41 +415,3 @@ const SearchDevice = ({ searchParams }) => {
   }
 };
 export default SearchDevice;
-// await axios.patch(
-//   "https://api.garssoftwaresolutions.link/devitrak/admin-dashboard/event/inventory-pool/update-device-pool",
-//   {
-//     ref: {
-//       device: checkArray(
-//         deviceInPoolListQuery.data.receiversInventory
-//       ).device,
-//       type: checkArray(deviceInPoolListQuery.data.receiversInventory)
-//         .type,
-//       activity: true,
-//       company: user.companyData.id,
-//     },
-//     newInfo: {
-//       activity: false,
-//     },
-//     collection: "receiverspools",
-//   }
-// );
-
-// await axios.post(
-//   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/return_item",
-//   {
-//     consumer: {
-//       name: `${record.data.userInfo.name} ${record.data.userInfo.lastName}`,
-//       email: record.data.userInfo.email,
-//     },
-//     device: {
-//       serialNumber: record.data.device.serialNumber,
-//       deviceType: record.data.device.deviceType,
-//     },
-//     event: record.data.eventSelected[0],
-//     company: record.data.provider[0],
-//     transaction: record.data.paymentIntent,
-//     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-//     time: dateRef[4],
-//     link: `https://app.devitrak.net/authentication/${record.data.eventInfo.id}/${user.companyData.id}/${record.data.userInfo.id}`,
-//   }
-// );

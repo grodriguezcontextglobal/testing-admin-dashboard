@@ -33,6 +33,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.companyData.company_name,
+        type:'event',
         active: true,
       }),
     refetchOnMount: false,

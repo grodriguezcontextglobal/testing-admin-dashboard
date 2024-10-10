@@ -82,38 +82,6 @@ const NavigationBarMain = (props) => {
     return window.location.reload();
   };
 
-  // const items = [
-  // {
-  //   key: "1",
-  //   label: (
-  //     <NavLink to={"/profile/my_details"}>
-  //       <Typography>Profile</Typography>
-  //     </NavLink>
-  //   ),
-  // },
-  // {
-  //   key: "2",
-  //   label: (
-  //     <Typography onClick={() => dispatch(onSwitchingCompany(true))}>
-  //       Switch company
-  //     </Typography>
-  //   ),
-  // },
-  //   {
-  //     key: "3",
-  //     label: (
-  //       <Typography
-  //         onClick={() => {
-  //           logout();
-  //         }}
-  //       >
-  //         Logout
-  //       </Typography>
-  //     ),
-  //     danger: true,
-  //   },
-  // ];
-
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
   };
@@ -195,6 +163,7 @@ const NavigationBarMain = (props) => {
           top: "2.9dvh",
           backgroundColor: "var(--blue700)",
           width: "100%",
+          zIndex: 30,
         }}
         component="nav"
       >
