@@ -35,6 +35,7 @@ const MainAdminSettingPage = ({
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
+        type:'event',
         active: true,
       }),
     refetchOnMount: false,
