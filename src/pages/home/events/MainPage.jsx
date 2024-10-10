@@ -20,6 +20,7 @@ const MainPage = () => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.companyData.company_name,
+        type:'event'
       }),
     refetchOnMount: false,
   });
