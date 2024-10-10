@@ -2,12 +2,15 @@ import { Chip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Badge, Button, Space, Table, message } from "antd";
 import { useEffect, useState } from "react";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import { renderingTernary } from "../../../components/utils/renderingTernary";
+import {
+  onAddEventData,
+  onAddEventInfoDetail,
+  onSelectCompany,
+  onSelectEvent,
+} from "../../../store/slices/eventSlice";
 import { onReceiverObjectToReplace } from "../../../store/slices/helperSlice";
 import {
   onAddCustomer,
@@ -15,25 +18,21 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
-import Choice from "../components/markedLostOption/Choice";
-import {
-  onAddEventData,
-  onAddEventInfoDetail,
-  onSelectCompany,
-  onSelectEvent,
-} from "../../../store/slices/eventSlice";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import FooterExpandedRow from "./FooterExpandedRow";
-import { renderingTernary } from "../../../components/utils/renderingTernary";
-import "../localStyles.css";
 import "../../../styles/global/ant-table.css";
-import EmailStructureUpdateItem from "../../../classes/emailStructureUpdateItem";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { GrayButton } from "../../../styles/global/GrayButton";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import Choice from "../components/markedLostOption/Choice";
+import "../localStyles.css";
+import FooterExpandedRow from "./FooterExpandedRow";
 
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
-  const { customer } = useSelector((state) => state.customer);
+  // const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
-  const { event } = useSelector((state) => state.event);
+  // const { event } = useSelector((state) => state.event);
   const assignedDevicesQuery = useQuery({
     queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
@@ -274,8 +273,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           }
         );
         if (deviceInPoolListQuery.data) {
-          const dateString = new Date().toString();
-          const dateRef = dateString.split(" ");
+          // const dateString = new Date().toString();
+          // const dateRef = dateString.split(" ");
           const deviceInPoolProfile = {
             id: deviceInPoolListQuery.data.receiversInventory[0].id,
             activity: false,
@@ -286,24 +285,24 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             deviceInPoolProfile
           );
           if (returningInPool.data) {
-            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-            const emailStructure = new EmailStructureUpdateItem(
-              customer.name,
-              customer.lastName,
-              customer.email,
-              props.serial_number,
-              props.type,
-              event.eventInfoDetail.eventName,
-              event.company,
-              rowRecord.paymentIntent,
-              String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              dateRef[4],
-              linkStructure
-            );
-            await devitrakApi.post(
-              "/nodemailer/confirm-returned-device-notification",
-              emailStructure.render()
-            );
+            // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            // const emailStructure = new EmailStructureUpdateItem(
+            //   customer.name,
+            //   customer.lastName,
+            //   customer.email,
+            //   props.serial_number,
+            //   props.type,
+            //   event.eventInfoDetail.eventName,
+            //   event.company,
+            //   rowRecord.paymentIntent,
+            //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            //   dateRef[4],
+            //   linkStructure
+            // );
+            // await devitrakApi.post(
+            //   "/nodemailer/confirm-returned-device-notification",
+            //   emailStructure.render()
+            // );
             await assignedDevicesQuery.refetch();
             await refetching();
             return success();
