@@ -48,6 +48,7 @@ const ItemTable = ({ searchItem }) => {
       }),
     refetchOnMount: false,
   });
+  
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
@@ -284,16 +285,17 @@ const ItemTable = ({ searchItem }) => {
       },
       render: (data) => {
         let result = data.event_name;
+        console.log(result)
         if (String(result).toLowerCase().includes("leased equipment")) {
           const splittingName = String(result).split(" / ");
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
         } else if (String(result).toLowerCase().split(" / ").length === 3) {
           const splittingName = String(result).split(" / ");
-          result = splittingName
-            .slice(0, 2)
-            .flat()
-            .toLocaleString()
-            .replaceAll(",", " ");
+          result = splittingName[1]
+            // .slice(1, 2)
+            // .flat()
+            // .toLocaleString()
+            // .replaceAll(",", " ");
         }
         return (
           <span style={cellStyle}>
