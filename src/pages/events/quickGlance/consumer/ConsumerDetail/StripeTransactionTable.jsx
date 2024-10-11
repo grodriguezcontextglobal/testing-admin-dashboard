@@ -105,7 +105,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
 
   const sourceData = () => {
     const result = new Set();
-    console.log(filterDataBasedOnUserAndEvent());
     if (filterDataBasedOnUserAndEvent()?.length > 0) {
       for (let data of filterDataBasedOnUserAndEvent()) {
         result.add({
