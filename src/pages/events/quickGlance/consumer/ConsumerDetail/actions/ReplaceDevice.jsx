@@ -43,12 +43,7 @@ export const ReplaceDevice = ({ refetching }) => {
   // const refDeviceSetInEvent = useRef(null);
   const stampTime = `${new Date()}`;
   // const { deviceSetup } = event;
-  const {
-    register,
-    setValue,
-    watch,
-    handleSubmit,
-  } = useForm();
+  const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
@@ -249,17 +244,10 @@ export const ReplaceDevice = ({ refetching }) => {
               </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label>
-                <p
-                  style={{
-                    ...Subtitle,
-                    display: `${
-                      watch("serialNumber") !== "" ? "flex" : "none"
-                    }`,
-                  }}
-                >
-                  Reason
-                </p>
+              <label
+                style={{ display: `${watch("serialNumber") !== "" && "flex"}` }}
+              >
+                <p style={Subtitle}>Reason</p>
                 {watch("serialNumber") !== "" && (
                   <Select
                     className="custom-autocomplete"
@@ -277,17 +265,24 @@ export const ReplaceDevice = ({ refetching }) => {
               </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              {watch("reason") === "Other" && (
-                <OutlinedInput
-                  multiline
-                  minRows={5}
-                  style={{ ...OutlinedInputStyle, height: "" }}
-                  type="text"
-                  {...register("otherComment", { required: true })}
-                  placeholder="Add comment..."
-                  fullWidth
-                />
-              )}
+              <label
+                style={{ display: `${watch("reason") === "Other" && "flex"}` }}
+              >
+                <p style={Subtitle}>
+                  when Other Reason is selected, please add comment
+                </p>
+                {watch("reason") === "Other" && (
+                  <OutlinedInput
+                    multiline
+                    minRows={5}
+                    style={{ ...OutlinedInputStyle, height: "" }}
+                    type="text"
+                    {...register("otherComment", { required: true })}
+                    placeholder="Add comment..."
+                    fullWidth
+                  />
+                )}
+              </label>
             </Grid>
             {watch("reason") !== "" && (
               <Grid display={"flex"} alignItems={"center"} gap={2} container>

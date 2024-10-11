@@ -24,6 +24,7 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const Replace = () => {
   const [newDeviceInfoFromPool, setNewDeviceInfoFromPool] = useState([]);
@@ -36,7 +37,6 @@ export const Replace = () => {
     setValue,
     watch,
     handleSubmit,
-    formState: { errors },
   } = useForm();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -44,7 +44,7 @@ export const Replace = () => {
     queryKey: ["deviceInPool"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: deviceInfoSelected.entireData.eventSelected,
+        eventSelected: deviceInfoSelected.entireData.eventSelected, //pass event id
         company: user.companyData.id,
         device: deviceInfoSelected.entireData.device,
         type: deviceInfoSelected.entireData.type,
@@ -226,42 +226,57 @@ export const Replace = () => {
       >
         <Grid container>
           <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-            <OutlinedInput
-              id="outlined-adornment-password"
-              placeholder="Serial number"
-              {...register("serialNumber", { required: true })}
-              style={OutlinedInputStyle}
-              fullWidth
-            />
-            {errors?.serialNumber && <Typography>Field required</Typography>}
-          </Grid>
-          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-            {watch("serialNumber") !== "" && (
-              <Select
-                {...register("reason", { required: true })}
-                style={{ ...AntSelectorStyle, width: "100%" }}
-              >
-                <MenuItem value="">None</MenuItem>
-                {menuOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    <Typography>{option}</Typography>
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-          </Grid>
-          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-            {watch("reason") === "Other" && (
+            <label>
+              <p style={Subtitle}>New serial number</p>
               <OutlinedInput
-                multiline
-                minRows={5}
-                style={{ ...OutlinedInputStyle, height: "" }}
-                type="text"
-                {...register("otherComment", { required: true })}
-                placeholder="Add comment..."
+                required
+                id="outlined-adornment-password"
+                placeholder="New serial number"
+                {...register("serialNumber")}
+                style={OutlinedInputStyle}
                 fullWidth
               />
-            )}
+            </label>
+          </Grid>
+          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
+            <label
+              style={{ display: `${watch("serialNumber") !== "" && "flex"}` }}
+            >
+              <p style={Subtitle}>Reason</p>
+              {watch("serialNumber") !== "" && (
+                <Select
+                  {...register("reason", { required: true })}
+                  style={{ ...AntSelectorStyle, width: "100%" }}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {menuOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      <Typography>{option}</Typography>
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            </label>
+          </Grid>
+          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
+            <label
+              style={{ display: `${watch("reason") === "Other" && "flex"}` }}
+            >
+              <p style={Subtitle}>
+                when Other Reason is selected, please add comment
+              </p>
+              {watch("reason") === "Other" && (
+                <OutlinedInput
+                  multiline
+                  minRows={5}
+                  style={{ ...OutlinedInputStyle, height: "" }}
+                  type="text"
+                  {...register("otherComment", { required: true })}
+                  placeholder="Add comment..."
+                  fullWidth
+                />
+              )}
+            </label>
           </Grid>
           {watch("reason") !== "" && (
             <Grid display={"flex"} alignItems={"center"} gap={2} container>
