@@ -144,6 +144,16 @@ const MainPage = () => {
     };
     renderingDataBasedOnStaffAndActiveEvent();
 
+    const checkActiveEventsToRemoveDuplicates = () => {
+      const events = new Map();
+      const data = renderingDataBasedOnStaffAndActiveEvent() ?? [];
+      for (let event of data) {
+        if (!events.has(event.id)) {
+          events.set(event.id, event);
+        }
+      }
+      return Array.from(events.values());
+    };
     const dataToBeRenderedInUpcomingSection = () => {
       const result = new Set();
       for (let data of renderingDataBasedOnStaffAndActiveEvent()) {
@@ -368,7 +378,7 @@ const MainPage = () => {
                   lg={12}
                 >
                   <PastEventsTable
-                    events={renderingDataBasedOnStaffAndActiveEvent()}
+                    events={checkActiveEventsToRemoveDuplicates().reverse()}
                   />
                 </Grid>
               </Grid>
