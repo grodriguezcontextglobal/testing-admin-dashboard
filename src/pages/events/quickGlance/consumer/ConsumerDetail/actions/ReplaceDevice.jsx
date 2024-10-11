@@ -28,6 +28,7 @@ import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../../styles/global/ant-select.css";
+import { Subtitle } from "../../../../../../styles/global/Subtitle";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const ReplaceDevice = ({ refetching }) => {
   const { user } = useSelector((state) => state.admin);
@@ -47,7 +48,6 @@ export const ReplaceDevice = ({ refetching }) => {
     setValue,
     watch,
     handleSubmit,
-    formState: { errors },
   } = useForm();
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
@@ -77,7 +77,7 @@ export const ReplaceDevice = ({ refetching }) => {
     queryKey: ["deviceInPoolList"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
+        eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
         company: user.companyData.id,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
@@ -159,7 +159,7 @@ export const ReplaceDevice = ({ refetching }) => {
     const newDeviceToAssignData = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
-        eventSelected: event.eventInfoDetail.eventName,
+        eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
         company: user.companyData.id,
         device: props.serialNumber,
         type: receiverToReplaceObject.deviceType,
@@ -236,30 +236,45 @@ export const ReplaceDevice = ({ refetching }) => {
         >
           <Grid container>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <OutlinedInput
-                id="outlined-adornment-password"
-                placeholder="Serial number"
-                {...register("serialNumber", { required: true })}
-                style={OutlinedInputStyle}
-                fullWidth
-              />
-              {errors?.serialNumber && <Typography>Field required</Typography>}
+              <label>
+                <p style={Subtitle}>New serial number</p>
+                <OutlinedInput
+                  required
+                  id="outlined-adornment-password"
+                  placeholder="Serial number"
+                  {...register("serialNumber")}
+                  style={OutlinedInputStyle}
+                  fullWidth
+                />
+              </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              {watch("serialNumber") !== "" && (
-                <Select
-                  className="custom-autocomplete"
-                  {...register("reason", { required: true })}
-                  style={{ ...AntSelectorStyle, width: "100%" }}
+              <label>
+                <p
+                  style={{
+                    ...Subtitle,
+                    display: `${
+                      watch("serialNumber") !== "" ? "flex" : "none"
+                    }`,
+                  }}
                 >
-                  <MenuItem value="">None</MenuItem>
-                  {menuOptions.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      <Typography>{option}</Typography>
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
+                  Reason
+                </p>
+                {watch("serialNumber") !== "" && (
+                  <Select
+                    className="custom-autocomplete"
+                    {...register("reason", { required: true })}
+                    style={{ ...AntSelectorStyle, width: "100%" }}
+                  >
+                    <MenuItem value="">None</MenuItem>
+                    {menuOptions.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        <Typography>{option}</Typography>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
               {watch("reason") === "Other" && (
@@ -303,169 +318,3 @@ export const ReplaceDevice = ({ refetching }) => {
     </>
   );
 };
-
-// //*found all devices of the event/company
-// const sortAndFilterDeviceListPerCompanyAndEvent = () => {
-//   if (poolQuery?.length > 0) {
-//     return poolQuery;
-//   }
-//   return [];
-// };
-// sortAndFilterDeviceListPerCompanyAndEvent();
-
-// //*substract device set for consumer in event
-// const retrieveDeviceInfoSetInEventForConsumers = () => {
-//   const result = new Set();
-//   for (let data of deviceSetup) {
-//     if (data.consumerUses) {
-//       result.add(data);
-//     }
-//   }
-//   refDeviceSetInEvent.current = Array.from(result);
-//   return Array.from(result);
-// };
-// retrieveDeviceInfoSetInEventForConsumers();
-
-// //*check new serial number to assign to get info to store new item
-// const substractDeviceInfoToStoreNewItem = () => {
-//   for (let data of retrieveDeviceInfoSetInEventForConsumers()) {
-//     if (Number(serialNumber) >= Number(data.startingNumber) && Number(serialNumber) <= Number(data.endingNumber)) {
-//       return data
-//     }
-//   }
-// }
-// substractDeviceInfoToStoreNewItem()
-
-// //*check if device to assign is already assigned to some consumer in event
-// const checkDeviceIsAssignedInEvent = () => {
-//   if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//     const deviceCheck = groupBy(
-//       sortAndFilterDeviceListPerCompanyAndEvent(),
-//       "device"
-//     );
-
-//     if (deviceCheck[serialNumber]) {
-//       for (let data of deviceCheck[serialNumber]) {
-//         if (!substractDeviceInfoToStoreNewItem()) return openNotificationWithIcon(
-//           "info",
-//           `device ${serialNumber} is out of range for this event.`
-//         );
-//         if (String(data.activity).toLowerCase() === "yes" || String(data.status).toLowerCase() === "lost") {
-//           openNotificationWithIcon(
-//             "info",
-//             `device ${serialNumber} is already assigned to other customer`
-//           );
-//           setValue("serialNumber", "");
-//         }
-
-//       }
-//       refDeviceHasRecordInEvent.current = deviceCheck[serialNumber].at(-1);
-//       return true;
-//     }
-//     refDeviceHasRecordInEvent.current = null;
-//     return false;
-//   }
-// };
-// checkDeviceIsAssignedInEvent();
-
-// //*check if serial number to assign has record in pool
-// const retrieveDeviceDataInPoolToUpdateIt = () => {
-//   if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
-//     const deviceCheck = groupBy(
-//       sortAndFilterDeviceListPerCompanyAndEvent(),
-//       "device"
-//     );
-//     if (deviceCheck[serialNumber]) {
-//       return deviceCheck[serialNumber].at(-1);
-//     } else {
-//       return null;
-//     }
-//   } else {
-//     return null;
-//   }
-// };
-
-// //* function to save new serial number in pool based on if has record update or create
-// const saveAndUpdateNewDeviceToAssignInPool = (props) => {
-//   if (retrieveDeviceDataInPoolToUpdateIt()) {
-//     devitrakApi.patch(
-//       `/receiver/receivers-pool-update/${retrieveDeviceDataInPoolToUpdateIt().id
-//       }`,
-//       {
-//         status: "Operational",
-//         activity: "YES",
-//         comment: "No comment",
-//       }
-//     );
-//   }
-// };
-
-// //*finding current device to report with defect in DB
-// const currentDeviceToChangeInPool = () => {
-//   const groupingByDevice = groupBy(
-//     sortAndFilterDeviceListPerCompanyAndEvent(),
-//     "device"
-//   );
-//   if (groupingByDevice[receiverToReplaceObject.serialNumber]) {
-//     return groupingByDevice[receiverToReplaceObject.serialNumber].at(-1);
-//   }
-// };
-// currentDeviceToChangeInPool()
-
-// //*function to update device to change in pool
-// const updateCurrentAssignedDeviceInDB = async (props) => {
-//   await devitrakApi.patch(
-//     `/receiver/receivers-pool-update/${currentDeviceToChangeInPool().id}`,
-//     {
-//       activity: "NO",
-//       status: props.reason,
-//       comment: `${props.otherComment ? props?.otherComment : "No comment"}`,
-//     }
-//   );
-// };
-// updateCurrentAssignedDeviceInDB.propTypes = {
-//   reason: PropTypes.string,
-//   otherComment: PropTypes.string,
-// };
-
-// //*function to add issued device in defect device document in DB
-// const addingDefectDeviceInDB = async (props) => {
-//   const issueDeviceProfile = {
-//     ...currentDeviceToChangeInPool(),
-//     activity: "NO",
-//     status: props.reason,
-//     comment: `${props.otherComment ? props?.otherComment : "No comment"}`,
-//     user: customer?.email,
-//     admin: user.email,
-//   };
-//   await devitrakApi.post("/receiver/receiver-returned-issue", issueDeviceProfile)
-// };
-// //*finding assigned device list in payment intent
-// const findingAssignedDeviceListInPaymentIntent = () => {
-
-// };
-// findingAssignedDeviceListInPaymentIntent();
-
-// //*function to update list of devices in payment intent
-// const updateAssignedDevicesListInPaymentIntent = async (props) => {
-//   if (findingAssignedDeviceListInPaymentIntent()) {
-//     const respoNewDeviceList = await devitrakApi.patch(
-//       `/receiver/receiver-update/${findingAssignedDeviceListInPaymentIntent().id
-//       }`,
-//       {
-//         id: findingAssignedDeviceListInPaymentIntent().id,
-//         device: {
-//           ...findingAssignedDeviceListInPaymentIntent().device,
-//           serialNumber: props.serialNumber
-//         },
-//       }
-//     );
-//     if (respoNewDeviceList.data.ok) {
-//       queryClient.invalidateQueries(['assignedDeviceListQuery', 'deviceInPoolQuery']);
-//       openNotificationWithIcon(
-//         "success",
-//         "New device assigned to transaction/consumer"
-//       );
-//     }
-//   }
-// };
