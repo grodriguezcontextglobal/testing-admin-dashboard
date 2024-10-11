@@ -33,11 +33,21 @@ const SpreadSheet = () => {
       }),
     refetchOnMount: false,
   });
+  const consumersDataQuery = useQuery({
+    queryKey: ["consumersDataQuery"],
+    queryFn: () =>
+      devitrakApi.post("/auth/user-query", {
+        event_providers: event.id,
+        company_providers: user.companyData.id,
+      }),
+    refetchOnMount: false,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
     transactionDeviceRecordInEvent.refetch();
     transactionPlusUserInfo.refetch();
+    consumersDataQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -271,6 +281,7 @@ const SpreadSheet = () => {
       "User - Last name",
       "User - Email",
       "User - Phone number",
+      "User - Group name",
       "Transaction Reference ID",
       "Payment ID",
       "Device - Serial number",
@@ -278,7 +289,11 @@ const SpreadSheet = () => {
       "Device returned",
       "Device checked out",
     ];
-
+    //grouping consumer
+    const groupingByConsumer = groupBy(
+      consumersDataQuery.data.data.users,
+      "email"
+    );
     // Convert data to worksheet format for Sheet4 (all data in detail)
     const wsDataDetail4 = [
       headers4,
@@ -287,6 +302,7 @@ const SpreadSheet = () => {
         item.userInfo.lastName,
         item.user,
         item.userInfo.phoneNumber,
+        groupingByConsumer[item.user].at(-1).groupName.at(-1),
         item._id,
         item.paymentIntent,
         item.device.serialNumber,
@@ -301,6 +317,7 @@ const SpreadSheet = () => {
 
     // Set cell styles for Sheet1
     wsSheet4["!cols"] = [
+      { width: 30 },
       { width: 30 },
       { width: 30 },
       { width: 30 },
