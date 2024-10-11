@@ -19,11 +19,11 @@ import {
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
-import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
+// import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const [submittedAction, setSubmittedAction] = useState(false);
-  const { customer } = useSelector((state) => state.stripe);
+  // const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { choice, event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
@@ -238,22 +238,22 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           deviceInPoolQuery.refetch();
           refetchingFn();
           if (Number(record.device[0].deviceNeeded) === 1) {
-            const dateString = new Date().toString();
-            const dateRef = dateString.split(" ");
-            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-            const emailStructure = new EmailStructureUpdateItem(
-              customer.name,
-              customer.lastName,
-              customer.email,
-              newDeviceObject.serialNumber,
-              newDeviceObject.deviceType,
-              event.eventInfoDetail.eventName,
-              event.company,
-              record.paymentIntent,
-              String(dateRef.slice(0, 4)).replaceAll(",", " "),
-              dateRef[4],
-              linkStructure
-            );
+            // const dateString = new Date().toString();
+            // const dateRef = dateString.split(" ");
+            // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            // const emailStructure = new EmailStructureUpdateItem(
+            //   customer.name,
+            //   customer.lastName,
+            //   customer.email,
+            //   newDeviceObject.serialNumber,
+            //   newDeviceObject.deviceType,
+            //   event.eventInfoDetail.eventName,
+            //   event.company,
+            //   record.paymentIntent,
+            //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
+            //   dateRef[4],
+            //   linkStructure
+            // );
             // await devitrakApi.post(
             //   "/nodemailer/assignig-device-notification",
             //   emailStructure.render()
