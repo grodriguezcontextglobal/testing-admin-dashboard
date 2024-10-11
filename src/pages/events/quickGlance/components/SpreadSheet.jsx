@@ -61,7 +61,10 @@ const SpreadSheet = () => {
         "device.status"
       );
       setAllTransaction(transactionPlusUserInfo.data.data.listOfReceivers);
-      setItemsUsers(grouping[true]);
+      if (grouping[true]) {
+        setItemsUsers(grouping[true]);
+      }
+      // setItemsUsers(grouping[true]);
       setDefectedItems(
         transactionDeviceRecordInEvent.data.data.receiversInventory
       );
