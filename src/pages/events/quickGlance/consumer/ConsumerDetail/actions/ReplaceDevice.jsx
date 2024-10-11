@@ -244,10 +244,8 @@ export const ReplaceDevice = ({ refetching }) => {
               </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label
-                style={{ display: `${watch("serialNumber") !== "" && "flex"}` }}
-              >
-                <p style={Subtitle}>Reason</p>
+              <label>
+                <p style={{ ...Subtitle, width: "100%", display: `${watch("serialNumber") !== "" ? "flex" : "none"}`, }}>Reason</p>
                 {watch("serialNumber") !== "" && (
                   <Select
                     className="custom-autocomplete"
@@ -265,10 +263,14 @@ export const ReplaceDevice = ({ refetching }) => {
               </label>
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label
-                style={{ display: `${watch("reason") === "Other" && "flex"}` }}
-              >
-                <p style={Subtitle}>
+              <label>
+                <p
+                  style={{
+                    ...Subtitle,
+                    width: "100%",
+                    display: `${watch("reason") === "Other" ? "flex" : "none"}`,
+                  }}
+                >
                   when Other Reason is selected, please add comment
                 </p>
                 {watch("reason") === "Other" && (
