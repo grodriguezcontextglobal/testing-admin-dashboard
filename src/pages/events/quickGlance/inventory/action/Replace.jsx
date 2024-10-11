@@ -32,12 +32,7 @@ export const Replace = () => {
   const { event } = useSelector((state) => state.event);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { triggerModal } = useSelector((state) => state.helper);
-  const {
-    register,
-    setValue,
-    watch,
-    handleSubmit,
-  } = useForm();
+  const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const deviceInPoolQuery = useQuery({
@@ -227,7 +222,7 @@ export const Replace = () => {
         <Grid container>
           <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
             <label>
-              <p style={Subtitle}>New serial number</p>
+              <p style={{ ...Subtitle, width: "100%" }}>New serial number</p>
               <OutlinedInput
                 required
                 id="outlined-adornment-password"
@@ -239,13 +234,19 @@ export const Replace = () => {
             </label>
           </Grid>
           <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-            <label
-              style={{ display: `${watch("serialNumber") !== "" && "flex"}` }}
-            >
-              <p style={Subtitle}>Reason</p>
+            <label>
+              <p
+                style={{
+                  ...Subtitle,
+                  width: "100%",
+                  display: `${watch("serialNumber") !== "" ? "flex" : "none"}`,
+                }}
+              >
+                Reason
+              </p>
               {watch("serialNumber") !== "" && (
                 <Select
-                  {...register("reason", { required: true })}
+                  {...register("reason")}
                   style={{ ...AntSelectorStyle, width: "100%" }}
                 >
                   <MenuItem value="">None</MenuItem>
@@ -259,10 +260,14 @@ export const Replace = () => {
             </label>
           </Grid>
           <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-            <label
-              style={{ display: `${watch("reason") === "Other" && "flex"}` }}
-            >
-              <p style={Subtitle}>
+            <label>
+              <p
+                style={{
+                  ...Subtitle,
+                  width: "100%",
+                  display: `${watch("reason") === "Other" ? "flex" : "none"}`,
+                }}
+              >
                 when Other Reason is selected, please add comment
               </p>
               {watch("reason") === "Other" && (
