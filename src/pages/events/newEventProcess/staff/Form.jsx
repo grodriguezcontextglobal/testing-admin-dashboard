@@ -57,7 +57,7 @@ const Form = () => {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone ?? "000-000-0000",
-        role: "admin",
+        role: "Administrator",
       };
       return setAdminStaff([...adminStaff, newMemberProfile]);
     };

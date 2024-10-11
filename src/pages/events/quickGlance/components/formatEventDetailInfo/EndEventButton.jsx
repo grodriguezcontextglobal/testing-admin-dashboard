@@ -112,7 +112,10 @@ const EndEventButton = () => {
         (element) => element.user === data.email
       );
       if (Number(employeesCompany[checkRole].role) > 3 && employeesCompany[checkRole].active) {
-        employeesCompany[checkRole].active = false;
+        employeesCompany[checkRole] = {
+          ...employeesCompany[checkRole],
+          active: false,
+        };
       }
     }
     await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
