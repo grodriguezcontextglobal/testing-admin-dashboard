@@ -18,7 +18,7 @@ import "../../../../../styles/global/ant-table.css";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
-import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
+// import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({ rowRecord }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
@@ -132,8 +132,8 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       );
       if (respUpdate.data) {
         if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
-          const dateString = new Date().toString();
-          const dateRef = dateString.split(" ");
+          // const dateString = new Date().toString();
+          // const dateRef = dateString.split(" ");
           const checkInPool =
             deviceInPoolListQuery.data.receiversInventory.at(-1);
           queryClient.invalidateQueries("assignedDeviceListQuery", {
@@ -210,8 +210,8 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       );
       if (respUpdate.data.ok) {
         if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
-          const dateString = new Date().toString();
-          const dateRef = dateString.split(" ");
+          // const dateString = new Date().toString();
+          // const dateRef = dateString.split(" ");
           const devicePoolData =
             deviceInPoolListQuery.data.receiversInventory.at(-1);
           queryClient.invalidateQueries("assignedDeviceListQuery", {
@@ -227,21 +227,21 @@ const ExpandedRowInTable = ({ rowRecord }) => {
             `/receiver/receivers-pool-update/${devicePoolData.id}`,
             deviceInPoolProfile
           );
-          const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+          // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
 
-          const emailStructure = new EmailStructureUpdateItem(
-            customer.name,
-            customer.lastName,
-            customer.email,
-            assignedItem.serialNumber,
-            assignedItem.deviceType,
-            event.eventInfoDetail.eventName,
-            event.company,
-            rowRecord.paymentIntent,
-            String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            dateRef[4],
-            linkStructure
-          );
+          // const emailStructure = new EmailStructureUpdateItem(
+          //   customer.name,
+          //   customer.lastName,
+          //   customer.email,
+          //   assignedItem.serialNumber,
+          //   assignedItem.deviceType,
+          //   event.eventInfoDetail.eventName,
+          //   event.company,
+          //   rowRecord.paymentIntent,
+          //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
+          //   dateRef[4],
+          //   linkStructure
+          // );
           // await devitrakApi.post(
           //   "/nodemailer/assignig-device-notification",
           //   emailStructure.render()
@@ -488,20 +488,32 @@ const ExpandedRowInTable = ({ rowRecord }) => {
                 title="Are you sure it is lost?"
                 onConfirm={() => handleLostSingleDevice(record)}
               >
-                <p
+                <button
                   style={{
-                    cursor: "pointer",
-                    textTransform: "none",
-                    textAlign: "left",
-                    fontWeight: 400,
-                    fontSize: "16px",
-                    fontFamily: "Inter",
-                    lineHeight: "24px",
-                    color: "#000",
+                    width: "fit-content",
+                    border: "1px solid var(--error-700, #B42318)",
+                    backgroundColor: "var(--error-700, #B42318)",
+                    borderRadius: "8px",
+                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                    padding: "5px",
+                    color: "#B42318",
                   }}
                 >
-                  Lost
-                </p>
+                  <p
+                    style={{
+                      cursor: "pointer",
+                      textTransform: "none",
+                      textAlign: "left",
+                      fontWeight: 400,
+                      fontSize: "16px",
+                      fontFamily: "Inter",
+                      lineHeight: "24px",
+                      color: "var(--basewhite)",
+                    }}
+                  >
+                    Lost
+                  </p>
+                </button>
               </Popconfirm>
             )}
         </Space>
