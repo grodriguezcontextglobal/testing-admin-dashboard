@@ -5,26 +5,27 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { Button } from "antd";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
 import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
+import { onAddExtraServiceNeeded } from "../../../../../store/slices/eventSlice";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { useForm } from "react-hook-form";
+import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import SelectedServiceAddedRendered from "../components/SelectedServicesAddedRendered";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { onAddExtraServiceNeeded } from "../../../../../store/slices/eventSlice";
 
 const Services = ({
   handleExtraService,
   removeServiceAdded,
   extraServiceAdded,
+  checkFilledFields,
 }) => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
   const { extraServiceNeeded } = useSelector((state) => state.event);
   const [extraServicesNeeded, setExtraServicesNeeded] =
     useState(extraServiceNeeded);
@@ -33,9 +34,34 @@ const Services = ({
   const handleExtraServiceNeeded = async () => {
     return setExtraServicesNeeded(!extraServicesNeeded);
   };
+  const clearForm = () => {
+    setValue("service", "");
+    setValue("deposit", "");
+    return;
+  };
+
   useEffect(() => {
     dispatch(onAddExtraServiceNeeded(extraServicesNeeded));
   }, [extraServicesNeeded, dispatch]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    clearForm();
+    return () => {
+      controller.abort();
+    };
+  }, [extraServiceAdded.length]);
+
+  const triggerFilledFields = () => {
+    const depositField = watch("deposit") !== "";
+    const serviceField = watch("service") !== "";
+    const checkingFields = [depositField, serviceField];
+    if (checkingFields.some((ele) => ele === true)) {
+      return checkFilledFields(true);
+    }
+    return checkFilledFields(false);
+  };
+  triggerFilledFields();
   return (
     <Grid
       style={{
