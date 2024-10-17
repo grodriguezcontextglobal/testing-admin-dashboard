@@ -123,7 +123,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
         dispatch(
           onAddDevicesSelectionPaidTransactions({
             deviceType: {
-              group: Array.from(servicesName).toString().replaceAll(",", " "),
+              group: Array.from(servicesName).toString().replaceAll(",", " | "),
               value: Number(totalToBeCharged()),
             },
           }) //pass data serial number from handleSubmit
