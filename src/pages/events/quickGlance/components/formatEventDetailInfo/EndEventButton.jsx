@@ -111,7 +111,10 @@ const EndEventButton = () => {
       const checkRole = employeesCompany.findIndex(
         (element) => element.user === data.email
       );
-      if (Number(employeesCompany[checkRole].role) > 3 && employeesCompany[checkRole].active) {
+      if (
+        Number(employeesCompany[checkRole].role) > 3 &&
+        employeesCompany[checkRole].active
+      ) {
         employeesCompany[checkRole] = {
           ...employeesCompany[checkRole],
           active: false,
@@ -308,6 +311,24 @@ const EndEventButton = () => {
       console.log("🚀 ~ addingRecordOfActivityInEvent ~ error:", error);
     }
   };
+
+  const inactiveTransactionDocuments = async () => {
+    const updatingTransactionDocuments = await devitrakApi.post(
+      "/transaction/update-multiple-documents",
+      {
+        find: {
+          eventSelected: event.eventInfoDetail.eventName,
+          company: user.companyData.id,
+        },
+        update: {
+          active: false,
+        },
+      }
+    );
+    if (updatingTransactionDocuments.data.ok) {
+      return updatingTransactionDocuments.data.list;
+    }
+  };
   const updatingItemInDB = async () => {
     setOpenEndingEventModal(true);
     if (returningItemsInInventoryAfterEndingEvent()?.length > 0) {
@@ -328,6 +349,7 @@ const EndEventButton = () => {
     await sqlDeviceReturnedToCompanyStock();
     await addingRecordOfActivityInEvent();
     await inactiveEventAfterEndIt();
+    await inactiveTransactionDocuments();
     return await removingAccessFromStaffMemberOnly();
   };
   return (
