@@ -1,10 +1,11 @@
 import { Grid, InputLabel } from "@mui/material";
 import { Switch, Table } from "antd";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { useEffect, useState } from "react";
-import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
@@ -85,9 +86,10 @@ const Device = () => {
             }}
             onClick={() => updateDeviceFeatures(index)}
           >
+            <p style={GrayButtonText}>For consumers use?</p>
             <Switch
-              checkedChildren="Consumer uses"
-              unCheckedChildren="Internal uses"
+              checkedChildren="Consumer"
+              unCheckedChildren="Internal"
               defaultChecked={record.consumerUses}
             />
           </button>

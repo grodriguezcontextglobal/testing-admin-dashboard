@@ -1,6 +1,6 @@
 import { Button, Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Select, Tooltip } from "antd";
+import { Select } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,6 +47,7 @@ const Form = () => {
   );
   const [assignAllDevices, setAssignAllDevices] = useState(false);
   const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
+  const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const itemQuery = useQuery({
@@ -201,7 +202,7 @@ const Form = () => {
     return navigate("/create-event-page/review-submit");
   };
   const renderingStyle = () => {
-    if (staff.adminUser.length === 0) {
+    if (filled) {
       return {
         button: {
           ...BlueButton,
@@ -211,8 +212,9 @@ const Form = () => {
         },
         text: {
           ...BlueButtonText,
-          color: "var(--disabled-gray-button-text)",
+          color: "var(--danger-action)",
           textTransform: "none",
+          textWrap: "balance",
         },
       };
     } else {
@@ -237,6 +239,10 @@ const Form = () => {
     setValue("service", "");
     return;
   };
+
+  const filledFields = (props) => {
+    return setFilled(props);
+  };
   return (
     <Suspense
       fallback={
@@ -253,156 +259,164 @@ const Form = () => {
         key={"settingUp-deviceList-event"}
       >
         {triggerAddingAdminStaff && <AddingEventCreated />}
-        <InputLabel
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          <Typography
-            textTransform="none"
-            style={{ ...TextFontSize20LineHeight30, color: "var(--gray600)" }}
-          >
-            Assign from existing groups in the inventory
-          </Typography>
-        </InputLabel>
-        <Typography
-          textTransform="none"
-          textAlign="justify"
-          style={{
-            ...Subtitle,
-            color: "var(--gray600)",
-            wordWrap: "break-word",
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            margin: "0.2rem auto 1rem",
-          }}
-        >
-          You can select groups of devices from existing inventory in your
-          database and assign to this event. When assigning, you can choose the
-          whole group of devices, or only a range of serial numbers per group.
-          You will see the groups selected as small tags below.
-        </Typography>
-        <Grid
-          style={{
-            borderRadius: "8px",
-            border: "1px solid var(--gray300, #D0D5DD)",
-            background: "var(--gray100, #F2F4F7)",
-            padding: "24px",
-            width: "100%",
-          }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <InputLabel
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              textTransform="none"
-              style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
-            >
-              Existing groups
-            </Typography>
-          </InputLabel>
-          <InputLabel
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              textTransform="none"
+        {!displayFormToCreateCategory && (
+          <>
+            {" "}
+            <InputLabel
               style={{
-                ...TextFontSize20LineHeight30,
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "#000",
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
               }}
             >
-              Select from existing inventory
+              <Typography
+                textTransform="none"
+                style={{
+                  ...TextFontSize20LineHeight30,
+                  color: "var(--gray600)",
+                }}
+              >
+                Assign from existing groups in the inventory
+              </Typography>
+            </InputLabel>
+            <Typography
+              textTransform="none"
+              textAlign="justify"
+              style={{
+                ...Subtitle,
+                color: "var(--gray600)",
+                wordWrap: "break-word",
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
+                margin: "0.2rem auto 1rem",
+              }}
+            >
+              You can select groups of devices from existing inventory in your
+              database and assign to this event. When assigning, you can choose
+              the whole group of devices, or only a range of serial numbers per
+              group. You will see the groups selected as small tags below.
             </Typography>
-          </InputLabel>
-          <Select
-            className="custom-autocomplete"
-            showSearch
-            placeholder="Search item to add to inventory."
-            optionFilterProp="children"
-            style={{ ...AntSelectorStyle, width: "100%" }}
-            onChange={onChange}
-            options={optionsToRenderInSelector().map((item) => {
-              return {
-                label: (
-                  <Typography
-                    textTransform={"capitalize"}
-                    style={{
-                      ...Subtitle,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <span style={{ width: "50%" }}>
-                      <span style={{ fontWeight: 700 }}>
-                        {item[0].category_name}
-                      </span>{" "}
-                      {item[0].item_group}
-                    </span>
-                    <span style={{ textAlign: "right", width: "20%" }}>
-                      Total available: {item.length}
-                    </span>
-                  </Typography>
-                ),
-                value: JSON.stringify(item),
-              };
-            })}
-          />
-          {eventInfoDetail.merchant ? (
-            <MerchantService
-              assignAllDevices={assignAllDevices}
-              setAssignAllDevices={setAssignAllDevices}
-              handleAddingNewItemToDeviceSetupEvent={
-                handleAddingNewItemToDeviceSetupEvent
-              }
-            />
-          ) : (
-            <NoMerchantService
-              assignAllDevices={assignAllDevices}
-              setAssignAllDevices={setAssignAllDevices}
-              handleAddingNewItemToDeviceSetupEvent={
-                handleAddingNewItemToDeviceSetupEvent
-              }
-            />
-          )}
-          <SelectedItemsRendered
-            selectedItem={selectedItem}
-            removeItemSelected={removeItemSelected}
-          />
-        </Grid>
-
-        {/* other services component */}
-        {eventInfoDetail.merchant && (
-          <Services
-            handleExtraService={handleExtraService}
-            extraServiceAdded={extraServiceAdded}
-            removeServiceAdded={removeServiceAdded}
-          />
-        )}
-
+            <Grid
+              style={{
+                borderRadius: "8px",
+                border: "1px solid var(--gray300, #D0D5DD)",
+                background: "var(--gray100, #F2F4F7)",
+                padding: "24px",
+                width: "100%",
+              }}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <InputLabel
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  textTransform="none"
+                  style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
+                >
+                  Existing groups
+                </Typography>
+              </InputLabel>
+              <InputLabel
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  textTransform="none"
+                  style={{
+                    ...TextFontSize20LineHeight30,
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    color: "#000",
+                  }}
+                >
+                  Select from existing inventory
+                </Typography>
+              </InputLabel>
+              <Select
+                className="custom-autocomplete"
+                showSearch
+                placeholder="Search item to add to inventory."
+                optionFilterProp="children"
+                style={{ ...AntSelectorStyle, width: "100%" }}
+                onChange={onChange}
+                options={optionsToRenderInSelector().map((item) => {
+                  return {
+                    label: (
+                      <Typography
+                        textTransform={"capitalize"}
+                        style={{
+                          ...Subtitle,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          width: "100%",
+                        }}
+                      >
+                        <span style={{ width: "50%" }}>
+                          <span style={{ fontWeight: 700 }}>
+                            {item[0].category_name}
+                          </span>{" "}
+                          {item[0].item_group}
+                        </span>
+                        <span style={{ textAlign: "right", width: "20%" }}>
+                          Total available: {item.length}
+                        </span>
+                      </Typography>
+                    ),
+                    value: JSON.stringify(item),
+                  };
+                })}
+              />
+              {eventInfoDetail.merchant ? (
+                <MerchantService
+                  assignAllDevices={assignAllDevices}
+                  setAssignAllDevices={setAssignAllDevices}
+                  handleAddingNewItemToDeviceSetupEvent={
+                    handleAddingNewItemToDeviceSetupEvent
+                  }
+                />
+              ) : (
+                <NoMerchantService
+                  assignAllDevices={assignAllDevices}
+                  setAssignAllDevices={setAssignAllDevices}
+                  handleAddingNewItemToDeviceSetupEvent={
+                    handleAddingNewItemToDeviceSetupEvent
+                  }
+                />
+              )}
+              <SelectedItemsRendered
+                selectedItem={selectedItem}
+                removeItemSelected={removeItemSelected}
+              />
+            </Grid>
+            {/* other services component */}
+            {eventInfoDetail.merchant && (
+              <Services
+                handleExtraService={handleExtraService}
+                extraServiceAdded={extraServiceAdded}
+                removeServiceAdded={removeServiceAdded}
+                checkFilledFields={filledFields}
+                setValue={setValue}
+              />
+            )}
+          </>
+        )}{" "}
         <InputLabel
           style={{
             width: "100%",
@@ -436,25 +450,22 @@ const Form = () => {
           a range of serial numbers starting with a serial number base, to
           register the new devices in your inventory.
         </Typography>
-
-        <Tooltip title="Section in construction">
-          <Button
-            // disabled
-            onClick={() =>
-              setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-            }
-            style={{
-              ...LightBlueButton,
-              width: "fit-content",
-              margin: "1rem auto",
-            }}
-          >
-            <PlusIcon />{" "}
-            <Typography textTransform="none" style={LightBlueButtonText}>
-              Create a new category or group
-            </Typography>
-          </Button>
-        </Tooltip>
+        <Button
+          // disabled
+          onClick={() =>
+            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+          }
+          style={{
+            ...LightBlueButton,
+            width: "fit-content",
+            margin: "1rem auto",
+          }}
+        >
+          <PlusIcon />{" "}
+          <Typography textTransform="none" style={LightBlueButtonText}>
+            Create a new category or group
+          </Typography>
+        </Button>
         {displayFormToCreateCategory && (
           <FormDeviceTrackingMethod
             existingData={optionsToRenderInSelector()}
@@ -499,11 +510,15 @@ const Form = () => {
             </Typography>
           </Button>
           <Button
-            disabled={staff.adminUser.length === 0}
+            disabled={filled}
             onClick={(e) => handleNextStepEventSetup(e)}
             style={renderingStyle().button}
           >
-            <Typography style={renderingStyle().text}>Next step</Typography>
+            <Typography style={renderingStyle().text}>
+              {filled
+                ? "Service fields are filled. Please clear the fields or add service to continue."
+                : "Next step"}
+            </Typography>
           </Button>
         </Grid>
       </Grid>
