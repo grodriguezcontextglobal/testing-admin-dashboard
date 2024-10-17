@@ -12,7 +12,9 @@ const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
   const [itemsUsers, setItemsUsers] = useState([]);
   const [allTransaction, setAllTransaction] = useState([]);
+  const [allServiceTransaction, setAllServiceTransaction] = useState([]);
   const [defectedItems, setDefectedItems] = useState([]);
+  const [reportCash, setReportCash] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const transactionDeviceRecordInEvent = useQuery({
@@ -33,6 +35,27 @@ const SpreadSheet = () => {
       }),
     refetchOnMount: false,
   });
+  const transactionInfo = useQuery({
+    queryKey: ["transactionInfo"],
+    queryFn: () =>
+      devitrakApi.post("/transaction/transaction", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+        "device.deviceNeeded": 0,
+      }),
+    refetchOnMount: false,
+  });
+
+  const cashReportQuery = useQuery({
+    queryKey: ["cashReportPerEvent"],
+    queryFn: () =>
+      devitrakApi.post("/cash-report/cash-reports", {
+        event: event.id,
+        company: user.companyData.id,
+      }),
+    refetchOnMount: false,
+  });
+
   const consumersDataQuery = useQuery({
     queryKey: ["consumersDataQuery"],
     queryFn: () =>
@@ -55,53 +78,31 @@ const SpreadSheet = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (transactionDeviceRecordInEvent.data && transactionPlusUserInfo.data) {
-      const grouping = groupBy(
-        transactionPlusUserInfo.data.data.listOfReceivers,
-        "device.status"
-      );
+    if (
+      transactionDeviceRecordInEvent.data &&
+      transactionPlusUserInfo.data &&
+      transactionInfo.data &&
+      cashReportQuery.data
+    ) {
       setAllTransaction(transactionPlusUserInfo.data.data.listOfReceivers);
-      if (grouping[true]) {
-        setItemsUsers(grouping[true]);
-      }
-      // setItemsUsers(grouping[true]);
+      setItemsUsers(transactionPlusUserInfo.data.data.listOfReceivers);
       setDefectedItems(
         transactionDeviceRecordInEvent.data.data.receiversInventory
       );
+      setAllServiceTransaction(transactionInfo.data.data.list);
+      setReportCash(cashReportQuery.data.data.report)
     }
     return () => {
       controller.abort();
     };
   }, [transactionPlusUserInfo.data, transactionDeviceRecordInEvent.data]);
+  
   const [messageApi, contextHolder] = message.useMessage();
   const success = () => {
     messageApi.open({
       type: "success",
       content: "xlsx file generated and downloading.",
     });
-  };
-
-  const sortAndGroupData = () => {
-    const result = new Map();
-    for (let data of itemsUsers) {
-      if (!result.has(data.user)) {
-        result.set(data.user, [data]);
-      } else {
-        result.set(data.user, [...result.get(data.user), data]);
-      }
-    }
-
-    const sortedResult = new Set();
-    for (const [user, receivers] of result) {
-      sortedResult.add({
-        firstName: receivers[0].userInfo.name,
-        lastName: receivers[0].userInfo.lastName,
-        email: user,
-        phoneNumber: receivers[0].userInfo.phoneNumber,
-        pendingDevices: receivers?.length,
-      });
-    }
-    return Array.from(sortedResult);
   };
 
   const defectedDevicesInfo = () => {
@@ -115,87 +116,8 @@ const SpreadSheet = () => {
   };
 
   const generateExcelFile = async () => {
-    // Define the header columns for Sheet1
-    const headers = [
-      "User - First name",
-      "User - Last name",
-      "User - Email",
-      "User - Phone number",
-      "Pending devices to return",
-    ];
-
-    // Convert data to worksheet format for Sheet1
-    const wsData = [
-      headers,
-      ...sortAndGroupData().map((item) => [
-        item.firstName,
-        item.lastName,
-        item.email,
-        item.phoneNumber,
-        item.pendingDevices,
-      ]),
-    ];
-
     // Create a new workbook
     const wb = utils.book_new();
-
-    // Add Sheet1 to the workbook
-    const wsSheet1 = utils.aoa_to_sheet(wsData);
-
-    // Set cell styles for Sheet1
-    wsSheet1["!cols"] = [
-      { width: 20 },
-      { width: 20 },
-      { width: 30 },
-      { width: 20 },
-      { width: 30 },
-    ];
-    wsSheet1["E1"].l = { Target: "#Details!A1" };
-    for (let colTitle of headers) {
-      const headerCellAddress = utils.encode_cell({
-        r: 0,
-        c: headers.indexOf(`${colTitle}`),
-      });
-      wsSheet1[headerCellAddress].s = {
-        fill: { patternType: "solid", bgColor: { rgb: "#ee1515" } },
-        font: {
-          name: "Inter",
-          sz: 16,
-          color: { rgb: "#fff" },
-          bold: true,
-          italic: false,
-          underline: true,
-        },
-      };
-    }
-
-    // Set background color for "Pending devices" cell if value > 5
-    const pendingDevicesIndex = headers.indexOf("Pending devices to return");
-    if (pendingDevicesIndex !== -1) {
-      // Iterate through data rows to check and set background color
-      sortAndGroupData().forEach((item, rowIndex) => {
-        const cellValue = item.pendingDevices;
-        if (!isNaN(cellValue) && cellValue >= 5) {
-          const cellAddress = utils.encode_cell({
-            r: rowIndex + 1,
-            c: pendingDevicesIndex,
-          });
-          wsSheet1[`${cellAddress}`].s = {
-            fill: { patternType: "solid", bgColor: { rgb: "#ee1515" } },
-            font: {
-              name: "Inter",
-              sz: 16,
-              color: { rgb: "#fff" },
-              bold: true,
-              italic: false,
-              underline: true,
-            },
-          };
-        }
-      });
-    }
-
-    utils.book_append_sheet(wb, wsSheet1, "Report");
 
     // Your data array
     const data = itemsUsers;
@@ -223,7 +145,7 @@ const SpreadSheet = () => {
         item.userInfo.phoneNumber,
         item.device.serialNumber,
         item.device.deviceType,
-        item.active ? "in-Use" : "in-Stock",
+        item.device.status ? "in-Use" : "in-Stock",
         item.eventSelected.join(", "), // Convert array to comma-separated string
         Date(item.timeStamp).toString(),
       ]),
@@ -244,6 +166,8 @@ const SpreadSheet = () => {
       { width: 25 },
       { width: 30 },
     ];
+    // Add filters to the header (first row)
+    wsSheet2["!autofilter"] = { ref: "A1:I1" };
 
     utils.book_append_sheet(wb, wsSheet2, "Details");
     const headers3 = ["Device", "Device type", "Device Status", "Comment"];
@@ -271,8 +195,10 @@ const SpreadSheet = () => {
       { width: 25 },
       { width: 30 },
     ];
+    // Add filters to the header (first row)
+    wsSheet3["!autofilter"] = { ref: "A1:E1" };
 
-    utils.book_append_sheet(wb, wsSheet3, "Defected_and_Lost devices");
+    utils.book_append_sheet(wb, wsSheet3, "Defective_and_Lost devices");
 
     //all transaction and device check out during the event
     // Your data array
@@ -326,9 +252,122 @@ const SpreadSheet = () => {
       { width: 30 },
       { width: 30 },
       { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+    ];
+    // Add filters to the header (first row)
+    wsSheet4["!autofilter"] = { ref: "A1:K1" };
+
+    utils.book_append_sheet(wb, wsSheet4, "All device transactions");
+
+    // Your data array
+    const data5 = allServiceTransaction;
+
+    // Sheet2 config (Details)
+    const headers5 = [
+      "User - First name",
+      "User - Last name",
+      "User - Email",
+      "User - Phone number",
+      "User - Group name",
+      "Transaction Reference ID",
+      "Payment ID",
+      "Device - Service",
+      "Device - Amount ($)",
+    ];
+    // Convert data to worksheet format for Sheet4 (all data in detail)
+    const wsDataDetail5 = [
+      headers5,
+      ...data5.map((item) => [
+        item.consumerInfo.name,
+        item.consumerInfo.lastName,
+        item.consumerInfo.email,
+        item.consumerInfo.phoneNumber,
+        item.consumerInfo.groupName.at(-1),
+        item._id,
+        item.paymentIntent,
+        item.device[0].deviceType,
+        item.device[0].deviceValue,
+      ]),
     ];
 
-    utils.book_append_sheet(wb, wsSheet4, "All transactions");
+    // Add Sheet4 to the workbook
+    const wsSheet5 = utils.aoa_to_sheet(wsDataDetail5);
+
+    // Set cell styles for Sheet1
+    wsSheet5["!cols"] = [
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+    ];
+    // Add filters to the header (first row)
+    wsSheet5["!autofilter"] = { ref: "A1:I1" };
+
+    utils.book_append_sheet(wb, wsSheet5, "All service transactions");
+
+        // Your data array
+        const data6 = reportCash;
+
+        // Sheet2 config (Details)
+        const headers6 = [
+          "User - First name",
+          "User - Last name",
+          "User - Email",
+          "User - Phone number",
+          "User - Group name",
+          "Device - Serial Number",
+          "Device - Type",
+          "Staff collected amount",
+          "Amount collected ($)",
+          "Transaction type",
+        ];
+        // Convert data to worksheet format for Sheet4 (all data in detail)
+        const wsDataDetail6 = [
+          headers6,
+          ...data6.map((item) => [
+            groupingByConsumer[item.attendee].at(-1).name,
+            groupingByConsumer[item.attendee].at(-1).lastName,
+            groupingByConsumer[item.attendee].at(-1).email,
+            groupingByConsumer[item.attendee].at(-1).phoneNumber,
+            groupingByConsumer[item.attendee].at(-1).groupName.at(-1),
+            item.deviceLost[0].label,
+            item.deviceLost[0].deviceType,
+            item.admin,
+            item.amount,
+            item.typeCollection,
+          ]),
+        ];
+    
+        // Add Sheet4 to the workbook
+        const wsSheet6 = utils.aoa_to_sheet(wsDataDetail6);
+    
+        // Set cell styles for Sheet1
+        wsSheet6["!cols"] = [
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+          { width: 30 },
+        ];
+        // Add filters to the header (first row)
+        wsSheet6["!autofilter"] = { ref: "A1:J1" };
+    
+        utils.book_append_sheet(wb, wsSheet6, "Cash report");
+    
 
     // Generate a random file name (you can customize this logic)
     const newFileName = `excel_${Date.now()}.xlsx`;
