@@ -21,18 +21,16 @@ import { convertToBase64 } from "../../../../../components/utils/convertToBase64
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import "../../../../../styles/global/ant-select.css";
-import { formatDate } from "../../../../inventory/utils/dateFormat";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import "../../../../../styles/global/reactInput.css";
+import { formatDate } from "../../../../inventory/utils/dateFormat";
+import ReturnDateModal from "./ReturnDateModal";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
@@ -40,7 +38,6 @@ const FormDeviceTrackingMethod = ({
   setDisplayFormToCreateCategory,
   existingData,
 }) => {
-  const [returningDate, setReturningDate] = useState(new Date());
   const [taxableLocation, setTaxableLocation] = useState("");
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -48,6 +45,8 @@ const FormDeviceTrackingMethod = ({
   const [valueObject, setValueObject] = useState("");
   const [choose, setChoose] = useState([]);
   const { user } = useSelector((state) => state.admin);
+  const [newDeviceGroupToPass, setNewDeviceGroupToPass] = useState([]);
+  const [openReturnDateModal, setOpenReturnDateModal] = useState(false);
   const {
     register,
     handleSubmit,
@@ -196,10 +195,9 @@ const FormDeviceTrackingMethod = ({
               existing: false,
               extra_serial_number: JSON.stringify(moreInfo),
               company_id: user.sqlInfo.company_id,
-              return_date: formatDate(returningDate),
             },
           ];
-          setSelectedItem(resulting);
+          setOpenReturnDateModal(true);
           setLoading(false);
           if (
             !renderLocationOptions().some(
@@ -214,6 +212,7 @@ const FormDeviceTrackingMethod = ({
               }
             );
           }
+          setNewDeviceGroupToPass(resulting);
           setValue("category_name", "");
           setValue("item_group", "");
           setValue("cost", "");
@@ -223,7 +222,6 @@ const FormDeviceTrackingMethod = ({
           setValue("startingNumber", "");
           setValue("endingNumber", "");
           setLoading(false);
-          setDisplayFormToCreateCategory(false);
         } catch (error) {
           setLoading(false);
         }
@@ -252,7 +250,6 @@ const FormDeviceTrackingMethod = ({
             existing: false,
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
-            return_date: formatDate(returningDate),
           },
         ];
         if (
@@ -268,9 +265,9 @@ const FormDeviceTrackingMethod = ({
             }
           );
         }
-        setSelectedItem(resulting);
+        setNewDeviceGroupToPass(resulting);
+        setOpenReturnDateModal(true);
         setLoading(false);
-        setDisplayFormToCreateCategory(false);
       } catch (error) {
         setLoading(false);
       }
@@ -549,78 +546,36 @@ const FormDeviceTrackingMethod = ({
               gap: "5px",
             }}
           >
-            <div
+            {/* <div
               style={{
                 textAlign: "left",
                 width: "50%",
                 display: "flex",
                 alignSelf: "flex-start",
               }}
-            >
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Tooltip title="Device added from this option would be set as rented Device.">
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    style={{ ...Subtitle, fontWeight: 500 }}
-                  >
-                    Ownership status of items{" "}
-                    {/* <strong>
+            > */}
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Tooltip title="Device added from this option would be set as rented Device.">
+                <Typography
+                  textTransform={"none"}
+                  textAlign={"left"}
+                  style={{ ...Subtitle, fontWeight: 500 }}
+                >
+                  Ownership status of items{" "}
+                  {/* <strong>
                       <QuestionIcon />
                     </strong> */}
-                  </Typography>
-                </Tooltip>
-                <OutlinedInput
-                  disabled
-                  style={OutlinedInputStyle}
-                  readOnly
-                  value={"Rent"}
-                  fullWidth
-                />
-              </InputLabel>
-            </div>
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-                display: "flex",
-                flexDirection: "column",
-                alignSelf: "flex-start",
-              }}
-            >
-              <Tooltip
-                placement="top"
-                title="Where the item is location physically."
-                style={{
-                  width: "100%",
-                }}
-              >
-                <Typography
-                  style={{
-                    ...TextFontSize14LineHeight20,
-                    fontWeight: 500,
-                    color: "var(--gray700, #344054)",
-                  }}
-                >
-                  Returning date <QuestionIcon />
                 </Typography>
               </Tooltip>
-              <DatePicker
-                id="calender-event"
-                autoComplete="checking"
-                showTimeSelect
-                dateFormat="Pp"
-                minDate={new Date()}
-                selected={returningDate}
-                openToDate={new Date()}
-                startDate={new Date()}
-                onChange={(date) => setReturningDate(date)}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "90%",
-                }}
+              <OutlinedInput
+                disabled
+                style={OutlinedInputStyle}
+                readOnly
+                value={"Rent"}
+                fullWidth
               />
-            </div>
+            </InputLabel>
+            {/* </div> */}
           </div>
         </div>
         <div
@@ -825,7 +780,8 @@ const FormDeviceTrackingMethod = ({
           </Grid>
         </Grid>
         <Divider />
-        <span
+        <button
+          type="button"
           onClick={() => setMoreInfoDisplay(true)}
           style={{
             ...CenteringGrid,
@@ -861,7 +817,7 @@ const FormDeviceTrackingMethod = ({
           >
             Add more information
           </Typography>
-        </span>
+        </button>
         {moreInfoDisplay && (
           <div
             style={{
@@ -979,6 +935,15 @@ const FormDeviceTrackingMethod = ({
           </div>
         </div>
       </form>
+      {openReturnDateModal && (
+        <ReturnDateModal
+          openReturnDateModal={openReturnDateModal}
+          setOpenReturnDateModal={setOpenReturnDateModal}
+          data={newDeviceGroupToPass}
+          setSelectedItem={setSelectedItem}
+          setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
+        />
+      )}
     </Grid>
   );
 };
