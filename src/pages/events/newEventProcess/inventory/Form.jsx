@@ -243,6 +243,10 @@ const Form = () => {
   const filledFields = (props) => {
     return setFilled(props);
   };
+
+  const handleRefresh = async () => {
+    return itemQuery.refetch();
+  };
   return (
     <Suspense
       fallback={
@@ -332,8 +336,9 @@ const Form = () => {
                 style={{
                   width: "100%",
                   display: "flex",
-                  justifyContent: "flex-start",
+                  justifyContent: "space-between",
                   alignItems: "center",
+                  margin: "0 0 0.5rem",
                 }}
               >
                 <Typography
@@ -347,6 +352,17 @@ const Form = () => {
                 >
                   Select from existing inventory
                 </Typography>
+                <button
+                style={{
+                  ...BlueButton,
+                  width: "fit-content",
+                  padding: "2px 5px",
+                }}
+                onClick={() => handleRefresh()}
+              >
+                <p style={{ ...BlueButtonText, padding: "2px 5px" }}>Refresh</p>
+              </button>
+
               </InputLabel>
               <Select
                 className="custom-autocomplete"
