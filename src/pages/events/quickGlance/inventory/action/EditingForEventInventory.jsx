@@ -1,7 +1,16 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, Divider, Modal, Popconfirm, Select, Space, notification } from "antd";
+import {
+  Button,
+  Card,
+  Divider,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  notification,
+} from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,6 +27,8 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
 
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -124,7 +135,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       } ${new Date().toString()} ${true} ${
         valueItemSelected[0].startingNumber
       } ${valueItemSelected[0].endingNumber}`,
-      consumerUses: false,//change this to false to force company to set device for consumer and others to set device for staff
+      consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
       startingNumber: valueItemSelected[0].serial_number,
       endingNumber: valueItemSelected[limit].serial_number,
       existing: true,
@@ -184,7 +195,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       });
     }
     await createDeviceRecordInNoSQLDatabase(data);
-    await openNotification("Device type and devices  range of serial number added to inventory.");
+    await openNotification(
+      "Device type and devices  range of serial number added to inventory."
+    );
   };
 
   const closeModal = () => {
@@ -263,6 +276,10 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       );
     }
   };
+
+  const handleRefresh = async () => {
+    return itemQuery.refetch();
+  };
   return (
     <Modal
       open={editingInventory}
@@ -271,11 +288,11 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        zIndex:30
+        zIndex: 30,
       }}
       footer={[]}
     >
-    {contextHolder}
+      {contextHolder}
       <Grid width={"70vw"} container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <Grid
@@ -311,8 +328,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "flex-start",
+                justifyContent: "space-between",
                 alignItems: "center",
+                margin: "0 0 0.5rem",
               }}
             >
               <Typography
@@ -326,6 +344,16 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               >
                 Select from existing category
               </Typography>
+              <button
+                style={{
+                  ...BlueButton,
+                  width: "fit-content",
+                  padding: "2px 5px",
+                }}
+                onClick={() => handleRefresh()}
+              >
+                <p style={{ ...BlueButtonText, padding: "2px 5px" }}>Refresh</p>
+              </button>
             </InputLabel>
             <Select
               className="custom-autocomplete"
