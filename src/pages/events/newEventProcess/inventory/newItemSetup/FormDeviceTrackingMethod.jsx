@@ -15,8 +15,10 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import { UploadIcon } from "../../../../../components/icons/UploadIcon";
+import { WarningIcon } from "../../../../../components/icons/WarningIcon";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -51,6 +53,7 @@ const FormDeviceTrackingMethod = ({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
@@ -112,11 +115,17 @@ const FormDeviceTrackingMethod = ({
       setLocationSelection(`${dataToRetrieve.location}`);
       setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
     }
-
     return () => {
       controller.abort();
     };
   }, [choose]);
+
+  const dataDevices = itemsInInventoryQuery?.data?.data?.items;
+  const checkExistingSerialNumberInCompanyInventory = (props) => {
+    const groupingBySerialNumber = groupBy(dataDevices, "serial_number");
+    const existingSerialNumber = groupingBySerialNumber[props];
+    return existingSerialNumber;
+  };
 
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
@@ -610,6 +619,41 @@ const FormDeviceTrackingMethod = ({
               style={OutlinedInputStyle}
               placeholder="e.g. 0001"
               fullWidth
+              endAdornment={
+                <Tooltip
+                  placement="right"
+                  title={
+                    checkExistingSerialNumberInCompanyInventory(
+                      watch("startingNumber")
+                    )?.length > 0
+                      ? "Serial number already exists in company inventory."
+                      : ""
+                  }
+                >
+                  <InputAdornment position="end">
+                    {checkExistingSerialNumberInCompanyInventory(
+                      watch("startingNumber")
+                    )?.length > 0 ? (
+                      <div
+                        style={{
+                          backgroundColor:
+                            checkExistingSerialNumberInCompanyInventory(
+                              watch("startingNumber")
+                            )?.length > 0
+                              ? "var(--danger-action)"
+                              : null,
+                          borderRadius: "50%",
+                          padding: "2px 5px",
+                        }}
+                      >
+                        <WarningIcon />
+                      </div>
+                    ) : (
+                      <CheckIcon />
+                    )}
+                  </InputAdornment>
+                </Tooltip>
+              }
             />
           </div>
           <div
@@ -634,6 +678,36 @@ const FormDeviceTrackingMethod = ({
               style={OutlinedInputStyle}
               placeholder="e.g. 1000"
               fullWidth
+              endAdornment={
+                <Tooltip
+                  placement="right"
+                  title={
+                    checkExistingSerialNumberInCompanyInventory(
+                      watch("endingNumber")
+                    )?.length > 0
+                      ? "Serial number already exists in company inventory."
+                      : ""
+                  }
+                >
+                  <InputAdornment position="end">
+                    {checkExistingSerialNumberInCompanyInventory(
+                      watch("endingNumber")
+                    )?.length > 0 ? (
+                      <div
+                        style={{
+                          backgroundColor: "var(--danger-action)",
+                          borderRadius: "50%",
+                          padding: "2px 5px",
+                        }}
+                      >
+                        <WarningIcon />
+                      </div>
+                    ) : (
+                      <CheckIcon />
+                    )}
+                  </InputAdornment>
+                </Tooltip>
+              }
             />
           </div>
         </div>
