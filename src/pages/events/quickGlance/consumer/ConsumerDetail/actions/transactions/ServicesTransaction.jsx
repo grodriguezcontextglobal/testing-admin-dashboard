@@ -26,6 +26,7 @@ import { onAddDevicesSelectionPaidTransactions } from "../../../../../../../stor
 const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
+  const { user } = useSelector((state) => state.admin);
   const [serviceList, setServiceList] = useState([]);
   const [servicesAddedForCustomer, setServicesAddedForCustomer] = useState([]);
   const [serviceSelected, setServiceSelected] = useState({});
@@ -133,6 +134,14 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       console.log(error); //error
     }
   };
+
+  const checkAdminForEnableEditPriceField = () => {
+    return (
+      event.staff.adminUser.some((ele) => ele.email === user.email) ||
+      user.companyData.employees.some((ele) => ele.email === user.email)
+    );
+  };
+  console.log(!checkAdminForEnableEditPriceField())
   return (
     <Modal
       title={renderTitle()}
@@ -145,7 +154,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       maskClosable={false}
       style={{
         top: "10dvh",
-        zIndex:30
+        zIndex: 30,
       }}
     >
       <div
@@ -220,6 +229,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
                   width: "100%",
                 }}
                 placeholder="Price."
+                readOnly={!checkAdminForEnableEditPriceField()}
                 startAdornment={
                   <InputAdornment position="start">$</InputAdornment>
                 }
@@ -269,25 +279,22 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
             display: servicesAddedForCustomer?.length > 0 ? "block" : "none",
           }}
         />
-        {
-          totalToBeCharged() > 0 &&
-          clientSecret == null && (
-            <Button
-              onClick={() => submitServicesAddedForCustomerPaymentIntent()}
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
-                display: clientSecret !== null ? "none" : "flex",
-                width: "100%",
-              }}
-            >
-              <p style={{ ...BlueButtonText, textAlign: "left" }}>
-                Total to be charged: ${totalToBeCharged()} | Click to submit CC
-                information
-              </p>
-            </Button>
-          )
-        }
+        {totalToBeCharged() > 0 && clientSecret == null && (
+          <Button
+            onClick={() => submitServicesAddedForCustomerPaymentIntent()}
+            style={{
+              ...BlueButton,
+              ...CenteringGrid,
+              display: clientSecret !== null ? "none" : "flex",
+              width: "100%",
+            }}
+          >
+            <p style={{ ...BlueButtonText, textAlign: "left" }}>
+              Total to be charged: ${totalToBeCharged()} | Click to submit CC
+              information
+            </p>
+          </Button>
+        )}
         {clientSecret !== "" && (
           <StripeElementServicesTransaction
             clientSecret={clientSecret}
