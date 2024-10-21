@@ -47,7 +47,11 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const renderingTotalAvailableDevices = (props) => {
     const result = groupBy(props, "warehouse");
     if (result[1]) {
-      return result[1].length;
+      const resultAssignable = groupBy(result[1], "data.enableAssignFeature");
+      if (resultAssignable[1]) {
+        return resultAssignable[1].length;
+      }
+      return 0;
     }
     return 0;
   };
@@ -57,15 +61,13 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     const parameter = props;
     if (dataToDisplay().length > 0) {
       for (let data of dataToDisplay()) {
-        if (data.data.enableAssignFeature === 1) {
-          if (totalPerLocation.has(data[parameter])) {
-            totalPerLocation.set(data[parameter], [
-              ...totalPerLocation.get(data[parameter]),
-              data,
-            ]);
-          } else {
-            totalPerLocation.set(data[parameter], [data]);
-          }
+        if (totalPerLocation.has(data[parameter])) {
+          totalPerLocation.set(data[parameter], [
+            ...totalPerLocation.get(data[parameter]),
+            data,
+          ]);
+        } else {
+          totalPerLocation.set(data[parameter], [data]);
         }
       }
     }
