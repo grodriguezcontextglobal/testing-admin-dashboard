@@ -48,7 +48,7 @@ const ItemTable = ({ searchItem }) => {
       }),
     refetchOnMount: false,
   });
-  
+
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
@@ -178,42 +178,71 @@ const ItemTable = ({ searchItem }) => {
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
-      render: (warehouse) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              warehouse === 0
-                ? "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
-        >
-          <p
-            style={{
-              color: `${
-                warehouse === 0
-                  ? "var(--blue-700, #175CD3)"
-                  : "var(--success-700, #027A48)"
-              }`,
-              textTransform: "capitalize",
-            }}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-            />
-            {warehouse === 0 ? "In Use" : "In Stock"}
-          </p>
-        </span>
-      ),
+      render: (warehouse, record) => {
+        if (record.data.enableAssignFeature === 1) {
+          return (
+            <span
+              style={{
+                ...cellStyle,
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `${
+                  warehouse === 0
+                    ? "var(--blue-50, #EFF8FF)"
+                    : "var(--success-50, #ECFDF3)"
+                }`,
+                width: "fit-content",
+              }}
+            >
+              <p
+                style={{
+                  color: `${
+                    warehouse === 0
+                      ? "var(--blue-700, #175CD3)"
+                      : "var(--success-700, #027A48)"
+                  }`,
+                  textTransform: "capitalize",
+                }}
+              >
+                <Icon
+                  icon="tabler:point-filled"
+                  rotate={3}
+                  color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
+                />
+                {warehouse === 0 ? "In Use" : "In Stock"}
+              </p>
+            </span>
+          );
+        } else {
+          return (
+            <span
+              style={{
+                ...cellStyle,
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `#F9F5FF`,
+                width: "fit-content",
+              }}
+            >
+              <p
+                style={{
+                  color: "#6941C6",
+                  textTransform: "capitalize",
+                }}
+              >
+                <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
+                Disabled
+              </p>
+            </span>
+          );
+        }
+      },
     },
     {
       title: "Ownership",
@@ -285,17 +314,17 @@ const ItemTable = ({ searchItem }) => {
       },
       render: (data) => {
         let result = data.event_name;
-        console.log(result)
+        console.log(result);
         if (String(result).toLowerCase().includes("leased equipment")) {
           const splittingName = String(result).split(" / ");
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
         } else if (String(result).toLowerCase().split(" / ").length === 3) {
           const splittingName = String(result).split(" / ");
-          result = splittingName[1]
-            // .slice(1, 2)
-            // .flat()
-            // .toLocaleString()
-            // .replaceAll(",", " ");
+          result = splittingName[1];
+          // .slice(1, 2)
+          // .flat()
+          // .toLocaleString()
+          // .replaceAll(",", " ");
         }
         return (
           <span style={cellStyle}>
