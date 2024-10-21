@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import pkg from "prop-types";
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -52,7 +52,7 @@ const navItems = [
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
 ];
 
-const NavigationBarMain = (props) => {
+const NavigationBarMain = forwardRef(function NavigationBarMain(props){
   // eslint-disable-next-line no-unused-vars
   const [{ x, y }, scrollTo] = useWindowScroll();
   // const { register, handleSubmit, watch } = useForm()
@@ -482,7 +482,7 @@ const NavigationBarMain = (props) => {
       </nav>
     </Grid>
   );
-};
+});
 
 export default NavigationBarMain;
 
