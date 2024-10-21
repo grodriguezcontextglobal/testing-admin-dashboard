@@ -162,12 +162,12 @@ const ServicePaymentConfirmation = lazy(() =>
 );
 const ErrorPage = lazy(() => import("../../pages/error/ErrorLandingPage"));
 const AuthRoutes = () => {
-  const navbarRef = useRef();
+  const navbarRef = useRef(null);
   return (
     <div style={{ width: "100%", margin: "auto" }}>
-      <header ref={navbarRef} style={{ width: "100%", margin: "0 auto" }}>
-        <UpperBanner />
-        <NavigationBarMain />
+      <header style={{ width: "100%", margin: "0 auto" }}>
+        <UpperBanner ref={navbarRef} />
+        <NavigationBarMain ref={navbarRef} />
       </header>
       <Suspense
         fallback={
@@ -334,7 +334,7 @@ const AuthRoutes = () => {
       <div
         style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}
       >
-        <FooterComponent />
+        <FooterComponent ref={navbarRef}/>
       </div>
     </div>
   );
