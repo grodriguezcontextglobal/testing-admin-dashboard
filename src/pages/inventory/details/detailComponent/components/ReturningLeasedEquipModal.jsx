@@ -6,12 +6,11 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Divider, Modal, notification, Space, Button, Tooltip } from "antd";
+import { Button, Divider, Modal, notification, Space, Tooltip } from "antd";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
@@ -33,6 +32,7 @@ const ReturningLeasedEquipModal = ({
   dataFound,
   openReturningModal,
   setOpenReturningModal,
+  setDataPropsCopy,
 }) => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [begin, setBegin] = useState(new Date());
@@ -41,7 +41,7 @@ const ReturningLeasedEquipModal = ({
   const [keyObject, setKeyObject] = useState("");
   const [valueObject, setValueObject] = useState("");
   const { handleSubmit } = useForm();
-  const { user } = useSelector((state) => state.admin);
+  // const { user } = useSelector((state) => state.admin);
   const [api, contextHolder] = notification.useNotification();
   const openNotification = (msg) => {
     api.open({
@@ -52,41 +52,40 @@ const ReturningLeasedEquipModal = ({
     return setOpenReturningModal(false);
   };
 
-  const emailNotificationAdmins = async () => {
-    const response = await devitrakApi.post(
-      "/nodemailer/leased-equip-staff-notification",
-      {
-        subject: "Leased device returned in company records.",
-        message: `The device with serial number ${
-          dataFound[0].serial_number
-        } was returned for staff member ${user.name} ${
-          user.lastName
-        } at Date ${new Date().toString()} to original renter company.`,
-        company: user.companyData.company_name,
-        staff: [
-          ...user.companyData.employees
-            .filter((element) => Number(element.role) < 2)
-            .map((ele) => ele.user),
-        ],
-        contactInfo: {
-          staff: `${user.name} ${user.lastName}`,
-          email: user.email,
-        },
-      }
-    );
-    if (response.data) {
-      return openNotification("Item is returned to the company.");
-    }
-  };
+  // const emailNotificationAdmins = async () => {
+  //   const response = await devitrakApi.post(
+  //     "/nodemailer/leased-equip-staff-notification",
+  //     {
+  //       subject: "Leased device returned in company records.",
+  //       message: `The device with serial number ${
+  //         dataFound.serial_number
+  //       } was returned for staff member ${user.name} ${
+  //         user.lastName
+  //       } at Date ${new Date().toString()} to original renter company.`,
+  //       company: user.companyData.company_name,
+  //       staff: [
+  //         ...user.companyData.employees
+  //           .filter((element) => Number(element.role) < 2)
+  //           .map((ele) => ele.user),
+  //       ],
+  //       contactInfo: {
+  //         staff: `${user.name} ${user.lastName}`,
+  //         email: user.email,
+  //       },
+  //     }
+  //   );
+  //   if (response.data) {
+  //     return openNotification("Item is returned to the company.");
+  //   }
+  // };
 
   const handleReturningLeasedEquip = async (data) => {
     setLoadingStatus(true);
     try {
-      console.log(data);
       const response = await devitrakApi.post(
         "/db_company/returning-leased-equipment",
         {
-          item_id: dataFound[0].item_id,
+          item_id: dataFound.item_id,
           return_date: begin.toString(),
           enableAssignFeature: 0,
           returnedRentedInfo: JSON.stringify(moreInfo),
@@ -94,7 +93,8 @@ const ReturningLeasedEquipModal = ({
       );
       setLoadingStatus(false);
       if (response.data.ok) {
-        await emailNotificationAdmins();
+        setDataPropsCopy({ ...dataFound, enableAssignFeature: 0 });
+        // await emailNotificationAdmins();
         setLoadingStatus(false);
         openNotification("Item is returned to the company.");
         return closeModal();
@@ -153,10 +153,10 @@ const ReturningLeasedEquipModal = ({
   };
   return (
     <Modal
-      key={dataFound[0].item_id}
+      key={dataFound.item_id}
       open={openReturningModal}
       onCancel={() => closeModal()}
-      style={{ top: "20dv", zIndex:30 }}
+      style={{ top: "20dv", zIndex: 30 }}
       width={1000}
       centered
       footer={[]}
@@ -170,7 +170,7 @@ const ReturningLeasedEquipModal = ({
         {contextHolder}
         {renderTitle()}
         <form
-          key={dataFound[0].item_id}
+          key={dataFound.item_id}
           id="handleReturningLeasedEquip"
           style={{
             width: "100%",
