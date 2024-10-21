@@ -4,14 +4,28 @@ import { Card, Tooltip } from "antd";
 import { CardStyle } from "../../../../styles/global/CardStyle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 // import ReturningLeasedEquipModal from "./components/ReturningLeasedEquipModal";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Loading from "../../../../components/animation/Loading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { checkArray } from "../../../../components/utils/checkArray";
 const ReturningLeasedEquipModal = lazy(() =>
   import("./components/ReturningLeasedEquipModal")
 );
 const DeviceDescriptionTags = ({ dataFound }) => {
   const [returningModal, setReturningModal] = useState(false);
+  const [dataPropsCopy, setDataPropsCopy] = useState(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (dataFound) {
+      const dataObject = checkArray(dataFound);
+      setDataPropsCopy(dataObject);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  console.log(dataPropsCopy);
   const dic = {
     Permanent: {
       label: "Owned",
@@ -61,7 +75,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
             <div
               style={{
                 display: `${
-                  String(dataFound[0].ownership).toLowerCase() === "rent"
+                  String(dataPropsCopy?.ownership).toLowerCase() === "rent"
                     ? "flex"
                     : "none"
                 }`,
@@ -74,8 +88,8 @@ const DeviceDescriptionTags = ({ dataFound }) => {
             >
               <Tooltip
                 title={`${
-                  dataFound[0]?.warehouse < 1 ||
-                  dataFound[0]?.warehouse === false
+                  dataPropsCopy?.warehouse < 1 ||
+                  dataPropsCopy?.warehouse === false
                     ? "This item is being used in an event."
                     : "Click to return leased equipment and adding returning infomration."
                 }`}
@@ -88,8 +102,8 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                     width: "100%",
                   }}
                   disabled={
-                    dataFound[0]?.warehouse < 1 ||
-                    dataFound[0]?.warehouse === false
+                    dataPropsCopy?.warehouse < 1 ||
+                    dataPropsCopy?.warehouse === false
                   }
                   onClick={() => setReturningModal(true)}
                 >
@@ -97,7 +111,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                     style={{
                       ...TextFontSize14LineHeight20,
                       display: `${
-                        String(dataFound[0].ownership).toLowerCase() ===
+                        String(dataPropsCopy?.ownership).toLowerCase() ===
                           "rent" && "flex"
                       }`,
                       fontSize: "12px",
@@ -109,12 +123,12 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                       padding: "2px 8px",
                     }}
                   >
-                    {dataFound[0]?.enabledAssignFeature > 0 ||
-                    !dataFound[0]?.enabledAssignFeature
+                    {dataPropsCopy?.enableAssignFeature === 1 
+                    // || !dataPropsCopy?.enableAssignFeature
                       ? "Returning date"
                       : "Returned equipment date"}
                     <br />{" "}
-                    {dataFound[0]?.return_date
+                    {dataPropsCopy?.return_date
                       ?.split(" ")
                       .slice(0, 5)
                       .toString()
@@ -132,7 +146,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                 alignItems: "center",
                 mixBlendMode: "multiply",
                 background: `${
-                  dataFound[0]?.warehouse === 0
+                  dataPropsCopy?.warehouse === 0
                     ? "var(--orange-dark-50, #FFF4ED)"
                     : "var(--success-50, #ECFDF3)"
                 }`,
@@ -149,7 +163,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                   textAlign: "center",
                   fontWeight: 500,
                   color: `${
-                    dataFound[0]?.warehouse === 0
+                    dataPropsCopy?.warehouse === 0
                       ? "var(--orange-700, #B93815)"
                       : "var(--success-700, #027A48)"
                   }`,
@@ -159,10 +173,10 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                   icon="tabler:point-filled"
                   rotate={3}
                   color={`${
-                    dataFound[0]?.warehouse === 0 ? "#EF6820" : "#12B76A"
+                    dataPropsCopy?.warehouse === 0 ? "#EF6820" : "#12B76A"
                   }`}
                 />
-                {dataFound[0]?.warehouse === 0 ? "In Use" : "In Stock"}
+                {dataPropsCopy?.warehouse === 0 ? "In Use" : "In Stock"}
               </Typography>
             </span>
             <br />
@@ -175,7 +189,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                 alignItems: "center",
                 mixBlendMode: "multiply",
                 background: `${
-                  dataFound[0]?.warehouse === 0
+                  dataPropsCopy?.warehouse === 0
                     ? "var(--Primary-50, #F9F5FF)"
                     : "#FFF4ED"
                 }`,
@@ -184,7 +198,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
               }}
             >
               <Typography
-                color={`${dic[dataFound[0]?.ownership]?.color}`}
+                color={`${dic[dataPropsCopy?.ownership]?.color}`}
                 fontSize={"12px"}
                 fontFamily={"Inter"}
                 fontStyle={"normal"}
@@ -196,19 +210,20 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                 <Icon
                   icon="tabler:point-filled"
                   rotate={3}
-                  color={`${dic[dataFound[0]?.ownership]?.color}`}
+                  color={`${dic[dataPropsCopy?.ownership]?.color}`}
                 />
-                {dic[dataFound[0]?.ownership]?.label}
+                {dic[dataPropsCopy?.ownership]?.label}
               </Typography>
             </span>
           </Grid>
         </Card>
       </Grid>
       {returningModal &&
-        (dataFound[0].enabledAssignFeature > 0 ||
-          !dataFound[0].enabledAssignFeature) && (
+        (dataPropsCopy?.enabledAssignFeature > 0 ||
+          !dataPropsCopy?.enabledAssignFeature) && (
           <ReturningLeasedEquipModal
-            dataFound={dataFound}
+            dataFound={dataPropsCopy}
+            setDataPropsCopy={setDataPropsCopy}
             openReturningModal={returningModal}
             setOpenReturningModal={setReturningModal}
           />
