@@ -646,7 +646,7 @@ const FormDeviceTrackingMethod = ({
                           padding: "2px 5px",
                         }}
                       >
-                        <WarningIcon />
+                        <WarningIcon color={"#fff"} />
                       </div>
                     ) : (
                       <CheckIcon />
@@ -700,7 +700,7 @@ const FormDeviceTrackingMethod = ({
                           padding: "2px 5px",
                         }}
                       >
-                        <WarningIcon />
+                        <WarningIcon color={"#fff"} />
                       </div>
                     ) : (
                       <CheckIcon />
