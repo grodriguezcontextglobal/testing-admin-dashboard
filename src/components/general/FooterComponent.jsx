@@ -1,4 +1,6 @@
-const FooterComponent = () => {
+import { forwardRef } from "react";
+
+const FooterComponent = forwardRef(function FooterComponent() {
   return (
     <p
       style={{
@@ -14,6 +16,6 @@ const FooterComponent = () => {
       © Devitrak {new Date().getFullYear()}{" "}
     </p>
   );
-};
+});
 
 export default FooterComponent;
