@@ -57,13 +57,15 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     const parameter = props;
     if (dataToDisplay().length > 0) {
       for (let data of dataToDisplay()) {
-        if (totalPerLocation.has(data[parameter])) {
-          totalPerLocation.set(data[parameter], [
-            ...totalPerLocation.get(data[parameter]),
-            data,
-          ]);
-        } else {
-          totalPerLocation.set(data[parameter], [data]);
+        if (data.data.enableAssignFeature === 1) {
+          if (totalPerLocation.has(data[parameter])) {
+            totalPerLocation.set(data[parameter], [
+              ...totalPerLocation.get(data[parameter]),
+              data,
+            ]);
+          } else {
+            totalPerLocation.set(data[parameter], [data]);
+          }
         }
       }
     }
@@ -164,7 +166,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "Total device",
           dataIndex: "valueParameter",
           key: "valueParameter",
-          width:"20%",
+          width: "20%",
           render: (valueParameter) => (
             <p style={Subtitle}>{valueParameter.total}</p>
           ),
@@ -173,7 +175,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "Total available devices",
           dataIndex: "valueParameter",
           key: "valueParameter",
-          width:"20%",
+          width: "20%",
           render: (valueParameter) => (
             <p style={Subtitle}>{valueParameter.available}</p>
           ),
@@ -183,7 +185,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           title: "",
           dataIndex: "action",
           key: "action",
-          width:"10%",
+          width: "10%",
           render: (_, record) => (
             <div
               style={{
@@ -275,7 +277,6 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
         },
       ],
     },
-
   ];
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
