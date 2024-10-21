@@ -12,6 +12,7 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import LinkIcon from "../../../../../components/icons/LinkIcon";
 // import EmailNotification from "../../../../../components/notification/email/EmailNotification";
 // import SpreadSheet from "../SpreadSheet";
 // import EndEventButton from "./EndEventButton";
@@ -20,9 +21,13 @@ const EmailNotification = lazy(() =>
 );
 const SpreadSheet = lazy(() => import("../SpreadSheet"));
 const EndEventButton = lazy(() => import("./EndEventButton"));
+const SendEventLinkModal = lazy(() =>
+  import("../../../../../components/notification/email/EventLinkNotification")
+);
 const ButtonSections = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const [sendEventLink, setSendEventLink] = useState(false);
   const [
     customizedEmailNotificationModal,
     setCustomizedEmailNotificationModal,
@@ -33,7 +38,6 @@ const ButtonSections = () => {
       devitrakApi.get("/inventory/list-inventories", {
         company: user.companyData.company_name,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
   const listOfItemsInInventoryQuery = useQuery({
@@ -76,6 +80,12 @@ const ButtonSections = () => {
       text: "Email Notifications to Attendees",
       disableStatus: !event.active,
       fn: () => setCustomizedEmailNotificationModal(true),
+    },
+    {
+      icon: <LinkIcon />,
+      text: "Send event link.",
+      disableStatus: true,
+      fn: () => setSendEventLink(true),
     },
   ];
 
@@ -269,6 +279,12 @@ const ButtonSections = () => {
           setCustomizedEmailNotificationModal={
             setCustomizedEmailNotificationModal
           }
+        />
+      )}
+      {sendEventLink && (
+        <SendEventLinkModal
+          sendEventLink={sendEventLink}
+          setSendEventLink={setSendEventLink}
         />
       )}
     </Suspense>
