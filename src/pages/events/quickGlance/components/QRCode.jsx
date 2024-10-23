@@ -5,26 +5,56 @@ import { useSelector } from "react-redux";
 import { DownloadIcon } from "../../../../components/icons/DownloadIcon";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-
 const QRCodeDisplay = () => {
   const { qrCodeLink } = useSelector((state) => state.event);
   const [valueQRCode] = useState(String(qrCodeLink));
+  
   const downloadQRCode = () => {
-    const canvas = document.getElementById("myqrcode")?.querySelector("canvas");
-    if (!canvas) {
-      console.error("Canvas not found!");
+    const svgElement = document.getElementById("myqrcode")?.querySelector("svg");
+    if (!svgElement) {
+      console.error("SVG not found!");
       return;
     }
     try {
-      const pngUrl = canvas.toDataURL("image/png");
+      const svgClone = svgElement.cloneNode(true);
+      const svgNamespace = "http://www.w3.org/2000/svg";
+
+      // Create a frame similar to the one in the image
+      const frame = document.createElementNS(svgNamespace, "rect");
+      frame.setAttribute("x", "0");
+      frame.setAttribute("y", "0");
+      frame.setAttribute("width", svgElement.getBoundingClientRect().width);
+      frame.setAttribute("height", svgElement.getBoundingClientRect().height);
+      frame.setAttribute("fill", "none");
+      frame.setAttribute("stroke", "black");
+      frame.setAttribute("stroke-width", "5");
+      svgClone.insertBefore(frame, svgClone.firstChild);
+
+      // Create the "SCAN ME" text below the QR code
+      const text = document.createElementNS(svgNamespace, "text");
+      text.setAttribute("x", "50%");
+      text.setAttribute("y", `${svgElement.getBoundingClientRect().height + 30}`);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "20");
+      text.setAttribute("font-family", "Inter");
+      text.setAttribute("fill", "black");
+      text.textContent = "SCAN ME";
+      svgClone.appendChild(text);
+
+      // Serialize and download the SVG
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgClone);
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const svgUrl = URL.createObjectURL(svgBlob);
       let downloadLink = document.createElement("a");
-      downloadLink.href = pngUrl;
-      downloadLink.download = `${qrCodeLink}.png`;
+      downloadLink.href = svgUrl;
+      downloadLink.download = `${qrCodeLink}.svg`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(svgUrl);
     } catch (error) {
-      console.error("Error generating PNG URL: ", error.message);
+      console.error("Error generating SVG URL: ", error.message);
     }
   };
 
@@ -88,7 +118,7 @@ const QRCodeDisplay = () => {
                 lineHeight="20px"
               >
                 <DownloadIcon />
-                &nbsp;Download as PNG
+                &nbsp;Download as SVG
               </Typography>
             </Button>
           </Grid>,
@@ -117,9 +147,11 @@ const QRCodeDisplay = () => {
             <QRCode
               errorLevel="H"
               value={valueQRCode}
-              // icon={'https://i.ibb.co/WHcvqrG/devitrak-logo.png'}
-              iconSize={50}
-              // bgColor="var(--basewhite)"
+              icon={'https://res.cloudinary.com/dpdzkhh07/image/upload/v1729629315/maskable_icon_white_background_t80s7n.png'}
+              // iconSize={100}
+              // size={300}
+              bgColor="#fff"              status="active"
+              type="svg"
             />
             <div
               style={{
