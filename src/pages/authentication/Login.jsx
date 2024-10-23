@@ -534,17 +534,17 @@ const Login = () => {
 
 Login.propTypes = {
   eventInfoDetail: PropTypes.shape({
-    address: PropTypes.string.isRequired,
-    eventName: PropTypes.string.isRequired,
-  }).isRequired,
-  company: PropTypes.string.isRequired,
-  subscription: PropTypes.string.isRequired,
+    address: PropTypes.string,
+    eventName: PropTypes.string,
+  }),
+  company: PropTypes.string,
+  subscription: PropTypes.string,
   qrCodeLink: PropTypes.string,
-  email: PropTypes.string.isRequired,
-  password: PropTypes.string.isRequired,
-  company_name: PropTypes.string.isRequired,
-  company_data: PropTypes.object.isRequired,
-  role: PropTypes.string.isRequired,
+  email: PropTypes.string,
+  password: PropTypes.string,
+  company_name: PropTypes.string,
+  company_data: PropTypes.object,
+  role: PropTypes.string,
 };
 
 export default Login;
