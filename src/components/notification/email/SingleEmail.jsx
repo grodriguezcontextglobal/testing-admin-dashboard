@@ -51,7 +51,7 @@ const SingleEmailNotification = ({
       openNotificationWithIcon("success", "Email sent!", "Email was sent");
       setValue("subject", "");
       setValue("message", "");
-      closeModal();
+      return closeModal();
     }
   };
   return (
