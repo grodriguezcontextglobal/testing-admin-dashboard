@@ -134,7 +134,7 @@ const FormatQuickGlanceCardGraphRender = ({
 export default FormatQuickGlanceCardGraphRender;
 
 FormatQuickGlanceCardGraphRender.propTypes = {
-  dataToRender: PropTypes.object,
+  dataToRender: PropTypes.Array,
   totalDeviceInRange: PropTypes.number,
   index: PropTypes.number,
 };
