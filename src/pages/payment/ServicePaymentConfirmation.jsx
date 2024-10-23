@@ -86,6 +86,22 @@ const ServicePaymentConfirmation = () => {
     }
   };
 
+  const invoiceEmail = async (props) => {
+    const template = {
+      email:customer.email,
+      amount: String(props.amount).slice(0, -2),
+      date: new Date(props.created).toString().slice(4, 15),
+      paymentIntent: props.id,
+      customer: `${customer.name} ${customer.lastName}`,
+      method: {
+        last4: props.charges.data[0].payment_method_details.card.last4,
+        brand: props.charges.data[0].payment_method_details.card.brand,
+      },
+      service: deviceSelectionPaidTransaction.deviceType.group,
+    };
+    await devitrakApi.post('/nodemailer/invoice-notification', template);
+  };
+
   const confirmPaymentIntent = async () => {
     try {
       setLoadingStatus(true);
@@ -95,6 +111,7 @@ const ServicePaymentConfirmation = () => {
       );
       if (response.data.ok) {
         dispatch(onAddNewPaymentIntent(response.data));
+        await invoiceEmail(response.data.paymentIntent);
         await saveTransaction();
         openNotification(
           "success",

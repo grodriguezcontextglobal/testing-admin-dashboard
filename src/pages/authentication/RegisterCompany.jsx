@@ -938,13 +938,13 @@ const RegisterCompany = () => {
 };
 
 RegisterCompany.propTypes = {
-  street: PropTypes.string.isRequired,
-  street2: PropTypes.string.isRequired,
-  city: PropTypes.string.isRequired,
-  state: PropTypes.string.isRequired,
-  postal_code: PropTypes.string.isRequired,
-  main_phone: PropTypes.string.isRequired,
-  alternative_phone: PropTypes.string.isRequired,
-  company_logo: PropTypes.string.isRequired,
+  street: PropTypes.string,
+  street2: PropTypes.string,
+  city: PropTypes.string,
+  state: PropTypes.string,
+  postal_code: PropTypes.string,
+  main_phone: PropTypes.string,
+  alternative_phone: PropTypes.string,
+  company_logo: PropTypes.string,
 };
 export default RegisterCompany;

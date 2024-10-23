@@ -98,10 +98,10 @@ const MainPage = () => {
 
   const displayingLeasedInventory = () => {
     const checking = inventory.filter(
-      (item) =>
+      (item) =>(
         String(item.ownership).toLowerCase() === "rent" &&
-        new Date(`${item.return_date}`).getTime() > new Date().getTime()
-    );
+        new Date(`${item.return_date}`).getTime() < new Date().getTime()
+    ));
     return setLeasedEquipmentNotificationStatus(checking.length > 0);
   };
 
