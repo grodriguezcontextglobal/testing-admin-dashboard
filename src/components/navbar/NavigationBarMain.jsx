@@ -52,7 +52,7 @@ const navItems = [
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
 ];
 
-const NavigationBarMain = forwardRef(function NavigationBarMain(props){
+const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
   const [{ x, y }, scrollTo] = useWindowScroll();
   // const { register, handleSubmit, watch } = useForm()
@@ -79,7 +79,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props){
     dispatch(onResetSubscriptionInfo());
     localStorage.removeItem("admin-token", "");
     dispatch(onLogout());
-    return window.location.reload();
+    return navigate("/login");
   };
 
   const handleDrawerToggle = () => {
@@ -149,6 +149,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props){
 
   return (
     <Grid
+      ref={ref}
       container
       sx={{
         display: "flex",
