@@ -215,34 +215,27 @@ const ReviewAndSubmitEvent = () => {
       const check = await "there is devices to be created in db";
       for (let data of deviceSetup) {
         if (!data.existing) {
-          for (
-            let i = Number(data.startingNumber);
-            i <= Number(data.endingNumber);
-            i++
-          ) {
-            await devitrakApi.post("/db_item/new_item", {
-              category_name: data.category_name,
-              item_group: data.item_group,
-              cost: data.cost,
-              brand: data.brand,
-              descript_item: data.descript_item,
-              ownership: data.ownership,
-              serial_number: String(i).padStart(
-                data.startingNumber.length,
-                `${data.startingNumber[0]}`
-              ),
-              warehouse: true,
-              main_warehouse: data.main_warehouse,
-              location: data.location,
-              current_location: data.location,
-              created_at: formatDate(new Date()),
-              updated_at: formatDate(new Date()),
-              company: data.company,
-              extra_serial_number: data.extra_serial_number,
-              company_id: data.company_id,
-              return_date: data.return_date,
-            });
-          }
+          const template = {
+            category_name: data.category_name,
+            item_group: data.item_group,
+            cost: data.cost,
+            brand: data.brand,
+            descript_item: data.descript_item,
+            ownership: data.ownership,
+            min_serial_number: data.startingNumber,
+            max_serial_number: data.endingNumber,
+            warehouse: true,
+            main_warehouse: data.main_warehouse,
+            location: data.location,
+            current_location: data.location,
+            created_at: formatDate(new Date()),
+            updated_at: formatDate(new Date()),
+            company: data.company,
+            extra_serial_number: data.extra_serial_number,
+            company_id: data.company_id,
+            return_date: data.return_date,
+          };
+          await devitrakApi.post("/db_item/bulk-item", template);
         }
       }
       return check;
@@ -303,7 +296,12 @@ const ReviewAndSubmitEvent = () => {
           <InputLabel style={{ width: "100%" }}>
             <Typography
               textTransform={"none"}
-              style={{ ...TextFontSize20LineHeight30, fontWeight: 600, textAlign: "left", color: "var(--gray-600, #475467)" }}
+              style={{
+                ...TextFontSize20LineHeight30,
+                fontWeight: 600,
+                textAlign: "left",
+                color: "var(--gray-600, #475467)",
+              }}
               alignSelf={"stretch"}
             >
               Review all the information below
