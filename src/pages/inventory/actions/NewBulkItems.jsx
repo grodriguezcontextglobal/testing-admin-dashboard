@@ -43,7 +43,7 @@ import DatePicker from "react-datepicker";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
-import "./style.css"
+import "./style.css";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -236,81 +236,52 @@ const AddNewBulkItems = () => {
         company: user.company,
       });
       if (resp.data) {
-        for (
-          let i = Number(data.startingNumber);
-          i <= Number(data.endingNumber);
-          i++
+        const template = {
+          category_name: data.category_name,
+          item_group: selectedItem,
+          cost: data.cost,
+          brand: data.brand,
+          descript_item: data.descript_item,
+          ownership: valueSelection,
+          min_serial_number: data.startingNumber,
+          max_serial_number: data.endingNumber,
+          warehouse: true,
+          main_warehouse: taxableLocation,
+          location: locationSelection,
+          current_location: locationSelection,
+          created_at: formatDate(new Date()),
+          updated_at: formatDate(new Date()),
+          company: user.company,
+          extra_serial_number: JSON.stringify(moreInfo),
+          company_id: user.sqlInfo.company_id,
+          return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+        };
+        await devitrakApi.post("/db_item/bulk-item", template);
+        if (
+          !renderLocationOptions().some(
+            (element) => element.value === locationSelection
+          )
         ) {
-          try {
-            await devitrakApi.post("/db_item/new_item", {
-              category_name: data.category_name,
-              item_group: selectedItem,
-              cost: data.cost,
-              brand: data.brand,
-              descript_item: data.descript_item,
-              ownership: valueSelection,
-              serial_number: String(i).padStart(
-                data.startingNumber.length,
-                `${data.startingNumber[0]}`
-              ),
-              warehouse: true,
-              main_warehouse: taxableLocation,
-              location: locationSelection,
-              current_location: locationSelection,
-              created_at: formatDate(new Date()),
-              updated_at: formatDate(new Date()),
-              company: user.company,
-              extra_serial_number: JSON.stringify(moreInfo),
-              company_id: user.sqlInfo.company_id,
-              return_date: `${
-                valueSelection === "Rent" ? returningDate : null
-              }`,
-            });
-            if (
-              !renderLocationOptions().some(
-                (element) => element.value === locationSelection
-              )
-            ) {
-              let template = [
-                ...companiesQuery.data.data.company.at(-1).location,
-                locationSelection,
-              ];
-              await devitrakApi.patch(
-                `/company/update-company/:${
-                  companiesQuery.data.data.company.at(-1).id
-                }`,
-                {
-                  location: template,
-                }
-              );
+          let template = [
+            ...companiesQuery.data.data.company.at(-1).location,
+            locationSelection,
+          ];
+          await devitrakApi.patch(
+            `/company/update-company/:${
+              companiesQuery.data.data.company.at(-1).id
+            }`,
+            {
+              location: template,
             }
-            if (
-              String(i).padStart(
-                data.startingNumber.length,
-                `${data.startingNumber[0]}`
-              ) === data.endingNumber
-            ) {
-              setValue("category_name", "");
-              setValue("item_group", "");
-              setValue("cost", "");
-              setValue("brand", "");
-              setValue("descript_item", "");
-              setValue("ownership", "");
-              setValue("serial_number", "");
-              setValueSelection(options[0]);
-              openNotificationWithIcon(
-                "success",
-                "items were created and stored in database."
-              );
-              setLoading(false);
-              api.destroy();
-              await navigate("/inventory");
-            }
-          } catch (error) {
-            openNotificationWithIcon("error", `${error.message}`);
-            setLoading(false);
-          }
+          );
         }
+        openNotificationWithIcon(
+          "success",
+          "items were created and stored in database."
+        );
+        setLoading(false);
+        api.destroy();
+        return navigate("/inventory");
       }
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
@@ -318,76 +289,52 @@ const AddNewBulkItems = () => {
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
       );
       setLoading(true);
-      for (
-        let i = Number(data.startingNumber);
-        i <= Number(data.endingNumber);
-        i++
+
+      const template = {
+        category_name: data.category_name,
+        item_group: selectedItem,
+        cost: data.cost,
+        brand: data.brand,
+        descript_item: data.descript_item,
+        ownership: valueSelection,
+        min_serial_number: data.startingNumber,
+        max_serial_number: data.endingNumber,
+        warehouse: true,
+        main_warehouse: taxableLocation,
+        location: locationSelection,
+        current_location: locationSelection,
+        created_at: formatDate(new Date()),
+        updated_at: formatDate(new Date()),
+        company: user.company,
+        extra_serial_number: JSON.stringify(moreInfo),
+        company_id: user.sqlInfo.company_id,
+        return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+      };
+      await devitrakApi.post("/db_item/bulk-item", template);
+      if (
+        !renderLocationOptions().some(
+          (element) => element.value === locationSelection
+        )
       ) {
-        try {
-          await devitrakApi.post("/db_item/new_item", {
-            category_name: data.category_name,
-            item_group: selectedItem,
-            cost: data.cost,
-            brand: data.brand,
-            descript_item: data.descript_item,
-            ownership: valueSelection,
-            serial_number: String(i).padStart(
-              data.startingNumber.length,
-              `${data.startingNumber[0]}`
-            ),
-            warehouse: true,
-            main_warehouse: taxableLocation,
-            location: locationSelection,
-            current_location: locationSelection,
-            created_at: formatDate(new Date()),
-            updated_at: formatDate(new Date()),
-            company: user.company,
-            extra_serial_number: JSON.stringify(moreInfo),
-            company_id: user.sqlInfo.company_id,
-            return_date: `${valueSelection === "Rent" ? returningDate : null}`,
-          });
-          if (
-            !renderLocationOptions().some(
-              (element) => element.value === locationSelection
-            )
-          ) {
-            let template = [
-              ...companiesQuery.data.data.company.at(-1).location,
-              locationSelection,
-            ];
-            await devitrakApi.patch(
-              `/company/update-company/${
-                companiesQuery.data.data.company.at(-1).id
-              }`,
-              {
-                location: template,
-              }
-            );
+        let template = [
+          ...companiesQuery.data.data.company.at(-1).location,
+          locationSelection,
+        ];
+        await devitrakApi.patch(
+          `/company/update-company/${
+            companiesQuery.data.data.company.at(-1).id
+          }`,
+          {
+            location: template,
           }
-          if (
-            String(i).padStart(
-              data.startingNumber.length,
-              `${data.startingNumber[0]}`
-            ) === data.endingNumber
-          ) {
-            openNotificationWithIcon(
-              "success",
-              "items were created and stored in database."
-            );
-            setLoading(false);
-            await navigate("/inventory");
-          }
-        } catch (error) {
-          openNotificationWithIcon(
-            "error",
-            `item ${String(i).padStart(
-              data.startingNumber.length,
-              `${data.startingNumber[0]}`
-            )} was not stored.`
-          );
-          setLoading(false);
-        }
+        );
       }
+      openNotificationWithIcon(
+        "success",
+        "items were created and stored in database."
+      );
+      setLoading(false);
+      return navigate("/inventory");
     }
   };
   const handleMoreInfoPerDevice = () => {
