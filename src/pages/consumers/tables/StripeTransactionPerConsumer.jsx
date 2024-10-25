@@ -83,10 +83,8 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         ...avoidDuplicatedEventsPerAdmin().map((item) => JSON.parse(item)),
         ...leasingData,
       ];
-      console.log("blending", blendingData);
       for (let data of blendingData) {
         const parsing = typeof data === "string" ? JSON.parse(data) : data; ///stringifyData(data);
-        console.log(`${parsing.eventInfoDetail.eventName}`, parsing);
         const respo = await devitrakApi.post(
           "/receiver/receiver-assigned-list",
           {
@@ -114,7 +112,6 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
         }
       }
     }
-    console.log(result);
     return setResponsedData(result);
   };
 

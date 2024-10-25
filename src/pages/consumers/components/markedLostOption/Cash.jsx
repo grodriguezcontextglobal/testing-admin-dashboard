@@ -156,8 +156,6 @@ const ConsumerDeviceLostFeeCash = () => {
       company:user.companyData.id,
       typeCollection: "Cash",
     };
-    // console.log(cashReportProfile);
-    // console.log(data);
     loading();
     if (data.total) {
       await changeStatusInDeviceAssignedData();

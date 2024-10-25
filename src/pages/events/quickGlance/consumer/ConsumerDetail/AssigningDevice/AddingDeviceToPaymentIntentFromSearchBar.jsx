@@ -294,12 +294,11 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
         }
       }
     } catch (error) {
-      console.log(error);
       openNotificationWithIcon(
         "error",
         "something went wrong, please try later."
       );
-      setSubmittedAction(false);
+      return setSubmittedAction(false);
     }
   };
   return (

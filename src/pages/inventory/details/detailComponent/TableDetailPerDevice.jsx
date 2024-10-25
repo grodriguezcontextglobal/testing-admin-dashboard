@@ -211,7 +211,6 @@ const TableDetailPerDevice = ({ dataFound }) => {
           ("" + a.state_address).localeCompare(b.state_address),
       },
       render: (record) => (
-        console.log('data', record),
         <span
           style={{
             backgroundColor: "transparent",

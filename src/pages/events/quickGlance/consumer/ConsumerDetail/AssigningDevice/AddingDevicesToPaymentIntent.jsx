@@ -287,7 +287,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
         }
       }
     } catch (error) {
-      console.log(error);
       openNotificationWithIcon(
         "error",
         "something went wrong, please try later."

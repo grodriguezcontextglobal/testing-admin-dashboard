@@ -144,7 +144,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
 
   const onSubmitRegister = async (data) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const totalDeviceAssigned = data.quantity;
       const id = nanoid(12);
       const max = 918273645;
@@ -240,19 +240,15 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           queryKey: ["listOfDevicesAssigned"],
           exact: true,
         });
-        setIsLoading(false)
+        setIsLoading(false);
         alert("Devices assigned successfully");
         if (noAssigned.length === 0) {
           return closeModal();
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
-        error
-      );
-      setIsLoading(false)
-      alert(error);
+      setIsLoading(false);
+      return alert(error);
     }
   };
   return (
@@ -359,7 +355,11 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           </FormControl>
         </div>
 
-        <Button loading={isLoading} style={{ ...BlueButton, width: "100%" }} htmlType="submit">
+        <Button
+          loading={isLoading}
+          style={{ ...BlueButton, width: "100%" }}
+          htmlType="submit"
+        >
           <Typography textTransform={"none"} style={BlueButtonText}>
             Create transaction
           </Typography>

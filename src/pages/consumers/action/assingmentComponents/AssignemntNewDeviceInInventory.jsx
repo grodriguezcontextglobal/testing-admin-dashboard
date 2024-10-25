@@ -186,7 +186,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      console.log("🚀 ~ createEvent ~ error:", error);
+      return null;
     }
   };
 

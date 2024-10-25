@@ -65,8 +65,7 @@ const StaffDetail = () => {
         return;
       }
     } catch (error) {
-      console.log("🚀 ~ activeOrDesactiveStaffMemberInCompany ~ error:", error);
-    }
+      return null    }
   };
 
   const tabOptions = [

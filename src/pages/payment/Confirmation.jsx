@@ -240,11 +240,7 @@ const Confirmation = () => {
           setLoadingStatus(false);
         }
       } catch (error) {
-        console.log(
-          "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
-          error
-        );
-        setLoadingStatus(false);
+        return setLoadingStatus(false);
       }
     };
 

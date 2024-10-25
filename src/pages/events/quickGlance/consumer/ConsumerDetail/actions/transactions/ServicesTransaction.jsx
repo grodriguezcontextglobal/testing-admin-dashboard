@@ -105,7 +105,6 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
   const refData = useRef(null);
   const submitServicesAddedForCustomerPaymentIntent = async () => {
     refData.current = { amount: Number(totalToBeCharged() * 100) };
-    console.log(Number(totalToBeCharged() * 100));
     try {
       const response = await devitrakApi.post(
         "/stripe/create-payment-intent-subscription",
@@ -131,8 +130,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
         );
       }
     } catch (error) {
-      console.log(error); //error
-    }
+      return null    }
   };
 
   const checkAdminForEnableEditPriceField = () => {
@@ -141,7 +139,6 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       user.companyData.employees.some((ele) => ele.email === user.email)
     );
   };
-  console.log(!checkAdminForEnableEditPriceField())
   return (
     <Modal
       title={renderTitle()}

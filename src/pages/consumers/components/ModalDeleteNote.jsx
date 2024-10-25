@@ -141,8 +141,7 @@ const UpdateListOfNotesPerConsumer = ({
         "error",
         "Something went wrong, please try later."
       );
-      console.log(error);
-      setLoading(false);
+      return setLoading(false);
     }
   };
   return (

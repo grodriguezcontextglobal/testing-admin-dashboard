@@ -85,7 +85,6 @@ const ModalAddAndUpdateDeviceSetup = ({
       controller.abort();
     };
   }, []);
-  console.log(eventInfoSqlDB?.data);
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];

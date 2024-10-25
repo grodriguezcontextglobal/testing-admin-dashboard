@@ -308,8 +308,7 @@ const EndEventButton = () => {
         });
       }
     } catch (error) {
-      console.log("🚀 ~ addingRecordOfActivityInEvent ~ error:", error);
-    }
+      return null    }
   };
 
   const inactiveTransactionDocuments = async () => {

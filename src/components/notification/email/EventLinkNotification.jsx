@@ -1,5 +1,5 @@
 import { Chip, Grid, OutlinedInput, Typography } from "@mui/material";
-import { Button, Input, Modal, notification, Space } from "antd";
+import { Button, Modal, notification, Space } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -9,19 +9,15 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-const { TextArea } = Input;
+import { devitrakApi } from "../../../api/devitrakApi";
 
 const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
-  const [message, setMessage] = useState("");
   const [emailConsumersList, setEmailConsumersList] = useState([]);
   const { register, handleSubmit, setValue } = useForm();
   const closeModal = () => {
     return setSendEventLink(false);
-  };
-  const onChange = (e) => {
-    return setMessage(e.target.value);
   };
 
   const [api, contextHolder] = notification.useNotification();
@@ -48,22 +44,30 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
     const result = [...emailConsumersList, data.email];
     setEmailConsumersList(result);
     setValue("email", "");
+  };
+
+  const handleEmailNotificationSent = async () => {
     const emailNotificationProfile = {
       list: emailConsumersList,
-      buttonLink: event.qrCodeLink,
-      videoId: "YOZQb2XUel8",
       company: user.companyData.company_name,
+      buttonLink:event.qrCodeLink,
+      contactInfo:{
+        staff: `${user.name} ${user.lastName}`,
+        email: user.email,
+      },
+      eventName:event.eventInfoDetail.eventName
     };
-    // const resp = await devitrakApi.post(
-    //   "/nodemailer/customized-notification",
-    //   emailNotificationProfile
-    // );
-    // if (resp) {
-    //   openNotificationWithIcon("success", "Email sent!", "Link of this event!");
-    //   setValue("message", "");
-    //   closeModal();
-    // }
-  };
+    const resp = await devitrakApi.post(
+      "/nodemailer/send-consumer-app-instructions",
+      emailNotificationProfile
+    );
+    if (resp) {
+      openNotificationWithIcon("success", "Email sent!", "Link of this event!");
+      setValue("message", "");
+      closeModal();
+    }
+
+  }
   return (
     <>
       {contextHolder}
@@ -182,7 +186,8 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
             xs={10}
           >
               <Button
-                htmlType="submit"
+                htmlType="button"
+                onClick={handleEmailNotificationSent}
                 style={{
                   ...BlueButton,
                   width: "100%",

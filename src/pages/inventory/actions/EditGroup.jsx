@@ -398,7 +398,6 @@ const EditGroup = () => {
             await navigate("/inventory");
           }
         } catch (error) {
-          console.log("🚀 ~ savingNewItem ~ error:", error);
           // openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
           setLoading(false);
         }
