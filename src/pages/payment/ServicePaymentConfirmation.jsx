@@ -88,7 +88,7 @@ const ServicePaymentConfirmation = () => {
 
   const invoiceEmail = async (props) => {
     const template = {
-      email:customer.email,
+      email: customer.email,
       amount: String(props.amount).slice(0, -2),
       date: new Date(props.created).toString().slice(4, 15),
       paymentIntent: props.id,
@@ -99,7 +99,7 @@ const ServicePaymentConfirmation = () => {
       },
       service: deviceSelectionPaidTransaction.deviceType.group,
     };
-    await devitrakApi.post('/nodemailer/invoice-notification', template);
+    await devitrakApi.post("/nodemailer/invoice-notification", template);
   };
 
   const confirmPaymentIntent = async () => {
@@ -129,11 +129,7 @@ const ServicePaymentConfirmation = () => {
         setLoadingStatus(false);
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
-        error
-      );
-      setLoadingStatus(false);
+      return setLoadingStatus(false);
     }
   };
 

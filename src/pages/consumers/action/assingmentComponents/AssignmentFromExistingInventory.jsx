@@ -324,8 +324,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      console.log("🚀 ~ createEvent ~ error:", error);
-    }
+      return null    }
   };
 
   const addDeviceToEvent = async (props) => {
@@ -363,7 +362,6 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       indexEnd
     );
     const deviceInfo = data; //*array of existing devices in sql db
-    console.log(deviceInfo);
     await createEventNoSQLDatabase({
       address: props.template,
       deviceInfo: deviceInfo,

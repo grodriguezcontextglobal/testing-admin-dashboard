@@ -249,12 +249,8 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
-        error
-      );
       setIsLoading(false);
-      alert(error);
+      return alert(error);
     }
   };
   return (
@@ -379,7 +375,11 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           </FormControl>
         </div>
 
-        <Button loading={isLoading} style={{ ...BlueButton, width: "100%" }} htmlType="submit">
+        <Button
+          loading={isLoading}
+          style={{ ...BlueButton, width: "100%" }}
+          htmlType="submit"
+        >
           <Typography textTransform={"none"} style={BlueButtonText}>
             Create transaction
           </Typography>

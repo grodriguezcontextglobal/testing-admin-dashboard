@@ -155,7 +155,6 @@ const SearchDevice = ({ searchParams }) => {
   }, [searchParams]);
 
   const handleDeviceSearch = async (record) => {
-    console.log(record);
     const respTransaction = await devitrakApi.post("/transaction/transaction", {
       paymentIntent: record.data.paymentIntent,
     });
@@ -186,7 +185,7 @@ const SearchDevice = ({ searchParams }) => {
       if (eventInfo.data && eventInfoSqlDB.data) {
         const formatDeviceSection = {
           activity: record.data.device.status,
-            //eventInventoryQuery.data.data.receiversInventory[0].activity,
+          //eventInventoryQuery.data.data.receiversInventory[0].activity,
           company: [record.type, record.data.eventSelected[0]],
           entireData: {
             ...eventInventoryQuery.data.data.receiversInventory[0],
@@ -287,11 +286,7 @@ const SearchDevice = ({ searchParams }) => {
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
-      setLoadingStatus(false);
+      return setLoadingStatus(false);
     }
   };
   if (

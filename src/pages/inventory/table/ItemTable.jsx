@@ -314,7 +314,6 @@ const ItemTable = ({ searchItem }) => {
       },
       render: (data) => {
         let result = data.event_name;
-        console.log(result);
         if (String(result).toLowerCase().includes("leased equipment")) {
           const splittingName = String(result).split(" / ");
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");

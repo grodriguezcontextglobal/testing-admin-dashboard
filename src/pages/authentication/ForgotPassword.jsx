@@ -91,7 +91,6 @@ const ForgotPassword = ({ open, close }) => {
         return setLoading(false);
       }
     } catch (error) {
-      console.log(error);
       openNotificationWithIcon("error", error.response.data.error);
       return setLoading(false);
     }

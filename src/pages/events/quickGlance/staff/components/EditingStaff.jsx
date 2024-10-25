@@ -344,7 +344,6 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         openNotificationWithIcon("success", "Staff member added to event.");
         await closeModal();
       } catch (error) {
-        console.log("🚀 ~ handleNewStaffMember ~ error:", error);
         setLoadingStatus(false);
       }
     };

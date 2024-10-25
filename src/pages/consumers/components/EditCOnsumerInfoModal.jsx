@@ -79,8 +79,7 @@ const EditConsumerInfoModal = ({
         setLoading(false);
       }
     } catch (error) {
-      console.log(error);
-      setLoading(false);
+      return setLoading(false);
     }
   };
 

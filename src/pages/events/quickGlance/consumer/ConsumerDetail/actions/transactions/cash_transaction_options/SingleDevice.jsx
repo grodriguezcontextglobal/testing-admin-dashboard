@@ -216,11 +216,7 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
           closeModal();
         }
       } catch (error) {
-        console.log(
-          "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
-          error
-        );
-        alert(error);
+        return alert(error);
       }
     } else {
       setIsLoading(false);

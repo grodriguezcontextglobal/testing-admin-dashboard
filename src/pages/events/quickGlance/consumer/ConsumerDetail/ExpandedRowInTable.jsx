@@ -170,11 +170,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
-    }
+      return null    }
   };
 
   const handleAssignSingleDevice = async (props) => {
@@ -250,11 +246,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
-    }
+      return null    }
   };
   const handleLostSingleDevice = (props) => {
     try {
@@ -269,11 +261,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       );
       handleRecord(props);
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
-    }
+      return null    }
   };
 
   const checkingRenderBackgroundColor = (props, col1, col2, col3) => {

@@ -25,7 +25,6 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     };
   }, []);
 
-  console.log(dataPropsCopy);
   const dic = {
     Permanent: {
       label: "Owned",

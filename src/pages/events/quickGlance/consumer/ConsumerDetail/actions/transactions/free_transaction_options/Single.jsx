@@ -213,12 +213,8 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           await closeModal();
         }
       } catch (error) {
-        console.log(
-          "🚀 ~ file: ModalCreateUser.js ~ line 136 ~ onSubmitRegister ~ error",
-          error
-        );
         setIsLoading(false);
-        alert(error);
+        return alert(error);
       }
     } else {
       setIsLoading(false);

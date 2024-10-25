@@ -88,10 +88,6 @@ const Body = () => {
           return window.location.reload(true);
         }
       } catch (error) {
-        console.log(
-          "🚀 ~ file: Body.jsx:101 ~ handleUpdatePersonalInfo ~ error:",
-          error
-        );
         openNotificationWithIcon("error", error.message);
         return triggerRoutes();
       }
