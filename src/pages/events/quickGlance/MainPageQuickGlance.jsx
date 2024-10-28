@@ -521,7 +521,7 @@ const MainPageQuickGlance = () => {
               alignItems: "center",
             }}
           >
-            <p style={BlueButtonText}>Add new customer</p>
+            <p style={BlueButtonText}>Add new consumer</p>
           </button>
         </Grid>
         <CustomerInformationSection

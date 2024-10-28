@@ -48,7 +48,7 @@ const AlInventoryEventAssigned = ({
             }}
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
-            Inventory assigned to event for customer uses:&nbsp;
+            Inventory assigned to event for consumer uses:&nbsp;
             <div
               style={{
                 borderRadius: "16px",
