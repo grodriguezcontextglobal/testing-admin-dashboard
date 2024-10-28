@@ -84,7 +84,7 @@ const ButtonSections = () => {
     {
       icon: <LinkIcon />,
       text: "Send event link.",
-      disableStatus: true,
+      disableStatus: false,
       fn: () => setSendEventLink(true),
     },
   ];
