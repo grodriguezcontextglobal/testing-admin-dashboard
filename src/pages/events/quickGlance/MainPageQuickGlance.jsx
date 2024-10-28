@@ -73,8 +73,8 @@ const MainPageQuickGlance = () => {
     queryKey: ["listOfAttendeesPerSelectedEvent"],
     queryFn: () =>
       devitrakApi.post("/auth/user-query", {
-        company: user.companyData.id,
-        eventSelected: choice,
+        company_providers: user.companyData.id,
+        event_providers: event.id,
       }),
     refetchOnMount: false,
   });

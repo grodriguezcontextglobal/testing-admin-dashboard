@@ -208,6 +208,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         consumerInfo: customer,
         provider: user.company,
         eventSelected: customer.id ?? customer.uid,
+        event_id: customer.id ?? customer.uid,
         date: new Date(),
         company: user.companyData.id,
         type: "lease",
