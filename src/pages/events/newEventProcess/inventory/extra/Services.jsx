@@ -157,7 +157,7 @@ const Services = ({
                     textAlign={"left"}
                     style={{ ...Subtitle, fontWeight: 500 }}
                   >
-                    Deposit
+                    Amount to charge
                   </Typography>
                 </InputLabel>
                 <OutlinedInput
