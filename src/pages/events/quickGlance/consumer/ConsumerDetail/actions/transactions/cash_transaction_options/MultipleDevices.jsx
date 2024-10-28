@@ -181,6 +181,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           consumerInfo: customer,
           provider: event.company,
           eventSelected: event.eventInfoDetail.eventName,
+          event_id: event.id,
           date: `${new Date()}`,
           company: user.companyData.id,
         };

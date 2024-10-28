@@ -160,6 +160,7 @@ const Confirmation = () => {
             },
             provider: event.company,
             eventSelected: event.eventInfoDetail.eventName,
+            event_id: event.id,
             company: user.companyData.id,
             date: new Date(),
           };
