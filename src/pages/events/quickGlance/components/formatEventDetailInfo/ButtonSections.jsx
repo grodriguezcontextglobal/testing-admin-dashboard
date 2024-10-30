@@ -4,15 +4,13 @@ import { Card } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
-import { PrinterIcon } from "../../../../../components/icons/PrinterIcon";
+import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import LinkIcon from "../../../../../components/icons/LinkIcon";
 // import EmailNotification from "../../../../../components/notification/email/EmailNotification";
 // import SpreadSheet from "../SpreadSheet";
 // import EndEventButton from "./EndEventButton";
@@ -56,7 +54,7 @@ const ButtonSections = () => {
         provider: event.company,
       }),
   });
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -69,12 +67,12 @@ const ButtonSections = () => {
   }, []);
 
   const options = [
-    {
-      icon: <PrinterIcon />,
-      text: "Print All Serial Numbers",
-      disableStatus: true,
-      fn: () => navigate("/page-to-print"),
-    },
+    // {
+    //   icon: <PrinterIcon />,
+    //   text: "Print All Serial Numbers",
+    //   disableStatus: true,
+    //   fn: () => navigate("/page-to-print"),
+    // },
     {
       icon: <EmailIcon />,
       text: "Email Notifications to Attendees",
