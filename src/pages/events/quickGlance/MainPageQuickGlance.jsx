@@ -2,9 +2,9 @@ import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Divider } from "antd";
+import { Divider, Upload, message } from "antd";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
@@ -22,6 +22,7 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
 import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
+import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
@@ -32,12 +33,14 @@ import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
-import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import { onAddEventData } from "../../../store/slices/eventSlice";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showInventoryTypes, setShowInventoryTypes] = useState(false);
   const [
     showInventoryTypesForCustomersOnly,
@@ -58,6 +61,7 @@ const MainPageQuickGlance = () => {
   const isExtraLargeDevice = useMediaQuery(
     "only screen and (min-width : 1201px)"
   );
+  const dispatch = useDispatch();
   const sum = (a, b) => {
     if (!a || !b) {
       return 0;
@@ -177,6 +181,80 @@ const MainPageQuickGlance = () => {
         ).role < 1
       ) {
         return true;
+      }
+    };
+    const beforeUpload = (file) => {
+      const isJpgOrPng =
+        file.type === "image/jpeg" || file.type === "image/png";
+      if (!isJpgOrPng) {
+        message.error("You can only upload JPG/PNG file!");
+      }
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        message.error("Image must smaller than 2MB!");
+      }
+      return isJpgOrPng && isLt2M;
+    };
+    const uploadButton = (
+      <button
+        style={{
+          border: 0,
+          background: "none",
+        }}
+        type="button"
+      >
+        {isLoading ? <Loading /> : null}
+        <div
+          style={{
+            marginTop: 8,
+          }}
+        >
+          <p
+            style={{
+              ...Subtitle,
+              display: `${isLoading ? "none" : "inline-block"}`,
+            }}
+          >
+            Upload
+          </p>
+        </div>
+      </button>
+    );
+
+    const handleUploadImage = async (info) => {
+      try {
+        setIsLoading(true);
+        const imageUrl = await convertToBase64(info.file.originFileObj);
+        const imageDataFormat = {
+          imageFile: imageUrl,
+          imageID: event.id,
+        };
+        const responseCloudinary = await devitrakApi.post(
+          "/cloudinary/upload-image",
+          imageDataFormat
+        );
+        if (responseCloudinary.data.ok) {
+          await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+            eventInfoDetail: {
+              ...event.eventInfoDetail,
+              logo: responseCloudinary.data.imageOptimized,
+            },
+          });
+          dispatch(
+            onAddEventData({
+              ...event,
+              eventInfoDetail: {
+                ...event.eventInfoDetail,
+                logo: responseCloudinary.data.imageOptimized,
+              },
+            })
+          );
+          message.success("Image uploaded successfully");
+          return setIsLoading(false);
+        }
+      } catch (error) {
+        setIsLoading(false);
+        return message.error(`Upload failed: ${error.message}`);
       }
     };
     return (
@@ -367,7 +445,7 @@ const MainPageQuickGlance = () => {
             md={6}
             lg={6}
           >
-            <p
+            <div
               style={{
                 ...TextFontSize30LineHeight38,
                 textAlign: "left",
@@ -379,14 +457,36 @@ const MainPageQuickGlance = () => {
                 textTransform: "none",
               }}
             >
-              <div style={{ alignSelf: "stretch", width: "15%" }}>
-                <Avatar
-                  src={
-                    event?.eventInfoDetail?.logo ??
-                    event?.eventInfoDetail?.eventName
-                  }
-                  size={70}
-                ></Avatar>
+              <div
+                style={{
+                  alignSelf: "stretch",
+                  width: "15%",
+                  margin: "0 1rem 0 0",
+                }}
+              >
+                <Upload
+                  name="avatar"
+                  listType="picture-circle"
+                  className="avatar-uploader"
+                  showUploadList={false}
+                  beforeUpload={beforeUpload}
+                  onChange={handleUploadImage}
+                  style={{
+                    backgroundColor: "var(--gray500)",
+                  }}
+                >
+                  {event?.eventInfoDetail?.logo ? (
+                    <img
+                      src={event?.eventInfoDetail?.logo}
+                      alt="avatar"
+                      style={{
+                        width: "100%",
+                      }}
+                    />
+                  ) : (
+                    uploadButton
+                  )}
+                </Upload>
               </div>
               <div style={{ width: "85%" }}>
                 {event?.eventInfoDetail?.eventName}
@@ -402,7 +502,7 @@ const MainPageQuickGlance = () => {
                   {subtitleInitials(event?.eventInfoDetail?.eventName)}
                 </div>
               </div>
-            </p>
+            </div>
           </Grid>
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <FormatEventDetailInfo />
@@ -616,7 +716,6 @@ const MainPageQuickGlance = () => {
           />
         )}
       </Grid>
-      // </Grid >
     );
   }
 };
