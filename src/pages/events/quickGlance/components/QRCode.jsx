@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, Card, QRCode } from "antd";
+import { Button, Card, message, QRCode } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { DownloadIcon } from "../../../../components/icons/DownloadIcon";
@@ -8,9 +8,11 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 const QRCodeDisplay = () => {
   const { qrCodeLink } = useSelector((state) => state.event);
   const [valueQRCode] = useState(String(qrCodeLink));
-  
+
   const downloadQRCode = () => {
-    const svgElement = document.getElementById("myqrcode")?.querySelector("svg");
+    const svgElement = document
+      .getElementById("myqrcode")
+      ?.querySelector("svg");
     if (!svgElement) {
       console.error("SVG not found!");
       return;
@@ -31,20 +33,25 @@ const QRCodeDisplay = () => {
       svgClone.insertBefore(frame, svgClone.firstChild);
 
       // Create the "SCAN ME" text below the QR code
-      const text = document.createElementNS(svgNamespace, "text");
-      text.setAttribute("x", "50%");
-      text.setAttribute("y", `${svgElement.getBoundingClientRect().height + 30}`);
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("font-size", "20");
-      text.setAttribute("font-family", "Inter");
-      text.setAttribute("fill", "black");
-      text.textContent = "SCAN ME";
-      svgClone.appendChild(text);
+      // const text = document.createElementNS(svgNamespace, "text");
+      // text.setAttribute("x", "50%");
+      // text.setAttribute(
+      //   "y",
+      //   `${svgElement.getBoundingClientRect().height + 30}`
+      // );
+      // text.setAttribute("text-anchor", "middle");
+      // text.setAttribute("font-size", "20");
+      // text.setAttribute("font-family", "Inter");
+      // text.setAttribute("fill", "black");
+      // text.textContent = "SCAN ME";
+      // svgClone.appendChild(text);
 
       // Serialize and download the SVG
       const serializer = new XMLSerializer();
       const svgString = serializer.serializeToString(svgClone);
-      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const svgBlob = new Blob([svgString], {
+        type: "image/svg+xml;charset=utf-8",
+      });
       const svgUrl = URL.createObjectURL(svgBlob);
       let downloadLink = document.createElement("a");
       downloadLink.href = svgUrl;
@@ -54,7 +61,7 @@ const QRCodeDisplay = () => {
       document.body.removeChild(downloadLink);
       URL.revokeObjectURL(svgUrl);
     } catch (error) {
-      console.error("Error generating SVG URL: ", error.message);
+      message.error(`Error generating QR code: ${error.message}`);
     }
   };
 
@@ -147,10 +154,11 @@ const QRCodeDisplay = () => {
             <QRCode
               errorLevel="H"
               value={valueQRCode}
-              icon={'https://res.cloudinary.com/dpdzkhh07/image/upload/v1729629315/maskable_icon_white_background_t80s7n.png'}
-              // iconSize={100}
-              // size={300}
-              bgColor="#fff"              status="active"
+              icon={
+                "https://res.cloudinary.com/dpdzkhh07/image/upload/v1729629315/maskable_icon_white_background_t80s7n.png"
+              }
+              bgColor="#fff"
+              status="active"
               type="svg"
             />
             <div
