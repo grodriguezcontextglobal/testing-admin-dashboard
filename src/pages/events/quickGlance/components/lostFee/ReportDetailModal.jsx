@@ -1,10 +1,8 @@
 import { Modal } from "antd";
-import { lazy, Suspense } from "react";
-import Loading from "../../../../../components/animation/Loading";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-const renderingTitle = lazy(() =>
-  import("../../../../../components/general/renderingTitle")
-);
+import renderingTitle from "../../../../../components/general/renderingTitle";
+// const renderingTitle = lazy(() =>
+//   import("../../../../../components/general/renderingTitle")
+// );
 const ReportDetailModal = ({
   setOpenLostReportModal,
   openLostReportDetail,
@@ -14,39 +12,31 @@ const ReportDetailModal = ({
     return setOpenLostReportModal(false);
   };
   return (
-    <Suspense
-      fallback={
-        <div style={CenteringGrid}>
-          <Loading />
-        </div>
-      }
+    <Modal
+      title={renderingTitle("Detail of lost fee collected")}
+      centered
+      open={openLostReportDetail}
+      onCancel={() => closeModal()}
+      footer={[]}
+      style={{ zIndex: 30 }}
     >
-      <Modal
-        title={renderingTitle("Detail of lost fee collected")}
-        centered
-        open={openLostReportDetail}
-        onCancel={() => closeModal()}
-        footer={[]}
-        style={{ zIndex: 30 }}
-      >
-        <div key={dataInfo.id}>
-          <h2>Attendee: {dataInfo.attendee}</h2>
-          <p>Admin: {dataInfo.admin}</p>
-          <p>Device Lost:</p>
-          <ul>
-            {dataInfo?.deviceLost?.map((device, deviceIndex) => (
-              <li key={deviceIndex}>
-                {device.label} - {device.deviceType}
-              </li>
-            ))}
-          </ul>
-          <p>Amount: ${dataInfo.amount}</p>
-          <p>Type Collection: {dataInfo.typeCollection}</p>
-          <p>ID: {dataInfo.id}</p>
-          <hr />
-        </div>
-      </Modal>{" "}
-    </Suspense>
+      <div key={dataInfo?.id}>
+        <h2>Attendee: {dataInfo?.attendee}</h2>
+        <p>Admin: {dataInfo?.admin}</p>
+        <p>Device Lost:</p>
+        <ul>
+          {dataInfo?.deviceLost?.map((device, deviceIndex) => (
+            <li key={deviceIndex}>
+              {device.label} - {device.deviceType}
+            </li>
+          ))}
+        </ul>
+        <p>Amount: ${dataInfo?.amount}</p>
+        <p>Type Collection: {dataInfo?.typeCollection}</p>
+        <p>ID: {dataInfo?.id}</p>
+        <hr />
+      </div>
+    </Modal>
   );
 };
 
