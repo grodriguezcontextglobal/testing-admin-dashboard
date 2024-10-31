@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Popconfirm, Table, Tooltip, Button } from "antd";
+import { Button, message, Popconfirm, Table, Tooltip } from "antd";
 import pkg from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,18 +10,21 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { DangerButton } from "../../../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-table.css";
-const { PropTypes } = pkg;
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCapturingDepositModal, setOpenCapturingDepositModal] =
@@ -30,6 +33,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     useState(false);
   const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
     useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const recordRef = useRef(null);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
@@ -98,7 +102,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           .toLowerCase()
           .includes(String(searchValue).toLowerCase())
       );
-      // console.log(transactionFound);
       return transactionFound;
     }
   };
@@ -128,14 +131,36 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     setOpenReturnDeviceInBulkModal(true);
     return (recordRef.current = record);
   };
-  //*nested table starts here
-  //!nested table ends
+
   const cellStyle = {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
   };
 
+  const handleRefund = async (record) => {
+    try {
+      setIsLoading(true);
+      await devitrakApi.post(`/stripe/refund`, {
+        paymentIntent: record.paymentIntent,
+      });
+      await devitrakApi.patch(`/transaction/update-transaction/${record.id}`, {
+        active: false,
+      });
+      const emailTemplate = {
+        email: customer.email,
+        amount: String(record.device[0].deviceValue),
+        date: new Date().toString().slice(4, 15),
+        paymentIntent: record.paymentIntent,
+        customer: `${customer.name} ${customer.lastName}`,
+      };
+      await devitrakApi.post("/nodemailer/refund-notification", emailTemplate);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      message.error(`There was an error. ${error}`);
+    }
+  };
   const columns = [
     {
       title: `Date and time`,
@@ -152,7 +177,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       key: "paymentIntent",
       render: (paymentIntent) => {
         const checkPaymentIntent = String(paymentIntent).split("_");
-        // console.log(checkPaymentIntent)
         return (
           <span style={{ ...Subtitle, textOverflow: "ellipsis" }}>
             {checkPaymentIntent[1] === "cash"
@@ -203,26 +227,54 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   style={{
                     ...cellStyle,
                     borderRadius: "16px",
-                    justifyContent: "center",
+                    // justifyContent: "center",
                     display: "flex",
                     padding: "2px 8px",
                     alignItems: "center",
+                    justifyContent: "space-between",
                     background: `${"var(--success-50, #ECFDF3)"}`,
-                    width: "fit-content",
+                    width: "100%",
                   }}
                 >
-                  <Typography
+                  <p
                     style={{
                       ...Subtitle,
                       color: "var(--success-700, #027A48)",
+                      textTransform: "capitalize",
                     }}
-                    textTransform={"capitalize"}
                   >
                     {String(record.device[0].deviceType)
                       .split(" ")
                       .toLocaleString()
                       .replaceAll(",", " ")}
-                  </Typography>
+                  </p>
+                  <div style={{ padding: "2px 8px" }}>
+                    <Button
+                      loading={isLoading}
+                      disabled={!record.active}
+                      style={{
+                        ...CenteringGrid,
+                        ...DangerButton,
+                        background: `${
+                          !record.active
+                            ? GrayButton.background
+                            : DangerButton.backgroundColor
+                        }`,
+                        border: `${
+                          !record.active
+                            ? GrayButton.border
+                            : DangerButton.border
+                        }`,
+                      }}
+                      onClick={() => handleRefund(record)}
+                    >
+                      {record.active ? (
+                        <p style={DangerButtonText}>Refund</p>
+                      ) : (
+                        <p style={GrayButtonText}>Refunded</p>
+                      )}
+                    </Button>
+                  </div>
                 </span>
               )}
             {record.paymentIntent?.length > 16 &&
@@ -264,16 +316,16 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 </Popconfirm>
               )}
           </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            display={"flex"}
-            alignItems={"center"}
-          >
-            {record.paymentIntent?.length > 16 &&
-              record.device[0].deviceNeeded > 0 && (
+          {record.paymentIntent?.length > 16 &&
+            record.device[0].deviceNeeded > 0 && (
+              <Grid
+                item
+                xs={12}
+                sm={12}
+                md={4}
+                display={"flex"}
+                alignItems={"center"}
+              >
                 <Popconfirm
                   title="Capturing deposit? This action can not be reversed."
                   onConfirm={() => {
@@ -299,17 +351,17 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     </Typography>
                   </Button>
                 </Popconfirm>
-              )}
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            display={"flex"}
-            alignItems={"center"}
-          >
-            {record.device[0].deviceNeeded > 4 && (
+              </Grid>
+            )}
+          {record.device[0].deviceNeeded > 4 && (
+            <Grid
+              item
+              xs={12}
+              sm={12}
+              md={4}
+              display={"flex"}
+              alignItems={"center"}
+            >
               <Tooltip title="This option is to return bulk of devices">
                 <Button
                   onClick={() => handleReturnDeviceInBulk(record)}
@@ -328,7 +380,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                         : DangerButton.background
                     }`,
                   }}
-              >
+                >
                   <Typography
                     textTransform={"none"}
                     style={{
@@ -341,8 +393,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   </Typography>
                 </Button>
               </Tooltip>
-            )}
-          </Grid>
+            </Grid>
+          )}
         </Grid>
       ),
     },
