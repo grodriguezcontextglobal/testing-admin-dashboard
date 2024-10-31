@@ -8,7 +8,6 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 const QRCodeDisplay = () => {
   const { qrCodeLink } = useSelector((state) => state.event);
   const [valueQRCode] = useState(String(qrCodeLink));
-
   const downloadQRCode = () => {
     const svgElement = document
       .getElementById("myqrcode")
@@ -20,8 +19,6 @@ const QRCodeDisplay = () => {
     try {
       const svgClone = svgElement.cloneNode(true);
       const svgNamespace = "http://www.w3.org/2000/svg";
-
-      // Create a frame similar to the one in the image
       const frame = document.createElementNS(svgNamespace, "rect");
       frame.setAttribute("x", "0");
       frame.setAttribute("y", "0");
@@ -31,22 +28,6 @@ const QRCodeDisplay = () => {
       frame.setAttribute("stroke", "black");
       frame.setAttribute("stroke-width", "5");
       svgClone.insertBefore(frame, svgClone.firstChild);
-
-      // Create the "SCAN ME" text below the QR code
-      // const text = document.createElementNS(svgNamespace, "text");
-      // text.setAttribute("x", "50%");
-      // text.setAttribute(
-      //   "y",
-      //   `${svgElement.getBoundingClientRect().height + 30}`
-      // );
-      // text.setAttribute("text-anchor", "middle");
-      // text.setAttribute("font-size", "20");
-      // text.setAttribute("font-family", "Inter");
-      // text.setAttribute("fill", "black");
-      // text.textContent = "SCAN ME";
-      // svgClone.appendChild(text);
-
-      // Serialize and download the SVG
       const serializer = new XMLSerializer();
       const svgString = serializer.serializeToString(svgClone);
       const svgBlob = new Blob([svgString], {
