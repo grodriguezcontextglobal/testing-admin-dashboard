@@ -51,11 +51,13 @@ const MainPage = () => {
     const active = eventsPerAdmin.active ?? [];
     const completed = eventsPerAdmin.completed ?? [];
     let events = [...active, ...completed];
-    const result = new Set();
+    const result = new Map();
     for (let data of events) {
-      result.add(JSON.stringify(data));
+      if (!result.has(data.id)) {
+        result.set(data.id, data);
+      }
     }
-    return Array.from(result);
+    return result;
   };
 
   useEffect(() => {
@@ -69,29 +71,27 @@ const MainPage = () => {
 
   const consumersPerAllowEvents = async () => {
     setLoadingState(true);
-    const result = new Map();
-    if (listOfEventsPerAdmin()?.length > 0) {
-      for (let item of listOfEventsPerAdmin()) {
-        const data = JSON.parse(item);
-        const resp = await devitrakApi
-          .post("/auth/user-query", {
-            company_providers: user.companyData.id,
-            event_providers: data.id,
-          })
-          .then((response) => response.data);
-        if (resp.ok && resp.users.length > 0) {
-          for (let data of resp.users) {
-            result.set(data.id, data);
+    const finalReturn = new Map();
+    if (listOfEventsPerAdmin().size > 0) {
+      const data = [
+        ...listOfEventsPerAdmin()
+          .keys()
+          .map((item) => item),
+      ];
+      const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
+        event_providers: { $in: data },
+        company_providers: user.companyData.id,
+      });
+      if (fetchUsersAttendees.data.ok) {
+        const responseData = fetchUsersAttendees.data.users;
+        for (let data of responseData) {
+          if (!finalReturn.has(data.id)) {
+            finalReturn.set(data.id, data);
           }
         }
       }
     }
-    const finalReturn = new Set();
-    for (let [, value] of result) {
-      finalReturn.add(value);
-    }
-
-    const formattingResponse = [...Array.from(finalReturn)];
+    const formattingResponse = [...finalReturn.values().map((item) => item)];
     setLoadingState(false);
     return setResponseData(formattingResponse);
   };
