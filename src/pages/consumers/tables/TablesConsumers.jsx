@@ -148,7 +148,7 @@ export default function TablesConsumers({
       sorter: {
         compare: (a, b) => ("" + a.user).localeCompare(b.user),
       },
-      render: (user) => (
+      render: (user, record) => (
         <span
           key={`${user}`}
           style={{
@@ -158,7 +158,7 @@ export default function TablesConsumers({
             gap: "5px",
           }}
         >
-          <Avatar />
+          <Avatar src={record.entireData.profile_picture ?? ""} />
           {user.map((detail, index) => {
             return (
               <div
