@@ -30,6 +30,8 @@ const Assignment = () => {
               value={existingOption}
               onChange={() => setExistingOption(!existingOption)}
               defaultChecked
+              checkedChildren="From Existing Inventory"
+              unCheckedChildren="New Device in Inventory"
             />
           </Divider>
           {existingOption ? (
