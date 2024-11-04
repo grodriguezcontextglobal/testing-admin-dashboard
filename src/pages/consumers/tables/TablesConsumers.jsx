@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Chip } from "@mui/material";
-import { Avatar, Table } from "antd";
+import { Avatar, Spin, Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,16 +9,20 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import "../../../styles/global/ant-table.css";
 import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import "../../../styles/global/ant-table.css";
 
 export default function TablesConsumers({
-  getInfoNeededToBeRenderedInTable,
+  searching,
+  getCounting,
   getActiveAndInactiveCount,
 }) {
   const { user } = useSelector((state) => state.admin);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
+  const [responseData, setResponseData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
     useState([]);
   const navigate = useNavigate();
@@ -36,7 +40,6 @@ export default function TablesConsumers({
     dispatch(onAddCustomer(userFormatData));
     navigate(`/consumers/${record.entireData.id}`);
   };
-
   const eventsInfo = useQuery({
     queryKey: ["allEventsInfoPerCompanyList"],
     queryFn: () =>
@@ -45,13 +48,98 @@ export default function TablesConsumers({
       }),
     refetchOnMount: false,
   });
+  const listOfEventsPerAdmin = () => {
+    const active = eventsPerAdmin.active ?? [];
+    const completed = eventsPerAdmin.completed ?? [];
+    let events = [...active, ...completed];
+    const result = new Map();
+    for (let data of events) {
+      if (!result.has(data.id)) {
+        result.set(data.id, data);
+      }
+    }
+    return result;
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsLoading(true);
+    listOfEventsPerAdmin();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const consumersPerAllowEvents = async () => {
+    // setLoadingState(true);
+    const finalReturn = new Map();
+    if (listOfEventsPerAdmin().size > 0) {
+      const data = [
+        ...listOfEventsPerAdmin()
+          .keys()
+          .map((item) => item),
+      ];
+      const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
+        event_providers: { $in: data },
+        company_providers: user.companyData.id,
+      });
+      if (fetchUsersAttendees.data.ok) {
+        const responseData = fetchUsersAttendees.data.users;
+        for (let data of responseData) {
+          if (!finalReturn.has(data.id)) {
+            finalReturn.set(data.id, data);
+          }
+        }
+      }
+    }
+    const formattingResponse = [...finalReturn.values().map((item) => item)];
+    getCounting(formattingResponse.length);
+    return setResponseData(formattingResponse);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    consumersPerAllowEvents();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const checkEventsPerCompany = () => {
+    if (searching?.length > 0) {
+      const check = responseData?.filter((item) =>
+        JSON.stringify(item)
+          .toLowerCase()
+          .includes(String(searching).toLowerCase())
+      );
+      return check;
+    }
+    return responseData;
+  };
+  checkEventsPerCompany();
+
+  const getInfoNeededToBeRenderedInTable = () => {
+    let result = new Set();
+    let mapTemplate = {};
+    for (let data of checkEventsPerCompany()) {
+      mapTemplate = {
+        company: user.company,
+        user: [data.name, data.lastName],
+        email: data.email,
+        key: data.id,
+        entireData: data,
+      };
+      result.add(mapTemplate);
+    }
+    return Array.from(result).reverse();
+  };
 
   const sortEventsDataPerCompany = () => {
     const events = new Map();
     if (eventsInfo.data) {
       const info = [...eventsInfo.data.data.list];
       for (let data of info) {
-        events.set(data.eventInfoDetail.eventName, data);
+        events.set(data.id, data);
       }
     }
     return events;
@@ -72,7 +160,7 @@ export default function TablesConsumers({
   };
   const dataToRenderInTable = async () => {
     const result = new Set();
-    for (let data of getInfoNeededToBeRenderedInTable) {
+    for (let data of getInfoNeededToBeRenderedInTable()) {
       const currentActiveStatus = await checkingActiveEventForActiveConsumer(
         data.entireData.eventSelected
       );
@@ -93,7 +181,7 @@ export default function TablesConsumers({
       }
       await getActiveAndInactiveCount(Array.from(result));
     }
-    // await getActiveAndInactiveCount(Array.from(result));
+    setIsLoading(false);
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
@@ -105,8 +193,8 @@ export default function TablesConsumers({
       controller.abort();
     };
   }, [
-    Array.isArray(getInfoNeededToBeRenderedInTable),
-    getInfoNeededToBeRenderedInTable?.length,
+    Array.isArray(getInfoNeededToBeRenderedInTable()),
+    getInfoNeededToBeRenderedInTable()?.length,
   ]);
 
   const renderingStyle = {
@@ -283,23 +371,29 @@ export default function TablesConsumers({
     },
   ];
   return (
-    <Table
-      sticky
-      size="large"
-      columns={columns}
-      dataSource={dataSortedAndFilterToRender}
-      onRow={(record) => {
-        return {
-          onClick: () => {
-            handleDataDetailUser(record);
-          },
-        };
-      }}
-      style={{ cursor: "pointer" }}
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      className="table-ant-customized"
-    />
+    <>
+      {!isLoading ? (
+        <Table
+          sticky
+          size="large"
+          columns={columns}
+          dataSource={dataSortedAndFilterToRender}
+          onRow={(record) => {
+            return {
+              onClick: () => {
+                handleDataDetailUser(record);
+              },
+            };
+          }}
+          style={{ cursor: "pointer" }}
+          pagination={{
+            position: ["bottomCenter"],
+          }}
+          className="table-ant-customized"
+        />
+      ) : (
+        <Spin spinning={isLoading} percent={0} fullscreen />
+      )}
+    </>
   );
 }
