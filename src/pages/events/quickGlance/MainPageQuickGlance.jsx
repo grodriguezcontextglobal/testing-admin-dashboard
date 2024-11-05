@@ -233,7 +233,7 @@ const MainPageQuickGlance = () => {
           "/cloudinary/upload-image",
           imageDataFormat
         );
-        if (responseCloudinary.data.ok) {
+        if (responseCloudinary.data) {
           await devitrakApi.patch(`/event/edit-event/${event.id}`, {
             eventInfoDetail: {
               ...event.eventInfoDetail,
@@ -245,7 +245,7 @@ const MainPageQuickGlance = () => {
               ...event,
               eventInfoDetail: {
                 ...event.eventInfoDetail,
-                logo: responseCloudinary.data.imageOptimized,
+                logo: responseCloudinary.data.imageUploaded.secure_url,
               },
             })
           );
