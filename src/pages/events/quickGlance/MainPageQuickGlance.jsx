@@ -237,7 +237,7 @@ const MainPageQuickGlance = () => {
           await devitrakApi.patch(`/event/edit-event/${event.id}`, {
             eventInfoDetail: {
               ...event.eventInfoDetail,
-              logo: responseCloudinary.data.imageOptimized,
+              logo: responseCloudinary.data.imageUploaded.secure_url,
             },
           });
           dispatch(
