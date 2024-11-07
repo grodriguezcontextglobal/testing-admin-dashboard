@@ -54,6 +54,25 @@ const createCompany = async ({
   );
   if (checkingExistingCompany.data.company.length > 0) {
     const companyData = checkArray(checkingExistingCompany.data.company);
+    if (props.company_logo.length > 0) {
+      const registerCompanyLogo = await devitrakApi.post(
+        "/cloudinary/upload-image",
+        {
+          imageID: companyData.id,
+          imageFile: props.company_logo,
+        }
+      );
+      const updateCompanyLogo = await devitrakApi.patch(
+        `/company/update-company/${companyData.id}`,
+        {
+          company_logo: registerCompanyLogo.data.secure_url,
+        }
+      );
+      return (ref.current = {
+        ...ref.current,
+        companyData: checkArray(updateCompanyLogo.data.company),
+      });
+    }
     return (ref.current = {
       ...ref.current,
       companyData: companyData,
@@ -62,11 +81,29 @@ const createCompany = async ({
     const resp = await devitrakApi.post("/company/new", companyTemplate);
     if (resp.data) {
       const companyData = checkArray(resp.data.company);
-      ref.current = {
+      if (props.company_logo.length > 0) {
+        const registerCompanyLogo = await devitrakApi.post(
+          "/cloudinary/upload-image",
+          {
+            imageID: companyData.id,
+            imageFile: props.company_logo,
+          }
+        );
+        const updateCompanyLogo = await devitrakApi.patch(
+          `/company/update-company/${companyData.id}`,
+          {
+            company_logo: registerCompanyLogo.data.secure_url,
+          }
+        );
+        return (ref.current = {
+          ...ref.current,
+          companyData: checkArray(updateCompanyLogo.data.company),
+        });
+      }
+      return (ref.current = {
         ...ref.current,
         companyData: companyData,
-      };
-      return;
+      });
     }
   }
 };
