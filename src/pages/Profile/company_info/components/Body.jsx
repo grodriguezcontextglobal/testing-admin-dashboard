@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
-import { onLogout } from "../../../../store/slices/adminSlice";
+import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -76,7 +76,7 @@ const Body = () => {
       originalDataRef[props] !== "" &&
       originalDataRef[props] !== watch(`${props}`)
     ) {
-      api.destroy()
+      api.destroy();
       return openNotificationWithIcon(
         "Please save updates before leave this tab.",
         2
@@ -179,7 +179,17 @@ const Body = () => {
           );
         } else {
           if (data.companyLogo[0]) {
-            base64 = await convertToBase64(data.companyLogo[0]);
+            const fileBase64 = await convertToBase64(data.companyLogo[0]);
+            const uploadingCompanyLogo = await devitrakApi.post(
+              "cloudinary/upload-image",
+              {
+                imageFile: fileBase64,
+                imageID: user.companyData.id,
+              }
+            );
+            if (uploadingCompanyLogo.data) {
+              base64 = uploadingCompanyLogo.data.imageUploaded.secure_url;
+            }
           } else {
             base64 = user.companyData.company_logo;
           }
@@ -222,9 +232,8 @@ const Body = () => {
           }
         }
       } catch (error) {
-        console.log(error);
         alert("Something went wrong. Please try again.");
-        setLoading(false);
+        return setLoading(false);
       }
     };
 
@@ -237,8 +246,15 @@ const Body = () => {
         }
       );
       api.destroy();
-      if (resp.data) {
+      if (resp.data.ok) {
         setLoading(false);
+        dispatch(onLogin({
+          ...user,
+          companyData: {
+            ...user.companyData,
+            company_logo: ""
+          }
+        }))
         return openNotificationWithIcon(
           "Company logo removed. Please log out and log in to see the changes.",
           3
@@ -461,16 +477,26 @@ const Body = () => {
                       }
                     />
                     <br />
-                    <p
+                    <button
+                      type="button"
                       onClick={() => removingCompanyLogo()}
                       style={{
-                        textDecoration: "underline",
-                        color: "var(--danger-action)",
-                        cursor: "pointer",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        outline: "none",
+                        margin: 0,
+                        padding: 0,
                       }}
                     >
-                      remove
-                    </p>
+                      <p
+                        style={{
+                          textDecoration: "underline",
+                          color: "var(--danger-action)",
+                        }}
+                      >
+                        remove
+                      </p>
+                    </button>
                   </div>
                 ) : (
                   <Avatar
@@ -604,14 +630,6 @@ const Body = () => {
                   <Space size={[8, 16]} wrap>
                     {user.companyData.employees.map((employee) => {
                       return (
-                        // <Grid
-                        //   key={employee.user}
-                        //   item
-                        //   xs={12}
-                        //   sm={12}
-                        //   md={4}
-                        //   lg={4}
-                        // >
                         <CardSearchStaffFound
                           key={employee.user}
                           props={{
@@ -623,74 +641,12 @@ const Body = () => {
                           }}
                           fn={null}
                         />
-                        // </Grid>
                       );
                     })}
                   </Space>
                 </Grid>
               </Grid>
             </details>
-            {/* <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              alignSelf={"stretch"}
-              marginY={0}
-              item
-              xs={4}
-              sm={4}
-              md={4}
-            >
-              <InputLabel style={{ width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Employees
-                </Typography>
-              </InputLabel>
-            </Grid>
-            <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              marginY={0}
-              gap={2}
-              item
-              xs={6}
-              sm={6}
-              md={6}
-            >
-              <Space size={[16, 24]} wrap>
-                {user.companyData.employees.map((employee) => {
-                  return (
-                    <Grid
-                      key={employee.user}
-                      display={"flex"}
-                      justifyContent={"flex-start"}
-                      alignItems={"center"}
-                      padding={"5px"}
-                      item
-                      xs={12}
-                      sm={12}
-                      md={4}
-                      lg={2}
-                    >
-                      <CardSearchStaffFound
-                        props={{
-                          status: employee.status,
-                          name: employee.firstName,
-                          lastName: employee.lastName,
-                          email: employee.user,
-                          phoneNumber: "",
-                        }}
-                        fn={null}
-                      />
-                    </Grid>
-                  );
-                })}
-              </Space>
-            </Grid> */}
             <Divider />
             <Grid
               display={"flex"}
