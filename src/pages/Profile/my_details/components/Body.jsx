@@ -146,6 +146,15 @@ const Body = () => {
         );
       } else if (data.photo.length > 0) {
         base64 = await convertToBase64(data.photo[0]);
+        const fileBase64 = await convertToBase64(data.photo[0]);
+        const staffMemberProfileImage = await devitrakApi.post('cloudinary/upload-image', {
+          imageFile: fileBase64,
+          imageID: user.uid,
+        });
+        if(staffMemberProfileImage.data){
+          base64 = staffMemberProfileImage.data.imageUploaded.secure_url;
+        }
+
         const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
           name: data.name,
           lastName: data.lastName,
