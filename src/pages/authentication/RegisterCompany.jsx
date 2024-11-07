@@ -26,7 +26,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { CompanyIcon } from "../../components/icons/CompanyIcon";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
-import { onAddErrorMessage, onLogout } from "../../store/slices/adminSlice";
+import { onAddErrorMessage, onLogin, onLogout } from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -220,13 +220,20 @@ const RegisterCompany = () => {
           queryClient.clear();
           setLoadingStatus(false);
           api.destroy()
+          dispatch(onLogin({
+            ...ref.current.userRegistration,
+            companyData:{...ref.current.companyData},
+            sqlMemberInfo:{...ref.current.sqlMemberInfo},
+            sqlInfo: {...ref.current.sqlInfo},
+
+          }))
           openNotificationWithIcon(
             "success",
             "Account created.",
             "Your new account was created. Please log in.",
             3
           );
-          return navigate("/login", { replace: true });
+          return navigate("/register/connected-account");
         } else {
           await createStripeAccount({ companyValue, user, ref });
           await userRegistrationProcess({ user, companyValue, ref });
@@ -250,6 +257,13 @@ const RegisterCompany = () => {
           await insertingUserMemberInSqlBd({ props: { ...data }, user, ref });
           await consultingUserMemberInSqlDb({ ref, user });
           await consultingCompanyInSqDb(ref);
+          dispatch(onLogin({
+            ...ref.current.userRegistration,
+            companyData:{...ref.current.companyData},
+            sqlMemberInfo:{...ref.current.sqlMemberInfo},
+            sqlInfo: {...ref.current.sqlInfo},
+
+          }))
           queryClient.clear();
           setLoadingStatus(false);
           api.destroy()
@@ -259,7 +273,7 @@ const RegisterCompany = () => {
             "Your new account was created. Please log in.",
             3
           );
-          return navigate("/login", { replace: true });
+          return navigate("/register/connected-account");
         }
       } catch (error) {
         notification.destroy("info");
