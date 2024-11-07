@@ -331,6 +331,9 @@ const AuthRoutes = () => {
                 path="register/company-setup"
                 element={<RedirectionPage />}
               />
+              <Route path="/refresh" element={<Dashboard />} />
+              <Route path="/reauth" element={<Dashboard />} />
+              <Route path="/return" element={<Dashboard />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>

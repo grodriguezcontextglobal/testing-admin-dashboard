@@ -136,20 +136,6 @@ const RegisterStripeConnectedAccount = () => {
               </select>
             </FormLabel>
           </Grid>
-          {/* <Grid textAlign={"left"} marginY={"20px"} item xs={12}>
-            <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-              Business type{" "}
-              <Radio.Group
-                onChange={(e) => setBusinessType(e.target.value)}
-                value={businessType}
-              >
-                <Radio value={1}>Individual</Radio>
-                <Radio value={2}>Business</Radio>
-              </Radio.Group>{" "}
-            </FormLabel>
-          </Grid>
-
-          {businessType === 1 ? <Individual /> : <Business/>} */}
           <Grid textAlign={"left"} marginY={"20px"} item xs={12}>
             <Button
               htmlType="submit"
