@@ -32,6 +32,19 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
       newAdminUserTemplate
     );
     if (resp.data) {
+      const uploadingProfileImage = await devitrakApi.post("/cloudinary/upload-image", {
+        imageFile: user.imageProfile,
+        imageID: resp.data.uid,
+      });
+      if (uploadingProfileImage.data) {
+        await devitrakApi.post(
+          `/admin-user/${resp.data.uid}`,
+          {
+            imageProfile: uploadingProfileImage.data.secure_url,
+            imageID:resp.data.uid
+          }
+        )
+      }
       ref.current = {
         ...ref.current,
         userRegistration: {
@@ -43,6 +56,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           phone: resp.data.entire.phone,
           role: "0",
           company: user.company,
+          imageProfile: uploadingProfileImage.data.secure_url,
           // token: resp.data.token,
         },
       };

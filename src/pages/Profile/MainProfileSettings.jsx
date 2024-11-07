@@ -73,6 +73,12 @@ const MainProfileSettings = () => {
       route: "company-info",
       permission: [0],
     },
+    {
+      label: "Stripe account",
+      route: "stripe_connected_account",
+      permission: [0],
+    },
+
   ];
   return (
     <Grid

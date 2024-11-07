@@ -5,6 +5,7 @@ import Loading from "../../components/animation/Loading";
 // import UpperBanner from "../../components/general/UpperBanner";
 // import NavigationBarMain from "../../components/navbar/NavigationBarMain";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import Dashboard from "../../pages/Profile/stripe_connected_account/Dashboard";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -310,6 +311,10 @@ const AuthRoutes = () => {
                   element={<StaffActivityMainPage />}
                 />
                 <Route path="company-info" element={<CompanyInfo />} />
+                <Route
+                  path="stripe_connected_account"
+                  element={<Dashboard />}
+                />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route
@@ -334,7 +339,7 @@ const AuthRoutes = () => {
       <div
         style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}
       >
-        <FooterComponent ref={navbarRef}/>
+        <FooterComponent ref={navbarRef} />
       </div>
     </div>
   );
