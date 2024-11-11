@@ -197,41 +197,71 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
-      render: (warehouse) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              warehouse === 0
-                ? "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${
-              warehouse === 0
-                ? "var(--blue-700, #175CD3)"
-                : "var(--success-700, #027A48)"
-            }`}
-            style={{ ...Subtitle, fontSize: "13px" }}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-            />
-            {warehouse === 0 ? "In Use" : "In Stock"}
-          </Typography>
-        </span>
-      ),
+      render: (warehouse, record) => {
+        if (record.data.enableAssignFeature === 1) {
+          return (
+            <span
+              style={{
+                ...cellStyle,
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `${
+                  warehouse === 0
+                    ? "var(--blue-50, #EFF8FF)"
+                    : "var(--success-50, #ECFDF3)"
+                }`,
+                width: "fit-content",
+              }}
+            >
+              <p
+                style={{
+                  color: `${
+                    warehouse === 0
+                      ? "var(--blue-700, #175CD3)"
+                      : "var(--success-700, #027A48)"
+                  }`,
+                  textTransform: "capitalize",
+                }}
+              >
+                <Icon
+                  icon="tabler:point-filled"
+                  rotate={3}
+                  color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
+                />
+                {warehouse === 0 ? "In Use" : "In Stock"}
+              </p>
+            </span>
+          );
+        } else {
+          return (
+            <span
+              style={{
+                ...cellStyle,
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `#F9F5FF`,
+                width: "fit-content",
+              }}
+            >
+              <p
+                style={{
+                  color: "#6941C6",
+                  textTransform: "capitalize",
+                }}
+              >
+                <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
+                Disabled
+              </p>
+            </span>
+          );
+        }
+      },
     },
     {
       title: "Ownership",
