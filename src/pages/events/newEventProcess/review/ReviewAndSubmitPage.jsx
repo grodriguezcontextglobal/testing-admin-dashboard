@@ -234,6 +234,7 @@ const ReviewAndSubmitEvent = () => {
             extra_serial_number: data.extra_serial_number,
             company_id: data.company_id,
             return_date: data.return_date,
+            enableAssignFeature: false,
           };
           await devitrakApi.post("/db_item/bulk-item", template);
         }
