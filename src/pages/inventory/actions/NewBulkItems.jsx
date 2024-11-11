@@ -255,6 +255,7 @@ const AddNewBulkItems = () => {
           extra_serial_number: JSON.stringify(moreInfo),
           company_id: user.sqlInfo.company_id,
           return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+          enableAssignFeature: true,
         };
         await devitrakApi.post("/db_item/bulk-item", template);
         if (
@@ -309,6 +310,7 @@ const AddNewBulkItems = () => {
         extra_serial_number: JSON.stringify(moreInfo),
         company_id: user.sqlInfo.company_id,
         return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+        enableAssignFeature: true,
       };
       await devitrakApi.post("/db_item/bulk-item", template);
       if (
