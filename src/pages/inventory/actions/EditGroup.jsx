@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Grid,
   InputAdornment,
   InputLabel,
@@ -10,38 +9,43 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Button,
   AutoComplete,
   Avatar,
   Divider,
   Select,
   Tooltip,
   notification,
+  Spin,
 } from "antd";
+import { groupBy, sortBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { UploadIcon } from "../../../components/icons/UploadIcon";
-import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import "../../../styles/global/reactInput.css";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { groupBy } from "lodash";
-import "../../../styles/global/ant-select.css";
-import { formatDate } from "../utils/dateFormat";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../../styles/global/reactInput.css";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import "./style.css";
+import { formatDate } from "../../../components/utils/dateFormat";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import Loading from "../../../components/animation/Loading";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+const { Option } = Select;
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
@@ -50,6 +54,7 @@ const EditGroup = () => {
   const [taxableLocation, setTaxableLocation] = useState("");
   const [valueSelection, setValueSelection] = useState("");
   const [groupData, setGroupData] = useState([]);
+  const [disabling, setDisabling] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -65,7 +70,7 @@ const EditGroup = () => {
       message: msg,
     });
   };
-  const [loading, setLoading] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [locationSelection, setLocationSelection] = useState("");
   const companiesQuery = useQuery({
     queryKey: ["locationOptionsPerCompany"],
@@ -97,8 +102,9 @@ const EditGroup = () => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
       const itemsOptions = itemsInInventoryQuery.data.data.items;
-      for (let data of itemsOptions) {
-        result.add(data.item_group);
+      const grouping = groupBy(itemsOptions, "item_group");
+      for (let [key] of Object.entries(grouping)) {
+        result.add(key);
       }
     }
     return Array.from(result);
@@ -118,28 +124,33 @@ const EditGroup = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
       const industryData = itemsInInventoryQuery.data.data.items;
-      for (let data of industryData) {
-        result.set(data.item_group, data);
-      }
+      const grouping = groupBy(industryData, "item_group");
+      return grouping;
     }
     return result;
   };
 
+  const retrieveEnableItemData = (props) => {
+    if (typeof props === "number") {
+      return props > 0;
+    }
+    return props;
+  };
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(selectedItem)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(selectedItem);
-      setValue("category_name", `${dataToRetrieve.category_name}`);
-      setValue("cost", `${dataToRetrieve.cost}`);
-      setValue("brand", `${dataToRetrieve.brand}`);
-      setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setLocationSelection(`${dataToRetrieve.location}`);
-      setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
-      const grouopingByItemGroup = groupBy(
-        itemsInInventoryQuery.data.data.items,
-        "item_group"
+    if (retrieveItemDataSelected()[selectedItem]) {
+      const dataToRetrieve = retrieveItemDataSelected()[selectedItem];
+      setValue("category_name", `${dataToRetrieve.at(-1).category_name}`);
+      setValue("cost", `${dataToRetrieve.at(-1).cost}`);
+      setValue("brand", `${dataToRetrieve.at(-1).brand}`);
+      setValue("descript_item", `${dataToRetrieve.at(-1).descript_item}`);
+      setLocationSelection(`${dataToRetrieve.at(-1).location}`);
+      setTaxableLocation(`${dataToRetrieve.at(-1).main_warehouse}`);
+      setDisabling(
+        retrieveEnableItemData(dataToRetrieve.at(-1).enableAssignFeature)
       );
-      return setGroupData(grouopingByItemGroup[selectedItem]);
+      const sortingAscData = sortBy(dataToRetrieve, "serial_number");
+      return setGroupData(sortingAscData);
     }
 
     return () => {
@@ -149,30 +160,88 @@ const EditGroup = () => {
 
   const getMinAndMax = useCallback(() => {
     if (groupData.length > 0) {
-      const serialNumbers = new Set();
-      for (let data of groupData) {
-        serialNumbers.add(Number(data.serial_number));
-      }
-      const data = Array.from(serialNumbers);
-      const min = Math.min(...data);
-      const max = Math.max(...data);
       return {
-        min: String(min).padStart(
-          groupData[0].serial_number.length,
-          `${groupData[0].serial_number[0]}`
-        ),
-        max: String(max).padStart(
-          groupData[0].serial_number.length,
-          `${groupData[0].serial_number[0]}`
-        ),
+        min: groupData[0].serial_number,
+        max: groupData.at(-1).serial_number,
       };
     }
     return {
-      min: 0,
-      max: 0,
+      min: "",
+      max: "",
     };
   }, [selectedItem, groupData.length]);
   getMinAndMax();
+
+  const stylingInputs = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: 500,
+    lineHeight: "20px",
+    color: "var(--gray-700, #344054)",
+  };
+
+  const fetchingUpdateGroupItems = async (props) => {
+    const { submitRef, groupData, slicingData } = props;
+    const templateUpdate = {
+      category_name: submitRef.current.category_name,
+      item_group: submitRef.current.item_group,
+      cost: submitRef.current.cost,
+      brand: submitRef.current.brand,
+      descript_item: submitRef.current.descript_item,
+      ownership: submitRef.current.ownership,
+      main_warehouse: submitRef.current.main_warehouse,
+      update_at: formatDate(new Date()),
+      location: submitRef.current.location,
+      current_location: submitRef.current.current_location,
+      extra_serial_number: JSON.stringify(groupData[0].extra_serial_number),
+      return_date:
+        submitRef.current.ownership === "Rent"
+          ? formatDate(returningDate)
+          : groupData[0].return_date,
+      enableAssignFeature: submitRef.current.enableAssignFeature,
+      data: JSON.stringify(slicingData),
+    };
+
+    const updatingGroupItems = await devitrakApi.post(
+      "/db_company/update-group-items",
+      templateUpdate
+    );
+    if (updatingGroupItems.data) {
+      if (
+        !renderLocationOptions().some(
+          (element) => element.value === submitRef.current.location
+        )
+      ) {
+        let template = [
+          ...companiesQuery.data.data.company.at(-1).location,
+          submitRef.current.location,
+        ];
+        await devitrakApi.patch(
+          `/company/update-company/${
+            companiesQuery.data.data.company.at(-1).id
+          }`,
+          {
+            location: template,
+          }
+        );
+      }
+
+      setValue("category_name", "");
+      setValue("item_group", "");
+      setValue("cost", "");
+      setValue("brand", "");
+      setValue("descript_item", "");
+      setValue("ownership", "");
+      setValue("serial_number", "");
+      setValueSelection(options[0]);
+      openNotificationWithIcon("success", "items were updated.");
+      setIsLoadingStatus(false);
+      return navigate("/inventory");
+    }
+  };
   const savingNewItem = async (data) => {
     submitRef.current = {
       ...data,
@@ -181,7 +250,19 @@ const EditGroup = () => {
       main_warehouse: taxableLocation,
       location: locationSelection,
       company: user.company,
+      return_date: formatDate(returningDate),
+      enableAssignFeature: disabling,
+      taxable_location: taxableLocation,
+      current_location: locationSelection,
     };
+    const starting = groupData.findIndex(
+      (element) =>
+        element.serial_number === `${submitRef.current.startingNumber}`
+    );
+    const ending = groupData.findIndex(
+      (element) => element.serial_number === `${submitRef.current.endingNumber}`
+    );
+    const slicingData = groupData.slice(starting, ending + 1);
     let base64;
     if (selectedItem === "")
       return openNotificationWithIcon(
@@ -198,20 +279,14 @@ const EditGroup = () => {
         "warning",
         "Ownership status must be provided."
       );
-    if (
-      String(valueSelection).toLowerCase() === "rent" &&
-      (!returningDate.getDate() ||
-        !returningDate.getFullYear() ||
-        !returningDate.getMonth())
-    ) {
+    if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
         "warning",
         "As ownership was set as 'Rent', returning date must be provided."
       );
     }
-
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
-      setLoading(false);
+      setIsLoadingStatus(false);
       return alert(
         "Image is bigger than allow. Please resize the image or select a new one."
       );
@@ -220,187 +295,36 @@ const EditGroup = () => {
         "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
       );
-      setLoading(true);
+      setIsLoadingStatus(true);
       base64 = await convertToBase64(data.photo[0]);
+      const templateImageUpload = {
+        imageFile: base64,
+        imageID: `${user.companyData.id}_inventory:${submitRef.current.category_name}_${submitRef.current.item_group}`,
+      };
+      const uploadingImage = await devitrakApi.post(
+        `/cloudinary/upload-image`,
+        templateImageUpload
+      );
       const resp = await devitrakApi.post(`/image/new_image`, {
-        source: base64,
+        source: uploadingImage.data.imageUploaded.secure_url,
         category: data.category_name,
         item_group: selectedItem,
-        company: user.company,
+        company: user.companyData.id,
       });
       if (resp.data) {
-        for (
-          let i = Number(submitRef.current.startingNumber);
-          i <= Number(submitRef.current.endingNumber);
-          i++
-        ) {
-          try {
-            const itemFoundInDB = groupData.find(
-              (element) =>
-                element.serial_number ===
-                String(i).padStart(
-                  submitRef.current.startingNumber.length,
-                  `${submitRef.current.startingNumber[0]}`
-                )
-            );
-            await devitrakApi.post("/db_item/edit-item", {
-              item_id: itemFoundInDB.item_id,
-              category_name: submitRef.current.category_name,
-              item_group: submitRef.current.item_group,
-              cost: submitRef.current.cost,
-              brand: submitRef.current.brand,
-              descript_item: submitRef.current.descript_item,
-              ownership: submitRef.current.ownership,
-              status: itemFoundInDB.status,
-              serial_number: String(i).padStart(
-                submitRef.current.startingNumber.length,
-                `${submitRef.current.startingNumber[0]}`
-              ),
-              warehouse: itemFoundInDB.warehouse,
-              main_warehouse: submitRef.current.main_warehouse,
-              location: submitRef.current.location,
-              current_location: submitRef.current.location,
-              updated_at: formatDate(new Date()),
-              company: user.company,
-              return_date: `${
-                submitRef.current.ownership === "Rent"
-                  ? formatDate(returningDate)
-                  : null
-              }`,
-            });
-            if (
-              !renderLocationOptions().some(
-                (element) => element.value === submitRef.current.location
-              )
-            ) {
-              let template = [
-                ...companiesQuery.data.data.company.at(-1).location,
-                submitRef.current.location,
-              ];
-              await devitrakApi.patch(
-                `/company/update-company/${
-                  companiesQuery.data.data.company.at(-1).id
-                }`,
-                {
-                  location: template,
-                }
-              );
-            }
-            if (
-              String(i).padStart(
-                submitRef.current.startingNumber.length,
-                `${submitRef.current.startingNumber[0]}`
-              ) === submitRef.current.endingNumber
-            ) {
-              setValue("category_name", "");
-              setValue("item_group", "");
-              setValue("cost", "");
-              setValue("brand", "");
-              setValue("descript_item", "");
-              setValue("ownership", "");
-              setValue("serial_number", "");
-              setValueSelection(options[0]);
-              openNotificationWithIcon(
-                "success",
-                "items were created and stored in database."
-              );
-              setLoading(false);
-              await navigate("/inventory");
-            }
-          } catch (error) {
-            openNotificationWithIcon("error", `${error.message}`);
-            setLoading(false);
-          }
-        }
+        await fetchingUpdateGroupItems({ submitRef, groupData, slicingData });
       }
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
         "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
       );
-      setLoading(true);
-      for (
-        let i = Number(submitRef.current.startingNumber);
-        i <= Number(submitRef.current.endingNumber);
-        i++
-      ) {
-        try {
-          const itemFoundInDB = groupData.find(
-            (element) =>
-              element.serial_number ===
-              String(i).padStart(
-                submitRef.current.startingNumber.length,
-                `${submitRef.current.startingNumber[0]}`
-              )
-          );
-          await devitrakApi.post("/db_item/edit-item", {
-            item_id: itemFoundInDB.item_id,
-            category_name: submitRef.current.category_name,
-            item_group: submitRef.current.item_group,
-            cost: submitRef.current.cost,
-            brand: submitRef.current.brand,
-            descript_item: submitRef.current.descript_item,
-            ownership: submitRef.current.ownership,
-            status: itemFoundInDB.status,
-            serial_number: String(i).padStart(
-              submitRef.current.startingNumber.length,
-              `${submitRef.current.startingNumber[0]}`
-            ),
-            warehouse: itemFoundInDB.warehouse,
-            main_warehouse: submitRef.current.main_warehouse,
-            location: submitRef.current.location,
-            current_location: submitRef.current.location,
-            updated_at: formatDate(new Date()),
-            company: user.company,
-            return_date: `${
-              submitRef.current.ownership === "Rent"
-                ? formatDate(returningDate)
-                : null
-            }`,
-          });
-          if (
-            !renderLocationOptions().some(
-              (element) => element.value === submitRef.current.location
-            )
-          ) {
-            let template = [
-              ...companiesQuery.data.data.company.at(-1).location,
-              submitRef.current.location,
-            ];
-            await devitrakApi.patch(
-              `/company/update-company/${
-                companiesQuery.data.data.company.at(-1).id
-              }`,
-              {
-                location: template,
-              }
-            );
-          }
-          if (
-            String(i).padStart(
-              submitRef.current.startingNumber.length,
-              `${submitRef.current.startingNumber[0]}`
-            ) === submitRef.current.endingNumber
-          ) {
-            setValue("category_name", "");
-            setValue("item_group", "");
-            setValue("cost", "");
-            setValue("brand", "");
-            setValue("descript_item", "");
-            setValue("ownership", "");
-            setValue("serial_number", "");
-            setValueSelection(options[0]);
-            openNotificationWithIcon(
-              "success",
-              "items were created and stored in database."
-            );
-            setLoading(false);
-            await navigate("/inventory");
-          }
-        } catch (error) {
-          // openNotificationWithIcon('error', `item ${String(i).padStart(data.startingNumber.length, `${data.startingNumber[0]}`)} was not stored.`)
-          setLoading(false);
-        }
+      try {
+        setIsLoadingStatus(true);
+        await fetchingUpdateGroupItems({ submitRef, groupData, slicingData });
+      } catch (error) {
+        console.log("error", error);
+        setIsLoadingStatus(false);
       }
     }
   };
@@ -447,6 +371,7 @@ const EditGroup = () => {
     >
       {contextHolder}
       {renderTitle()}
+      {isLoadingStatus && <Spin indicator={<Loading />} fullscreen />}
       <form
         style={{
           width: "100%",
@@ -457,7 +382,6 @@ const EditGroup = () => {
           padding: "24px",
           flexDirection: "column",
           gap: "24px",
-          // alignSelf: "stretch",
           borderRadius: "8px",
           border: "1px solid var(--gray-300, #D0D5DD)",
           background: "var(--gray-100, #F2F4F7)",
@@ -482,21 +406,10 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Category
-              </Typography>
+              <Typography style={stylingInputs}>Category</Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={loading}
+              disabled={isLoadingStatus}
               required
               {...register("category_name")}
               aria-invalid={errors.category_name}
@@ -504,22 +417,6 @@ const EditGroup = () => {
               placeholder="e.g. Electronic"
               fullWidth
             />
-            {errors?.category_name && (
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.category_name.type}
-              </Typography>
-            )}
             <div
               style={{
                 textAlign: "left",
@@ -534,21 +431,10 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Device name
-              </Typography>
+              <Typography style={stylingInputs}>Device name</Typography>
             </InputLabel>
             <AutoComplete
-              disabled={loading}
+              disabled={isLoadingStatus}
               className="custom-autocomplete" // Add a custom className here
               variant="outlined"
               style={{
@@ -595,21 +481,10 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Brand
-              </Typography>
+              <Typography style={stylingInputs}>Brand</Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={loading}
+              disabled={isLoadingStatus}
               required
               {...register("brand")}
               aria-invalid={errors.brand}
@@ -617,22 +492,6 @@ const EditGroup = () => {
               placeholder="e.g. Apple"
               fullWidth
             />
-            {errors?.brand && (
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.brand.type}
-              </Typography>
-            )}
           </div>
           <div
             style={{
@@ -641,23 +500,14 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
+              <Typography style={stylingInputs}>
                 <Tooltip title="Address where tax deduction for equipment will be applied.">
                   Taxable location <QuestionIcon />
                 </Tooltip>
               </Typography>
             </InputLabel>
             <AutoComplete
-              disabled={loading}
+              disabled={isLoadingStatus}
               className="custom-autocomplete"
               style={{ width: "100%", height: "2.5rem" }}
               options={renderLocationOptions()}
@@ -688,21 +538,12 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
+              <Typography style={stylingInputs}>
                 Cost of replace device
               </Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={loading}
+              disabled={isLoadingStatus}
               required
               {...register("cost", { required: true })}
               aria-invalid={errors.cost}
@@ -710,23 +551,13 @@ const EditGroup = () => {
               placeholder="e.g. $200"
               startAdornment={
                 <InputAdornment position="start">
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    fontFamily={"Inter"}
-                    fontSize={"14px"}
-                    fontStyle={"normal"}
-                    fontWeight={400}
-                    lineHeight={"20px"}
-                    color={"var(--gray-700, #344054)"}
-                  >
+                  <Typography style={{ ...stylingInputs, fontWeight: 500 }}>
                     $
                   </Typography>
                 </InputAdornment>
               }
               fullWidth
             />
-            {errors?.cost && <Typography>{errors.cost.type}</Typography>}
           </div>
           <div
             style={{
@@ -743,7 +574,7 @@ const EditGroup = () => {
                 width: "100%",
                 display: "flex",
                 alignSelf: "flex-start",
-                gap: "5px", 
+                gap: "5px",
               }}
             >
               <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -754,7 +585,7 @@ const EditGroup = () => {
                   Ownership status of items
                 </Typography>
                 <Select
-                  disabled={loading}
+                  disabled={isLoadingStatus}
                   showSearch
                   className="custom-autocomplete"
                   style={{
@@ -842,21 +673,12 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
+              <Typography style={{ ...stylingInputs, fontWeight: 500 }}>
                 From starting number
               </Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={loading}
+              disabled={isLoadingStatus}
               required
               {...register("startingNumber")}
               aria-invalid={errors.startingNumber}
@@ -876,13 +698,13 @@ const EditGroup = () => {
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 textTransform={"none"}
-                style={{ ...Subtitle, fontWeight: 500 }}
+                style={{ ...stylingInputs, fontWeight: 500 }}
               >
                 To ending number
               </Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={loading}
+              disabled={isLoadingStatus}
               required
               {...register("endingNumber")}
               aria-invalid={errors.endingNumber}
@@ -898,42 +720,72 @@ const EditGroup = () => {
           style={{
             width: "100%",
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
+            justifyContent: "space-between",
             alignItems: "center",
             textAlign: "left",
+            gap: "15px",
           }}
         >
-          <InputLabel style={{ width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              Location{" "}
+          <div
+            style={{
+              width: "80%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              textAlign: "left",
+            }}
+          >
+            <InputLabel style={{ width: "100%" }}>
               <Tooltip title="Where the item is location physically.">
-                <QuestionIcon />
+                <Typography style={{ ...stylingInputs, fontWeight: 500 }}>
+                  Location <QuestionIcon />
+                </Typography>
               </Tooltip>
-            </Typography>
-          </InputLabel>
-          <AutoComplete
-            disabled={loading}
-            className="custom-autocomplete"
-            value={locationSelection}
-            style={{ width: "100%", height: "2.5rem" }}
-            options={renderLocationOptions()}
-            placeholder="Select a location"
-            filterOption={(inputValue, option) =>
-              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-              -1
-            }
-            onChange={(value) => setLocationSelection(value)}
-          />
+            </InputLabel>
+            <AutoComplete
+              disabled={isLoadingStatus}
+              className="custom-autocomplete"
+              value={locationSelection}
+              style={{ width: "100%", height: "2.5rem" }}
+              options={renderLocationOptions()}
+              placeholder="Select a location"
+              filterOption={(inputValue, option) =>
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                -1
+              }
+              onChange={(value) => setLocationSelection(value)}
+            />
+          </div>
+          <div
+            style={{
+              width: "20%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              textAlign: "left",
+            }}
+          >
+            <InputLabel style={{ width: "100%" }}>
+              <Tooltip title="Disable items from being assigned to events and/or users.">
+                <Typography style={{ ...stylingInputs, fontWeight: 500 }}>
+                  Disable items <QuestionIcon />
+                </Typography>
+              </Tooltip>
+            </InputLabel>
+
+            <Select
+              name="disabling"
+              onChange={(e) => setDisabling(e)}
+              value={disabling}
+              className="custom-autocomplete"
+              style={{ width: "100%", height: "2.5rem" }}
+            >
+              <Option value={true}>Enabled</Option>
+              <Option value={false}>Disabled</Option>
+            </Select>
+          </div>
         </div>
         <div
           style={{
@@ -951,7 +803,7 @@ const EditGroup = () => {
             </Typography>
           </InputLabel>
           <OutlinedInput
-            disabled={loading}
+            disabled={isLoadingStatus}
             required
             multiline
             minRows={5}
@@ -1058,8 +910,9 @@ const EditGroup = () => {
           >
             <Link to="/inventory">
               <Button
-                disabled={loading}
-                style={{ ...GrayButton, width: "100%" }}
+                htmlType="button"
+                disabled={isLoadingStatus}
+                style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
               >
                 <Icon
                   icon="ri:arrow-go-back-line"
@@ -1081,9 +934,11 @@ const EditGroup = () => {
             }}
           >
             <Button
-              disabled={loading}
-              type="submit"
+              disabled={isLoadingStatus}
+              loading={isLoadingStatus}
+              htmlType="submit"
               style={{
+                ...CenteringGrid,
                 ...BlueButton,
                 width: "100%",
               }}
@@ -1103,7 +958,6 @@ const EditGroup = () => {
         </div>
       </form>
     </Grid>
-    // </Modal>
   );
 };
 export default EditGroup;
