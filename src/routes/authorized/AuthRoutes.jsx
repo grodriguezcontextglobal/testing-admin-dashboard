@@ -5,7 +5,6 @@ import Loading from "../../components/animation/Loading";
 // import UpperBanner from "../../components/general/UpperBanner";
 // import NavigationBarMain from "../../components/navbar/NavigationBarMain";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import Dashboard from "../../pages/Profile/stripe_connected_account/Dashboard";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -162,6 +161,8 @@ const ServicePaymentConfirmation = lazy(() =>
   import("../../pages/payment/ServicePaymentConfirmation")
 );
 const ErrorPage = lazy(() => import("../../pages/error/ErrorLandingPage"));
+const Dashboard = lazy(() => import("../../pages/Profile/stripe_connected_account/Dashboard"));  
+const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() => import("../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"));
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -331,9 +332,9 @@ const AuthRoutes = () => {
                 path="register/company-setup"
                 element={<RedirectionPage />}
               />
-              <Route path="/refresh" element={<Dashboard />} />
-              <Route path="/reauth" element={<Dashboard />} />
-              <Route path="/return" element={<Dashboard />} />
+              <Route path="/refresh" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
+              <Route path="/reauth" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
+              <Route path="/return" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>
