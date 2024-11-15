@@ -19,7 +19,6 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
@@ -340,13 +339,6 @@ const SearchDevice = ({ searchParams }) => {
       return setLoadingStatus(false);
     }
   };
-  if (imageDeviceQuery.isLoading && searchingQuery.isLoading)
-    return (
-      <div style={CenteringGrid}>
-        <Loading />
-      </div>
-    );
-  if (imageDeviceQuery.data && searchingQuery.data) {
     return (
       <Grid
         container
@@ -426,6 +418,5 @@ const SearchDevice = ({ searchParams }) => {
         </Grid>
       </Grid>
     );
-  }
 };
 export default SearchDevice;
