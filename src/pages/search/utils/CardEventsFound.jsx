@@ -20,7 +20,7 @@ const CardEventsFound = ({ props, fn }) => {
                     padding: '5px 20px 20px 20px',
                 }
             }}>
-            <div style={{ width: "100%", textAlign: "left" }}><Avatar style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>{props.image ? props.image : initials}</Avatar></div>
+            <div style={{ width: "100%", textAlign: "left" }}><Avatar src={props.data.eventInfoDetail?.logo} style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>{!props.data.eventInfoDetail.logo && initials}</Avatar></div>
             <div style={{
                 width: "100%",
                 textAlign: "left",

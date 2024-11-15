@@ -15,7 +15,7 @@ const CardSearchFound = ({ props, fn }) => {
     }}
       styles={{
         body: {
-          padding: '5px 20px 20px 20px',
+          padding: '5px 10px 20px 20px',
         }
       }}
     >
@@ -40,7 +40,8 @@ const CardSearchFound = ({ props, fn }) => {
         fontStyle: 'normal',
         fontWeight: 400,
         lineHeight: '24px', /* 150% */
-        textWrap:"pretty"
+        textWrap:"pretty",
+        overflowWrap: "anywhere"
       }}>{props.email}</div>
       <div style={{
         width: "100%",
