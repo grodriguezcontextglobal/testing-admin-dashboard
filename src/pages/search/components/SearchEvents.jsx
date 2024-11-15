@@ -26,6 +26,59 @@ const SearchEvents = ({ searchParams }) => {
       devitrakApi.post("/event/event-list", {
         company: user.company,
         active: true,
+        type: "event",
+        $or: [
+          {
+            "eventInfoDetail.eventName": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          {
+            "eventInfoDetail.eventLocation": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          {
+            "eventInfoDetail.address": { $regex: searchParams, $options: "i" },
+          },
+          {
+            "eventInfoDetail.building": { $regex: searchParams, $options: "i" },
+          },
+          { "eventInfoDetail.floor": { $regex: searchParams, $options: "i" } },
+
+          { "staff.adminUser.email": { $regex: searchParams, $options: "i" } },
+          {
+            "staff.headsetAttendees.email": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          {
+            "staff.adminUser.firstName": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          {
+            "staff.headsetAttendees.firstName": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          {
+            "staff.adminUser.lastName": { $regex: searchParams, $options: "i" },
+          },
+          {
+            "staff.headsetAttendees.lastName": {
+              $regex: searchParams,
+              $options: "i",
+            },
+          },
+          { "deviceSetup.category": { $regex: searchParams, $options: "i" } },
+          { "deviceSetup.group": { $regex: searchParams, $options: "i" } },
+        ],
       }),
     refetchOnMount: false,
   });
@@ -42,6 +95,7 @@ const SearchEvents = ({ searchParams }) => {
 
   const sortAndRenderFoundData = () => {
     if (staffMembersQuery.data) {
+      console.log(staffMembersQuery.data.data.list);
       const foundData = staffMembersQuery.data.data.list;
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
