@@ -151,7 +151,7 @@ const RegisterStripeConnectedAccount = () => {
             <p style={{ color: "#475467", fontSize: "14px" }}>
               Already have an account?{" "}
               <Link
-                href="/login"
+                to="/login"
                 style={{ color: "#004EEB", fontWeight: "600" }}
               >
                 Sign in
