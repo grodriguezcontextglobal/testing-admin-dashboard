@@ -44,12 +44,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const dispatch = useDispatch();
   // const queryClient = useQueryClient();
   const transactionsQuery = useQuery({
-    queryKey: ["transactionPerConsumerListQuery"],
+    queryKey: ["transactionPerConsumerListQuery", customer.uid],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
-        eventSelected: event.eventInfoDetail.eventName,
+        event_id: event.id,
         company: user.companyData.id,
-        "consumerInfo.uid": customer.id ?? customer.uid,
+        "consumerInfo.id": customer.id ?? customer.uid,
       }),
     refetchOnMount: false,
   });
@@ -111,7 +111,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     if (filterDataBasedOnUserAndEvent()?.length > 0) {
       for (let data of filterDataBasedOnUserAndEvent()) {
         result.add({
-          key: data.id,
+          key: data.paymentIntent,
           ...data,
         });
       }
@@ -384,9 +384,10 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   <Typography
                     textTransform={"none"}
                     style={{
-                      ...BlueButtonText,
+                      ...DangerButtonText,
                       cursor: "pointer",
                       color: "#fff",
+                      padding: "0px 8px",
                     }}
                   >
                     Bulk return
@@ -399,6 +400,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       ),
     },
   ];
+  console.log("sourceData()", sourceData());
   return (
     <>
       <Table
@@ -466,13 +468,3 @@ export default StripeTransactionTable;
 StripeTransactionTable.propTypes = {
   searchValue: PropTypes.string,
 };
-
-// borderRadius: "8px",
-// boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-// padding: "5px",
-// border: `${
-//   !record.active
-//     ? "1px solid #ffbbb6"
-//     : "1px solid #B42318"
-// }`,
-// background: `${!record.active ? "#ffbbb6" : "#B42318"}`,
