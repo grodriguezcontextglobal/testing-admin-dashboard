@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { FormLabel, Grid, OutlinedInput, TextField } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, notification } from "antd";
+import { Avatar, Button, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ import { UploadImagePlaceholder } from "../../components/icons/UpdateImagePlaceh
 // import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       firstName: user.name,
       lastName: user.lastName,
@@ -83,13 +83,19 @@ const Registration = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (userExists.length > 0)
+    if (userExists.length > 0) {
+      setValue("email", userExists[0].email);
+      setValue("email_confirmation", userExists[0].email);
+      setValue("password", userExists[0].password);
+      setValue("password2", userExists[0].password);
+      setValue("firstName", userExists[0].name);
+      setValue("lastName", userExists[0].lastName);
       return openNotificationWithIcon(
         "success",
         "Email already exists in our record.",
         "Please proceed to set up a company account."
       );
-
+    }
     return () => {
       controller.abort();
     };
@@ -255,7 +261,7 @@ const Registration = () => {
                 Email <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
               <OutlinedInput
-                required
+                required={userExists.length < 1}
                 {...register("email")}
                 style={OutlinedInputStyle}
                 placeholder="Enter your email"
@@ -269,7 +275,7 @@ const Registration = () => {
               </FormLabel>
               <OutlinedInput
                 disabled={userExists.length > 0}
-                required
+                required={userExists.length < 1}
                 {...register("email_confirmation")}
                 style={OutlinedInputStyle}
                 placeholder="Repeat your email"
@@ -283,7 +289,7 @@ const Registration = () => {
               </FormLabel>
               <OutlinedInput
                 disabled={userExists.length > 0}
-                required
+                required={userExists.length < 1}
                 {...register("password")}
                 style={OutlinedInputStyle}
                 placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
@@ -297,7 +303,7 @@ const Registration = () => {
               </FormLabel>
               <OutlinedInput
                 disabled={userExists.length > 0}
-                required
+                required={userExists.length < 1}
                 {...register("password2")}
                 // value={password2}
                 // onChange={(e) => setPassword2(e.target.value)}
@@ -313,7 +319,7 @@ const Registration = () => {
               </FormLabel>
               <OutlinedInput
                 disabled={userExists.length > 0}
-                required
+                required={userExists.length < 1}
                 {...register("firstName")}
                 type="text"
                 // value={firstName}
@@ -331,7 +337,7 @@ const Registration = () => {
               </FormLabel>
               <OutlinedInput
                 disabled={userExists.length > 0}
-                required
+                required={userExists.length < 1}
                 {...register("lastName")}
                 type="text"
                 style={{
@@ -508,12 +514,12 @@ const Registration = () => {
               item
               xs={12}
             >
-              <button
-                type="submit"
+              <Button
+                htmlType="submit"
                 style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
               >
                 <p style={BlueButtonText}>Set up new company</p>
-              </button>
+              </Button>
             </Grid>
           </form>
           <Grid item xs={12} justifyContent={"center"} alignItems={"center"}>
