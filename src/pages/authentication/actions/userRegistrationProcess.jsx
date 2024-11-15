@@ -32,20 +32,37 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
       newAdminUserTemplate
     );
     if (resp.data) {
-      const uploadingProfileImage = await devitrakApi.post("/cloudinary/upload-image", {
-        imageFile: user.imageProfile,
-        imageID: resp.data.uid,
-      });
-      if (uploadingProfileImage.data) {
-        await devitrakApi.post(
-          `/admin-user/${resp.data.uid}`,
+      if (user.imageProfile.length > 0) {
+        const uploadingProfileImage = await devitrakApi.post(
+          "/cloudinary/upload-image",
           {
-            imageProfile: uploadingProfileImage.data.secure_url,
-            imageID:resp.data.uid
+            imageFile: user.imageProfile,
+            imageID: resp.data.uid,
           }
-        )
+        );
+        if (uploadingProfileImage.data) {
+          await devitrakApi.post(`/admin-user/${resp.data.uid}`, {
+            imageProfile: uploadingProfileImage.data.secure_url,
+            imageID: resp.data.uid,
+          });
+        }
+        ref.current = {
+          ...ref.current,
+          userRegistration: {
+            data: resp.data.entire,
+            uid: resp.data.uid,
+            name: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            phone: resp.data.entire.phone,
+            role: "0",
+            company: user.company,
+            imageProfile: uploadingProfileImage.data.secure_url,
+            // token: resp.data.token,
+          },
+        };
       }
-      ref.current = {
+      return         ref.current = {
         ...ref.current,
         userRegistration: {
           data: resp.data.entire,
@@ -56,14 +73,15 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           phone: resp.data.entire.phone,
           role: "0",
           company: user.company,
-          imageProfile: uploadingProfileImage.data.secure_url,
+          imageProfile: "",
           // token: resp.data.token,
         },
       };
+
     }
     return resp.data;
   } catch (error) {
-    return error;
+    throw new Error(error);
   }
 };
 

@@ -277,10 +277,11 @@ const RegisterCompany = () => {
         }
       } catch (error) {
         notification.destroy("info");
+        console.log(error);
         openNotificationWithIcon(
           "error",
           "Action failed",
-          `Please try again later. ${error.response}`,
+          `Please try again later. ${error}`,
           3
         );
         dispatch(onAddErrorMessage(error));
