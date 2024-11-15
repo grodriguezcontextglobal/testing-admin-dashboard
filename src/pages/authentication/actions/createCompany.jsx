@@ -44,7 +44,7 @@ const createCompany = async ({
         preference: { inventory_location: [] },
       },
     ],
-    company_logo: props.company_logo,
+    company_logo: props.company_logo ?? "",
   };
   const checkingExistingCompany = await devitrakApi.post(
     `/company/search-company`,

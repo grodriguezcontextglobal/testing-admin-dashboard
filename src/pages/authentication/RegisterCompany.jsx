@@ -629,7 +629,7 @@ const RegisterCompany = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Your company locations
+                    Your company locations <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <div
                     style={{

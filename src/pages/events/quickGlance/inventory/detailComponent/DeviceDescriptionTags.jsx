@@ -55,7 +55,7 @@ const DeviceDescriptionTags = () => {
             >
               <Typography
                 color={`${
-                  deviceInfoSelected.activity
+                  deviceInfoSelected.entireData.activity
                     ? "var(--orange-700, #B93815)"
                     : "var(--success-700, #027A48)"
                 }`}
@@ -71,12 +71,12 @@ const DeviceDescriptionTags = () => {
                   icon="tabler:point-filled"
                   rotate={3}
                   color={`${
-                    deviceInfoSelected.activity
+                    deviceInfoSelected.entireData.activity
                       ? "#EF6820"
                       : "#12B76A"
                   }`}
                 />
-                {deviceInfoSelected.activity ? "In Use" : "In Stock"}
+                {deviceInfoSelected.entireData.activity ? "In Use" : "In Stock"}
               </Typography>
             </span>
           ) : (
