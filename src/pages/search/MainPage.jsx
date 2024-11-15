@@ -22,7 +22,7 @@ const SearchMainPage = () => {
         alignItems: "center",
         borderBottom: "solid 1px gray",
         borderRadius: "0",
-        padding: "24px 12px",
+        padding: "24px 0 24px 12px",
         width: "100%",
         margin: "0.5rem 0"
     }
