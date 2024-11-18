@@ -413,12 +413,18 @@ const ItemTable = ({ searchItem }) => {
             style={{
               width: "100%",
               display: "flex",
+              flexDirection: "column",
               justifyContent: "space-between",
               alignItems: "center",
             }}
             open
           >
-            <summary open>
+            <summary
+              style={{
+                width: "100%",
+              }}
+              open
+            >
               <p
                 style={{
                   ...TextFontsize18LineHeight28,
@@ -429,8 +435,8 @@ const ItemTable = ({ searchItem }) => {
               >
                 All devices
               </p>
+              <Divider />
             </summary>
-            <Divider />
             <Grid container>
               <Grid
                 border={"1px solid var(--gray-200, #eaecf0)"}
@@ -508,9 +514,9 @@ const ItemTable = ({ searchItem }) => {
                 className="table-ant-customized"
               />
             </Grid>
+            <Divider />
           </details>
         </Grid>
-        <Divider />
         {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && (
           <BannerMsg
             props={{
