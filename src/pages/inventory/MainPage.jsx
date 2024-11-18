@@ -29,9 +29,9 @@ const MainPage = () => {
   const inventoryQuery = useQuery({
     queryKey: ["itemsList"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
+      devitrakApi.get(
+        `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
+      ),
     refetchOnMount: false,
   });
   useEffect(() => {

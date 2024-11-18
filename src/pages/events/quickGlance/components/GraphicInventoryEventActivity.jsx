@@ -11,10 +11,7 @@ const GraphicInventoryEventActivity = () => {
   const deviceStatusInEvent = useQuery({
     queryKey: ["devicesInEvent"],
     queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-      }),
+      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
     refetchOnMount: false,
   });
 

@@ -20,9 +20,9 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   const attendeesEventQuery = useQuery({
     queryKey: ["consumersList"],
     queryFn: () =>
-      devitrakApi.post("/auth/user-query", {
-        event_providers: event.id,
-      }),
+      devitrakApi.get(
+        `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
   useEffect(() => {

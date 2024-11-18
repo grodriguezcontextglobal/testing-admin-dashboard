@@ -20,10 +20,7 @@ const SpreadSheet = () => {
   const transactionDeviceRecordInEvent = useQuery({
     queryKey: ["transactionAndDeviceRecord"],
     queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-      }),
+      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
     refetchOnMount: false,
   });
   const transactionPlusUserInfo = useQuery({

@@ -46,11 +46,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const transactionsQuery = useQuery({
     queryKey: ["transactionPerConsumerListQuery", customer.uid],
     queryFn: () =>
-      devitrakApi.post("/transaction/transaction", {
-        event_id: event.id,
-        company: user.companyData.id,
-        "consumerInfo.id": customer.id ?? customer.uid,
-      }),
+      devitrakApi.get(
+        `/transaction/transaction?event_id=${event.id}&company=${
+          user.companyData.id
+        }&consumerInfo.id=${customer.id ?? customer.uid}`
+      ),
     refetchOnMount: false,
   });
 

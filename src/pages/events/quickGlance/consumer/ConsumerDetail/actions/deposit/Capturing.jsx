@@ -53,10 +53,7 @@ const Capturing = ({
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
     queryFn: () =>
-      devitrakApi.post(`/transaction/transaction`, {
-        paymentIntent: paymentIntentDetailSelected.paymentIntent,
-        active: true,
-      }),
+      devitrakApi.get(`/transaction/transaction?paymentIntent=${paymentIntentDetailSelected.paymentIntent}&active=${true}`),
     refetchOnMount: false,
   });
   const queryClient = useQueryClient();

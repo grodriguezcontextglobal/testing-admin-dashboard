@@ -33,10 +33,7 @@ const SearchDevice = ({ searchParams }) => {
   const searchingQuery = useQuery({
     queryKey: ["searchingQuery"],
     queryFn: () =>
-      devitrakApi.post("/db_company/search-inventory", {
-        company_id: user.sqlInfo.company_id,
-        searchValue: searchParams,
-      }),
+      devitrakApi.get(`/db_company/search-inventory?company_id=${user.sqlInfo.company_id}&searchValue=${searchParams}`),
     refetchOnMount: false,
   });
 
@@ -185,9 +182,7 @@ const SearchDevice = ({ searchParams }) => {
     return navigate("/device-quick-glance");
   };
   const handleDeviceSearch = async (record) => {
-    const respTransaction = await devitrakApi.post("/transaction/transaction", {
-      paymentIntent: record.data.paymentIntent,
-    });
+    const respTransaction = await devitrakApi.get(`/transaction/transaction?paymentIntent=${record.data.paymentIntent}`);
     if (respTransaction.data.ok) {
       const eventInventoryQuery = await devitrakApi.post(
         "/receiver/receiver-pool-list",

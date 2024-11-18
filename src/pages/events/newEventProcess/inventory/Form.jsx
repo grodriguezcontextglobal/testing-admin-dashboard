@@ -53,11 +53,7 @@ const Form = () => {
   const itemQuery = useQuery({
     queryKey: ["listOfItems"],
     queryFn: () =>
-      devitrakApi.post("/db_item/warehouse-items", {
-        company_id: user.sqlInfo.company_id,
-        warehouse: true,
-        enableAssignFeature: 1,
-      }),
+      devitrakApi.get(`/db_item/check-item?company_id=${user.sqlInfo.company_id}&warehouse=${true}&enableAssignFeature=${1}`),
   });
   useEffect(() => {
     const controller = new AbortController();

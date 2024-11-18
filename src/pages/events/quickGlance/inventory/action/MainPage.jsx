@@ -25,6 +25,7 @@ import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import Choice from "../lostFee/Choice";
 import { Replace } from "./Replace";
+import { useNavigate } from "react-router-dom";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -32,6 +33,7 @@ const ActionsMainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const { triggerModal } = useSelector((state) => state.helper);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -94,6 +96,7 @@ const ActionsMainPage = () => {
             },
           })
         );
+        return setTimeout(()=> navigate(`/events/event-quickglance`), 1000);
       }
     }
   };

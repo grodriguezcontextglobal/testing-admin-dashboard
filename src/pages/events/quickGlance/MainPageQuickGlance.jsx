@@ -73,21 +73,20 @@ const MainPageQuickGlance = () => {
   const eventAttendeesParametersQuery = useQuery({
     queryKey: ["listOfAttendeesPerSelectedEvent"],
     queryFn: () =>
-      devitrakApi.post("/auth/user-query", {
-        company_providers: user.companyData.id,
-        event_providers: event.id,
-      }),
+      devitrakApi.get(
+        `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event?.eventInfoDetail?.eventName,
-        company: user.companyData.id,
-      }),
+      devitrakApi.get(
+        `/receiver/receiver-pool-list?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     eventAttendeesQuery.refetch();
@@ -97,7 +96,6 @@ const MainPageQuickGlance = () => {
       controller.abort();
     };
   }, []);
-
   if (
     eventAttendeesQuery.isLoading ||
     receiversPoolQuery.isLoading ||
@@ -114,7 +112,7 @@ const MainPageQuickGlance = () => {
     receiversPoolQuery.data &&
     eventAttendeesParametersQuery.data
   ) {
-    const parsingData = receiversPoolQuery?.data?.data?.receiversInventory;
+    const parsingData = receiversPoolQuery?.data?.data?.receiversInventory ?? receiversPoolQuery?.data?.data?.items;
 
     const inventoryEventAssignedCount = () => {
       let result = 0;
