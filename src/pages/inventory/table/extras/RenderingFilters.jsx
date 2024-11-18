@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { Subtitle } from "../../../../styles/global/Subtitle";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { onLogin } from "../../../../store/slices/adminSlice";
-import { useDispatch } from "react-redux";
-import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
-import { Link, useNavigate } from "react-router-dom";
-import { Divider, Popconfirm, Space, Table } from "antd";
 import { Grid } from "@mui/material";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CardLocations from "../../utils/CardLocations";
-import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
-import { PropTypes } from "prop-types";
+import { Divider, Table } from "antd";
 import { groupBy } from "lodash";
+import { PropTypes } from "prop-types";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
+import { onLogin } from "../../../../store/slices/adminSlice";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
+import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
+import CardLocations from "../../utils/CardLocations";
 const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -410,6 +410,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                             style={{
                               width: "fit-content",
                             }}
+                            width="fit-content"
                           />
                         </Grid>
                       );
@@ -438,6 +439,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                               props={`${opt.value} total devices`}
                               optional={null}
                               style={{width:"fit-content"}}
+                              width="fit-content"
                             />
                           </Link>
                         </Grid>
