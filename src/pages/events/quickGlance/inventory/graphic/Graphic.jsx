@@ -15,9 +15,9 @@ const Graphic = () => {
   const itemInInventoryQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
+      devitrakApi.get(
+        `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
+      ),
     refetchOnMount: false,
   });
 
@@ -28,7 +28,6 @@ const Graphic = () => {
       controller.abort();
     };
   }, []);
-
   const foundAllDevicesGivenInEvent = useCallback(() => {
     if (itemInInventoryQuery?.data?.data.ok) {
       const groupingByStatus = groupBy(

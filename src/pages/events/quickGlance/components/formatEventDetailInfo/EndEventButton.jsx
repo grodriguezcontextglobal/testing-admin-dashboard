@@ -46,10 +46,7 @@ const EndEventButton = () => {
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-      }),
+      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
     refetchOnMount: false,
   });
 
@@ -153,6 +150,7 @@ const EndEventButton = () => {
     return [];
   };
   findItemsInPoolEvent();
+  
   const sqlDeviceReturnedToCompanyStock = async () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
@@ -225,6 +223,7 @@ const EndEventButton = () => {
     return [];
   };
   itemsPerCompany();
+
   const checkItemsInUseToUpdateInventory = () => {
     const result = {};
     for (let data of findItemsInPoolEvent()) {
@@ -239,6 +238,7 @@ const EndEventButton = () => {
     return Object.entries(result);
   };
   checkItemsInUseToUpdateInventory();
+
   const returningItemsInInventoryAfterEndingEvent = () => {
     const totalResult = new Set();
     for (let device of event.deviceSetup) {
@@ -261,6 +261,7 @@ const EndEventButton = () => {
     }
     return Array.from(totalResult);
   };
+
   const inactiveEventAfterEndIt = async () => {
     try {
       const resp = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
@@ -298,7 +299,7 @@ const EndEventButton = () => {
           email: data.user,
           serial_number: data.device.serialNumber,
           status: renderingByConditionTypeof(data.device.status),
-          activity: data.device.status, ///`${data.device.status ? "YES" : "No"}`,
+          activity: data.device.status,
           payment_id: data.paymentIntent,
           event: event.eventInfoDetail.eventName,
           item_group: data.device.deviceType,
@@ -328,6 +329,7 @@ const EndEventButton = () => {
       return updatingTransactionDocuments.data.list;
     }
   };
+
   const updatingItemInDB = async () => {
     setOpenEndingEventModal(true);
     if (returningItemsInInventoryAfterEndingEvent()?.length > 0) {

@@ -28,9 +28,9 @@ const ItemTable = ({ searchItem }) => {
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
-      devitrakApi.post("/db_item/current-inventory", {
-        company_id: user.sqlInfo.company_id,
-      }),
+      devitrakApi.get(
+        `/db_item/check-inventory?company_id=${user.sqlInfo.company_id}`
+      ),
     refetchOnMount: false,
   });
 
@@ -43,9 +43,9 @@ const ItemTable = ({ searchItem }) => {
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
+      devitrakApi.get(
+        `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
+      ),
     refetchOnMount: false,
   });
 
@@ -91,7 +91,6 @@ const ItemTable = ({ searchItem }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.company]);
-
   const dataToDisplay = () => {
     if (!searchItem || searchItem === "") {
       if (dataStructuringFormat().length > 0) {

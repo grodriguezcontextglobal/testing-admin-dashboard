@@ -13,10 +13,7 @@ const FormatToDisplayDetail = () => {
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-      }),
+      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
     refetchOnMount: false,
   });
   const receiversNoOperatingInPoolQuery = useQuery({

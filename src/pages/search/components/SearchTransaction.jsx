@@ -65,9 +65,7 @@ const SearchTransaction = ({ searchParams }) => {
 
   const handleTransactionSearch = useCallback(async () => {
     setLoading(true);
-    const respTransaction = await devitrakApi.post("/transaction/transaction", {
-      paymentIntent: searchParams,
-    });
+    const respTransaction = await devitrakApi.get(`/transaction/transaction?paymentIntent=${searchParams}`);
     if (respTransaction.data.ok) {
       let userProfile = {
         ...respTransaction.data.list[0].consumerInfo,
