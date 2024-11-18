@@ -29,7 +29,7 @@ const TransactionTableRefactoring = () => {
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
-        "consumerInfo.id": customerInfoTemplate.id,
+        "consumerInfo.email": customerInfoTemplate.customerInfo.email,
       }),
     refetchOnMount: false,
   });
