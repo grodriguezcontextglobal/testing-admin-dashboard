@@ -13,13 +13,10 @@ import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { onAddCompanyAccountStripe, onLogin } from "../../../../store/slices/adminSlice";
 import {
   onAddContactInfo,
   onAddEventInfoDetail,
 } from "../../../../store/slices/eventSlice";
-import { onAddNewSubscription } from "../../../../store/slices/subscriptionSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
@@ -28,18 +25,18 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { InputLabelStyle } from "../style/InputLabelStyle";
 // import "react-clock/dist/Clock.css";
-import "react-phone-number-input/style.css";
 import "react-datepicker/dist/react-datepicker.css";
+import "react-phone-number-input/style.css";
 import "../../../../styles/global/OutlineInput.css";
 import "../../../../styles/global/ant-select.css";
 import "../../../../styles/global/reactInput.css";
 import "../style/NewEventInfoSetup.css";
 const Form = () => {
-  const { subscriptionJSON } = useSelector(
-    (state) => state.subscription
-  );
+  // const { subscriptionJSON } = useSelector(
+  //   (state) => state.subscription
+  // );
+  // const { companyAccountStripe, user } = useSelector((state) => state.admin);
   const { eventInfoDetail } = useSelector((state) => state.event);
-  const { companyAccountStripe, user } = useSelector((state) => state.admin);
   const addressSplit = eventInfoDetail?.address?.split(" ");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -74,171 +71,169 @@ const Form = () => {
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
-  const paymentIntentParams = new URLSearchParams(window.location.search).get(
-    "payment_intent"
-  );
+  // const paymentIntentParams = new URLSearchParams(window.location.search).get(
+  //   "payment_intent"
+  // );
 
-  const renderingStatus = (props) => {
-    return props === "active" || props === "trialing";
-  };
-  const storeSubscriptionJSON = async () => {
-    if (paymentIntentParams) {
-      const respPaymentIntentRetrieved = await devitrakApi.get(
-        `/stripe/payment_intents/${paymentIntentParams}`
-      );
-      const respSubscriptionInfo = await devitrakApi.get(
-        `/subscription/searching-subscription/subscriptions/${paymentIntentParams}`
-      );
-      if (respSubscriptionInfo.data.ok) {
-        const updatingSubscriptionData = await devitrakApi.patch(
-          `/subscription/update-subscription/${user.subscription.id}`,
-          {
-            newSubscriptionData: {
-              // ...user.subscription,
-              // stripeCompanyID: user.subscription.stripeCompanyID,
-              record: [
-                {
-                  subscription_id: respSubscriptionInfo.data.subscription.id,
-                  active: renderingStatus(
-                    respSubscriptionInfo.data.subscription.status
-                  ),
-                  cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
-                  subscription_type:
-                    respSubscriptionInfo.data.subscription.items.data[0].plan
-                      .interval,
-                  created_at: new Date().getTime(),
-                },
-                ...user.subscription.record,
-              ],
-            },
-          }
-        );
-        if (updatingSubscriptionData.data.ok) {
-          dispatch(
-            onLogin({
-              ...user,
-              subscription: {
-                ...user.subscription,
-                record: [
-                  {
-                    subscription_id: respSubscriptionInfo.data.subscription.id,
-                    active: renderingStatus(
-                      respSubscriptionInfo.data.subscription.status
-                    ),
-                    cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
-                    subscription_type:
-                      respSubscriptionInfo.data.subscription.items.data[0].plan
-                        .interval,
-                    created_at: new Date().getTime(),
-                  },
-                  ...user.subscription.record,
-                ],
-                }
-            })
-          );
+  // const renderingStatus = (props) => {
+  //   return props === "active" || props === "trialing";
+  // };
+  // const storeSubscriptionJSON = async () => {
+  //   if (paymentIntentParams) {
+  //     const respPaymentIntentRetrieved = await devitrakApi.get(
+  //       `/stripe/payment_intents/${paymentIntentParams}`
+  //     );
+  //     const respSubscriptionInfo = await devitrakApi.get(
+  //       `/subscription/searching-subscription/subscriptions/${paymentIntentParams}`
+  //     );
+  //     if (respSubscriptionInfo.data.ok) {
+  //       const updatingSubscriptionData = await devitrakApi.patch(
+  //         `/subscription/update-subscription/${user.subscription.id}`,
+  //         {
+  //           newSubscriptionData: {
+  //             record: [
+  //               {
+  //                 subscription_id: respSubscriptionInfo.data.subscription.id,
+  //                 active: renderingStatus(
+  //                   respSubscriptionInfo.data.subscription.status
+  //                 ),
+  //                 cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
+  //                 subscription_type:
+  //                   respSubscriptionInfo.data.subscription.items.data[0].plan
+  //                     .interval,
+  //                 created_at: new Date().getTime(),
+  //               },
+  //               ...user.subscription.record,
+  //             ],
+  //           },
+  //         }
+  //       );
+  //       if (updatingSubscriptionData.data.ok) {
+  //         dispatch(
+  //           onLogin({
+  //             ...user,
+  //             subscription: {
+  //               ...user.subscription,
+  //               record: [
+  //                 {
+  //                   subscription_id: respSubscriptionInfo.data.subscription.id,
+  //                   active: renderingStatus(
+  //                     respSubscriptionInfo.data.subscription.status
+  //                   ),
+  //                   cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
+  //                   subscription_type:
+  //                     respSubscriptionInfo.data.subscription.items.data[0].plan
+  //                       .interval,
+  //                   created_at: new Date().getTime(),
+  //                 },
+  //                 ...user.subscription.record,
+  //               ],
+  //               }
+  //           })
+  //         );
 
-          dispatch(
-            onAddNewSubscription({
-              ...subscriptionJSON,
-              latest_invoice: {
-                latest_invoice:
-                  respSubscriptionInfo.data.subscription.latest_invoice,
-                payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
-              },
-              paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
-              status: respSubscriptionInfo.data.subscription.status,
-            })
-          );
-          dispatch(
-            onAddCompanyAccountStripe({
-              ...companyAccountStripe,
-              subscriptionHistory: [
-                // ...companyAccountStripe.subscriptionHistory,
-                {
-                  subscription: respSubscriptionInfo.data.subscription.id,
-                  billing_cycle_anchor:
-                    respSubscriptionInfo.data.subscription.billing_cycle_anchor,
-                  created: respSubscriptionInfo.data.subscription.created,
-                  current_period_end:
-                    respSubscriptionInfo.data.subscription.current_period_end,
-                  current_period_start:
-                    respSubscriptionInfo.data.subscription.current_period_start,
-                  latest_invoice: {
-                    ...subscriptionJSON.latest_invoice,
-                    payment_intent:
-                      respPaymentIntentRetrieved.data.paymentIntent,
-                  },
-                  paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
-                  status: respSubscriptionInfo.data.subscription.status,
-                },
-              ],
-            })
-          );
-        } else {
-          await devitrakApi.post("/subscription/new_subscription", {
-            company: user.company,
-            stripeCompanyID: user.subscription.stripeCompanyID,
-            record: [
-              {
-                subscription_id: respSubscriptionInfo.data.subscription.id,
-                active: renderingStatus(
-                  respSubscriptionInfo.data.subscription.status
-                ),
-                cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
-                subscription_type:
-                  respSubscriptionInfo.data.subscription.items.data[0].plan
-                    .interval,
-              }
-            ]
-          });
-        }
-        dispatch(
-          onAddNewSubscription({
-            latest_invoice: {
-              latest_invoice:
-                respSubscriptionInfo.data.subscription.latest_invoice,
-              payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
-            },
-            paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
-            status: respSubscriptionInfo.data.subscription.status,
-          })
-        );
-        dispatch(
-          onAddCompanyAccountStripe({
-            ...companyAccountStripe,
-            subscriptionHistory: [
-              {
-                subscription: respSubscriptionInfo.data.subscription.id,
-                billing_cycle_anchor:
-                  respSubscriptionInfo.data.subscription.billing_cycle_anchor,
-                created: respSubscriptionInfo.data.subscription.created,
-                current_period_end:
-                  respSubscriptionInfo.data.subscription.current_period_end,
-                current_period_start:
-                  respSubscriptionInfo.data.subscription.current_period_start,
-                latest_invoice: {
-                  ...subscriptionJSON.latest_invoice,
-                  payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
-                },
-                paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
-                status: respSubscriptionInfo.data.subscription.status,
-              },
-            ],
-          })
-        );
-      }
-    }
-  };
+  //         dispatch(
+  //           onAddNewSubscription({
+  //             ...subscriptionJSON,
+  //             latest_invoice: {
+  //               latest_invoice:
+  //                 respSubscriptionInfo.data.subscription.latest_invoice,
+  //               payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
+  //             },
+  //             paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
+  //             status: respSubscriptionInfo.data.subscription.status,
+  //           })
+  //         );
+  //         dispatch(
+  //           onAddCompanyAccountStripe({
+  //             ...companyAccountStripe,
+  //             subscriptionHistory: [
+  //               // ...companyAccountStripe.subscriptionHistory,
+  //               {
+  //                 subscription: respSubscriptionInfo.data.subscription.id,
+  //                 billing_cycle_anchor:
+  //                   respSubscriptionInfo.data.subscription.billing_cycle_anchor,
+  //                 created: respSubscriptionInfo.data.subscription.created,
+  //                 current_period_end:
+  //                   respSubscriptionInfo.data.subscription.current_period_end,
+  //                 current_period_start:
+  //                   respSubscriptionInfo.data.subscription.current_period_start,
+  //                 latest_invoice: {
+  //                   ...subscriptionJSON.latest_invoice,
+  //                   payment_intent:
+  //                     respPaymentIntentRetrieved.data.paymentIntent,
+  //                 },
+  //                 paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
+  //                 status: respSubscriptionInfo.data.subscription.status,
+  //               },
+  //             ],
+  //           })
+  //         );
+  //       } else {
+  //         await devitrakApi.post("/subscription/new_subscription", {
+  //           company: user.company,
+  //           stripeCompanyID: user.subscription.stripeCompanyID,
+  //           record: [
+  //             {
+  //               subscription_id: respSubscriptionInfo.data.subscription.id,
+  //               active: renderingStatus(
+  //                 respSubscriptionInfo.data.subscription.status
+  //               ),
+  //               cancel_at: respSubscriptionInfo.data.subscription.cancel_at,
+  //               subscription_type:
+  //                 respSubscriptionInfo.data.subscription.items.data[0].plan
+  //                   .interval,
+  //             }
+  //           ]
+  //         });
+  //       }
+  //       dispatch(
+  //         onAddNewSubscription({
+  //           latest_invoice: {
+  //             latest_invoice:
+  //               respSubscriptionInfo.data.subscription.latest_invoice,
+  //             payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
+  //           },
+  //           paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
+  //           status: respSubscriptionInfo.data.subscription.status,
+  //         })
+  //       );
+  //       dispatch(
+  //         onAddCompanyAccountStripe({
+  //           ...companyAccountStripe,
+  //           subscriptionHistory: [
+  //             {
+  //               subscription: respSubscriptionInfo.data.subscription.id,
+  //               billing_cycle_anchor:
+  //                 respSubscriptionInfo.data.subscription.billing_cycle_anchor,
+  //               created: respSubscriptionInfo.data.subscription.created,
+  //               current_period_end:
+  //                 respSubscriptionInfo.data.subscription.current_period_end,
+  //               current_period_start:
+  //                 respSubscriptionInfo.data.subscription.current_period_start,
+  //               latest_invoice: {
+  //                 ...subscriptionJSON.latest_invoice,
+  //                 payment_intent: respPaymentIntentRetrieved.data.paymentIntent,
+  //               },
+  //               paymentIntent: respPaymentIntentRetrieved.data.paymentIntent,
+  //               status: respSubscriptionInfo.data.subscription.status,
+  //             },
+  //           ],
+  //         })
+  //       );
+  //     }
+  //   }
+  // };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (paymentIntentParams) {
-      storeSubscriptionJSON();
-    }
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   if (paymentIntentParams) {
+  //     storeSubscriptionJSON();
+  //   }
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   useEffect(() => {
     setEnd(
@@ -282,7 +277,7 @@ const Form = () => {
       );
     dispatch(onAddEventInfoDetail(format));
     dispatch(onAddContactInfo(contactInfoFormat));
-    storeSubscriptionJSON();
+    // storeSubscriptionJSON();
     navigate("/create-event-page/staff-detail");
   };
   // const checkSubscription = useMemo(() => {
