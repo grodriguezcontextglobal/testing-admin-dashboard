@@ -5,7 +5,7 @@ import { onLogin } from "../../../../store/slices/adminSlice";
 import { useDispatch } from "react-redux";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import { Link, useNavigate } from "react-router-dom";
-import { Divider, Popconfirm, Table } from "antd";
+import { Divider, Popconfirm, Space, Table } from "antd";
 import { Grid } from "@mui/material";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
@@ -325,12 +325,17 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "space-between",
+                flexDirection: "column",
+                justifyContent: "flex-start",
                 alignItems: "center",
               }}
               open={item.open}
             >
-              <summary>
+              <summary
+                style={{
+                  width: "100%",
+                }}
+              >
                 <p
                   style={{
                     ...TextFontsize18LineHeight28,
@@ -370,32 +375,56 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                     )}
                 </p>
               </summary>
-              <Divider />
-              <Grid container>
+              <div
+                style={{
+                  maxWidth: "1228px",
+                  width: "99.5vw",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  alignSelf: "flex-start",
+                  flexWrap: "wrap",
+                }}
+              >
                 {item.renderedCardData
                   ? item.renderedCardData.map((opt) => {
                       return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
-                          <Popconfirm
-                            title="Do you want to remove this location from your preferences?"
-                            onConfirm={() => ""}
-                          >
-                            <CardInventoryLocationPreference
-                              title={opt.key}
-                              props={`${opt.value} total devices`}
-                              route={`/inventory/${String(
-                                item.routeTitle
-                              ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                                searchItem && searchItem
-                              }`}
-                            />
-                          </Popconfirm>
+                        <Grid
+                          key={opt}
+                          alignSelf={"flex-start"}
+                          item
+                          xs={12}
+                          sm={12}
+                          md={12}
+                          lg={12}
+                        >
+                          <CardInventoryLocationPreference
+                            key={opt}
+                            title={opt.key}
+                            props={`${opt.value} total devices`}
+                            route={`/inventory/${String(
+                              item.routeTitle
+                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${
+                              searchItem && searchItem
+                            }`}
+                            style={{
+                              width: "fit-content",
+                            }}
+                          />
                         </Grid>
                       );
                     })
                   : item.data.map((opt) => {
                       return (
-                        <Grid key={opt} item xs={12} sm={12} md={4} lg={4}>
+                        <Grid
+                          key={opt}
+                          alignSelf={"flex-start"}
+                          item
+                          xs={12}
+                          sm={12}
+                          md={4}
+                          lg={4}
+                        >
                           {" "}
                           <Link
                             to={`/inventory/${String(
@@ -408,12 +437,13 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                               title={dictionary[opt.key] ?? opt.key}
                               props={`${opt.value} total devices`}
                               optional={null}
+                              style={{width:"fit-content"}}
                             />
                           </Link>
                         </Grid>
                       );
                     })}
-              </Grid>
+              </div>
               {item.renderMoreOptions && (
                 <Table
                   pagination={{
@@ -423,7 +453,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                     defaultPageSize: 10,
                     defaultCurrent: 1,
                   }}
-                  style={{ width: "100%" }}
+                  style={{ maxWidth: "1228px", width: "99.5vw" }}
                   rowSelection={item.rowSelection}
                   columns={item.columns}
                   dataSource={item.data}
