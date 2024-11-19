@@ -5,15 +5,15 @@ import HeaderSearch from "./components/HeaderSearch";
 import SearchConsumer from "./components/SearchConsumer";
 import SearchDevice from "./components/SearchDevice";
 import SearchEvents from "./components/SearchEvents";
-import SearchPosts from "./components/SearchPosts";
+// import SearchPosts from "./components/SearchPosts";
 import SearchStaff from "./components/SearchStaff";
 import SearchTransaction from "./components/SearchTransaction";
 
 const SearchMainPage = () => {
     const [countingResult, setCountingResult] = useState([0])
     const [filterOptions, setFilterOptions] = useState({
-        'View All': 1, 'Consumers': 0, 'Staff': 0, 'Devices': 0, 'Posts': 0, 'Events': 0
-    })
+        'View All': 1, 'Consumers': 0, 'Staff': 0, 'Devices': 0, 'Events': 0
+    }) //'Posts': 0, 
     const location = useLocation()
     const searchParams = location.search.slice(8)
     const styleSection = {
@@ -51,9 +51,9 @@ const SearchMainPage = () => {
                 {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) && <section style={styleSection}>
                     <SearchDevice searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult} />
                 </section>}
-                {(filterOptions["View All"] === 1 || filterOptions.Posts === 1) && <section style={styleSection}>
+                {/* {(filterOptions["View All"] === 1 || filterOptions.Posts === 1) && <section style={styleSection}>
                     <SearchPosts searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult} />
-                </section>}
+                </section>} */}
                 {(filterOptions["View All"] === 1 || filterOptions.Events === 1) && <section style={styleSection}>
                     <SearchEvents searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult} />
                 </section>}
