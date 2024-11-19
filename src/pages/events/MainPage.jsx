@@ -34,10 +34,9 @@ const MainPage = () => {
   const eventQuery = useQuery({
     queryKey: ["events"],
     queryFn: () =>
-      devitrakApi.post("/event/event-list", {
-        company: user.company,
-        type: "event",
-      }),
+      devitrakApi.get(
+        `/event/event-list-per-company?company=${user.company}&type=event`
+      ),
     refetchOnMount: false,
   });
   const companyAccountStripeQuery = useQuery({
