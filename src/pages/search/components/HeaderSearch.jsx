@@ -4,7 +4,7 @@ import { Subtitle } from '../../../styles/global/Subtitle'
 import { useMemo, useState } from 'react'
 import { PropTypes } from 'prop-types'
 const HeaderSearch = ({ countingResults, setFilterOptions }) => {
-    const options = ['View All', 'Consumers', 'Staff', 'Devices', 'Posts', 'Events']
+    const options = ['View All', 'Consumers', 'Staff', 'Devices', 'Events'] //'Posts', 
     const [activedParams, setActivedParams] = useState([])
     const handleActiveParams = (item) => {
         if (item === "View All") {
@@ -51,7 +51,7 @@ const HeaderSearch = ({ countingResults, setFilterOptions }) => {
                                 border: '1px solid var(--Gray-300, #D0D5DD)',
                                 boxShadow: '0px 1px 2px 0px rgba(16, 24, 40, 0.05)', borderRadius: "8px 0 0 8px"
                             }} key={item} onClick={() => handleActiveParams(item)}>{item}</button>
-                        } else if (index === 5) {
+                        } else if (index === 4) {
                             return <button style={{
                                 ...Subtitle,
                                 background: `${activedParams.some(element => element === item) ? "#EFF4FF" : 'var(--Gray-50, #F9FAFB)'}`,
