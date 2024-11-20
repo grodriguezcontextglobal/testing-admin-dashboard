@@ -14,9 +14,9 @@ const EmailNotification = ({
   customizedEmailNotificationModal,
   setCustomizedEmailNotificationModal,
 }) => {
-  const { consumersOfEvent } = useSelector((state) => state.customer);
   const { event } = useSelector((state) => state.event);
   const [message, setMessage] = useState("");
+  const [loadingState, setLoadingState] = useState(false);
   const { register, handleSubmit, setValue } = useForm();
   const closeModal = () => {
     setCustomizedEmailNotificationModal(false);
@@ -25,14 +25,8 @@ const EmailNotification = ({
     return setMessage(e.target.value);
   };
 
-  const renderListOfEmailsOfConsumersPerEvent = () => {
-    const result = [];
-    consumersOfEvent.forEach((element) => result.unshift(element.email));
-    return result;
-  };
-  renderListOfEmailsOfConsumersPerEvent();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, dscpt) => {
+  const openNotificationWithIcon = (msg, dscpt) => {
     api.open({
       message: msg,
       description: dscpt,
@@ -54,26 +48,34 @@ const EmailNotification = ({
     );
   };
   const handleSubmitEmailNotification = async (data) => {
-    const emailNotificationProfile = {
-      consumersList: renderListOfEmailsOfConsumersPerEvent(),
-      subject: data.subject,
-      message: message,
-      eventSelected: event.eventInfoDetail.eventName,
-      company: event.company,
-    };
-    const resp = await devitrakApi.post(
-      "/nodemailer/customized-notification",
-      emailNotificationProfile
-    );
-    if (resp) {
-      openNotificationWithIcon(
-        "success",
-        "Email sent!",
-        "Email was sent to all consumers of this event!"
+    try {
+      setLoadingState(true);
+      const emailNotificationProfile = {
+        eventID: event.id,
+        subject: data.subject,
+        message: message,
+        eventSelected: event.eventInfoDetail.eventName,
+        company: event.company,
+      };
+      const resp = await devitrakApi.post(
+        "/nodemailer/massive-event-customer-notification",
+        emailNotificationProfile
       );
-      setValue("subject", "");
-      setValue("message", "");
-      closeModal();
+      if (resp.data.ok) {
+        openNotificationWithIcon(
+          "Notification sent.",
+          `${resp.data.notification}`
+        );
+        setValue("subject", "");
+        setValue("message", "");
+        setLoadingState(false);
+        return setTimeout(() => {
+          closeModal();
+        }, 2500);
+      }
+    } catch (error) {
+      setLoadingState(false);
+      openNotificationWithIcon("Error", `${error}`);
     }
   };
   return (
@@ -160,6 +162,7 @@ const EmailNotification = ({
               <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Button
                   htmlType="submit"
+                  loading={loadingState}
                   style={{
                     ...BlueButton,
                     width: "100%",
