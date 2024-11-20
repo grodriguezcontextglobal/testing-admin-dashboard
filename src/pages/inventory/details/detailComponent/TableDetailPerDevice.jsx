@@ -27,22 +27,6 @@ const TableDetailPerDevice = ({ dataFound }) => {
       }
     }
     return Array.from(renderingData.values());
-    // const addingKey = new Set();
-    // for (let data of dataFound) {
-    //   const jsonToStringForAvoidDuplicates = JSON.stringify({
-    //     key: `${data.item_id}*${data.event_name}`,
-    //     ...data,
-    //     data: { ...data },
-    //   });
-    //   addingKey.add(jsonToStringForAvoidDuplicates);
-    // }
-    // const finalDatTodisplay = new Set();
-    // const dataToTransform = Array.from(addingKey);
-    // for (let data of dataToTransform) {
-    //   const stringToJson = JSON.parse(data);
-    //   finalDatTodisplay.add(stringToJson);
-    // }
-    // return Array.from(finalDatTodisplay);
   };
   useEffect(() => {
     const controller = new AbortController();

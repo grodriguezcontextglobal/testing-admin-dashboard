@@ -23,16 +23,15 @@ const DeviceInformationDetail = () => {
         id="checking"
         style={{ ...CardStyle }}
         styles={{
-          body:{
-            padding: "24px 24px 24px 0"
-          }
+          body: {
+            padding: "24px 24px 24px 0",
+          },
         }}
       >
         <Grid
           display={"flex"}
           justifyContent={"space-around"}
           alignItems={"center"}
-
           container
         >
           <Grid
@@ -75,19 +74,7 @@ const DeviceInformationDetail = () => {
             item
             xs={12}
           >
-            <p
-            style={TextFontsize18LineHeight28}
-              // textAlign={"left"}
-              // paddingTop={"8px"}
-              // fontFamily={"Inter"}
-              // fontSize={"18px"}
-              // fontStyle={"normal"}
-              // fontWeight={600}
-              // lineHeight={"28px"}
-              // color={"var(--gray-900, #101828)"}
-            >
-              Serial number
-            </p>
+            <p style={TextFontsize18LineHeight28}>Serial number</p>
           </Grid>
           <Grid
             display={"flex"}
@@ -97,17 +84,7 @@ const DeviceInformationDetail = () => {
             item
             xs={12}
           >
-            <p
-            style={TextFontSize30LineHeight38}
-              // textAlign={"left"}
-              // paddingTop={"8px"}
-              // fontFamily={"Inter"}
-              // fontSize={"38px"}
-              // fontStyle={"normal"}
-              // fontWeight={600}
-              // lineHeight={"38px"}
-              // color={"var(--gray-900, #101828)"}
-            >
+            <p style={TextFontSize30LineHeight38}>
               {deviceInfoSelected.entireData.device}
             </p>
           </Grid>

@@ -56,10 +56,9 @@ const SpreadSheet = () => {
   const consumersDataQuery = useQuery({
     queryKey: ["consumersDataQuery"],
     queryFn: () =>
-      devitrakApi.post("/auth/user-query", {
-        event_providers: event.id,
-        company_providers: user.companyData.id,
-      }),
+      devitrakApi.get(
+        `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
 
