@@ -95,7 +95,6 @@ const SearchEvents = ({ searchParams }) => {
 
   const sortAndRenderFoundData = () => {
     if (staffMembersQuery.data) {
-      console.log(staffMembersQuery.data.data.list);
       const foundData = staffMembersQuery.data.data.list;
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
