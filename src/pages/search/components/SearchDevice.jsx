@@ -100,14 +100,15 @@ const SearchDevice = ({ searchParams }) => {
   };
 
   const checkingIfItemInWarehouseOrNot = () => {
-    // if (searchingQuery.data) {
-    const result = searchingQuery?.data?.data?.result ?? [];
+    if (searchingQuery.data) {
+    const result = searchingQuery?.data?.data?.result;
     if (result.some((item) => item.warehouse < 1)) {
       return fetchActiveAssignedDevicesPerEvent();
     }
     return setFoundDeviceData([]);
-    // }
+    }
   };
+
   useEffect(() => {
     const controller = new AbortController();
     imageDeviceQuery.refetch();
@@ -130,6 +131,8 @@ const SearchDevice = ({ searchParams }) => {
     }
     return foundDeviceData;
   };
+  console.log(sortAndRenderFoundData());
+
   const imagesDeviceFoundData = () => {
     if (imageDeviceQuery.data) {
       const foundData = imageDeviceQuery?.data?.data?.item;
@@ -138,6 +141,8 @@ const SearchDevice = ({ searchParams }) => {
     }
   };
 
+  console.log(imagesDeviceFoundData());
+  
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
@@ -395,7 +400,7 @@ const SearchDevice = ({ searchParams }) => {
                     serialNumber: item?.device?.serialNumber,
                     type: item?.device?.deviceType,
                     event: item?.eventSelected ?? item?.eventSelected[0],
-                    image: imagesDeviceFoundData()[item?.device?.deviceType]
+                    image: imagesDeviceFoundData()
                       ? imagesDeviceFoundData()[item?.device?.deviceType]?.at(
                           -1
                         )?.source
