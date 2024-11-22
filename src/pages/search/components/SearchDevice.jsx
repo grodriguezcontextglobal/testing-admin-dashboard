@@ -55,7 +55,7 @@ const SearchDevice = ({ searchParams }) => {
     const controller = new AbortController();
     if (searchParams) {
       setTimeout(() => {
-        return setLoadingSearchingResult(false);
+        setLoadingSearchingResult(false);
       }, 3500);
     }
     return () => {
@@ -141,6 +141,7 @@ const SearchDevice = ({ searchParams }) => {
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
+    imagesDeviceFoundData();
     return () => {
       controller.abort();
     };
@@ -163,7 +164,6 @@ const SearchDevice = ({ searchParams }) => {
       serialNumber: record.serialNumber,
       status: eventInventoryQuery.data.receiversInventory[0].status,
     };
-    console.log(formatDeviceSection);
     dispatch(
       onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile)
     );
@@ -389,16 +389,17 @@ const SearchDevice = ({ searchParams }) => {
           {sortAndRenderFoundData()?.length > 0 ? (
             sortAndRenderFoundData()?.map((item) => (
               <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
-                {" "}
                 <CardDeviceFound
                   key={item.id}
                   props={{
                     serialNumber: item?.device?.serialNumber,
                     type: item?.device?.deviceType,
                     event: item?.eventSelected ?? item?.eventSelected[0],
-                    image:
-                      imagesDeviceFoundData()[item?.device?.deviceType]?.at(-1)
-                        ?.source,
+                    image: imagesDeviceFoundData()[item?.device?.deviceType]
+                      ? imagesDeviceFoundData()[item?.device?.deviceType]?.at(
+                          -1
+                        )?.source
+                      : false,
                     data: item ?? [],
                   }}
                   fn={handleDeviceSearch}
