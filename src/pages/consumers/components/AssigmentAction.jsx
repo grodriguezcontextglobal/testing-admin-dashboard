@@ -22,7 +22,7 @@ const AssigmentAction = () => {
           //   setAssignDeviceEvent(true);
           // }}
         >
-          For an event
+          For an event.
         </Typography>
       ),
       key: 1,
@@ -36,7 +36,7 @@ const AssigmentAction = () => {
             setAssignDevice(true);
           }}
         >
-          As a lease.
+          For a lease.
         </Typography>
       ),
       key: 2,
