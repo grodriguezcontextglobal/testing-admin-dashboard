@@ -402,9 +402,11 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       },
     },
   ];
-  
+
   return (
     <Table
+      key={customerFormat.id}
+      id={customerFormat.id}
       columns={columns}
       expandable={{
         expandIcon: false,

@@ -42,8 +42,10 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
 
   const matchingEventInventoryForValueItems = (props) => {
     const { device } = rowRecord["eventInfo"];
-    return device?.filter((element) => element.group === props)?.at(-1)
-      ?.value ?? device[0]?.deviceValue;
+    return (
+      device?.filter((element) => element.group === props)?.at(-1)?.value ??
+      device[0]?.deviceValue
+    );
   };
   useEffect(() => {
     const controller = new AbortController();
@@ -343,6 +345,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     <>
       {contextHolder}
       <Table
+        id={rowRecord.key}
+        key={rowRecord.key}
         columns={columns}
         dataSource={dataRendering()}
         pagination={false}

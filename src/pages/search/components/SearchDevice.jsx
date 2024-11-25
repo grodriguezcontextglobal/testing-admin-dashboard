@@ -29,9 +29,8 @@ const SearchDevice = ({ searchParams }) => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
-
   const searchingQuery = useQuery({
-    queryKey: ["searchingQuery", searchParams],
+    queryKey: [`${searchParams}`],
     queryFn: () =>
       devitrakApi.get(
         `/db_company/search-inventory?company_id=${user.sqlInfo.company_id}&searchValue=${searchParams}`
@@ -53,6 +52,8 @@ const SearchDevice = ({ searchParams }) => {
 
   useEffect(() => {
     const controller = new AbortController();
+    imageDeviceQuery.refetch();
+    searchingQuery.refetch();
     if (searchParams) {
       setTimeout(() => {
         setLoadingSearchingResult(false);
@@ -61,7 +62,7 @@ const SearchDevice = ({ searchParams }) => {
     return () => {
       controller.abort();
     };
-  }, [searchParams]);
+  }, [searchParams, loadingSearchingResult]);
   const fetchActiveAssignedDevicesPerEvent = async () => {
     const rowEventsData = [...eventsPerAdmin.active];
     const result = new Map();
@@ -101,23 +102,21 @@ const SearchDevice = ({ searchParams }) => {
 
   const checkingIfItemInWarehouseOrNot = () => {
     if (searchingQuery.data) {
-    const result = searchingQuery?.data?.data?.result;
-    if (result.some((item) => item.warehouse < 1)) {
-      return fetchActiveAssignedDevicesPerEvent();
-    }
-    return setFoundDeviceData([]);
+      const result = searchingQuery?.data?.data?.result;
+      if (result.some((item) => item.warehouse < 1)) {
+        return fetchActiveAssignedDevicesPerEvent();
+      }
+      return setFoundDeviceData([]);
     }
   };
 
   useEffect(() => {
     const controller = new AbortController();
-    imageDeviceQuery.refetch();
-    searchingQuery.refetch();
     checkingIfItemInWarehouseOrNot();
     return () => {
       controller.abort();
     };
-  }, [searchParams, loadingSearchingResult]);
+  }, [searchParams, loadingSearchingResult, foundDeviceData[0]]);
 
   const sortAndRenderFoundData = () => {
     if (searchingQuery.data) {
@@ -131,7 +130,7 @@ const SearchDevice = ({ searchParams }) => {
     }
     return foundDeviceData;
   };
-  console.log(sortAndRenderFoundData());
+  // console.log(sortAndRenderFoundData());
 
   const imagesDeviceFoundData = () => {
     if (imageDeviceQuery.data) {
@@ -141,8 +140,8 @@ const SearchDevice = ({ searchParams }) => {
     }
   };
 
-  console.log(imagesDeviceFoundData());
-  
+  // console.log(imagesDeviceFoundData());
+
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
