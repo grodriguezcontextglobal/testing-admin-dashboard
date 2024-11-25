@@ -78,23 +78,23 @@ const MainPage = () => {
     }
     return setDataToRenderInComponent(returnValues);
   };
-  const checkingDevicesGivenInEvents = () => {
-    if (dataToRenderInComponent.active || dataToRenderInComponent.inactive) {
-      const data = [
-        ...dataToRenderInComponent.active,
-        ...dataToRenderInComponent.inactive,
-      ];
-      const result = new Set();
-      for (let item of data) {
-        result.add({
-          serialNumber: item?.serialNumber,
-          deviceType: item?.deviceType,
-        });
-      }
-      return Array.from(result);
-    }
-    return [];
-  };
+  // const checkingDevicesGivenInEvents = () => {
+  //   if (dataToRenderInComponent.active || dataToRenderInComponent.inactive) {
+  //     const data = [
+  //       ...dataToRenderInComponent.active,
+  //       ...dataToRenderInComponent.inactive,
+  //     ];
+  //     const result = new Set();
+  //     for (let item of data) {
+  //       result.add({
+  //         serialNumber: item?.serialNumber,
+  //         deviceType: item?.deviceType,
+  //       });
+  //     }
+  //     return Array.from(result);
+  //   }
+  //   return [];
+  // };
 
   return (
     <Grid
