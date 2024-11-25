@@ -30,9 +30,7 @@ import FooterExpandedRow from "./FooterExpandedRow";
 
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
-  // const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
-  // const { event } = useSelector((state) => state.event);
   const assignedDevicesQuery = useQuery({
     queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
@@ -43,14 +41,13 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   });
 
   const matchingEventInventoryForValueItems = (props) => {
-    const { deviceSetup } = rowRecord["eventInfo"];
-    return deviceSetup.filter((element) => element.group === props).at(-1)
-      .value;
+    const { device } = rowRecord["eventInfo"];
+    return device?.filter((element) => element.group === props)?.at(-1)
+      ?.value ?? device[0]?.deviceValue;
   };
   useEffect(() => {
     const controller = new AbortController();
     assignedDevicesQuery.refetch();
-    // eventsRelatedToTransactionQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -232,7 +229,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           key: data._id,
           serial_number: data?.device?.serialNumber,
           type: data?.device?.deviceType,
-          deviceValue:  matchingEventInventoryForValueItems(
+          deviceValue: matchingEventInventoryForValueItems(
             data?.device?.deviceType
           ),
           status: data?.device?.status,
@@ -247,7 +244,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   };
   useEffect(() => {
     dataRendering();
-  }, [assignedDevicesQuery.data]);
+  }, [assignedDevicesQuery.data, rowRecord.key]);
 
   const handleReturnSingleDevice = async (props) => {
     try {
@@ -266,7 +263,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         const deviceInPoolListQuery = await devitrakApi.post(
           "/receiver/receiver-pool-list",
           {
-            eventSelected: props.entireData.eventSelected[0],
+            eventSelected: props.entireData.eventSelected[0], //pass event id
             company: user.companyData.id,
             device: props.serial_number,
             type: props.type,
@@ -310,10 +307,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         }
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
+      return null;
     }
   };
   const handleLostSingleDevice = (props) => {
@@ -341,10 +335,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       );
       dispatch(onAddCustomer(props.entireData.userInfo));
     } catch (error) {
-      console.log(
-        "🚀 ~ file: StripeTransactionHistoryByUser.jsx:277 ~ handleReturnSingleDevice ~ error:",
-        error
-      );
+      return null;
     }
   };
 

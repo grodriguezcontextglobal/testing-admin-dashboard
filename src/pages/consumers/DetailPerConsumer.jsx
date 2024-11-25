@@ -34,12 +34,16 @@ const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
   const navigate = useNavigate();
   const rowRef = useRef();
   const customerInfoTemplate = {
     ...customer,
     id: customer.id ?? customer.uid,
   };
+  const active = eventsPerAdmin.active ?? [];
+  const complete = eventsPerAdmin.completed ?? [];
+  const events = [ ...active, ...complete]
 
   const transactionsConsumerQuery = useQuery({
     queryKey: ["transactionsPerCustomer", customerInfoTemplate.id],
@@ -47,9 +51,13 @@ const DetailPerConsumer = () => {
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
         "consumerInfo.email": customer.email,
+        "event_id":{$in:[ ...events.map(item => item.id)]},
+        'type':"event"
       }),
+    enabled: false,
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     transactionsConsumerQuery.refetch();
@@ -63,6 +71,7 @@ const DetailPerConsumer = () => {
     const result = new Map();
     if (transactionsConsumerQuery.data) {
       const dataPerEvent = transactionsConsumerQuery?.data?.data?.list;
+      console.log(dataPerEvent)
       for (let data of dataPerEvent) {
         if (!result.has(data.eventSelected)) {
           result.set(data.eventSelected, data);
@@ -78,7 +87,12 @@ const DetailPerConsumer = () => {
     return () => {
       controller.abort();
     };
-  }, [user.id, user.companyData.id, transactionsConsumerQuery.data, customer.email]);
+  }, [
+    user.id,
+    user.companyData.id,
+    transactionsConsumerQuery.data,
+    customer.email,
+  ]);
 
   if (transactionsConsumerQuery.isLoading)
     return (
@@ -97,13 +111,13 @@ const DetailPerConsumer = () => {
       if (result.length > 0) {
         let final = [];
         final = [...final, ...result.map((item) => item)];
-        // (note += item.notes)
         return final;
       }
       return [];
     };
     const renderingTransactions = () => {
       if (transactionsConsumerQuery.data) {
+        console.log(transactionsConsumerQuery.data.data.list)
         const dataPerEvent = transactionsConsumerQuery.data.data.list;
         return dataPerEvent.length;
       }

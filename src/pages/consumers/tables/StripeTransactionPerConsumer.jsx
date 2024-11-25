@@ -58,28 +58,17 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   const retrievePaymentIntentInfo = (props) => {
     return setPaymentIntentInfoRetrieved(props);
   };
-  //refactoring -->>
-  const avoidDuplicatedEventsPerAdmin = () => {
-    const result = new Map();
+
+  const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
     const active = eventsPerAdmin.active ?? [];
     const complete = eventsPerAdmin.completed ?? [];
     const events = [...active, ...complete];
-    for (let data of events) {
-      if (!result.has(data.id)) {
-        result.set(data.id, JSON.stringify(data));
-      }
-    }
-    return [...result.values()];
-  };
-
-  const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
-    const eventsId = [
-      ...avoidDuplicatedEventsPerAdmin().map((item) => JSON.parse(item).id),
-    ];
+    const eventsId = [...events.map((item) => item.id)];
     const allTransactionFetching = await devitrakApi.post(
       "/transaction/transaction",
       {
-        "consumerInfo.id": customer.id ?? customer.uid,
+        company: user.companyData.id,
+        "consumerInfo.email": customer.email,
         event_id: { $in: eventsId },
       }
     );
@@ -138,7 +127,8 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [customer.id, customer.uid]);
+
   const reformedSourceData = () => {
     const result = new Set();
     responsedData.forEach((value) => {
@@ -172,14 +162,10 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
 
   const finalDataToDisplayIncludeSearchFN = () => {
     if (searchValue?.length > 0 && addingKeysToExpandRow()?.length > 0) {
-      return addingKeysToExpandRow().filter(
-        (element) =>
-          String(element.eventSelected)
-            .toLowerCase()
-            .includes(String(searchValue).toLowerCase()) ||
-          String(element.paymentIntent)
-            .toLowerCase()
-            .includes(String(searchValue).toLowerCase())
+      return addingKeysToExpandRow().filter((element) =>
+        JSON.stringify(element)
+          .toLowerCase()
+          .includes(searchValue.toLowerCase())
       );
     }
     return addingKeysToExpandRow();
@@ -216,6 +202,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       return "flex";
     }
   };
+
   const columns = [
     {
       title: "Event",
@@ -415,6 +402,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
       },
     },
   ];
+  
   return (
     <Table
       columns={columns}
