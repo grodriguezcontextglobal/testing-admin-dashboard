@@ -4,6 +4,8 @@ import { Badge, Button, Space, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { checkArray } from "../../../components/utils/checkArray";
+import { formatDate } from "../../../components/utils/dateFormat";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import {
   onAddEventData,
@@ -24,13 +26,20 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
 
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
+  console.log(rowRecord);
   const [openModal, setOpenModal] = useState(false);
+  const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
+    useState(false);
+    const [infoNeededToBeRenderedInTable, setInfoNeededToBeRenderedInTable] =
+    useState([]);
   const { user } = useSelector((state) => state.admin);
+  const { customer } = useSelector((state) => state.customer);
   const assignedDevicesQuery = useQuery({
     queryKey: ["assignedDevicesByTransaction", rowRecord.key],
     queryFn: () =>
@@ -41,7 +50,11 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   });
 
   const matchingEventInventoryForValueItems = (props) => {
-    const { device } = rowRecord["eventInfo"];
+    const { device, type } = checkArray(rowRecord["eventInfo"]);
+    if (type === "lease") {
+      return device?.filter((element) => element.group === props)?.at(-1)
+        ?.value;
+    }
     return (
       device?.filter((element) => element.group === props)?.at(-1)?.value ??
       device[0]?.deviceValue
@@ -74,6 +87,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       return bg3;
     }
   };
+
   const columns = [
     {
       title: "Device name",
@@ -159,53 +173,26 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       title: "Actions",
       key: "operation",
       render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: `${
-              typeof record.status !== "string" && record.status && "flex"
-            }`,
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            onClick={() => handleReturnSingleDevice(record)}
+        console.log("record in expanded row", record),
+        (
+          <Space
+            size="middle"
             style={{
-              ...BlueButton,
-              display: renderingTernary(
-                record.status,
-                "string",
-                "none",
-                "flex",
-                "none"
-              ),
+              display: `${
+                typeof record.status !== "string" && record.status && "flex"
+              }`,
+              justifyContent: "flex-end",
+              alignItems: "center",
             }}
           >
-            <p style={BlueButtonText}>Mark as returned</p>
-          </Button>
-          <Button
-            // disabled
-            onClick={() => handleLostSingleDevice(record)}
-            style={{
-              ...GrayButton,
-              display: renderingTernary(
-                record.status,
-                "string",
-                "none",
-                "flex",
-                "none"
-              ),
-            }}
-          >
-            <p
+            <Button
+              onClick={() =>
+                record.transactionData.type === "lease"
+                  ? handleReturnItemFromLeaseTransaction(record)
+                  : handleReturnSingleDevice(record)
+              }
               style={{
-                ...GrayButtonText,
-                color: `${
-                  record.status
-                    ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
-                }`,
+                ...BlueButton,
                 display: renderingTernary(
                   record.status,
                   "string",
@@ -215,10 +202,48 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
                 ),
               }}
             >
-              Mark as lost
-            </p>
-          </Button>
-        </Space>
+              {record.transactionData.type === "lease" ? (
+                <p style={BlueButtonText}>Mark as ended lease</p>
+              ) : (
+                <p style={BlueButtonText}>Mark as returned</p>
+              )}
+            </Button>
+            <Button
+              // disabled
+              onClick={() => handleLostSingleDevice(record)}
+              style={{
+                ...GrayButton,
+                display: renderingTernary(
+                  record.status,
+                  "string",
+                  "none",
+                  "flex",
+                  "none"
+                ),
+              }}
+            >
+              <p
+                style={{
+                  ...GrayButtonText,
+                  color: `${
+                    record.status
+                      ? GrayButtonText.color
+                      : "var(--disabled0gray-button-text)"
+                  }`,
+                  display: renderingTernary(
+                    record.status,
+                    "string",
+                    "none",
+                    "flex",
+                    "none"
+                  ),
+                }}
+              >
+                Mark as lost
+              </p>
+            </Button>
+          </Space>
+        )
       ),
     },
   ];
@@ -272,8 +297,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           }
         );
         if (deviceInPoolListQuery.data) {
-          // const dateString = new Date().toString();
-          // const dateRef = dateString.split(" ");
           const deviceInPoolProfile = {
             id: deviceInPoolListQuery.data.receiversInventory[0].id,
             activity: false,
@@ -284,24 +307,25 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             deviceInPoolProfile
           );
           if (returningInPool.data) {
-            // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-            // const emailStructure = new EmailStructureUpdateItem(
-            //   customer.name,
-            //   customer.lastName,
-            //   customer.email,
-            //   props.serial_number,
-            //   props.type,
-            //   event.eventInfoDetail.eventName,
-            //   event.company,
-            //   rowRecord.paymentIntent,
-            //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //   dateRef[4],
-            //   linkStructure
-            // );
-            // await devitrakApi.post(
-            //   "/nodemailer/confirm-returned-device-notification",
-            //   emailStructure.render()
-            // );
+            const checkItemDetails = await devitrakApi.post(
+              "/db_item/consulting-item",
+              {
+                serial_number: props.serial_number,
+                item_group: props.type,
+                company_id: user.sqlInfo.company_id,
+              }
+            );
+            if (checkItemDetails.data.ok) {
+              await devitrakApi.post("/db_event/returning-item", {
+                warehouse: 1,
+                status: "Operational",
+                update_at: formatDate(new Date()),
+                serial_number: props.serial_number,
+                category_name: checkItemDetails.data.items[0].category_name,
+                item_group: props.type,
+                company_id: user.sqlInfo.company_id,
+              });
+            }
             await assignedDevicesQuery.refetch();
             await refetching();
             return success();
@@ -312,6 +336,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       return null;
     }
   };
+
   const handleLostSingleDevice = (props) => {
     try {
       setOpenModal(true);
@@ -341,6 +366,45 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   };
 
+  const handleReturnItemFromLeaseTransaction = async (props) => {
+    setOpenReturnDeviceStaffModal(true);
+    const sqlItemInfo = await devitrakApi.post("/db_item/consulting-item", {
+      serial_number: props.serial_number,
+      item_group: props.type,
+      company_id: user.sqlInfo.company_id,
+    });
+
+    const sqlConsumerInfo = await devitrakApi.post(
+      "/db_consumer/consulting-consumer",
+      {
+        email: customer.email,
+      }
+    );
+    const sqlConsumerLeaseInfo = await devitrakApi.post(
+      "/db_lease/consulting-consumer-lease",
+      {
+        consumer_member_id: sqlConsumerInfo.data.consumer[0].consumer_id,
+        company_id: user.sqlInfo.company_id,
+        device_id: sqlItemInfo.data.items[0].item_id,
+        subscription_current_in_use: 1,
+      }
+    );
+    if (
+      sqlItemInfo.data.ok &&
+      sqlConsumerInfo.data.ok &&
+      sqlConsumerLeaseInfo.data.ok
+    ) {
+      const template = {
+        ...sqlConsumerInfo.data.consumer[0],
+        ...sqlConsumerLeaseInfo.data.lease[0],
+        ...sqlItemInfo.data.items[0],
+        item_id_info: sqlItemInfo.data.items[0],
+        rowRecord: rowRecord,
+      };
+      return setInfoNeededToBeRenderedInTable(template);
+    }
+  };
+
   return (
     <>
       {contextHolder}
@@ -363,6 +427,14 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       />
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
+      )}
+      {openReturnDeviceStaffModal && (
+        <ModalReturnItem
+          openReturnDeviceStaffModal={openReturnDeviceStaffModal}
+          setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
+          deviceInfo={infoNeededToBeRenderedInTable}
+          returnFunction={handleReturnSingleDevice}
+        />
       )}
     </>
   );
