@@ -43,11 +43,20 @@ export default function TablesConsumers({
   const eventsInfo = useQuery({
     queryKey: ["allEventsInfoPerCompanyList"],
     queryFn: () =>
-      devitrakApi.post("/event/event-list", {
-        company: user.company,
-      }),
+      devitrakApi.get(
+        `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
+      ),
     refetchOnMount: false,
   });
+  // const leaseInfo = useQuery({
+  //   queryKey: ["allLeaseInfoPerCompanyList"],
+  //   queryFn: () =>
+  //     devitrakApi.get(
+  //       `/event/event-list-per-company?company=${user.companyData.company_name}&type=lease`
+  //     ),
+  //   refetchOnMount: false,
+  // });
+
   const listOfEventsPerAdmin = () => {
     const active = eventsPerAdmin.active ?? [];
     const completed = eventsPerAdmin.completed ?? [];
@@ -100,6 +109,8 @@ export default function TablesConsumers({
   useEffect(() => {
     const controller = new AbortController();
     consumersPerAllowEvents();
+    eventsInfo.refetch();
+
     return () => {
       controller.abort();
     };
@@ -144,58 +155,76 @@ export default function TablesConsumers({
     }
     return events;
   };
+
   const currentStatus = (props) => {
     const grouping = groupBy(props, "device.status");
-    if (grouping[true]) return true;
-    return false;
+    return grouping[true] ? grouping[true].length > 0 : false;
   };
   const checkingActiveEventForActiveConsumer = (props) => {
-    const result = [false];
+    let result = false;
     for (let [key, value] of sortEventsDataPerCompany()) {
       if (props.some((element) => element === key)) {
-        if (value.active) return (result[0] = value.active);
+        if (value.active) return (result = value.active);
       }
     }
-    return result[0];
+    return result;
+  };
+
+  const renderingTransactionsPerEventPerConsumer = async () => {
+    const fetching = await devitrakApi.post(
+      "/receiver/receiver-assigned-list",
+      {
+        user: {
+          $in: [
+            ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
+          ],
+        },
+        company: user.companyData.id,
+      }
+    );
+    if (fetching.data.ok) {
+      const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
+      return groupingbyUser;
+    }
+    return [];
   };
   const dataToRenderInTable = async () => {
     const result = new Set();
+    const existingData = await renderingTransactionsPerEventPerConsumer();
     for (let data of getInfoNeededToBeRenderedInTable()) {
       const currentActiveStatus = await checkingActiveEventForActiveConsumer(
-        data.entireData.eventSelected
+        data.entireData.event_providers
       );
-      const fetching = await devitrakApi.post(
-        "/receiver/receiver-assigned-users-list",
-        {
-          user: data.email,
-          company: user.companyData.id,
-        }
-      );
-      if (fetching.data.ok) {
-        result.add({
-          ...data,
-          currentActivity: fetching.data.listOfReceivers,
-          status: currentStatus(fetching.data.listOfReceivers),
-          currentConsumerActive: currentActiveStatus,
-        });
-      }
+      result.add({
+        ...data,
+        currentActivity: existingData[data.email] ?? [],
+        status: currentStatus(existingData[data.email]) ?? [],
+        currentConsumerActive: currentActiveStatus,
+      });
       await getActiveAndInactiveCount(Array.from(result));
     }
     setIsLoading(false);
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
+  const timerTrigger = setTimeout(() => {
+    dataToRenderInTable();
+  }, 1500);
+
   useEffect(() => {
     const controller = new AbortController();
     dataToRenderInTable();
-    eventsInfo.refetch();
     return () => {
       controller.abort();
+      clearTimeout(timerTrigger);
     };
   }, [
     Array.isArray(getInfoNeededToBeRenderedInTable()),
     getInfoNeededToBeRenderedInTable()?.length,
+    timerTrigger
   ]);
+
+  clearTimeout(timerTrigger);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -205,6 +234,7 @@ export default function TablesConsumers({
     alignSelf: "stretch",
     fontWeight: 500,
   };
+
   const renderingRowStyle = {
     ...TextFontsize18LineHeight28,
     fontSize: "12px",
@@ -370,6 +400,7 @@ export default function TablesConsumers({
       ),
     },
   ];
+  
   return (
     <>
       {!isLoading ? (
