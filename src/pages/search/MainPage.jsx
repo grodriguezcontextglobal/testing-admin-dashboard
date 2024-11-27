@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useLocation } from "react-router-dom";
 import HeaderSearch from "./components/HeaderSearch";
 import SearchConsumer from "./components/SearchConsumer";
@@ -18,8 +18,8 @@ const SearchMainPage = () => {
     Devices: 0,
     Events: 0,
   }); //'Posts': 0,
+  const [searchParams, setSearchParams] = useState("");
   const location = useLocation();
-  const searchParams = location.search.slice(8);
   const styleSection = {
     display: "flex",
     justifyContent: "flex-start",
@@ -30,7 +30,9 @@ const SearchMainPage = () => {
     width: "100%",
     margin: "0.5rem 0",
   };
-
+  useEffect(() => {
+    return setSearchParams(location.search.slice(8).replaceAll("%20", " "));
+  }, [location.key, location.search, searchParams]);
   const searching_consumer = useId();
   const searching_staff = useId();
   const searching_device = useId();
@@ -50,6 +52,8 @@ const SearchMainPage = () => {
       justifyContent={"center"}
       alignItems={"center"}
       container
+      id={location.key}
+      key={location.key}
     >
       <HeaderSearch
         countingResults={sumOfResultDisplayed()}
