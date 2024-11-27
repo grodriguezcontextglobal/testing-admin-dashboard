@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Avatar, Badge, Table } from "antd";
+import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,14 +21,13 @@ import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
-const StripeTransactionPerConsumer = ({ searchValue }) => {
+const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.customer);
   const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
     {}
   );
-  const [responsedData, setResponsedData] = useState([]);
+  const [responseData, setResponseData] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const customerFormat = {
@@ -36,91 +35,71 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     id: customer.id ?? customer.uid,
   };
 
-  const leaseEventTransaction = useQuery({
-    QueryKey: ["leaseEventTransaction", customerFormat.id],
-    queryFn: () =>
-      devitrakApi.post("/receiver/receiver-assigned-list", {
-        company: user.companyData.id,
-        eventSelected: customerFormat.id,
-        type: "lease",
-      }),
-    refetchOnMount: false,
-  });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    leaseEventTransaction.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   const retrievePaymentIntentInfo = (props) => {
     return setPaymentIntentInfoRetrieved(props);
   };
 
   const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
-    const active = eventsPerAdmin.active ?? [];
-    const complete = eventsPerAdmin.completed ?? [];
-    const events = [...active, ...complete];
-    const eventsId = [...events.map((item) => item.id)];
-    const allTransactionFetching = await devitrakApi.post(
-      "/transaction/transaction",
-      {
-        company: user.companyData.id,
-        "consumerInfo.email": customer.email,
-        event_id: { $in: eventsId },
-      }
-    );
-    if (allTransactionFetching.data.ok) return allTransactionFetching.data.list;
+    return data;
   };
 
   const fetchingDataPerAllowed = async () => {
     const allTransactionFetching =
       await fetchingAllTransactionPerConsumerRelatedToEvent();
     const result = new Map();
-    if (allTransactionFetching.length > 0 && leaseEventTransaction.data) {
-      const leasingData = leaseEventTransaction.data.data.list ?? [];
-      const blendingData = [...allTransactionFetching, ...leasingData];
-      for (let data of blendingData) {
-        const parsing = typeof data === "string" ? JSON.parse(data) : data; ///stringifyData(data);
-        if (parsing.device[0].deviceNeeded > 0) {
-          const respo = await devitrakApi.post(
-            "/receiver/receiver-assigned-list",
-            {
-              company: user.companyData.id,
-              user: customer.email,
-              eventSelected: parsing.eventSelected,
-            }
-          );
-          if (respo.data) {
-            const inventory = respo.data.listOfReceivers;
-            if (inventory.length > 0) {
-              for (let data of inventory) {
-                if (!result.has(data.paymentIntent)) {
-                  result.set(data.paymentIntent, [
-                    { ...data, eventInfo: parsing },
-                  ]);
-                } else {
-                  result.set(data.paymentIntent, [
-                    ...result.get(data.paymentIntent),
-                    { ...data, eventInfo: parsing },
-                  ]);
-                }
-              }
-            }
-          }
-        } else {
-          result.set(parsing.paymentIntent, [{ ...parsing }]);
-        }
+    const groupedData = groupBy(allTransactionFetching, "paymentIntent");
+    for (let [key, value] of Object.entries(groupedData)) {
+      const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
+        paymentIntent: key,
+      });
+      const transactionData = respo?.data?.listOfReceivers;
+      if (!result.has(key)) {
+        result.set(key, [
+          {
+            eventSelected: value[0]?.eventSelected,
+            paymentIntent: key,
+            device: transactionData?.length,
+            status: Array.isArray(transactionData[0]?.device)
+              ? 0
+              : transactionData?.reduce(
+                  (acc, { device }) =>
+                    acc +
+                    (device?.status === false || device?.status === "Lost"),
+                  0
+                ),
+            eventInfo: value,
+            extra_data: transactionData ?? [],
+          },
+        ]);
+      } else {
+        result.set(key, [
+          ...result.get(key),
+          {
+            eventSelected: value[0]?.eventSelected,
+            paymentIntent: key,
+            device: transactionData?.length,
+            status: Array.isArray(transactionData[0]?.device)
+              ? 0
+              : transactionData?.reduce(
+                  (acc, { device }) =>
+                    acc +
+                    (device?.status === false || device?.status === "Lost"),
+                  0
+                ),
+            eventInfo: value,
+            extra_data: transactionData ?? [],
+          },
+        ]);
       }
     }
-    return setResponsedData(result);
+    let final = [...result.values().map((item) => item)];
+    return setResponseData(final);
   };
 
   const refetchingAfterReturnDeviceInRow = () => {
     return fetchingDataPerAllowed();
   };
+
   useEffect(() => {
     const controller = new AbortController();
     fetchingDataPerAllowed();
@@ -131,19 +110,14 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
 
   const reformedSourceData = () => {
     const result = new Set();
-    responsedData.forEach((value) => {
+    responseData.forEach((value) => {
       result.add({
         eventSelected: value[0]?.eventSelected,
         paymentIntent: value[0]?.paymentIntent,
-        device: value.length,
-        status: Array.isArray(value[0].device)
-          ? 0
-          : value.reduce(
-              (acc, { device }) =>
-                acc + (device.status === false || device.status === "Lost"),
-              0
-            ),
+        device: value[0]?.device,
+        status: value[0]?.device > 0 ? value[0]?.status : null,
         eventInfo: value[0].eventInfo,
+        type: value[0].eventInfo[0].type,
       });
     });
     return Array.from(result);
@@ -170,6 +144,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
     }
     return addingKeysToExpandRow();
   };
+
   const moreDetailFn = async (record) => {
     const eventListQuery = await devitrakApi.post("/event/event-list", {
       company: user.company,
@@ -190,11 +165,11 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
   };
 
   const renderingOptionsBasedOnPaymentIntentStatus = (paymentIntent) => {
-    if (paymentIntent.length < 16) {
+    if (paymentIntent?.length < 16) {
       return "none";
     } else if (
-      (paymentIntent.length > 15 && String(paymentIntent).includes("cash")) ||
-      (paymentIntent.length > 15 &&
+      (paymentIntent?.length > 15 && String(paymentIntent).includes("cash")) ||
+      (paymentIntent?.length > 15 &&
         paymentIntentInfoRetrieved.status !== "requires_capture")
     ) {
       return "none";
@@ -306,7 +281,68 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                     lineHeight: "18px",
                   }}
                 >
-                  {record.status === record.device ? "Returned" : "Active"}
+                  {record.status !== null
+                    ? record?.status === record?.device
+                      ? "Returned"
+                      : "Active"
+                    : "Service"}
+                </p>
+              }
+            />
+          </Badge>
+        </p>
+      ),
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      responsive: ["lg"],
+      render: (type, record) => (
+        <p style={Subtitle}>
+          <Badge
+            style={{
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              borderRadius: "16px",
+              background: `${
+                type === "event"
+                  ? "var(--Primary-50, #F9F5FF)"
+                  : "var(--Success-50, #ECFDF3)"
+              }`,
+              mixBlendMode: "multiply",
+            }}
+          >
+            <Chip
+              style={{
+                backgroundColor: `${
+                  type === "event"
+                    ? "var(--Primary-50, #F9F5FF)"
+                    : "var(--Success-50, #ECFDF3)"
+                }`,
+              }}
+              label={
+                <p
+                  style={{
+                    color: `${
+                      type === "event"
+                        ? "var(--Primary-700, #6941C6)"
+                        : "var(--success-700, #027A48)"
+                    }`,
+                    fontFamily: "Inter",
+                    fontSize: "12px",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    lineHeight: "18px",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {type === "event"
+                    ? record.device > 0
+                      ? type
+                      : `${type} | Service`
+                    : "Lease"}
                 </p>
               }
             />
@@ -340,7 +376,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                 // background: "transparent",
                 outline: "none",
                 display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
                     : "flex"
                 }`,
@@ -351,7 +387,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                   ...DangerButtonText,
                   display: `${
                     checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1].length < 13
+                    checkPaymentID[1]?.length < 13
                       ? "none"
                       : "flex"
                   }`,
@@ -369,7 +405,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                 // background: "transparent",
                 outline: "none",
                 display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1].length < 13
+                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
                     : "flex"
                 }`,
@@ -380,7 +416,7 @@ const StripeTransactionPerConsumer = ({ searchValue }) => {
                   ...BlueButtonText,
                   display: `${
                     checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1].length < 13
+                    checkPaymentID[1]?.length < 13
                       ? "none"
                       : "flex"
                   }`,
