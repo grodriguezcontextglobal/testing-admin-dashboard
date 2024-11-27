@@ -28,7 +28,7 @@ const SearchDevice = ({ searchParams }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
+  const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
   const searchingQuery = useQuery({
     queryKey: [`${searchParams}`],
     queryFn: () =>
@@ -50,20 +50,21 @@ const SearchDevice = ({ searchParams }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    imageDeviceQuery.refetch();
-    searchingQuery.refetch();
-    if (searchParams) {
-      setTimeout(() => {
-        setLoadingSearchingResult(false);
-      }, 3500);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [searchParams, loadingSearchingResult]);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   imageDeviceQuery.refetch();
+  //   searchingQuery.refetch();
+  //   if (searchParams) {
+  //     setTimeout(() => {
+  //       setLoadingSearchingResult(false);
+  //     }, 3500);
+  //   }
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, [searchParams, loadingSearchingResult]);
   const fetchActiveAssignedDevicesPerEvent = async () => {
+    setLoadingSearchingResult(true);
     const rowEventsData = [...eventsPerAdmin.active];
     const result = new Map();
     const eventsName = [
@@ -97,6 +98,7 @@ const SearchDevice = ({ searchParams }) => {
     for (let [, value] of result) {
       finalResult.add(value);
     }
+    setLoadingSearchingResult(false);
     return setFoundDeviceData(Array.from(finalResult));
   };
 
