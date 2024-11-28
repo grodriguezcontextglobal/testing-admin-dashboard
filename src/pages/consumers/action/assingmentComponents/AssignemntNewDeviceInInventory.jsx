@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -37,6 +37,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../../styles/global/reactInput.css";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
+import { nanoid } from "@reduxjs/toolkit";
+import DeviceAssigned from "../../../../classes/deviceAssigned";
 
 const options = [
   { value: "Select an option" },
@@ -77,6 +79,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       }),
     refetchOnMount: false,
   });
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -85,6 +88,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       }),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     companiesQuery.refetch();
@@ -93,6 +97,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       controller.abort();
     };
   }, []);
+
   const retrieveItemOptions = () => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
@@ -119,6 +124,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   const onChange = (value) => {
     return setValueSelection(value);
   };
+
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -129,6 +135,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
     }
     return result;
   };
+
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(selectedItem)) {
@@ -157,13 +164,142 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         staff_admin_id: user.sqlMemberInfo.staff_id,
         company_id: user.sqlInfo.company_id,
         subscription_expected_return_data: formatDate(new Date()),
-        subscription_initial_date: new Date().getTime(),
+        subscription_initial_date: formatDate(new Date()),
         location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
         consumer_member_id: checkArray(staffMember.data.consumer).consumer_id,
         device_id: data.item_id,
       });
     }
   };
+
+  const reference = useRef(null);
+  const transactionDeviceAdded = async (props) => {
+    const id = nanoid(12);
+    const max = 918273645;
+    const transactionGenerated = "pi_" + id;
+    reference.current = transactionGenerated;
+    const newTransaction = await devitrakApi.post(
+      "/stripe/stripe-transaction-no-regular-user",
+      {
+        paymentIntent: transactionGenerated,
+        clientSecret: 1 + customer.uid + Math.floor(Math.random() * max),
+        device: 1,
+        user: customer.uid,
+        eventSelected: customer.id ?? customer.uid,
+        provider: user.company,
+        company: user.companyData.id,
+        type: "lease",
+      }
+    );
+    if (newTransaction.data) {
+      const transactionProfile = {
+        paymentIntent: reference.current,
+        clientSecret:
+          newTransaction.data.stripeTransaction.clientSecret ?? "unknown",
+        device: {
+          serialNumber: props.deviceInfo[0].serial_number,
+          deviceType: props.deviceInfo[0].item_group,
+          status: true,
+        },
+        consumerInfo: customer,
+        provider: user.company,
+        eventSelected: customer.id ?? customer.uid,
+        event_id: customer.id ?? customer.uid,
+        date: new Date(),
+        company: user.companyData.id,
+        type: "lease",
+      };
+      await devitrakApi.post("/stripe/save-transaction", transactionProfile);
+      const deviceFormat = {
+        serialNumber: props.deviceInfo[0].serial_number,
+        deviceType: props.deviceInfo[0].item_group,
+        status: true,
+      };
+      const transaction = new DeviceAssigned(
+        transactionGenerated,
+        deviceFormat,
+        customer.email,
+        true,
+        customer.id ?? customer.uid,
+        user.company,
+        new Date().getTime(),
+        user.companyData.id
+      );
+      await devitrakApi.post("/receiver/receiver-assignation", {
+        ...transaction.render(),
+        type: "lease",
+      });
+    }
+  };
+
+  const createEventNoSQLDatabase = async (props) => {
+    const eventLink = customer.name.replace(/ /g, "%20");
+    const newEventInfo = await devitrakApi.post("/event/create-event", {
+      user: user.email,
+      company: user.company,
+      subscription: [],
+      eventInfoDetail: {
+        address: `${props.address.street} ${props.address.city} ${props.address.state} ${props.address.zip}`,
+        eventName: customer.id ?? customer.uid,
+        eventLocation: props.address.city,
+        building: customer.id ?? customer.uid,
+        floor: customer.id ?? customer.uid,
+        phoneNumber: [customer.phoneNumber],
+        merchant: true,
+        dateBegin: new Date().toString(),
+        dateEnd: new Date().toString(),
+        dateBeginTime: new Date().getTime(),
+      },
+      staff: {
+        adminUser: [
+          {
+            firstName: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            role: "Administrator",
+          },
+        ],
+        headsetAttendees: [],
+      },
+      deviceSetup: [
+        {
+          category: props.deviceInfo[0].category_name,
+          group: props.deviceInfo[0].item_group,
+          value: props.deviceInfo[0].cost,
+          description: props.deviceInfo[0].descript_item,
+          company: props.deviceInfo[0].company,
+          quantity: props.quantity,
+          ownership: props.deviceInfo[0].ownership,
+          createdBy: user.email,
+          key: props.deviceInfo[0].category_name,
+          dateCreated: new Date().toString(),
+          resume: props.deviceInfo[0].descript_item,
+          consumerUses: false,
+          startingNumber: props.deviceInfo[0].serial_number,
+          endingNumber: props.deviceInfo.at(-1).serial_number,
+          existing: true,
+        },
+      ],
+      extraServicesNeeded: false,
+      extraServices: [],
+      active: true,
+      contactInfo: {
+        email: customer.email,
+        phone: [customer.phoneNumber],
+        name: customer.name,
+      },
+      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+      type: "lease",
+    });
+    if (newEventInfo.data.ok) {
+      const eventId = checkArray(newEventInfo.data.event);
+      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      });
+      await transactionDeviceAdded(props);
+    }
+  };
+
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
@@ -192,12 +328,13 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
+      const qty = (Number(data.max_serial_number) - Number(data.min_serial_number)) + 1
       await devitrakApi.post("/db_event/event_device", {
         event_id: newEventInfo.insertId,
         item_group: data.item_group,
         category_name: data.category_name,
-        min_serial_number: data.min_serial_number,
-        max_serial_number: data.max_serial_number,
+        startingNumber: data.min_serial_number,
+        quantity: qty,
       });
     }
   };
@@ -225,9 +362,14 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       queryKey: ["ItemsInventoryCheckingQuery"],
       exact: true,
     });
+    queryClient.invalidateQueries({
+      queryKey: ["/transactionsPerCustomer", customer.id],
+      exact: true,
+    });
 
     await closeModal();
   };
+
   const option1 = async (props) => {
     await createEvent(props.template);
     const deviceInfo = props.deviceInfo; //*array of existing devices in sql db
@@ -241,9 +383,15 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           max_serial_number: deviceInfo[0].serial_number,
         },
       ]);
+      await createEventNoSQLDatabase({
+        address: props.template,
+        deviceInfo: deviceInfo,
+        quantity: 1,
+      });
       await closingProcess();
     }
   };
+
   const retrieveDataNewAddedItem = async (props) => {
     const newAddedItem = await devitrakApi.post("/db_item/consulting-item", {
       company_id: user.sqlInfo.company_id,
@@ -326,11 +474,13 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
+            extra_serial_number: JSON.stringify([]),
             company_id: user.sqlInfo.company_id,
             return_date: `${
               valueSelection === "Rent" ? formatDate(returningDate) : null
             }`,
           });
+
           if (respNewItem.data.ok) {
             await retrieveDataNewAddedItem({
               ...data,
@@ -355,11 +505,13 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
+          extra_serial_number: JSON.stringify([]),
           company_id: user.sqlInfo.company_id,
           return_date: `${
             valueSelection === "Rent" ? formatDate(returningDate) : null
           }`,
         });
+
         if (respNewItem.data.ok) {
           await retrieveDataNewAddedItem({
             ...data,
@@ -409,6 +561,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       </>
     );
   };
+
   return (
     <Grid
       display={"flex"}

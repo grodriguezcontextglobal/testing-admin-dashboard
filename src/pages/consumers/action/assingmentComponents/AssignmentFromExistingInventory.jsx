@@ -134,6 +134,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       message: msg,
     });
   };
+
   const handleAddingNewItemToInventoryEvent = (data) => {
     setSelectedItem([
       ...selectedItem,
@@ -227,13 +228,12 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         customer.id ?? customer.uid,
         user.company,
         new Date().getTime(),
-        user.companyData.id,
-
+        user.companyData.id
       );
-      await devitrakApi.post(
-        "/receiver/receiver-assignation",
-        {...transaction.render(), type:"lease"}
-      );
+      await devitrakApi.post("/receiver/receiver-assignation", {
+        ...transaction.render(),
+        type: "lease",
+      });
     }
   };
   const createEventNoSQLDatabase = async (props) => {
@@ -293,6 +293,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         name: customer.name,
       },
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+      type: "lease",
     });
     if (newEventInfo.data.ok) {
       const eventId = checkArray(newEventInfo.data.event);
@@ -325,7 +326,8 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const addDeviceToEvent = async (props) => {
@@ -348,6 +350,10 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     });
     queryClient.invalidateQueries({
       queryKey: ["ItemsInventoryCheckingQuery"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["/transactionsPerCustomer", customer.id],
       exact: true,
     });
   };
