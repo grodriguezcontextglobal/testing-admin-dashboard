@@ -79,20 +79,42 @@ const AllInventoryEventForCustomerOnly = ({
             </div>
           </p>
         </button>
-
-        <button
-          onClick={() => setEditingInventory(true)}
+        <div
           style={{
-            ...BlueButton,
-            width: "fit-content",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: "10px",
             display: user.role === "4" ? "none" : "flex",
             margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
           }}
         >
-          <p style={{ ...BlueButtonText }}>Update inventory</p>
-        </button>
+          <button
+            style={{
+              ...BlueButton,
+              width: "fit-content",
+              justifyContent: "space-between",
+              alignItems: "center",
+              display: user.role === "4" ? "none" : "flex",
+              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
+            }}
+          >
+            <p style={{ ...BlueButtonText }}>Update services</p>
+          </button>
+
+          <button
+            onClick={() => setEditingInventory(true)}
+            style={{
+              ...BlueButton,
+              width: "fit-content",
+              justifyContent: "space-between",
+              alignItems: "center",
+              display: user.role === "4" ? "none" : "flex",
+              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
+            }}
+          >
+            <p style={{ ...BlueButtonText }}>Update inventory</p>
+          </button>
+        </div>
       </Grid>
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
         <DisplayAllItemsSetInventoryEvent />
