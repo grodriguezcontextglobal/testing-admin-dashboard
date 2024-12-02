@@ -1,9 +1,9 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { checkArray } from "../../../components/utils/checkArray";
@@ -23,23 +23,28 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
-const SearchDevice = ({ searchParams }) => {
+const SearchDevice = () => {
+  const location = useLocation();
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
   const searchingQuery = useQuery({
-    queryKey: [`${searchParams}`],
+    queryKey: [`${location.search.split("?search=")[1]}`],
     queryFn: () =>
       devitrakApi.get(
-        `/db_company/search-inventory?company_id=${user.sqlInfo.company_id}&searchValue=${searchParams}`
+        `/db_company/search-inventory?company_id=${
+          user.sqlInfo.company_id
+        }&searchValue=${location.search.split("?search=")[1]}`
       ),
     refetchOnMount: false,
   });
-
   const imageDeviceQuery = useQuery({
-    queryKey: ["imageDeviceList", `image-${searchParams}`],
+    queryKey: [
+      "imageDeviceList",
+      `image-${location.search.split("?search=")[1]}`,
+    ],
     queryFn: () =>
       devitrakApi.post("/image/images", {
         company: user.company,
@@ -49,21 +54,7 @@ const SearchDevice = ({ searchParams }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   imageDeviceQuery.refetch();
-  //   searchingQuery.refetch();
-  //   if (searchParams) {
-  //     setTimeout(() => {
-  //       setLoadingSearchingResult(false);
-  //     }, 3500);
-  //   }
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [searchParams, loadingSearchingResult]);
-  const fetchActiveAssignedDevicesPerEvent = async () => {
+  const fetchActiveAssignedDevicesPerEvent = useCallback(async () => {
     setLoadingSearchingResult(true);
     const rowEventsData = [...eventsPerAdmin.active];
     const result = new Map();
@@ -74,7 +65,10 @@ const SearchDevice = ({ searchParams }) => {
       "/receiver/receiver-assigned-users-list",
       {
         company: user.companyData.id,
-        "device.serialNumber": { $regex: searchParams, $options: "i" },
+        "device.serialNumber": {
+          $regex: location.search.split("?search=")[1],
+          $options: "i",
+        },
         "device.status": true,
         eventSelected: { $in: eventsName },
       }
@@ -100,7 +94,7 @@ const SearchDevice = ({ searchParams }) => {
     }
     setLoadingSearchingResult(false);
     return setFoundDeviceData(Array.from(finalResult));
-  };
+  }, []);
 
   const checkingIfItemInWarehouseOrNot = () => {
     if (searchingQuery.data) {
@@ -118,7 +112,7 @@ const SearchDevice = ({ searchParams }) => {
     return () => {
       controller.abort();
     };
-  }, [searchParams, loadingSearchingResult, foundDeviceData[0]]);
+  }, [location.key, location.search]); //searchParams, loadingSearchingResult, foundDeviceData[0]
 
   const sortAndRenderFoundData = () => {
     if (searchingQuery.data) {
@@ -126,13 +120,12 @@ const SearchDevice = ({ searchParams }) => {
       const result = foundData?.filter((element) =>
         JSON.stringify(element)
           .toLowerCase()
-          .includes(`${searchParams}`.toLowerCase())
+          .includes(`${location.search.split("?search=")[1]}`.toLowerCase())
       );
       return result;
     }
     return foundDeviceData;
   };
-  // console.log(sortAndRenderFoundData());
 
   const imagesDeviceFoundData = () => {
     if (imageDeviceQuery.data) {
@@ -142,8 +135,6 @@ const SearchDevice = ({ searchParams }) => {
     }
   };
 
-  // console.log(imagesDeviceFoundData());
-
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
@@ -151,7 +142,7 @@ const SearchDevice = ({ searchParams }) => {
     return () => {
       controller.abort();
     };
-  }, [searchParams]);
+  }, [location.key]);
 
   const afterActionTakenCollectStoreAndNavigate = async (props) => {
     const {
@@ -189,6 +180,7 @@ const SearchDevice = ({ searchParams }) => {
     dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection));
     return navigate("/device-quick-glance");
   };
+
   const handleDeviceSearch = async (record) => {
     const respTransaction = await devitrakApi.get(
       `/transaction/transaction?paymentIntent=${record.data.paymentIntent}`
@@ -198,7 +190,7 @@ const SearchDevice = ({ searchParams }) => {
         "/receiver/receiver-pool-list",
         {
           company: user.companyData.id,
-          device: searchParams,
+          device: location.search.split("?search=")[1],
           activity: true,
         }
       );
@@ -237,6 +229,7 @@ const SearchDevice = ({ searchParams }) => {
       }
     }
   };
+
   const returningDevice = async (record) => {
     try {
       setLoadingStatus(true);
@@ -344,6 +337,14 @@ const SearchDevice = ({ searchParams }) => {
       return setLoadingStatus(false);
     }
   };
+
+  const ternaryRender = (props) => {
+    if (props) {
+      return <Loading />;
+    }
+    return <NoDataFound />;
+  };
+
   return (
     <Grid
       container
@@ -352,6 +353,8 @@ const SearchDevice = ({ searchParams }) => {
         justifyContent: "flex-start",
         alignItems: "center",
       }}
+      key={`${location.search.split("?search=")[1]}-${location.key}`}
+      id={location.key}
     >
       <Grid
         style={{
@@ -392,33 +395,29 @@ const SearchDevice = ({ searchParams }) => {
       </Grid>
       <Grid item xs={12} sm={12} md={8} lg={8}>
         <Grid container gap={1}>
-          {sortAndRenderFoundData()?.length > 0 ? (
-            sortAndRenderFoundData()?.map((item) => (
-              <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
-                <CardDeviceFound
-                  key={item.id}
-                  props={{
-                    serialNumber: item?.device?.serialNumber,
-                    type: item?.device?.deviceType,
-                    event: item?.eventSelected ?? item?.eventSelected[0],
-                    image: imagesDeviceFoundData()
-                      ? imagesDeviceFoundData()[item?.device?.deviceType]?.at(
-                          -1
-                        )?.source
-                      : false,
-                    data: item ?? [],
-                  }}
-                  fn={handleDeviceSearch}
-                  returnFn={returningDevice}
-                  loadingStatus={loadingStatus}
-                />
-              </Grid>
-            ))
-          ) : loadingSearchingResult ? (
-            <Loading />
-          ) : (
-            <NoDataFound />
-          )}
+          {sortAndRenderFoundData()?.length > 0
+            ? sortAndRenderFoundData()?.map((item) => (
+                <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+                  <CardDeviceFound
+                    key={item.id}
+                    props={{
+                      serialNumber: item?.device?.serialNumber,
+                      type: item?.device?.deviceType,
+                      event: item?.eventSelected ?? item?.eventSelected[0],
+                      image: imagesDeviceFoundData()
+                        ? imagesDeviceFoundData()[item?.device?.deviceType]?.at(
+                            -1
+                          )?.source
+                        : false,
+                      data: item ?? [],
+                    }}
+                    fn={handleDeviceSearch}
+                    returnFn={returningDevice}
+                    loadingStatus={loadingStatus}
+                  />
+                </Grid>
+              ))
+            : ternaryRender(loadingSearchingResult)}
         </Grid>
       </Grid>
     </Grid>
