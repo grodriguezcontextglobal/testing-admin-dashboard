@@ -13,6 +13,7 @@ const AllInventoryEventForCustomerOnly = ({
   inventoryEventAssignedCount,
   setEditingInventory,
   user,
+  setEditingServiceInEvent,
 }) => {
   return (
     <>
@@ -89,6 +90,7 @@ const AllInventoryEventForCustomerOnly = ({
           }}
         >
           <button
+            onClick={() => setEditingServiceInEvent(true)}
             style={{
               ...BlueButton,
               width: "fit-content",
