@@ -35,6 +35,7 @@ import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { onAddEventData } from "../../../store/slices/eventSlice";
+import EditingServiceInEvent from "./inventory/action/components/EditingServiceInEvent";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -48,6 +49,7 @@ const MainPageQuickGlance = () => {
   ] = useState(true);
   const [editingStaff, setEditingStaff] = useState(false);
   const [editingInventory, setEditingInventory] = useState(false);
+  const [editingServiceInEvent, setEditingServiceInEvent] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState(
     today > new Date(event?.eventInfoDetail?.dateEnd).getTime()
   );
@@ -61,7 +63,9 @@ const MainPageQuickGlance = () => {
   const isExtraLargeDevice = useMediaQuery(
     "only screen and (min-width : 1201px)"
   );
+
   const dispatch = useDispatch();
+
   const sum = (a, b) => {
     return a + b;
   };
@@ -70,6 +74,7 @@ const MainPageQuickGlance = () => {
     queryFn: () => devitrakApi.get("/auth/users"),
     refetchOnMount: false,
   });
+
   const eventAttendeesParametersQuery = useQuery({
     queryKey: ["listOfAttendeesPerSelectedEvent"],
     queryFn: () =>
@@ -78,6 +83,7 @@ const MainPageQuickGlance = () => {
       ),
     refetchOnMount: false,
   });
+
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
@@ -96,6 +102,7 @@ const MainPageQuickGlance = () => {
       controller.abort();
     };
   }, []);
+
   if (
     eventAttendeesQuery.isLoading ||
     receiversPoolQuery.isLoading ||
@@ -112,7 +119,9 @@ const MainPageQuickGlance = () => {
     receiversPoolQuery.data &&
     eventAttendeesParametersQuery.data
   ) {
-    const parsingData = receiversPoolQuery?.data?.data?.receiversInventory ?? receiversPoolQuery?.data?.data?.items;
+    const parsingData =
+      receiversPoolQuery?.data?.data?.receiversInventory ??
+      receiversPoolQuery?.data?.data?.items;
 
     const inventoryEventAssignedCount = () => {
       let result = 0;
@@ -178,6 +187,7 @@ const MainPageQuickGlance = () => {
         return true;
       }
     };
+
     const beforeUpload = (file) => {
       const isJpgOrPng =
         file.type === "image/jpeg" || file.type === "image/png";
@@ -190,6 +200,7 @@ const MainPageQuickGlance = () => {
       }
       return isJpgOrPng && isLt2M;
     };
+
     const uploadButton = (
       <button
         style={{
@@ -252,6 +263,7 @@ const MainPageQuickGlance = () => {
         return message.error(`Upload failed: ${error.message}`);
       }
     };
+
     return (
       <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container>
         {notificationStatus && event.active && (
@@ -509,6 +521,7 @@ const MainPageQuickGlance = () => {
             showInventoryTypes={showInventoryTypes}
             inventoryEventAssignedCount={inventoryEventAssignedCount}
             setEditingInventory={setEditingInventory}
+            setEditingServiceInEvent={setEditingServiceInEvent}
             user={user}
             AlInventoryEventAssigned
           />
@@ -521,6 +534,7 @@ const MainPageQuickGlance = () => {
               inventoryEventAssignedForCustomersCount
             }
             setEditingInventory={setEditingInventory}
+            setEditingServiceInEvent={setEditingServiceInEvent}
             user={user}
             AlInventoryEventAssigned
           />
@@ -698,6 +712,7 @@ const MainPageQuickGlance = () => {
             setEditingInventory={setEditingInventory}
           />
         )}
+        {editingServiceInEvent && <EditingServiceInEvent editingServicesInEvent={editingServiceInEvent} setEditingServicesInEvent={setEditingServiceInEvent} />}
         {editingStaff && (
           <EditingStaff
             editingStaff={editingStaff}

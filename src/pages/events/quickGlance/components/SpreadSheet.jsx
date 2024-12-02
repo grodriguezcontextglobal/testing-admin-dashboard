@@ -28,7 +28,7 @@ const SpreadSheet = () => {
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       }),
     refetchOnMount: false,
   });
