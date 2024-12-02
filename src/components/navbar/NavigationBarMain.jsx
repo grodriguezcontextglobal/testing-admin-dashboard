@@ -93,9 +93,16 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     setSearchValue("");
     return dispatch(onResetResult());
   };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    return navigate(`/search-result-page?search=${searchValue}`);
+    return navigate(`/search-result-page?search=${searchValue}`, {
+      state: { search: searchValue },
+      flushSync: true,
+      replace: true,
+      relative: false,
+      window: true,
+    });
   };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -207,49 +214,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                   style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
                   <DevitrakLogo />
-                  <DevitrakName />
-
-                  {/* {user.companyData.company_logo.length > 0 ? (
-                    <div style={{  display: "flex" }}>
-                      <img
-                        width={"40px"}
-                        // height={"auto"}
-                        style={{
-                          verticalAlign: "middle",
-                          objectPosition: "50% 50%",
-                          objectFit: "scale-down",
-                          borderRadius: "50px",
-                        }}
-                        src={`${user.companyData.company_logo}`}
-                        alt={`${user.companyData.company_logo}`}
-                      />
-                      &nbsp;
-                      <div className="content-main-navbar-updated">
-                        <article
-                          className={"nav-item-base-main-navbar-updated"}
-                          style={{border:"transparent"}}
-                        >
-                          <div className="content-2-main-navbar-updated">
-                            <div className="text-1-main-navbar-updated text-mdsemibold">
-                              <p
-                                style={{
-                                  ...TextFontSize14LineHeight20,
-                                  color: "var(--basewhite)",
-                                }}
-                              >
-                                {user.companyData.company_name}
-                              </p>
-                            </div>
-                          </div>
-                        </article>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <DevitrakLogo />
-                      <DevitrakName />
-                    </>
-                  )} */}
+                  <DevitrakName />{" "}
                 </NavLink>
 
                 {navItems.map((item) => {
@@ -297,7 +262,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 // gap: "5px",
               }}
             >
-              <form style={{ margin: "0 5px 0 0" }} onSubmit={handleSearch}>
+              <form
+                style={{ margin: "0 5px 0 0" }}
+                onSubmit={handleSearch}
+                method="get"
+                action="/search-result-page?search="
+              >
                 <OutlinedInput
                   placeholder="Search"
                   required
@@ -378,23 +348,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               </NavLink>
               {status === "authenticated" && (
                 <NavLink>
-                  {/* <button
-                    style={{
-                      outline: "none",
-                      border: "transparent",
-                      margin: 0,
-                      padding: 0,
-                      backgroundColor: "transparent",
-                    }}
-                    key={"authenticated"}
-                    onClick={() =>
-                      scrollTo({
-                        left: 0,
-                        top: 0,
-                        behavior: "smooth",
-                      })
-                    }
-                  > */}
                   <div className="content-main-navbar-updated">
                     <article
                       className="nav-item-base-1-main-navbar-updated"
@@ -420,13 +373,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                             }}
                             key={"authenticated"}
                             onClick={() => logout()}
-                            // onClick={() =>
-                            //   scrollTo({
-                            //     left: 0,
-                            //     top: 0,
-                            //     behavior: "smooth",
-                            //   })
-                            // }
                           >
                             <p
                               style={{
