@@ -111,11 +111,13 @@ const ItemTable = ({ searchItem }) => {
     Rent: "Leased",
     Sale: "For sale",
   };
+
   const cellStyle = {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
   };
+
   const columns = [
     {
       title: "Device category",
@@ -432,7 +434,17 @@ const ItemTable = ({ searchItem }) => {
                   cursor: "pointer",
                 }}
               >
-                All devices
+                All devices{" "}
+                <span
+                  style={{
+                    ...Subtitle,
+                    width: "100%",
+                    textAlign: "left",
+                  }}
+                >
+                  | Total <strong>{dataToDisplay().length}</strong> units
+                </span>{" "}
+                &nbsp;{" "}
               </p>
               <Divider />
             </summary>
