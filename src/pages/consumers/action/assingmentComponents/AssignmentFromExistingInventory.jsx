@@ -1,6 +1,6 @@
 import { Button, Grid, InputLabel, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification, Select } from "antd";
+import { Divider, notification, Select } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,13 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 import { formatDate } from "../../../inventory/utils/dateFormat";
 import { nanoid } from "@reduxjs/toolkit";
 import DeviceAssigned from "../../../../classes/deviceAssigned";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../../../../styles/global/OutlineInput.css";
+import "../../../../styles/global/ant-select.css";
+import "../../../../styles/global/reactInput.css";
+import "./style.css";
+
 const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -32,6 +39,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [returnDate, setReturnDate] = useState(new Date());
   const newEventInfo = {};
   let dataFound = useRef([]);
   const customerSqlDb = useRef({});
@@ -69,6 +77,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     }
     return result;
   };
+  
   const optionsToRenderInSelector = () => {
     const result = new Set();
     for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
@@ -570,7 +579,52 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
                 />
               </div>
             </div>
-
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                gap: "10px",
+                justifyContent: "space-between",
+                alignItems: "center",
+                textAlign: "left",
+              }}
+            >
+              <InputLabel
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "justify-content",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    ...TextFontSize20LineHeight30,
+                    fontWeight: 600,
+                    textTransform: "none",
+                    textWrap: "balance",
+                  }}
+                >
+                  Expect equipment return date from consumer to company:
+                </p>
+              </InputLabel>
+              <DatePicker
+                id="calender-event"
+                autoComplete="checking"
+                showTimeSelect
+                dateFormat="Pp"
+                minDate={new Date()}
+                selected={returnDate}
+                onChange={(date) => setReturnDate(date)}
+                placeholderText="Equipment return date"
+                startDate={new Date()}
+                style={{
+                  ...OutlinedInputStyle,
+                  margin: "0.1rem 0 1.5rem",
+                }}
+              />
+            </div>
+            <Divider />
             <InputLabel
               style={{
                 width: "100%",
@@ -589,6 +643,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
                 Device
               </p>
             </InputLabel>
+
             <form
               onSubmit={handleSubmit(handleAddingNewItemToInventoryEvent)}
               style={{
