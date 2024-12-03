@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import "../../../styles/global/ant-select.css";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
 const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
@@ -45,19 +47,44 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
         alignItems={"center"}
         marginY={2}
         key={"settingUp-deviceList-event"}
-      >        <Divider>
-          <Switch
-            value={existingOption}
-            onChange={() => setExistingOption(!existingOption)}
-            // checkedChildren="From existing inventory"
-            // unCheckedChildren="New inventory device"
-            defaultChecked
-          />
+      >
+        {" "}
+        <Divider>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <h2 style={{ ...CenteringGrid, ...TextFontSize20LineHeight30 }}>
+              New inventory
+            </h2>
+            &nbsp;
+            <Switch
+              value={existingOption}
+              onChange={() => setExistingOption(!existingOption)}
+              defaultChecked
+            />
+            &nbsp;
+            <h2 style={{ ...CenteringGrid, ...TextFontSize20LineHeight30 }}>
+              Existing inventory
+            </h2>
+          </div>
         </Divider>
         {existingOption ? (
-          <AssignmentFromExistingInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} closeModal={closeModal} />
+          <AssignmentFromExistingInventory
+            consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer}
+            closeModal={closeModal}
+          />
         ) : (
-          <AssignemntNewDeviceInInventory consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer} closeModal={closeModal} />
+          <AssignemntNewDeviceInInventory
+            consumerInfoSqlDb={checkConsumerInSqlDb?.data?.data?.consumer}
+            closeModal={closeModal}
+          />
         )}
       </Grid>
     </Modal>

@@ -55,6 +55,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [returningDate, setReturningDate] = useState(new Date());
+  const [returnDate, setReturnDate] = useState(new Date());
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const newEventInfo = {};
@@ -163,7 +164,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       await devitrakApi.post("/db_lease/new-consumer-lease", {
         staff_admin_id: user.sqlMemberInfo.staff_id,
         company_id: user.sqlInfo.company_id,
-        subscription_expected_return_data: formatDate(new Date()),
+        subscription_expected_return_data: formatDate(returnDate),
         subscription_initial_date: formatDate(new Date()),
         location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
         consumer_member_id: checkArray(staffMember.data.consumer).consumer_id,
@@ -328,7 +329,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
 
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
-      const qty = (Number(data.max_serial_number) - Number(data.min_serial_number)) + 1
+      const qty =
+        Number(data.max_serial_number) - Number(data.min_serial_number) + 1;
       await devitrakApi.post("/db_event/event_device", {
         event_id: newEventInfo.insertId,
         item_group: data.item_group,
@@ -667,8 +669,53 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
               />
             </div>
           </div>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              gap: "10px",
+              justifyContent: "space-between",
+              alignItems: "center",
+              textAlign: "left",
+            }}
+          >
+            <InputLabel
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "justify-content",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  ...TextFontSize20LineHeight30,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  textWrap:"balance"
+                }}
+              >
+                Expect equipment return date from consumer to company:
+              </p>
+            </InputLabel>
+            <DatePicker
+              id="calender-event"
+              autoComplete="checking"
+              showTimeSelect
+              dateFormat="Pp"
+              minDate={new Date()}
+              selected={returnDate}
+              onChange={(date) => setReturnDate(date)}
+              placeholderText="Equipment return date"
+              startDate={new Date()}
+              style={{
+                ...OutlinedInputStyle,
+                margin: "0.1rem 0 1.5rem",
+              }}
+            />
+          </div>
         </div>
-
+        <Divider />
         <div
           style={{
             width: "100%",
@@ -1011,7 +1058,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           >
             <Tooltip
               placement="top"
-              title="Where the item is location physically."
+              title="Returning date of the item from company to renter."
               style={{
                 width: "100%",
               }}
