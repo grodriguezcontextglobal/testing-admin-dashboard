@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Popconfirm, Space, Table, notification } from "antd";
+import { Button, Popconfirm, Space, Table, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,13 +18,19 @@ import "../../../../../styles/global/ant-table.css";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
-const ExpandedRowInTable = ({ rowRecord }) => {
+const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const [openModal, setOpenModal] = useState(false);
   const { triggerModal } = useSelector((state) => state.helper);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
+    useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const transactionsQuery = useQuery({
@@ -37,6 +43,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       }),
     refetchOnMount: false,
   });
+
   const deviceAssignedListQuery = useQuery({
     queryKey: ["assginedDeviceList"],
     queryFn: () =>
@@ -47,6 +54,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       }),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     transactionsQuery.refetch();
@@ -58,6 +66,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
   }, []);
 
   const refetchingFn = () => {
+    refetching();
     return deviceAssignedListQuery.refetch();
   };
   const [api, contextHolder] = notification.useNotification();
@@ -66,6 +75,17 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       message: message,
       placement: "bottomRight",
     });
+  };
+
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      setSelectedItems(selectedRows);
+    },
+    getCheckboxProps: (record) => {
+      return {
+        disabled: record.status === false,
+      };
+    },
   };
 
   const foundAllTransactionsAndDevicesAssigned = () => {
@@ -97,7 +117,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
     const result = new Set();
     if (foundTransactionAndDevicesAssigned()) {
       for (let data of foundTransactionAndDevicesAssigned()) {
-        result.add({ ...data.device });
+        result.add({ key: data.id, ...data.device });
       }
     }
     return Array.from(result);
@@ -170,7 +190,8 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const handleAssignSingleDevice = async (props) => {
@@ -246,8 +267,10 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         }
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
+
   const handleLostSingleDevice = (props) => {
     try {
       const findData = groupBy(
@@ -261,7 +284,8 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       );
       handleRecord(props);
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const checkingRenderBackgroundColor = (props, col1, col2, col3) => {
@@ -272,6 +296,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       return col3;
     }
   };
+
   const checkingRenderStatus = (props) => {
     if (typeof props === "string") {
       return props;
@@ -508,6 +533,7 @@ const ExpandedRowInTable = ({ rowRecord }) => {
       ),
     },
   ];
+
   return (
     <>
       {contextHolder}
@@ -528,18 +554,52 @@ const ExpandedRowInTable = ({ rowRecord }) => {
         )}
       </div>
       {checkDevicesInTransaction()?.length > 0 && (
-        <Table
-          columns={columns}
-          dataSource={checkDevicesInTransaction()}
-          pagination={{
-            position: ["bottomLeft"],
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            gap: "5px",
           }}
-        />
+        >
+          <Button
+            style={{
+              ...BlueButton,
+              display: selectedItems.length > 0 ? "flex" : "none",
+              gap: "5px",
+            }}
+            onClick={() => setOpenReturnDeviceInBulkModal(true)}
+          >
+            <p style={BlueButtonText}>
+              Return multiple items of this transaction
+            </p>
+          </Button>
+          <Table
+            columns={columns}
+            dataSource={checkDevicesInTransaction()}
+            pagination={{
+              position: ["bottomLeft"],
+            }}
+            rowSelection={{
+              type: "checkbox",
+              ...rowSelection,
+            }}
+          />
+        </div>
       )}
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
       )}
       {triggerModal && <ReplaceDevice refetching={refetchingFn} />}
+      {openReturnDeviceInBulkModal && (
+        <ReturningInBulkMethod
+          openReturnDeviceBulkModal={openReturnDeviceInBulkModal}
+          setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal}
+          record={rowRecord}
+          refetching={refetchingFn}
+          selectedItems={selectedItems}
+        />
+      )}
     </>
   );
 };
