@@ -19,6 +19,7 @@ const EndEventButton = () => {
   const { event } = useSelector((state) => state.event);
   const [openEndingEventModal, setOpenEndingEventModal] = useState(false);
   const dispatch = useDispatch();
+
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
@@ -42,14 +43,14 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
-
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
-      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
+      devitrakApi.get(
+        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
-
   const transactionsRecordQuery = useQuery({
     queryKey: ["transactionList"],
     queryFn: () =>
@@ -59,7 +60,6 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
-
   const sqlDBCompanyStockQuery = useQuery({
     queryKey: ["allDevicesOutOfCompanyStock"],
     queryFn: () =>
@@ -78,7 +78,8 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
-
+  let trigger = false;
+  console.log(eventInventoryQuery?.data?.data);
   useEffect(() => {
     const controller = new AbortController();
     listOfInventoryQuery.refetch();
@@ -91,7 +92,8 @@ const EndEventButton = () => {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [trigger === true]);
+
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -150,61 +152,28 @@ const EndEventButton = () => {
     return [];
   };
   findItemsInPoolEvent();
-  
-  const sqlDeviceReturnedToCompanyStock = async () => {
-    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
-      ?.receiversInventory;
-    const groupingDevicesFromNoSQL = groupBy(listOfDevicesInEvent, "device");
-    const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
-    for (let data of allInventoryOfEvent) {
-      if (groupingDevicesFromNoSQL[data.serial_number]) {
-        await devitrakApi.post("/db_event/returning-item", {
-          warehouse: 1,
-          status: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
-          update_at: formatDate(new Date()),
-          serial_number: data.serial_number,
-          category_name: data.category_name,
-          item_group: data.item_group,
-          company_id: user.sqlInfo.company_id,
-        });
-      } else {
-        await devitrakApi.post("/db_event/returning-item", {
-          warehouse: 1,
-          status: data.status,
-          update_at: formatDate(new Date()),
-          serial_number: data.serial_number,
-          category_name: data.category_name,
-          item_group: data.item_group,
-          company_id: user.sqlInfo.company_id,
-        });
-      }
-    }
-  };
 
   const sqlDeviceFinalStatusAtEventFinished = async () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
     const groupingDevicesFromNoSQL = groupBy(listOfDevicesInEvent, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
-    for (let data of allInventoryOfEvent) {
-      if (groupingDevicesFromNoSQL[data.serial_number]) {
-        await devitrakApi.post("/db_event/device-final-status", {
-          status: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
-          condition: groupingDevicesFromNoSQL[data.serial_number].at(-1).status,
-          updated_at: formatDate(new Date()),
-          serial_number: data.serial_number,
-          event_id: event.sql.event_id,
-        });
-      } else {
-        await devitrakApi.post("/db_event/device-final-status", {
-          status: data.status,
-          condition: data.condition,
-          updated_at: formatDate(new Date()),
-          serial_number: data.serial_number,
-          event_id: event.sql.event_id,
-        });
-      }
-    }
+    const eventId = event.sql.event_id;
+    const companyId = user.sqlInfo.company_id;
+    const update_at = formatDate(new Date());
+
+    await devitrakApi.post("/db_event/device-final-status-refactored", {
+      groupingDevicesFromNoSQL: JSON.stringify(groupingDevicesFromNoSQL),
+      allInventoryOfEvent: JSON.stringify(allInventoryOfEvent),
+      eventId: eventId,
+      update_at: update_at,
+    });
+    await devitrakApi.post("/db_event/returning-item-refactored", {
+      groupingDevicesFromNoSQL: JSON.stringify(groupingDevicesFromNoSQL),
+      allInventoryOfEvent: JSON.stringify(allInventoryOfEvent),
+      companyId: companyId,
+      update_at: update_at,
+    });
   };
 
   const groupingItemsByCompany = groupBy(
@@ -279,37 +248,20 @@ const EndEventButton = () => {
     }
   };
 
-  const renderingByConditionTypeof = (props) => {
-    if (typeof props === "string") {
-      return props;
-    } else {
-      if (props) {
-        return "In-Use";
-      }
-      return "Returned";
-    }
-  };
   const addingRecordOfActivityInEvent = async () => {
     try {
       const groupingInventoryByGroupName = groupBy(event.deviceSetup, "group");
       const dataToStoreAsRecord =
         transactionsRecordQuery?.data?.data?.listOfReceivers;
-      for (let data of dataToStoreAsRecord) {
-        await devitrakApi.post("/db_record/inserting-record", {
-          email: data.user,
-          serial_number: data.device.serialNumber,
-          status: renderingByConditionTypeof(data.device.status),
-          activity: data.device.status,
-          payment_id: data.paymentIntent,
-          event: event.eventInfoDetail.eventName,
-          item_group: data.device.deviceType,
-          category_name:
-            groupingInventoryByGroupName[data.device.deviceType].at(-1)
-              .category,
-        });
-      }
+      const event = event.eventInfoDetail.eventName;
+      await devitrakApi.post("/db_record/inserting-record-refactored", {
+        groupingInventoryByGroupName,
+        dataToStoreAsRecord,
+        event,
+      });
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const inactiveTransactionDocuments = async () => {
@@ -347,7 +299,6 @@ const EndEventButton = () => {
       }
     }
     await sqlDeviceFinalStatusAtEventFinished();
-    await sqlDeviceReturnedToCompanyStock();
     await addingRecordOfActivityInEvent();
     await inactiveEventAfterEndIt();
     await inactiveTransactionDocuments();
