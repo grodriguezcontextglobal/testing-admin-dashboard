@@ -1,9 +1,9 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Table, Tooltip } from "antd";
+import { Button, message, Popconfirm, Table } from "antd";
 import pkg from "prop-types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
@@ -20,10 +20,10 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import "../../../../../styles/global/ant-table.css";
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
-import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+// import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -31,10 +31,10 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     useState(false);
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
     useState(false);
-  const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
-    useState(false);
+  // const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
+  //   useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const recordRef = useRef(null);
+  // const recordRef = useRef(null);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -127,10 +127,10 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
   };
-  const handleReturnDeviceInBulk = (record) => {
-    setOpenReturnDeviceInBulkModal(true);
-    return (recordRef.current = record);
-  };
+  // const handleReturnDeviceInBulk = (record) => {
+  //   setOpenReturnDeviceInBulkModal(true);
+  //   return (recordRef.current = record);
+  // };
 
   const cellStyle = {
     display: "flex",
@@ -353,7 +353,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 </Popconfirm>
               </Grid>
             )}
-          {record.device[0].deviceNeeded > 4 && (
+          {/* {record.device[0].deviceNeeded > 4 && (
             <Grid
               item
               xs={12}
@@ -395,12 +395,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 </Button>
               </Tooltip>
             </Grid>
-          )}
+          )} */}
         </Grid>
       ),
     },
   ];
-  console.log("sourceData()", sourceData());
+
   return (
     <>
       <Table
@@ -433,7 +433,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           },
           expandRowByClick: true,
           expandedRowRender: (record) => (
-            <ExpandedRowInTable rowRecord={record} />
+            <ExpandedRowInTable rowRecord={record} refetching={refetchingFn} />
           ),
           // renderDataPerRow(record),
         }}
@@ -452,14 +452,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           refetchingTransactionFn={refetchingTransactionFn}
         />
       )}
-      {openReturnDeviceInBulkModal && (
+      {/* {openReturnDeviceInBulkModal && (
         <ReturningInBulkMethod
           openReturnDeviceBulkModal={openReturnDeviceInBulkModal}
           setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal}
           record={recordRef.current}
           refetching={refetchingFn}
         />
-      )}
+      )} */}
       {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
     </>
   );
