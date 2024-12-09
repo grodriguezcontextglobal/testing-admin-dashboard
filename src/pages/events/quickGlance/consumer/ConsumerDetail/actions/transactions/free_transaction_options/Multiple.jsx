@@ -148,8 +148,9 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           (element) => element.device === data.startingNumber
         );
         if (Number(deviceFound) > -1) {
+          const dataToPass = copiedDeviceData.slice(deviceFound, deviceFound + Number(data.quantity));
           const createTransactionTemplate = {
-            serialNumbers: JSON.stringify(copiedDeviceData),
+            serialNumbers: JSON.stringify(dataToPass),
             deviceType: copiedDeviceData[0].type,
             status: true,
             paymentIntent: reference.current,

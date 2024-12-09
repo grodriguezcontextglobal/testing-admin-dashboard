@@ -3,7 +3,7 @@ import {
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography
+  Typography,
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -149,8 +149,12 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           (element) => element.device === data.startingNumber
         );
         if (Number(deviceFound) > -1) {
+          const dataToPass = copiedDeviceData.slice(
+            deviceFound,
+            deviceFound + Number(data.quantity)
+          );
           const createTransactionTemplate = {
-            serialNumbers: JSON.stringify(copiedDeviceData),
+            serialNumbers: JSON.stringify(dataToPass),
             deviceType: copiedDeviceData[0].type,
             status: true,
             paymentIntent: reference.current,

@@ -184,8 +184,12 @@ const Confirmation = () => {
                 element.device === deviceSelectionPaidTransaction.startingNumber
             );
             if (deviceFound > -1) {
+              const dataToPass = copiedData.slice(
+                deviceFound,
+                deviceFound + Number(deviceSelectionPaidTransaction.quantity)
+              );
               const createTransactionTemplate = {
-                serialNumbers: JSON.stringify(copiedData),
+                serialNumbers: JSON.stringify(dataToPass),
                 deviceType: copiedData[0].type,
                 status: true,
                 paymentIntent: payment_intent,
