@@ -140,20 +140,22 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
     }
   };
-
   const createDeviceRecordInNoSQLDatabase = async (props) => {
-    for (let index = 0; index < Number(props.quantity); index++) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: props.deviceInfo[index].serial_number,
-        status: "Operational",
-        activity: false,
-        comment: "No comment",
-        eventSelected: eventInfoDetail.eventName,
-        provider: user.company,
-        type: props.deviceInfo[index].item_group,
-        company: user.companyData.id,
-      });
-    }
+    const index = props.deviceInfo.findIndex(
+      (element) => element.serial_number === props.startingNumber
+    );
+    const data = props.deviceInfo.slice(index, index + Number(props.quantity));
+    const template = {
+      deviceList: JSON.stringify(data),
+      status: "Operational",
+      activity: false,
+      comment: "No comment",
+      eventSelected: eventInfoDetail.eventName,
+      provider: user.company,
+      type: props.deviceInfo[0].item_group,
+      company: user.companyData.id,
+    };
+    await devitrakApi.post("/receiver/receivers-pool-bulk", template);
     await updateDeviceSetupInEvent();
     return null;
   };
