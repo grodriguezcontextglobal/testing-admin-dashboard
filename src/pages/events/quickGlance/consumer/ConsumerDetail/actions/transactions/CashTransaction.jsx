@@ -55,7 +55,7 @@ const CashTransaction = ({ openCashTransaction, setOpenCashTransaction }) => {
           fontSize={"18px"}
           marginY={2}
         >
-          Please scan device for free transaction:
+          Please scan device for a cash deposit transaction:
         </Typography>
         <Divider />
         <Box
