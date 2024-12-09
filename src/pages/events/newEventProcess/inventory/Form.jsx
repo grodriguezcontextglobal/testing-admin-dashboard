@@ -53,8 +53,9 @@ const Form = () => {
   const itemQuery = useQuery({
     queryKey: ["listOfItems"],
     queryFn: () =>
-      devitrakApi.get(`/db_item/check-item?company_id=${user.sqlInfo.company_id}&warehouse=${true}&enableAssignFeature=${1}`),
+      devitrakApi.get(`/db_item/check-item?company_id=${user.sqlInfo.company_id}&warehouse=${1}&enableAssignFeature=${1}`),
   });
+
   useEffect(() => {
     const controller = new AbortController();
     if (staff.adminUser.length === 0) {
