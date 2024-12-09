@@ -14,6 +14,7 @@ const ReturningInBulkMethod = ({
   record,
   refetching,
   selectedItems,
+  setSelectedItems,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -24,6 +25,7 @@ const ReturningInBulkMethod = ({
       message: msg,
     });
   };
+
   const closeModal = () => {
     setOpenReturnDeviceInBulkModal(false);
   };
@@ -39,6 +41,7 @@ const ReturningInBulkMethod = ({
       </Typography>
     );
   };
+
   const returnDevicesInTransaction = async () => {
     const template = {
       timeStamp: new Date().getTime(),
@@ -55,16 +58,30 @@ const ReturningInBulkMethod = ({
       activity: false,
       eventSelected: record.eventSelected,
     };
+    
     await devitrakApi.patch(
       `/receiver/update-bulk-items-in-pool`,
       template
     );
+
     queryClient.invalidateQueries({
       queryKey: ["assginedDeviceList"],
       exact: true,
     });
+
+    queryClient.invalidateQueries({
+      queryKey: ["listOfreceiverInPool"],
+      exact: true,
+    });
+
     return null;
   };
+
+  const removeItemFromSelectedItems = (props) => {
+    const result = selectedItems.filter((_, i) => i !== props);
+    return setSelectedItems(result);
+  };
+
   const handleReturnDevices = async (e) => {
     e.preventDefault();
     try {
@@ -78,6 +95,7 @@ const ReturningInBulkMethod = ({
       setLoadingStatus(false);
       openNotificationWithIcon("Success", "All devices returned!");
       message.success("All devices returned!");
+      setSelectedItems([]);
       return closeModal();
     } catch (error) {
       setLoadingStatus(false);
@@ -106,9 +124,9 @@ const ReturningInBulkMethod = ({
           width: "100%",
         }}
       >
-        <Space>
-          {selectedItems.map((item) => (
-            <Chip key={item.id} label={item.serialNumber} />
+        <Space size={[8, 16]} wrap>
+          {selectedItems.map((item, index) => (
+            <Chip key={item.id} label={item.serialNumber} onDelete={() => removeItemFromSelectedItems(index)} />
           ))}
         </Space>
         <Button
