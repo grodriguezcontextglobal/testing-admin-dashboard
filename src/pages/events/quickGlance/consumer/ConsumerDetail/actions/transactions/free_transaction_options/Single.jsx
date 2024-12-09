@@ -114,7 +114,8 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
       event.eventInfoDetail.eventName,
       user.company,
       new Date().getTime(),
-      user.companyData.id
+      user.companyData.id,
+      event.id
     );
 
     await devitrakApi.post(
