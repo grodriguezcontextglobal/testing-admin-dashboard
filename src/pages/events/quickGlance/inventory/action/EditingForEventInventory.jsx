@@ -158,19 +158,32 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       return setLoadingStatus(false);
     }
   };
+  
   const createDeviceRecordInNoSQLDatabase = async (props) => {
-    for (let index = 0; index < Number(props.quantity); index++) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: valueItemSelected[index].serial_number,
-        status: "Operational",
-        activity: false,
-        comment: "No comment",
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: user.company,
-        type: valueItemSelected[index].item_group,
-        company: user.companyData.id,
-      });
-    }
+    const template = {
+      deviceList: JSON.stringify(valueItemSelected),
+      status: "Operational",
+      activity: false,
+      comment: "No comment",
+      eventSelected: event.eventInfoDetail.eventName,
+      provider: user.company,
+      type: valueItemSelected[0].item_group,
+      company: user.companyData.id,
+      qty:Number(props.quantity)
+    };
+    await devitrakApi.post("/receiver/receivers-pool-bulk", template);
+    // for (let index = 0; index < Number(props.quantity); index++) {
+    //   await devitrakApi.post("/receiver/receivers-pool", {
+    //     device: valueItemSelected[index].serial_number,
+    //     status: "Operational",
+    //     activity: false,
+    //     comment: "No comment",
+    //     eventSelected: event.eventInfoDetail.eventName,
+    //     provider: user.company,
+    //     type: valueItemSelected[index].item_group,
+    //     company: user.companyData.id,
+    //   });
+    // }
     await handleUpdateDeviceInEvent(props);
     return null;
   };
