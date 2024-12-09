@@ -1,27 +1,23 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../../../../../../api/devitrakApi";
-import { nanoid } from "@reduxjs/toolkit";
-import { groupBy } from "lodash";
-import { Card, Select, Space, Button } from "antd";
-import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import {
-  Chip,
   FormControl,
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
-import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
+import { nanoid } from "@reduxjs/toolkit";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Select } from "antd";
+import { groupBy } from "lodash";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../../../../api/devitrakApi";
+import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
-import { CardStyle } from "../../../../../../../../styles/global/CardStyle";
+import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
-import { checkArray } from "../../../../../../../../components/utils/checkArray";
-import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
 const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -29,7 +25,6 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
   const { event } = useSelector((state) => state.event);
   const [isLoading, setIsLoading] = useState(false);
   const [deviceSelection, setDeviceSelection] = useState(null);
-  const [noAssigned, setNoAssigned] = useState([]);
   const deviceTrackInPoolQuery = useQuery({
     queryKey: ["devicesInPoolListPerEvent"],
     queryFn: () =>
@@ -72,35 +67,26 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
   };
   checkIfDeviceIsInUsed();
 
-  const formattingSerialNumberLeadingZero = (num, reference) => {
-    return String(num).padStart(reference.length, `${reference[0]}`);
-  };
   const subtractRangePerGroupToDisplayItInScreen = useCallback(() => {
     const devicesInPool = checkIfDeviceIsInUsed();
     const deviceSelectionInfo = JSON.parse(deviceSelection);
-    const findingRange = new Set();
-    for (let i = 0; i < devicesInPool.length; i++) {
-      if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
-        if (
-          !devicesInPool[i]?.activity &&
-          `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
-        )
-          findingRange.add(Number(devicesInPool[i].device));
+    const groupByType = groupBy(devicesInPool, "type");
+    const groupByStatus = groupBy(
+      groupByType[deviceSelectionInfo?.group],
+      "status"
+    );
+    let check = [];
+    for (const [key] of Object.entries(groupByStatus)) {
+      if (String(key).toLowerCase() !== "lost") {
+        check = [...check, ...groupByStatus[key]];
       }
     }
-    const result = Array.from(findingRange);
-    const max = Math.max(...result);
-    const min = Math.min(...result);
-    if (result.length > 0) {
+    const max = check?.at(-1)?.device;
+    const min = check[0]?.device;
+    if (check.length > 0) {
       return {
-        max: formattingSerialNumberLeadingZero(
-          max,
-          deviceSelectionInfo.startingNumber
-        ),
-        min: formattingSerialNumberLeadingZero(
-          min,
-          deviceSelectionInfo.startingNumber
-        ),
+        max: max,
+        min: min,
       };
     }
     return {
@@ -110,37 +96,6 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
   }, [deviceSelection]);
 
   subtractRangePerGroupToDisplayItInScreen();
-
-  const checkDeviceAvailability = (props) => {
-    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
-    return grouping[props].at(-1).activity;
-    // return grouping[props].length > 0;
-  };
-  const createReceiverInTransaction = async (props) => {
-    const transaction = new DeviceAssigned(
-      props.paymentIntent,
-      props.device,
-      customer.email,
-      true,
-      event.eventInfoDetail.eventName,
-      user.company,
-      new Date().getTime(),
-      user.companyData.id
-    );
-
-    await devitrakApi.post(
-      "/receiver/receiver-assignation",
-      transaction.render()
-    );
-  };
-
-  const createDevicesInPool = async (props) => {
-    const grouping = groupBy(checkIfDeviceIsInUsed(), "device");
-    await devitrakApi.patch(
-      `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
-      { activity: true, status: "Operational" }
-    );
-  };
 
   const onSubmitRegister = async (data) => {
     try {
@@ -194,31 +149,39 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           (element) => element.device === data.startingNumber
         );
         if (Number(deviceFound) > -1) {
-          for (
-            let index = Number(deviceFound);
-            index < Number(deviceFound) + Number(totalDeviceAssigned);
-            index++
-          ) {
-            const serialNumber = await checkArray(copiedDeviceData[index])
-              .device;
-            if (!checkDeviceAvailability(serialNumber)) {
-              const createTransactionTemplate = {
-                device: {
-                  serialNumber: serialNumber,
-                  deviceType: deviceSelectedOption.deviceType,
-                  status: true,
-                },
-                paymentIntent: reference.current,
-                company: user.companyData.id,
-              };
-              await createReceiverInTransaction(createTransactionTemplate);
-              await createDevicesInPool(serialNumber);
-            } else {
-              let resultingNoAssigned = [];
-              resultingNoAssigned = [...noAssigned, serialNumber];
-              setNoAssigned(resultingNoAssigned);
-            }
-          }
+          const createTransactionTemplate = {
+            serialNumbers: JSON.stringify(copiedDeviceData),
+            deviceType: copiedDeviceData[0].type,
+            status: true,
+            paymentIntent: reference.current,
+            company: user.companyData.id,
+            user: customer.email,
+            eventSelected: event.eventInfoDetail.eventName,
+            provider: user.company,
+            event_id: event.id,
+            timestamp: new Date().toISOString(),
+            qty: data.quantity,
+            startingNumber: data.startingNumber,
+          };
+
+          const templateBulkItemUpdate = {
+            device: copiedDeviceData.slice(
+              deviceFound,
+              deviceFound + Number(data.quantity)
+            ),
+            company: user.companyData.id,
+            activity: true,
+            eventSelected: event.eventInfoDetail.eventName,
+          };
+
+          await devitrakApi.patch(
+            "/receiver/update-bulk-items-in-pool",
+            templateBulkItemUpdate
+          );
+          await devitrakApi.post(
+            "/receiver/create-bulk-item-transaction-in-user",
+            createTransactionTemplate
+          );
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
         await queryClient.refetchQueries({
@@ -245,9 +208,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
         });
         alert("Devices assigned successfully");
         setIsLoading(false);
-        if (noAssigned.length === 0) {
-          return closeModal();
-        }
+        return closeModal();
       }
     } catch (error) {
       setIsLoading(false);
@@ -386,7 +347,7 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           </Typography>
         </Button>
       </form>
-      <div
+      {/* <div
         style={{
           margin: "1rem 0 0 0",
           display: `${noAssigned.length === 0 && "none"}`,
@@ -413,9 +374,11 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
               ))}
           </Space>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 };
 
 export default MultipleDevices;
+
+//`pi_cash_amount:$${data.amount}_received_by:**${user.email}**&` + id;

@@ -39,10 +39,7 @@ export const ReplaceDevice = ({ refetching }) => {
   const { triggerModal, receiverToReplaceObject } = useSelector(
     (state) => state.helper
   );
-  // const refDeviceHasRecordInEvent = useRef(null);
-  // const refDeviceSetInEvent = useRef(null);
   const stampTime = `${new Date()}`;
-  // const { deviceSetup } = event;
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
@@ -63,7 +60,6 @@ export const ReplaceDevice = ({ refetching }) => {
         "device.deviceType": receiverToReplaceObject.deviceType,
         paymentIntent: paymentIntentSelected,
       }),
-    // enabled: false,
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
@@ -74,6 +70,7 @@ export const ReplaceDevice = ({ refetching }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
         company: user.companyData.id,
+        activity: false,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }),
@@ -81,7 +78,6 @@ export const ReplaceDevice = ({ refetching }) => {
     refetchOnMount: false,
     notifyOnChangeProps: ["data", "dataUpdatedAt"],
   });
-
   useEffect(() => {
     const controller = new AbortController();
     assignedDeviceInTransactionQuery.refetch();
@@ -192,20 +188,42 @@ export const ReplaceDevice = ({ refetching }) => {
     });
   };
 
-  const replaceDevice = async (data) => {
-    await updateOldDeviceInPool(data);
-    await updateNewDeviceInPool(data);
-    await updateNewDeviceInTransaction(data);
-    await defectedDevice(data);
-    reportEventLog(data);
-    handleClearRecord();
-    queryClient.invalidateQueries({
-      queryKey: ["assginedDeviceList"],
-      exact: true,
+  //*funtion to check if new device is assigned to another customer
+  const checkIfNewDeviceIsAssignedToAnotherCustomer = async (props) => {
+    const check = await devitrakApi.post("/receiver/receiver-pool-list", {
+      eventSelected: event.eventInfoDetail.eventName,
+      company: user.companyData.id,
+      device: props.serialNumber,
+      type: receiverToReplaceObject.deviceType,
+      activity: true,
     });
-    refetching();
-    openNotificationWithIcon("success", "Device replaced successfully.");
-    closeModal();
+    setValue("serialNumber", "");
+    setValue("reason", "");
+    setValue("otherComment", "");
+    return check.data.receiversInventory.length > 0;
+  };
+  const replaceDevice = async (data) => {
+    const checkingBeforeContinueWithReplace =
+      await checkIfNewDeviceIsAssignedToAnotherCustomer(data);
+    if (checkingBeforeContinueWithReplace) {
+      return alert(
+        "New device is assigned to another customer. Please return this device first."
+      );
+    } else {
+      await updateOldDeviceInPool(data);
+      await updateNewDeviceInPool(data);
+      await updateNewDeviceInTransaction(data);
+      await defectedDevice(data);
+      reportEventLog(data);
+      handleClearRecord();
+      queryClient.invalidateQueries({
+        queryKey: ["assginedDeviceList"],
+        exact: true,
+      });
+      refetching();
+      openNotificationWithIcon("success", "Device replaced successfully.");
+      closeModal();
+    }
   };
 
   return (
@@ -245,7 +263,17 @@ export const ReplaceDevice = ({ refetching }) => {
             </Grid>
             <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
               <label>
-                <p style={{ ...Subtitle, width: "100%", display: `${watch("serialNumber") !== "" ? "flex" : "none"}`, }}>Reason</p>
+                <p
+                  style={{
+                    ...Subtitle,
+                    width: "100%",
+                    display: `${
+                      watch("serialNumber") !== "" ? "flex" : "none"
+                    }`,
+                  }}
+                >
+                  Reason
+                </p>
                 {watch("serialNumber") !== "" && (
                   <Select
                     className="custom-autocomplete"

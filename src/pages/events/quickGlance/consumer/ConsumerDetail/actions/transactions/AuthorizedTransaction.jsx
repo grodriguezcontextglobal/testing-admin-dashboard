@@ -62,7 +62,7 @@ const AuthorizedTransaction = ({
           fontSize={"18px"}
           marginY={2}
         >
-          Please scan device for free transaction:
+          Please scan device for an authorized transaction:
         </Typography>
         <Divider />
         <Box

@@ -203,7 +203,8 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       choice,
       user.company,
       new Date().getTime(),
-      user.companyData.id
+      user.companyData.id,
+      event.id
     );
 
     // const template = {

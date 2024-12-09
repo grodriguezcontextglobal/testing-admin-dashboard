@@ -63,7 +63,7 @@ const ChargedTransaction = ({
           fontSize={"18px"}
           marginY={2}
         >
-          Please scan device for free transaction:
+          Please scan device for charged transaction:
         </Typography>
         <Divider />
         <Box

@@ -92,22 +92,9 @@ const Confirmation = () => {
           event.eventInfoDetail.eventName,
           event.company,
           new Date().getTime(),
-          user.companyData.id
+          user.companyData.id,
+          event.id
         );
-        // const deviceTemplate = {
-        //   paymentIntent: payment_intent,
-        //   device: {
-        //     serialNumber: props,
-        //     deviceType: deviceSelectionPaidTransaction.deviceType.group,
-        //     status: true,
-        //   },
-        //   active: true,
-        //   timeStamp: new Date().getTime(),
-        //   eventSelected: event.eventInfoDetail.eventName,
-        //   provider: event.company,
-        //   user: customer.email,
-        //   company: user.companyData.id,
-        // };
         const response = await addingDeviceInTransactionMutation.mutateAsync(
           deviceTemplate.render()
         );
@@ -197,24 +184,50 @@ const Confirmation = () => {
                 element.device === deviceSelectionPaidTransaction.startingNumber
             );
             if (deviceFound > -1) {
-              for (
-                let index = deviceFound;
-                index <=
-                Number(deviceFound) +
-                  Number(deviceSelectionPaidTransaction.quantity) -
-                  1;
-                index++
-              ) {
-                const argument = await checkArray(copiedData[index]);
-                await formatToDeviceInAssignedReceiverInDocumentInDB(
-                  argument.device
-                );
-                await createDeviceInPool(argument.device);
-              }
+              const createTransactionTemplate = {
+                serialNumbers: JSON.stringify(copiedData),
+                deviceType: copiedData[0].type,
+                status: true,
+                paymentIntent: payment_intent,
+                company: user.companyData.id,
+                user: customer.email,
+                eventSelected: event.eventInfoDetail.eventName,
+                provider: user.company,
+                event_id: event.id,
+                timestamp: new Date().toISOString(),
+                qty: deviceSelectionPaidTransaction.quantity,
+                startingNumber: deviceSelectionPaidTransaction.startingNumber,
+              };
+
+              const templateBulkItemUpdate = {
+                device: copiedData.slice(
+                  deviceFound,
+                  deviceFound + Number(deviceSelectionPaidTransaction.quantity)
+                ),
+                company: user.companyData.id,
+                activity: true,
+                eventSelected: event.eventInfoDetail.eventName,
+              };
+              console.log(
+                "🚀 ~ createTransactionTemplate:",
+                createTransactionTemplate
+              );
+              console.log(
+                "🚀 ~ templateBulkItemUpdate:",
+                templateBulkItemUpdate
+              );
+              await devitrakApi.patch(
+                "/receiver/update-bulk-items-in-pool",
+                templateBulkItemUpdate
+              );
+              await devitrakApi.post(
+                "/receiver/create-bulk-item-transaction-in-user",
+                createTransactionTemplate
+              );
             }
           }
           openNotification(
-            "success",
+            "Success",
             "Device assigned.",
             "All device assigned into account."
           );
@@ -248,6 +261,7 @@ const Confirmation = () => {
     if (triggerStatus) {
       confirmPaymentIntent();
     }
+
     return (
       <Grid
         style={{

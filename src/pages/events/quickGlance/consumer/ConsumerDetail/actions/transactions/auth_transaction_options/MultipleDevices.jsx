@@ -23,6 +23,7 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../../../../styles/global/ant-select.css";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
+import { groupBy } from "lodash";
 
 const MultipleDevices = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -76,35 +77,26 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
   };
   checkIfDeviceIsInUsed();
 
-  const formattingSerialNumberLeadingZero = (num, reference) => {
-    return String(num).padStart(reference?.length, `${reference[0]}`);
-  };
   const subtractRangePerGroupToDisplayItInScreen = useCallback(() => {
     const devicesInPool = checkIfDeviceIsInUsed();
     const deviceSelectionInfo = JSON.parse(deviceSelection);
-    const findingRange = new Set();
-    for (let i = 0; i < devicesInPool?.length; i++) {
-      if (devicesInPool[i]?.type === deviceSelectionInfo?.group) {
-        if (
-          !devicesInPool[i]?.activity && //`${devicesInPool[i]?.activity}`.toLowerCase() === "no" &&
-          `${devicesInPool[i]?.status}`.toLowerCase() !== "lost"
-        )
-          findingRange.add(Number(devicesInPool[i].device));
+    const groupByType = groupBy(devicesInPool, "type");
+    const groupByStatus = groupBy(
+      groupByType[deviceSelectionInfo?.group],
+      "status"
+    );
+    let check = [];
+    for (const [key] of Object.entries(groupByStatus)) {
+      if (String(key).toLowerCase() !== "lost") {
+        check = [...check, ...groupByStatus[key]];
       }
     }
-    const result = Array.from(findingRange);
-    const max = Math.max(...result);
-    const min = Math.min(...result);
-    if (result?.length > 0) {
+    const max = check?.at(-1)?.device;
+    const min = check[0]?.device;
+    if (check.length > 0) {
       return {
-        max: formattingSerialNumberLeadingZero(
-          max,
-          deviceSelectionInfo.startingNumber
-        ),
-        min: formattingSerialNumberLeadingZero(
-          min,
-          deviceSelectionInfo.startingNumber
-        ),
+        max: max,
+        min: min,
       };
     }
     return {
@@ -112,6 +104,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
       min: 0,
     };
   }, [deviceSelection]);
+
   subtractRangePerGroupToDisplayItInScreen();
 
   const generatePaymentIntent = async (data) => {
@@ -209,7 +202,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
             disabled={clientSecret !== ""}
             {...register("startingNumber")}
             autoFocus={true}
-            style={{ ...OutlinedInputStyle, width: "90%" }}
+            style={{ ...OutlinedInputStyle, width: "80%" }}
             placeholder="Scan or enter starting serial number"
           />
           <FormControl style={{ width: "20%" }}>
@@ -261,7 +254,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
         />
       )}
       {clientSecret !== "" && (
-        <Button onClick={() => closeModal()}>Cancel</Button>
+        <Button
+          style={{ ...BlueButton, width: "100%" }}
+          onClick={() => closeModal()}
+        >
+          <p style={BlueButtonText}>Cancel</p>
+        </Button>
       )}
     </>
   );

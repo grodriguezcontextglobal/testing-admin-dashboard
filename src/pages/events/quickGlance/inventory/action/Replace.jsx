@@ -156,49 +156,71 @@ export const Replace = () => {
     );
   };
 
+  //*function to check if new device to assign is assigned to another customer
+  const checkIfNewDeviceIsAssignedToAnotherCustomer = async (props) => {
+    const check = await devitrakApi.post("/receiver/receiver-pool-list", {
+      eventSelected: event.eventInfoDetail.eventName,
+      company: user.companyData.id,
+      device: props.serialNumber,
+      type: deviceInfoSelected.entireData.type,
+      activity: true,
+    });
+    setValue("serialNumber", "");
+    setValue("reason", "");
+    setValue("otherComment", "");
+    return check.data.receiversInventory.length > 0;
+  };
   //*function to create activity in repot document in DB
   const replaceDevice = async (data) => {
-    await updateOldDeviceInPool(data);
-    await updateNewDeviceInPool(data);
-    await updateNewDeviceInTransaction(data);
-    await defectedDevice(data);
-    queryClient.invalidateQueries({
-      queryKey: ["assignedDeviceInEvent"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({ queryKey: ["pool"], exact: true });
-    queryClient.invalidateQueries({
-      queryKey: ["devicesAssignedPerTransaction"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["assginedDeviceList"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["listOfDevicesInPool"],
-      exact: true,
-    });
-    dispatch(
-      onAddDeviceToDisplayInQuickGlance({
-        company: [event.eventInfoDetail.eventName, event.company],
-        activity: true,
-        status: "Operational",
-        serialNumber: data.serialNumber,
-        user: "YES",
-        entireData: {
-          eventSelected: event.eventInfoDetail.eventName,
-          device: data.serialNumber,
-          type: deviceInfoSelected.entireData.type,
-          status: "Operational",
+    const checkingBeforeContinueWithReplace =
+      await checkIfNewDeviceIsAssignedToAnotherCustomer(data);
+    if (checkingBeforeContinueWithReplace) {
+      return alert(
+        "New device is assigned to another customer. Please return this device first."
+      );
+    } else {
+      await updateOldDeviceInPool(data);
+      await updateNewDeviceInPool(data);
+      await updateNewDeviceInTransaction(data);
+      await defectedDevice(data);
+      queryClient.invalidateQueries({
+        queryKey: ["assignedDeviceInEvent"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({ queryKey: ["pool"], exact: true });
+      queryClient.invalidateQueries({
+        queryKey: ["devicesAssignedPerTransaction"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["assginedDeviceList"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["listOfDevicesInPool"],
+        exact: true,
+      });
+      dispatch(
+        onAddDeviceToDisplayInQuickGlance({
+          company: [event.eventInfoDetail.eventName, event.company],
           activity: true,
-          comment: "No comment",
-          provider: event.company,
-          id: newDeviceInfoFromPool.id,
-        },
-      })
-    );
-    closeModal();
+          status: "Operational",
+          serialNumber: data.serialNumber,
+          user: "YES",
+          entireData: {
+            eventSelected: event.eventInfoDetail.eventName,
+            device: data.serialNumber,
+            type: deviceInfoSelected.entireData.type,
+            status: "Operational",
+            activity: true,
+            comment: "No comment",
+            provider: event.company,
+            id: newDeviceInfoFromPool.id,
+          },
+        })
+      );
+      closeModal();
+    }
   };
   return (
     <Modal

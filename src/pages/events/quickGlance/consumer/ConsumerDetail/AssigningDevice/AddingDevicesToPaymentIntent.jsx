@@ -201,7 +201,8 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       choice,
       user.company,
       new Date().getTime(),
-      user.companyData.id
+      user.companyData.id,
+      event.id
     );
 
     try {

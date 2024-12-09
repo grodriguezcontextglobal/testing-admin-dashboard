@@ -41,7 +41,7 @@ const Capturing = ({
     (state) => state.stripe
   );
   const { event } = useSelector((state) => state.event);
-  const { user } = useSelector(state => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
@@ -53,9 +53,14 @@ const Capturing = ({
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
     queryFn: () =>
-      devitrakApi.get(`/transaction/transaction?paymentIntent=${paymentIntentDetailSelected.paymentIntent}&active=${true}`),
+      devitrakApi.get(
+        `/transaction/transaction?paymentIntent=${
+          paymentIntentDetailSelected.paymentIntent
+        }&active=${true}`
+      ),
     refetchOnMount: false,
   });
+  console.log(stripeTransactionQuery?.data?.data);
   const queryClient = useQueryClient();
   const {
     register,
@@ -69,8 +74,8 @@ const Capturing = ({
   useEffect(() => {
     stripeTransactionQuery.refetch();
     transactionQuery.refetch();
-  },[])
-  
+  }, []);
+
   const maxAmount = stripeTransactionQuery?.data?.data?.paymentIntent?.amount;
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
   const initalValue = useCallback(() => {
@@ -237,10 +242,29 @@ const Capturing = ({
                       desired value before submitting.
                     </p>
                   </FormHelperText>
-                  <Button type="submit" style={BlueButton}>
+                  <Button
+                    type="submit"
+                    style={{
+                      ...BlueButton,
+                      width: "100%",
+                      backgroundColor:
+                        stripeTransactionQuery?.data?.data?.paymentIntent
+                          ?.status === "succeeded"
+                          ? "var(--disabled-blue-button)"
+                          : BlueButtonText.backgroundColor,
+                    }}
+                  >
                     <Typography
                       textTransform={"none"}
-                      style={{ ...BlueButtonText, width: "100%" }}
+                      style={{
+                        ...BlueButtonText,
+                        width: "100%",
+                        backgroundColor:
+                          stripeTransactionQuery?.data?.data?.paymentIntent
+                            ?.status === "succeeded"
+                            ? "var(--disabled-blue-button)"
+                            : BlueButtonText.backgroundColor,
+                      }}
                     >
                       Capture deposit
                     </Typography>

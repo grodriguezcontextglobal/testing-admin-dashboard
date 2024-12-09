@@ -224,7 +224,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         customer.id ?? customer.uid,
         user.company,
         new Date().getTime(),
-        user.companyData.id
+        user.companyData.id,
+        props.event_id
       );
       await devitrakApi.post("/receiver/receiver-assignation", {
         ...transaction.render(),
@@ -297,7 +298,11 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
         qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
       });
-      await transactionDeviceAdded(props);
+      const templateProps = {
+        ...props,
+        event_id: eventId.id
+      }
+      await transactionDeviceAdded(templateProps);
     }
   };
 

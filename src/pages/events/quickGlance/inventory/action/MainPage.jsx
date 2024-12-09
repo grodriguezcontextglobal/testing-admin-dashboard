@@ -77,7 +77,7 @@ const ActionsMainPage = () => {
             activity: false,
           }
         );
-        openNotificationWithIcon("success", "Device returned.");
+        openNotificationWithIcon("Success", "Device returned.");
         queryClient.invalidateQueries({
           queryKey: ["assignedDeviceListQuery"],
           exact: true,

@@ -83,7 +83,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     },
     getCheckboxProps: (record) => {
       return {
-        disabled: record.status === false,
+        disabled: record.status === false || typeof record.status === "string",
       };
     },
   };
@@ -571,7 +571,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
             onClick={() => setOpenReturnDeviceInBulkModal(true)}
           >
             <p style={BlueButtonText}>
-              Return multiple items of this transaction
+              Return multiple items of this transaction | Total items to return: {selectedItems.length}
             </p>
           </Button>
           <Table
@@ -598,6 +598,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           record={rowRecord}
           refetching={refetchingFn}
           selectedItems={selectedItems}
+          setSelectedItems={setSelectedItems}
         />
       )}
     </>
