@@ -57,8 +57,10 @@ const EditingServiceInEvent = ({
 
   const handleAddService = async (data) => {
     setLoadingStatus(true);
-    const newServices = [...eventServiceCopy, data];
-    let updatingEvent = event;
+    let newServices = [...eventServiceCopy, data];
+    let updatingEvent = {
+      ...event
+    };
     updatingEvent.extraServices = newServices;
     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
       extraServices: newServices,
@@ -66,13 +68,19 @@ const EditingServiceInEvent = ({
     if (response.data) {
       setEventServiceCopy(newServices);
       setLoadingStatus(false);
+      dispatch(
+        onAddEventData({
+          ...event,
+          extraServices: newServices,
+        })
+      );
+
       return openNotification("Service added to event successfully");
     }
     return setLoadingStatus(false);
   };
 
   const handleUpdateServiceNeededInEvent = async (e) => {
-    console.log(e);
     setLoadingStatus(true);
     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
       extraServicesNeeded: e,
@@ -86,7 +94,7 @@ const EditingServiceInEvent = ({
       );
       setNeedService(e);
       setLoadingStatus(false);
-      return openNotification("Service needed in event successfully");
+      return openNotification(e ? "Enabling service in this event." : "Disabling service in this event.");
     }
   };
   return (
@@ -114,7 +122,10 @@ const EditingServiceInEvent = ({
               alignItems: "center",
             }}
           >
-            <p style={{ ...Subtitle, fontWeight: 500 }}>Do you need to offer some service in this event?</p>&nbsp;
+            <p style={{ ...Subtitle, fontWeight: 500 }}>
+              Do you need to offer some service in this event?
+            </p>
+            &nbsp;
             <Switch
               key={"need-service"}
               defaultChecked={needService}
