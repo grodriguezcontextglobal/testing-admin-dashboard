@@ -32,7 +32,7 @@ const Releasing = ({
     (state) => state.stripe
   );
   const { event } = useSelector((state) => state.event);
-  const { user } = useSelector(state => state.admin)
+  const { user } = useSelector((state) => state.admin);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
@@ -44,7 +44,11 @@ const Releasing = ({
   const transactionQuery = useQuery({
     queryKey: ["transaction"],
     queryFn: () =>
-      devitrakApi.get(`/transaction/transaction?paymentIntent=${paymentIntentDetailSelected.paymentIntent}&active=${true}`),
+      devitrakApi.get(
+        `/transaction/transaction?paymentIntent=${
+          paymentIntentDetailSelected.paymentIntent
+        }&active=${true}`
+      ),
     refetchOnMount: false,
   });
   const queryClient = useQueryClient();
@@ -54,7 +58,7 @@ const Releasing = ({
   useEffect(() => {
     stripeTransactionQuery.refetch();
     transactionQuery.refetch();
-  },[])
+  }, []);
   const renderingTitle = () => {
     return (
       <Typography
@@ -129,7 +133,7 @@ const Releasing = ({
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
-      style={{zIndex:30}}
+      style={{ zIndex: 30 }}
     >
       {contextHolder}
       <Grid
@@ -269,9 +273,24 @@ const Releasing = ({
                   style={{
                     ...BlueButton,
                     width: "100%",
+                    backgroundColor:
+                      stripeTransactionQuery?.data?.data?.paymentIntent
+                        ?.status === "canceled"
+                        ? "var(--disabled-blue-button)"
+                        : BlueButtonText.backgroundColor,
                   }}
                 >
-                  <Typography textTransform={"none"} style={BlueButtonText}>
+                  <Typography
+                    textTransform={"none"}
+                    style={{
+                      ...BlueButtonText,
+                      backgroundColor:
+                        stripeTransactionQuery?.data?.data?.paymentIntent
+                          ?.status === "canceled"
+                          ? "var(--disabled-blue-button)"
+                          : BlueButtonText.backgroundColor,
+                    }}
+                  >
                     {stripeTransactionQuery?.data?.data?.paymentIntent
                       ?.status === "canceled"
                       ? "Transaction released already"
