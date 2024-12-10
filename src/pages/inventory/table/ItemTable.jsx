@@ -18,7 +18,7 @@ import "../../../styles/global/ant-table.css";
 import "../style/details.css";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import DownloadPdf from "../actions/DownloadPdf";
+// import DownloadPdf from "../actions/DownloadPdf";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -505,12 +505,13 @@ const ItemTable = ({ searchItem }) => {
                     display: "flex",
                     justifyContent: "flex-end",
                     alignItems: "center",
-                    marginRight: "5px",
+                    // marginRight: "5px",
                     padding: "0 0 0 0",
                   }}
                 >
-                  <DownloadingXlslFile props={dataToDisplay()} />&nbsp;&nbsp;
-                  <DownloadPdf data={dataToDisplay()} />
+                  <DownloadingXlslFile props={dataToDisplay()} />
+                  {/* &nbsp;&nbsp; */}
+                  {/* <DownloadPdf data={dataToDisplay()} /> */}
                 </div>{" "}
               </Grid>
 
