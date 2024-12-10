@@ -8,7 +8,7 @@ import {
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery } from "@tanstack/react-query";
 import { Card, Divider, Modal, Popconfirm, Select, Space, Tag } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -46,10 +46,21 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }),
   });
 
+  useEffect(() => {
+    const controller = new AbortController();
+    itemQuery.refetch();
+    
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const groupingItemByCategoriesToRenderThemInSelector = () => {
     const result = new Map();
-    for (let data of dataFound) {
+    const dataToIterate =
+      typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
+    for (let data of dataToIterate) {
       if (!result.has(data.category_name)) {
         result.set(data.category_name, [data]);
       } else {
@@ -164,7 +175,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         activity: false,
         comment: "No comment",
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id,
+        company: user.companyData.id,
         type: valueItemSelected[index].item_group,
       });
     }
@@ -206,7 +217,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       "/receiver/receiver-pool-list",
       {
         eventSelected: event.eventInfoDetail.eventName,
-        company:user.companyData.id,
+        company: user.companyData.id,
         type: props.group,
       }
     );
@@ -237,7 +248,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {
-        company:user.companyData.id,
+        company: user.companyData.id,
         eventSelected: event.eventInfoDetail.eventName,
         "device.deviceType": props.group,
         "device.status": true,
@@ -274,7 +285,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        zindex:30
+        zindex: 30,
       }}
       width={1000}
       footer={[]}

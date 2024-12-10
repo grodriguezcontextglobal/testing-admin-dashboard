@@ -89,39 +89,41 @@ const ModalAddAndUpdateDeviceSetup = ({
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
   const optionsToRenderInSelector = () => {
-    const locations = groupBy(dataFound, "location");
+    const dataToIterate =
+      typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
+    const locations = groupBy(dataToIterate, "location");
     return locations;
   };
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
     setValueItemSelected(optionRendering);
   };
-  const orderValuesInPlace = (values) => {
-    return values.sort((a, b) => parseInt(a) - parseInt(b));
-  };
-  const deviceRanging = () => {
-    let ranges = [];
-    for (let item of listOfLocations) {
-      ranges = [
-        ...ranges,
-        item.deviceInfo[0].serial_number,
-        item.deviceInfo[Number(item.quantity) - 1].serial_number,
-      ];
-    }
-    return orderValuesInPlace(ranges);
-  };
+  // const orderValuesInPlace = (values) => {
+  //   return values.sort((a, b) => parseInt(a) - parseInt(b));
+  // };
+  // const deviceRanging = () => {
+  //   let ranges = [];
+  //   for (let item of listOfLocations) {
+  //     ranges = [
+  //       ...ranges,
+  //       item.deviceInfo[0].serial_number,
+  //       item.deviceInfo[Number(item.quantity) - 1].serial_number,
+  //     ];
+  //   }
+  //   return orderValuesInPlace(ranges);
+  // };
 
-  const updateDeviceSetupInEvent = async () => {
-    const ranging = deviceRanging();
+  const updateDeviceSetupInEvent = async (props) => {
+    const ranging = props.deviceInfo //deviceRanging();
     const updateDeviceInv = [...event.deviceSetup];
     const foundIndex = updateDeviceInv.findIndex(
-      (element) => element.group === listOfLocations[0].deviceInfo[0].item_group
+      (element) => element.group === props.deviceInfo[0].item_group
     );
     if (foundIndex > -1) {
       updateDeviceInv[foundIndex] = {
         ...updateDeviceInv[foundIndex],
-        startingNumber: ranging[0],
-        endingNumber: ranging.at(-1),
+        startingNumber: ranging[0].serial_number,
+        endingNumber: ranging.at(-1).serial_number,
       };
     }
     const updatingDeviceInEvent = await devitrakApi.patch(
@@ -144,20 +146,25 @@ const ModalAddAndUpdateDeviceSetup = ({
     const index = props.deviceInfo.findIndex(
       (element) => element.serial_number === props.startingNumber
     );
-    const data = props.deviceInfo.slice(index, index + Number(props.quantity));
-    const template = {
-      deviceList: JSON.stringify(data),
-      status: "Operational",
-      activity: false,
-      comment: "No comment",
-      eventSelected: eventInfoDetail.eventName,
-      provider: user.company,
-      type: props.deviceInfo[0].item_group,
-      company: user.companyData.id,
-    };
-    await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-    await updateDeviceSetupInEvent();
-    return null;
+    if (index > -1) {
+      const data = props.deviceInfo.slice(
+        index,
+        index + Number(props.quantity)
+      );
+      const template = {
+        deviceList: JSON.stringify(data),
+        status: "Operational",
+        activity: false,
+        comment: "No comment",
+        eventSelected: eventInfoDetail.eventName,
+        provider: user.company,
+        type: props.deviceInfo[0].item_group,
+        company: user.companyData.id,
+      };
+      await devitrakApi.post("/receiver/receivers-pool-bulk", template);
+      await updateDeviceSetupInEvent(props);
+      return null;
+    }
   };
   const createDeviceInEvent = async (props) => {
     const event_id = checkArray(eventInfoSqlDB?.data?.data?.event).event_id;
@@ -204,10 +211,22 @@ const ModalAddAndUpdateDeviceSetup = ({
       return setListOfLocations(result);
     }
   };
+  console.log(listOfLocations);
   const handleDevicesInEvent = async () => {
     setLoading(true);
     for (let data of listOfLocations) {
-      await createDeviceInEvent(data);
+      const index = data.deviceInfo.findIndex(
+        (element) => element.serial_number === data.startingNumber
+      );
+      if (index > -1) {
+        const deviceInfo = [...data.deviceInfo].slice(
+          index,
+          index + Number(data.quantity)
+        );
+        await createDeviceInEvent({ ...data, deviceInfo: deviceInfo });
+      } else {
+        console.log('device not found');
+      }
     }
     setLoading(false);
     return await closeModal();

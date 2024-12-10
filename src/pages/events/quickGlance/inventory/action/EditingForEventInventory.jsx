@@ -56,7 +56,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const groupingItemByCategoriesToRenderThemInSelector = () => {
     const result = new Map();
-    for (let data of dataFound) {
+    const dataToIterate = typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
+    for (let data of dataToIterate) {
       if (!result.has(data.category_name)) {
         result.set(data.category_name, [data]);
       } else {
