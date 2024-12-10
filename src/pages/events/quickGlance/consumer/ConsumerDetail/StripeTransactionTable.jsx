@@ -145,6 +145,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         paymentIntent: record.paymentIntent,
       });
       await devitrakApi.patch(`/transaction/update-transaction/${record.id}`, {
+        id:record.id,
         active: false,
       });
       const emailTemplate = {

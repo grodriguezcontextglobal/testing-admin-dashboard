@@ -106,7 +106,6 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       return sortedByDevice[serialNumber];
     }
     refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
-
     return Array.from(dataToRetrieve);
   };
   if (serialNumber?.length > 0) {
@@ -280,8 +279,8 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           }
 
           openNotificationWithIcon(
-            "success",
-            "devices are being added, they will be displayed shortly."
+            "Success",
+            "Devices are being added, they will be displayed shortly."
           );
           setValue("serialNumber", "");
           setSubmittedAction(false);
