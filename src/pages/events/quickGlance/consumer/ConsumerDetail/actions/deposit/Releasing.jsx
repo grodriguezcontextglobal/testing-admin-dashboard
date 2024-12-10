@@ -96,7 +96,7 @@ const Releasing = ({
       const dateRef = dateString.split(" ");
       await devitrakApi.patch(
         `/transaction/update-transaction/${transactionInfo.id}`,
-        { active: false }
+        { active: false, id: transactionInfo.id }
       );
       devitrakApi.post("/nodemailer/deposit-return-notification", {
         consumer: {
@@ -273,22 +273,12 @@ const Releasing = ({
                   style={{
                     ...BlueButton,
                     width: "100%",
-                    backgroundColor:
-                      stripeTransactionQuery?.data?.data?.paymentIntent
-                        ?.status === "canceled"
-                        ? "var(--disabled-blue-button)"
-                        : BlueButtonText.backgroundColor,
                   }}
                 >
                   <Typography
                     textTransform={"none"}
                     style={{
                       ...BlueButtonText,
-                      backgroundColor:
-                        stripeTransactionQuery?.data?.data?.paymentIntent
-                          ?.status === "canceled"
-                          ? "var(--disabled-blue-button)"
-                          : BlueButtonText.backgroundColor,
                     }}
                   >
                     {stripeTransactionQuery?.data?.data?.paymentIntent

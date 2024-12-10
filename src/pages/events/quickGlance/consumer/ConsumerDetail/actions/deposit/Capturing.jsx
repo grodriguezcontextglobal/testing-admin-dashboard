@@ -110,7 +110,7 @@ const Capturing = ({
           const dateRef = dateString.split(" ");
           await devitrakApi.patch(
             `/transaction/update-transaction/${transactionInfo.id}`,
-            { active: false }
+            { active: false, id: transactionInfo.id }
           );
           await devitrakApi.post("/nodemailer/deposit-collected-notification", {
             consumer: {
@@ -243,15 +243,11 @@ const Capturing = ({
                     </p>
                   </FormHelperText>
                   <Button
+                    disabled={stripeTransactionQuery?.data?.data?.paymentIntent.status !== "requires_capture"}
                     type="submit"
                     style={{
                       ...BlueButton,
                       width: "100%",
-                      backgroundColor:
-                        stripeTransactionQuery?.data?.data?.paymentIntent
-                          ?.status === "succeeded"
-                          ? "var(--disabled-blue-button)"
-                          : BlueButtonText.backgroundColor,
                     }}
                   >
                     <Typography
@@ -259,11 +255,6 @@ const Capturing = ({
                       style={{
                         ...BlueButtonText,
                         width: "100%",
-                        backgroundColor:
-                          stripeTransactionQuery?.data?.data?.paymentIntent
-                            ?.status === "succeeded"
-                            ? "var(--disabled-blue-button)"
-                            : BlueButtonText.backgroundColor,
                       }}
                     >
                       Capture deposit
