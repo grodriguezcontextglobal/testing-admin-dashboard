@@ -70,7 +70,7 @@ export const ReplaceDevice = ({ refetching }) => {
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
         company: user.companyData.id,
-        activity: false,
+        activity: true,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }),
@@ -199,6 +199,7 @@ export const ReplaceDevice = ({ refetching }) => {
     });
     return check.data.receiversInventory.length > 0;
   };
+
   const replaceDevice = async (data) => {
     const checkingBeforeContinueWithReplace =
       await checkIfNewDeviceIsAssignedToAnotherCustomer(data);
