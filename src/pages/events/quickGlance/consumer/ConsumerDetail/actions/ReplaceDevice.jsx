@@ -197,15 +197,15 @@ export const ReplaceDevice = ({ refetching }) => {
       type: receiverToReplaceObject.deviceType,
       activity: true,
     });
-    setValue("serialNumber", "");
-    setValue("reason", "");
-    setValue("otherComment", "");
     return check.data.receiversInventory.length > 0;
   };
   const replaceDevice = async (data) => {
     const checkingBeforeContinueWithReplace =
       await checkIfNewDeviceIsAssignedToAnotherCustomer(data);
     if (checkingBeforeContinueWithReplace) {
+      setValue("serialNumber", "");
+      setValue("reason", "");
+      setValue("otherComment", "");
       return alert(
         "New device is assigned to another customer. Please return this device first."
       );
