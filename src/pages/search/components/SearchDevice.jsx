@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -25,6 +25,7 @@ import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 const SearchDevice = () => {
   const location = useLocation();
+  const ref = useRef(location.search);
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -105,14 +106,13 @@ const SearchDevice = () => {
       return setFoundDeviceData([]);
     }
   };
-
   useEffect(() => {
     const controller = new AbortController();
     checkingIfItemInWarehouseOrNot();
     return () => {
       controller.abort();
     };
-  }, [location.key, location.search]); //searchParams, loadingSearchingResult, foundDeviceData[0]
+  }, [ref.current !== location.key]); //
 
   const sortAndRenderFoundData = () => {
     if (searchingQuery.data) {
