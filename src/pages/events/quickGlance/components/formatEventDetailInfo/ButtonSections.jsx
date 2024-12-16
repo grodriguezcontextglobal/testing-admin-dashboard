@@ -11,9 +11,8 @@ import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-// import EmailNotification from "../../../../../components/notification/email/EmailNotification";
-// import SpreadSheet from "../SpreadSheet";
-// import EndEventButton from "./EndEventButton";
+import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
 );
@@ -26,6 +25,7 @@ const ButtonSections = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [sendEventLink, setSendEventLink] = useState(false);
+  const [createUserButton, setCreateUserButton] = useState(false);
   const [
     customizedEmailNotificationModal,
     setCustomizedEmailNotificationModal,
@@ -54,7 +54,6 @@ const ButtonSections = () => {
         provider: event.company,
       }),
   });
-  // const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -67,12 +66,12 @@ const ButtonSections = () => {
   }, []);
 
   const options = [
-    // {
-    //   icon: <PrinterIcon />,
-    //   text: "Print All Serial Numbers",
-    //   disableStatus: true,
-    //   fn: () => navigate("/page-to-print"),
-    // },
+    {
+      icon: <WhiteCirclePlusIcon/>,
+      text: "Add new consumer",
+      disableStatus: !event.active,
+      fn: () => setCreateUserButton(true),
+    },
     {
       icon: <EmailIcon />,
       text: "Email Notifications to Attendees",
@@ -82,7 +81,7 @@ const ButtonSections = () => {
     {
       icon: <LinkIcon />,
       text: "Send event link.",
-      disableStatus: false,
+      disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
   ];
@@ -283,6 +282,12 @@ const ButtonSections = () => {
         <SendEventLinkModal
           sendEventLink={sendEventLink}
           setSendEventLink={setSendEventLink}
+        />
+      )}
+      {createUserButton && (
+        <CreateNewConsumer
+          createUserButton={createUserButton}
+          setCreateUserButton={setCreateUserButton}
         />
       )}
     </Suspense>

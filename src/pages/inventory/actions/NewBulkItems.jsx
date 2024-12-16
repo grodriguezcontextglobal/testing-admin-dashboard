@@ -44,6 +44,7 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
 import "./style.css";
+import costValueInputFormat from "../utils/costValueInputFormat";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -59,6 +60,7 @@ const AddNewBulkItems = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
@@ -380,6 +382,15 @@ const AddNewBulkItems = () => {
       </>
     );
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    costValueInputFormat({ props: watch("cost"), setValue });
+    return () => {
+      controller.abort();
+    };
+  }, [watch("cost")]);
+
   return (
     <Grid
       display={"flex"}
@@ -578,7 +589,7 @@ const AddNewBulkItems = () => {
                 textAlign={"left"}
                 style={{ ...Subtitle, fontWeight: 500 }}
               >
-                Cost of replace device
+                Replacement cost
               </Typography>
             </InputLabel>
             <OutlinedInput
@@ -586,7 +597,7 @@ const AddNewBulkItems = () => {
               {...register("cost", { required: true })}
               aria-invalid={errors.cost}
               style={OutlinedInputStyle}
-              placeholder="e.g. $200"
+              placeholder="e.g. 12000.54 | 95.44 | 4585"
               startAdornment={
                 <InputAdornment position="start">
                   <Typography
