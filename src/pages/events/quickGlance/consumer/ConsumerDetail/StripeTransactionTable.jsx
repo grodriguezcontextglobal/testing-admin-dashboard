@@ -311,7 +311,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                         ...BlueButtonText,
                       }}
                     >
-                      Release
+                      Release deposit
                     </Typography>
                   </Button>
                 </Popconfirm>
@@ -348,55 +348,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     }}
                   >
                     <Typography textTransform={"none"} style={BlueButtonText}>
-                      Capture
+                      Capture fund
                     </Typography>
                   </Button>
                 </Popconfirm>
               </Grid>
             )}
-          {/* {record.device[0].deviceNeeded > 4 && (
-            <Grid
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              display={"flex"}
-              alignItems={"center"}
-            >
-              <Tooltip title="This option is to return bulk of devices">
-                <Button
-                  onClick={() => handleReturnDeviceInBulk(record)}
-                  style={{
-                    ...CenteringGrid,
-                    ...DangerButton,
-                    width: "100%",
-                    border: `${
-                      !record.active
-                        ? "1px solid var(--disabled-danger-button)"
-                        : DangerButton.border
-                    }`,
-                    background: `${
-                      !record.active
-                        ? "var(--disabled-danger-button)"
-                        : DangerButton.background
-                    }`,
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      ...DangerButtonText,
-                      cursor: "pointer",
-                      color: "#fff",
-                      padding: "0px 8px",
-                    }}
-                  >
-                    Bulk return
-                  </Typography>
-                </Button>
-              </Tooltip>
-            </Grid>
-          )} */}
         </Grid>
       ),
     },
