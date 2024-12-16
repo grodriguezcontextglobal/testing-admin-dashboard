@@ -3,10 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, Card, Popconfirm, notification } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { ExchangeIcon } from "../../../../../components/icons/ExchangeIcon";
-import { LostIcon } from "../../../../../components/icons/LostIcon";
-import { ReturnIcon } from "../../../../../components/icons/ReturnIcon";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import {
@@ -24,14 +22,15 @@ import { DangerButtonText } from "../../../../../styles/global/DangerButtonText"
 import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import Choice from "../lostFee/Choice";
+import UpdateStatus from "./components/UpdateStatus";
 import { Replace } from "./Replace";
-import { useNavigate } from "react-router-dom";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const { triggerModal } = useSelector((state) => state.helper);
+  const [modalUpdateStatus, setModalUpdateStatus] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
@@ -96,7 +95,7 @@ const ActionsMainPage = () => {
             },
           })
         );
-        return setTimeout(()=> navigate(`/events/event-quickglance`), 1000);
+        return setTimeout(() => navigate(`/events/event-quickglance`), 1000);
       }
     }
   };
@@ -172,8 +171,8 @@ const ActionsMainPage = () => {
       <Grid
         padding={"0px"}
         display={"flex"}
-        justifyContent={"space-between"}
-        textAlign={"left"}
+        justifyContent={"flex-end"}
+        textAlign={"right"}
         alignItems={"flex-start"}
         alignSelf={"stretch"}
         item
@@ -192,29 +191,29 @@ const ActionsMainPage = () => {
             padding: 0,
           }}
         >
-          {deviceInfoSelected.activity && (
+          {deviceInfoSelected.activity ? (
             <Grid
               container
               display={"flex"}
-              justifyContent={"space-between"}
+              justifyContent={"flex-end"}
               alignItems={"center"}
             >
               <Grid
                 display={"flex"}
-                justifyContent={"center"}
+                justifyContent={"space-between"}
                 alignItems={"center"}
+                gap={1}
                 margin={"0 5px 0 0"}
                 item
                 xs={12}
                 sm={12}
-                md={4}
-                lg={3}
+                md={12}
+                lg={12}
               >
                 <Button
                   onClick={() => handleLostSingleDevice()}
                   style={{ ...DangerButton, outline: "none" }}
                 >
-                  <LostIcon />
                   <p
                     style={{
                       ...DangerButtonText,
@@ -225,24 +224,10 @@ const ActionsMainPage = () => {
                     lost
                   </p>
                 </Button>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                margin={"0 5px 0 0"}
-                gap={1}
-                item
-                xs={12}
-                sm={12}
-                md={4}
-                lg={3}
-              >
                 <Button
                   onClick={() => exchangeDefectedDevice()}
                   style={{ ...DangerButton, outline: "none" }}
                 >
-                  <ExchangeIcon />
                   <p
                     style={{
                       ...DangerButtonText,
@@ -253,29 +238,41 @@ const ActionsMainPage = () => {
                     exchange
                   </p>
                 </Button>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                item
-                xs={12}
-                sm={12}
-                md={4}
-                lg={3}
-              >
                 <Popconfirm
                   title="Are you sure?"
                   onConfirm={() => handleReturnDevice()}
                 >
                   <Button style={{ ...LightBlueButton, outline: "none" }}>
-                    <ReturnIcon />
                     <p style={{ ...LightBlueButtonText, textAlign: "left" }}>
                       Return
                     </p>
                   </Button>
                 </Popconfirm>
               </Grid>
+            </Grid>
+          ) : (
+            <Grid
+              style={{ display: deviceInfoSelected.activity && "none" }}
+              item
+              xs={12}
+              sm={12}
+              md={4}
+              lg={3}
+            >
+              <Button
+                onClick={() => setModalUpdateStatus(true)}
+                style={{ ...DangerButton, outline: "none" }}
+              >
+                <p
+                  style={{
+                    ...DangerButtonText,
+                    textTransform: "capitalize",
+                    textAlign: "left",
+                  }}
+                >
+                  edit status
+                </p>
+              </Button>
             </Grid>
           )}
         </Card>
@@ -284,6 +281,12 @@ const ActionsMainPage = () => {
         <Choice openModal={openLostModal} setOpenModal={setOpenLostModal} />
       )}
       {triggerModal && <Replace />}
+      {modalUpdateStatus && (
+        <UpdateStatus
+          openUpdateStatusModal={modalUpdateStatus}
+          setOpenUpdateStatusModal={setModalUpdateStatus}
+        />
+      )}
     </>
   );
 };
