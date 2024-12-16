@@ -88,11 +88,24 @@ const ModalAddAndUpdateDeviceSetup = ({
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
+
   const optionsToRenderInSelector = () => {
     const dataToIterate =
       typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
     const locations = groupBy(dataToIterate, "location");
-    return locations;
+    const options = new Map();
+    for (const [key, value] of Object.entries(locations)) {
+      const serialNumberList = groupBy(value, "serial_number");
+      options.set(key, {
+        qty: value.length,
+        data: JSON.stringify(value),
+        start: value[0].serial_number,
+        end: value.at(-1).serial_number,
+        serialNumberList: JSON.stringify(serialNumberList),
+      });
+    }
+    // return locations
+    return options;
   };
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
@@ -114,7 +127,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   // };
 
   const updateDeviceSetupInEvent = async (props) => {
-    const ranging = props.deviceInfo //deviceRanging();
+    const ranging = props.deviceInfo; //deviceRanging();
     const updateDeviceInv = [...event.deviceSetup];
     const foundIndex = updateDeviceInv.findIndex(
       (element) => element.group === props.deviceInfo[0].item_group
@@ -142,6 +155,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
     }
   };
+
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const index = props.deviceInfo.findIndex(
       (element) => element.serial_number === props.startingNumber
@@ -166,6 +180,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       return null;
     }
   };
+
   const createDeviceInEvent = async (props) => {
     const event_id = checkArray(eventInfoSqlDB?.data?.data?.event).event_id;
     const database = [...props.deviceInfo];
@@ -202,7 +217,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         ...listOfLocations,
         {
           quantity: data.quantity,
-          deviceInfo: valueItemSelected,
+          deviceInfo: JSON.parse(valueItemSelected?.data),
           startingNumber: data.serial_number,
         },
       ];
@@ -211,7 +226,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       return setListOfLocations(result);
     }
   };
-  console.log(listOfLocations);
+
   const handleDevicesInEvent = async () => {
     setLoading(true);
     for (let data of listOfLocations) {
@@ -225,7 +240,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         );
         await createDeviceInEvent({ ...data, deviceInfo: deviceInfo });
       } else {
-        console.log('device not found');
+        console.log("device not found");
       }
     }
     setLoading(false);
@@ -253,12 +268,24 @@ const ModalAddAndUpdateDeviceSetup = ({
       return BlueButton;
     }
   };
+
   const checkIfSerialNumberExists = () => {
-    if (valueItemSelected.length > 0)
-      return valueItemSelected.some(
-        (elem) => elem.serial_number === watch("serial_number")
+    if (valueItemSelected?.serialNumberList?.length > 0) {
+      const checkingSerialNumber = JSON.parse(
+        valueItemSelected.serialNumberList
       );
+      return checkingSerialNumber[watch("serial_number")].length > 0;
+    }
   };
+
+  const renderOptionAsNeededFormat = () => {
+    const result = new Set();
+    for (const [key, value] of optionsToRenderInSelector()) {
+      result.add({ key, value });
+    }
+    return Array.from(result);
+  };
+
   return (
     <Modal
       open={openModalDeviceSetup}
@@ -292,33 +319,31 @@ const ModalAddAndUpdateDeviceSetup = ({
             optionFilterProp="children"
             style={{ ...AntSelectorStyle, width: "100%" }}
             onChange={onChange}
-            options={Object.entries(optionsToRenderInSelector())?.map(
-              (item) => {
-                return {
-                  label: (
-                    <Typography
-                      textTransform={"capitalize"}
-                      style={{
-                        ...Subtitle,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <span style={{ textAlign: "left", width: "50%" }}>
-                        Location:{" "}
-                        <span style={{ fontWeight: 700 }}>{item[0]}</span>
-                      </span>
-                      <span style={{ textAlign: "right", width: "5 0%" }}>
-                        Available: {item[1]?.length}
-                      </span>
-                    </Typography>
-                  ), //renderOptionAsNeededFormat(JSON.stringify(option))
-                  value: JSON.stringify(item[1]),
-                };
-              }
-            )}
+            options={renderOptionAsNeededFormat()?.map((item) => {
+              return {
+                label: (
+                  <Typography
+                    textTransform={"capitalize"}
+                    style={{
+                      ...Subtitle,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <span style={{ textAlign: "left", width: "50%" }}>
+                      Location:{" "}
+                      <span style={{ fontWeight: 700 }}>{item.key}</span>
+                    </span>
+                    <span style={{ textAlign: "right", width: "5 0%" }}>
+                      Available: {item?.value?.qty}
+                    </span>
+                  </Typography>
+                ),
+                value: JSON.stringify(item?.value),
+              };
+            })}
           />
         </div>
         <div
@@ -391,8 +416,8 @@ const ModalAddAndUpdateDeviceSetup = ({
         </div>
         <span style={{ width: "100%", textAlign: "right" }}>
           <p style={Subtitle}>
-            series starts: {valueItemSelected[0]?.serial_number} - series ends:{" "}
-            {valueItemSelected?.at(-1)?.serial_number}
+            series starts: {valueItemSelected?.start} - series ends:{" "}
+            {valueItemSelected?.end}
           </p>
         </span>
 
