@@ -9,10 +9,18 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { groupBy } from "lodash";
 import { useQuery } from "@tanstack/react-query";
-import { AutoComplete, Avatar, Divider, Select, notification } from "antd";
+import {
+  AutoComplete,
+  Avatar,
+  Divider,
+  Select,
+  notification
+} from "antd";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,20 +28,19 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { UploadIcon } from "../../../components/icons/UploadIcon";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import "../../../styles/global/OutlineInput.css";
+import "../../../styles/global/reactInput.css";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
+import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
-import "../../../styles/global/OutlineInput.css";
-import "../../../styles/global/ant-select.css";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../../styles/global/reactInput.css";
-import "./style.css"
+import "./style.css";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
@@ -52,6 +59,7 @@ const AddNewItem = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
@@ -310,6 +318,26 @@ const AddNewItem = () => {
       </>
     );
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!moreInfoDisplay) {
+      setMoreInfo([]);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [moreInfoDisplay]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    costValueInputFormat({ props: watch("cost"), setValue });
+    return () => {
+      controller.abort();
+    };
+  }, [watch("cost")]);
+
   return (
     <Grid
       display={"flex"}
@@ -549,7 +577,7 @@ const AddNewItem = () => {
                 lineHeight={"20px"}
                 color={"var(--gray-700, #344054)"}
               >
-                Cost of replace device
+                Replacement cost
               </Typography>
             </InputLabel>
             <OutlinedInput
@@ -557,7 +585,7 @@ const AddNewItem = () => {
               {...register("cost", { required: true })}
               aria-invalid={errors.cost}
               style={OutlinedInputStyle}
-              placeholder="e.g. $200"
+              placeholder="e.g. 12000.54 | 95.44 | 4585"
               startAdornment={
                 <InputAdornment position="start">
                   <Typography
@@ -843,8 +871,9 @@ const AddNewItem = () => {
           </div>
         </div>
         <Divider />
-        <span
-          onClick={() => setMoreInfoDisplay(true)}
+        <button
+          type="button"
+          onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
           style={{
             ...CenteringGrid,
             width: "100%",
@@ -883,7 +912,7 @@ const AddNewItem = () => {
           >
             Add more information
           </Typography>
-        </span>
+        </button>
         {moreInfoDisplay && (
           <div
             style={{

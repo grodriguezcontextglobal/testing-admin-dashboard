@@ -45,6 +45,7 @@ import { formatDate } from "../../../components/utils/dateFormat";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import costValueInputFormat from "../utils/costValueInputFormat";
 const { Option } = Select;
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
@@ -60,6 +61,7 @@ const EditGroup = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
@@ -80,6 +82,7 @@ const EditGroup = () => {
       }),
     refetchOnMount: false,
   });
+  
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -109,6 +112,7 @@ const EditGroup = () => {
     }
     return Array.from(result);
   };
+
   const renderLocationOptions = () => {
     if (companiesQuery.data) {
       const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
@@ -120,6 +124,7 @@ const EditGroup = () => {
     }
     return [];
   };
+
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -136,6 +141,7 @@ const EditGroup = () => {
     }
     return props;
   };
+
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected()[selectedItem]) {
@@ -242,6 +248,7 @@ const EditGroup = () => {
       return navigate("/inventory");
     }
   };
+
   const savingNewItem = async (data) => {
     submitRef.current = {
       ...data,
@@ -328,6 +335,7 @@ const EditGroup = () => {
       }
     }
   };
+
   const renderTitle = () => {
     return (
       <>
@@ -362,6 +370,15 @@ const EditGroup = () => {
       </>
     );
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    costValueInputFormat({ props: watch("cost"), setValue });
+    return () => {
+      controller.abort();
+    };
+  }, [watch("cost")]);
+
   return (
     <Grid
       display={"flex"}
@@ -539,7 +556,7 @@ const EditGroup = () => {
           >
             <InputLabel style={{ width: "100%" }}>
               <Typography style={stylingInputs}>
-                Cost of replace device
+                Replacement cost
               </Typography>
             </InputLabel>
             <OutlinedInput
@@ -548,7 +565,7 @@ const EditGroup = () => {
               {...register("cost", { required: true })}
               aria-invalid={errors.cost}
               style={OutlinedInputStyle}
-              placeholder="e.g. $200"
+              placeholder="e.g. 12000.54 | 95.44 | 4585"
               startAdornment={
                 <InputAdornment position="start">
                   <Typography style={{ ...stylingInputs, fontWeight: 500 }}>
