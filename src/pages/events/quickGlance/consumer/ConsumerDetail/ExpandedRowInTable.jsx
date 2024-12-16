@@ -154,6 +154,11 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
         if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
           // const dateString = new Date().toString();
           // const dateRef = dateString.split(" ");
+          await devitrakApi.post("/cache_update/remove-cache", {
+            key: `event_id=${event.id}&company=${
+              user.companyData.id
+            }&consumerInfo.id=${customer.id ?? customer.uid}`,
+          });
           const checkInPool =
             deviceInPoolListQuery.data.receiversInventory.at(-1);
           queryClient.invalidateQueries("assignedDeviceListQuery", {
@@ -571,7 +576,8 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
             onClick={() => setOpenReturnDeviceInBulkModal(true)}
           >
             <p style={BlueButtonText}>
-              Return multiple items of this transaction | Total items to return: {selectedItems.length}
+              Return multiple items of this transaction | Total items to return:{" "}
+              {selectedItems.length}
             </p>
           </Button>
           <Table
