@@ -287,7 +287,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
           }
 
           openNotificationWithIcon(
-            "success",
+            "Success",
             "devices are being added, they will be displayed shortly."
           );
           setValue("serialNumber", "");

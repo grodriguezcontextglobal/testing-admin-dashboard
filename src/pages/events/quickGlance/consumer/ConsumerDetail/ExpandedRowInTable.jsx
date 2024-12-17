@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Popconfirm, Space, Table, notification } from "antd";
+import { Button, Popconfirm, Space, Table, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -539,6 +539,61 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     },
   ];
 
+  const returnDevicesInTransaction = async (props) => {
+    const template = {
+      timeStamp: new Date().getTime(),
+      device: props,
+    };
+    await devitrakApi.patch(
+      `/receiver/transaction-all-items-returned-at-once`,
+      template
+    );
+    queryClient.invalidateQueries("assginedDeviceList", { exact: true });
+  };
+
+  const returnDeviceInPool = async (props) => {
+    const template = {
+      device: props,
+      company: user.companyData.id,
+      activity: false,
+      eventSelected: props[0].eventSelected[0],
+    };
+    await devitrakApi.patch(
+      `/receiver/transaction-return-all-items-in-pool`,
+      template
+    );
+
+    queryClient.invalidateQueries({
+      queryKey: ["assginedDeviceList"],
+      exact: true,
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["listOfreceiverInPool"],
+      exact: true,
+    });
+
+    return null;
+  };
+
+  const handleAllItemsReturn = async () => {
+    try {
+      const groupingByStatus = groupBy(
+        foundTransactionAndDevicesAssigned(),
+        "device.status"
+      );
+      if (groupingByStatus[true]) {
+        message.info("Returning all items in this transaction. Please wait!");
+        await returnDevicesInTransaction(groupingByStatus[true]);
+        await returnDeviceInPool(groupingByStatus[true]);
+        return message.success("All items returned successfully");
+      } else {
+        return message.warning("No items to return");
+      }
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
   return (
     <>
       {contextHolder}
@@ -580,6 +635,20 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
               {selectedItems.length}
             </p>
           </Button>
+          <Popconfirm
+            title="All assigned items in this transaction will be returned at once."
+            onConfirm={() => handleAllItemsReturn()}
+          >
+            <Button
+              style={{
+                ...BlueButton,
+                display: selectedItems.length === 0 ? "flex" : "none",
+                gap: "5px",
+              }}
+            >
+              <p style={BlueButtonText}>Return all items of this transaction</p>
+            </Button>
+          </Popconfirm>
           <Table
             columns={columns}
             dataSource={checkDevicesInTransaction()}

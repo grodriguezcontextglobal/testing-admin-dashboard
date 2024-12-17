@@ -120,7 +120,7 @@ const Releasing = ({
         exact: true,
       });
       refetchingTransactionFn();
-      openNotificationWithIcon("success", "Deposit was released.");
+      openNotificationWithIcon("Success", "Deposit was released.");
       await closeModal();
     }
   };

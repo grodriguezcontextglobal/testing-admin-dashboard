@@ -20,6 +20,7 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../../store/slices/stripeSlice";
+import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
@@ -27,7 +28,6 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import "../../../../../../styles/global/ant-select.css";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const ReplaceDevice = ({ refetching }) => {
@@ -39,6 +39,7 @@ export const ReplaceDevice = ({ refetching }) => {
   const { triggerModal, receiverToReplaceObject } = useSelector(
     (state) => state.helper
   );
+  // const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const stampTime = `${new Date()}`;
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
@@ -222,7 +223,7 @@ export const ReplaceDevice = ({ refetching }) => {
         exact: true,
       });
       refetching();
-      openNotificationWithIcon("success", "Device replaced successfully.");
+      openNotificationWithIcon("Success", "Device replaced successfully.");
       closeModal();
     }
   };

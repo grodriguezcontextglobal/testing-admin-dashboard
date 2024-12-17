@@ -54,7 +54,7 @@ const DeleteItemModal = ({
       }),
     refetchOnMount: false,
   });
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -63,11 +63,7 @@ const DeleteItemModal = ({
   };
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
-  const {
-    register,
-    handleSubmit,
-    setValue,
-  } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
       category_name: dataFound[0].category_name,
       cost: dataFound[0].cost,
@@ -159,8 +155,8 @@ const DeleteItemModal = ({
             );
           }
         }
-        openNotificationWithIcon("success", "Device was deleted.");
-        navigate('/inventory');
+        openNotificationWithIcon("Success", "Device was deleted.");
+        navigate("/inventory");
       }
     } catch (error) {
       setLoadingStatus(false);

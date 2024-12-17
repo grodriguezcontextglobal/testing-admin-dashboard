@@ -121,7 +121,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
         for (let data of deviceCheck[serialNumber]) {
           if (data.activity || String(data.status).toLowerCase() === "lost") {
             openNotificationWithIcon(
-              "info",
+              "Info",
               `device ${serialNumber} is already assigned to other customer`
             );
             setValue("serialNumber", "");
@@ -181,7 +181,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
     ) {
       openNotificationWithIcon(
-        "warning",
+        "Warning",
         `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`
       );
       setValue("serialNumber", "");
@@ -288,7 +288,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       }
     } catch (error) {
       openNotificationWithIcon(
-        "error",
+        "Error",
         "something went wrong, please try later."
       );
       setSubmittedAction(false);
@@ -332,7 +332,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
               {errors?.serialNumber && <p>Serial number is required</p>}
             </FormHelperText>
           </Grid>
-          <Grid item xs={2}>
+          <Grid height={'auto'} alignSelf={'flex-end'} item xs={2}>
             <Button
               disabled={submittedAction}
               style={{

@@ -28,6 +28,8 @@ import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { DangerButton } from "../../../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
@@ -341,7 +343,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         });
 
         setLoadingStatus(false);
-        openNotificationWithIcon("success", "Staff member added to event.");
+        openNotificationWithIcon("Success", "Staff member added to event.");
         await closeModal();
       } catch (error) {
         setLoadingStatus(false);
@@ -367,7 +369,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         centered
         width={1000}
         footer={[]}
-        style={{zIndex:30}}
+        style={{ zIndex: 30 }}
       >
         {contextHolder}
         <Grid container>
@@ -405,7 +407,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     {
                       value: "administrator",
                       label: "Event administrator",
-                      disabled: false
+                      disabled: false,
                       // event.subscription.adminUser
                       //   ? Number(checkAdminSpots()) ===
                       //     Number(event.subscription.adminUser)
@@ -418,7 +420,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     },
                     {
                       value: "eventStaffOnly",
-                      label: "Event assistant/staff (remove when event finishes)",
+                      label:
+                        "Event assistant/staff (remove when event finishes)",
                       disabled: false,
                     },
                   ]}
@@ -466,13 +469,30 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                   {...register("lastName", { required: true })}
                 />
               </div>
-              <Button
-                style={{ ...BlueButton, width: "100%" }}
-                loading={loadingStatus}
-                htmlType="submit"
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
               >
-                <Typography style={BlueButtonText}>Add staff</Typography>
-              </Button>
+                <Button
+                  style={{ ...BlueButton, width: "fit-content" }}
+                  loading={loadingStatus}
+                  htmlType="submit"
+                >
+                  <Typography style={BlueButtonText}>Add staff</Typography>
+                </Button>
+                <Button
+                  style={{ ...DangerButton, width: "fit-content" }}
+                  htmlType="reset"
+                  onClick={() => setEditingStaff(false)}
+                >
+                  <Typography style={DangerButtonText}>Cancel</Typography>
+                </Button>
+              </div>
             </form>
             <Divider />
             <Grid item xs={12} sm={12} md={12} lg={12}>

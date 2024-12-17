@@ -80,7 +80,7 @@ const ForgotPassword = ({ open, close }) => {
           }
         );
         if (checkingEmail.data.ok) {
-          openNotificationWithIcon("success", `Email sent to ${data.email}`);
+          openNotificationWithIcon("Success", `Email sent to ${data.email}`);
           setLoading(false);
           setTimeout(() => {
             return handleClose();

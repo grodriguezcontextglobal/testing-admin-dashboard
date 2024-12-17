@@ -82,7 +82,7 @@ const EditGroup = () => {
       }),
     refetchOnMount: false,
   });
-  
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -243,7 +243,7 @@ const EditGroup = () => {
       setValue("ownership", "");
       setValue("serial_number", "");
       setValueSelection(options[0]);
-      openNotificationWithIcon("success", "items were updated.");
+      openNotificationWithIcon("Success", "items were updated.");
       setIsLoadingStatus(false);
       return navigate("/inventory");
     }
@@ -555,9 +555,7 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ width: "100%" }}>
-              <Typography style={stylingInputs}>
-                Replacement cost
-              </Typography>
+              <Typography style={stylingInputs}>Replacement cost</Typography>
             </InputLabel>
             <OutlinedInput
               disabled={isLoadingStatus}

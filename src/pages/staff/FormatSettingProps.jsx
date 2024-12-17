@@ -50,7 +50,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
     try {
       const resp = await devitrakApiAdmin.delete(`/${sendObjectIdUser}`);
       if (resp)
-        return openNotificationWithIcon("success", {
+        return openNotificationWithIcon("Success", {
           title: "Admin deleted",
           description: "admin user was deleted",
         });
