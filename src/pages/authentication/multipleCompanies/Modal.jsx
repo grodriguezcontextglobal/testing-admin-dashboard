@@ -96,14 +96,14 @@ const ModalMultipleCompanies = ({
 
         dispatch(clearErrorMessage());
         queryClient.clear();
-        openNotificationWithIcon("success", "User logged in.");
+        openNotificationWithIcon("Success", "User logged in.");
         navigate(`${Number(props.role) === 4 ? "/events" : "/"}`);
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
-      throw error
+      throw error;
     }
   };
   return (
@@ -114,7 +114,7 @@ const ModalMultipleCompanies = ({
       // width={1000}
       footer={[]}
       title={renderingTitle("Please select which company you want to log in.")}
-      style={{zIndex: 30}}
+      style={{ zIndex: 30 }}
     >
       {contextHolder}
       <Grid container>

@@ -133,7 +133,7 @@ const Capturing = ({
             exact: true,
           });
           refetchingTransactionFn();
-          openNotificationWithIcon("success", "Deposit was captured.");
+          openNotificationWithIcon("Success", "Deposit was captured.");
           setTimeout(() => {
             return closeModal();
           }, 2500);
@@ -243,7 +243,10 @@ const Capturing = ({
                     </p>
                   </FormHelperText>
                   <Button
-                    disabled={stripeTransactionQuery?.data?.data?.paymentIntent.status !== "requires_capture"}
+                    disabled={
+                      stripeTransactionQuery?.data?.data?.paymentIntent
+                        .status !== "requires_capture"
+                    }
                     type="submit"
                     style={{
                       ...BlueButton,

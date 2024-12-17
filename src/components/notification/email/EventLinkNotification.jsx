@@ -50,24 +50,23 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
     const emailNotificationProfile = {
       list: emailConsumersList,
       company: user.companyData.company_name,
-      buttonLink:event.qrCodeLink,
-      contactInfo:{
+      buttonLink: event.qrCodeLink,
+      contactInfo: {
         staff: `${user.name} ${user.lastName}`,
         email: user.email,
       },
-      eventName:event.eventInfoDetail.eventName
+      eventName: event.eventInfoDetail.eventName,
     };
     const resp = await devitrakApi.post(
       "/nodemailer/send-consumer-app-instructions",
       emailNotificationProfile
     );
     if (resp) {
-      openNotificationWithIcon("success", "Email sent!", "Link of this event!");
+      openNotificationWithIcon("Success", "Email sent!", "Link of this event!");
       setValue("message", "");
       closeModal();
     }
-
-  }
+  };
   return (
     <>
       {contextHolder}
@@ -185,21 +184,21 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
             item
             xs={10}
           >
-              <Button
-                htmlType="button"
-                onClick={handleEmailNotificationSent}
-                style={{
-                  ...BlueButton,
-                  width: "100%",
-                }}
+            <Button
+              htmlType="button"
+              onClick={handleEmailNotificationSent}
+              style={{
+                ...BlueButton,
+                width: "100%",
+              }}
+            >
+              <Typography
+                textTransform={"none"}
+                style={{ ...BlueButtonText, ...CenteringGrid }}
               >
-                <Typography
-                  textTransform={"none"}
-                  style={{ ...BlueButtonText, ...CenteringGrid }}
-                >
-                  Send link
-                </Typography>
-              </Button>
+                Send link
+              </Typography>
+            </Button>
           </Grid>
         </Grid>
       </Modal>

@@ -76,7 +76,7 @@ export const CreateNewConsumer = ({
   };
   const queryClient = useQueryClient();
   const newConsumerAfterBeingCheck = async (data) => {
-    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo)
+    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
     const newUserProfile = {
       name: data.firstName,
       lastName: data.lastName,
@@ -85,9 +85,7 @@ export const CreateNewConsumer = ({
       privacyPolicy: true,
       category: "Regular",
       provider: [user.company],
-      eventSelected: [
-        newEventToAddConsumer.eventInfoDetail.eventName,
-      ],
+      eventSelected: [newEventToAddConsumer.eventInfoDetail.eventName],
       company_providers: [user.companyData.id],
       event_providers: [newEventToAddConsumer.id],
     };
@@ -104,7 +102,7 @@ export const CreateNewConsumer = ({
         email: data.email,
         phoneNumber: contactPhoneNumber,
       });
-      openNotificationWithIcon("success", "New consumer added");
+      openNotificationWithIcon("Success", "New consumer added");
       setLoading(false);
       closeDeviceModal();
     }
@@ -158,7 +156,7 @@ export const CreateNewConsumer = ({
           queryKey: ["consumersList"],
           exact: true,
         });
-        openNotificationWithIcon("success", "New consumer added");
+        openNotificationWithIcon("Success", "New consumer added");
         setLoading(false);
         closeDeviceModal();
       }

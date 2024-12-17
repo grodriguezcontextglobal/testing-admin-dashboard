@@ -73,7 +73,7 @@ const EditConsumerInfoModal = ({
         dispatch(onAddCustomerInfo(userFormatData));
         dispatch(onAddCustomer(userFormatData));
 
-        openNotificationWithIcon("success", "Consumer information updated.");
+        openNotificationWithIcon("Success", "Consumer information updated.");
         setLoading(false);
         closeDeviceModal();
         setLoading(false);

@@ -48,7 +48,7 @@ const SingleEmailNotification = ({
       emailNotificationProfile
     );
     if (resp.data.ok) {
-      openNotificationWithIcon("success", "Email sent!", "Email was sent");
+      openNotificationWithIcon("Success", "Email sent!", "Email was sent");
       setValue("subject", "");
       setValue("message", "");
       return closeModal();
