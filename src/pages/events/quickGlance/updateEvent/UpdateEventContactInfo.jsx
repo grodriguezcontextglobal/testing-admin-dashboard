@@ -62,20 +62,18 @@ const UpdateEventContactInfo = ({
       }
     );
     if (respUpdateContactInfo.data.ok) {
-      openNotificationWithIcon("success", "Contact information updated");
+      openNotificationWithIcon("Success", "Contact information updated");
       dispatch(onAddEventData({ ...event, contactInfo: contactProfile }));
       dispatch(onAddContactInfo(contactProfile));
       setTimeout(() => {
         setLoading(false);
-
       }, 2500);
-      
+
       await closeModal();
     }
     setTimeout(() => {
       setLoading(false);
     }, 2500);
-
   };
   const renderTitle = () => {
     return (
@@ -102,7 +100,7 @@ const UpdateEventContactInfo = ({
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
-      style={{zIndex:30}}
+      style={{ zIndex: 30 }}
     >
       {contextHolder}
       <Grid
@@ -146,7 +144,7 @@ const UpdateEventContactInfo = ({
               <OutlinedInput
                 {...register("firstName", { required: true })}
                 aria-invalid={errors.firstName}
-                style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem", }}
+                style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem" }}
                 placeholder="First name"
               />
               <div style={{ width: "100%" }}>
@@ -178,8 +176,7 @@ const UpdateEventContactInfo = ({
               <OutlinedInput
                 {...register("lastName", { required: true })}
                 aria-invalid={errors.lastName}
-                style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem", }}
-
+                style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem" }}
                 placeholder="Last name"
               />
               <div style={{ width: "100%" }}>
@@ -206,8 +203,7 @@ const UpdateEventContactInfo = ({
           <OutlinedInput
             {...register("email", { required: true, minLength: 10 })}
             aria-invalid={errors.email}
-            style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem", }}
-
+            style={{ ...OutlinedInputStyle, margin: "0.1rem auto 1rem" }}
             placeholder="Enter your email"
             fullWidth
           />
@@ -248,7 +244,13 @@ const UpdateEventContactInfo = ({
               }}
             >
               <PhoneInput
-                style={{ ...OutlinedInputStyle, padding: "2.5px 12px", border: "0.3px solid var(--gray300)", margin: "0.1rem auto 1rem", width: "100%" }}
+                style={{
+                  ...OutlinedInputStyle,
+                  padding: "2.5px 12px",
+                  border: "0.3px solid var(--gray300)",
+                  margin: "0.1rem auto 1rem",
+                  width: "100%",
+                }}
                 countrySelectProps={{ unicodeFlags: true }}
                 defaultCountry="US"
                 placeholder="(555) 000-0000"
@@ -314,7 +316,11 @@ const UpdateEventContactInfo = ({
               );
             })}
           </Space>
-          <Button loading={loading} htmlType="submit" style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
+          <Button
+            loading={loading}
+            htmlType="submit"
+            style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+          >
             <Typography style={BlueButtonText}>Update</Typography>
           </Button>
         </form>
