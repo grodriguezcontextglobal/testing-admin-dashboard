@@ -31,8 +31,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     useState(false);
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
     useState(false);
-  // const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
-  //   useState(false);
   const [isLoading, setIsLoading] = useState(false);
   // const recordRef = useRef(null);
   const { event } = useSelector((state) => state.event);
@@ -66,6 +64,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     // enabled: false,
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     transactionsQuery.refetch();
@@ -78,6 +77,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const refetchingFn = () => {
     return deviceAssignedListQuery.refetch();
   };
+
   const refetchingTransactionFn = () => {
     return transactionsQuery.refetch();
   };
@@ -145,7 +145,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         paymentIntent: record.paymentIntent,
       });
       await devitrakApi.patch(`/transaction/update-transaction/${record.id}`, {
-        id:record.id,
+        id: record.id,
         active: false,
       });
       const emailTemplate = {
@@ -162,6 +162,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       message.error(`There was an error. ${error}`);
     }
   };
+
   const columns = [
     {
       title: `Date and time`,
@@ -217,7 +218,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
             item
             xs={12}
             sm={12}
-            md={record.device[0].deviceNeeded < 1 ? 12 : 4}
+            md={record.device[0].deviceNeeded < 1 ? 12 : 6}
             display={"flex"}
             justifyContent={"flex-end"}
             alignItems={"center"}
@@ -285,6 +286,9 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                   onConfirm={() => {
                     setOpenCancelingDepositModal(true);
                     handleRecord(record);
+                  }}
+                  style={{
+                    width:"100%"
                   }}
                 >
                   <Button
