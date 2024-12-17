@@ -44,24 +44,24 @@ const DownloadingXlslFile = ({ props }) => {
     const wsData = [
       headers,
       ...props.map((item) => [
-        item.data.serial_number,
-        item.data.warehouse === 1 ? "In-Stock" : "In-Use",
-        item.data.brand,
-        item.data.category_name,
-        item.data.item_group,
-        dictionaryOwnership[item.data.ownership],
-        item.data.cost,
-        item.data.status,
-        item.data.warehouse === 1 ? item.data.location : item.event_name,
-        item.data.main_warehouse,
-        item.data.enableAssignFeature === 1 ? "Assignable" : "No Assignable",
-        item.data.ownership === "Rent" ? item.data.return_date : "",
+        item?.data?.serial_number,
+        item?.data?.warehouse === 1 ? "In-Stock" : "In-Use",
+        item?.data?.brand,
+        item?.data?.category_name,
+        item?.data?.item_group,
+        dictionaryOwnership[item?.data?.ownership],
+        item?.data?.cost,
+        item?.data?.status,
+        item?.data?.warehouse === 1 ? item?.data?.location : item?.event_name,
+        item?.data?.main_warehouse,
+        item?.data?.enableAssignFeature === 1 ? "Assignable" : "No Assignable",
+        item?.data?.ownership === "Rent" ? item?.data?.return_date : "",
         [
-          item.data.extra_serial_number.map(
+          item?.data?.extra_serial_number?.map(
             (item) => `- ${item.keyObject}: ${item.valueObject}`
           ),
         ].toLocaleString(),
-        item.data.descript_item,
+        item?.data?.descript_item,
       ]),
     ];
 
