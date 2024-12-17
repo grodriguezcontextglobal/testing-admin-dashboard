@@ -97,7 +97,7 @@ const ModalMultipleCompanies = ({
         dispatch(clearErrorMessage());
         queryClient.clear();
         openNotificationWithIcon("success", "User logged in.");
-        navigate("/");
+        navigate(`${Number(props.role) === 4 ? "/events" : "/"}`);
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.response.data.msg}`);
