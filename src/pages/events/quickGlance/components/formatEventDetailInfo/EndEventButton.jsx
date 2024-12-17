@@ -2,7 +2,7 @@ import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Popconfirm, notification } from "antd";
 import { groupBy } from "lodash";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { formatDate } from "../../../../../components/utils/dateFormat";
@@ -19,7 +19,7 @@ const EndEventButton = () => {
   const { event } = useSelector((state) => state.event);
   const [openEndingEventModal, setOpenEndingEventModal] = useState(false);
   const dispatch = useDispatch();
-
+  const staffRemoveAccessRef = useRef([]);
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
@@ -79,7 +79,7 @@ const EndEventButton = () => {
     refetchOnMount: false,
   });
   let trigger = false;
-  console.log(eventInventoryQuery?.data?.data);
+
   useEffect(() => {
     const controller = new AbortController();
     listOfInventoryQuery.refetch();
@@ -114,6 +114,10 @@ const EndEventButton = () => {
         Number(employeesCompany[checkRole].role) > 3 &&
         employeesCompany[checkRole].active
       ) {
+        staffRemoveAccessRef.current = [
+          ...staffRemoveAccessRef.current,
+          data.email,
+        ];
         employeesCompany[checkRole] = {
           ...employeesCompany[checkRole],
           active: false,
@@ -233,8 +237,17 @@ const EndEventButton = () => {
 
   const inactiveEventAfterEndIt = async () => {
     try {
+      const removingTemporalStaff = [ ...staffRemoveAccessRef.current ]
+      const allStaffEvent = [ ...event.staff.headsetAttendees ]
+      const result = new Set()
+      for(const data of allStaffEvent){
+        if(!removingTemporalStaff.includes(data.email)){
+          result.add(data)
+        }
+      }
       const resp = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
         active: false,
+        'staff.headsetAttendees': Array.from(result)
       });
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
