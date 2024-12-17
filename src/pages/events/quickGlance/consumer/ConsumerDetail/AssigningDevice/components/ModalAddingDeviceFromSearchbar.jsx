@@ -1,27 +1,27 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, Table } from "antd";
-// import _ from 'lodash';
-import { useEffect } from "react";
+import { Button, message, Modal, Table } from "antd";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import {
-  onAddDeviceToDisplayInQuickGlance,
-  onOpenDeviceAssignmentModalFromSearchPage,
-} from "../../../../../../../store/slices/devicesHandleSlice";
+import Loading from "../../../../../../../components/animation/Loading";
+import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
+import { BlueButton } from "../../../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
+import { DangerButton } from "../../../../../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
-import { useNavigate } from "react-router-dom";
-import { checkArray } from "../../../../../../../components/utils/checkArray";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
     useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const findindAssignedInPaymentIntentQuery = useQuery({
+  // const navigate = useNavigate();
+  const findingAssignedInPaymentIntentQuery = useQuery({
     queryKey: ["assignedDeviceInPaymentIntent"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned", {
@@ -32,7 +32,7 @@ const ModalAddingDeviceFromSearchbar = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    findindAssignedInPaymentIntentQuery.refetch();
+    findingAssignedInPaymentIntentQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -41,15 +41,15 @@ const ModalAddingDeviceFromSearchbar = () => {
     (state) => state.devicesHandle
   );
   const refetchingFn = () => {
-    return findindAssignedInPaymentIntentQuery.refetch();
+    return findingAssignedInPaymentIntentQuery.refetch();
   };
   const closeModal = () => {
     dispatch(onOpenDeviceAssignmentModalFromSearchPage(false));
   };
 
-  if (findindAssignedInPaymentIntentQuery.data) {
+  if (findingAssignedInPaymentIntentQuery.data) {
     const deviceAssignedListQuery =
-      findindAssignedInPaymentIntentQuery?.data?.data?.receiver; //*need to get the final result form finding assigned device query
+      findingAssignedInPaymentIntentQuery?.data?.data?.receiver; //*need to get the final result form finding assigned device query
 
     const foundTransactionAndDevicesAssigned = () => {
       if (deviceAssignedListQuery?.length) return deviceAssignedListQuery;
@@ -58,9 +58,41 @@ const ModalAddingDeviceFromSearchbar = () => {
     const checkDevicesInTransaction = () => {
       const result = new Set();
       for (let data of foundTransactionAndDevicesAssigned()) {
-        result.add(data.device);
+        result.add({ key: data.id, ...data.device });
       }
-      return Array.from(result);
+      return Array.from(result).reverse();
+    };
+
+    const removeDeviceFromTransaction = async (props) => {
+      try {
+        setIsLoadingStatus(true);
+        const response = await devitrakApi.delete(
+          `/receiver/remove-transaction/${props.key}`
+        );
+        if (response.data.ok) {
+          const deviceInPool = await devitrakApi.post(
+            "/receiver/receiver-pool-list",
+            {
+              activity: true,
+              eventSelected: event.eventInfoDetail.eventName,
+              company: user.companyData.id,
+              device: props.serialNumber,
+              type: props.deviceType,
+            }
+          );
+          // console.log(deviceInPool.data.receiversInventory[0])
+          await devitrakApi.patch(
+            `/receiver/receivers-pool-update/${deviceInPool.data.receiversInventory[0].id}`,
+            { activity: false }
+          );
+          await refetchingFn();
+          setIsLoadingStatus(false);
+          return message.success("Device removed from transaction");
+        }
+      } catch (error) {
+        setIsLoadingStatus(false);
+        return message.error("Something went wrong, please try again later.");
+      }
     };
 
     const renderTernaryOption = (props) => {
@@ -71,6 +103,7 @@ const ModalAddingDeviceFromSearchbar = () => {
         return "Returned";
       }
     };
+
     const columns = [
       {
         title: "Device serial number",
@@ -138,6 +171,20 @@ const ModalAddingDeviceFromSearchbar = () => {
           </p>
         ),
       },
+      {
+        title: "Remove",
+        key:"key",
+        width: "10%",
+        render: (record) => (
+          <Button
+            loading={isLoadingStatus}
+            style={DangerButton}
+            onClick={() => removeDeviceFromTransaction(record)}
+          >
+            {isLoadingStatus ? <Loading /> : <p style={DangerButtonText}>X</p>}
+          </Button>
+        ),
+      },
     ];
     const renderTitle = () => {
       return (
@@ -165,48 +212,48 @@ const ModalAddingDeviceFromSearchbar = () => {
       );
     };
 
-    const navigateToDeviceDetailPage = async (record) => {
-      const deviceInPoolListQuery = await devitrakApi.post(
-        "/receiver/receiver-pool-list",
-        {
-          eventSelected: event.eventInfoDetail.eventName,
-          company: user.companyData.id,
-          device: record.serialNumber,
-          type: record.deviceType,
-          activity: true,
-        }
-      );
-      if (deviceInPoolListQuery.data) {
-        const format = {
-          company: [`${record.deviceType}`, `${event.company}`],
-          activity: record.status,
-          status: checkArray(deviceInPoolListQuery.data.receiversInventory)
-            .status,
-          serialNumber: record.serialNumber,
-          user: true,
-          entireData: {
-            eventSelected: `${event.eventInfoDetail.eventName}`,
-            device: `${record.serialNumber}`,
-            type: `${record.deviceType}`,
-            status: `${
-              checkArray(deviceInPoolListQuery.data.receiversInventory).status
-            }`,
-            activity: record.status,
-            comment: `${
-              checkArray(deviceInPoolListQuery.data.receiversInventory).comment
-            }`,
-            provider: `${event.company}`,
-            company: `${user.companyData.id}`,
-            id: `${
-              checkArray(deviceInPoolListQuery.data.receiversInventory).id
-            }`,
-          },
-        };
+    // const navigateToDeviceDetailPage = async (record) => {
+    //   const deviceInPoolListQuery = await devitrakApi.post(
+    //     "/receiver/receiver-pool-list",
+    //     {
+    //       eventSelected: event.eventInfoDetail.eventName,
+    //       company: user.companyData.id,
+    //       device: record.serialNumber,
+    //       type: record.deviceType,
+    //       activity: true,
+    //     }
+    //   );
+    //   if (deviceInPoolListQuery.data) {
+    //     const format = {
+    //       company: [`${record.deviceType}`, `${event.company}`],
+    //       activity: record.status,
+    //       status: checkArray(deviceInPoolListQuery.data.receiversInventory)
+    //         .status,
+    //       serialNumber: record.serialNumber,
+    //       user: true,
+    //       entireData: {
+    //         eventSelected: `${event.eventInfoDetail.eventName}`,
+    //         device: `${record.serialNumber}`,
+    //         type: `${record.deviceType}`,
+    //         status: `${
+    //           checkArray(deviceInPoolListQuery.data.receiversInventory).status
+    //         }`,
+    //         activity: record.status,
+    //         comment: `${
+    //           checkArray(deviceInPoolListQuery.data.receiversInventory).comment
+    //         }`,
+    //         provider: `${event.company}`,
+    //         company: `${user.companyData.id}`,
+    //         id: `${
+    //           checkArray(deviceInPoolListQuery.data.receiversInventory).id
+    //         }`,
+    //       },
+    //     };
 
-        dispatch(onAddDeviceToDisplayInQuickGlance(format));
-        navigate("/device-quick-glance");
-      }
-    };
+    //     dispatch(onAddDeviceToDisplayInQuickGlance(format));
+    //     navigate("/device-quick-glance");
+    //   }
+    // };
     return (
       <Modal
         title={renderTitle()}
@@ -217,7 +264,7 @@ const ModalAddingDeviceFromSearchbar = () => {
         width={1000}
         footer={[]}
         maskClosable={false}
-        style={{ zIndex:30}}
+        style={{ zIndex: 30 }}
       >
         <Grid container>
           {foundTransactionAndDevicesAssigned()?.length ===
@@ -238,6 +285,45 @@ const ModalAddingDeviceFromSearchbar = () => {
               />
             </Grid>
           )}
+          <Grid
+            display={"flex"}
+            alignItems={"center"}
+            justifyContent={"flex-start"}
+            marginY={1}
+            gap={2}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <Button
+            onClick={() => closeModal()}
+              style={{
+                ...BlueButton,
+                display:
+                  foundTransactionAndDevicesAssigned()?.length ===
+                  paymentIntentDetailSelected?.device
+                    ? "flex"
+                    : "none",
+              }}
+            >
+              <p style={BlueButtonText}>Done</p>
+            </Button>
+            <Button
+            onClick={() => closeModal()}
+              style={{
+                ...BlueButton,
+                display:
+                  foundTransactionAndDevicesAssigned()?.length ===
+                  paymentIntentDetailSelected?.device
+                    ? "none"
+                    : "flex",
+              }}
+            >
+              <p style={BlueButtonText}>Continue later</p>
+            </Button>
+          </Grid>
           <Grid item xs={12}>
             {checkDevicesInTransaction().length > 0 && (
               <Table
@@ -246,14 +332,14 @@ const ModalAddingDeviceFromSearchbar = () => {
                 pagination={{
                   position: ["bottomLeft"],
                 }}
-                onRow={(record) => {
-                  return {
-                    onClick: () => {
-                      navigateToDeviceDetailPage(record);
-                    },
-                  };
-                }}
-                style={{ cursor: "pointer" }}
+                // onRow={(record) => {
+                //   return {
+                //     onClick: () => {
+                //       navigateToDeviceDetailPage(record);
+                //     },
+                //   };
+                // }}
+                // style={{ cursor: "pointer" }}
               />
             )}
           </Grid>
