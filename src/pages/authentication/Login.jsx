@@ -118,7 +118,8 @@ const Login = () => {
       });
       if (response.data.ok) {
         if (response.data.list.length > 0) {
-          return addingEventState(response.data.list[0]);
+          addingEventState(response.data.list[0]);
+          return navigate(`/events`);
         } else {
           return openNotificationWithIcon(
             "error",
@@ -126,8 +127,9 @@ const Login = () => {
           );
         }
       }
+    } else {
+      return navigate("/");
     }
-    return navigate("/");
   };
   const loginIntoOneCompanyAccount = async ({ props }) => {
     const respo = await devitrakApiAdmin.post("/login", {
@@ -158,12 +160,12 @@ const Login = () => {
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: checkArray(companyInfoTable.data.company).company_id,
       });
-      const subscriptionCompanyInfo = await devitrakApi.post(
-        "/subscription/company-subscription",
-        {
-          companyName: props.company_name,
-        }
-      );
+      // const subscriptionCompanyInfo = await devitrakApi.post(
+      //   "/subscription/company-subscription",
+      //   {
+      //     companyName: props.company_name,
+      //   }
+      // );
       dispatch(
         onLogin({
           data: {
@@ -185,21 +187,23 @@ const Login = () => {
             ...checkArray(companyInfoTable.data.company),
             stripeID: checkArray(stripeSQL.data.stripe),
           },
-          subscription: subscriptionCompanyInfo.data
-            ? subscriptionCompanyInfo.data.subscription.subscription
-            : {},
+          subscription: {},
+          // subscriptionCompanyInfo.data
+          //   ? subscriptionCompanyInfo.data.subscription.subscription
+          //   : {},
         })
       );
       dispatch(
         onAddSubscription(
-          subscriptionCompanyInfo.data
-            ? subscriptionCompanyInfo.data.subscription.subscription
-            : {}
+          {}
+          // subscriptionCompanyInfo.data
+          //   ? subscriptionCompanyInfo.data.subscription.subscription
+          //   : {}
         )
       );
       dispatch(clearErrorMessage());
       queryClient.clear();
-      openNotificationWithIcon("success", "User logged in.");
+      openNotificationWithIcon("Success", "User logged in.");
       await navigateUserBasedOnRole({
         role: props.role,
         email: respo.data.email,
@@ -243,12 +247,18 @@ const Login = () => {
           });
         }
         if (infoFound.length > 1) {
-          const storeData = (dataPassed.current = {
+          // const storeData = (dataPassed.current = {
+          //   ...data,
+          //   companyInfo: infoFound,
+          //   company_data: userFoundInCompany,
+          // });
+          // return storeData;
+          dataPassed.current = {
             ...data,
             companyInfo: infoFound,
             company_data: userFoundInCompany,
-          });
-          return storeData;
+          };
+          return dataPassed.current;
         }
       }
     } catch (error) {
@@ -442,7 +452,8 @@ const Login = () => {
                   justifyContent={"flex-end"}
                   alignItems={"center"}
                 >
-                  <span
+                  <button
+                    type="button"
                     style={{
                       backgroundColor: "transparent",
                       outline: "none",
@@ -464,7 +475,7 @@ const Login = () => {
                     >
                       Forgot password?
                     </p>
-                  </span>
+                  </button>
                 </Grid>
               </Grid>
               <OutlinedInput
