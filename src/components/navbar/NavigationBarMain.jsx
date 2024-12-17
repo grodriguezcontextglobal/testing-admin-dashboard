@@ -210,7 +210,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               >
                 <NavLink
                   key={"devitrakName"}
-                  to={`/`}
+                  to={`${Number(user.role) === 4 ? "/events" : "/"}`}
                   style={{ margin: "0 3px 0 0", width: "fit-content" }}
                 >
                   <DevitrakLogo />
