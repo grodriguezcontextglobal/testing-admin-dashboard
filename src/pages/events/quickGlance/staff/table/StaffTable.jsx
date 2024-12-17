@@ -135,7 +135,7 @@ const StaffTable = ({ searching }) => {
                 rotate={3}
                 color={`${online ? "#12B76A" : "#2E90FA"}`}
               />
-              {online ? "On line" : "Off line"}
+              {online ? "Online" : "Offline"}
             </Typography>
           </span>
         ),
