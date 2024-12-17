@@ -355,11 +355,11 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       return "none";
     };
 
-    const checkAdminSpots = () => {
-      const data = event.staff.adminUser;
-      let index = data.length;
-      return index;
-    };
+    // const checkAdminSpots = () => {
+    //   const data = event.staff.adminUser;
+    //   let index = data.length;
+    //   return index;
+    // };
     return (
       <Modal
         open={editingStaff}
@@ -405,19 +405,20 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                     {
                       value: "administrator",
                       label: "Event administrator",
-                      disabled: event.subscription.adminUser
-                        ? Number(checkAdminSpots()) ===
-                          Number(event.subscription.adminUser)
-                        : true,
+                      disabled: false
+                      // event.subscription.adminUser
+                      //   ? Number(checkAdminSpots()) ===
+                      //     Number(event.subscription.adminUser)
+                      //   : true,
                     },
                     {
                       value: "headsetAttendee",
-                      label: "Event headset Attendees",
+                      label: "Event assistant/staff (current company employee)",
                       disabled: false,
                     },
                     {
                       value: "eventStaffOnly",
-                      label: "Event staff only",
+                      label: "Event assistant/staff (remove when event finishes)",
                       disabled: false,
                     },
                   ]}
