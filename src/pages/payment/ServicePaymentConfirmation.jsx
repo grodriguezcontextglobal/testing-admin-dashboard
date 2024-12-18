@@ -1,7 +1,7 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Result, notification } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -55,6 +55,7 @@ const ServicePaymentConfirmation = () => {
         eventSelected: event.eventInfoDetail.eventName,
         user: customer.uid ?? customer.id,
         company: user.companyData.id,
+        type: "event",
       });
       if (resp) {
         const transactionProfile = {
@@ -77,12 +78,13 @@ const ServicePaymentConfirmation = () => {
           event_id: event.id,
           company: user.companyData.id,
           date: new Date(),
+          type: "event",
         };
         const responseTransaction = await devitrakApi.post(
           "/transaction/save-transaction",
           transactionProfile
         );
-        if (responseTransaction.data.ok) return (sequency = false);
+        if (responseTransaction.data) return (sequency = false);
       }
     }
   };
@@ -91,26 +93,21 @@ const ServicePaymentConfirmation = () => {
     const template = {
       email: customer.email,
       amount: String(props.amount).slice(0, -2),
-      date: new Date(props.created).toString().slice(4, 15),
+      date: Date().toString().slice(4, 33),
       paymentIntent: props.id,
       customer: `${customer.name} ${customer.lastName}`,
-      method: {
-        last4: props.charges.data[0].payment_method_details.card.last4,
-        brand: props.charges.data[0].payment_method_details.card.brand,
-      },
       service: deviceSelectionPaidTransaction.deviceType.group,
     };
-    await devitrakApi.post("/nodemailer/invoice-notification", template);
+    return await devitrakApi.post("/nodemailer/invoice-notification", template);
   };
 
   const confirmPaymentIntent = async () => {
     try {
       setLoadingStatus(true);
-      setTriggerStatus(false);
       const response = await devitrakApi.get(
         `/stripe/payment_intents/${payment_intent}`
       );
-      if (response.data.ok) {
+      if (response.data) {
         dispatch(onAddNewPaymentIntent(response.data));
         await invoiceEmail(response.data.paymentIntent);
         await saveTransaction();
@@ -128,15 +125,23 @@ const ServicePaymentConfirmation = () => {
           exact: true,
         });
         setLoadingStatus(false);
+        return setTriggerStatus(false);
       }
     } catch (error) {
       return setLoadingStatus(false);
     }
   };
 
-  if (triggerStatus) {
-    confirmPaymentIntent();
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+    if (triggerStatus) {
+      confirmPaymentIntent();
+    }
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   return (
     <Grid
       style={{
