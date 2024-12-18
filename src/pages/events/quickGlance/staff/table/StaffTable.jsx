@@ -152,6 +152,21 @@ const StaffTable = ({ searching }) => {
         dataIndex: "email",
         key: "email",
       },
+      {
+        title: "",
+        key: "action",
+        align: "right",
+        width: "5%",
+        render: () => (
+          <Icon
+            icon="fluent:arrow-circle-right-20-regular"
+            color="#475467"
+            width={25}
+            height={25}
+          />
+        ),
+      },
+  
     ];
     return (
       <Table
