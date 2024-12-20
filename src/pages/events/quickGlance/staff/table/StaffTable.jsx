@@ -1,24 +1,22 @@
-import { Table } from "antd";
-import "../../../../../styles/global/ant-table.css";
-import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
-import { useEffect } from "react";
-import { groupBy } from "lodash";
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, Table } from "antd";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import "../../../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const StaffTable = ({ searching }) => {
   const { event } = useSelector((state) => state.event);
+  const [staff, setStaff] = useState([])
   const staffEventQuery = useQuery({
-    queryKey: ["staffEvent"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
-    // enabled: false,
+    queryKey: ["newEndpointQuery"],
+    queryFn: () => devitrakApi.get(`/event/event-staff-detail/${event.id}`), //devitrakApi.get("/staff/admin-users"),
     refetchOnMount: false,
-    // staleTime: Infinity,
-    // cacheTime: 1000 * 60 * 60, //oneHourInMs
   });
+
   useEffect(() => {
     const controller = new AbortController();
     staffEventQuery.refetch();
@@ -26,159 +24,200 @@ const StaffTable = ({ searching }) => {
       controller.abort();
     };
   }, []);
+  const employeesString = staffEventQuery?.data?.data?.staff;
+  const employees = typeof employeesString === "string" ? JSON.parse(employeesString) : employeesString
+  // const groupingEmployees = groupBy(employees, "email");
+  // const result = new Map();
+  const renderingStaffInfo = async () => {
+    const result = new Set()
+    for (const data of employees) {
+      const onlineStatus = await devitrakApi.get(`/admin/check-online-status/${data.staff.email}`)
+      result.add({
+        name: `${data.staff.firstName} ${data.staff.lastName}`,
+        online: onlineStatus?.data?.online,
+        role: data.staff.role ?? "Assistant",
+        email: data.staff.email,
+        phone: data.phone ?? "000-000-0000",
+        photo: data.photo
+      })
+    }
+    return setStaff(Array.from(result))
+  }
+  useEffect(() => {
+    renderingStaffInfo()
+  }, [staffEventQuery.isLoading, staffEventQuery.isFetched, staffEventQuery.data])
+  // const mergeStaffInEvent2 = async () => {
+  //   for (let data of event.staff.adminUser) {
+  //     if (groupingEmployees[data.email]) {
+  //       if (!result.has(data.email)) {
+  //         result.set(data.email, {
+  //           name: `${data.firstName} ${data.lastName}`,
+  //           role: "Administrator",
+  //           online: groupingEmployees[data.email].at(-1).online,
+  //           email: data.email,
+  //         });
+  //       }
+  //     }
+  //     if (!result.has(data.email)) {
+  //       result.set(data.email, {
+  //         name: `${data.firstName} ${data.lastName}`,
+  //         role: "Administrator",
+  //         online: false,
+  //         email: data.email,
+  //       });
+  //     }
+  //   }
+  //   if (event.staff.headsetAttendees) {
+  //     for (let data of event.staff.headsetAttendees) {
+  //       if (groupingEmployees[data.email]) {
+  //         if (!result.has(data.email)) {
+  //           result.set(data.email, {
+  //             name: `${data.firstName} ${data.lastName}`,
+  //             role: "Assistant",
+  //             online: groupingEmployees[data.email].at(-1).online,
+  //             email: data.email,
+  //           });
+  //         }
+  //       }
+  //       if (!result.has(data.email)) {
+  //         result.set(data.email, {
+  //           name: `${data.firstName} ${data.lastName}`,
+  //           role: "Assistant",
+  //           online: false,
+  //           email: data.email,
+  //         });
+  //       }
+  //     }
+  //   }
+  // };
+  // mergeStaffInEvent2();
 
-  if (staffEventQuery.data) {
-    const employees = staffEventQuery.data.data.adminUsers;
-    const groupingEmployees = groupBy(employees, "email");
-    const result = new Map();
-    const mergeStaffInEvent2 = async () => {
-      for (let data of event.staff.adminUser) {
-        if (groupingEmployees[data.email]) {
-          if (!result.has(data.email)) {
-            result.set(data.email, {
-              name: `${data.firstName} ${data.lastName}`,
-              role: "Administrator",
-              online: groupingEmployees[data.email].at(-1).online,
-              email: data.email,
-            });
-          }
-        }
-        if (!result.has(data.email)) {
-          result.set(data.email, {
-            name: `${data.firstName} ${data.lastName}`,
-            role: "Administrator",
-            online: false,
-            email: data.email,
-          });
-        }
+
+  // const dataToRender = () => {
+  //   if (!searching || String(searching).length < 1) {
+  //     return [...result.values()];
+  //   } else {
+  //     const responding = [...result.values()].filter((staff) =>
+  //       JSON.stringify(staff)
+  //         .toLowerCase()
+  //         .includes(String(searching).toLowerCase())
+  //     );
+  //     return responding;
+  //   }
+  // };
+  const dataToRender = () => {
+    if (!searching || String(searching).length < 1) {
+      return staff;
+    } else {
+      const responding = [...staff].filter((staff) =>
+        JSON.stringify(staff)
+          .toLowerCase()
+          .includes(String(searching).toLowerCase())
+      );
+      return responding;
+    }
+  };
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (name, record) => {
+        const initials = String(name).toUpperCase().split(" ");
+        return (
+          <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignItems: "center", alignSelf: "flex-start" }}>
+            <Avatar src={record.photo}>{`${initials[0][0]}${initials[1][0]}`}</Avatar>&nbsp;
+            <p>{name}</p>
+          </div>
+        )
       }
-      if (event.staff.headsetAttendees) {
-        for (let data of event.staff.headsetAttendees) {
-          if (groupingEmployees[data.email]) {
-            if (!result.has(data.email)) {
-              result.set(data.email, {
-                name: `${data.firstName} ${data.lastName}`,
-                role: "Assistant",
-                online: groupingEmployees[data.email].at(-1).online,
-                email: data.email,
-              });
-            }
-          }
-          if (!result.has(data.email)) {
-            result.set(data.email, {
-              name: `${data.firstName} ${data.lastName}`,
-              role: "Assistant",
-              online: false,
-              email: data.email,
-            });
-          }
-        }
-      }
-    };
-    mergeStaffInEvent2();
-    const dataToRender = () => {
-      if (!searching || String(searching).length < 1) {
-        return [...result.values()];
-      } else {
-        const responding = [...result.values()].filter((staff) =>
-          JSON.stringify(staff)
-            .toLowerCase()
-            .includes(String(searching).toLowerCase())
-        );
-        return responding;
-      }
-    };
-    const columns = [
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-      },
-      {
-        title: "Status",
-        width: "10%",
-        dataIndex: "online",
-        key: "online",
-        render: (online) => (
-          <span
-            style={{
-              borderRadius: "16px",
-              justifyContent: "center",
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              background: `${
-                online
-                  ? "var(--success-50, #ECFDF3)"
-                  : "var(--blue-50, #EFF8FF)"
+    },
+    {
+      title: "Status",
+      width: "10%",
+      dataIndex: "online",
+      key: "online",
+      render: (online) => (
+        <span
+          style={{
+            borderRadius: "16px",
+            justifyContent: "center",
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            background: `${online
+              ? "var(--success-50, #ECFDF3)"
+              : "var(--blue-50, #EFF8FF)"
               }`,
-              width: "fit-content",
+            width: "fit-content",
+          }}
+        >
+          <Typography
+            color={`${online
+              ? "var(--success-700, #027A48)"
+              : "var(--blue-700, #175CD3)"
+              }`}
+            textTransform={"capitalize"}
+            style={{
+              ...Subtitle,
+              fontWeight: 500,
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
             }}
           >
-            <Typography
-              color={`${
-                online
-                  ? "var(--success-700, #027A48)"
-                  : "var(--blue-700, #175CD3)"
-              }`}
-              textTransform={"capitalize"}
-              style={{
-                ...Subtitle,
-                fontWeight: 500,
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-            >
-              <Icon
-                icon="tabler:point-filled"
-                rotate={3}
-                color={`${online ? "#12B76A" : "#2E90FA"}`}
-              />
-              {online ? "Online" : "Offline"}
-            </Typography>
-          </span>
-        ),
-      },
-      {
-        title: "Role",
-        width: "20%",
-        dataIndex: "role",
-        key: "role",
-      },
-      {
-        title: "Email",
-        width: "25%",
-        dataIndex: "email",
-        key: "email",
-      },
-      {
-        title: "",
-        key: "action",
-        align: "right",
-        width: "5%",
-        render: () => (
-          <Icon
-            icon="fluent:arrow-circle-right-20-regular"
-            color="#475467"
-            width={25}
-            height={25}
-          />
-        ),
-      },
-  
-    ];
-    return (
-      <Table
-        pagination={{
-          position: "bottomCenter",
-        }}
-        className="table-ant-customized"
-        columns={columns}
-        dataSource={dataToRender()}
-      />
-    );
-  }
+            <Icon
+              icon="tabler:point-filled"
+              rotate={3}
+              color={`${online ? "#12B76A" : "#2E90FA"}`}
+            />
+            {online ? "Online" : "Offline"}
+          </Typography>
+        </span>
+      ),
+    },
+    {
+      title: "Role",
+      width: "15%",
+      dataIndex: "role",
+      key: "role",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+    },
+    {
+      title: "",
+      key: "action",
+      align: "right",
+      width: "5%",
+      render: () => (
+        <Icon
+          icon="fluent:arrow-circle-right-20-regular"
+          color="#475467"
+          width={25}
+          height={25}
+        />
+      ),
+    },
+
+  ];
+  return (
+    <Table
+      pagination={{
+        position: "bottomCenter",
+      }}
+      className="table-ant-customized"
+      columns={columns}
+      dataSource={dataToRender()}
+    />
+  );
 };
 
 export default StaffTable;
