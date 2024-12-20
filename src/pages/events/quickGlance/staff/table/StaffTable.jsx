@@ -26,8 +26,6 @@ const StaffTable = ({ searching }) => {
   }, []);
   const employeesString = staffEventQuery?.data?.data?.staff;
   const employees = typeof employeesString === "string" ? JSON.parse(employeesString) : employeesString
-  // const groupingEmployees = groupBy(employees, "email");
-  // const result = new Map();
   const renderingStaffInfo = async () => {
     const result = new Set()
     for (const data of employees) {
@@ -46,65 +44,6 @@ const StaffTable = ({ searching }) => {
   useEffect(() => {
     renderingStaffInfo()
   }, [staffEventQuery.isLoading, staffEventQuery.isFetched, staffEventQuery.data])
-  // const mergeStaffInEvent2 = async () => {
-  //   for (let data of event.staff.adminUser) {
-  //     if (groupingEmployees[data.email]) {
-  //       if (!result.has(data.email)) {
-  //         result.set(data.email, {
-  //           name: `${data.firstName} ${data.lastName}`,
-  //           role: "Administrator",
-  //           online: groupingEmployees[data.email].at(-1).online,
-  //           email: data.email,
-  //         });
-  //       }
-  //     }
-  //     if (!result.has(data.email)) {
-  //       result.set(data.email, {
-  //         name: `${data.firstName} ${data.lastName}`,
-  //         role: "Administrator",
-  //         online: false,
-  //         email: data.email,
-  //       });
-  //     }
-  //   }
-  //   if (event.staff.headsetAttendees) {
-  //     for (let data of event.staff.headsetAttendees) {
-  //       if (groupingEmployees[data.email]) {
-  //         if (!result.has(data.email)) {
-  //           result.set(data.email, {
-  //             name: `${data.firstName} ${data.lastName}`,
-  //             role: "Assistant",
-  //             online: groupingEmployees[data.email].at(-1).online,
-  //             email: data.email,
-  //           });
-  //         }
-  //       }
-  //       if (!result.has(data.email)) {
-  //         result.set(data.email, {
-  //           name: `${data.firstName} ${data.lastName}`,
-  //           role: "Assistant",
-  //           online: false,
-  //           email: data.email,
-  //         });
-  //       }
-  //     }
-  //   }
-  // };
-  // mergeStaffInEvent2();
-
-
-  // const dataToRender = () => {
-  //   if (!searching || String(searching).length < 1) {
-  //     return [...result.values()];
-  //   } else {
-  //     const responding = [...result.values()].filter((staff) =>
-  //       JSON.stringify(staff)
-  //         .toLowerCase()
-  //         .includes(String(searching).toLowerCase())
-  //     );
-  //     return responding;
-  //   }
-  // };
   const dataToRender = () => {
     if (!searching || String(searching).length < 1) {
       return staff;
@@ -211,7 +150,7 @@ const StaffTable = ({ searching }) => {
   return (
     <Table
       pagination={{
-        position: "bottomCenter",
+        position: ["bottomCenter"],
       }}
       className="table-ant-customized"
       columns={columns}
