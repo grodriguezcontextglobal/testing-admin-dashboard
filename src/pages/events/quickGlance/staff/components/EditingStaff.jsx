@@ -403,15 +403,12 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                 <Select
                   style={{ ...AntSelectorStyle, width: "60%" }}
                   onChange={handleChange}
+                  placeholder="Staff role"
                   options={[
                     {
                       value: "administrator",
                       label: "Event administrator",
                       disabled: false,
-                      // event.subscription.adminUser
-                      //   ? Number(checkAdminSpots()) ===
-                      //     Number(event.subscription.adminUser)
-                      //   : true,
                     },
                     {
                       value: "headsetAttendee",
