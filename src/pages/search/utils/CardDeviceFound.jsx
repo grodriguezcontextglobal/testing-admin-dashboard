@@ -6,7 +6,30 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import { Subtitle } from "../../../styles/global/Subtitle";
 const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
+  const styleDic = {
+    true: {
+      backgroundColor: "#FFF4ED",
+      color: "#B93815",
+    },
+    false: {
+      backgroundColor: "#ECFDF3",
+      color: "#027A48",
+    },
+  };
+
+  const subtitleCardStyle = {
+    width: "100%",
+    textAlign: "left",
+    color: "var(--Gray-600, #475467)",
+    fontFamily: "Inter",
+    fontSize: "16px",
+    fontStyle: "normal",
+    fontWeight: 400,
+    lineHeight: "24px" /* 150% */,
+    textWrap: "pretty",
+  };
   return (
     <Card
       key={props.data?._id}
@@ -53,20 +76,23 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
       >
         {props?.serialNumber}
       </div>
+      <div style={subtitleCardStyle}>{props?.type}</div>
+      <div style={subtitleCardStyle}>{props?.event}</div>
       <div
         style={{
-          width: "100%",
-          textAlign: "left",
-          color: "var(--Gray-600, #475467)",
-          fontFamily: "Inter",
-          fontSize: "16px",
-          fontStyle: "normal",
-          fontWeight: 400,
-          lineHeight: "24px" /* 150% */,
-          textWrap: "pretty",
+          ...subtitleCardStyle,
+          backgroundColor: styleDic[props.active].backgroundColor,
+          borderRadius: "16px",
+          justifyContent: "center",
+          display: "flex",
+          padding: "2px 8px",
+          alignItems: "center",
+          margin:"5px 0"
         }}
       >
-        {props?.type}
+        <p style={{ ...Subtitle, color: styleDic[props.active].color }}>
+          {props?.active ? "In transaction" : "In event's stock"}
+        </p>
       </div>
       <Divider style={{ margin: "5px 0 10px" }} />
       <div
@@ -87,7 +113,12 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
         <Button
           loading={loadingStatus}
           onClick={() => returnFn(props)}
-          style={{ ...DangerButton, ...CenteringGrid, width: "100%" }}
+          style={{
+            ...DangerButton,
+            ...CenteringGrid,
+            width: "100%",
+            display: props.active ? "flex" : "none",
+          }}
         >
           <p style={DangerButtonText}>Return</p>
         </Button>
