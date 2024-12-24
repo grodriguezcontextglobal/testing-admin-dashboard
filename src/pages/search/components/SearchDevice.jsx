@@ -1,5 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -55,7 +56,68 @@ const SearchDevice = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchActiveAssignedDevicesPerEvent = useCallback(async () => {
+
+  const checkPoolEventInventory = async () => {
+    try {
+      const rowEventsData = [...eventsPerAdmin.active];
+      const result = new Map();
+      const eventsName = [
+        ...rowEventsData.map((item) => item.eventInfoDetail.eventName),
+      ];
+
+      const fetchingDataPerEvent = await devitrakApi.post(
+        "/receiver/receiver-pool-list",
+        {
+          company: user.companyData.id,
+          device: {
+            $regex: location.search.split("?search=")[1],
+            $options: "i",
+          },
+          eventSelected: { $in: eventsName },
+        },
+        {
+          limit: 10,
+        }
+      );
+      const responseData = fetchingDataPerEvent?.data?.receiversInventory;
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        for (let item of responseData) {
+          if (!result.has(checkArray(responseData).id)) {
+            result.set(checkArray(responseData).id, {
+              ...responseData.at(-1),
+              eventInfo: checkArray(
+                rowEventsData.find(
+                  (ele) => ele.eventInfoDetail.eventName === item.eventSelected
+                )
+              ),
+            });
+          }
+        }
+      }
+
+      for (const [, value] of result) {
+        if (value.activity) {
+          fetchActiveAssignedDevicesPerEvent(value.device);
+        } else {
+          const template = {
+            serialNumber: value.device,
+            type: value.type,
+            event: value.eventSelected,
+            image: imagesDeviceFoundData()
+              ? imagesDeviceFoundData()[value.type]?.at(-1)?.source
+              : false,
+            data: value,
+            active: false,
+          };
+          setFoundDeviceData([...foundDeviceData, template]);
+        }
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+  const fetchActiveAssignedDevicesPerEvent = useCallback(async (props) => {
     setLoadingSearchingResult(true);
     const rowEventsData = [...eventsPerAdmin.active];
     const result = new Map();
@@ -67,7 +129,7 @@ const SearchDevice = () => {
       {
         company: user.companyData.id,
         "device.serialNumber": {
-          $regex: location.search.split("?search=")[1],
+          $regex: props, //location.search.split("?search=")[1],
           $options: "i",
         },
         "device.status": true,
@@ -91,17 +153,28 @@ const SearchDevice = () => {
     }
     const finalResult = new Set();
     for (let [, value] of result) {
-      finalResult.add(value);
+      const template = {
+        serialNumber: value.device.serialNumber,
+        type: value.device.deviceType,
+        event: value.eventSelected[0],
+        image: imagesDeviceFoundData()
+          ? imagesDeviceFoundData()[value.device.deviceType]?.at(-1)?.source
+          : false,
+        data: value,
+        active: true,
+      };
+
+      finalResult.add(template);
     }
     setLoadingSearchingResult(false);
-    return setFoundDeviceData(Array.from(finalResult));
+    return setFoundDeviceData([...foundDeviceData, ...Array.from(finalResult)]);
   }, []);
 
   const checkingIfItemInWarehouseOrNot = () => {
     if (searchingQuery.data) {
       const result = searchingQuery?.data?.data?.result;
       if (result.some((item) => item.warehouse < 1)) {
-        return fetchActiveAssignedDevicesPerEvent();
+        return checkPoolEventInventory(); //fetchActiveAssignedDevicesPerEvent();
       }
       return setFoundDeviceData([]);
     }
@@ -143,6 +216,47 @@ const SearchDevice = () => {
       controller.abort();
     };
   }, [location.key]);
+
+  const checkItemInEventWhenItIsNotInTransaction = async (props) => {
+    try {
+      setLoadingSearchingResult(true);
+      const eventInfoSqlDB = await devitrakApi.post(
+        "/db_event/events_information",
+        {
+          event_name: props.event,
+          company_assigned_event_id: user.sqlInfo.company_id,
+        }
+      );
+
+      const formatDeviceSection = {
+        activity: props.active,
+        company: [props.type, props.event],
+        entireData: {
+          ...props.data,
+        },
+        serialNumber: props.serialNumber,
+        status: props.data.status,
+      };
+      dispatch(onAddPaymentIntentDetailSelected(null));
+      dispatch(
+        onAddEventData({
+          ...checkArray(props.data.eventInfo),
+          sql: eventInfoSqlDB.data.events.at(-1),
+        })
+      );
+      dispatch(onSelectEvent(props.event));
+      dispatch(onSelectCompany(props.data.provider));
+      dispatch(onAddCustomer(null));
+      dispatch(onAddCustomerInfo(null));
+      dispatch(onAddPaymentIntentSelected(null));
+      dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection));
+      setLoadingSearchingResult(false);
+      return navigate("/device-quick-glance");
+    } catch (error) {
+      setLoadingSearchingResult(false);
+      message.error(error.message);
+    }
+  };
 
   const afterActionTakenCollectStoreAndNavigate = async (props) => {
     const {
@@ -400,18 +514,12 @@ const SearchDevice = () => {
                 <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                   <CardDeviceFound
                     key={item.id}
-                    props={{
-                      serialNumber: item?.device?.serialNumber,
-                      type: item?.device?.deviceType,
-                      event: item?.eventSelected ?? item?.eventSelected[0],
-                      image: imagesDeviceFoundData()
-                        ? imagesDeviceFoundData()[item?.device?.deviceType]?.at(
-                            -1
-                          )?.source
-                        : false,
-                      data: item ?? [],
-                    }}
-                    fn={handleDeviceSearch}
+                    props={item}
+                    fn={
+                      item.active
+                        ? handleDeviceSearch
+                        : checkItemInEventWhenItIsNotInTransaction
+                    }
                     returnFn={returningDevice}
                     loadingStatus={loadingStatus}
                   />
