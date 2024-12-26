@@ -344,6 +344,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
 
         setLoadingStatus(false);
         openNotificationWithIcon("Success", "Staff member added to event.");
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `event_staff_info=${event.id}`,
+        });
         await closeModal();
       } catch (error) {
         setLoadingStatus(false);
