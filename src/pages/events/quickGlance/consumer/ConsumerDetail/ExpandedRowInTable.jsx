@@ -40,6 +40,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
         "consumerInfo.id": customer.id,
+        paymentIntent: rowRecord.paymentIntent,
       }),
     refetchOnMount: false,
   });
@@ -51,6 +52,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
         user: customer.email,
         company: user.companyData.id,
         eventSelected: event.eventInfoDetail.eventName,
+        paymentIntent: rowRecord.paymentIntent,
       }),
     refetchOnMount: false,
   });
@@ -64,7 +66,6 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   const refetchingFn = () => {
     refetching();
     return deviceAssignedListQuery.refetch();
@@ -192,6 +193,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           //   emailStructure.render()
           // );
           openNotificationWithIcon("Device returned.");
+          await checkItemsStatusInTransactionForEmailNotification();
         }
       }
     } catch (error) {
@@ -539,6 +541,53 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     },
   ];
 
+  const returnConfirmationEmailNotification = async (props) => {
+    try {
+      console.log("returnConfirmationEmailNotification", props);
+      await devitrakApi.post(
+        "/nodemailer/confirm-returned-device-notification",
+        {
+          consumer: {
+            email: customer.email,
+            firstName: customer.name,
+            lastName: customer.lastName,
+          },
+          devices: props,
+          event: event.eventInfoDetail.eventName,
+          transaction: rowRecord.paymentIntent,
+          company: user.companyData.id,
+          link: `https://app.devitrak.net/?event=${event.id}&company=${
+            user.companyData.id
+          }`,
+          admin: user.email,
+        }
+      );
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
+  const checkItemsStatusInTransactionForEmailNotification = async () => {
+    try {
+      const checkingNewStatus = await devitrakApi.post(
+        "/receiver/receiver-assigned-list",
+        {
+          user: customer.email,
+          company: user.companyData.id,
+          eventSelected: event.eventInfoDetail.eventName,
+          paymentIntent: rowRecord.paymentIntent,
+        }
+      );
+      const data = checkingNewStatus?.data?.listOfReceivers;
+      const groupingByStatus = groupBy(data, "device.status");
+      console.log(groupingByStatus);
+      if (!groupingByStatus[true])
+        return returnConfirmationEmailNotification(groupingByStatus[false]);
+      return null;
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
+
   const returnDevicesInTransaction = async (props) => {
     const template = {
       timeStamp: new Date().getTime(),
@@ -586,6 +635,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
         message.info("Returning all items in this transaction. Please wait!");
         await returnDevicesInTransaction(groupingByStatus[true]);
         await returnDeviceInPool(groupingByStatus[true]);
+        await returnConfirmationEmailNotification(groupingByStatus[true]);
         return message.success("All items returned successfully");
       } else {
         return message.warning("No items to return");
@@ -674,6 +724,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           refetching={refetchingFn}
           selectedItems={selectedItems}
           setSelectedItems={setSelectedItems}
+          emailNotification={checkItemsStatusInTransactionForEmailNotification}
         />
       )}
     </>
