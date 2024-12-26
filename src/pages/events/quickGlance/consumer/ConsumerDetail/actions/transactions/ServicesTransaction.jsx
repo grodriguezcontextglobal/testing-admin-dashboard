@@ -84,6 +84,8 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
         quantity: data.quantity,
       },
     ];
+    setValue("quantity","");
+    setValue("price","");
     return setServicesAddedForCustomer(result);
   };
 
@@ -130,7 +132,8 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
         );
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const checkAdminForEnableEditPriceField = () => {
@@ -226,6 +229,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
                   width: "100%",
                 }}
                 placeholder="Price."
+                required
                 readOnly={!checkAdminForEnableEditPriceField()}
                 startAdornment={
                   <InputAdornment position="start">$</InputAdornment>
@@ -244,6 +248,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
                 </Typography>
               </InputLabel>
               <OutlinedInput
+                required
                 disabled={clientSecret !== null}
                 {...register("quantity")}
                 style={{
