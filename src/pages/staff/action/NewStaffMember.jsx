@@ -129,6 +129,13 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           queryKey: ["employeesPerCompanyList"],
           exact: true,
         });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `_id=${user.companyData.id}`,
+        });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `company_id=${user.companyData.id}`,
+        });
+
         warning(
           "success",
           `An invitation was sent to ${data.name} ${data.lastName}!`

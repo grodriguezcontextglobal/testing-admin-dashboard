@@ -33,7 +33,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.companyData.company_name,
-        type:'event',
+        type: "event",
         active: true,
       }),
     refetchOnMount: false,
@@ -271,6 +271,12 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
             },
           })
         );
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `_id=${user.companyData.id}`,
+        });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `company_id=${user.companyData.id}`,
+        });
         queryClient.invalidateQueries({
           queryKey: ["listOfAdminUsers"],
           exact: true,
@@ -284,6 +290,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
           queryKey: ["events"],
           exact: true,
         });
+
         openNotification();
         return closeModal();
       }
