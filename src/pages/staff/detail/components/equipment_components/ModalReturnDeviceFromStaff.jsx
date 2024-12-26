@@ -2,6 +2,7 @@ import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Modal } from "antd";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import renderingTitle from "../../../../../components/general/renderingTitle";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
@@ -9,7 +10,6 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
-import { useSelector } from "react-redux";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -85,11 +85,37 @@ const ModalReturnDeviceFromStaff = ({
           exact: true,
         });
 
-        return closeModal();
+        return closingEventAndReturningDevice();
       }
     }
   };
+  const closingEventAndReturningDevice = async () => {
+    try {
+      const checkEventByDevice = await devitrakApi.post(
+        "/receiver/receiver-pool-list",
+        {
+          company: user.companyData.id,
+          device: deviceInfo.item_id_info.serial_number,
+          type: deviceInfo.item_id_info.item_group,
+        }
+      );
+      if (checkEventByDevice.data) {
+        const deviceUpdate = await devitrakApi.patch(
+          `/receiver/receivers-pool-update/${
+            checkEventByDevice.data.receiversInventory.at(-1).id
+          }`,
+          {
+            activity: false,
+          }
+        );
 
+        if (deviceUpdate.data.ok) {
+          return closeModal();
+        }
+      }
+    } catch (error) {
+      return null    }
+  };
   const closeModal = () => {
     return setOpenReturnDeviceStaffModal(false);
   };
@@ -103,7 +129,7 @@ const ModalReturnDeviceFromStaff = ({
       onCancel={() => closeModal()}
       footer={[]}
       maskClosable={false}
-      style={{ zIndex: 30}}
+      style={{ zIndex: 30 }}
     >
       <form
         style={{
