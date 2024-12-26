@@ -17,10 +17,6 @@ import ActionsMainPage from "./action/MainPage";
 import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
 import DeviceInformationDetail from "./detailComponent/DeviceInformationDetail";
 import TableDetailPerDevice from "./detailComponent/TableDetailPerDevice";
-// import TableDetailPerDevice from "./TableDetailPerDevice";
-// import Actions from "./Actions";
-// import DeviceDescriptionTags from "./DeviceDescriptionTags";
-// import DeviceInformationDetail from "./DeviceInformationDetail";
 
 const DeviceDetail = () => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
