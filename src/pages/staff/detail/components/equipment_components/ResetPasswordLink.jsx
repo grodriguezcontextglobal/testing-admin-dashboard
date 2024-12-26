@@ -87,9 +87,10 @@ const ForgetPasswordLinkFromStaffPage = () => {
           email: data.email,
           company: adminUserInfoRef.current.at(-1).company,
         },
+        company_logo: user.companyData.company_logo,
       });
       if (resp.data.ok) {
-        openNotificationWithIcon("success", "Email was sent to email address.");
+        openNotificationWithIcon("Success", "Email was sent to email address.");
         handleClose();
       }
     } else {
@@ -131,7 +132,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
         footer={[]}
         centered
         maskClosable={false}
-        style={{ zIndex: 30}}
+        style={{ zIndex: 30 }}
       >
         <Grid container>
           <Grid
