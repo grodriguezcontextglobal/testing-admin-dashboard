@@ -17,7 +17,7 @@ const style = {
   p: 4,
   borderRadius: "20px",
   boxShadow: "0px 0px 5px var(--gray300)",
-  width:"40vw"
+  width: "40vw",
 };
 const Choice = ({ openModal, setOpenModal }) => {
   const { customer } = useSelector((state) => state.stripe);
@@ -38,13 +38,11 @@ const Choice = ({ openModal, setOpenModal }) => {
           timeout: 500,
         },
       }}
-      style={{ zIndex: 30 }}
+      sx={{ zIndex: 1300 }}
     >
       <Fade in={openModal}>
         <Box sx={style}>
-          <p
-            style={{...Subtitle, fontWeight:600}}
-          >
+          <p style={{ ...Subtitle, fontWeight: 600 }}>
             How will the lost device fee be paid?
           </p>
           <Grid
@@ -59,7 +57,9 @@ const Choice = ({ openModal, setOpenModal }) => {
               style={{ width: "100%" }}
               to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/credit-card-method`}
             >
-              <button style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
+              <button
+                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+              >
                 <p style={{ ...BlueButtonText, textTransform: "none" }}>
                   Credit card
                 </p>
@@ -70,14 +70,21 @@ const Choice = ({ openModal, setOpenModal }) => {
               style={{ width: "100%" }}
               to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/cash-method`}
             >
-              <button style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}>
+              <button
+                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+              >
                 <p style={{ ...BlueButtonText, textTransform: "none" }}>Cash</p>
               </button>
             </Link>
           </Grid>
 
           <button
-            style={{ ...GrayButton, ...CenteringGrid, width: "100%" , margin: "5px 0" }}
+            style={{
+              ...GrayButton,
+              ...CenteringGrid,
+              width: "100%",
+              margin: "5px 0",
+            }}
             onClick={() => handleClose()}
           >
             <p style={GrayButtonText}>Go back</p>
