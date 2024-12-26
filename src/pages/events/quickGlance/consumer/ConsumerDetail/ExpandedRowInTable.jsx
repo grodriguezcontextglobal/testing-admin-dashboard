@@ -543,7 +543,6 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
 
   const returnConfirmationEmailNotification = async (props) => {
     try {
-      console.log("returnConfirmationEmailNotification", props);
       await devitrakApi.post(
         "/nodemailer/confirm-returned-device-notification",
         {
@@ -579,7 +578,6 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       );
       const data = checkingNewStatus?.data?.listOfReceivers;
       const groupingByStatus = groupBy(data, "device.status");
-      console.log(groupingByStatus);
       if (!groupingByStatus[true])
         return returnConfirmationEmailNotification(groupingByStatus[false]);
       return null;
