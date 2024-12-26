@@ -11,6 +11,7 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 const ModalToDisplayFunctionInProgress = lazy(() =>
   import("./endEvent/ModalToDisplayFunctionInProgress")
 );
@@ -160,7 +161,9 @@ const EndEventButton = () => {
   const sqlDeviceFinalStatusAtEventFinished = async () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
-    const groupingDevicesFromNoSQL = groupBy(listOfDevicesInEvent, "device");
+
+    const dataToIterate =checkTypeFetchResponse(listOfDevicesInEvent);
+    const groupingDevicesFromNoSQL = groupBy(dataToIterate, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
     const eventId = event.sql.event_id;
     const companyId = user.sqlInfo.company_id;
@@ -237,17 +240,17 @@ const EndEventButton = () => {
 
   const inactiveEventAfterEndIt = async () => {
     try {
-      const removingTemporalStaff = [ ...staffRemoveAccessRef.current ]
-      const allStaffEvent = [ ...event.staff.headsetAttendees ]
-      const result = new Set()
-      for(const data of allStaffEvent){
-        if(!removingTemporalStaff.includes(data.email)){
-          result.add(data)
+      const removingTemporalStaff = [...staffRemoveAccessRef.current];
+      const allStaffEvent = [...event.staff.headsetAttendees];
+      const result = new Set();
+      for (const data of allStaffEvent) {
+        if (!removingTemporalStaff.includes(data.email)) {
+          result.add(data);
         }
       }
       const resp = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
         active: false,
-        'staff.headsetAttendees': Array.from(result)
+        "staff.headsetAttendees": Array.from(result),
       });
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));

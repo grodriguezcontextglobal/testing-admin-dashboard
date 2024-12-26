@@ -8,6 +8,7 @@ import { XLSXIcon } from "../../../../components/icons/XLSXIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { groupBy } from "lodash";
+import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
   const [itemsUsers, setItemsUsers] = useState([]);
@@ -118,7 +119,8 @@ const SpreadSheet = () => {
 
   const defectedDevicesInfo = () => {
     const result = new Set();
-    for (const data of defectedItems) {
+    const dataToIterate = checkTypeFetchResponse(defectedItems);
+    for (const data of dataToIterate) {
       if (data.status !== "Operational") {
         result.add(data);
       }

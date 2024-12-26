@@ -27,6 +27,7 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import checkTypeFetchResponse from "../../../../../../components/utils/checkTypeFetchResponse";
 
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -49,7 +50,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   useEffect(() => {
     const controller = new AbortController();
     itemQuery.refetch();
-    
+
     return () => {
       controller.abort();
     };
@@ -58,8 +59,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const dataFound = itemQuery?.data?.data?.items ?? [];
   const groupingItemByCategoriesToRenderThemInSelector = () => {
     const result = new Map();
-    const dataToIterate =
-      typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
+    const dataToIterate = checkTypeFetchResponse(dataFound);
     for (let data of dataToIterate) {
       if (!result.has(data.category_name)) {
         result.set(data.category_name, [data]);

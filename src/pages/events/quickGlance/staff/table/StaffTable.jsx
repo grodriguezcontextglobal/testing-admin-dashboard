@@ -7,10 +7,11 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import "../../../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 
 const StaffTable = ({ searching }) => {
   const { event } = useSelector((state) => state.event);
-  const [staff, setStaff] = useState([])
+  const [staff, setStaff] = useState([]);
   const staffEventQuery = useQuery({
     queryKey: ["newEndpointQuery"],
     queryFn: () => devitrakApi.get(`/event/event-staff-detail/${event.id}`), //devitrakApi.get("/staff/admin-users"),
@@ -25,25 +26,31 @@ const StaffTable = ({ searching }) => {
     };
   }, []);
   const employeesString = staffEventQuery?.data?.data?.staff;
-  const employees = typeof employeesString === "string" ? JSON.parse(employeesString) : employeesString
+  const employees = checkTypeFetchResponse(employeesString);
   const renderingStaffInfo = async () => {
-    const result = new Set()
+    const result = new Set();
     for (const data of employees) {
-      const onlineStatus = await devitrakApi.get(`/admin/check-online-status/${data.staff.email}`)
+      const onlineStatus = await devitrakApi.get(
+        `/admin/check-online-status/${data.staff.email}`
+      );
       result.add({
         name: `${data.staff.firstName} ${data.staff.lastName}`,
         online: onlineStatus?.data?.online,
         role: data.staff.role ?? "Assistant",
         email: data.staff.email,
         phone: data.phone ?? "000-000-0000",
-        photo: data.photo
-      })
+        photo: data.photo,
+      });
     }
-    return setStaff(Array.from(result))
-  }
+    return setStaff(Array.from(result));
+  };
   useEffect(() => {
-    renderingStaffInfo()
-  }, [staffEventQuery.isLoading, staffEventQuery.isFetched, staffEventQuery.data])
+    renderingStaffInfo();
+  }, [
+    staffEventQuery.isLoading,
+    staffEventQuery.isFetched,
+    staffEventQuery.data,
+  ]);
   const dataToRender = () => {
     if (!searching || String(searching).length < 1) {
       return staff;
@@ -64,12 +71,23 @@ const StaffTable = ({ searching }) => {
       render: (name, record) => {
         const initials = String(name).toUpperCase().split(" ");
         return (
-          <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", alignItems: "center", alignSelf: "flex-start" }}>
-            <Avatar src={record.photo}>{`${initials[0][0]}${initials[1][0]}`}</Avatar>&nbsp;
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              alignSelf: "flex-start",
+            }}
+          >
+            <Avatar
+              src={record.photo}
+            >{`${initials[0][0]}${initials[1][0]}`}</Avatar>
+            &nbsp;
             <p>{name}</p>
           </div>
-        )
-      }
+        );
+      },
     },
     {
       title: "Status",
@@ -84,18 +102,18 @@ const StaffTable = ({ searching }) => {
             display: "flex",
             padding: "2px 8px",
             alignItems: "center",
-            background: `${online
-              ? "var(--success-50, #ECFDF3)"
-              : "var(--blue-50, #EFF8FF)"
-              }`,
+            background: `${
+              online ? "var(--success-50, #ECFDF3)" : "var(--blue-50, #EFF8FF)"
+            }`,
             width: "fit-content",
           }}
         >
           <Typography
-            color={`${online
-              ? "var(--success-700, #027A48)"
-              : "var(--blue-700, #175CD3)"
-              }`}
+            color={`${
+              online
+                ? "var(--success-700, #027A48)"
+                : "var(--blue-700, #175CD3)"
+            }`}
             textTransform={"capitalize"}
             style={{
               ...Subtitle,
@@ -145,7 +163,6 @@ const StaffTable = ({ searching }) => {
         />
       ),
     },
-
   ];
   return (
     <Table

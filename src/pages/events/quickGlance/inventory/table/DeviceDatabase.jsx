@@ -6,8 +6,9 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import "../../../../../styles/global/ant-table.css";
+import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
-  const dataFormat = eventInventoryData.dataToRenderInComponent;
+  const dataFormat =checkTypeFetchResponse(eventInventoryData.dataToRenderInComponent);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const columns = [

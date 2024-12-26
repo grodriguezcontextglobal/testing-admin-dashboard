@@ -27,6 +27,7 @@ import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { checkArray } from "../../../../components/utils/checkArray";
+import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -90,8 +91,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
 
   const optionsToRenderInSelector = () => {
-    const dataToIterate =
-      typeof dataFound === "string" ? JSON.parse(dataFound) : dataFound;
+    const dataToIterate = checkTypeFetchResponse(dataFound);
     const locations = groupBy(dataToIterate, "location");
     const options = new Map();
     for (const [key, value] of Object.entries(locations)) {

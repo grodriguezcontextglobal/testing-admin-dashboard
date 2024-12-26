@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import FormatQuickGlanceCardGraphRender from "./graphic/FormatQuickGlanceCardGraphRender";
+import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 const GraphicInventoryEventActivity = () => {
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -41,7 +42,7 @@ const GraphicInventoryEventActivity = () => {
       };
     };
     const sortData = () => {
-      const data = deviceStatusInEvent.data.data.receiversInventory;
+      const data = checkTypeFetchResponse(deviceStatusInEvent.data.data.receiversInventory);
       const groupingByStatus = groupBy(data, "status");
       const groupingByActivity = groupBy(data, "activity");
       const noFunctionalData = Object.entries(groupingByStatus);

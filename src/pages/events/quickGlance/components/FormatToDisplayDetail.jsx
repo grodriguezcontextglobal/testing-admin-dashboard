@@ -6,6 +6,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import CardRendered from "./CardRendered";
 import { useEffect, useState } from "react";
 import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
+import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 const FormatToDisplayDetail = () => {
   const [defectedDeviceList, setDefectedDeviceList] = useState(false);
   const { event } = useSelector((state) => state.event);
@@ -13,7 +14,9 @@ const FormatToDisplayDetail = () => {
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.get(`/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`),
+      devitrakApi.get(
+        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      ),
     refetchOnMount: false,
   });
   const receiversNoOperatingInPoolQuery = useQuery({
@@ -36,15 +39,17 @@ const FormatToDisplayDetail = () => {
   }, []);
 
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {
-    const inventoryEventData = receiversPoolQuery.data.data.receiversInventory;
+    const inventoryEventData = checkTypeFetchResponse(
+      receiversPoolQuery.data.data.receiversInventory
+    );
     const foundAllDevicesGivenInEvent = () => {
-      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
+      const receiversPoolData = inventoryEventData;
       if (receiversPoolData?.length > 0) return receiversPoolData;
       return [];
     };
 
     const foundAllNoOperatingDeviceInEvent = () => {
-      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
+      const receiversPoolData = inventoryEventData;
       const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
@@ -56,7 +61,7 @@ const FormatToDisplayDetail = () => {
     };
 
     const foundAllNoOperatingDeviceListInEvent = () => {
-      const receiversPoolData = receiversPoolQuery.data.data.receiversInventory;
+      const receiversPoolData = inventoryEventData;
       const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
@@ -89,7 +94,7 @@ const FormatToDisplayDetail = () => {
     deviceRangeDisplay();
 
     const numberDisplayDynamically = () => {
-      const dataRef = receiversPoolQuery.data.data.receiversInventory;
+      const dataRef = inventoryEventData;
       if (dataRef?.length > 0) {
         return deviceRangeDisplay() - foundDevicesOut();
       }

@@ -13,6 +13,7 @@ import {
 import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 
 export const CustomerDatabase = ({ searchAttendees }) => {
   const { user } = useSelector((state) => state.admin);
@@ -197,7 +198,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   ];
 
   const checkEventsPerCompany = () => {
-    const list = typeof response === "string" ? JSON.parse(response) : response;
+    const list = checkTypeFetchResponse(response);
     if (list) {
       if (searchAttendees?.length > 0) {
         const check = list?.filter((item) =>
