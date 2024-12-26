@@ -7,7 +7,7 @@ import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
-const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
+const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) => {
   const styleDic = {
     true: {
       backgroundColor: "#FFF4ED",
@@ -87,7 +87,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
           display: "flex",
           padding: "2px 8px",
           alignItems: "center",
-          margin:"5px 0"
+          margin: "5px 0",
         }}
       >
         <p style={{ ...Subtitle, color: styleDic[props.active].color }}>
@@ -105,6 +105,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus }) => {
         }}
       >
         <Button
+          loading={returnLoading}
           onClick={() => fn(props)}
           style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
         >

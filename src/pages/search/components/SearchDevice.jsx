@@ -32,6 +32,7 @@ const SearchDevice = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
+  const [returnLoading, setReturnLoading] = useState(false);
   const searchingQuery = useQuery({
     queryKey: [`${location.search.split("?search=")[1]}`],
     queryFn: () =>
@@ -74,10 +75,10 @@ const SearchDevice = () => {
             $options: "i",
           },
           eventSelected: { $in: eventsName },
-        },
-        {
-          limit: 10,
         }
+        // {
+        //   limit: 10,
+        // }
       );
       const responseData = fetchingDataPerEvent?.data?.receiversInventory;
       if (Array.isArray(responseData) && responseData.length > 0) {
@@ -109,7 +110,7 @@ const SearchDevice = () => {
             data: value,
             active: false,
           };
-          setFoundDeviceData([...foundDeviceData, template]);
+          setFoundDeviceData([template]);
         }
       }
       return null;
@@ -179,13 +180,17 @@ const SearchDevice = () => {
       return setFoundDeviceData([]);
     }
   };
+  let tryingCounting = 0;
+  if (foundDeviceData.length === 0 && tryingCounting < 3) {
+    tryingCounting++;
+  }
   useEffect(() => {
     const controller = new AbortController();
     checkingIfItemInWarehouseOrNot();
     return () => {
       controller.abort();
     };
-  }, [ref.current !== location.key]); //
+  }, [ref.current !== location.key, tryingCounting]); //
 
   const sortAndRenderFoundData = () => {
     if (searchingQuery.data) {
@@ -296,51 +301,58 @@ const SearchDevice = () => {
   };
 
   const handleDeviceSearch = async (record) => {
-    const respTransaction = await devitrakApi.get(
-      `/transaction/transaction?paymentIntent=${record.data.paymentIntent}`
-    );
-    if (respTransaction.data.ok) {
-      const eventInventoryQuery = await devitrakApi.post(
-        "/receiver/receiver-pool-list",
-        {
-          company: user.companyData.id,
-          device: location.search.split("?search=")[1],
-          activity: true,
-        }
+    try {
+      setReturnLoading(true);
+      const respTransaction = await devitrakApi.get(
+        `/transaction/transaction?paymentIntent=${record.data.paymentIntent}`
       );
+      if (respTransaction.data.ok) {
+        const eventInventoryQuery = await devitrakApi.post(
+          "/receiver/receiver-pool-list",
+          {
+            company: user.companyData.id,
+            device: location.search.split("?search=")[1],
+            activity: true,
+          }
+        );
 
-      let userProfile = {
-        ...respTransaction.data.list[0].consumerInfo,
-        uid:
-          respTransaction.data.list[0].consumerInfo.uid ??
-          respTransaction.data.list[0].consumerInfo.id,
-      };
-      const paymentIntentDetailSelectedProfile = {
-        ...respTransaction.data.list[0],
-        user: userProfile,
-        device: respTransaction.data.list[0].device[0].deviceNeeded,
-      };
-      const eventInfo = await devitrakApi.post("/event/event-list", {
-        company: user.company,
-        "eventInfoDetail.eventName": record.event,
-      });
-
-      const eventInfoSqlDB = await devitrakApi.post(
-        "/db_event/events_information",
-        {
-          event_name: record.event,
-          company_assigned_event_id: user.sqlInfo.company_id,
-        }
-      );
-      if (eventInfo.data && eventInfoSqlDB.data) {
-        afterActionTakenCollectStoreAndNavigate({
-          paymentIntentDetailSelectedProfile,
-          eventInfo: eventInfo.data.list,
-          eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
-          record,
-          eventInventoryQuery,
+        let userProfile = {
+          ...respTransaction.data.list[0].consumerInfo,
+          uid:
+            respTransaction.data.list[0].consumerInfo.uid ??
+            respTransaction.data.list[0].consumerInfo.id,
+        };
+        const paymentIntentDetailSelectedProfile = {
+          ...respTransaction.data.list[0],
+          user: userProfile,
+          device: respTransaction.data.list[0].device[0].deviceNeeded,
+        };
+        const eventInfo = await devitrakApi.post("/event/event-list", {
+          company: user.company,
+          "eventInfoDetail.eventName": record.event,
         });
+
+        const eventInfoSqlDB = await devitrakApi.post(
+          "/db_event/events_information",
+          {
+            event_name: record.event,
+            company_assigned_event_id: user.sqlInfo.company_id,
+          }
+        );
+        if (eventInfo.data && eventInfoSqlDB.data) {
+          afterActionTakenCollectStoreAndNavigate({
+            paymentIntentDetailSelectedProfile,
+            eventInfo: eventInfo.data.list,
+            eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+            record,
+            eventInventoryQuery,
+          });
+        }
       }
+      setReturnLoading(false);
+    } catch (error) {
+      message.error(error.message);
+      setReturnLoading(false);
     }
   };
 
@@ -522,6 +534,7 @@ const SearchDevice = () => {
                     }
                     returnFn={returningDevice}
                     loadingStatus={loadingStatus}
+                    returnLoading={returnLoading}
                   />
                 </Grid>
               ))
