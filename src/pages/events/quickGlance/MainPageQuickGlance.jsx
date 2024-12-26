@@ -122,7 +122,6 @@ const MainPageQuickGlance = () => {
     const parsingData =
       receiversPoolQuery?.data?.data?.receiversInventory ??
       receiversPoolQuery?.data?.data?.items;
-
     const inventoryEventAssignedCount = () => {
       let result = 0;
       const { deviceSetup } = event;
@@ -712,7 +711,12 @@ const MainPageQuickGlance = () => {
             setEditingInventory={setEditingInventory}
           />
         )}
-        {editingServiceInEvent && <EditingServiceInEvent editingServicesInEvent={editingServiceInEvent} setEditingServicesInEvent={setEditingServiceInEvent} />}
+        {editingServiceInEvent && (
+          <EditingServiceInEvent
+            editingServicesInEvent={editingServiceInEvent}
+            setEditingServicesInEvent={setEditingServiceInEvent}
+          />
+        )}
         {editingStaff && (
           <EditingStaff
             editingStaff={editingStaff}
