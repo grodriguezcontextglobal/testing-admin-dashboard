@@ -52,15 +52,15 @@ const ModalCancelOptions = ({
     for (let data of priceOptions) {
       if (
         data[
-        companyAccountStripe?.subscriptionHistory?.at(-1)?.latest_invoice
-          ?.total
+          companyAccountStripe?.subscriptionHistory?.at(-1)?.latest_invoice
+            ?.total
         ]
       ) {
         return (priceRefToPass.current =
           data[
-          companyAccountStripe?.subscriptionHistory?.at(
-            -1
-          )?.latest_invoice?.total
+            companyAccountStripe?.subscriptionHistory?.at(
+              -1
+            )?.latest_invoice?.total
           ]);
       }
     }
@@ -145,14 +145,14 @@ const ModalCancelOptions = ({
       {contextHolder}
       <Modal
         title={renderTitle()}
-        style={{
-          top: 20,
-        }}
+        centered
         open={openCancelOptionsModal}
         onOk={() => closeModal()}
         onCancel={() => closeModal()}
         footer={[]}
         maskClosable={false}
+        width={1000}
+        style={{ zIndex: 30 }}
       >
         <Grid container>
           <Grid
