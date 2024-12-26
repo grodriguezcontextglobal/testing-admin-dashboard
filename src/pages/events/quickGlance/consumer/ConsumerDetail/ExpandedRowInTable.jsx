@@ -1,6 +1,13 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Popconfirm, Space, Table, message, notification } from "antd";
+import {
+  Button,
+  Popconfirm,
+  Space,
+  Table,
+  message,
+  notification
+} from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,12 +21,12 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import "../../../../../styles/global/ant-table.css";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({ rowRecord, refetching }) => {
@@ -29,6 +36,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   const [openModal, setOpenModal] = useState(false);
   const { triggerModal } = useSelector((state) => state.helper);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [statusRecordState, setStatusRecordState] = useState(null);
   const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
     useState(false);
   const dispatch = useDispatch();
@@ -104,6 +112,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
   };
+
   const foundTransactionAndDevicesAssigned = () => {
     if (foundAllTransactionsAndDevicesAssigned()) {
       const paymentIntentInRecord =
@@ -114,6 +123,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     }
     return [];
   };
+
   const checkDevicesInTransaction = () => {
     const result = new Set();
     if (foundTransactionAndDevicesAssigned()) {
@@ -123,8 +133,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     }
     return Array.from(result);
   };
+
   const handleReturnSingleDevice = async (props) => {
     try {
+      setStatusRecordState(props.key);
       const deviceInPoolListQuery = await devitrakApi.post(
         "/receiver/receiver-pool-list",
         {
@@ -193,16 +205,19 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           //   emailStructure.render()
           // );
           openNotificationWithIcon("Device returned.");
+          setStatusRecordState(null);
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
     } catch (error) {
+      setStatusRecordState(null);
       return null;
     }
   };
 
   const handleAssignSingleDevice = async (props) => {
     try {
+      setStatusRecordState(props.key);
       const deviceInPoolListQuery = await devitrakApi.post(
         "/receiver/receiver-pool-list",
         {
@@ -271,9 +286,11 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           //   emailStructure.render()
           // );
           openNotificationWithIcon("Device assigned.");
+          setStatusRecordState(null);
         }
       }
     } catch (error) {
+      setStatusRecordState(null);
       return null;
     }
   };
@@ -402,9 +419,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       render: (_, record) => (
         <Space size="middle">
           {record.status === "Lost" || record.status === false ? (
-            <button
+            <Button
               onClick={() => handleAssignSingleDevice(record)}
               disabled={String(record.status).toLowerCase() === "lost"}
+              loading={record.key === statusRecordState}
               style={{
                 width: "fit-content",
                 border: `${
@@ -436,9 +454,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
               >
                 Assign
               </p>
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              loading={record.key === statusRecordState}
               onClick={() => handleReturnSingleDevice(record)}
               disabled={!event.active}
               style={{
@@ -465,7 +484,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
               >
                 Return
               </p>
-            </button>
+            </Button>
           )}
           {record.status === true && (
             <button
@@ -555,9 +574,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           event: event.eventInfoDetail.eventName,
           transaction: rowRecord.paymentIntent,
           company: user.companyData.id,
-          link: `https://app.devitrak.net/?event=${event.id}&company=${
-            user.companyData.id
-          }`,
+          link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
           admin: user.email,
         }
       );
@@ -642,6 +659,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       message.error(`There was an error. ${error}`);
     }
   };
+
   return (
     <>
       {contextHolder}
