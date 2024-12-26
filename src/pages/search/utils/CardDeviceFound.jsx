@@ -1,4 +1,4 @@
-import { Button, Card, Divider } from "antd";
+import { Button, Card, Divider, Popconfirm } from "antd";
 import { PropTypes } from "prop-types";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -7,7 +7,13 @@ import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
-const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) => {
+const CardDeviceFound = ({
+  props,
+  fn,
+  returnFn,
+  loadingStatus,
+  returnLoading,
+}) => {
   const styleDic = {
     true: {
       backgroundColor: "#FFF4ED",
@@ -111,18 +117,19 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) 
         >
           <p style={BlueButtonText}>Details</p>
         </Button>
-        <Button
-          loading={loadingStatus}
-          onClick={() => returnFn(props)}
-          style={{
-            ...DangerButton,
-            ...CenteringGrid,
-            width: "100%",
-            display: props.active ? "flex" : "none",
-          }}
-        >
-          <p style={DangerButtonText}>Return</p>
-        </Button>
+        <Popconfirm title="Are you sure to return this device?" onConfirm={() => returnFn(props)}>
+          <Button
+            loading={loadingStatus}
+            style={{
+              ...DangerButton,
+              ...CenteringGrid,
+              width: "100%",
+              display: props.active ? "flex" : "none",
+            }}
+          >
+            <p style={DangerButtonText}>Return</p>
+          </Button>
+        </Popconfirm>
       </div>
     </Card>
   );
