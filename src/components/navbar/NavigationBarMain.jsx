@@ -97,7 +97,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const handleSearch = (e) => {
     e.preventDefault();
     return navigate(`/search-result-page?search=${searchValue}`, {
-      state: { search: searchValue },
+      state: { search: searchValue, count: 0 },
       flushSync: true,
       replace: true,
       relative: false,
