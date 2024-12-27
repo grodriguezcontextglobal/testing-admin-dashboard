@@ -702,7 +702,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
             </p>
           </Button>
           <Popconfirm
-            title="Are you sure to return all assigned items in this transaction?"
+            title="Are you sure you want to return all items of this transaction?"
             onConfirm={() => handleAllItemsReturn()}
           >
             <Button
