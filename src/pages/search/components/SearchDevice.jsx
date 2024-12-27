@@ -2,7 +2,7 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -26,7 +26,7 @@ import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 const SearchDevice = () => {
   const location = useLocation();
-  const ref = useRef(location.search);
+  const ref = useRef(location.state.search);
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -34,12 +34,12 @@ const SearchDevice = () => {
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
   const [returnLoading, setReturnLoading] = useState(false);
   const searchingQuery = useQuery({
-    queryKey: [`${location.search.split("?search=")[1]}`],
+    queryKey: [`${location.state.search}`],//.search.split("?search=")[1]}
     queryFn: () =>
       devitrakApi.get(
         `/db_company/search-inventory?company_id=${
           user.sqlInfo.company_id
-        }&searchValue=${location.search.split("?search=")[1]}`
+        }&searchValue=${location.state.search}` //.search.split("?search=")[1]
       ),
     refetchOnMount: false,
   });
@@ -180,7 +180,7 @@ const SearchDevice = () => {
       return setFoundDeviceData([]);
     }
   };
-  let tryingCounting = 0;
+  let tryingCounting = Number(location.state.count);
   if (foundDeviceData.length === 0 && tryingCounting < 3) {
     tryingCounting++;
   }
@@ -220,7 +220,7 @@ const SearchDevice = () => {
     return () => {
       controller.abort();
     };
-  }, [location.key]);
+  }, [location.key, tryingCounting]);
 
   const checkItemInEventWhenItIsNotInTransaction = async (props) => {
     try {
@@ -470,78 +470,81 @@ const SearchDevice = () => {
     }
     return <NoDataFound />;
   };
-
-  return (
-    <Grid
-      container
-      style={{
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "center",
-      }}
-      key={`${location.search.split("?search=")[1]}-${location.key}`}
-      id={location.key}
-    >
+  const result = useMemo(() => {
+    return (
       <Grid
+        container
         style={{
           display: "flex",
-          flexDirection: "column",
           justifyContent: "flex-start",
           alignItems: "center",
-          alignSelf: "flex-start",
         }}
-        item
-        xs={12}
-        sm={12}
-        md={4}
-        lg={4}
+        key={`${location.state.search}-${location.key}`} //split("?search=")[1]
+        id={location.key}
       >
-        <Typography
+        <Grid
           style={{
-            ...TextFontSize30LineHeight38,
-            fontSize: "36px",
-            lineHeight: "44px",
-            fontWeight: 600,
-            width: "100%",
-            textAlign: "left",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            alignSelf: "flex-start",
           }}
+          item
+          xs={12}
+          sm={12}
+          md={4}
+          lg={4}
         >
-          Search Device{" "}
-        </Typography>
-        <br />
-        <Typography
-          style={{
-            ...TextFontSize20LineHeight30,
-            width: "100%",
-            textAlign: "left",
-          }}
-        >
-          All devices matching the search keywords.
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={12} md={8} lg={8}>
-        <Grid container gap={1}>
-          {sortAndRenderFoundData()?.length > 0
-            ? sortAndRenderFoundData()?.map((item) => (
-                <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
-                  <CardDeviceFound
-                    key={item.id}
-                    props={item}
-                    fn={
-                      item.active
-                        ? handleDeviceSearch
-                        : checkItemInEventWhenItIsNotInTransaction
-                    }
-                    returnFn={returningDevice}
-                    loadingStatus={loadingStatus}
-                    returnLoading={returnLoading}
-                  />
-                </Grid>
-              ))
-            : ternaryRender(loadingSearchingResult)}
+          <Typography
+            style={{
+              ...TextFontSize30LineHeight38,
+              fontSize: "36px",
+              lineHeight: "44px",
+              fontWeight: 600,
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            Search Device{" "}
+          </Typography>
+          <br />
+          <Typography
+            style={{
+              ...TextFontSize20LineHeight30,
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            All devices matching the search keywords.
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={12} md={8} lg={8}>
+          <Grid container gap={1}>
+            {sortAndRenderFoundData()?.length > 0 && tryingCounting < 3
+              ? sortAndRenderFoundData()?.map((item) => (
+                  <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+                    <CardDeviceFound
+                      key={item.id}
+                      props={item}
+                      fn={
+                        item.active
+                          ? handleDeviceSearch
+                          : checkItemInEventWhenItIsNotInTransaction
+                      }
+                      returnFn={returningDevice}
+                      loadingStatus={loadingStatus}
+                      returnLoading={returnLoading}
+                    />
+                  </Grid>
+                ))
+              : ternaryRender(loadingSearchingResult)}
+          </Grid>
         </Grid>
       </Grid>
-    </Grid>
-  );
+    );
+  }, [tryingCounting]);
+
+  return result;
 };
 export default SearchDevice;
