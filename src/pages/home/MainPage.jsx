@@ -1,23 +1,22 @@
 import { Button, Grid, Typography } from "@mui/material";
+import { Divider } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
 import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { BlueButton } from "../../styles/global/BlueButton";
-import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { Subtitle } from "../../styles/global/Subtitle";
-import { Divider } from "antd";
+import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 // import { default as InventoryMainPage } from "./inventory/MainPage";
 // import { default as ActiveEventMainPage } from "./events/MainPage";
 import { GrayButton } from "../../styles/global/GrayButton";
 import GrayButtonText from "../../styles/global/GrayButtonText";
 // import BannerNotificationTemplate from "../../components/notification/alerts/BannerNotificationTemplate";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { devitrakApi } from "../../api/devitrakApi";
-import { useDispatch, useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
-import { onAddSubscriptionRecord } from "../../store/slices/subscriptionSlice";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
@@ -57,31 +56,31 @@ const MainPage = () => {
     }
   };
 
-  const subscriptionPerCompanyQuery = useQuery({
-    queryKey: ["checkingSubscriptionPerCompanyQuery"],
-    queryFn: () =>
-      devitrakApi.post("/subscription/search_subscription", {
-        company: user.company,
-      }),
-    refetchOnMount: false,
-  });
+  // const subscriptionPerCompanyQuery = useQuery({
+  //   queryKey: ["checkingSubscriptionPerCompanyQuery"],
+  //   queryFn: () =>
+  //     devitrakApi.post("/subscription/search_subscription", {
+  //       company: user.company,
+  //     }),
+  //   refetchOnMount: false,
+  // });
 
-  const checkForActiveSubscriptionPerCompany = useCallback(() => {
-    const checkSubscriptionQuery = subscriptionPerCompanyQuery?.data?.data;
-    if (checkSubscriptionQuery?.ok) {
-      return dispatch(
-        onAddSubscriptionRecord(checkSubscriptionQuery.subscription)
-      );
-    }
-    return dispatch(onAddSubscriptionRecord([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subscriptionPerCompanyQuery.data]);
-  checkForActiveSubscriptionPerCompany();
+  // const checkForActiveSubscriptionPerCompany = useCallback(() => {
+  //   const checkSubscriptionQuery = subscriptionPerCompanyQuery?.data?.data;
+  //   if (checkSubscriptionQuery?.ok) {
+  //     return dispatch(
+  //       onAddSubscriptionRecord(checkSubscriptionQuery.subscription)
+  //     );
+  //   }
+  //   return dispatch(onAddSubscriptionRecord([]));
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [subscriptionPerCompanyQuery.data]);
+  // checkForActiveSubscriptionPerCompany();
   useEffect(() => {
     const controller = new AbortController();
     inventoryQuery.refetch();
     companiesCheck.refetch();
-    subscriptionPerCompanyQuery.refetch();
+    // subscriptionPerCompanyQuery.refetch();
     return () => {
       controller.abort();
     };
