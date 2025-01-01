@@ -258,6 +258,8 @@ const AddNewBulkItems = () => {
           company_id: user.sqlInfo.company_id,
           return_date: `${valueSelection === "Rent" ? returningDate : null}`,
           enableAssignFeature: true,
+          container: data.container === "true",
+          containerSpotLimit: data.containerSpotLimit,
         };
         await devitrakApi.post("/db_item/bulk-item", template);
         if (
@@ -313,7 +315,9 @@ const AddNewBulkItems = () => {
         company_id: user.sqlInfo.company_id,
         return_date: `${valueSelection === "Rent" ? returningDate : null}`,
         enableAssignFeature: true,
-      };
+        container: data.container === "true",
+        containerSpotLimit: data.containerSpotLimit,
+};
       await devitrakApi.post("/db_item/bulk-item", template);
       if (
         !renderLocationOptions().some(
@@ -390,6 +394,17 @@ const AddNewBulkItems = () => {
       controller.abort();
     };
   }, [watch("cost")]);
+
+  const styling = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: 500,
+    lineHeight: "20px",
+    color: "var(--gray-700, #344054)",
+  };
 
   return (
     <Grid
@@ -807,6 +822,87 @@ const AddNewBulkItems = () => {
           style={{
             width: "100%",
             display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
+          }}
+        >
+          <div
+            style={{
+              width: watch("container") === "true" ? "50%" : "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <div style={{ width: "100%" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Tooltip
+                  placement="top"
+                  title="This item will contain other items inside."
+                >
+                  <Typography style={styling}>
+                    Is it a container?&nbsp;
+                    <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+              </InputLabel>
+              <select
+                {...register("container")}
+                style={{
+                  width: "100%",
+                  ...OutlinedInputStyle,
+                  color: Subtitle.color,
+                }}
+              >
+                <option style={{ ...Subtitle }} value={false}>
+                  No - It is not a container
+                </option>
+                <option style={{ ...Subtitle }} value={true}>
+                  Yes - It is a container
+                </option>
+              </select>
+            </div>
+          </div>
+          <div
+            style={{
+              width: "50%",
+              display: watch("container") === "true" ? "flex" : "none",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <div style={{ width: "100%" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Tooltip
+                  placement="top"
+                  title="Limit in number of items that can be stored in the container."
+                >
+                  <Typography style={styling}>
+                    Container cap&nbsp;
+                    <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+              </InputLabel>
+              <OutlinedInput
+                required
+                {...register("containerSpotLimit", { required: true })}
+                aria-invalid={errors.containerSpotLimit}
+                style={OutlinedInputStyle}
+                placeholder="e.g. 30"
+                fullWidth
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "center",
@@ -912,7 +1008,8 @@ const AddNewBulkItems = () => {
           </Grid>
         </Grid>
         <Divider />
-        <span
+        <button
+          type="button"
           onClick={() => setMoreInfoDisplay(true)}
           style={{
             ...CenteringGrid,
@@ -948,7 +1045,7 @@ const AddNewBulkItems = () => {
           >
             Add more information
           </Typography>
-        </span>
+        </button>
         {moreInfoDisplay && (
           <div
             style={{
@@ -985,7 +1082,17 @@ const AddNewBulkItems = () => {
             </Button>
           </div>
         )}
-        <Divider />
+        <Divider style={{ marginBottom: "-15px" }} />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignSelf: "flex-start",
+          }}
+        >
+          <p style={Subtitle}>More information</p>
+        </div>
         <div
           style={{
             width: "100%",
@@ -1076,12 +1183,3 @@ const AddNewBulkItems = () => {
   );
 };
 export default AddNewBulkItems;
-{
-  /* <Icon
-                  icon="ri:arrow-go-back-line"
-                  color="#344054"
-                  width={20}
-                  height={20}
-                />
-                &nbsp; */
-}

@@ -10,13 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import {
-  AutoComplete,
-  Avatar,
-  Divider,
-  Select,
-  notification
-} from "antd";
+import { AutoComplete, Avatar, Divider, Select, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
@@ -31,10 +25,14 @@ import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../styles/global/GrayButton";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/OutlineInput.css";
 import "../../../styles/global/reactInput.css";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
@@ -217,6 +215,8 @@ const AddNewItem = () => {
             extra_serial_number: JSON.stringify(moreInfo),
             company_id: user.sqlInfo.company_id,
             return_date: `${valueSelection === "Rent" ? returningDate : null}`,
+            container: data.container === "true",
+            containerSpotLimit: data.containerSpotLimit,
           });
           if (respNewItem.data.ok) {
             setValue("category_name", "");
@@ -257,6 +257,8 @@ const AddNewItem = () => {
           return_date: `${
             valueSelection === "Rent" ? formatDate(returningDate) : null
           }`,
+          container: data.container === "true",
+          containerSpotLimit: data.containerSpotLimit,
         });
         if (respNewItem.data.ok) {
           setValue("category_name", "");
@@ -338,6 +340,32 @@ const AddNewItem = () => {
     };
   }, [watch("cost")]);
 
+  const styling = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: 500,
+    lineHeight: "20px",
+    color: "var(--gray-700, #344054)",
+  };
+
+  const buttonStyleLoading = {
+    ...BlueButton,
+    ...CenteringGrid,
+    width: "100%",
+    border: `1px solid ${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    borderRadius: "8px",
+    background: `${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+    padding: "6px 12px",
+    cursor: "pointer",
+  };
   return (
     <Grid
       display={"flex"}
@@ -382,18 +410,7 @@ const AddNewItem = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Category
-              </Typography>
+              <Typography style={styling}>Category</Typography>
             </InputLabel>
             <OutlinedInput
               required
@@ -405,13 +422,7 @@ const AddNewItem = () => {
             />
             {errors?.category_name && (
               <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={400}
-                lineHeight={"20px"}
+                style={styling}
                 color={"red"}
                 width={"100%"}
                 padding={"0.5rem 0"}
@@ -433,18 +444,7 @@ const AddNewItem = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Device name
-              </Typography>
+              <Typography style={styling}>Device name</Typography>
             </InputLabel>
             <AutoComplete
               className="custom-autocomplete" // Add a custom className here
@@ -486,18 +486,7 @@ const AddNewItem = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Brand
-              </Typography>
+              <Typography style={styling}>Brand</Typography>
             </InputLabel>
             <OutlinedInput
               required
@@ -515,16 +504,7 @@ const AddNewItem = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
+              <Typography style={styling}>
                 <Tooltip
                   placement="top"
                   title="Address where tax deduction for equipment will be applied."
@@ -562,49 +542,33 @@ const AddNewItem = () => {
         >
           <div
             style={{
-              textAlign: "left",
               width: "50%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "5px",
             }}
           >
-            <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Replacement cost
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("cost", { required: true })}
-              aria-invalid={errors.cost}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 12000.54 | 95.44 | 4585"
-              startAdornment={
-                <InputAdornment position="start">
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    fontFamily={"Inter"}
-                    fontSize={"14px"}
-                    fontStyle={"normal"}
-                    fontWeight={400}
-                    lineHeight={"20px"}
-                    color={"var(--gray-700, #344054)"}
-                  >
-                    $
-                  </Typography>
-                </InputAdornment>
-              }
-              fullWidth
-            />
-            {errors?.cost && <Typography>{errors.cost.type}</Typography>}
+            <div style={{ width: "100%" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Typography style={styling}>Replacement cost</Typography>
+              </InputLabel>
+              <OutlinedInput
+                required
+                {...register("cost", { required: true })}
+                aria-invalid={errors.cost}
+                style={OutlinedInputStyle}
+                placeholder="e.g. 12000.54 | 95.44 | 4585"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <Typography style={{ ...styling, fontWeight: 400 }}>
+                      $
+                    </Typography>
+                  </InputAdornment>
+                }
+                fullWidth
+              />
+            </div>
           </div>
           <div
             style={{
@@ -613,18 +577,7 @@ const AddNewItem = () => {
             }}
           >
             <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-700, #344054)"}
-              >
-                Serial number
-              </Typography>
+              <Typography style={styling}>Serial number</Typography>
             </InputLabel>
             <OutlinedInput
               required
@@ -640,6 +593,87 @@ const AddNewItem = () => {
           style={{
             width: "100%",
             display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            textAlign: "left",
+            gap: "10px",
+          }}
+        >
+          <div
+            style={{
+              width: watch("container") === "true" ? "50%" : "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <div style={{ width: "100%" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Tooltip
+                  placement="top"
+                  title="This item will contain other items inside."
+                >
+                  <Typography style={styling}>
+                    Is it a container?&nbsp;
+                    <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+              </InputLabel>
+              <select
+                {...register("container")}
+                style={{
+                  width: "100%",
+                  ...OutlinedInputStyle,
+                  color: Subtitle.color,
+                }}
+              >
+                <option style={{ ...Subtitle }} value={false}>
+                  No - It is not a container
+                </option>
+                <option style={{ ...Subtitle }} value={true}>
+                  Yes - It is a container
+                </option>
+              </select>
+            </div>
+          </div>
+          <div
+            style={{
+              width: "50%",
+              display: watch("container") === "true" ? "flex" : "none",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <div style={{ width: "100%" }}>
+              <InputLabel style={{ width: "100%" }}>
+                <Tooltip
+                  placement="top"
+                  title="Limit in number of items that can be stored in the container."
+                >
+                  <Typography style={styling}>
+                    Container cap&nbsp;
+                    <QuestionIcon />
+                  </Typography>
+                </Tooltip>
+              </InputLabel>
+              <OutlinedInput
+              required
+              {...register("containerSpotLimit", { required: true })}
+              aria-invalid={errors.containerSpotLimit}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 30"
+              fullWidth
+            />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "center",
@@ -647,18 +681,7 @@ const AddNewItem = () => {
           }}
         >
           <InputLabel style={{ width: "100%", marginBottom: "6px" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              Description of the device
-            </Typography>
+            <Typography style={styling}>Description of the device</Typography>
           </InputLabel>
           <OutlinedInput
             required
@@ -741,11 +764,7 @@ const AddNewItem = () => {
           >
             <Typography
               color={"var(--gray-600, #475467)"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={400}
-              lineHeight={"20px"}
+              style={{ ...styling, fontWeight: 400 }}
             >
               SVG, PNG, JPG or GIF (max. 1MB)
             </Typography>
@@ -762,18 +781,7 @@ const AddNewItem = () => {
           }}
         >
           <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-700, #344054)"}
-            >
-              Ownership status of item
-            </Typography>
+            <Typography style={styling}>Ownership status of item</Typography>
             <Select
               showSearch
               style={{ ...AntSelectorStyle, width: "100%" }}
@@ -874,24 +882,7 @@ const AddNewItem = () => {
         <button
           type="button"
           onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-          style={{
-            ...CenteringGrid,
-            width: "100%",
-            border: `1px solid ${
-              loadingStatus
-                ? "var(--disabled-blue-button)"
-                : "var(--blue-dark-600)"
-            }`,
-            borderRadius: "8px",
-            background: `${
-              loadingStatus
-                ? "var(--disabled-blue-button)"
-                : "var(--blue-dark-600)"
-            }`,
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            padding: "6px 12px",
-            cursor: "pointer",
-          }}
+          style={buttonStyleLoading}
         >
           <Icon
             icon="ic:baseline-plus"
@@ -900,16 +891,7 @@ const AddNewItem = () => {
             height={20}
           />
           &nbsp;
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--base-white, #FFF)",
-              fontSize: "14px",
-              fontWeight: "600",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
+          <Typography textTransform={"none"} style={BlueButtonText}>
             Add more information
           </Typography>
         </button>
@@ -949,7 +931,17 @@ const AddNewItem = () => {
             </Button>
           </div>
         )}
-        <Divider />
+        <Divider style={{ marginBottom: "-15px" }} />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignSelf: "flex-start",
+          }}
+        >
+          <p style={Subtitle}>More information</p>
+        </div>
         <div
           style={{
             width: "100%",
@@ -991,32 +983,19 @@ const AddNewItem = () => {
               width: "50%",
             }}
           >
-            <Link to="/inventory">
+            <Link to="/inventory" style={{ width: "100%" }}>
               <Button
                 disabled={loadingStatus}
                 style={{
+                  ...GrayButton,
+                  ...CenteringGrid,
                   width: "100%",
-                  border: "1px solid var(--gray-300, #D0D5DD)",
-                  borderRadius: "8px",
-                  background: "var(--base-white, #FFF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 }}
               >
-                {/* <Icon
-                  icon="ri:arrow-go-back-line"
-                  color="#344054"
-                  width={20}
-                  height={20}
-                />
-                &nbsp; */}
                 <Typography
                   textTransform={"none"}
                   style={{
-                    color: "#344054",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
+                    ...GrayButtonText,
                   }}
                 >
                   Go back
@@ -1033,21 +1012,7 @@ const AddNewItem = () => {
             <Button
               disabled={loadingStatus}
               type="submit"
-              style={{
-                width: "100%",
-                border: `1px solid ${
-                  loadingStatus
-                    ? "var(--disabled-blue-button)"
-                    : "var(--blue-dark-600)"
-                }`,
-                borderRadius: "8px",
-                background: `${
-                  loadingStatus
-                    ? "var(--disabled-blue-button)"
-                    : "var(--blue-dark-600)"
-                }`,
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-              }}
+              style={buttonStyleLoading}
             >
               <Icon
                 icon="ic:baseline-plus"
@@ -1056,16 +1021,7 @@ const AddNewItem = () => {
                 height={20}
               />
               &nbsp;
-              <Typography
-                textTransform={"none"}
-                style={{
-                  color: "var(--base-white, #FFF)",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
-              >
+              <Typography textTransform={"none"} style={BlueButtonText}>
                 Save new item
               </Typography>
             </Button>
