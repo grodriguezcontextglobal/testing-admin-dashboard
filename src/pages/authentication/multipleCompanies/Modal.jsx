@@ -46,12 +46,10 @@ const ModalMultipleCompanies = ({
       });
       if (respo.data) {
         localStorage.setItem("admin-token", respo.data.token);
-        const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
-          `/profile/${respo.data.uid}`,
-          {
-            online: true,
-          }
-        );
+        // const updatingOnlineStatusResponse =
+        await devitrakApiAdmin.patch(`/profile/${respo.data.uid}`, {
+          online: true,
+        });
         const respoFindMemberInfo = await devitrakApi.post(
           "/db_staff/consulting-member",
           {
@@ -74,7 +72,7 @@ const ModalMultipleCompanies = ({
           onLogin({
             data: {
               ...respo.data.entire,
-              online: updatingOnlineStatusResponse.data.entire.online,
+              online: true,
             },
             name: respo.data.name,
             lastName: respo.data.lastName,
@@ -85,7 +83,7 @@ const ModalMultipleCompanies = ({
             company: props.company,
             companyData: findingCompanyInfoBasedOnSelection(props.company),
             token: respo.data.token,
-            online: updatingOnlineStatusResponse.data.entire.online,
+            online: true,
             sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
             sqlInfo: {
               ...companyInfoTable.data.company.at(-1),
