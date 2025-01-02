@@ -613,6 +613,8 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       template
     );
     queryClient.invalidateQueries("assginedDeviceList", { exact: true });
+    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
+    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${event.company}`})
   };
 
   const returnDeviceInPool = async (props) => {
