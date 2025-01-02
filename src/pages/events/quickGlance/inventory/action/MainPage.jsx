@@ -95,9 +95,13 @@ const ActionsMainPage = () => {
             },
           })
         );
-        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
-        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${event.company}`})
-            return setTimeout(() => navigate(`/events/event-quickglance`), 1000);
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
+        });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+        });
+        return setTimeout(() => navigate(`/events/event-quickglance`), 1000);
       }
     }
   };

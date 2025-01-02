@@ -18,6 +18,7 @@ const ReturningInBulkMethod = ({
   emailNotification,
 }) => {
   const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
@@ -97,6 +98,9 @@ const ReturningInBulkMethod = ({
       await emailNotification();
       openNotificationWithIcon("Success", "All devices returned!");
       message.success("All devices returned!");
+      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
+      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
+  
       setSelectedItems([]);
       return closeModal();
     } catch (error) {
