@@ -1,28 +1,31 @@
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, message, Modal, Pagination, Space } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { TrashIcon } from "../../../../../components/icons/TashIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { useLocation } from "react-router-dom";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
   const [selectedItem, setSelectedItem] = useState(null);
+  const [loadingState, setLoadingState] = useState(false);
   const [current, setCurrent] = useState(1);
   const { user } = useSelector((state) => state.admin);
-  const [itemToContent, setItemToContent] = useState(containerInfo?.container_items ?? []);
+  const [itemToContent, setItemToContent] = useState(
+    containerInfo?.container_items ?? []
+  );
   const { register, watch, setValue } = useForm();
-      // const itemsInInventoryQuery = useQuery({
+  // const itemsInInventoryQuery = useQuery({
   //   queryKey: ["listOfItemsInStock"],
   //   queryFn: () =>
   //     devitrakApi.get(
@@ -30,16 +33,15 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
   //     ),
   //   refetchOnMount: false,
   // });
+  const queryClient = useQueryClient();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["retrievingItemsInInventoryQuery"],
     queryFn: () =>
-      devitrakApi.post(
-        `/db_item/warehouse-items`,{
-          company_id: user.sqlInfo.company_id,
-          warehouse: true,
-          enableAssignFeature: true,
-        }
-      ),
+      devitrakApi.post(`/db_item/warehouse-items`, {
+        company_id: user.sqlInfo.company_id,
+        warehouse: true,
+        enableAssignFeature: true,
+      }),
     refetchOnMount: false,
   });
   const location = useLocation();
@@ -57,7 +59,7 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
   }, []);
 
   if (itemsInInventoryQuery.data) {
-    let dataToIterate = itemsInInventoryQuery.data.data.items //result;
+    let dataToIterate = itemsInInventoryQuery.data.data.items; //result;
     const groupingByWarehouse = groupBy(dataToIterate, "warehouse");
     const groupingByItemGroup = groupBy(groupingByWarehouse[1], "item_group");
     const renderingOptions = () => {
@@ -126,6 +128,10 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
           ...itemToContent.filter((item) => item.serial_number !== props.key),
         ];
       } else {
+        if (itemToContent.length >= containerInfo?.containerSpotLimit)
+          return alert(
+            `You can't add more items to this case. Case hits the limit. Limit is ${containerInfo?.containerSpotLimit} items.`
+          );
         adding = [
           ...itemToContent,
           { serial_number: props.key, ...props.value[0] },
@@ -139,13 +145,16 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
     };
 
     const checkingIfItemWasAdded = groupBy(itemToContent, "serial_number");
-
     const savingItemsInContainer = async () => {
       try {
+        setLoadingState(true);
         const content = itemToContent.map((item) => {
           return {
             serial_number: item.serial_number,
             item_id: item.item_id,
+            item_group: item.item_group,
+            category_name: item.category_name,
+            location: item.location,
           };
         });
         const response = await devitrakApi.post(
@@ -157,9 +166,17 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
           }
         );
         if (response.data) message.success("Item was successfully updated");
+        queryClient.invalidateQueries({
+          queryKey: ["infoItemSql"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["trackingItemActivity"],
+        });
+        setLoadingState(false);
         return closeModal();
       } catch (error) {
         message.error("Something went wrong");
+        return setLoadingState(false);
       }
     };
 
@@ -183,7 +200,7 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
           {renderingOptions()?.map((item) => {
             return (
               <Button
-                style={BlueButton}
+                style={{ ...BlueButton }}
                 key={item.key}
                 onClick={() => {
                   setSelectedItem(item.value);
@@ -273,7 +290,11 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
               {renderingUnits()?.map((item) => {
                 return (
                   <Button
-                  disabled={item.value[0].display_item === 0 && item.value[0].container_id !== searchParams}
+                    disabled={
+                      item.value[0].display_item === 0 &&
+                      String(item.value[0].container_id) !==
+                        String(searchParams)
+                    }
                     style={{
                       ...GrayButton,
                       background:
@@ -289,7 +310,7 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
                         ...GrayButtonText,
                         ...CenteringGrid,
                         color:
-                        checkingIfItemWasAdded[item.key]?.length > 0
+                          checkingIfItemWasAdded[item.key]?.length > 0
                             ? BlueButtonText.color
                             : GrayButtonText.color,
                       }}
@@ -315,7 +336,11 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
             <Button style={GrayButton} onClick={() => setItemToContent([])}>
               <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
             </Button>
-            <Button style={BlueButton} onClick={() => savingItemsInContainer()}>
+            <Button
+              loading={loadingState}
+              style={BlueButton}
+              onClick={() => savingItemsInContainer()}
+            >
               <p style={{ ...BlueButtonText, ...CenteringGrid }}>Save</p>
             </Button>
           </Grid>
