@@ -9,7 +9,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
+import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
@@ -19,10 +21,9 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { useSelector } from "react-redux";
-import { lazy, Suspense, useEffect } from "react";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import useFetchingDeviceInfoBasedOnFeature from "../utils/useFetchingDeviceInfoBasedOnFeature";
+import ExtraInformation from "./detailComponent/components/ExtraInformation";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
 const DeviceDescriptionTags = lazy(() =>
   import("./detailComponent/DeviceDescriptionTags")
@@ -52,7 +53,7 @@ const MainPage = () => {
     queryFn: () => devitrakApi.post(`/db_item/tracking_item/${item_id}`),
     refetchOnMount: false,
   });
-  
+
   const infoItemQuery = useQuery({
     queryKey: ["infoItemSql"],
     queryFn: () =>
@@ -61,7 +62,6 @@ const MainPage = () => {
       }),
     refetchOnMount: false,
   });
-
   const { register } = useForm();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -98,7 +98,7 @@ const MainPage = () => {
     const dataFound = [
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
-        data: [ ...trackingHistoryItemQuery.data.data.result],
+        data: [...trackingHistoryItemQuery.data.data.result],
         itemInfo: { ...infoItemQuery?.data?.data?.items },
       },
     ];
@@ -340,6 +340,19 @@ const MainPage = () => {
                   </Grid>
                 );
               })}
+          </Grid>
+          <Grid
+            display={dataFound[0]?.container > 0 ? "flex" : "none"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            container
+          >
+            {dataFound[0]?.container > 0 && (
+              <ExtraInformation
+                dataFound={dataFound[0]}
+                containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
+              />
+            )}
           </Grid>
 
           <Divider />
