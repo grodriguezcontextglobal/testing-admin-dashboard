@@ -46,13 +46,13 @@ const ModalMultipleCompanies = ({
       });
       if (respo.data) {
         localStorage.setItem("admin-token", respo.data.token);
-        const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
+        // const updatingOnlineStatusResponse = 
+        await devitrakApiAdmin.patch(
           `/profile/${respo.data.uid}`,
           {
             online: true,
           }
         );
-        console.log(updatingOnlineStatusResponse);
         const respoFindMemberInfo = await devitrakApi.post(
           "/db_staff/consulting-member",
           {
