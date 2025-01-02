@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Modal, Select, Space, Tooltip } from "antd";
+import { Button, message, Modal, Select, Space, Tooltip } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -133,11 +133,29 @@ const ModalAddAndUpdateDeviceSetup = ({
       (element) => element.group === props.deviceInfo[0].item_group
     );
     if (foundIndex > -1) {
-      updateDeviceInv[foundIndex] = {
-        ...updateDeviceInv[foundIndex],
-        startingNumber: ranging[0].serial_number,
-        endingNumber: ranging.at(-1).serial_number,
-      };
+      const checkIfContainer = [...ranging].findIndex(
+        (item) => item.serial_number === props.startingNumber
+      );
+      if (checkIfContainer > -1) {
+        if (ranging[checkIfContainer].container > 0) {
+          updateDeviceInv[foundIndex] = {
+            ...updateDeviceInv[foundIndex],
+            category:
+              ranging[checkIfContainer].container_items[0].category_name,
+            group: ranging[checkIfContainer].container_items[0].item_group,
+            startingNumber:
+              ranging[checkIfContainer].container_items[0].serial_number,
+            endingNumber:
+              ranging[checkIfContainer].container_items.at(-1).serial_number,
+          };
+        } else {
+          updateDeviceInv[foundIndex] = {
+            ...updateDeviceInv[foundIndex],
+            startingNumber: ranging[0].serial_number,
+            endingNumber: ranging.at(-1).serial_number,
+          };
+        }
+      }
     }
     const updatingDeviceInEvent = await devitrakApi.patch(
       `/event/edit-event/${event.id}`,
@@ -161,10 +179,12 @@ const ModalAddAndUpdateDeviceSetup = ({
       (element) => element.serial_number === props.startingNumber
     );
     if (index > -1) {
-      const data = props.deviceInfo.slice(
-        index,
-        index + Number(props.quantity)
-      );
+      let data = null;
+      if (props.deviceInfo[index].container > 0) {
+        data = props.deviceInfo[index].container_items;
+      } else {
+        data = props.deviceInfo.slice(index, index + Number(props.quantity));
+      }
       const template = {
         deviceList: JSON.stringify(data),
         status: "Operational",
@@ -172,7 +192,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         comment: "No comment",
         eventSelected: eventInfoDetail.eventName,
         provider: user.company,
-        type: props.deviceInfo[0].item_group,
+        type: data[0].item_group,
         company: user.companyData.id,
       };
       await devitrakApi.post("/receiver/receivers-pool-bulk", template);
@@ -183,21 +203,44 @@ const ModalAddAndUpdateDeviceSetup = ({
 
   const createDeviceInEvent = async (props) => {
     const event_id = checkArray(eventInfoSqlDB?.data?.data?.event).event_id;
-    const database = [...props.deviceInfo];
-    await devitrakApi.post("/db_event/event_device", {
-      event_id: event_id,
-      item_group: database[0].item_group,
-      startingNumber: database[0].serial_number,
-      quantity: props.quantity,
-      category_name: database[0].category_name,
-    });
-    await devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: false,
-      company_id: user.sqlInfo.company_id,
-      item_group: database[0].item_group,
-      startingNumber: database[0].serial_number,
-      quantity: props.quantity,
-    });
+    let database = [...props.deviceInfo];
+    const index = database.findIndex(
+      (item) => item.serial_number === props.startingNumber
+    );
+    if (index > -1) {
+      if (database[index].container > 0) {
+        database = [...database[index].container_items];
+        await devitrakApi.post(
+          "/db_event/inserting-items-in-event-from-container",
+          {
+            event_id: event_id,
+            refDatabase: database,
+          }
+        );
+        await devitrakApi.post(
+          "/db_event/update-item-in-table-after-being-added-to-event-from-container",
+          {
+            refDatabase: database,
+            warehouse: false,
+          }
+        );
+      } else {
+        await devitrakApi.post("/db_event/event_device", {
+          event_id: event_id,
+          item_group: database[0].item_group,
+          startingNumber: database[0].serial_number,
+          quantity: props.quantity,
+          category_name: database[0].category_name,
+        });
+        await devitrakApi.post("/db_item/item-out-warehouse", {
+          warehouse: false,
+          company_id: user.sqlInfo.company_id,
+          item_group: database[0].item_group,
+          startingNumber: database[0].serial_number,
+          quantity: props.quantity,
+        });
+      }
+    }
     await createDeviceRecordInNoSQLDatabase(props);
   };
 
@@ -240,11 +283,11 @@ const ModalAddAndUpdateDeviceSetup = ({
         );
         await createDeviceInEvent({ ...data, deviceInfo: deviceInfo });
       } else {
-        console.log("device not found");
+        message.warning("device not found");
       }
     }
     setLoading(false);
-    return await closeModal();
+    return closeModal();
   };
 
   const removeItem = (props) => {
@@ -274,7 +317,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       const checkingSerialNumber = JSON.parse(
         valueItemSelected.serialNumberList
       );
-      return checkingSerialNumber[watch("serial_number")].length > 0;
+      return checkingSerialNumber[watch("serial_number")]?.length > 0;
     }
   };
 
