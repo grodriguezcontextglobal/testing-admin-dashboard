@@ -138,6 +138,11 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
       if (checkIfContainer > -1) {
         if (ranging[checkIfContainer].container > 0) {
+          const newQty =
+            Number(
+              ranging[checkIfContainer].container_items.at(-1).serial_number
+            ) -
+            Number(ranging[checkIfContainer].container_items[0].serial_number);
           updateDeviceInv[foundIndex] = {
             ...updateDeviceInv[foundIndex],
             category:
@@ -147,6 +152,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               ranging[checkIfContainer].container_items[0].serial_number,
             endingNumber:
               ranging[checkIfContainer].container_items.at(-1).serial_number,
+            quantity: `${newQty + 1}`,
           };
         } else {
           updateDeviceInv[foundIndex] = {
