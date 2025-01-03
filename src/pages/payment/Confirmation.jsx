@@ -101,6 +101,7 @@ const Confirmation = () => {
         if (response.data.ok) return (sequency = false);
       }
     };
+    
     const createDeviceInPool = async (props) => {
       const device = await checkArray(groupingByDevice[props]);
       if (device.id) {
@@ -212,14 +213,6 @@ const Confirmation = () => {
                 activity: true,
                 eventSelected: event.eventInfoDetail.eventName,
               };
-              console.log(
-                "🚀 ~ createTransactionTemplate:",
-                createTransactionTemplate
-              );
-              console.log(
-                "🚀 ~ templateBulkItemUpdate:",
-                templateBulkItemUpdate
-              );
               await devitrakApi.patch(
                 "/receiver/update-bulk-items-in-pool",
                 templateBulkItemUpdate
@@ -257,6 +250,12 @@ const Confirmation = () => {
           });
           setLoadingStatus(false);
         }
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
+        });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+        });
       } catch (error) {
         return setLoadingStatus(false);
       }
