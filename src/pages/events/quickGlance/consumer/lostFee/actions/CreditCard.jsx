@@ -390,31 +390,6 @@ const CreditCard = () => {
                 </Typography>
               </Button>
             </Grid>
-            {/* <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={"10px"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={2}
-              item
-              xs={12}
-              sm={12}
-              md={3}
-              lg={2}
-            >
-            </Grid> */}
           </Grid>
         </form>
         <Grid item xs={12}>
