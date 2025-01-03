@@ -98,8 +98,8 @@ const ReturningInBulkMethod = ({
       await emailNotification();
       openNotificationWithIcon("Success", "All devices returned!");
       message.success("All devices returned!");
-      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
       await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
+      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
   
       setSelectedItems([]);
       return closeModal();

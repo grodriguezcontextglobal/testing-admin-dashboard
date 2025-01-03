@@ -191,9 +191,9 @@ const Cash = () => {
             checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
           link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
         });
-        await messageApi.destroy;
-        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
+        messageApi.destroy;
         await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
+        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
     
         navigator(
           `/events/event-attendees/${customer.uid}/transactions-details`

@@ -433,6 +433,10 @@ const SearchDevice = () => {
             device: respTransaction.data.list[0].device[0].deviceNeeded,
           };
           setLoadingStatus(false);
+          await devitrakApi.post("/cache_update/remove-cache", {
+            key: `eventSelected=${record.eventSelected}&company=${user.companyData.id}`,
+          });
+  
           await afterActionTakenCollectStoreAndNavigate({
             paymentIntentDetailSelectedProfile,
             eventInfo: record.data.eventInfo,
