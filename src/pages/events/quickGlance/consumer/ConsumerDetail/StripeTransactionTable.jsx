@@ -395,9 +395,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           },
           expandRowByClick: true,
           expandedRowRender: (record) => (
-            <ExpandedRowInTable rowRecord={record} refetching={refetchingFn} />
+            <ExpandedRowInTable key={record.paymentIntent} rowRecord={record} refetching={refetchingFn} />
           ),
-          // renderDataPerRow(record),
         }}
       />
       {openCapturingDepositModal && (
@@ -414,14 +413,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           refetchingTransactionFn={refetchingTransactionFn}
         />
       )}
-      {/* {openReturnDeviceInBulkModal && (
-        <ReturningInBulkMethod
-          openReturnDeviceBulkModal={openReturnDeviceInBulkModal}
-          setOpenReturnDeviceInBulkModal={setOpenReturnDeviceInBulkModal}
-          record={recordRef.current}
-          refetching={refetchingFn}
-        />
-      )} */}
       {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
     </>
   );

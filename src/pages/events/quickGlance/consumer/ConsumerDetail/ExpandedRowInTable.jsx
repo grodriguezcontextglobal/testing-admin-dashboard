@@ -1,13 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Button,
-  Popconfirm,
-  Space,
-  Table,
-  message,
-  notification
-} from "antd";
+import { Button, Popconfirm, Space, Table, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -227,11 +220,12 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           type: props.deviceType,
         }
       );
-      if (deviceInPoolListQuery.data.receiversInventory.at(-1).activity)
+      if (deviceInPoolListQuery.data.receiversInventory.at(-1).activity) {
+        setStatusRecordState(null);
         return alert(
           `Device is already in use for another consumer. Please assign another device serial number.`
         );
-
+      }
       let assignedItem = {
         ...props,
         status: true,
@@ -613,8 +607,6 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       template
     );
     queryClient.invalidateQueries("assginedDeviceList", { exact: true });
-    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
-    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
   };
 
   const returnDeviceInPool = async (props) => {
@@ -653,6 +645,12 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
         await returnDevicesInTransaction(groupingByStatus[true]);
         await returnDeviceInPool(groupingByStatus[true]);
         await returnConfirmationEmailNotification(groupingByStatus[true]);
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
+        });
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+        });
         return message.success("All items returned successfully");
       } else {
         return message.warning("No items to return");
@@ -663,7 +661,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   };
 
   return (
-    <>
+    <div key={rowRecord.paymentIntent}>
       {contextHolder}
       <div
         style={{
@@ -745,7 +743,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           emailNotification={checkItemsStatusInTransactionForEmailNotification}
         />
       )}
-    </>
+    </div>
   );
 };
 export default ExpandedRowInTable;
