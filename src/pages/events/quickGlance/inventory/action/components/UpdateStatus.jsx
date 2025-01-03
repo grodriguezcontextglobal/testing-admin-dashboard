@@ -5,12 +5,12 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import {
-    onReceiverObjectToReplace,
-    onTriggerModalToReplaceReceiver,
+  onReceiverObjectToReplace,
+  onTriggerModalToReplaceReceiver,
 } from "../../../../../../store/slices/helperSlice";
 import {
-    onAddPaymentIntentDetailSelected,
-    onAddPaymentIntentSelected,
+  onAddPaymentIntentDetailSelected,
+  onAddPaymentIntentSelected,
 } from "../../../../../../store/slices/stripeSlice";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
