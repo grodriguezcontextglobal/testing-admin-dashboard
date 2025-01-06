@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Table } from "antd";
+import { Button, message, Popconfirm, Spin, Table } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +24,7 @@ import ExpandedRowInTable from "./ExpandedRowInTable";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
+import Loading from "../../../../../components/animation/Loading";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -364,7 +365,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       ),
     },
   ];
-
+const [expandedRowKeys, setExpandedRowKeys] = useState([])
   return (
     <>
       <Table
@@ -376,10 +377,15 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         }}
         style={{ cursor: "pointer" }}
         expandable={{
+          expandedRowKeys,
+          onExpand: (expanded, record) => {
+            setExpandedRowKeys(expanded ? [record.key] : []);
+          },          
           expandIcon: (record) => {
             if (record.expanded) {
               return (
                 <Icon
+                  key={`${record.key}-${record.expanded}`}
                   icon="mdi:arrow-collapse"
                   width={20}
                   color="var(--gray300)"
@@ -388,6 +394,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
             } else {
               return (
                 <Icon
+                  key={`${record.key}-${record.expanded}`}
                   icon="mdi:arrow-expand"
                   width={20}
                   color="var(--gray300)"
@@ -396,13 +403,16 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
             }
           },
           expandRowByClick: true,
-          expandedRowRender: (record) => (
-            <ExpandedRowInTable
-              key={record.paymentIntent}
-              rowRecord={record}
-              refetching={refetchingFn}
-            />
-          ),
+          expandedRowRender: (record) =>
+            expandedRowKeys[0] === record.key ? (
+              <ExpandedRowInTable
+                key={record.paymentIntent}
+                rowRecord={record}
+                refetching={refetchingFn}
+              />
+            ) : (
+              <Spin indicator={<Loading />} />
+            ),
         }}
       />
       {openCapturingDepositModal && (
