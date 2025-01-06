@@ -34,12 +34,10 @@ const SearchDevice = () => {
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
   const [returnLoading, setReturnLoading] = useState(false);
   const searchingQuery = useQuery({
-    queryKey: [`${location.state.search}`],//.search.split("?search=")[1]}
+    queryKey: [`${location.state.search}`], //.search.split("?search=")[1]}
     queryFn: () =>
       devitrakApi.get(
-        `/db_company/search-inventory?company_id=${
-          user.sqlInfo.company_id
-        }&searchValue=${location.state.search}` //.search.split("?search=")[1]
+        `/db_company/search-inventory?company_id=${user.sqlInfo.company_id}&searchValue=${location.state.search}` //.search.split("?search=")[1]
       ),
     refetchOnMount: false,
   });
@@ -362,7 +360,7 @@ const SearchDevice = () => {
       const assignedDeviceListQuery = await devitrakApi.post(
         "/receiver/receiver-assigned-list",
         {
-          eventSelected: record.eventSelected,
+          eventSelected: record.eventSelected ?? record.event,
           provider: record.provider,
           "device.serialNumber": record.serialNumber,
           "device.deviceType": record.type,
@@ -372,7 +370,7 @@ const SearchDevice = () => {
       const deviceInPoolListQuery = await devitrakApi.post(
         "/receiver/receiver-pool-list",
         {
-          eventSelected: record.eventSelected,
+          eventSelected: record.eventSelected ?? record.event,
           provider: record.provider,
           device: record.serialNumber,
           type: record.type,
@@ -434,9 +432,9 @@ const SearchDevice = () => {
           };
           setLoadingStatus(false);
           await devitrakApi.post("/cache_update/remove-cache", {
-            key: `eventSelected=${record.eventSelected}&company=${user.companyData.id}`,
+            key: `eventSelected=${record.event}&company=${user.companyData.id}`,
           });
-  
+
           await afterActionTakenCollectStoreAndNavigate({
             paymentIntentDetailSelectedProfile,
             eventInfo: record.data.eventInfo,
