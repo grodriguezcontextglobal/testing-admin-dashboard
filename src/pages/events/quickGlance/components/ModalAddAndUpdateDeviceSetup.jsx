@@ -293,8 +293,8 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
     }
     setLoading(false);
-    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
     await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
+    await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
     return closeModal();
   };
 
