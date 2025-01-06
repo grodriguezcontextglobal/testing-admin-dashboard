@@ -288,13 +288,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     handleRecord(record);
                   }}
                   style={{
-                    width:"100%"
+                    width: "100%",
+                    ...CenteringGrid,
                   }}
                 >
                   <Button
                     disabled={!record.active}
                     style={{
-                      ...CenteringGrid,
+                      // ...CenteringGrid,
                       ...DangerButton,
                       width: "100%",
                       border: `${
@@ -312,7 +313,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     <Typography
                       textTransform={"none"}
                       style={{
-                        ...BlueButtonText,
+                        ...DangerButtonText,
+                        margin: 0,
                       }}
                     >
                       Release deposit
@@ -395,7 +397,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           },
           expandRowByClick: true,
           expandedRowRender: (record) => (
-            <ExpandedRowInTable key={record.paymentIntent} rowRecord={record} refetching={refetchingFn} />
+            <ExpandedRowInTable
+              key={record.paymentIntent}
+              rowRecord={record}
+              refetching={refetchingFn}
+            />
           ),
         }}
       />
