@@ -202,10 +202,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
-      await devitrakApi.post("/cache_update/remove-cache", {
+      devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       });
-      await devitrakApi.post("/cache_update/remove-cache", {
+      devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.id}&company=${user.companyData.id}`,
       });
 
@@ -291,10 +291,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           setStatusRecordState(null);
         }
       }
-      await devitrakApi.post("/cache_update/remove-cache", {
+       devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       });
-      await devitrakApi.post("/cache_update/remove-cache", {
+       devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.id}&company=${user.companyData.id}`,
       });
 
