@@ -90,7 +90,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     {
       title: "Consumer",
       dataIndex: "user",
-      width: "40%",
+      width: "30%",
       responsive: ["md", "lg"],
       sorter: {
         compare: (a, b) => ("" + a.user).localeCompare(b.user),
@@ -113,7 +113,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
               fontWeight: "500",
             }}
           >
-            <Typography textTransform={"capitalize"}>
+            <Typography textTransform={"capitalize"} style={{ width: "100%", textWrap: "balance" }}>
               {user[0]}&nbsp;
               {user[1]}
             </Typography>
@@ -124,7 +124,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     {
       title: "Status",
       dataIndex: "status",
-      width: "20%",
+      width: "15%",
       responsive: ["md", "lg"],
       sorter: {
         compare: (a, b) => ("" + a.status).localeCompare(b.status),
@@ -168,10 +168,12 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     {
       title: "Email",
       dataIndex: "email",
-      width: "auto",
       sorter: {
         compare: (a, b) => ("" + a.email).localeCompare(b.email),
       },
+      render: (email) => (
+        <p style={{ ...Subtitle, textWrap: "balance" }}>{email}</p>
+      ),
     },
     {
       title: "Phone",
@@ -180,6 +182,9 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       sorter: {
         compare: (a, b) => ("" + a.phone).localeCompare(b.phone),
       },
+      render: (phone) => (
+        <p style={{ ...Subtitle, textWrap: "balance" }}>{phone}</p>
+      ),
     },
     {
       title: "",
