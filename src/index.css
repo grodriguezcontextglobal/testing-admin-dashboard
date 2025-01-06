@@ -85,6 +85,13 @@
 
   --font-family-inter: "Inter";
   --font-family-open_sans: "Open Sans";
+
+
+  --box-sizing: border-box;
+}
+
+.MuiOutlinedInput-root input{
+  box-sizing: var(--box-sizing);
 }
 
 a {
@@ -92,6 +99,7 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -108,35 +116,45 @@ h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
+
 input {
   background: #fff;
   color: #000;
   border: none;
   height: 0 dvh;
+  box-sizing: border-box;
 }
+
 input::placeholder {
   font-family: "Inter";
   font-size: 14px;
   background: #fff;
   color: #000;
+  box-sizing: border-box;
 }
+
 input:focus {
   height: 2.5dvh;
   border: none;
   outline: none;
   padding: 5px;
+  box-sizing: border-box;
 }
+
 input:focus-visible {
   height: 2.5dvh;
   border: none;
   outline: none;
   padding: 5px;
+  box-sizing: border-box;
 }
+
 input:autofill {
   height: 2.5dvh;
   border: none;
   outline: none;
   padding: 5px;
+  box-sizing: border-box;
 }
 
 input:-webkit-autofill {
@@ -165,6 +183,10 @@ button:focus-visible {
 }
 .footer-expanded-table.ant-table-body {
   background: #f9fafb;
+}
+
+.css-16w1hsz-MuiInputBase-root-MuiOutlinedInput-root{
+  box-sizing: border-box;
 }
 @media (prefers-color-scheme: light) {
   :root {
