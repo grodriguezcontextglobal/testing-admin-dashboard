@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
+import { message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +26,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   // const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { choice, event } = useSelector((state) => state.event);
+  const { customer } = useSelector((state) => state.customer);
   const dispatch = useDispatch();
   const { deviceSetup } = event;
   const refDeviceObjectRetrieve = useRef(null);
@@ -65,7 +66,32 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       placement: "bottomRight",
     });
   };
+
   let serialNumber = watch("serialNumber");
+
+  const assignItemEmailNotification = async (props) => {
+    try {
+      await devitrakApi.post("/nodemailer/assignig-device-notification", {
+        consumer: {
+          email: customer.email,
+          firstName: customer.name,
+          lastName: customer.lastName,
+        },
+        devices: [
+          { ...props.device, paymentIntent: props.paymentIntent },
+        ],
+        event: props.eventSelected ?? props.event,
+        transaction: props.paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${props.event_id}&company=${user.companyData.id}`,
+        admin: user.email,
+      });
+      message.success("Assignment email has been sent successfully");
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
+
   const sortAndFilterDeviceListPerCompanyAndEvent = () => {
     if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
       return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
@@ -73,6 +99,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     return [];
   };
   sortAndFilterDeviceListPerCompanyAndEvent();
+
   const sortedByDevice = groupBy(
     sortAndFilterDeviceListPerCompanyAndEvent(),
     "device"
@@ -99,6 +126,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     return Array.from(result);
   };
   retrieveDeviceInfoSetInEventForConsumers();
+
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
     const dataToRetrieve = new Set();
     if (sortedByDevice[serialNumber]) {
@@ -108,6 +136,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
     return Array.from(dataToRetrieve);
   };
+
   if (serialNumber?.length > 0) {
     retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
   }
@@ -135,6 +164,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
     }
   };
   checkDeviceIsAssignedInEvent();
+
   const retrieveDeviceDataInPoolToUpdateIt = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = groupBy(
@@ -150,6 +180,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       return [];
     }
   };
+
   const saveAndUpdateDeviceInPool = async () => {
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${
@@ -162,6 +193,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       }
     );
   };
+
   const createEventInTransactionLog = async () => {
     await devitrakApi.post("/transaction-audit-log/create-audit", {
       transaction: record.paymentIntent,
@@ -283,6 +315,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             "Devices are being added, they will be displayed shortly."
           );
           setValue("serialNumber", "");
+          await assignItemEmailNotification(template.render());
           setSubmittedAction(false);
         }
       }
@@ -294,6 +327,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       setSubmittedAction(false);
     }
   };
+
   return (
     <>
       {contextHolder}
@@ -332,7 +366,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
               {errors?.serialNumber && <p>Serial number is required</p>}
             </FormHelperText>
           </Grid>
-          <Grid height={'auto'} alignSelf={'flex-end'} item xs={2}>
+          <Grid height={"auto"} alignSelf={"flex-end"} item xs={2}>
             <Button
               disabled={submittedAction}
               style={{
