@@ -31,7 +31,7 @@ const AssignStaffMemberToEvent = () => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
-        type:'event',
+        type: "event",
         active: true,
       }),
     // enabled: false,
@@ -88,6 +88,9 @@ const AssignStaffMemberToEvent = () => {
             JSON.parse(data.event).eventInfoDetail.eventName
           }`
         );
+        devitrakApi.post("cache_update/remove-cache", {
+          key: `event_staff_info=${JSON.parse(data.event).id}`,
+        });
         return navigate(`/staff/${profile.adminUserInfo.id}/main`);
       }
     } else {
