@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Checkbox, Typography, notification } from "antd";
+import { Button, Checkbox, Typography, notification } from "antd";
 import { lazy, Suspense, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
@@ -36,6 +36,8 @@ import "./style/authStyle.css";
 import PropTypes from "prop-types";
 import { checkArray } from "../../components/utils/checkArray";
 import Loading from "../../components/animation/Loading";
+import { BlueButton } from "../../styles/global/BlueButton";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -478,18 +480,9 @@ const Login = () => {
                   </button>
                 </Grid>
               </Grid>
-              <OutlinedInput
-                style={{
-                  color: "#fff",
-                  width: "100%",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  background: " var(--blue-dark-600, #155EEF)",
-                  borderRadius: "8px",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                }}
-                type="submit"
-                value="Sign in"
-              />
+              <Button htmlType="submit" style={{ ...BlueButton, width: "100%" }}>
+                <p style={BlueButtonText}>Sign in</p>
+              </Button>
             </form>
             <div style={{ ...CenteringGrid, margin: ".8rem auto" }}>
               <Typography
