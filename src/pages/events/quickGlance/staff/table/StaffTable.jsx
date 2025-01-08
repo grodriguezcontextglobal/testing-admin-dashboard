@@ -30,17 +30,28 @@ const StaffTable = ({ searching }) => {
   const renderingStaffInfo = async () => {
     const result = new Set();
     for (const data of employees) {
-      const onlineStatus = await devitrakApi.get(
-        `/admin/check-online-status/${data.staff.email}`
-      );
-      result.add({
-        name: `${data.staff.firstName} ${data.staff.lastName}`,
-        online: onlineStatus?.data?.online,
-        role: data.staff.role ?? "Assistant",
-        email: data.staff.email,
-        phone: data.phone ?? "000-000-0000",
-        photo: data.photo,
-      });
+      if (data.admin_id === null) {
+        result.add({
+          name: `${data.staff.firstName} ${data.staff.lastName}`,
+          online: false,
+          role: data.staff.role !== 'Administrator' ? "Assistant" : data.staff.role,
+          email: data.staff.email,
+          phone: "000-000-0000",
+          photo: "",
+        });
+      } else {
+        const onlineStatus = await devitrakApi.get(
+          `/admin/check-online-status/${data.staff.email}`
+        );
+        result.add({
+          name: `${data.staff.firstName} ${data.staff.lastName}`,
+          online: onlineStatus?.data?.online,
+          role: data.staff.role !== 'Administrator' ? "Assistant" : data.staff.role,
+          email: data.staff.email,
+          phone: data.phone ?? "000-000-0000",
+          photo: data.photo ?? "",
+        });
+      }
     }
     return setStaff(Array.from(result));
   };
