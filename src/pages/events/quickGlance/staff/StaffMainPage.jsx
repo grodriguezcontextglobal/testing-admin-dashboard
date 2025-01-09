@@ -15,7 +15,7 @@ const StaffMainPage = () => {
   const { register, watch } = useForm();
   const queryClient = useQueryClient();
   const refreshing = () => {
-    devitrakApi.post("cache_update/remove-cache", {
+    devitrakApi.post("/cache_update/remove-cache", {
       key: `event_staff_info=${event.id}`,
     });
     return queryClient.invalidateQueries("newEndpointQuery");
