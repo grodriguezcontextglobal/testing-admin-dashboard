@@ -88,7 +88,7 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
     let check = [];
     for (const [key] of Object.entries(groupByStatus)) {
       if (String(key).toLowerCase() !== "lost") {
-        check = [...check, ...groupByStatus[key]];
+        check = [...check, ...groupByStatus[key]].flat().sort((a, b) => a.device - b.device);
       }
     }
     const max = check?.at(-1)?.device;

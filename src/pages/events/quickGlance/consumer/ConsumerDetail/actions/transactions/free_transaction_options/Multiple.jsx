@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Select } from "antd";
+import { Button, message, Select } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -79,7 +79,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     let check = [];
     for (const [key] of Object.entries(groupByStatus)) {
       if (String(key).toLowerCase() !== "lost") {
-        check = [...check, ...groupByStatus[key]];
+        check = [...check, ...groupByStatus[key]].flat().sort((a, b) => a.device - b.device);
       }
     }
     const max = check?.at(-1)?.device;
@@ -97,6 +97,28 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
   }, [deviceSelection]);
 
   subtractRangePerGroupToDisplayItInScreen();
+
+  const assignItemEmailNotification = async (props) => {
+    try {
+      await devitrakApi.post("/nodemailer/assignig-device-notification", {
+        consumer: {
+          email: customer.email,
+          firstName: customer.name,
+          lastName: customer.lastName,
+        },
+        devices: props.device,
+        event: props.eventSelected ?? props.event,
+        transaction: props.paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${props.event_id}&company=${user.companyData.id}`,
+        admin: user.email,
+      });
+      message.success("Assignment email has been sent successfully");
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
+
   const onSubmitRegister = async (data) => {
     try {
       setIsLoading(true);
@@ -182,6 +204,20 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
             "/receiver/create-bulk-item-transaction-in-user",
             createTransactionTemplate
           );
+          await assignItemEmailNotification({
+            paymentIntent: reference.current,
+            device: [
+              ...templateBulkItemUpdate.device.map((item) => ({
+                deviceType: item.type,
+                serialNumber: item.device,
+                paymentIntent: reference.current,
+              })),
+            ],
+            event_id: event.id,
+            eventSelected: event.eventInfoDetail.eventName,
+            event: event.eventInfoDetail.eventName,
+          });
+  
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
 
@@ -212,6 +248,7 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
 
         setIsLoading(false);
         alert("Devices assigned successfully");
+
         return closeModal();
       }
     } catch (error) {
