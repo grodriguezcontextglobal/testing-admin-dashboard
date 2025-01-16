@@ -88,6 +88,7 @@ export const CreateNewConsumer = ({
       eventSelected: [newEventToAddConsumer.eventInfoDetail.eventName],
       company_providers: [user.companyData.id],
       event_providers: [newEventToAddConsumer.id],
+      groupName: [],
     };
     const newUser = await devitrakApi.post("/auth/new", newUserProfile);
     if (newUser.data) {
@@ -100,7 +101,7 @@ export const CreateNewConsumer = ({
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
-        phoneNumber: contactPhoneNumber,
+        phone_number: `${newUserProfile.phoneNumber}`,
       });
       openNotificationWithIcon("Success", "New consumer added");
       setLoading(false);
