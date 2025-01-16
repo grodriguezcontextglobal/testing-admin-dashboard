@@ -21,6 +21,7 @@ import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   const { event } = useSelector((state) => state.event);
@@ -32,6 +33,11 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   const [statusRecordState, setStatusRecordState] = useState(null);
   const [openReturnDeviceInBulkModal, setOpenReturnDeviceInBulkModal] =
     useState(false);
+  const [
+    openReturnExpressCheckInDeviceModal,
+    setOpenReturnExpressCheckInDeviceModal,
+  ] = useState(false);
+  const [isLoadingAction, setIsLoadingAction] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const transactionsQuery = useQuery({
@@ -672,6 +678,40 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     }
   };
 
+  const sendEmailDeviceReport = async () => {
+    try {
+      setIsLoadingAction(true);
+      const response = await devitrakApi.post("/nodemailer/device-report-per-transaction", {
+        consumer: {
+          email: customer.email,
+          firstName: customer.name,
+          lastName: customer.lastName,
+        },
+        devices: [
+          ...checkDevicesInTransaction().map((item) => {
+            return {
+              device: { ...item },
+              paymentIntent: rowRecord.paymentIntent,
+            };
+          }),
+        ],
+        event: event.eventInfoDetail.eventName,
+        transaction: rowRecord.paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+        admin: user.email,
+      });
+      if (response.data.ok) {
+        setIsLoadingAction(false);
+        return message.success(
+          `Device report was sent successfully to ${customer.email}`
+        );
+      }
+    } catch (error) {
+      setIsLoadingAction(false);
+      return message.error(`There was an error. ${error}`);
+    }
+  };
   return (
     <div key={rowRecord.paymentIntent}>
       {contextHolder}
@@ -700,33 +740,65 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
             gap: "5px",
           }}
         >
-          <Button
+          <div
             style={{
-              ...BlueButton,
-              display: selectedItems.length > 0 ? "flex" : "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              width: "100%",
               gap: "5px",
             }}
-            onClick={() => setOpenReturnDeviceInBulkModal(true)}
-          >
-            <p style={BlueButtonText}>
-              Return multiple items of this transaction | Total items to return:{" "}
-              {selectedItems.length}
-            </p>
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to return all items of this transaction?"
-            onConfirm={() => handleAllItemsReturn()}
           >
             <Button
               style={{
                 ...BlueButton,
-                display: selectedItems.length === 0 ? "flex" : "none",
+                display: selectedItems.length > 0 ? "flex" : "none",
+                gap: "5px",
+              }}
+              onClick={() => setOpenReturnDeviceInBulkModal(true)}
+            >
+              <p style={BlueButtonText}>
+                Return multiple items of this transaction | Total items to
+                return: {selectedItems.length}
+              </p>
+            </Button>
+            <Popconfirm
+              title="Are you sure you want to return all items of this transaction?"
+              onConfirm={() => handleAllItemsReturn()}
+            >
+              <Button
+                style={{
+                  ...BlueButton,
+                  display: selectedItems.length === 0 ? "flex" : "none",
+                  gap: "5px",
+                }}
+              >
+                <p style={BlueButtonText}>
+                  Return all items of this transaction
+                </p>
+              </Button>
+            </Popconfirm>
+            <Button
+              style={{
+                ...BlueButton,
+                gap: "5px",
+              }}
+              onClick={() => setOpenReturnExpressCheckInDeviceModal(true)}
+            >
+              <p style={BlueButtonText}>Express check-in devices</p>
+            </Button>
+            <Button
+            loading={isLoadingAction}
+              onClick={() => sendEmailDeviceReport()}
+              style={{
+                ...BlueButton,
                 gap: "5px",
               }}
             >
-              <p style={BlueButtonText}>Return all items of this transaction</p>
+              <p style={BlueButtonText}>Send device report</p>
             </Button>
-          </Popconfirm>
+          </div>
+
           <Table
             columns={columns}
             dataSource={checkDevicesInTransaction()}
@@ -751,6 +823,19 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           record={rowRecord}
           refetching={refetchingFn}
           selectedItems={selectedItems}
+          setSelectedItems={setSelectedItems}
+          emailNotification={checkItemsStatusInTransactionForEmailNotification}
+        />
+      )}
+      {openReturnExpressCheckInDeviceModal && (
+        <ExpressCheckInDevices
+          openReturnDeviceBulkModal={openReturnExpressCheckInDeviceModal}
+          setOpenReturnDeviceInBulkModal={
+            setOpenReturnExpressCheckInDeviceModal
+          }
+          record={rowRecord}
+          refetching={refetchingFn}
+          selectedItems={checkDevicesInTransaction()}
           setSelectedItems={setSelectedItems}
           emailNotification={checkItemsStatusInTransactionForEmailNotification}
         />
