@@ -59,7 +59,18 @@ const AddNewItem = () => {
     setValue,
     watch,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      photo: [],
+      category_name: "",
+      cost: "",
+      brand: "",
+      descript_item: "",
+      serial_number: "",
+      container: "false",
+      containerSpotLimit: "0",
+    },
+  });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
@@ -659,13 +670,13 @@ const AddNewItem = () => {
                 </Tooltip>
               </InputLabel>
               <OutlinedInput
-              required
-              {...register("containerSpotLimit", { required: true })}
-              aria-invalid={errors.containerSpotLimit}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 30"
-              fullWidth
-            />
+                required
+                {...register("containerSpotLimit", { required: true })}
+                aria-invalid={errors.containerSpotLimit}
+                style={OutlinedInputStyle}
+                placeholder="e.g. 30"
+                fullWidth
+              />
             </div>
           </div>
         </div>

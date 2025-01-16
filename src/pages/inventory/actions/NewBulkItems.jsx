@@ -62,7 +62,19 @@ const AddNewBulkItems = () => {
     setValue,
     watch,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      photo: [],
+      category_name:"",
+      cost:"",
+      brand:"",
+      descript_item:"",
+      startingNumber:"",
+      endingNumber:"",
+      container:"false",
+      containerSpotLimit:"0",    },
+
+  });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
