@@ -199,6 +199,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           // );
           openNotificationWithIcon("Device returned.");
           setStatusRecordState(null);
+
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
@@ -208,8 +209,6 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.id}&company=${user.companyData.id}`,
       });
-
-
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -291,13 +290,12 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
           setStatusRecordState(null);
         }
       }
-       devitrakApi.post("/cache_update/remove-cache", {
+      devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       });
-       devitrakApi.post("/cache_update/remove-cache", {
+      devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.id}&company=${user.companyData.id}`,
       });
-
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -604,8 +602,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       );
       const data = checkingNewStatus?.data?.listOfReceivers;
       const groupingByStatus = groupBy(data, "device.status");
-      if (!groupingByStatus[true])
-        return returnConfirmationEmailNotification(groupingByStatus[false]);
+      returnConfirmationEmailNotification([...groupingByStatus[false]]);
       return null;
     } catch (error) {
       message.error(`There was an error. ${error}`);
