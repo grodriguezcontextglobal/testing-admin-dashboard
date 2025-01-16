@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Popconfirm, Spin, Table } from "antd";
@@ -21,10 +20,12 @@ import "../../../../../styles/global/ant-table.css";
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+import Loading from "../../../../../components/animation/Loading";
+import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon";
+import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import Loading from "../../../../../components/animation/Loading";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -365,7 +366,30 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       ),
     },
   ];
-const [expandedRowKeys, setExpandedRowKeys] = useState([])
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const customExpandIcon = (props) => {
+    if (props.expanded) {
+      return (
+        <Button
+          onClick={(e) => {
+            props.onExpand(props.record, e);
+          }}
+        >
+          <UpDoubleArrow />
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          onClick={(e) => {
+            props.onExpand(props.record, e);
+          }}
+        >
+          <DownDoubleArrowIcon />
+        </Button>
+      );
+    }
+  };
   return (
     <>
       <Table
@@ -380,29 +404,9 @@ const [expandedRowKeys, setExpandedRowKeys] = useState([])
           expandedRowKeys,
           onExpand: (expanded, record) => {
             setExpandedRowKeys(expanded ? [record.key] : []);
-          },          
-          expandIcon: (record) => {
-            if (record.expanded) {
-              return (
-                <Icon
-                  key={`${record.key}-${record.expanded}`}
-                  icon="mdi:arrow-collapse"
-                  width={20}
-                  color="var(--gray300)"
-                />
-              );
-            } else {
-              return (
-                <Icon
-                  key={`${record.key}-${record.expanded}`}
-                  icon="mdi:arrow-expand"
-                  width={20}
-                  color="var(--gray300)"
-                />
-              );
-            }
           },
-          expandRowByClick: true,
+          expandIcon: (props) => customExpandIcon(props),
+          expandRowByClick: false,
           expandedRowRender: (record) =>
             expandedRowKeys[0] === record.key ? (
               <ExpandedRowInTable
