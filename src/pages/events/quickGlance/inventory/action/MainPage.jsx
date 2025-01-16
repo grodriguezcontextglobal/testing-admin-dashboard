@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Popconfirm, notification } from "antd";
+import { Button, Card, Popconfirm, message, notification } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +41,35 @@ const ActionsMainPage = () => {
     });
   };
   const queryClient = useQueryClient();
+  const returnConfirmationEmailNotification = async (props) => {
+    try {
+      const customer = await devitrakApi.post("/auth/user-query", {
+        email: props.email,
+      });
+      if (customer.data.ok) {
+        await devitrakApi.post(
+          "/nodemailer/confirm-returned-device-notification",
+          {
+            consumer: {
+              email: customer.data.users.at(-1).email,
+              firstName: customer.data.users.at(-1).name,
+              lastName: customer.data.users.at(-1).lastName,
+            },
+            devices: props.device,
+            event: event.eventInfoDetail.eventName,
+            transaction: props.paymentIntent,
+            company: user.companyData.id,
+            link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+            admin: user.email,
+          }
+        );
+        return null;
+      }
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
+
   const handleReturnDevice = async () => {
     const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
       "device.serialNumber": deviceInfoSelected.entireData.device,
@@ -95,11 +124,23 @@ const ActionsMainPage = () => {
             },
           })
         );
-        await devitrakApi.post("/cache_update/remove-cache", {
+        devitrakApi.post("/cache_update/remove-cache", {
           key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
         });
-        await devitrakApi.post("/cache_update/remove-cache", {
+        devitrakApi.post("/cache_update/remove-cache", {
           key: `eventSelected=${event.id}&company=${user.companyData.id}`,
+        });
+        await returnConfirmationEmailNotification({
+          paymentIntent: respo.data.listOfReceivers.at(-1).paymentIntent,
+          device: [
+            ...respo.data.listOfReceivers.map((item) => {
+              return {
+                device: { ...item.device },
+                paymentIntent: item.paymentIntent,
+              };
+            }),
+          ],
+          email: respo.data.listOfReceivers.at(-1).user,
         });
         return setTimeout(() => navigate(`/events/event-quickglance`), 1000);
       }
