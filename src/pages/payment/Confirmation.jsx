@@ -1,6 +1,6 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Result, notification } from "antd";
+import { Result, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -101,7 +101,7 @@ const Confirmation = () => {
         if (response.data.ok) return (sequency = false);
       }
     };
-    
+
     const createDeviceInPool = async (props) => {
       const device = await checkArray(groupingByDevice[props]);
       if (device.id) {
@@ -161,6 +161,26 @@ const Confirmation = () => {
       }
     };
 
+    const assignItemEmailNotification = async (props) => {
+      try {
+        await devitrakApi.post("/nodemailer/assignig-device-notification", {
+          consumer: {
+            email: customer.email,
+            firstName: customer.name,
+            lastName: customer.lastName,
+          },
+          devices: props.device,
+          event: props.eventSelected ?? props.event,
+          transaction: props.paymentIntent,
+          company: user.companyData.id,
+          link: `https://app.devitrak.net/?event=${props.event_id}&company=${user.companyData.id}`,
+          admin: user.email,
+        });
+        message.success("Assignment email has been sent successfully");
+      } catch (error) {
+        message.error(`There was an error. ${error}`);
+      }
+    };
     const confirmPaymentIntent = async () => {
       try {
         setLoadingStatus(true);
@@ -221,6 +241,19 @@ const Confirmation = () => {
                 "/receiver/create-bulk-item-transaction-in-user",
                 createTransactionTemplate
               );
+              await assignItemEmailNotification({
+                paymentIntent: payment_intent,
+                device: [
+                  ...templateBulkItemUpdate.device.map((item) => ({
+                    deviceType: item.type,
+                    serialNumber: item.device,
+                    paymentIntent: payment_intent,
+                  })),
+                ],
+                event_id: event.id,
+                eventSelected: event.eventInfoDetail.eventName,
+                event: event.eventInfoDetail.eventName,
+              });
             }
           }
           openNotification(
