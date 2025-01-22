@@ -316,6 +316,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       textTransform={"none"}
                       style={{
                         ...DangerButtonText,
+                        color: !record.active ? "var(--disabled-danger-button-text)" : DangerButtonText.color,
                         margin: 0,
                       }}
                     >
@@ -348,6 +349,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       ...CenteringGrid,
                       ...BlueButton,
                       width: "100%",
+                      border: `${
+                        !record.active
+                          ? "1px solid var(--disabled-blue-button)"
+                          : BlueButton.border
+                      }`,
                       background: `${
                         !record.active
                           ? "var(--disabled-blue-button)"
@@ -390,6 +396,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       );
     }
   };
+
   return (
     <>
       <Table
