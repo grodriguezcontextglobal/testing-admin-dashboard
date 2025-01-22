@@ -23,7 +23,11 @@ import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
-const ExpandedRowInTable = ({ rowRecord, refetching }) => {
+const ExpandedRowInTable = ({
+  rowRecord,
+  refetching,
+  setCheckDeviceReport,
+}) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -73,6 +77,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const refetchingFn = () => {
     refetching();
     return deviceAssignedListQuery.refetch();
@@ -681,26 +686,29 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
   const sendEmailDeviceReport = async () => {
     try {
       setIsLoadingAction(true);
-      const response = await devitrakApi.post("/nodemailer/device-report-per-transaction", {
-        consumer: {
-          email: customer.email,
-          firstName: customer.name,
-          lastName: customer.lastName,
-        },
-        devices: [
-          ...checkDevicesInTransaction().map((item) => {
-            return {
-              device: { ...item },
-              paymentIntent: rowRecord.paymentIntent,
-            };
-          }),
-        ],
-        event: event.eventInfoDetail.eventName,
-        transaction: rowRecord.paymentIntent,
-        company: user.companyData.id,
-        link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
-        admin: user.email,
-      });
+      const response = await devitrakApi.post(
+        "/nodemailer/device-report-per-transaction",
+        {
+          consumer: {
+            email: customer.email,
+            firstName: customer.name,
+            lastName: customer.lastName,
+          },
+          devices: [
+            ...checkDevicesInTransaction().map((item) => {
+              return {
+                device: { ...item },
+                paymentIntent: rowRecord.paymentIntent,
+              };
+            }),
+          ],
+          event: event.eventInfoDetail.eventName,
+          transaction: rowRecord.paymentIntent,
+          company: user.companyData.id,
+          link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+          admin: user.email,
+        }
+      );
       if (response.data.ok) {
         setIsLoadingAction(false);
         return message.success(
@@ -712,6 +720,10 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
       return message.error(`There was an error. ${error}`);
     }
   };
+
+  useEffect(() => {
+    return setCheckDeviceReport(checkDevicesInTransaction());
+  }, []);
   return (
     <div key={rowRecord.paymentIntent}>
       {contextHolder}
@@ -788,7 +800,7 @@ const ExpandedRowInTable = ({ rowRecord, refetching }) => {
               <p style={BlueButtonText}>Express check-in devices</p>
             </Button>
             <Button
-            loading={isLoadingAction}
+              loading={isLoadingAction}
               onClick={() => sendEmailDeviceReport()}
               style={{
                 ...BlueButton,

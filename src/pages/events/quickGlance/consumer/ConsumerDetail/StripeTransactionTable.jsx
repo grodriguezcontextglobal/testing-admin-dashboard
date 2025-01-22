@@ -1,6 +1,14 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Spin, Table } from "antd";
+import {
+  Button,
+  message,
+  notification,
+  Popconfirm,
+  Space,
+  Spin,
+  Table,
+} from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,7 +42,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const recordRef = useRef(null);
+  const [checkDeviceReport, setCheckDeviceReport] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -55,6 +63,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   });
 
   const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
+
   const deviceAssignedListQuery = useQuery({
     queryKey: ["assginedDeviceList"],
     queryFn: () =>
@@ -66,6 +75,33 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     // enabled: false,
     refetchOnMount: false,
   });
+
+  const [api, contextHolder] = notification.useNotification();
+  const openNotification = () => {
+    const key = `open${Date.now()}`;
+    const btn = (
+      <Space>
+        <Button style={DangerButton} size="small" onClick={() => api.destroy()}>
+        <p style={DangerButtonText}>Cancel</p>
+        </Button>
+        <Button
+          style={BlueButton}
+          size="small"
+          onClick={() => setOpenCancelingDepositModal(true)}
+        >
+          <p style={BlueButtonText}>Confirm</p>
+        </Button>
+      </Space>
+    );
+    api.open({
+      message: "Do you want to release the deposit of this transaction?",
+      description:
+        "All assigned devices to this transaction are returned, please release the deposit.",
+      btn,
+      key,
+      // onClose: close,
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -316,7 +352,9 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       textTransform={"none"}
                       style={{
                         ...DangerButtonText,
-                        color: !record.active ? "var(--disabled-danger-button-text)" : DangerButtonText.color,
+                        color: !record.active
+                          ? "var(--disabled-danger-button-text)"
+                          : DangerButtonText.color,
                         margin: 0,
                       }}
                     >
@@ -397,8 +435,32 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     }
   };
 
+  useEffect(() => {
+    if (expandedRowKeys.length !== 0) {
+      if (
+        expandedRowKeys[0].length > 15 &&
+        checkDeviceReport.some((item) => item.status === true)
+      ) {
+        message.warning(
+          "All devices need to be returned before you can cancel or release the deposit."
+        );
+        return setOpenCancelingDepositModal(false);
+      }
+      if (
+        expandedRowKeys[0].length > 15 &&
+        !checkDeviceReport.some((item) => item.status === true) &&
+        sourceData().filter(
+          (item) => item.paymentIntent === expandedRowKeys[0]
+        )[0].active
+      ) {
+        return openNotification();
+      }
+    }
+  }, [expandedRowKeys]);
+
   return (
     <>
+    {contextHolder}
       <Table
         columns={columns}
         dataSource={sourceData()}
@@ -420,6 +482,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 key={record.paymentIntent}
                 rowRecord={record}
                 refetching={refetchingFn}
+                setCheckDeviceReport={setCheckDeviceReport}
               />
             ) : (
               <Spin indicator={<Loading />} />
