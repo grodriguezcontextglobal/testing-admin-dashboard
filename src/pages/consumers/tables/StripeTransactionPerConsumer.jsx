@@ -1,5 +1,5 @@
 import { Chip } from "@mui/material";
-import { Avatar, Badge, Table } from "antd";
+import { Avatar, Badge, Button, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -21,6 +21,8 @@ import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
+import UpDoubleArrow from "../../../components/icons/UpDoubleArrow";
+import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
@@ -439,14 +441,43 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     },
   ];
 
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const customExpandIcon = (props) => {
+    if (props.expanded) {
+      return (
+        <Button
+          onClick={(e) => {
+            props.onExpand(props.record, e);
+          }}
+        >
+          <UpDoubleArrow />
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          onClick={(e) => {
+            props.onExpand(props.record, e);
+          }}
+        >
+          <DownDoubleArrowIcon />
+        </Button>
+      );
+    }
+  };
+
   return (
     <Table
       key={customerFormat.id}
       id={customerFormat.id}
       columns={columns}
       expandable={{
-        expandIcon: false,
-        expandRowByClick: true,
+        expandedRowKeys,
+        onExpand: (expanded, record) => {
+          setExpandedRowKeys(expanded ? [record.key] : []);
+        },
+        expandIcon: (props) => customExpandIcon(props),
+        expandRowByClick: false,
         expandedRowRender: (record) => (
           <ExpandedRow
             rowRecord={record}
@@ -460,7 +491,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       pagination={{
         position: ["bottomCenter"],
       }}
-      style={{ cursor: "pointer" }}
+      // style={{ cursor: "pointer" }}
     />
   );
 };
