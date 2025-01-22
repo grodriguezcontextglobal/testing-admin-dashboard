@@ -66,6 +66,7 @@ const Releasing = ({
         stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
       ) {
         setTransactionStatus(true);
+        setOpenCancelingDepositModal(false)
         return alert("This transaction has been released or canceled already.");
       }
       if (

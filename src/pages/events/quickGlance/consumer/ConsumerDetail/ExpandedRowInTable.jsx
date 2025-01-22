@@ -27,6 +27,7 @@ const ExpandedRowInTable = ({
   rowRecord,
   refetching,
   setCheckDeviceReport,
+  setOpenCancelingDepositModal,
 }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
@@ -600,6 +601,7 @@ const ExpandedRowInTable = ({
       message.error(`There was an error. ${error}`);
     }
   };
+
   const checkItemsStatusInTransactionForEmailNotification = async () => {
     try {
       const checkingNewStatus = await devitrakApi.post(
@@ -614,6 +616,10 @@ const ExpandedRowInTable = ({
       const data = checkingNewStatus?.data?.listOfReceivers;
       const groupingByStatus = groupBy(data, "device.status");
       returnConfirmationEmailNotification([...groupingByStatus[false]]);
+      if(!groupingByStatus[true]){
+        handleRecord(rowRecord);
+        return setOpenCancelingDepositModal(true);
+      }
       return null;
     } catch (error) {
       message.error(`There was an error. ${error}`);
@@ -674,7 +680,9 @@ const ExpandedRowInTable = ({
         await devitrakApi.post("/cache_update/remove-cache", {
           key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
         });
-        return message.success("All items returned successfully");
+        message.success("All items returned successfully");
+        handleRecord(rowRecord);
+        return setOpenCancelingDepositModal(true);
       } else {
         return message.warning("No items to return");
       }
@@ -723,7 +731,8 @@ const ExpandedRowInTable = ({
 
   useEffect(() => {
     return setCheckDeviceReport(checkDevicesInTransaction());
-  }, []);
+  }, [statusRecordState]);
+
   return (
     <div key={rowRecord.paymentIntent}>
       {contextHolder}

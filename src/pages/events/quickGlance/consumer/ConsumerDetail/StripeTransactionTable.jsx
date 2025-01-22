@@ -3,11 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   message,
-  notification,
   Popconfirm,
-  Space,
   Spin,
-  Table,
+  Table
 } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
@@ -75,33 +73,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     // enabled: false,
     refetchOnMount: false,
   });
-
-  const [api, contextHolder] = notification.useNotification();
-  const openNotification = () => {
-    const key = `open${Date.now()}`;
-    const btn = (
-      <Space>
-        <Button style={DangerButton} size="small" onClick={() => api.destroy()}>
-        <p style={DangerButtonText}>Cancel</p>
-        </Button>
-        <Button
-          style={BlueButton}
-          size="small"
-          onClick={() => setOpenCancelingDepositModal(true)}
-        >
-          <p style={BlueButtonText}>Confirm</p>
-        </Button>
-      </Space>
-    );
-    api.open({
-      message: "Do you want to release the deposit of this transaction?",
-      description:
-        "All assigned devices to this transaction are returned, please release the deposit.",
-      btn,
-      key,
-      // onClose: close,
-    });
-  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -411,6 +382,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     },
   ];
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+
   const customExpandIcon = (props) => {
     if (props.expanded) {
       return (
@@ -447,20 +419,19 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         return setOpenCancelingDepositModal(false);
       }
       if (
-        expandedRowKeys[0].length > 15 &&
+        // expandedRowKeys[0].length > 15 &&
         !checkDeviceReport.some((item) => item.status === true) &&
         sourceData().filter(
           (item) => item.paymentIntent === expandedRowKeys[0]
         )[0].active
       ) {
-        return openNotification();
+        return setOpenCancelingDepositModal(true);
       }
     }
   }, [expandedRowKeys]);
 
   return (
     <>
-    {contextHolder}
       <Table
         columns={columns}
         dataSource={sourceData()}
@@ -483,6 +454,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 rowRecord={record}
                 refetching={refetchingFn}
                 setCheckDeviceReport={setCheckDeviceReport}
+                setOpenCancelingDepositModal={setOpenCancelingDepositModal}
+                handleRecord={handleRecord}
               />
             ) : (
               <Spin indicator={<Loading />} />
