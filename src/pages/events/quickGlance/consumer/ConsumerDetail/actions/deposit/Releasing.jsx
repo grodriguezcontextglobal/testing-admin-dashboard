@@ -14,13 +14,14 @@ import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { PropTypes } from "prop-types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
   refetchingTransactionFn,
 }) => {
+    const [transactionStatus, setTransactionStatus] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
@@ -59,6 +60,23 @@ const Releasing = ({
     stripeTransactionQuery.refetch();
     transactionQuery.refetch();
   }, []);
+  useEffect(() => {
+    if (stripeTransactionQuery.data) {
+      if (
+        stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
+      ) {
+        setTransactionStatus(true);
+        return alert("This transaction has been released or canceled already.");
+      }
+      if (
+        stripeTransactionQuery.data.data.paymentIntent.status === "succeeded"
+      ) {
+        setTransactionStatus(true);
+        return alert("This transaction has been captured already.");
+      }
+    }
+  }, [stripeTransactionQuery?.data?.data?.paymentIntent?.status]);
+
   const renderingTitle = () => {
     return (
       <Typography
@@ -273,7 +291,8 @@ const Releasing = ({
                   style={{
                     ...BlueButton,
                     width: "100%",
-                  }}
+                    display: transactionStatus? "none" : "flex",
+                }}
                 >
                   <Typography
                     textTransform={"none"}
@@ -281,10 +300,11 @@ const Releasing = ({
                       ...BlueButtonText,
                     }}
                   >
-                    {stripeTransactionQuery?.data?.data?.paymentIntent
+                    {/* {stripeTransactionQuery?.data?.data?.paymentIntent
                       ?.status === "canceled"
                       ? "Transaction released already"
-                      : "Cancelling deposit"}
+                      : "Cancelling deposit"} */}
+                      Cancelling deposit
                   </Typography>
                 </Button>
               </form>

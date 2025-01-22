@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
@@ -30,6 +30,7 @@ const Capturing = ({
   setOpenCapturingDepositModal,
   refetchingTransactionFn,
 }) => {
+  const [transactionStatus, setTransactionStatus] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
@@ -60,7 +61,6 @@ const Capturing = ({
       ),
     refetchOnMount: false,
   });
-  console.log(stripeTransactionQuery?.data?.data);
   const queryClient = useQueryClient();
   const {
     register,
@@ -82,6 +82,22 @@ const Capturing = ({
     return setValue("amount", amountWithNoDecimal);
   }, [amountWithNoDecimal, setValue]);
 
+  useEffect(() => {
+    if (stripeTransactionQuery.data) {
+      if (
+        stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
+      ) {
+        setTransactionStatus(true);
+        return alert("This transaction has been released or canceled already.");
+      }
+      if (
+        stripeTransactionQuery.data.data.paymentIntent.status === "succeeded"
+      ) {
+        setTransactionStatus(true);
+        return alert("This transaction has been captured already.");
+      }
+    }
+  }, [stripeTransactionQuery?.data?.data?.paymentIntent?.status]);
   if (stripeTransactionQuery.data) {
     initalValue();
     const renderingTitle = () => {
@@ -92,7 +108,6 @@ const Capturing = ({
       setValue("amount", "");
       return setOpenCapturingDepositModal(false);
     };
-
     const handleEventInfo = async (data) => {
       if (data.amount > parseInt(amountWithNoDecimal)) {
         return alert(`Max amount to capture: $${amountWithNoDecimal}`);
@@ -251,6 +266,7 @@ const Capturing = ({
                     style={{
                       ...BlueButton,
                       width: "100%",
+                      display: transactionStatus? "none" : "flex",
                     }}
                   >
                     <Typography
