@@ -1,5 +1,3 @@
-import CenteringGrid from "./CenteringGrid";
-
 export const DangerButtonText = {
     fontFamily: "Inter",
     fontSize: "14px",
@@ -7,5 +5,4 @@ export const DangerButtonText = {
     fontWeight: 600,
     lineHeight: "20px",
     color: "var(--basewhite)",
-    ...CenteringGrid
 }
