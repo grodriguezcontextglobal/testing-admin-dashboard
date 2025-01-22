@@ -27,14 +27,17 @@ import NoDataFound from "../utils/NoDataFound";
 const SearchDevice = () => {
   const location = useLocation();
   const ref = useRef(location.state.search);
+  const [tryingCounting, setTryingCounting] = useState(
+    Number(location.state.count)
+  );
   const [foundDeviceData, setFoundDeviceData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [loadingSearchingResult, setLoadingSearchingResult] = useState(false);
+  const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
   const [returnLoading, setReturnLoading] = useState(false);
   const searchingQuery = useQuery({
-    queryKey: [`${location.state.search}`], //.search.split("?search=")[1]}
+    queryKey: [`${location.state.search}`],
     queryFn: () =>
       devitrakApi.get(
         `/db_company/search-inventory?company_id=${user.sqlInfo.company_id}&searchValue=${location.state.search}` //.search.split("?search=")[1]
@@ -74,9 +77,6 @@ const SearchDevice = () => {
           },
           eventSelected: { $in: eventsName },
         }
-        // {
-        //   limit: 10,
-        // }
       );
       const responseData = fetchingDataPerEvent?.data?.receiversInventory;
       if (Array.isArray(responseData) && responseData.length > 0) {
@@ -178,10 +178,16 @@ const SearchDevice = () => {
       return setFoundDeviceData([]);
     }
   };
-  let tryingCounting = Number(location.state.count);
-  if (foundDeviceData.length === 0 && tryingCounting < 3) {
-    tryingCounting++;
-  }
+
+  const updatingTrigger = setInterval(() => {
+    if (tryingCounting < 3) {
+      setLoadingSearchingResult(false)
+      let count = 1;
+      return setTryingCounting(count++);
+    }
+    return null;
+  }, 1000);
+
   useEffect(() => {
     const controller = new AbortController();
     checkingIfItemInWarehouseOrNot();
@@ -210,6 +216,14 @@ const SearchDevice = () => {
       return grouping;
     }
   };
+
+  useEffect(() => {
+    if (checkPoolEventInventory().length > 0 && tryingCounting > 3) {
+      setLoadingSearchingResult(false);
+      clearInterval(updatingTrigger);
+    }
+    return () => clearInterval(updatingTrigger);
+  }, [tryingCounting]);
 
   useEffect(() => {
     const controller = new AbortController();

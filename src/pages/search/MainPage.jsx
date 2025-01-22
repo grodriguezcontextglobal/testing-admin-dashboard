@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useLocation } from "react-router-dom";
 import HeaderSearch from "./components/HeaderSearch";
 import SearchConsumer from "./components/SearchConsumer";
@@ -33,19 +33,21 @@ const SearchMainPage = () => {
   useEffect(() => {
     return setSearchParams(location.search.slice(8).replaceAll("%20", " "));
   }, [location.key, location.search, searchParams]);
+
   const searching_consumer = useId();
   const searching_staff = useId();
   const searching_device = useId();
   const searching_events = useId();
   const searching_transaction = useId();
-  const sumOfResultDisplayed = () => {
+  const sumOfResultDisplayed = useCallback(() => {
     const initialValue = 0;
     const count = countingResult.reduce(
       (accu, curr) => accu + curr,
       initialValue
     );
     return count;
-  };
+  }, [searchParams]);
+
   return (
     <Grid
       display={"flex"}
@@ -53,7 +55,7 @@ const SearchMainPage = () => {
       alignItems={"center"}
       container
       id={location.key}
-      key={location.key}
+      key={`${location.key} - ${searchParams}`}
     >
       <HeaderSearch
         countingResults={sumOfResultDisplayed()}
@@ -75,6 +77,7 @@ const SearchMainPage = () => {
               searchParams={searchParams}
               countingResult={countingResult}
               setCountingResult={setCountingResult}
+              
             />
           </section>
         )}
@@ -85,6 +88,7 @@ const SearchMainPage = () => {
               searchParams={searchParams}
               countingResult={countingResult}
               setCountingResult={setCountingResult}
+              
             />
           </section>
         )}
@@ -95,11 +99,13 @@ const SearchMainPage = () => {
               searchParams={searchParams}
               countingResult={countingResult}
               setCountingResult={setCountingResult}
+              
             />
           </section>
         )}
         {/* {(filterOptions["View All"] === 1 || filterOptions.Posts === 1) && <section style={styleSection}>
-                    <SearchPosts id={searching_device} searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult} />
+                    <SearchPosts id={searching_device} searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult}
+                    
                 </section>} */}
         {(filterOptions["View All"] === 1 || filterOptions.Events === 1) && (
           <section style={styleSection}>
@@ -108,6 +114,7 @@ const SearchMainPage = () => {
               searchParams={searchParams}
               countingResult={countingResult}
               setCountingResult={setCountingResult}
+              
             />
           </section>
         )}
