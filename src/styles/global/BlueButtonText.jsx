@@ -1,3 +1,5 @@
+import CenteringGrid from "./CenteringGrid";
+
 export const BlueButtonText = {
     textTransform: "none",
     color: "var(--base-white, #FFF",
@@ -5,4 +7,5 @@ export const BlueButtonText = {
     fontWeight: "600",
     fontFamily: "Inter",
     lineHeight: "20px",
+    ...CenteringGrid
 }
