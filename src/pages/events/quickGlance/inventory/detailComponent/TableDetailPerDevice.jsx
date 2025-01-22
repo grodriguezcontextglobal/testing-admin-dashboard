@@ -28,11 +28,11 @@ const TableDetailPerDevice = ({ searching }) => {
 
   const [defectedDevicesList, setDefectedDevicesList] = useState([]);
   
-  const defecedDeviceTracking = useCallback(async () => {
+  const defectedDeviceTracking = useCallback(async () => {
     const respo = await devitrakApi.post(
       "/receiver/list-receiver-returned-issue",
       {
-        "device.serialNumber": deviceInfoSelected.serialNumber,
+        "device": deviceInfoSelected.serialNumber,
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       }
@@ -46,7 +46,7 @@ const TableDetailPerDevice = ({ searching }) => {
   useEffect(() => {
     const controller = new AbortController();
     assignedDeviceTracking();
-    defecedDeviceTracking();
+    defectedDeviceTracking();
     return () => {
       controller.abort();
     };
