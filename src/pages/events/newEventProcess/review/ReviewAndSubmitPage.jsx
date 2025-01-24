@@ -132,6 +132,7 @@ const ReviewAndSubmitEvent = () => {
     }
     return Array.from(result);
   };
+
   const staffDetail = () => {
     const profileStaffList = {
       adminUser:
@@ -141,6 +142,7 @@ const ReviewAndSubmitEvent = () => {
     };
     return profileStaffList;
   };
+
   const createEventNoSQLDatabase = async () => {
     const eventLink = eventInfoDetail.eventName.replace(/ /g, "%20");
     const newEventInfo = await devitrakApi.post("/event/create-event", {
@@ -158,6 +160,7 @@ const ReviewAndSubmitEvent = () => {
       active: true,
       contactInfo: contactInfo,
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
+      company_id:user.companyData.id
     });
     if (newEventInfo.data.ok) {
       const eventId = checkArray(newEventInfo.data.event);
@@ -244,6 +247,7 @@ const ReviewAndSubmitEvent = () => {
       return;
     }
   };
+
   const processOfCreatingInformationOfNewEvent = async () => {
     try {
       openNotificationWithIcon(
@@ -264,6 +268,7 @@ const ReviewAndSubmitEvent = () => {
       setTimeout(() => api.destroy(), 4000);
     }
   };
+
   return (
     <Suspense
       fallback={
