@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -17,6 +17,9 @@ import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BannerMsg from "../../components/utils/BannerMsg";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
+import CenteringGrid from "../../styles/global/CenteringGrid";
+import { GrayButton } from "../../styles/global/GrayButton";
+import GrayButtonText from "../../styles/global/GrayButtonText";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
@@ -30,19 +33,49 @@ const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [dataToRenderInComponent, setDataToRenderInComponent] = useState([]);
   const [counting, setCounting] = useState(0);
+  // const [consumersList, setConsumersList] = useState([]);
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const searching = watch("searchEvent");
-  const leaseListQuery = useQuery({
-    queryKey: ["leaseList"],
+  // const leaseListQuery = useQuery({
+  //   queryKey: ["leaseList"],
+  //   queryFn: () =>
+  //     devitrakApi.post("/db_lease/consulting-lease", {
+  //       company_id: user.sqlInfo.company_id,
+  //       subscription_current_in_use: 1,
+  //     }),
+  //   refetchOnMount: false,
+  // });
+  const allConsumersBasedOnEventsPerCompany = useQuery({
+    queryKey: ["allConsumersBasedOnEventsPerCompany"],
     queryFn: () =>
-      devitrakApi.post("/db_lease/consulting-lease", {
-        company_id: user.sqlInfo.company_id,
-        subscription_current_in_use: 1,
-      }),
-    refetchOnMount: false,
+      devitrakApi.get(
+        `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
+      ),
   });
 
+  useEffect(() => {
+    const controller = new AbortController();
+    allConsumersBasedOnEventsPerCompany.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   return setConsumersList([
+  //     Number(
+  //       allConsumersBasedOnEventsPerCompany?.data?.data?.result
+  //         ?.activeTransaction
+  //     ) +
+  //       Number(
+  //         allConsumersBasedOnEventsPerCompany?.data?.data?.result
+  //           ?.inactiveTransaction
+  //       ),
+  //   ]);
+  // }, [
+  //   allConsumersBasedOnEventsPerCompany.data,
+  // ]);
   let counter = 0;
 
   const renderActiveAndInactiveCount = (props) => {
@@ -78,23 +111,6 @@ const MainPage = () => {
     }
     return setDataToRenderInComponent(returnValues);
   };
-  // const checkingDevicesGivenInEvents = () => {
-  //   if (dataToRenderInComponent.active || dataToRenderInComponent.inactive) {
-  //     const data = [
-  //       ...dataToRenderInComponent.active,
-  //       ...dataToRenderInComponent.inactive,
-  //     ];
-  //     const result = new Set();
-  //     for (let item of data) {
-  //       result.add({
-  //         serialNumber: item?.serialNumber,
-  //         deviceType: item?.deviceType,
-  //       });
-  //     }
-  //     return Array.from(result);
-  //   }
-  //   return [];
-  // };
 
   return (
     <Grid
@@ -200,33 +216,47 @@ const MainPage = () => {
           <RenderingConsumersChartsBehavior
             active={{
               title: "Active",
-              number: 454, //dataToRenderInComponent?.active?.length,
+              number: dataToRenderInComponent?.active?.length,
             }}
             inactive={{
               title: "Inactive",
-              number: 785, //dataToRenderInComponent?.inactive?.length,
+              number: dataToRenderInComponent?.inactive?.length,
             }}
             props={{
               title: "General activity",
               description:
                 "Active consumers refers to those users currently holding one or more devices from the database.",
-              total: 50,
+              total:
+                Number(dataToRenderInComponent?.active?.length ?? 0) +
+                Number(dataToRenderInComponent?.inactive?.length ?? 0),
             }}
           />
           <RenderingConsumersChartsBehavior
             active={{
               title: "Event",
-              number: 150, //checkingDevicesGivenInEvents().length,
+              number:
+                allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                  ?.totalConsumersFromEvents ?? 0,
             }}
             inactive={{
               title: "General",
-              number: leaseListQuery?.data?.data?.lease.length,
+              number:
+                allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                  ?.lease ?? 0,
             }}
             props={{
               title: "Consumer origin",
               description:
                 "Consumers from an event typically spend a shorter time with your devices.",
-              total: 50,
+              total:
+                Number(
+                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                    ?.totalConsumersFromEvents ?? 0
+                ) +
+                Number(
+                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                    ?.lease ?? 0
+                ),
             }}
           />
         </Grid>
@@ -350,25 +380,25 @@ const MainPage = () => {
           </p>
           <Button
             style={{
-              display: "flex",
-              alignItems: "center",
-              outline: "none",
-              backgroundColor: "transparent",
+              ...GrayButton,
+              ...CenteringGrid,
+              height: "fit-content",
+              margin: "15px 10px",
             }}
+            onClick={() => allConsumersBasedOnEventsPerCompany.refetch()}
           >
             <p
               style={{
+                ...GrayButtonText,
                 textTransform: "none",
-                textAlign: "left",
                 fontWeight: 500,
                 fontSize: "12px",
-                fontFamily: "Inter",
-                lineHeight: "28px",
                 color: "var(--blue-dark-700, #004EEB)",
                 padding: "0px 8px",
               }}
             >
-              <Icon icon="jam:refresh" /> Refresh
+              <Icon icon="jam:refresh" />
+              &nbsp;Refresh
             </p>
           </Button>
         </Grid>
