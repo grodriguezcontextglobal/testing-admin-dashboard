@@ -31,7 +31,7 @@ import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
-  const [dataToRenderInComponent, setDataToRenderInComponent] = useState([]);
+  // const [dataToRenderInComponent, setDataToRenderInComponent] = useState([]);
   const [counting, setCounting] = useState(0);
   // const [consumersList, setConsumersList] = useState([]);
   const { register, watch } = useForm();
@@ -109,7 +109,7 @@ const MainPage = () => {
       const lost = [...returnValues.inactive, ...result.get("Lost")];
       returnValues.inactive = [...lost];
     }
-    return setDataToRenderInComponent(returnValues);
+    return returnValues;
   }, [allConsumersBasedOnEventsPerCompany.data]);
 
   return (
