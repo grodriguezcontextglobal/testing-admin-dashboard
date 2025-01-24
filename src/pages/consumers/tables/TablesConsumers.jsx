@@ -66,6 +66,7 @@ export default function TablesConsumers({
 
   useEffect(() => {
     const controller = new AbortController();
+    eventsInfo.refetch();
     listOfEventsPerAdmin();
     return () => {
       controller.abort();
