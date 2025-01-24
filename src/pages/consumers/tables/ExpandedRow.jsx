@@ -30,14 +30,21 @@ import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import Capturing from "../action/deposit/Capturing";
+import Releasing from "../action/deposit/Releasing";
 
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
-  console.log(rowRecord);
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
-    const [infoNeededToBeRenderedInTable, setInfoNeededToBeRenderedInTable] =
+  const [infoNeededToBeRenderedInTable, setInfoNeededToBeRenderedInTable] =
     useState([]);
+  const [openModalCapturingDeposit, setOpenModalCapturingDeposit] =
+    useState(false);
+  const [openModalReleasingDeposit, setOpenModalReleasingDeposit] =
+    useState(false);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const assignedDevicesQuery = useQuery({
@@ -60,6 +67,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       device[0]?.deviceValue
     );
   };
+
   useEffect(() => {
     const controller = new AbortController();
     assignedDevicesQuery.refetch();
@@ -173,26 +181,61 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       title: "Actions",
       key: "operation",
       render: (record) => (
-        console.log("record in expanded row", record),
-        (
-          <Space
-            size="middle"
+        <Space
+          size="middle"
+          style={{
+            display: `${
+              typeof record.status !== "string" && record.status && "flex"
+            }`,
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <Button
+            onClick={() =>
+              record.transactionData.type === "lease"
+                ? handleReturnItemFromLeaseTransaction(record)
+                : handleReturnSingleDevice(record)
+            }
             style={{
-              display: `${
-                typeof record.status !== "string" && record.status && "flex"
-              }`,
-              justifyContent: "flex-end",
-              alignItems: "center",
+              ...BlueButton,
+              display: renderingTernary(
+                record.status,
+                "string",
+                "none",
+                "flex",
+                "none"
+              ),
             }}
           >
-            <Button
-              onClick={() =>
-                record.transactionData.type === "lease"
-                  ? handleReturnItemFromLeaseTransaction(record)
-                  : handleReturnSingleDevice(record)
-              }
+            {record.transactionData.type === "lease" ? (
+              <p style={BlueButtonText}>Mark as ended lease</p>
+            ) : (
+              <p style={BlueButtonText}>Mark as returned</p>
+            )}
+          </Button>
+          <Button
+            // disabled
+            onClick={() => handleLostSingleDevice(record)}
+            style={{
+              ...GrayButton,
+              display: renderingTernary(
+                record.status,
+                "string",
+                "none",
+                "flex",
+                "none"
+              ),
+            }}
+          >
+            <p
               style={{
-                ...BlueButton,
+                ...GrayButtonText,
+                color: `${
+                  record.status
+                    ? GrayButtonText.color
+                    : "var(--disabled0gray-button-text)"
+                }`,
                 display: renderingTernary(
                   record.status,
                   "string",
@@ -202,51 +245,14 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
                 ),
               }}
             >
-              {record.transactionData.type === "lease" ? (
-                <p style={BlueButtonText}>Mark as ended lease</p>
-              ) : (
-                <p style={BlueButtonText}>Mark as returned</p>
-              )}
-            </Button>
-            <Button
-              // disabled
-              onClick={() => handleLostSingleDevice(record)}
-              style={{
-                ...GrayButton,
-                display: renderingTernary(
-                  record.status,
-                  "string",
-                  "none",
-                  "flex",
-                  "none"
-                ),
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  color: `${
-                    record.status
-                      ? GrayButtonText.color
-                      : "var(--disabled0gray-button-text)"
-                  }`,
-                  display: renderingTernary(
-                    record.status,
-                    "string",
-                    "none",
-                    "flex",
-                    "none"
-                  ),
-                }}
-              >
-                Mark as lost
-              </p>
-            </Button>
-          </Space>
-        )
+              Mark as lost
+            </p>
+          </Button>
+        </Space>
       ),
     },
   ];
+
   const dataRendering = () => {
     if (assignedDevicesQuery.data) {
       const query = assignedDevicesQuery.data.data.listOfReceivers;
@@ -269,6 +275,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
     return [];
   };
+
   useEffect(() => {
     dataRendering();
   }, [assignedDevicesQuery.data, rowRecord.key]);
@@ -404,18 +411,86 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       return setInfoNeededToBeRenderedInTable(template);
     }
   };
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRefund = async (record) => {
+    try {
+      setIsLoading(true);
+      await devitrakApi.post(`/stripe/refund`, {
+        paymentIntent: record.paymentIntent,
+      });
+      await devitrakApi.patch(
+        `/transaction/update-transaction/${record.eventInfo[0].id}`,
+        {
+          id: record.eventInfo[0].id,
+          active: false,
+        }
+      );
+      const emailTemplate = {
+        email: customer.email,
+        amount: String(record.eventInfo[0].device[0].deviceValue),
+        date: new Date().toString().slice(4, 15),
+        paymentIntent: record.paymentIntent,
+        customer: `${customer.name} ${customer.lastName}`,
+      };
+      await devitrakApi.post("/nodemailer/refund-notification", emailTemplate);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      message.error(`There was an error. ${error}`);
+    }
+  };
 
   return (
     <>
       {contextHolder}
-      <Table
-        id={rowRecord.key}
-        key={rowRecord.key}
-        columns={columns}
-        dataSource={dataRendering()}
-        pagination={false}
-        className="table-ant-expanded-row-customized"
-      />
+      <div
+        style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}
+      >
+        <Button
+          style={{
+            ...BlueButton,
+            width: "100%",
+            display: rowRecord.device > 0 ? "flex" : "none",
+          }}
+          onClick={() => setOpenModalReleasingDeposit(true)}
+        >
+          <p style={{ ...BlueButtonText, width: "100%" }}>Release deposit</p>
+        </Button>
+        <Button
+          style={{
+            ...DangerButton,
+            width: "100%",
+            display: rowRecord.device > 0 ? "flex" : "none",
+          }}
+          onClick={() => setOpenModalCapturingDeposit(true)}
+        >
+          <p style={{ ...DangerButtonText, width: "100%" }}>Capture deposit</p>
+        </Button>
+        <Button
+          loading={isLoading}
+          style={{
+            ...DangerButton,
+            width: "50%",
+            display: rowRecord.device === 0 ? "flex" : "none",
+          }}
+          onClick={() => handleRefund(rowRecord)}
+        >
+          <p style={{ ...DangerButtonText, width: "100%" }}>Refund</p>
+        </Button>
+      </div>
+
+      {rowRecord.device > 0 && (
+        <Table
+          id={rowRecord.key}
+          key={rowRecord.key}
+          columns={columns}
+          dataSource={dataRendering()}
+          pagination={false}
+          className="table-ant-expanded-row-customized"
+        />
+      )}
+
       <FooterExpandedRow
         displayTernary={displayTernary}
         handleReturnSingleDevice={handleReturnSingleDevice}
@@ -425,15 +500,35 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         formattedData={dataRendering()}
         paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
       />
+
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
       )}
+
       {openReturnDeviceStaffModal && (
         <ModalReturnItem
           openReturnDeviceStaffModal={openReturnDeviceStaffModal}
           setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
           deviceInfo={infoNeededToBeRenderedInTable}
           returnFunction={handleReturnSingleDevice}
+        />
+      )}
+
+      {openModalCapturingDeposit && (
+        <Capturing
+          openCapturingDepositModal={openModalCapturingDeposit}
+          setOpenCapturingDepositModal={setOpenModalCapturingDeposit}
+          refetchingTransactionFn={refetching}
+          rowRecord={rowRecord}
+        />
+      )}
+
+      {openModalReleasingDeposit && (
+        <Releasing
+          openCancelingDepositModal={openModalReleasingDeposit}
+          setOpenCancelingDepositModal={setOpenModalReleasingDeposit}
+          refetchingTransactionF={refetching}
+          rowRecord={rowRecord}
         />
       )}
     </>
