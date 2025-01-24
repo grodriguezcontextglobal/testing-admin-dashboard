@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -71,14 +71,14 @@ const MainPage = () => {
   //       Number(
   //         allConsumersBasedOnEventsPerCompany?.data?.data?.result
   //           ?.inactiveTransaction
-  //       ),
+  //       )useCallback(,
   //   ]);
   // }, [
   //   allConsumersBasedOnEventsPerCompany.data,
   // ]);
   let counter = 0;
 
-  const renderActiveAndInactiveCount = (props) => {
+  const renderActiveAndInactiveCount = useCallback((props) => {
     const result = new Map();
     if (Array.isArray(props)) {
       for (let data of props) {
@@ -110,7 +110,7 @@ const MainPage = () => {
       returnValues.inactive = [...lost];
     }
     return setDataToRenderInComponent(returnValues);
-  };
+  }, [allConsumersBasedOnEventsPerCompany.data]);
 
   return (
     <Grid
@@ -216,19 +216,23 @@ const MainPage = () => {
           <RenderingConsumersChartsBehavior
             active={{
               title: "Active",
-              number: dataToRenderInComponent?.active?.length,
+              number:
+                allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                  ?.activeTransactions ?? 0,
             }}
             inactive={{
               title: "Inactive",
-              number: dataToRenderInComponent?.inactive?.length,
+              number:
+                allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                  ?.inactiveTransactions ?? 0,
             }}
             props={{
               title: "General activity",
               description:
                 "Active consumers refers to those users currently holding one or more devices from the database.",
               total:
-                Number(dataToRenderInComponent?.active?.length ?? 0) +
-                Number(dataToRenderInComponent?.inactive?.length ?? 0),
+                allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                  ?.total ?? 0,
             }}
           />
           <RenderingConsumersChartsBehavior
