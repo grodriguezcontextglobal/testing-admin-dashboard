@@ -1,17 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { Chip } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, Spin, Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Loading from "../../../components/animation/Loading";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { useQuery } from "@tanstack/react-query";
-import { Icon } from "@iconify/react/dist/iconify.js";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 
 export default function TablesConsumers({
@@ -22,7 +23,7 @@ export default function TablesConsumers({
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [responseData, setResponseData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
     useState([]);
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export default function TablesConsumers({
     dispatch(onAddCustomer(userFormatData));
     navigate(`/consumers/${record.entireData.id}`);
   };
+
   const eventsInfo = useQuery({
     queryKey: ["allEventsInfoPerCompanyList"],
     queryFn: () =>
@@ -48,14 +50,6 @@ export default function TablesConsumers({
       ),
     refetchOnMount: false,
   });
-  // const leaseInfo = useQuery({
-  //   queryKey: ["allLeaseInfoPerCompanyList"],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/event/event-list-per-company?company=${user.companyData.company_name}&type=lease`
-  //     ),
-  //   refetchOnMount: false,
-  // });
 
   const listOfEventsPerAdmin = () => {
     const active = eventsPerAdmin.active ?? [];
@@ -72,7 +66,6 @@ export default function TablesConsumers({
 
   useEffect(() => {
     const controller = new AbortController();
-    setIsLoading(true);
     listOfEventsPerAdmin();
     return () => {
       controller.abort();
@@ -188,6 +181,7 @@ export default function TablesConsumers({
     }
     return [];
   };
+
   const dataToRenderInTable = async () => {
     const result = new Set();
     const existingData = await renderingTransactionsPerEventPerConsumer();
@@ -207,24 +201,14 @@ export default function TablesConsumers({
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
-  const timerTrigger = setTimeout(() => {
-    dataToRenderInTable();
-  }, 1500);
+  const trigger = setInterval(() =>{
+    setIsLoading(false);
+  }, 100)
 
   useEffect(() => {
-    const controller = new AbortController();
     dataToRenderInTable();
-    return () => {
-      controller.abort();
-      clearTimeout(timerTrigger);
-    };
-  }, [
-    Array.isArray(getInfoNeededToBeRenderedInTable()),
-    getInfoNeededToBeRenderedInTable()?.length,
-    timerTrigger
-  ]);
-
-  clearTimeout(timerTrigger);
+    return () => clearInterval(trigger);
+  }, [isLoading]);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -400,7 +384,7 @@ export default function TablesConsumers({
       ),
     },
   ];
-  
+
   return (
     <>
       {!isLoading ? (
@@ -423,7 +407,12 @@ export default function TablesConsumers({
           className="table-ant-customized"
         />
       ) : (
-        <Spin spinning={isLoading} percent={0} fullscreen />
+        <Spin
+          spinning={isLoading}
+          indicator={<Loading />}
+          percent={0}
+          fullscreen
+        />
       )}
     </>
   );
