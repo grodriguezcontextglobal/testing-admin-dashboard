@@ -103,12 +103,8 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   };
 
   useEffect(() => {
-    const controller = new AbortController();
     fetchingDataPerAllowed();
-    return () => {
-      controller.abort();
-    };
-  }, [customer.id, customer.uid]);
+  }, []);//customer.id, customer.uid
 
   const reformedSourceData = () => {
     const result = new Set();
@@ -442,6 +438,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   ];
 
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+
   const customExpandIcon = (props) => {
     if (props.expanded) {
       return (
