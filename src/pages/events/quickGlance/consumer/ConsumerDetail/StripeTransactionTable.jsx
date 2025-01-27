@@ -411,15 +411,15 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           }
         );
         if (
-          // expandedRowKeys[0].length > 15 &&
-          response.data.listOfReceivers.length > 0
+          expandedRowKeys[0]?.length > 15 &&
+          response?.data?.listOfReceivers?.length > 0
         ) {
           return setOpenCancelingDepositModal(false);
         }
         return setOpenCancelingDepositModal(true);
       };
       if (
-        // expandedRowKeys[0].length > 15 &&
+        expandedRowKeys[0]?.length > 15 &&
         sourceData().filter(
           (item) => item.paymentIntent === expandedRowKeys[0]
         )[0].active
