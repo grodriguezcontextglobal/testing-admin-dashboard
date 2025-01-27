@@ -35,7 +35,6 @@ const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
-  // const { eventsPerAdmin } = useSelector((state) => state.event);
   const navigate = useNavigate();
   const rowRef = useRef();
   const customerInfoTemplate = {
@@ -104,10 +103,10 @@ const DetailPerConsumer = () => {
       navigate("/consumers");
     };
     const substractingNotesAddedForCompany = () => {
-      const result = customer?.data?.notes.filter(
+      const result = customer?.data?.notes?.filter(
         (ele) => ele.company === user.companyData.id
       );
-      if (result.length > 0) {
+      if (result?.length > 0) {
         let final = [];
         final = [...final, ...result.map((item) => item)];
         return final;
@@ -124,7 +123,7 @@ const DetailPerConsumer = () => {
       }
       return 0;
     };
-    
+
     return (
       <Grid
         key={customer.id}
