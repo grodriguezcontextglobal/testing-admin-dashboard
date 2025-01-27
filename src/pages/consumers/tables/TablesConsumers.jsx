@@ -27,6 +27,7 @@ export default function TablesConsumers({
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
+    console.log(record)
     let userFormatData = {
       uid: record?.key,
       name: record?.entireData?.name,
@@ -37,7 +38,7 @@ export default function TablesConsumers({
     };
     dispatch(onAddCustomerInfo(userFormatData));
     dispatch(onAddCustomer(userFormatData));
-    navigate(`/consumers/${record.entireData.id}`);
+    navigate(`/consumers/${record.entireData.id ?? record.entireData._id}`);
   };
 
   // const eventsInfo = useQuery({
