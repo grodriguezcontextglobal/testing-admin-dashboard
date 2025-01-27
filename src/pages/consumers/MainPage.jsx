@@ -62,55 +62,54 @@ const MainPage = () => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   return setConsumersList([
-  //     Number(
-  //       allConsumersBasedOnEventsPerCompany?.data?.data?.result
-  //         ?.activeTransaction
-  //     ) +
-  //       Number(
-  //         allConsumersBasedOnEventsPerCompany?.data?.data?.result
-  //           ?.inactiveTransaction
-  //       )useCallback(,
-  //   ]);
-  // }, [
-  //   allConsumersBasedOnEventsPerCompany.data,
-  // ]);
   let counter = 0;
 
-  const renderActiveAndInactiveCount = useCallback((props) => {
-    const result = new Map();
-    if (Array.isArray(props)) {
-      for (let data of props) {
-        data.currentActivity.map((item) => {
-          if (!result.has(item.device.status)) {
-            result.set(item.device.status, [item.device]);
-          } else {
-            result.set(item.device.status, [
-              ...result.get(item.device.status),
-              item.device,
-            ]);
-          }
-        });
+  const renderActiveAndInactiveCount = useCallback(
+    (props) => {
+      const result = new Map();
+      if (Array.isArray(props)) {
+        for (let data of props) {
+          data.currentActivity.map((item) => {
+            if (!result.has(item.device.status)) {
+              result.set(item.device.status, [item.device]);
+            } else {
+              result.set(item.device.status, [
+                ...result.get(item.device.status),
+                item.device,
+              ]);
+            }
+          });
+        }
       }
-    }
-    const returnValues = {
-      active: [],
-      inactive: [],
-    };
+      const returnValues = {
+        active: [],
+        inactive: [],
+      };
 
-    if (result.has(true)) {
-      returnValues.active = result.get(true);
+      if (result.has(true)) {
+        returnValues.active = result.get(true);
+      }
+      if (result.has(false)) {
+        returnValues.inactive = [...result.get(false)];
+      }
+      if (result.has("Lost")) {
+        const lost = [...returnValues.inactive, ...result.get("Lost")];
+        returnValues.inactive = [...lost];
+      }
+      return returnValues;
+    },
+    [allConsumersBasedOnEventsPerCompany.data]
+  );
+
+  useEffect(() => {
+    if (allConsumersBasedOnEventsPerCompany.data) {
+      setCounting(
+        allConsumersBasedOnEventsPerCompany.data.data.result.totalConsumers
+      );
     }
-    if (result.has(false)) {
-      returnValues.inactive = [...result.get(false)];
-    }
-    if (result.has("Lost")) {
-      const lost = [...returnValues.inactive, ...result.get("Lost")];
-      returnValues.inactive = [...lost];
-    }
-    return returnValues;
-  }, [allConsumersBasedOnEventsPerCompany.data]);
+  }, [
+    allConsumersBasedOnEventsPerCompany.data,
+  ]);
 
   return (
     <Grid
@@ -412,6 +411,7 @@ const MainPage = () => {
             getCounting={setCounting}
             searching={searching}
             getActiveAndInactiveCount={renderActiveAndInactiveCount}
+            data={allConsumersBasedOnEventsPerCompany?.data?.data}
           />
         </Grid>
       </Grid>

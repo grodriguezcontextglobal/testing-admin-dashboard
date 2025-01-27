@@ -1,13 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Chip } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Avatar, Spin, Table } from "antd";
-import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
@@ -17,11 +14,12 @@ import "../../../styles/global/ant-table.css";
 
 export default function TablesConsumers({
   searching,
-  getCounting,
-  getActiveAndInactiveCount,
+  // getCounting,
+  // getActiveAndInactiveCount,
+  data,
 }) {
   const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin } = useSelector((state) => state.event);
+  // const { eventsPerAdmin } = useSelector((state) => state.event);
   const [responseData, setResponseData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
@@ -42,73 +40,77 @@ export default function TablesConsumers({
     navigate(`/consumers/${record.entireData.id}`);
   };
 
-  const eventsInfo = useQuery({
-    queryKey: ["allEventsInfoPerCompanyList"],
-    queryFn: () =>
-      devitrakApi.get(
-        `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
-      ),
-    refetchOnMount: false,
-  });
+  // const eventsInfo = useQuery({
+  //   queryKey: ["allEventsInfoPerCompanyList"],
+  //   queryFn: () =>
+  //     devitrakApi.get(
+  //       `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
+  //     ),
+  //   refetchOnMount: false,
+  // });
 
-  const listOfEventsPerAdmin = () => {
-    const active = eventsPerAdmin.active ?? [];
-    const completed = eventsPerAdmin.completed ?? [];
-    let events = [...active, ...completed];
-    const result = new Map();
-    for (let data of events) {
-      if (!result.has(data.id)) {
-        result.set(data.id, data);
-      }
-    }
-    return result;
-  };
+  // const listOfEventsPerAdmin = () => {
+  //   const active = eventsPerAdmin.active ?? [];
+  //   const completed = eventsPerAdmin.completed ?? [];
+  //   let events = [...active, ...completed];
+  //   const result = new Map();
+  //   for (let data of events) {
+  //     if (!result.has(data.id)) {
+  //       result.set(data.id, data);
+  //     }
+  //   }
+  //   return result;
+  // };
 
   useEffect(() => {
     const controller = new AbortController();
-    eventsInfo.refetch();
-    listOfEventsPerAdmin();
+    // eventsInfo.refetch();
+    const checking = data;
+    if (checking?.result) {
+      setResponseData(JSON.parse(checking?.result?.usersList))
+    }
+    // listOfEventsPerAdmin();
     return () => {
       controller.abort();
     };
   }, []);
 
-  const consumersPerAllowEvents = async () => {
-    // setLoadingState(true);
-    const finalReturn = new Map();
-    if (listOfEventsPerAdmin().size > 0) {
-      const data = [
-        ...listOfEventsPerAdmin()
-          .keys()
-          .map((item) => item),
-      ];
-      const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
-        event_providers: { $in: data },
-        company_providers: user.companyData.id,
-      });
-      if (fetchUsersAttendees.data.ok) {
-        const responseData = fetchUsersAttendees.data.users;
-        for (let data of responseData) {
-          if (!finalReturn.has(data.id)) {
-            finalReturn.set(data.id, data);
-          }
-        }
-      }
-    }
-    const formattingResponse = [...finalReturn.values().map((item) => item)];
-    getCounting(formattingResponse.length);
-    return setResponseData(formattingResponse);
-  };
+  // const consumersPerAllowEvents = async () => {
+  //   // setLoadingState(true);
+  //   const finalReturn = new Map();
+  //   if (listOfEventsPerAdmin().size > 0) {
+  //     const data = [
+  //       ...listOfEventsPerAdmin()
+  //         .keys()
+  //         .map((item) => item),
+  //     ];
+  //     const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
+  //       event_providers: { $in: data },
+  //       company_providers: user.companyData.id,
+  //     });
+  //     if (fetchUsersAttendees.data.ok) {
+  //       const responseData = fetchUsersAttendees.data.users;
+  //       for (let data of responseData) {
+  //         if (!finalReturn.has(data.id)) {
+  //           finalReturn.set(data.id, data);
+  //         }
+  //       }
+  //     }
+  //   }
+  //   const formattingResponse = [...finalReturn.values().map((item) => item)];
+  //   getCounting(formattingResponse.length);
+  //   return setResponseData(formattingResponse);
+  // };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    consumersPerAllowEvents();
-    eventsInfo.refetch();
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   consumersPerAllowEvents();
+  //   // eventsInfo.refetch();
 
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
@@ -122,7 +124,6 @@ export default function TablesConsumers({
     return responseData;
   };
   checkEventsPerCompany();
-
   const getInfoNeededToBeRenderedInTable = () => {
     let result = new Set();
     let mapTemplate = {};
@@ -131,7 +132,7 @@ export default function TablesConsumers({
         company: user.company,
         user: [data.name, data.lastName],
         email: data.email,
-        key: data.id,
+        key: data.id ?? data._id,
         entireData: data,
       };
       result.add(mapTemplate);
@@ -139,72 +140,72 @@ export default function TablesConsumers({
     return Array.from(result).reverse();
   };
 
-  const sortEventsDataPerCompany = () => {
-    const events = new Map();
-    if (eventsInfo.data) {
-      const info = [...eventsInfo.data.data.list];
-      for (let data of info) {
-        events.set(data.id, data);
-      }
-    }
-    return events;
-  };
+  // const sortEventsDataPerCompany = () => {
+  //   const events = new Map();
+  //   if (eventsInfo.data) {
+  //     const info = [...eventsInfo.data.data.list];
+  //     for (let data of info) {
+  //       events.set(data.id, data);
+  //     }
+  //   }
+  //   return events;
+  // };
 
-  const currentStatus = (props) => {
-    const grouping = groupBy(props, "device.status");
-    return grouping[true] ? grouping[true].length > 0 : false;
-  };
-  const checkingActiveEventForActiveConsumer = (props) => {
-    let result = false;
-    for (let [key, value] of sortEventsDataPerCompany()) {
-      if (props.some((element) => element === key)) {
-        if (value.active) return (result = value.active);
-      }
-    }
-    return result;
-  };
+  // const currentStatus = (props) => {
+  //   const grouping = groupBy(props, "device.status");
+  //   return grouping[true] ? grouping[true].length > 0 : false;
+  // };
+  // const checkingActiveEventForActiveConsumer = (props) => {
+  //   let result = false;
+  //   for (let [key, value] of sortEventsDataPerCompany()) {
+  //     if (props.some((element) => element === key)) {
+  //       if (value.active) return (result = value.active);
+  //     }
+  //   }
+  //   return result;
+  // };
 
-  const renderingTransactionsPerEventPerConsumer = async () => {
-    const fetching = await devitrakApi.post(
-      "/receiver/receiver-assigned-list",
-      {
-        user: {
-          $in: [
-            ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
-          ],
-        },
-        company: user.companyData.id,
-      }
-    );
-    if (fetching.data.ok) {
-      const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
-      return groupingbyUser;
-    }
-    return [];
-  };
+  // const renderingTransactionsPerEventPerConsumer = async () => {
+  //   const fetching = await devitrakApi.post(
+  //     "/receiver/receiver-assigned-list",
+  //     {
+  //       user: {
+  //         $in: [
+  //           ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
+  //         ],
+  //       },
+  //       company: user.companyData.id,
+  //     }
+  //   );
+  //   if (fetching.data.ok) {
+  //     const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
+  //     return groupingbyUser;
+  //   }
+  //   return [];
+  // };
 
   const dataToRenderInTable = async () => {
     const result = new Set();
-    const existingData = await renderingTransactionsPerEventPerConsumer();
+    // const existingData = await renderingTransactionsPerEventPerConsumer();
     for (let data of getInfoNeededToBeRenderedInTable()) {
-      const currentActiveStatus = await checkingActiveEventForActiveConsumer(
-        data.entireData.event_providers
-      );
+      // const currentActiveStatus = await checkingActiveEventForActiveConsumer(
+      //   data.entireData.event_providers
+      // );
       result.add({
         ...data,
-        currentActivity: existingData[data.email] ?? [],
-        status: currentStatus(existingData[data.email]) ?? [],
-        currentConsumerActive: currentActiveStatus,
+        currentActivity: data.entireData.totalDeviceRequested , //existingData[data.email] ?? [],
+        status: data.entireData.totalEventsActive, //currentStatus(existingData[data.email]) ?? [],
+        currentConsumerActive: data.entireData.totalEventsActive //currentActiveStatus,
       });
-      await getActiveAndInactiveCount(Array.from(result));
+      // await getActiveAndInactiveCount(Array.from(result));
     }
     setIsLoading(false);
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
-  const trigger = setInterval(() =>{
+  const trigger = setInterval(() => {
     setIsLoading(false);
-  }, 100)
+  }, 100);
 
   useEffect(() => {
     dataToRenderInTable();
@@ -306,7 +307,8 @@ export default function TablesConsumers({
             padding: "2px 8px",
             alignItems: "center",
             background: `${
-              !currentConsumerActive
+              currentConsumerActive === 0
+              // !currentConsumerActive
                 ? "var(--blue-50, #EFF8FF)"
                 : "var(--success-50, #ECFDF3)"
             }`,
@@ -317,7 +319,8 @@ export default function TablesConsumers({
             style={{
               ...Subtitle,
               color: `${
-                !currentConsumerActive
+                currentConsumerActive === 0
+                // !currentConsumerActive
                   ? "var(--blue-700, #175CD3)"
                   : "var(--success-700, #027A48)"
               }`,
@@ -327,9 +330,10 @@ export default function TablesConsumers({
             <Icon
               icon="tabler:point-filled"
               rotate={3}
-              color={`${!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
+              color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`}//!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
             />
-            {!currentConsumerActive ? "No active" : "Active"}
+            {/* {!currentConsumerActive ? "No active" : "Active"} */}
+            {currentConsumerActive === 0 ? "No active" : "Active"}
           </p>
         </span>
       ),
@@ -358,7 +362,8 @@ export default function TablesConsumers({
       width: "7%",
       render: (currentActivity) => (
         <p style={{ ...renderingStyle, width: "fit-content" }}>
-          {currentActivity?.length}
+          {/* {currentActivity?.length} */}
+          {currentActivity}
         </p>
       ),
     },
