@@ -26,7 +26,6 @@ import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 const ExpandedRowInTable = ({
   rowRecord,
   refetching,
-  setCheckDeviceReport,
   setOpenCancelingDepositModal,
 }) => {
   const { event } = useSelector((state) => state.event);
@@ -729,9 +728,6 @@ const ExpandedRowInTable = ({
     }
   };
 
-  useEffect(() => {
-    return setCheckDeviceReport(checkDevicesInTransaction());
-  }, [statusRecordState]);
 
   return (
     <div key={rowRecord.paymentIntent}>

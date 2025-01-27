@@ -1,12 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  message,
-  Popconfirm,
-  Spin,
-  Table
-} from "antd";
+import { Button, message, Popconfirm, Spin, Table } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,7 +34,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [checkDeviceReport, setCheckDeviceReport] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -409,23 +402,29 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
 
   useEffect(() => {
     if (expandedRowKeys.length !== 0) {
-      if (
-        expandedRowKeys[0].length > 15 &&
-        checkDeviceReport.some((item) => item.status === true)
-      ) {
-        message.warning(
-          "All devices need to be returned before you can cancel or release the deposit."
+      const checking = async () => {
+        const response = await devitrakApi.post(
+          "/receiver/receiver-assigned-list",
+          {
+            paymentIntent: expandedRowKeys[0],
+            "device.status": true,
+          }
         );
-        return setOpenCancelingDepositModal(false);
-      }
+        if (
+          // expandedRowKeys[0].length > 15 &&
+          response.data.listOfReceivers.length > 0
+        ) {
+          return setOpenCancelingDepositModal(false);
+        }
+        return setOpenCancelingDepositModal(true);
+      };
       if (
         // expandedRowKeys[0].length > 15 &&
-        !checkDeviceReport.some((item) => item.status === true) &&
         sourceData().filter(
           (item) => item.paymentIntent === expandedRowKeys[0]
         )[0].active
       ) {
-        return setOpenCancelingDepositModal(true);
+        checking();
       }
     }
   }, [expandedRowKeys]);
@@ -453,7 +452,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 key={record.paymentIntent}
                 rowRecord={record}
                 refetching={refetchingFn}
-                setCheckDeviceReport={setCheckDeviceReport}
                 setOpenCancelingDepositModal={setOpenCancelingDepositModal}
                 handleRecord={handleRecord}
               />
