@@ -122,6 +122,7 @@ const ModalMultipleCompanies = ({
       <Grid container>
         <Grid
           display={"flex"}
+          flexDirection={'column'}
           justifyContent={"flex-start"}
           alignSelf={"flex-start"}
           margin={"20px 0px"}
@@ -131,50 +132,64 @@ const ModalMultipleCompanies = ({
           md={12}
           lg={12}
         >
-          <div style={{ width: "100px", height: "100px", margin:"0 20px 0 0" }}>
-            <Avatar
-              src={dataPassed.respo.entire.imageProfile}
-              style={{ width: "100%", height: "100%", verticalAlign: "middle", objectFit:"cover", borderRadius:"50%" }}
-              size="large"
-              icon={<ProfileIcon />}
-            >
-              <ProfileIcon />
-            </Avatar>
-          </div>
-          <h1
+          <div
             style={{
-              ...TextFontSize30LineHeight38,
-              textWrap: "pretty",
-              margin: "0px 0px 10px 0px",
+              width: "100%",
+              display: "flex",
+              alignSelf: "flex-start",
+              justifyContent: "flex-start",
             }}
           >
-            Welcome back {dataPassed.respo.entire.name}{" "}
-            {dataPassed.respo.entire.lastName}!
-          </h1>
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignSelf={"flex-start"}
-          margin={"20px 0px"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
+            <div
+              style={{
+                width: "100px",
+                height: "80px",
+                borderRadius: "50%",
+                margin: "0 20px 0 0",
+              }}
+            >
+              {dataPassed.respo.entire.imageProfile.length > 0 ? (
+                <img
+                  src={dataPassed.respo.entire.imageProfile}
+                  alt="profile"
+                  style={{
+                    verticalAlign: "middle",
+                    objectFit: "cover",
+                    overflow: "hidden",
+                    borderRadius: "50%",
+                  }}
+                  width={"100%"}
+                  height={"100%"}
+                />
+              ) : (
+                <ProfileIcon />
+              )}
+            </div>
+            <h1
+              style={{
+                ...TextFontSize30LineHeight38,
+                textWrap: "pretty",
+                margin: "0px 0px 10px 0px",
+              }}
+            >
+              Welcome back {dataPassed.respo.entire.name}{" "}
+              {dataPassed.respo.entire.lastName}!
+            </h1>
+          </div>
           <p
             style={{
               ...TextFontSize20LineHeight30,
               textWrap: "balance",
               fontWeight: 500,
+              width: "100%",
+              margin:"15px 0"
             }}
           >
             You have access to multiple companies. Please select the company you
             wish to log in to from the options below.
           </p>
-        </Grid>
 
+        </Grid>
         <Select
           style={{
             width: "100%",
