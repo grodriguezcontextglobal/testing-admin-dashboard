@@ -58,7 +58,8 @@ const Login = () => {
       duration: 0,
     });
   };
-  const dataPassed = useRef([]);
+
+  const dataPassed = useRef(null);
   const addingEventState = async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
       "/db_event/events_information",
@@ -133,134 +134,123 @@ const Login = () => {
       return navigate("/");
     }
   };
-  const loginIntoOneCompanyAccount = async ({ props }) => {
-    const respo = await devitrakApiAdmin.post("/login", {
-      email: props.email,
-      password: props.password,
-    });
 
-    if (respo.data) {
-      localStorage.setItem("admin-token", respo.data.token);
-      const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
-        `/profile/${respo.data.uid}`,
-        {
-          online: true,
-        }
-      );
-      const respoFindMemberInfo = await devitrakApi.post(
-        "/db_staff/consulting-member",
-        {
-          email: props.email,
-        }
-      );
-      const companyInfoTable = await devitrakApi.post(
-        "/db_company/consulting-company",
-        {
-          company_name: props.company_name,
-        }
-      );
-      const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: checkArray(companyInfoTable.data.company).company_id,
-      });
-      // const subscriptionCompanyInfo = await devitrakApi.post(
-      //   "/subscription/company-subscription",
-      //   {
-      //     companyName: props.company_name,
-      //   }
-      // );
-      dispatch(
-        onLogin({
-          data: {
-            ...respo.data.entire,
-            online: updatingOnlineStatusResponse.data.entire.online,
-          },
-          name: respo.data.name,
-          lastName: respo.data.lastName,
-          uid: respo.data.uid,
-          email: respo.data.email,
-          role: props.role,
-          phone: respo.data.phone,
-          company: props.company_name,
-          token: respo.data.token,
+  const loginIntoOneCompanyAccount = async ({ props }) => {
+    localStorage.setItem("admin-token", props.respo.token);
+    const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
+      `/profile/${props.respo.uid}`,
+      {
+        online: true,
+      }
+    );
+    const respoFindMemberInfo = await devitrakApi.post(
+      "/db_staff/consulting-member",
+      {
+        email: props.email,
+      }
+    );
+    const companyInfoTable = await devitrakApi.post(
+      "/db_company/consulting-company",
+      {
+        company_name: props.company_name,
+      }
+    );
+    const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
+      company_id: checkArray(companyInfoTable.data.company).company_id,
+    });
+    dispatch(
+      onLogin({
+        data: {
+          ...props.respo.entire,
           online: updatingOnlineStatusResponse.data.entire.online,
-          companyData: props.company_data[0],
-          sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
-          sqlInfo: {
-            ...checkArray(companyInfoTable.data.company),
-            stripeID: checkArray(stripeSQL.data.stripe),
-          },
-          subscription: {},
-          // subscriptionCompanyInfo.data
-          //   ? subscriptionCompanyInfo.data.subscription.subscription
-          //   : {},
-        })
-      );
-      dispatch(
-        onAddSubscription(
-          {}
-          // subscriptionCompanyInfo.data
-          //   ? subscriptionCompanyInfo.data.subscription.subscription
-          //   : {}
-        )
-      );
-      dispatch(clearErrorMessage());
-      queryClient.clear();
-      openNotificationWithIcon("Success", "User logged in.");
-      await navigateUserBasedOnRole({
+        },
+        name: props.respo.name,
+        lastName: props.respo.lastName,
+        uid: props.respo.uid,
+        email: props.respo.email,
         role: props.role,
-        email: respo.data.email,
-      });
-    }
+        phone: props.respo.phone,
+        company: props.company_name,
+        token: props.respo.token,
+        online: updatingOnlineStatusResponse.data.entire.online,
+        companyData: props.company_data[0],
+        sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
+        sqlInfo: {
+          ...checkArray(companyInfoTable.data.company),
+          stripeID: checkArray(stripeSQL.data.stripe),
+        },
+        subscription: {},
+      })
+    );
+    dispatch(onAddSubscription({}));
+    dispatch(clearErrorMessage());
+    queryClient.clear();
+    openNotificationWithIcon("Success", "User logged in.");
+    await navigateUserBasedOnRole({
+      role: props.role,
+      email: props.email,
+    });
+    // }
   };
+
+  const handleMulitpleCompanyLogin = async (props) => {
+    setOpenMultipleCompanies(true);
+    return (dataPassed.current = props);
+  };
+
   const onSubmitLogin = async (data) => {
-    dispatch(onChecking());
     try {
-      const checkCompanyUserSet = await devitrakApi.post(
-        "/company/search-company",
-        { "employees.user": data.email }
-      );
-      if (checkCompanyUserSet.data) {
-        const result = new Set();
-        const userFoundInCompany = checkCompanyUserSet.data.company;
-        for (let item of userFoundInCompany) {
-          const userInfo = item.employees.filter(
-            (element) => element.user === data.email && element.active
-          );
-          if (Array.isArray(userInfo) && userInfo.length > 0) {
-            result.add({ company: item.company_name, role: userInfo[0].role });
+      dispatch(onChecking());
+      const respo = await devitrakApiAdmin.post("/login", {
+        email: data.email,
+        password: data.password,
+      });
+      if (respo.data) {
+        const checkCompanyUserSet = await devitrakApi.post(
+          "/company/search-company",
+          { "employees.user": data.email }
+        );
+        if (checkCompanyUserSet.data) {
+          const result = new Set();
+          const userFoundInCompany = checkCompanyUserSet.data.company;
+          for (let item of userFoundInCompany) {
+            const userInfo = item.employees.filter(
+              (element) => element.user === data.email && element.active
+            );
+            if (Array.isArray(userInfo) && userInfo.length > 0) {
+              result.add({
+                company: item.company_name,
+                role: userInfo[0].role,
+              });
+            }
           }
-        }
-        const infoFound = Array.from(result);
-        setOpenMultipleCompanies(infoFound.length > 1);
-        if (infoFound.length === 0)
-          return openNotificationWithIcon(
-            "error",
-            "We could not find an active status in any company where you were assigned."
-          );
-        if (infoFound.length === 1) {
-          await loginIntoOneCompanyAccount({
-            props: {
-              email: data.email,
-              password: data.password,
-              company_name: infoFound[0].company,
-              role: infoFound[0].role,
+          const infoFound = Array.from(result);
+          if (infoFound.length > 1) {
+            const template = {
+              ...data,
+              companyInfo: infoFound,
               company_data: userFoundInCompany,
-            },
-          });
-        }
-        if (infoFound.length > 1) {
-          // const storeData = (dataPassed.current = {
-          //   ...data,
-          //   companyInfo: infoFound,
-          //   company_data: userFoundInCompany,
-          // });
-          // return storeData;
-          dataPassed.current = {
-            ...data,
-            companyInfo: infoFound,
-            company_data: userFoundInCompany,
-          };
-          return dataPassed.current;
+              respo: respo.data,
+            };
+            return await handleMulitpleCompanyLogin(template);
+          } else if (infoFound.length === 1) {
+            return await loginIntoOneCompanyAccount({
+              props: {
+                email: data.email,
+                password: data.password,
+                company_name: infoFound[0].company,
+                role: infoFound[0].role,
+                company_data: userFoundInCompany,
+                respo: respo.data,
+              },
+            });
+          } else {
+            console.log("no company found");
+            return openNotificationWithIcon(
+              "error",
+              "We could not find an active status in any company where you were assigned."
+            );
+          }
         }
       }
     } catch (error) {
@@ -273,6 +263,7 @@ const Login = () => {
     setValue("password", "");
     return dispatch(clearErrorMessage());
   };
+
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
@@ -292,6 +283,7 @@ const Login = () => {
       return "30vw";
     }
   };
+
   return (
     <Suspense
       fallback={
@@ -480,7 +472,10 @@ const Login = () => {
                   </button>
                 </Grid>
               </Grid>
-              <Button htmlType="submit" style={{ ...BlueButton, width: "100%" }}>
+              <Button
+                htmlType="submit"
+                style={{ ...BlueButton, width: "100%" }}
+              >
                 <p style={BlueButtonText}>Sign in</p>
               </Button>
             </form>
@@ -522,7 +517,7 @@ const Login = () => {
       {openMultipleCompanies && (
         <ModalMultipleCompanies
           data={dataPassed.current}
-          openMultipleCompanies={true}
+          openMultipleCompanies={openMultipleCompanies}
           setOpenMultipleCompanies={setOpenMultipleCompanies}
         />
       )}
