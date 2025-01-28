@@ -17,6 +17,14 @@ import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import dicRole from "../../../components/general/dicRole";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import { GrayButton } from "../../../styles/global/GrayButton";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -27,6 +35,7 @@ const ModalMultipleCompanies = ({
     return setOpenMultipleCompanies(false);
   };
   const [isLoading, setIsLoading] = useState(false);
+  const [selection, setSelection] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
@@ -44,7 +53,7 @@ const ModalMultipleCompanies = ({
     return result;
   };
 
-  const loginIntoOneCompanyAccount = async (props) => {
+  const loginIntoOneCompanyAccount = async () => {
     try {
       setIsLoading(true);
       localStorage.setItem("admin-token", dataPassed.respo.token);
@@ -60,12 +69,17 @@ const ModalMultipleCompanies = ({
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
-          company_name: props,
+          company_name: selection,
         }
       );
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyInfoTable.data.company.at(-1).company_id,
       });
+
+      const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
+        selection
+      ).employees.find((item) => item.user === dataPassed.respo.email).role;
+
       dispatch(
         onLogin({
           data: {
@@ -76,12 +90,10 @@ const ModalMultipleCompanies = ({
           lastName: dataPassed.respo.lastName,
           uid: dataPassed.respo.uid,
           email: dataPassed.respo.email,
-          role: findingCompanyInfoBasedOnSelection(props).employees.find(
-            (item) => item.user === dataPassed.respo.email
-          ).role,
+          role: employeeRoleBasedOnCompany,
           phone: dataPassed.respo.phone,
-          company: props,
-          companyData: findingCompanyInfoBasedOnSelection(props),
+          company: selection,
+          companyData: findingCompanyInfoBasedOnSelection(selection),
           token: dataPassed.respo.token,
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
@@ -95,10 +107,9 @@ const ModalMultipleCompanies = ({
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
-      navigate(`${Number(props.role) === 4 ? "/events" : "/"}`);
+      navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
       // }
     } catch (error) {
-      console.log(error);
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
@@ -107,7 +118,20 @@ const ModalMultipleCompanies = ({
   };
 
   const handleChange = (value) => {
-    loginIntoOneCompanyAccount(value);
+    return setSelection(value);
+  };
+
+  const renderingExtraCompanyInfo = (props) => {
+    const result = dataPassed.company_data.filter(
+      (item) => item.company_name === props
+    );
+    const employeeRoleInCompany = result[0]?.employees.find(
+      (item) => item.user === dataPassed.respo.email
+    );
+    return {
+      company_logo: result[0]?.company_logo,
+      employeeRoleInCompany: employeeRoleInCompany?.role,
+    };
   };
 
   return (
@@ -122,7 +146,7 @@ const ModalMultipleCompanies = ({
       <Grid container>
         <Grid
           display={"flex"}
-          flexDirection={'column'}
+          flexDirection={"column"}
           justifyContent={"flex-start"}
           alignSelf={"flex-start"}
           margin={"20px 0px"}
@@ -136,14 +160,14 @@ const ModalMultipleCompanies = ({
             style={{
               width: "100%",
               display: "flex",
-              alignSelf: "flex-start",
+              alignItems: "center",
               justifyContent: "flex-start",
             }}
           >
             <div
               style={{
-                width: "100px",
-                height: "80px",
+                width: "50px",
+                height: "50px",
                 borderRadius: "50%",
                 margin: "0 20px 0 0",
               }}
@@ -167,73 +191,133 @@ const ModalMultipleCompanies = ({
             </div>
             <h1
               style={{
-                ...TextFontSize30LineHeight38,
+                ...TextFontSize14LineHeight20,
                 textWrap: "pretty",
                 margin: "0px 0px 10px 0px",
               }}
             >
-              Welcome back {dataPassed.respo.entire.name}{" "}
+              Welcome back, {dataPassed.respo.entire.name}{" "}
               {dataPassed.respo.entire.lastName}!
             </h1>
           </div>
           <p
             style={{
-              ...TextFontSize20LineHeight30,
+              ...TextFontsize18LineHeight28,
               textWrap: "balance",
-              fontWeight: 500,
               width: "100%",
-              margin:"15px 0"
+              margin: "15px 0",
             }}
           >
-            You have access to multiple companies. Please select the company you
-            wish to log in to from the options below.
+            Select the account
           </p>
 
+          <p
+            style={{
+              ...TextFontSize14LineHeight20,
+              textWrap: "pretty",
+            }}
+          >
+            Because you have access to more than one account using Devitrak, you
+            must select the account you want to log in to from the menu below.
+          </p>
         </Grid>
+        <p
+          style={{
+            ...TextFontSize14LineHeight20,
+            fontWeight: 500,
+            textWrap: "pretty",
+          }}
+        >
+          Companies you have access to:
+        </p>
         <Select
           style={{
             width: "100%",
             display: "flex",
             justifyContent: "flex-start",
             alignItems: "center",
+            height:"2.5rem",
           }}
           onChange={handleChange}
           options={[
             ...dataPassed.companyInfo.map((item) => ({
               value: item.company,
               label: (
-                <span
+                <p
                   style={{
                     width: "100%",
                     display: "flex",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    padding: "10px 10px 10px 0px",
+                    padding: "20px 10px 20px 0px",
                   }}
                 >
                   <Avatar
-                    src={
-                      dataPassed.company_data.filter(
-                        (item) => item.company_name === item.company
-                      )[0]?.company_logo
+                    src={renderingExtraCompanyInfo(item.company).company_logo}
+                  >
+                    {item.company}
+                  </Avatar>
+                  &nbsp;
+                  <span
+                    style={{
+                      ...TextFontSize20LineHeight30,
+                      fontSize: "16px",
+                      fontWeight: 500,
+                      lineHeight: "24px",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {item.company} -
+                  </span>
+                  &nbsp;
+                  <span
+                    style={{
+                      ...Subtitle,
+                      fontSize: "16px",
+                      fontWeight: 400,
+                      lineHeight: "24px",
+                    }}
+                  >
+                    {
+                      dicRole[
+                        renderingExtraCompanyInfo(item.company)
+                          .employeeRoleInCompany
+                      ]
                     }
-                  ></Avatar>
-                  &nbsp;{item.company}
-                </span>
+                  </span>
+                </p>
               ),
             })),
           ]}
         />
-        <Button
-          loading={isLoading}
-          onClick={() => {
-            localStorage.removeItem("admin-token");
-            setOpenMultipleCompanies(false);
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-around",
+            width: "100%",
+            gap: "10px",
           }}
-          style={{ ...DangerButton, width: "100%", margin: "20px 0px" }}
         >
-          <p style={DangerButtonText}>Log out</p>
-        </Button>
+          <Button
+            loading={isLoading}
+            onClick={() => {
+              localStorage.removeItem("admin-token");
+              setOpenMultipleCompanies(false);
+            }}
+            style={{ ...GrayButton, width: "100%", margin: "20px 0px" }}
+          >
+            <p style={GrayButtonText}>Cancel</p>
+          </Button>
+          <Button
+            loading={isLoading}
+            onClick={() => loginIntoOneCompanyAccount()}
+            style={{ ...BlueButton, width: "100%", margin: "20px 0px" }}
+          >
+            <p style={BlueButtonText}>Enter account</p>
+          </Button>
+        </div>
+
         {isLoading && <Spin indicator={<Loading />} fullscreen />}
       </Grid>
     </Modal>
