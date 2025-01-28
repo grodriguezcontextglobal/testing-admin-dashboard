@@ -1,11 +1,12 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, Button, Modal, Select, Spin, notification } from "antd";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
-import { useState } from "react";
 import Loading from "../../../components/animation/Loading";
+import dicRole from "../../../components/general/dicRole";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import {
   clearErrorMessage,
@@ -13,18 +14,14 @@ import {
   onLogin,
   onLogout,
 } from "../../../store/slices/adminSlice";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import dicRole from "../../../components/general/dicRole";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { GrayButton } from "../../../styles/global/GrayButton";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
