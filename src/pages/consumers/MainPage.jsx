@@ -8,8 +8,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { Divider, Spin } from "antd";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -29,23 +29,14 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 import RenderingConsumersChartsBehavior from "./components/RenderingConsumersChartsBehavior";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
+import Loading from "../../components/animation/Loading";
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
-  // const [dataToRenderInComponent, setDataToRenderInComponent] = useState([]);
-  const [counting, setCounting] = useState(0);
-  // const [consumersList, setConsumersList] = useState([]);
+  const [counting, setCounting] = useState(null);
+  const [consumersList, setConsumersList] = useState([]);
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const searching = watch("searchEvent");
-  // const leaseListQuery = useQuery({
-  //   queryKey: ["leaseList"],
-  //   queryFn: () =>
-  //     devitrakApi.post("/db_lease/consulting-lease", {
-  //       company_id: user.sqlInfo.company_id,
-  //       subscription_current_in_use: 1,
-  //     }),
-  //   refetchOnMount: false,
-  // });
   const allConsumersBasedOnEventsPerCompany = useQuery({
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
     queryFn: () =>
@@ -62,7 +53,7 @@ const MainPage = () => {
     };
   }, []);
 
-  let counter = 0;
+  const componentLocator = useId();
 
   const renderActiveAndInactiveCount = useCallback(
     (props) => {
@@ -106,10 +97,11 @@ const MainPage = () => {
       setCounting(
         allConsumersBasedOnEventsPerCompany.data.data.result.totalConsumers
       );
+      setConsumersList(allConsumersBasedOnEventsPerCompany.data.data);
+    } else {
+      setCounting(0);
     }
-  }, [
-    allConsumersBasedOnEventsPerCompany.data,
-  ]);
+  }, [allConsumersBasedOnEventsPerCompany.data]);
 
   return (
     <Grid
@@ -135,7 +127,7 @@ const MainPage = () => {
             textTransform={"none"}
             style={{
               ...TextFontSize30LineHeight38,
-              // color: "var(--gray-900, #101828)",
+              textAlign: "left",
             }}
           >
             Consumers
@@ -407,11 +399,12 @@ const MainPage = () => {
         </Grid>
         <Grid item xs={12}>
           <TablesConsumers
-            key={counter}
-            getCounting={setCounting}
+            key={componentLocator}
+            getCounting={counting}
             searching={searching}
             getActiveAndInactiveCount={renderActiveAndInactiveCount}
-            data={allConsumersBasedOnEventsPerCompany?.data?.data}
+            data={consumersList}
+            statePage={null}
           />
         </Grid>
       </Grid>
@@ -471,6 +464,10 @@ const MainPage = () => {
           createUserButton={createUserButton}
           setCreateUserButton={setCreateUserButton}
         />
+      )}
+      {(counting === null ||
+        allConsumersBasedOnEventsPerCompany.isLoading) && (
+        <Spin indicator={<Loading />} fullscreen />
       )}
     </Grid>
   );
