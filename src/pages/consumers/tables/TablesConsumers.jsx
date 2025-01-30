@@ -2,7 +2,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Chip } from "@mui/material";
 import { Avatar, Spin, Table } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../components/animation/Loading";
@@ -14,20 +14,20 @@ import "../../../styles/global/ant-table.css";
 
 export default function TablesConsumers({
   searching,
-  // getCounting,
-  // getActiveAndInactiveCount,
   data,
+  getCounting,
+  // getActiveAndInactiveCount,
 }) {
   const { user } = useSelector((state) => state.admin);
   // const { eventsPerAdmin } = useSelector((state) => state.event);
-  const [responseData, setResponseData] = useState([]);
+  const dataRef = useRef(null);
+  const [responseData, setResponseData] = useState(data);
   const [isLoading, setIsLoading] = useState(true);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
     useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
-    console.log(record)
     let userFormatData = {
       uid: record?.key,
       name: record?.entireData?.name,
@@ -40,6 +40,15 @@ export default function TablesConsumers({
     dispatch(onAddCustomer(userFormatData));
     navigate(`/consumers/${record.entireData.id ?? record.entireData._id}`);
   };
+
+  // if (data.result) {
+  //   const checking = data;
+  //   const result =
+  //     typeof checking?.result?.usersList === "string"
+  //       ? JSON.parse(checking?.result?.usersList)
+  //       : checking?.result?.usersList;
+  //   dataRef.current = result;
+  // }
 
   // const eventsInfo = useQuery({
   //   queryKey: ["allEventsInfoPerCompanyList"],
@@ -62,19 +71,6 @@ export default function TablesConsumers({
   //   }
   //   return result;
   // };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    // eventsInfo.refetch();
-    const checking = data;
-    if (checking?.result) {
-      setResponseData(JSON.parse(checking?.result?.usersList))
-    }
-    // listOfEventsPerAdmin();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   // const consumersPerAllowEvents = async () => {
   //   // setLoadingState(true);
@@ -113,6 +109,14 @@ export default function TablesConsumers({
   //   };
   // }, []);
 
+  useEffect(() => {
+    dataRef.current =
+      typeof data?.result?.usersList === "string"
+        ? JSON.parse(data?.result?.usersList)
+        : data?.result?.usersList;
+    setResponseData(dataRef.current);
+  }, [getCounting]);
+  
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
       const check = responseData?.filter((item) =>
@@ -125,21 +129,24 @@ export default function TablesConsumers({
     return responseData;
   };
   checkEventsPerCompany();
-  const getInfoNeededToBeRenderedInTable = () => {
+
+  const getInfoNeededToBeRenderedInTable = useCallback(() => {
     let result = new Set();
     let mapTemplate = {};
-    for (let data of checkEventsPerCompany()) {
-      mapTemplate = {
-        company: user.company,
-        user: [data.name, data.lastName],
-        email: data.email,
-        key: data.id ?? data._id,
-        entireData: data,
-      };
-      result.add(mapTemplate);
+    if (checkEventsPerCompany()?.length > 0) {
+      for (let data of checkEventsPerCompany()) {
+        mapTemplate = {
+          company: user.company,
+          user: [data.name, data.lastName],
+          email: data.email,
+          key: data.id ?? data._id,
+          entireData: data,
+        };
+        result.add(mapTemplate);
+      }
     }
     return Array.from(result).reverse();
-  };
+  }, [responseData?.length, dataRef.current]);
 
   // const sortEventsDataPerCompany = () => {
   //   const events = new Map();
@@ -194,9 +201,9 @@ export default function TablesConsumers({
       // );
       result.add({
         ...data,
-        currentActivity: data.entireData.totalDeviceRequested , //existingData[data.email] ?? [],
+        currentActivity: data.entireData.totalDeviceRequested, //existingData[data.email] ?? [],
         status: data.entireData.totalEventsActive, //currentStatus(existingData[data.email]) ?? [],
-        currentConsumerActive: data.entireData.totalEventsActive //currentActiveStatus,
+        currentConsumerActive: data.entireData.totalEventsActive, //currentActiveStatus,
       });
       // await getActiveAndInactiveCount(Array.from(result));
     }
@@ -204,14 +211,9 @@ export default function TablesConsumers({
     return setDataSortedAndFilterToRender(Array.from(result));
   };
 
-  const trigger = setInterval(() => {
-    setIsLoading(false);
-  }, 100);
-
   useEffect(() => {
     dataToRenderInTable();
-    return () => clearInterval(trigger);
-  }, [isLoading]);
+  }, [dataRef.current]);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -309,8 +311,8 @@ export default function TablesConsumers({
             alignItems: "center",
             background: `${
               currentConsumerActive === 0
-              // !currentConsumerActive
-                ? "var(--blue-50, #EFF8FF)"
+                ? // !currentConsumerActive
+                  "var(--blue-50, #EFF8FF)"
                 : "var(--success-50, #ECFDF3)"
             }`,
             width: "fit-content",
@@ -321,8 +323,8 @@ export default function TablesConsumers({
               ...Subtitle,
               color: `${
                 currentConsumerActive === 0
-                // !currentConsumerActive
-                  ? "var(--blue-700, #175CD3)"
+                  ? // !currentConsumerActive
+                    "var(--blue-700, #175CD3)"
                   : "var(--success-700, #027A48)"
               }`,
               textTransform: "capitalize",
@@ -331,7 +333,7 @@ export default function TablesConsumers({
             <Icon
               icon="tabler:point-filled"
               rotate={3}
-              color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`}//!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
+              color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`} //!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
             />
             {/* {!currentConsumerActive ? "No active" : "Active"} */}
             {currentConsumerActive === 0 ? "No active" : "Active"}
