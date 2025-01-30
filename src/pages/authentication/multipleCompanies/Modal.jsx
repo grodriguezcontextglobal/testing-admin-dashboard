@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, Button, Modal, Select, Spin, notification } from "antd";
+import { Button, Modal, Select, Spin, notification } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -146,7 +146,7 @@ const ModalMultipleCompanies = ({
           flexDirection={"column"}
           justifyContent={"flex-start"}
           alignSelf={"flex-start"}
-          margin={"20px 0px"}
+          margin={"20px 0px 0px"}
           item
           xs={12}
           sm={12}
@@ -212,6 +212,7 @@ const ModalMultipleCompanies = ({
             style={{
               ...TextFontSize14LineHeight20,
               textWrap: "pretty",
+              margin:0
             }}
           >
             Because you have access to more than one account using Devitrak, you
@@ -223,6 +224,7 @@ const ModalMultipleCompanies = ({
             ...TextFontSize14LineHeight20,
             fontWeight: 500,
             textWrap: "pretty",
+            margin:"10px 0px 5px"
           }}
         >
           Companies you have access to:
@@ -233,7 +235,7 @@ const ModalMultipleCompanies = ({
             display: "flex",
             justifyContent: "flex-start",
             alignItems: "center",
-            height:"2.5rem",
+            height: "2.5rem",
           }}
           onChange={handleChange}
           options={[
@@ -246,14 +248,30 @@ const ModalMultipleCompanies = ({
                     display: "flex",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    padding: "20px 10px 20px 0px",
+                    padding: "5px 5px 5px 0px",
                   }}
                 >
-                  <Avatar
+                  <img
+                    width={30}
+                    height={30}
+                    style={{
+                      objectFit: "scale-down",
+                      objectPosition: "center",
+                    }}
+                    src={
+                      renderingExtraCompanyInfo(item.company).company_logo
+                        .length > 0
+                        ? renderingExtraCompanyInfo(item.company).company_logo
+                        : "https://res.cloudinary.com/dsuynhcgd/image/upload/c_thumb,w_200,g_face/v1738169822/material-symbols--enterprise-outline_vmmi7y.svg"
+                    }
+                  />{" "}
+                  {/* <Avatar
+                    size={"large"}
+                    shape="circle"
                     src={renderingExtraCompanyInfo(item.company).company_logo}
                   >
                     {item.company}
-                  </Avatar>
+                  </Avatar> */}
                   &nbsp;
                   <span
                     style={{
