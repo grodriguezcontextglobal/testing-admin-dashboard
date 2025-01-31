@@ -16,6 +16,7 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import NoDepositTransaction from "./transaction/NoDeposit";
+import CashDeposit from "./transaction/CashDeposit";
 const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
@@ -233,7 +234,7 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
           }}
           onChange={(value) => setTypeOfTransaction(value)}
           options={[
-            ...["No-Deposit"].map( //, "Authorized-Deposit", "Cash-Deposit"
+            ...["No-Deposit","Cash-Deposit"].map( //, "Authorized-Deposit", 
               (item) => ({
                 value: item,
                 label: (
@@ -397,6 +398,25 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
         </div>
 
         {isLoadingState && <Spin indicator={<Loading />} fullscreen />}
+        {triggering === 2 && (
+          <CashDeposit
+            customer={customer}
+            quantity={qty}
+            staff={user}
+            event={JSON.parse(eventSelected)}
+            deviceInfo={{
+              group: deviceType,
+              deviceNeeded: qty,
+              value: authorizedAmount,
+            }}
+            serialNumber={serialNumber}
+            loadingState={setIsLoadingState}
+            triggering={setTriggering}
+            closeModal={closeModal}
+            amount={authorizedAmount}
+          />
+        )}
+
         {triggering === 3 && (
           <NoDepositTransaction
             customer={customer}
