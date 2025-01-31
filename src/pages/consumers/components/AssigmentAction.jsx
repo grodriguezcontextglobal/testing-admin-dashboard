@@ -18,15 +18,15 @@ const AssigmentAction = () => {
       label: (
         <Typography
           style={{ ...Subtitle, ...CenteringGrid, width: "100%" }}
-          // onClick={() => {
-          //   setAssignDeviceEvent(true);
-          // }}
+          onClick={() => {
+            setAssignDeviceEvent(true);
+          }}
         >
           For an event.
         </Typography>
       ),
       key: 1,
-      disabled: true,
+      // disabled: true,
     },
     {
       label: (
