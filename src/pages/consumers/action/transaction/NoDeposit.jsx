@@ -111,7 +111,6 @@ const NoDepositTransaction = ({
             qty: quantity,
             startingNumber: serialNumber,
           };
-          console.log("createTransactionTemplate", createTransactionTemplate);
           const templateBulkItemUpdate = {
             device: copiedDeviceData.slice(
               deviceFound,
@@ -121,7 +120,6 @@ const NoDepositTransaction = ({
             activity: true,
             eventSelected: event.eventInfoDetail.eventName,
           };
-          console.log("templateBulkItemUpdate", templateBulkItemUpdate);
           await devitrakApi.patch(
             "/receiver/update-bulk-items-in-pool",
             templateBulkItemUpdate
