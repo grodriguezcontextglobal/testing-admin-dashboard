@@ -20,7 +20,7 @@ const NoDepositTransaction = ({
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
         company: staff.companyData.id,
-        type:deviceInfo.group,
+        type: deviceInfo.group,
         activity: false,
       }),
     refetchOnMount: false,
@@ -39,6 +39,13 @@ const NoDepositTransaction = ({
     try {
       const listOfAvailableDevices =
         deviceInventoryEventQuery?.data?.data?.receiversInventory ?? [];
+      const checkAvailableDevices = listOfAvailableDevices.filter(
+        (item) => item.device === serialNumber
+      );
+      if (checkAvailableDevices.length === 0) {
+        alert(`${serialNumber} - No device available in pool`);
+        return;
+      }
       const totalDeviceAssigned = quantity;
       const id = nanoid(12);
       const max = 918273645;
@@ -74,7 +81,7 @@ const NoDepositTransaction = ({
           clientSecret:
             stripeResponse.data.stripeTransaction.clientSecret ?? "unknown",
           device: deviceSelectedOption,
-          consumerInfo: {...customer.data, ...customer, id: customer.uid},
+          consumerInfo: { ...customer.data, ...customer, id: customer.uid },
           provider: event.company,
           eventSelected: event.eventInfoDetail.eventName,
           event_id: event.id,
@@ -104,6 +111,7 @@ const NoDepositTransaction = ({
             qty: quantity,
             startingNumber: serialNumber,
           };
+          console.log("createTransactionTemplate", createTransactionTemplate);
           const templateBulkItemUpdate = {
             device: copiedDeviceData.slice(
               deviceFound,
@@ -113,6 +121,7 @@ const NoDepositTransaction = ({
             activity: true,
             eventSelected: event.eventInfoDetail.eventName,
           };
+          console.log("templateBulkItemUpdate", templateBulkItemUpdate);
           await devitrakApi.patch(
             "/receiver/update-bulk-items-in-pool",
             templateBulkItemUpdate
