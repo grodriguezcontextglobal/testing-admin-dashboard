@@ -15,14 +15,15 @@ import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
   refetchingTransactionFn,
-  rowRecord
+  rowRecord,
 }) => {
-    const [transactionStatus, setTransactionStatus] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
@@ -30,16 +31,12 @@ const Releasing = ({
       duration: 0,
     });
   };
-  const { customer } = useSelector(
-    (state) => state.stripe
-  );
+  const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
-      devitrakApi.get(
-        `/stripe/payment_intents/${rowRecord?.paymentIntent}`
-      ),
+      devitrakApi.get(`/stripe/payment_intents/${rowRecord?.paymentIntent}`),
     refetchOnMount: false,
   });
   const transactionQuery = useQuery({
@@ -67,7 +64,7 @@ const Releasing = ({
         stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
       ) {
         setTransactionStatus(true);
-        setOpenCancelingDepositModal(false)
+        setOpenCancelingDepositModal(false);
         return alert("This transaction has been released or canceled already.");
       }
       if (
@@ -82,13 +79,10 @@ const Releasing = ({
   const renderingTitle = () => {
     return (
       <Typography
+        style={{
+          ...TextFontSize30LineHeight38,
+        }}
         textTransform={"none"}
-        color="var(--gray-900, #101828)"
-        lineHeight={"38px"}
-        textAlign={"center"}
-        fontWeight={600}
-        fontFamily={"Inter"}
-        fontSize={"30px"}
         textWrap={"balance"}
         textOverflow={"ellipsis"}
         padding={"1rem 1.5rem"}
@@ -133,7 +127,12 @@ const Releasing = ({
         date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
         time: dateRef[4],
         company: rowRecord?.eventInfo[0].provider,
-        link: `https://app.devitrak.net/authentication/${rowRecord?.eventInfo[0].event_id}/${user.companyData.id}/${rowRecord?.eventInfo[0].consumerInfo.uid ?? rowRecord?.eventInfo[0].consumerInfo.id}`,
+        link: `https://app.devitrak.net/authentication/${
+          rowRecord?.eventInfo[0].event_id
+        }/${user.companyData.id}/${
+          rowRecord?.eventInfo[0].consumerInfo.uid ??
+          rowRecord?.eventInfo[0].consumerInfo.id
+        }`,
       });
       queryClient.invalidateQueries({
         queryKey: ["transactionPerConsumerListQuery"],
@@ -293,8 +292,8 @@ const Releasing = ({
                   style={{
                     ...BlueButton,
                     width: "100%",
-                    display: transactionStatus? "none" : "flex",
-                }}
+                    display: transactionStatus ? "none" : "flex",
+                  }}
                 >
                   <Typography
                     textTransform={"none"}
@@ -302,7 +301,7 @@ const Releasing = ({
                       ...BlueButtonText,
                     }}
                   >
-                      Cancelling deposit
+                    Cancelling deposit
                   </Typography>
                 </Button>
               </form>
