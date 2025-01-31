@@ -19,6 +19,7 @@ import NoDepositTransaction from "./transaction/NoDeposit";
 import CashDeposit from "./transaction/CashDeposit";
 const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
   const { customer } = useSelector((state) => state.customer);
+  console.log(customer);
   const { user } = useSelector((state) => state.admin);
   const [typeOfTransaction, setTypeOfTransaction] = useState("");
   const [eventSelected, setEventSelected] = useState("");
@@ -93,10 +94,45 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
     }));
   };
 
+  const addEventToUserHistory = async () => {
+    const companyNameList = new Set();
+    const eventsIdList = new Set();
+    const companyIdList = new Set();
+    const eventNamesList = new Set();
+    const eventInfo =
+      typeof eventSelected === "string"
+        ? JSON.parse(eventSelected)
+        : eventSelected;
+
+    [...customer.data.event_providers, eventInfo.id].forEach((item) =>
+      eventsIdList.add(item)
+    );
+
+    [...customer.data.company_providers, user.companyData.id].forEach((item) =>
+      companyIdList.add(item)
+    );
+
+    [
+      ...customer.data.eventSelected,
+      eventInfo.eventInfoDetail.eventName,
+    ].forEach((item) => eventNamesList.add(item));
+
+    [...customer.data.provider, eventInfo.company].forEach((item) =>
+      companyNameList.add(item)
+    );
+    const updateConsumerInfo = {
+      event_providers: [...Array.from(eventsIdList)],
+      company_providers: [...Array.from(companyIdList)],
+      eventSelected: [...Array.from(eventNamesList)],
+      provider: [...Array.from(companyNameList)],
+    };
+    await devitrakApi.patch(`/auth/${customer.uid}`, updateConsumerInfo);
+  };
   const handleSubmitInformation = async (e) => {
     e.preventDefault();
     try {
       setIsLoadingState(true);
+      await addEventToUserHistory();
       if (typeOfTransaction === "Authorized-Deposit") {
         return setTriggering(1);
       } else if (typeOfTransaction === "Cash-Deposit") {
@@ -223,7 +259,7 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
         >
           Type of transaction you want to create:
         </p>
-        
+
         <Select
           style={{
             width: "100%",
@@ -234,7 +270,8 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
           }}
           onChange={(value) => setTypeOfTransaction(value)}
           options={[
-            ...["No-Deposit","Cash-Deposit"].map( //, "Authorized-Deposit", 
+            ...["No-Deposit", "Cash-Deposit"].map(
+              //, "Authorized-Deposit",
               (item) => ({
                 value: item,
                 label: (
