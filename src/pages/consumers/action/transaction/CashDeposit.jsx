@@ -169,6 +169,12 @@ const CashDeposit = ({
           queryKey: ["listOfDevicesAssigned"],
           exact: true,
         });
+
+        await queryClient.refetchQueries({
+          queryKey: ["transactionsPerCustomer", customer.uid ?? customer.id],
+          exact: true,
+        });
+
         loadingState(false);
         triggering(0);
         alert("Devices assigned successfully");
