@@ -15,11 +15,10 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import NoDepositTransaction from "./transaction/NoDeposit";
 import CashDeposit from "./transaction/CashDeposit";
+import NoDepositTransaction from "./transaction/NoDeposit";
 const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
   const { customer } = useSelector((state) => state.customer);
-  console.log(customer);
   const { user } = useSelector((state) => state.admin);
   const [typeOfTransaction, setTypeOfTransaction] = useState("");
   const [eventSelected, setEventSelected] = useState("");
@@ -37,7 +36,6 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
       }),
     refetchOnMount: false,
   });
-
   useEffect(() => {
     const controller = new AbortController();
     eventsWhereStaffIsAssigned.refetch();
@@ -135,7 +133,7 @@ const ModalAssignDeviceInEvent = ({ assignDevice, setAssignDevice }) => {
       await addEventToUserHistory();
       if (typeOfTransaction === "Authorized-Deposit") {
         return setTriggering(1);
-      } else if (typeOfTransaction === "Cash-Deposit") {
+      } else if (typeOfTransaction === "Cash-Deposit") {  
         return setTriggering(2);
       } else {
         return setTriggering(3);
