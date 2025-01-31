@@ -116,7 +116,7 @@ export default function TablesConsumers({
         : data?.result?.usersList;
     setResponseData(dataRef.current);
   }, [getCounting]);
-  
+
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
       const check = responseData?.filter((item) =>
@@ -297,8 +297,7 @@ export default function TablesConsumers({
       dataIndex: "currentConsumerActive",
       width: "13%",
       sorter: {
-        compare: (a, b) =>
-          ("" + a.currentConsumerActive).localeCompare(b.currentConsumerActive),
+        compare: (a, b) => a.currentConsumerActive - b.currentConsumerActive,
       },
       render: (currentConsumerActive) => (
         <span
@@ -359,8 +358,7 @@ export default function TablesConsumers({
       title: renderingRowStyling("Devices"),
       dataIndex: "currentActivity",
       sorter: {
-        compare: (a, b) =>
-          ("" + a.currentActivity).localeCompare(b.currentActivity),
+        compare: (a, b) => a.currentActivity - b.currentActivity,
       },
       width: "7%",
       render: (currentActivity) => (
