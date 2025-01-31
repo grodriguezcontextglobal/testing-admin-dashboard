@@ -23,17 +23,17 @@ import {
 import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import Capturing from "../action/deposit/Capturing";
+import Releasing from "../action/deposit/Releasing";
 import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import Capturing from "../action/deposit/Capturing";
-import Releasing from "../action/deposit/Releasing";
 
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -441,6 +441,29 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   };
 
+  const checkTransaction = async () => {
+    const transactionInfo = await devitrakApi.post("/transaction/transaction", {
+      paymentIntent: rowRecord.key,
+      active: true,
+    });
+    const result = await transactionInfo.data.list.at(-1);
+    if (result.active) {
+      return setOpenModalReleasingDeposit(true);
+    }
+    return null;
+  };
+  useEffect(() => {
+    if (assignedDevicesQuery.data && !rowRecord) {
+      const data = [...assignedDevicesQuery.data.data.listOfReceivers];
+      if (
+        !data.some((item) => item.device.status === true) &&
+        rowRecord.paymentIntent.length > 15
+      ) {
+        checkTransaction();
+      }
+    }
+  }, [refetching, assignedDevicesQuery.data]);
+
   return (
     <>
       {contextHolder}
@@ -448,33 +471,82 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}
       >
         <Button
+          disabled={!rowRecord.eventInfo[0].active}
           style={{
             ...BlueButton,
             width: "100%",
             display: rowRecord.device > 0 ? "flex" : "none",
+            border: `${
+              !rowRecord.eventInfo[0].active
+                ? "1px solid var(--disabled-blue-button)"
+                : BlueButton.border
+            }`,
+            backgroundColor: !rowRecord.eventInfo[0].active
+              ? "var(--disabled-blue-button)"
+              : BlueButton.background,
           }}
           onClick={() => setOpenModalReleasingDeposit(true)}
         >
-          <p style={{ ...BlueButtonText, width: "100%" }}>Release deposit</p>
+          <p
+            style={{
+              ...BlueButtonText,
+              width: "100%",
+              color: !rowRecord.eventInfo[0].active
+                ? "var(--blue-dark--800)"
+                : BlueButtonText.color,
+            }}
+          >
+            Release deposit
+          </p>
         </Button>
         <Button
+          disabled={!rowRecord.eventInfo[0].active}
           style={{
             ...DangerButton,
             width: "100%",
-            display: rowRecord.device > 0 ? "flex" : "none",
+            border: `${
+              !rowRecord.eventInfo[0].active
+                ? "1px solid var(--disabled-danger-button)"
+                : DangerButton.border
+            }`,
+            background: `${
+              !rowRecord.eventInfo[0].active
+                ? "var(--disabled-danger-button)"
+                : DangerButton.background
+            }`,
           }}
           onClick={() => setOpenModalCapturingDeposit(true)}
         >
-          <p style={{ ...DangerButtonText, width: "100%" }}>Capture deposit</p>
+          <p
+            style={{
+              ...DangerButtonText,
+              width: "100%",
+              color: !rowRecord.eventInfo[0].active
+                ? "var(--disabled-danger-button-text)"
+                : DangerButtonText.color,
+            }}
+          >
+            Capture deposit
+          </p>
         </Button>
         <Button
           loading={isLoading}
+          onClick={() => handleRefund(rowRecord)}
           style={{
             ...DangerButton,
             width: "50%",
             display: rowRecord.device === 0 ? "flex" : "none",
+            border: `${
+              !rowRecord.eventInfo[0].active
+                ? "1px solid var(--disabled-danger-button)"
+                : DangerButton.border
+            }`,
+            background: `${
+              !rowRecord.eventInfo[0].active
+                ? "var(--disabled-danger-button)"
+                : DangerButton.background
+            }`,
           }}
-          onClick={() => handleRefund(rowRecord)}
         >
           <p style={{ ...DangerButtonText, width: "100%" }}>Refund</p>
         </Button>
