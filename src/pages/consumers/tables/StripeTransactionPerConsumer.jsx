@@ -229,7 +229,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${
                   String(checkPaymentID[4]).split("**")[1]
                 }`
-              : `${checkPaymentID[0]}_${checkPaymentID[1]}`}
+              : `${paymentIntent}`}
           </p>
         );
       },
