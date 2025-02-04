@@ -7,6 +7,7 @@ const customerSlice = createSlice({
   initialState: {
     customer: undefined,
     consumersOfEvent: [],
+    transaction: null
   },
   reducers: {
     onAddCustomerInfo: (state, { payload }) => {
@@ -19,12 +20,15 @@ const customerSlice = createSlice({
       state.customer = undefined;
       state.consumersOfEvent = [];
     },
+    onAddTransactionInfo: (state, { payload }) => {
+      state.transaction = payload;
+    },
   },
 });
 
 // action creators are generated for each case reducer function
 
-export const { onAddCustomerInfo, onAddUsersOfEventList, onResetCustomer } =
+export const { onAddCustomerInfo, onAddUsersOfEventList, onResetCustomer, onAddTransactionInfo } =
   customerSlice.actions;
 
 export default customerSlice.reducer;
