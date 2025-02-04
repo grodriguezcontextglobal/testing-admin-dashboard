@@ -23,6 +23,7 @@ import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
 import UpDoubleArrow from "../../../components/icons/UpDoubleArrow";
 import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
@@ -104,7 +105,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
 
   useEffect(() => {
     fetchingDataPerAllowed();
-  }, []);//customer.id, customer.uid
+  }, []); //customer.id, customer.uid
 
   const reformedSourceData = () => {
     const result = new Set();
@@ -464,32 +465,72 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   };
 
   return (
-    <Table
-      key={customerFormat.id}
-      id={customerFormat.id}
-      columns={columns}
-      expandable={{
-        expandedRowKeys,
-        onExpand: (expanded, record) => {
-          setExpandedRowKeys(expanded ? [record.key] : []);
-        },
-        expandIcon: (props) => customExpandIcon(props),
-        expandRowByClick: false,
-        expandedRowRender: (record) => (
-          <ExpandedRow
-            rowRecord={record}
-            refetching={refetchingAfterReturnDeviceInRow}
-            paymentIntentInfoRetrieved={retrievePaymentIntentInfo}
-          />
-        ),
-      }}
-      dataSource={finalDataToDisplayIncludeSearchFN()}
-      className="table-ant-customized"
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      // style={{ cursor: "pointer" }}
-    />
+    <div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            margin: "2rem auto -0.5rem",
+            padding: "1rem 1.5rem",
+            border:"1px solid var(--gray-200, #eaecf0)",
+            borderRadius:"12px 12px 0 0",
+            background:"var(--gray-50, #F9F9F9)",
+          }}
+        >
+          <p
+            style={{
+              ...TextFontSize20LineHeight30,
+              fontWeight: 500,
+              color: "#000",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+          >
+            Transactions
+          </p>
+          <Button
+          onAbort={()=>{refetchingAfterReturnDeviceInRow();}}
+            style={{
+              ...BlueButton,
+              width: "fit-content",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <p 
+            style={BlueButtonText}
+            >Refresh</p>
+          </Button>
+        </div>
+      <Table
+        key={customerFormat.id}
+        id={customerFormat.id}
+        columns={columns}
+        expandable={{
+          expandedRowKeys,
+          onExpand: (expanded, record) => {
+            setExpandedRowKeys(expanded ? [record.key] : []);
+          },
+          expandIcon: (props) => customExpandIcon(props),
+          expandRowByClick: false,
+          expandedRowRender: (record) => (
+            <ExpandedRow
+              rowRecord={record}
+              refetching={refetchingAfterReturnDeviceInRow}
+              paymentIntentInfoRetrieved={retrievePaymentIntentInfo}
+            />
+          ),
+        }}
+        dataSource={finalDataToDisplayIncludeSearchFN()}
+        className="table-ant-customized"
+        pagination={{
+          position: ["bottomCenter"],
+        }}
+        // style={{ cursor: "pointer" }}
+      />
+    </div>
   );
 };
 
