@@ -20,7 +20,6 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
-  refetchingTransactionFn,
   rowRecord,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
@@ -138,7 +137,6 @@ const Releasing = ({
         queryKey: ["transactionPerConsumerListQuery"],
         exact: true,
       });
-      refetchingTransactionFn();
       openNotificationWithIcon("Success", "Deposit was released.");
       await closeModal();
     }

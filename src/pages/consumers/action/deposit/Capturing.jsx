@@ -28,7 +28,6 @@ const schema = yup
 const Capturing = ({
   openCapturingDepositModal,
   setOpenCapturingDepositModal,
-  refetchingTransactionFn,
   rowRecord
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
@@ -149,7 +148,6 @@ const Capturing = ({
             queryKey: ["transactionPerConsumerListQuery"],
             exact: true,
           });
-          refetchingTransactionFn();
           openNotificationWithIcon("Success", "Deposit was captured.");
           setTimeout(() => {
             return closeModal();
