@@ -15,7 +15,6 @@ export const StripeCheckoutFormConsumer = ({ total, myUrl  }) => {
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log("my url", myUrl); 
   useEffect(() => {
     if (!stripe) {
       return;

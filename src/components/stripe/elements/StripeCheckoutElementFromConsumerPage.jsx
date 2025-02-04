@@ -6,7 +6,6 @@ export const StripeCheckoutElementFromConsumerPage = ({ clientSecret, total, myU
   const options = {
     clientSecret,
   };
-console.log('element - my url', myUrl);
   return (
     <>
       {clientSecret && (
