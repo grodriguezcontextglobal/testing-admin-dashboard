@@ -60,14 +60,14 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
           alignItems: "center",
         },
       }}
-      style={{ backgroundColor: "#fff", width: "25vw", height: "auto" }}
+      style={{ backgroundColor: "#fff", width: "100%", height: "auto" }}
     >
-      <ReactECharts option={option} style={{ height: '300px', width: '24vw' }} />
+      <ReactECharts option={option} style={{ height: '350px', width: "350px" }} />
       <p
         style={{
           ...Subtitle,
           width: "100%",
-          textAlign: "right",
+          textAlign: "left",
           textWrap: "balance",
         }}
       >
