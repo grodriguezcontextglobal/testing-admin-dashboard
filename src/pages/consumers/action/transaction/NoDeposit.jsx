@@ -13,6 +13,7 @@ const NoDepositTransaction = ({
   loadingState,
   triggering,
   closeModal,
+  refetching,
 }) => {
   const deviceInventoryEventQuery = useQuery({
     queryKey: ["devicesInPoolListPerEvent"],
@@ -172,6 +173,7 @@ const NoDepositTransaction = ({
           queryKey: ["transactionsPerCustomer", customer.uid ?? customer.id],
           exact: true,
         });
+        refetching()
         loadingState(false);
         triggering(0);
         alert("Devices assigned successfully");

@@ -13,6 +13,7 @@ const CashDeposit = ({
   triggering,
   closeModal,
   amount,
+  refetching,
 }) => {
   const deviceInventoryEventQuery = useQuery({
     queryKey: ["devicesInPoolListPerEvent"],
@@ -174,7 +175,7 @@ const CashDeposit = ({
           queryKey: ["transactionsPerCustomer", customer.uid ?? customer.id],
           exact: true,
         });
-
+        refetching();
         loadingState(false);
         triggering(0);
         alert("Devices assigned successfully");
@@ -191,4 +192,3 @@ const CashDeposit = ({
 
 export default CashDeposit;
 
-//          `pi_cash_amount:$${data.amount}_received_by:**${user.email}**&` + id;
