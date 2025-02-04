@@ -204,56 +204,76 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <RenderingConsumersChartsBehavior
-            active={{
-              title: "Active",
-              number:
-                allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                  ?.activeTransactions ?? 0,
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignSelf: "flex-start",
             }}
-            inactive={{
-              title: "Inactive",
-              number:
-                allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                  ?.inactiveTransactions ?? 0,
-            }}
-            props={{
-              title: "General activity",
-              description:
-                "Active consumers refers to those users currently holding one or more devices from the database.",
-              total:
-                allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                  ?.total ?? 0,
-            }}
-          />
-          <RenderingConsumersChartsBehavior
-            active={{
-              title: "Event",
-              number:
-                allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                  ?.totalConsumersFromEvents ?? 0,
-            }}
-            inactive={{
-              title: "General",
-              number:
-                allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                  ?.lease ?? 0,
-            }}
-            props={{
-              title: "Consumer origin",
-              description:
-                "Consumers from an event typically spend a shorter time with your devices.",
-              total:
-                Number(
+          >
+            {" "}
+            <RenderingConsumersChartsBehavior
+              active={{
+                title: "Active",
+                number:
                   allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.totalConsumersFromEvents ?? 0
-                ) +
-                Number(
+                    ?.activeTransactions ?? 0,
+              }}
+              inactive={{
+                title: "Inactive",
+                number:
                   allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.lease ?? 0
-                ),
+                    ?.inactiveTransactions ?? 0,
+              }}
+              props={{
+                title: "General activity",
+                description:
+                  "Active consumers refers to those users currently holding one or more devices.",// from the database
+                total:
+                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                    ?.total ?? 0,
+              }}
+            />
+          </div>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignSelf: "flex-start",
             }}
-          />
+          >
+            {" "}
+            <RenderingConsumersChartsBehavior
+              active={{
+                title: "Event",
+                number:
+                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                    ?.totalConsumersFromEvents ?? 0,
+              }}
+              inactive={{
+                title: "General",
+                number:
+                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                    ?.lease ?? 0,
+              }}
+              props={{
+                title: "Consumer origin",
+                description:
+                  "Consumers from an event typically spend a shorter time with your devices.",
+                total:
+                  Number(
+                    allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                      ?.totalConsumersFromEvents ?? 0
+                  ) +
+                  Number(
+                    allConsumersBasedOnEventsPerCompany?.data?.data?.result
+                      ?.lease ?? 0
+                  ),
+              }}
+            />
+          </div>
         </Grid>
         <Grid
           display={"flex"}
@@ -465,8 +485,7 @@ const MainPage = () => {
           setCreateUserButton={setCreateUserButton}
         />
       )}
-      {(counting === null ||
-        allConsumersBasedOnEventsPerCompany.isLoading) && (
+      {(counting === null || allConsumersBasedOnEventsPerCompany.isLoading) && (
         <Spin indicator={<Loading />} fullscreen />
       )}
     </Grid>
