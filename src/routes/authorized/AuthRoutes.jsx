@@ -1,10 +1,8 @@
 import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import Loading from "../../components/animation/Loading";
-// import FooterComponent from "../../components/general/FooterComponent";
-// import UpperBanner from "../../components/general/UpperBanner";
-// import NavigationBarMain from "../../components/navbar/NavigationBarMain";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -161,8 +159,14 @@ const ServicePaymentConfirmation = lazy(() =>
   import("../../pages/payment/ServicePaymentConfirmation")
 );
 const ErrorPage = lazy(() => import("../../pages/error/ErrorLandingPage"));
-const Dashboard = lazy(() => import("../../pages/Profile/stripe_connected_account/Dashboard"));  
-const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() => import("../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"));
+const Dashboard = lazy(() =>
+  import("../../pages/Profile/stripe_connected_account/Dashboard")
+);
+const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
+  import(
+    "../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"
+  )
+);
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -258,6 +262,10 @@ const AuthRoutes = () => {
               <Route path="/consumers" element={<ConsumersMainPage />} />
               <Route path="/consumers/:id" element={<ConsumerDetail />} />
               <Route
+                path="/consumers/:id/payment-confirmation"
+                element={<AuthorizedDeposit />}
+              />
+              <Route
                 path="/consumers/:id/lost-device-fee/cash"
                 element={<ConsumerDeviceLostFeeCash />}
               />
@@ -332,9 +340,24 @@ const AuthRoutes = () => {
                 path="register/company-setup"
                 element={<RedirectionPage />}
               />
-              <Route path="/refresh" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
-              <Route path="/reauth" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
-              <Route path="/return" element={<UpdatingCompanyInfoAfterStripeConnectedAccountCreated />} />
+              <Route
+                path="/refresh"
+                element={
+                  <UpdatingCompanyInfoAfterStripeConnectedAccountCreated />
+                }
+              />
+              <Route
+                path="/reauth"
+                element={
+                  <UpdatingCompanyInfoAfterStripeConnectedAccountCreated />
+                }
+              />
+              <Route
+                path="/return"
+                element={
+                  <UpdatingCompanyInfoAfterStripeConnectedAccountCreated />
+                }
+              />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>
