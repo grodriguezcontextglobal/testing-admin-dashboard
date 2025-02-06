@@ -1,10 +1,8 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripeCheckoutFormUpgradeSubscription } from "../checkout/StripeCheckoutFormUpgradeSubscription";
-const stripePromise = loadStripe(
-  import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY
-  // `pk_live_51JS4MGJAluu3aB96nGEaMmcFT9ZuTzRMQkWVLpOVDuNHXKDT5ZqeBxwmaL9eOihAglxPQTVITZSfbUN32DWpiY1g0074EJN6tZ`
-);
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key);
 
 /**
  * @description StripeChecoutElementAdmin - Elements display after verify a valid clientSecret

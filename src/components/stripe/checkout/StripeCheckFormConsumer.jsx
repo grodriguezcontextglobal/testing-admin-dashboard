@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import {
   PaymentElement,
@@ -83,7 +84,6 @@ export const StripeCheckoutFormConsumer = ({ total, myUrl  }) => {
         return_url: myUrl+"/payment-confirmation",
       },
     });
-    console.log(data);
     if (error.type === "card_error" || error.type === "validation_error") {
       setMessage(error.message);
     } else {

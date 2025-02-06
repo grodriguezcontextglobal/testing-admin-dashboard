@@ -1,11 +1,9 @@
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CheckoutServicesTransaction from "../checkout/CheckoutServicesTransaction";
-const stripePromise = loadStripe(
-  import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY
-  // `pk_live_51JS4MGJAluu3aB96nGEaMmcFT9ZuTzRMQkWVLpOVDuNHXKDT5ZqeBxwmaL9eOihAglxPQTVITZSfbUN32DWpiY1g0074EJN6tZ`
-);
-// const stripePromise = loadStripe( 'pk_test_51JS4MGJAluu3aB96xB1ZXpKeDHf4o6lPKkPCXbSPwFDILlyOgAY5ReR59To4ehWuuJGf1nA1Ut3GPaPMqZR7A1Cj00mVh75k5r')
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+
+const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key);
 
 /**
  * @description StripeCheckoutElementAdmin - Elements display after verify a valid clientSecret
@@ -13,10 +11,7 @@ const stripePromise = loadStripe(
  * @param {String} total - amount imported and passed to checkout element to be displayed in submit button
  * @returns {HTMLBodyElement}
  */
-const StripeElementServicesTransaction = ({
-  clientSecret,
-  total,
-}) => {
+const StripeElementServicesTransaction = ({ clientSecret, total }) => {
   const options = {
     clientSecret,
   };
@@ -39,6 +34,5 @@ const StripeElementServicesTransaction = ({
     </>
   );
 };
-
 
 export default StripeElementServicesTransaction;

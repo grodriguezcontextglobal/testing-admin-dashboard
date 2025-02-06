@@ -1,7 +1,8 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripeCheckoutFormConsumer } from "../checkout/StripeCheckFormConsumer";
-const stripePromise = loadStripe(import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY);
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key);
 export const StripeCheckoutElementFromConsumerPage = ({ clientSecret, total, myUrl }) => {
   const options = {
     clientSecret,

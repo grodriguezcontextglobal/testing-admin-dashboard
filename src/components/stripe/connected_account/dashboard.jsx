@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import "./dashboard.css";
 import { Skeleton } from "antd";
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 const StripeConnectedAccountDashboard = () => {
   const { user } = useSelector((state) => state.admin);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,7 +29,7 @@ const StripeConnectedAccountDashboard = () => {
 
     return loadConnectAndInitialize({
       // This is your test publishable API key.
-      publishableKey: import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY,
+      publishableKey: ConfigEnvExport.stripe_public_key,
       fetchClientSecret: fetchClientSecret,
       fonts: [
         {

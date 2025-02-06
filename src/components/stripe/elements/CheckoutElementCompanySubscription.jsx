@@ -1,7 +1,9 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import CheckoutFormCompanySubscription from "../checkout/CheckoutFormCompanySubscription";
-const stripePromise = loadStripe(import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY);
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+
+const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key);
 
 export const CheckoutElementCompanySubscription = ({ clientSecret, total, type }) => {
   const options = {

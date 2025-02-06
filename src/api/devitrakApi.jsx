@@ -1,14 +1,10 @@
 import axios from "axios";
+import { ConfigEnvExport } from "../config/ConfigEnvExport";
 
-const api = import.meta.env.VITE_APP_DEVITRACK_API;
-const apiConsumers = import.meta.env.VITE_APP_DEVITRAK_CONSUMER_API
-
-export const devitrakConsumersApi = axios.create({
-  baseURL: apiConsumers
-})
+const { devitrack_api, aws_api, header_auth_token } = ConfigEnvExport;
 
 export const devitrakApi = axios.create({
-  baseURL: api,
+  baseURL: devitrack_api,
 });
 
 devitrakApi.interceptors.request.use((config) => {
@@ -21,7 +17,7 @@ devitrakApi.interceptors.request.use((config) => {
 });
 
 export const devitrakApiAdmin = axios.create({
-  baseURL: `${api}/admin`,
+  baseURL: `${devitrack_api}/admin`,
 });
 
 //*config interceptors
@@ -35,7 +31,7 @@ devitrakApiAdmin.interceptors.request.use((config) => {
 });
 
 export const devitrakApiArticle = axios.create({
-  baseURL: `${api}/article`,
+  baseURL: `${devitrack_api}/article`,
 });
 
 //*config interceptors
@@ -46,4 +42,11 @@ devitrakApiArticle.interceptors.request.use((config) => {
     };
   }
   return config;
+});
+
+export const devitrakAWSApi = axios.create({
+  baseURL: aws_api,
+  headers: {
+    "auth-token": header_auth_token
+  },
 });
