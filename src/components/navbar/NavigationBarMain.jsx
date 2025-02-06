@@ -176,13 +176,14 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         ))}
         <ListItem key={`log-out`} disablePadding>
           <ListItemButton
+          onClick={() => logout()}
             sx={{
               textAlign: "center",
               backgroundColor: "var(--blue700)",
             }}
           >
             <NavLink
-              to={"/logout"}
+              to={"/login"}
               style={{ margin: "0 3px 0 0", width: "100%" }}
             >
               <div className="content-main-navbar-updated">
