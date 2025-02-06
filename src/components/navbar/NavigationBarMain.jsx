@@ -50,6 +50,7 @@ const navItems = [
   { title: "events", route: "/events", permission: [0, 1, 2, 3, 4] },
   { title: "consumers", route: "/consumers", permission: [0, 1] },
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
+  { title: "profile", route: "/profile", permission: [0, 1, 2, 3, 4] },
 ];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
@@ -61,6 +62,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const location = useLocation();
   const { user, status } = useSelector((state) => state.admin);
   const [searchValue, setSearchValue] = useState("");
+  const [rowId, setRowId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const logout = async () => {
@@ -118,10 +120,33 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
       <List>
         {navItems.map((item) => (
           <ListItem key={`${item.title}-${item.route}`} disablePadding>
-            <ListItemButton sx={{ textAlign: "center" }}>
-              <NavLink key={item.title} to={`${item.route}`}>
+            <ListItemButton
+              onMouseEnter={() => setRowId(item.route)}
+              onMouseLeave={() => setRowId(null)}
+              sx={{
+                textAlign: "center",
+                backgroundColor:
+                  location.pathname === `${item.route}`
+                    ? "transparent"
+                    : "var(--blue700)",
+              }}
+            >
+              <NavLink
+                key={item.title}
+                to={`${item.route}`}
+                style={{
+                  margin: "0 3px 0 0",
+                  width: "100%",
+                }}
+              >
                 <div className="content-main-navbar-updated">
                   <article
+                    style={{
+                      backgroundColor:
+                        rowId === item.route
+                          ? "var(--whitebase)"
+                          : "var(--blue700)",
+                    }}
                     className={
                       location.pathname === `${item.route}`
                         ? "nav-item-base-main-navbar-updated"
@@ -130,7 +155,15 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                   >
                     <div className="content-2-main-navbar-updated">
                       <div className="text-1-main-navbar-updated text-mdsemibold">
-                        <p style={{ textTransform: "capitalize" }}>
+                        <p
+                          style={{
+                            textTransform: "capitalize",
+                            color:
+                              rowId === item.route
+                                ? "var(--blue700)"
+                                : "var(--whitebase)",
+                          }}
+                        >
                           {item.title}
                         </p>
                       </div>
@@ -141,6 +174,32 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </ListItemButton>
           </ListItem>
         ))}
+        <ListItem key={`log-out`} disablePadding>
+          <ListItemButton
+            sx={{
+              textAlign: "center",
+              backgroundColor: "var(--blue700)",
+            }}
+          >
+            <NavLink
+              to={"/logout"}
+              style={{ margin: "0 3px 0 0", width: "100%" }}
+            >
+              <div className="content-main-navbar-updated">
+                <article className={"nav-item-base-main-navbar-updated"}>
+                  <div className="content-2-main-navbar-updated">
+                    <div className="text-1-main-navbar-updated text-mdsemibold">
+                      <p style={{ textTransform: "capitalize" }}>
+                        <LogoutIcon />
+                        &nbsp;Log out
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </NavLink>
+          </ListItemButton>
+        </ListItem>
       </List>
     </Box>
   );
@@ -185,7 +244,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
             }}
           >
-            <Grid item sm={9} md={6} lg={6}>
+            <Grid item sm={2} md={6} lg={6}>
               <IconButton
                 color="inherit"
                 aria-label="open drawer"
@@ -251,7 +310,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
 
             <Grid
               item
-              sm={6}
+              sm={10}
               md={6}
               lg={6}
               sx={{
@@ -263,7 +322,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               }}
             >
               <form
-                style={{ margin: "0 5px 0 0" }}
+                style={{ margin: "0 5px 0 0", width: "100%" }}
                 onSubmit={handleSearch}
                 method="get"
                 action="/search-result-page?search="
@@ -271,7 +330,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 <OutlinedInput
                   placeholder="Search"
                   required
-                  sx={OutlinedInputStyle}
+                  style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
                   onChange={(e) => onChange(e)}
                   name={"searchValue"}
                   value={searchValue}
