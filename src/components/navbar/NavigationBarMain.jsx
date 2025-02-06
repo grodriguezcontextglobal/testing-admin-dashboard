@@ -118,6 +118,22 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Divider />
       <List>
+        <NavLink
+          to={"/"}
+          style={{
+            margin: "0 3px 0 0",
+            width: "100%",
+            height: "100%",
+            backgroundColor: "var(--blue700)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "12px 0",
+          }}
+        >
+          <DevitrakLogo />
+          <DevitrakName />{" "}
+        </NavLink>
         {navItems.map((item) => (
           <ListItem key={`${item.title}-${item.route}`} disablePadding>
             <ListItemButton
@@ -176,7 +192,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         ))}
         <ListItem key={`log-out`} disablePadding>
           <ListItemButton
-          onClick={() => logout()}
+            onClick={() => logout()}
             sx={{
               textAlign: "center",
               backgroundColor: "var(--blue700)",
@@ -245,7 +261,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
             }}
           >
-            <Grid item sm={2} md={6} lg={6}>
+            <Grid item sm={2} md={8} lg={8}>
               <IconButton
                 color="inherit"
                 aria-label="open drawer"
@@ -312,8 +328,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             <Grid
               item
               sm={10}
-              md={6}
-              lg={6}
+              md={4}
+              lg={4}
               sx={{
                 display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
                 justifyContent: "flex-end",
@@ -450,17 +466,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                       </div>
                     </article>
                   </div>
-                  {/* </button> */}
-
-                  {/* <Dropdown
-                    menu={{
-                      items,
-                    }}
-                    trigger={["click"]}
-                    autoAdjustOverflow
-                    placement="bottom"
-                  >
-                  </Dropdown> */}
                 </NavLink>
               )}
             </Grid>
