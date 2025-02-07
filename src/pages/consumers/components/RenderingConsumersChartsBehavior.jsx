@@ -2,8 +2,15 @@ import { Card } from "antd";
 import ReactECharts from "echarts-for-react";
 import { PropTypes } from "prop-types";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import { useMediaQuery } from "@uidotdev/usehooks";
 
 const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
+  const isLargeDevice = useMediaQuery(
+    "only screen and (min-width : 993px) and (max-width : 1200px)"
+  );
+  const isExtraLargeDevice = useMediaQuery(
+    "only screen and (min-width : 1201px)"
+  );
   const option = {
     color: ["#00359E", "#528BFF"], // Add your custom colors here
     tooltip: {
@@ -62,7 +69,13 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
       }}
       style={{ backgroundColor: "#fff", width: "100%", height: "auto" }}
     >
-      <ReactECharts option={option} style={{ height: '350px', width: "350px" }} />
+      <ReactECharts
+        option={option}
+        style={{
+          height: isLargeDevice || isExtraLargeDevice ? "350px" : "250px",
+          width: isLargeDevice || isExtraLargeDevice ? "350px" : "250px",
+        }}
+      />
       <p
         style={{
           ...Subtitle,
