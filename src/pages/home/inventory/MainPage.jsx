@@ -1,12 +1,8 @@
 import { Grid } from "@mui/material";
-// import CategoryInventory from "../components/CategoriesInventory";
-// import Graphic from "../components/Graphic";
-// import TotalConsumer from "../components/TotalConsumer";
-// import TotalDevice from "../components/TotalDeviceValue";
-// import TableLocations from "../components/locations/TableLocations";
 import { lazy, Suspense } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { Spin } from "antd";
 const CategoryInventory = lazy(() =>
   import("../components/CategoriesInventory")
 );
@@ -21,14 +17,14 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <Spin indicator={<Loading />} fullscreen />
         </div>
       }
     >
       <Grid
         textAlign={"right"}
         display={"flex"}
-        justifyContent={"space-between"}
+        justifyContent={"flex-start"}
         alignItems={"center"}
         gap={1}
         item
