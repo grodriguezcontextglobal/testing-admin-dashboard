@@ -15,7 +15,7 @@ import GrayButtonText from "../../styles/global/GrayButtonText";
 // import BannerNotificationTemplate from "../../components/notification/alerts/BannerNotificationTemplate";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -37,10 +37,12 @@ const MainPage = () => {
   const navigate = useNavigate(); 
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
-    queryFn: () => devitrakApi.post("/company/companies"),
+    queryFn: () => devitrakApi.post(`/company/search-company`, {
+      _id: user.companyData.id
+    }),
     refetchOnMount: false,
   });
-  const dispatch = useDispatch();
+
   const inventoryQuery = useQuery({
     queryKey: ["itemsList"],
     queryFn: () =>
@@ -56,31 +58,9 @@ const MainPage = () => {
     }
   };
 
-  // const subscriptionPerCompanyQuery = useQuery({
-  //   queryKey: ["checkingSubscriptionPerCompanyQuery"],
-  //   queryFn: () =>
-  //     devitrakApi.post("/subscription/search_subscription", {
-  //       company: user.company,
-  //     }),
-  //   refetchOnMount: false,
-  // });
-
-  // const checkForActiveSubscriptionPerCompany = useCallback(() => {
-  //   const checkSubscriptionQuery = subscriptionPerCompanyQuery?.data?.data;
-  //   if (checkSubscriptionQuery?.ok) {
-  //     return dispatch(
-  //       onAddSubscriptionRecord(checkSubscriptionQuery.subscription)
-  //     );
-  //   }
-  //   return dispatch(onAddSubscriptionRecord([]));
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [subscriptionPerCompanyQuery.data]);
-  // checkForActiveSubscriptionPerCompany();
   useEffect(() => {
     const controller = new AbortController();
     inventoryQuery.refetch();
-    companiesCheck.refetch();
-    // subscriptionPerCompanyQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -127,6 +107,7 @@ const MainPage = () => {
     return Array.from(result);
   };
   checkUserAssignedCompanies();
+
   const leasedEquipmentNotificationBody = () => {
     return (
       <p>
