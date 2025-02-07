@@ -26,7 +26,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const sortingByParameters = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
-    if (dataToDisplay().length > 0) {
+    if (dataToDisplay()?.length > 0) {
       for (let data of dataToDisplay()) {
         if (totalPerLocation.has(data[parameter])) {
           totalPerLocation.set(
@@ -49,7 +49,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     if (result[1]) {
       const resultAssignable = groupBy(result[1], "data.enableAssignFeature");
       if (resultAssignable[1]) {
-        return resultAssignable[1].length;
+        return resultAssignable[1]?.length;
       }
       return 0;
     }
@@ -59,7 +59,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   const displayTotalDevicesAndTotalAvailbalePerLocation = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
-    if (dataToDisplay().length > 0) {
+    if (dataToDisplay()?.length > 0) {
       for (let data of dataToDisplay()) {
         if (totalPerLocation.has(data[parameter])) {
           totalPerLocation.set(data[parameter], [
@@ -74,7 +74,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     const result = new Set();
     for (let [key, value] of totalPerLocation) {
       const valueParameter = {
-        total: value.length,
+        total: value.length ?? 0,
         available: renderingTotalAvailableDevices(value),
       };
       result.add({ key, valueParameter });
@@ -149,7 +149,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       totalUnits: renderingTotalUnits(sortingByParameters("location")),
       renderedCardData: selectedRowKeys,
       open: true,
-      displayCards: selectedRowKeys.length > 0,
+      displayCards: selectedRowKeys?.length > 0,
       routeTitle: "location",
       renderSelectedOptions: [],
       renderMoreOptions: true,
@@ -222,7 +222,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     {
       title: "Category",
       data: sortingByParameters("category_name"),
-      totalUnits: sortingByParameters("category_name").length,
+      totalUnits: sortingByParameters("category_name").length ?? 0,
       open: false,
       routeTitle: "category_name",
       renderMoreOptions: false,
@@ -237,7 +237,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     {
       title: "Groups",
       data: sortingByParameters("item_group"),
-      totalUnits: sortingByParameters("item_group").length,
+      totalUnits: sortingByParameters("item_group").length ?? 0,
       open: false,
       routeTitle: "group",
       renderMoreOptions: false,
@@ -252,7 +252,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     {
       title: "Brands",
       data: sortingByParameters("brand"),
-      totalUnits: sortingByParameters("brand").length,
+      totalUnits: sortingByParameters("brand").length ?? 0,
       open: false,
       routeTitle: "brand",
       renderMoreOptions: false,
@@ -267,7 +267,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     {
       title: "Ownership",
       data: sortingByParameters("ownership"),
-      totalUnits: sortingByParameters("ownership").length,
+      totalUnits: sortingByParameters("ownership").length ?? 0,
       open: false,
       routeTitle: "ownership",
       renderMoreOptions: false,
@@ -284,7 +284,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
 
-    if (keys1.length !== keys2.length) return false;
+    if (keys1?.length !== keys2?.length) return false;
 
     return keys1.every((key) => {
       const val1 = obj1[key];
@@ -297,7 +297,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   };
 
   const compareArraysOfObjects = (arr1, arr2) => {
-    if (arr1.length !== arr2.length) return false;
+    if (arr1?.length !== arr2?.length) return false;
 
     const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
     const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
@@ -438,7 +438,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                               title={dictionary[opt.key] ?? opt.key}
                               props={`${opt.value} total devices`}
                               optional={null}
-                              style={{width:"fit-content"}}
+                              style={{ width: "fit-content" }}
                               width="fit-content"
                             />
                           </Link>
@@ -451,7 +451,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                   pagination={{
                     position: ["bottomCenter"],
                     pageSizeOptions: [10, 20, 30, 50, 100],
-                    total: item.data.length,
+                    total: item?.data?.length,
                     defaultPageSize: 10,
                     defaultCurrent: 1,
                   }}

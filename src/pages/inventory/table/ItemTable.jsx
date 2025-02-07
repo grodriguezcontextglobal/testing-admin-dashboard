@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-vars */
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Table } from "antd";
-import { groupBy } from "lodash";
-import { lazy, Suspense, useEffect } from "react";
+import { Avatar, Button, Divider, Select, Space, Table } from "antd";
+import { groupBy, set } from "lodash";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -26,6 +27,7 @@ const ItemTable = ({ searchItem }) => {
   const navigate = useNavigate();
   // const dispatch = useDispatch();
   const { user } = useSelector((state) => state.admin);
+  const [chosen, setChosen] = useState({ category: null, value: null });
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -53,6 +55,14 @@ const ItemTable = ({ searchItem }) => {
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
+  const dicSelectedOptions = {
+    0: "Brand",
+    1: "Model",
+    2: "Serial Number",
+    3: "Location",
+    4: "Ownership",
+    5: "Status",
+  };
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = groupBy(
@@ -81,6 +91,7 @@ const ItemTable = ({ searchItem }) => {
     }
     return [];
   };
+
   useEffect(() => {
     const controller = new AbortController();
     dataStructuringFormat();
@@ -92,12 +103,39 @@ const ItemTable = ({ searchItem }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.company]);
+
+  const filterOptionsBasedOnProps = (props) => {
+    const options = new Set();
+    const sortingByProps = groupBy(dataStructuringFormat(), props);
+    for (let [key, _] of Object.entries(sortingByProps)) {
+      options.add(key);
+    }
+    return Array.from(options);
+  };
+  const filterByProps = () => {
+    const dicSelectedOptions = {
+      0: "brand",
+      1: "item_group",
+      2: "serial_number",
+      3: "location",
+      4: "ownership",
+      5: "status",
+    };
+    const sortingByProps = groupBy(
+      dataStructuringFormat(),
+      dicSelectedOptions[chosen.category]
+    );
+    return sortingByProps[chosen.value];
+  };
   const dataToDisplay = () => {
     if (!searchItem || searchItem === "") {
-      if (dataStructuringFormat().length > 0) {
+      if (chosen.value !== null) {
+        return filterByProps();
+      } else if (!chosen.value && dataStructuringFormat()?.length > 0) {
         return dataStructuringFormat();
+      } else {
+        return [];
       }
-      return [];
     } else {
       return dataStructuringFormat()?.filter((item) =>
         JSON.stringify(item)
@@ -105,6 +143,15 @@ const ItemTable = ({ searchItem }) => {
           .includes(String(searchItem).toLowerCase())
       );
     }
+  };
+
+  const filterOptions = {
+    0: filterOptionsBasedOnProps("brand"),
+    1: filterOptionsBasedOnProps("item_group"),
+    2: filterOptionsBasedOnProps("serial_number"),
+    3: filterOptionsBasedOnProps("location"),
+    4: filterOptionsBasedOnProps("ownership"),
+    5: filterOptionsBasedOnProps("status"),
   };
 
   const dictionary = {
@@ -319,7 +366,7 @@ const ItemTable = ({ searchItem }) => {
         if (String(result).toLowerCase().includes("leased equipment")) {
           const splittingName = String(result).split(" / ");
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
-        } else if (String(result).toLowerCase().split(" / ").length === 3) {
+        } else if (String(result).toLowerCase().split(" / ")?.length === 3) {
           const splittingName = String(result).split(" / ");
           result = splittingName[1];
           // .slice(1, 2)
@@ -353,22 +400,6 @@ const ItemTable = ({ searchItem }) => {
         </span>
       ),
     },
-    // {
-    //   title: "Value",
-    //   dataIndex: "cost",
-    //   key: "cost",
-    //   sorter: {
-    //     compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
-    //   },
-    //   render: (cost) => (
-    //     <span style={cellStyle}>
-    //       {" "}
-    //       <Typography style={Subtitle} textTransform={"capitalize"}>
-    //         ${cost}
-    //       </Typography>
-    //     </span>
-    //   ),
-    // },
     {
       title: "",
       dataIndex: "data",
@@ -411,7 +442,7 @@ const ItemTable = ({ searchItem }) => {
           item
           xs={12}
         >
-          <details
+          <div //details
             style={{
               width: "100%",
               display: "flex",
@@ -419,36 +450,92 @@ const ItemTable = ({ searchItem }) => {
               justifyContent: "space-between",
               alignItems: "center",
             }}
-            open
+            open={true}
           >
-            <summary
+            <div //summary
               style={{
                 width: "100%",
               }}
               open
             >
-              <p
+              <div
                 style={{
-                  ...TextFontsize18LineHeight28,
-                  width: "100%",
-                  textAlign: "left",
-                  cursor: "pointer",
+                  ...CenteringGrid,
+                  justifyContent: "space-between",
                 }}
               >
-                All devices{" "}
-                <span
+                <p
                   style={{
-                    ...Subtitle,
-                    width: "100%",
+                    ...TextFontsize18LineHeight28,
+                    width: "60%",
                     textAlign: "left",
+                    cursor: "pointer",
+                    textWrap: "balance",
                   }}
                 >
-                  | Total <strong>{dataToDisplay().length}</strong> units
-                </span>{" "}
-                &nbsp;{" "}
-              </p>
-              <Divider />
-            </summary>
+                  All devices{" "}
+                  <span
+                    style={{
+                      ...Subtitle,
+                      width: "100%",
+                      textAlign: "left",
+                    }}
+                  >
+                    | Total <strong>{dataToDisplay()?.length}</strong> units
+                  </span>{" "}
+                  &nbsp;{" "}
+                </p>
+                <div
+                  style={{
+                    ...TextFontsize18LineHeight28,
+                    width: "100%",
+                    textAlign: "right",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                  }}
+                >
+                  {new Array(6).fill(null).map((item, index) => {
+                    return (
+                      <Select
+                        style={{ margin: "0 5px 0 0" }}
+                        key={index}
+                        title={dicSelectedOptions[index]}
+                        prefix={dicSelectedOptions[index]}
+                        suffixIcon={
+                          <Icon
+                            icon="fluent:chevron-down-12-filled"
+                            style={{ color: "var(--gray-600, #475467)" }}
+                          />
+                        }
+                        value={chosen.category === index ? chosen.value : null}
+                        options={[
+                          ...filterOptions[index].map((item) => ({
+                            value: item,
+                            label: item,
+                          })),
+                        ]}
+                        allowClear
+                        onChange={(value) => {
+                          if (value === undefined || value === null) {
+                            return setChosen({
+                              category: null,
+                              value: null,
+                            });
+                          }
+                          return setChosen({
+                            category: value === null ? null : index,
+                            value: value,
+                          });
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <Divider />
             <Grid container>
               <Grid
                 border={"1px solid var(--gray-200, #eaecf0)"}
@@ -510,8 +597,6 @@ const ItemTable = ({ searchItem }) => {
                   }}
                 >
                   <DownloadingXlslFile props={dataToDisplay()} />
-                  {/* &nbsp;&nbsp; */}
-                  {/* <DownloadPdf data={dataToDisplay()} /> */}
                 </div>{" "}
               </Grid>
 
@@ -519,7 +604,7 @@ const ItemTable = ({ searchItem }) => {
                 pagination={{
                   position: ["bottomCenter"],
                   pageSizeOptions: [10, 20, 30, 50, 100],
-                  total: dataToDisplay().length,
+                  total: dataToDisplay()?.length,
                   defaultPageSize: 10,
                   defaultCurrent: 1,
                 }}
@@ -530,24 +615,25 @@ const ItemTable = ({ searchItem }) => {
               />
             </Grid>
             <Divider />
-          </details>
+          </div>
         </Grid>
-        {dataToDisplay().length === 0 && (!searchItem || searchItem === "") && (
-          <BannerMsg
-            props={{
-              title: "Add new item",
-              message: `Add new devices to your inventory and assign categories and groups
+        {dataToDisplay()?.length === 0 &&
+          (!searchItem || searchItem === "") && (
+            <BannerMsg
+              props={{
+                title: "Add new item",
+                message: `Add new devices to your inventory and assign categories and groups
             for easier management. Devices in your inventory can be assigned to
             staff or consumers permanently or temporarily. You can also mark
             devices with different statuses for condition and location. Include
             a device value to track deposits and fees.`,
-              link: "/inventory/new-item",
-              button: BlueButton,
-              paragraphStyle: BlueButtonText,
-              paragraphText: "Add new item",
-            }}
-          />
-        )}
+                link: "/inventory/new-item",
+                button: BlueButton,
+                paragraphStyle: BlueButtonText,
+                paragraphText: "Add new item",
+              }}
+            />
+          )}
       </Grid>
     </Suspense>
   );
