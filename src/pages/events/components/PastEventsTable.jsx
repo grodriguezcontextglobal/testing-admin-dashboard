@@ -150,6 +150,7 @@ const PastEventsTable = ({ events }) => {
             dataIndex: 'contactInfo',
             key: 'contactInfo',
             width: "5%",
+            responsive:["lg"],
             render: () => (
                 <span><RightNarrowInCircle /></span>
             )
