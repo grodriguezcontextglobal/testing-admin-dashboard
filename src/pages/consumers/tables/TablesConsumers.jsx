@@ -357,6 +357,7 @@ export default function TablesConsumers({
     {
       title: renderingRowStyling("Devices"),
       dataIndex: "currentActivity",
+      responsive:["lg"],
       sorter: {
         compare: (a, b) => a.currentActivity - b.currentActivity,
       },
