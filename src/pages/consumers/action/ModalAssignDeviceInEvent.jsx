@@ -50,6 +50,7 @@ const ModalAssignDeviceInEvent = ({
       }),
     refetchOnMount: false,
   });
+  
   useEffect(() => {
     const controller = new AbortController();
     eventsWhereStaffIsAssigned.refetch();
@@ -64,7 +65,7 @@ const ModalAssignDeviceInEvent = ({
 
   const sortedByCompany =
     eventsWhereStaffIsAssigned?.data?.data?.events?.filter(
-      (item) => item.company_id === user.companyData.id && item.active
+      (item) => item.company_id === user.companyData.id && item.active && item.type === "event"
     ) ?? [];
 
   const renderingInventoryOptionsBasedOnSelectedEvent = useCallback(() => {
