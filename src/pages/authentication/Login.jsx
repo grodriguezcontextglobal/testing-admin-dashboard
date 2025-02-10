@@ -6,13 +6,17 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Checkbox, Typography, notification } from "antd";
+import { Button, Checkbox, notification, Typography } from "antd";
+import PropTypes from "prop-types";
 import { lazy, Suspense, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Turnstile from "react-turnstile";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
+import { checkArray } from "../../components/utils/checkArray";
 import {
   clearErrorMessage,
   onAddErrorMessage,
@@ -28,16 +32,13 @@ import {
   onSelectEvent,
 } from "../../store/slices/eventSlice";
 import { onAddSubscription } from "../../store/slices/subscriptionSlice";
+import { BlueButton } from "../../styles/global/BlueButton";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "./style/authStyle.css";
-import PropTypes from "prop-types";
-import { checkArray } from "../../components/utils/checkArray";
-import Loading from "../../components/animation/Loading";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -58,7 +59,6 @@ const Login = () => {
       duration: 0,
     });
   };
-
   const dataPassed = useRef(null);
   const addingEventState = async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
@@ -245,7 +245,6 @@ const Login = () => {
               },
             });
           } else {
-            console.log("no company found");
             return openNotificationWithIcon(
               "error",
               "We could not find an active status in any company where you were assigned."
@@ -472,6 +471,26 @@ const Login = () => {
                   </button>
                 </Grid>
               </Grid>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                }}
+              >
+                <Turnstile
+                  sitekey={"0x4AAAAAAA8O1W9R4nOXuKqU"}
+                  execution="execute"
+                  theme="light"
+                  size="normal"
+                  onLoad={(widgetId, bound) => {
+                    // before:
+                    window.turnstile.execute(widgetId);
+                    // now:
+                    bound.execute();
+                  }}
+                />
+              </div>
               <Button
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%" }}
