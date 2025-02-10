@@ -482,7 +482,8 @@ const Login = () => {
                   sitekey={"0x4AAAAAAA8O1W9R4nOXuKqU"}
                   execution="execute"
                   theme="light"
-                  size="normal"
+                  size="flexible"
+                  style={{width: "100%"}}
                   onLoad={(widgetId, bound) => {
                     // before:
                     window.turnstile.execute(widgetId);
