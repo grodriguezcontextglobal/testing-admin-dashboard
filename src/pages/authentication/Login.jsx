@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Checkbox, notification, Typography } from "antd";
+import { Button, Checkbox, message, notification, Typography } from "antd";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -286,22 +286,13 @@ const Login = () => {
   const [token, setToken] = useState(null);
   const handleVerify = (responseToken) => {
     if (responseToken) {
-      console.log("Turnstile verification successful. Token:", responseToken);
-      setToken(responseToken);
-
-      // Show notification for successful verification
-      notification.success({
-        message: "Verification Complete",
-        description: "Redirecting to your dashboard...",
-      });
-      console.log("token", token);
-      // Redirect after a short delay (simulating processing)
+      return setToken(responseToken);
     } else {
-      console.error("Turnstile verification failed.");
-      notification.error({
+      message.error({
         message: "Verification Failed",
         description: "Please complete the verification process.",
       });
+      return setToken(null);
     }
   };
 
@@ -521,6 +512,7 @@ const Login = () => {
                 />
               </div>
               <Button
+                disabled={token === null}
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%" }}
               >
