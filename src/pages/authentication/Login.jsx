@@ -283,6 +283,28 @@ const Login = () => {
     }
   };
 
+  const [token, setToken] = useState(null);
+  const handleVerify = (responseToken) => {
+    if (responseToken) {
+      console.log("Turnstile verification successful. Token:", responseToken);
+      setToken(responseToken);
+
+      // Show notification for successful verification
+      notification.success({
+        message: "Verification Complete",
+        description: "Redirecting to your dashboard...",
+      });
+      console.log("token", token);
+      // Redirect after a short delay (simulating processing)
+    } else {
+      console.error("Turnstile verification failed.");
+      notification.error({
+        message: "Verification Failed",
+        description: "Please complete the verification process.",
+      });
+    }
+  };
+
   return (
     <Suspense
       fallback={
@@ -483,13 +505,19 @@ const Login = () => {
                   execution="execute"
                   theme="light"
                   size="flexible"
-                  style={{width: "100%"}}
+                  appearance="execute"
+                  style={{
+                    width: "100%",
+                    margin: "15px 0px",
+                    borderRadius: "12px",
+                  }}
                   onLoad={(widgetId, bound) => {
                     // before:
                     window.turnstile.execute(widgetId);
                     // now:
                     bound.execute();
                   }}
+                  onVerify={handleVerify}
                 />
               </div>
               <Button
