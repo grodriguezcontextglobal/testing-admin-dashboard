@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider } from "antd";
-import { lazy, Suspense, useEffect } from "react";
+import { Button, Calendar, Divider, Dropdown, theme } from "antd";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -21,28 +21,34 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
+import CalendarIcon from "../../components/icons/CalendarIcon";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { set } from "lodash";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const { register, watch } = useForm();
-  const inventoryQuery = useQuery({
-    queryKey: ["itemsList"],
+  const companyHasInventoryQuery = useQuery({
+    queryKey: ["companyHasInventoryQuery"],
     queryFn: () =>
       devitrakApi.get(
-        `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
+        `/db_item/check-company-has-inventory?company_id=${user.sqlInfo.company_id}`
       ),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
-    inventoryQuery.refetch();
+    companyHasInventoryQuery.refetch();
     return () => {
       controller.abort();
     };
   }, []);
 
+  const [begin, setBegin] = useState(null);
   return (
     <Suspense
       fallback={
@@ -128,7 +134,7 @@ const MainPage = () => {
           <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
         <Divider />
-        {inventoryQuery?.data?.data?.items.length > 0 ? (
+        {companyHasInventoryQuery?.data?.data?.total > 0 ? (
           <>
             <Grid
               display={"flex"}
@@ -150,7 +156,7 @@ const MainPage = () => {
               >
                 Search inventory:&nbsp;
               </p>
-              <Grid item xs sm md lg>
+              <Grid style={{ ...CenteringGrid, gap: "5px" }} item xs sm md lg>
                 <OutlinedInput
                   {...register("searchItem")}
                   style={OutlinedInputStyle}
@@ -162,6 +168,37 @@ const MainPage = () => {
                     </InputAdornment>
                   }
                 />
+                <Button
+                  style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
+                >
+                  <CalendarIcon />
+                  <DatePicker
+                    id="calender-event"
+                    autoComplete="checking"
+                    minDate={new Date()}
+                    selected={begin}
+                    onChange={(date) => setBegin(date.toString())}
+                    placeholderText="Choose a date"
+                    startDate={new Date()}
+                    style={{
+                      ...OutlinedInputStyle,
+                      margin: "0.1rem 0 1.5rem",
+                      width: "100%",
+                    }}
+                  />
+                  <Button
+                    style={{
+                      ...OutlinedInputStyle,
+                      gap: 0,
+                      border: "none",
+                      height: "95%",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => setBegin(null)}
+                  >
+                    X
+                  </Button>
+                </Button>
               </Grid>
             </Grid>
             <Grid container>
@@ -172,7 +209,7 @@ const MainPage = () => {
                 item
                 xs={12}
               >
-                <ItemTable searchItem={watch("searchItem")} />
+                <ItemTable searchItem={watch("searchItem")} date={begin} />
               </Grid>
             </Grid>
           </>
