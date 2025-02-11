@@ -50,7 +50,7 @@ const navItems = [
   { title: "events", route: "/events", permission: [0, 1, 2, 3, 4] },
   { title: "consumers", route: "/consumers", permission: [0, 1] },
   { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
-  { title: "profile", route: "/profile", permission: [0, 1, 2, 3, 4] },
+  // { title: "profile", route: "/profile", permission: [0, 1, 2, 3, 4] },
 ];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
