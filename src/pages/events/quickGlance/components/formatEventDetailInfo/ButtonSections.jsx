@@ -1,6 +1,6 @@
-import { Button, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "antd";
+import { Card, Button } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -13,6 +13,8 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import FeedbackEvent from "../../../../../components/notification/email/FeedbackEvent";
+import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
 );
@@ -30,6 +32,8 @@ const ButtonSections = () => {
     customizedEmailNotificationModal,
     setCustomizedEmailNotificationModal,
   ] = useState(false);
+  const [feedbackEventModal, setFeedbackEventModal] = useState(false);
+
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () =>
@@ -67,7 +71,7 @@ const ButtonSections = () => {
 
   const options = [
     {
-      icon: <WhiteCirclePlusIcon/>,
+      icon: <WhiteCirclePlusIcon />,
       text: "Add new consumer",
       disableStatus: !event.active,
       fn: () => setCreateUserButton(true),
@@ -83,6 +87,12 @@ const ButtonSections = () => {
       text: "Send event link.",
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
+    },
+    {
+      icon: <FeedbackIcon />,
+      text: "Feedback",
+      disableStatus: !event.active,
+      fn: () => setFeedbackEventModal(true),
     },
   ];
 
@@ -157,6 +167,7 @@ const ButtonSections = () => {
     );
     return check > -1;
   };
+
   return (
     <Suspense
       fallback={
@@ -191,7 +202,7 @@ const ButtonSections = () => {
           alignItems={"center"}
           container
         >
-          {options.map((item) => {
+          {options.map((item, index) => {
             return (
               <Grid
                 key={item.text}
@@ -207,6 +218,7 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <Button
+                  loading={index === 3 && feedbackEventModal}
                   disabled={item.disableStatus}
                   onClick={() => item.fn()}
                   style={
@@ -288,6 +300,12 @@ const ButtonSections = () => {
         <CreateNewConsumer
           createUserButton={createUserButton}
           setCreateUserButton={setCreateUserButton}
+        />
+      )}
+      {feedbackEventModal && (
+        <FeedbackEvent
+          feedbackEventModal={feedbackEventModal}
+          setFeedbackEventModal={setFeedbackEventModal}
         />
       )}
     </Suspense>
