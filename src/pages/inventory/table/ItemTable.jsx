@@ -2,32 +2,40 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Select, Space, Table } from "antd";
-import { groupBy, set } from "lodash";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Avatar, Button, Divider, Select, Table } from "antd";
+import { groupBy } from "lodash";
+import { PropTypes } from "prop-types";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Loading from "../../../components/animation/Loading";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { PropTypes } from "prop-types";
-import "../../../styles/global/ant-table.css";
 import "../style/details.css";
-import Loading from "../../../components/animation/Loading";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 // import DownloadPdf from "../actions/DownloadPdf";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
-const ItemTable = ({ searchItem }) => {
+const ItemTable = ({ searchItem, date, loadingState, reference }) => {
   const navigate = useNavigate();
-  // const dispatch = useDispatch();
   const { user } = useSelector((state) => state.admin);
   const [chosen, setChosen] = useState({ category: null, value: null });
+  const [chosenConditionState, setChosenConditionState] = useState(0);
+  const [searchDateResult, setSearchDateResult] = useState([]);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -63,55 +71,65 @@ const ItemTable = ({ searchItem }) => {
     4: "Ownership",
     5: "Status",
   };
-  const dataStructuringFormat = () => {
-    const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = groupBy(
-      itemsInInventoryQuery?.data?.data?.items,
-      "serial_number"
-    );
-    if (renderedListItems?.length > 0) {
-      for (let data of renderedListItems) {
-        if (groupingBySerialNumber[data.serial_number]) {
-          resultFormatToDisplay.add({
-            key: `${data.item_id}-${data.event_name}`,
-            ...data,
-            brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
-            data: {
-              ...data,
-              location:
-                groupingBySerialNumber[data.serial_number].at(-1).location,
-              ...groupingBySerialNumber[data.serial_number].at(-1),
-            },
-            location:
-              groupingBySerialNumber[data.serial_number].at(-1).location,
-          });
-        }
-      }
-      return Array.from(resultFormatToDisplay);
-    }
-    return [];
-  };
 
   useEffect(() => {
     const controller = new AbortController();
-    dataStructuringFormat();
     listItemsQuery.refetch();
     listImagePerItemQuery.refetch();
     itemsInInventoryQuery.refetch();
     return () => {
       controller.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.company]);
+  }, []); // ✅ Moves function execution to useEffect
+
+  const getDataStructuringFormat = useCallback(
+    (props) => {
+      const resultFormatToDisplay = new Set();
+      const groupingBySerialNumber = groupBy(
+        itemsInInventoryQuery?.data?.data?.items,
+        "serial_number"
+      );
+      if (props?.length > 0) {
+        for (let data of props) {
+          if (groupingBySerialNumber[data.serial_number]) {
+            resultFormatToDisplay.add({
+              key: `${data.item_id}-${data.event_name}`,
+              ...data,
+              brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
+              data: {
+                ...data,
+                location:
+                  groupingBySerialNumber[data.serial_number].at(-1).location,
+                ...groupingBySerialNumber[data.serial_number].at(-1),
+              },
+              location:
+                groupingBySerialNumber[data.serial_number].at(-1).location,
+            });
+          }
+        }
+      }
+      return Array.from(resultFormatToDisplay);
+    },
+    [renderedListItems, itemsInInventoryQuery]
+  );
+
+  useEffect(() => {
+    getDataStructuringFormat(renderedListItems);
+    loadingState(false); // ✅ State update happens inside useEffect, not render
+  }, [getDataStructuringFormat, loadingState]);
 
   const filterOptionsBasedOnProps = (props) => {
     const options = new Set();
-    const sortingByProps = groupBy(dataStructuringFormat(), props);
+    const sortingByProps = groupBy(
+      getDataStructuringFormat(renderedListItems),
+      props
+    );
     for (let [key, _] of Object.entries(sortingByProps)) {
       options.add(key);
     }
     return Array.from(options);
   };
+
   const filterByProps = () => {
     const dicSelectedOptions = {
       0: "brand",
@@ -122,29 +140,75 @@ const ItemTable = ({ searchItem }) => {
       5: "status",
     };
     const sortingByProps = groupBy(
-      dataStructuringFormat(),
+      getDataStructuringFormat(renderedListItems),
       dicSelectedOptions[chosen.category]
     );
     return sortingByProps[chosen.value];
   };
-  const dataToDisplay = () => {
-    if (!searchItem || searchItem === "") {
-      if (chosen.value !== null) {
-        return filterByProps();
-      } else if (!chosen.value && dataStructuringFormat()?.length > 0) {
-        return dataStructuringFormat();
-      } else {
-        return [];
-      }
-    } else {
-      return dataStructuringFormat()?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searchItem).toLowerCase())
-      );
-    }
-  };
 
+  const searchingData = () => {
+    return getDataStructuringFormat(renderedListItems)?.filter((item) =>
+      JSON.stringify(item)
+        .toLowerCase()
+        .includes(String(searchItem).toLowerCase())
+    );
+  };
+  useEffect(() => {
+    if (searchItem && searchItem !== "") {
+      setSearchDateResult([]);
+      setChosenConditionState(1);
+    }
+    if (chosen.value !== null) {
+      setSearchDateResult([]);
+      setChosenConditionState(2);
+    }
+    if (date !== null) {
+      setChosenConditionState(3);
+    }
+    if (
+      chosen.value === null &&
+      date === null &&
+      (!searchItem || searchItem.length === 0)
+    ) {
+      setSearchDateResult([]);
+      setChosenConditionState(0);
+    }
+  }, [searchItem, chosen.value, date, loadingState]);
+
+  const querySearchingDataByDate = async () => {
+    const date1Format = `${new Date(date).getTime()}`;
+    const date2Format = `${new Date(date).getFullYear()}-${
+      new Date(date).getMonth() + 1
+    }-${new Date(date).getDate()}`;
+    const responseQuery = await devitrakApi.get(
+      `/event/event-inventory-based-on-period?company_id=${user.companyData.id}&date=${date1Format}&date2=${date2Format}&company_sql_id=${user.sqlInfo.company_id}`
+    );
+    setSearchDateResult(responseQuery.data.events);
+    return responseQuery?.data?.events;
+  };
+useEffect(() => {
+  if (date) {
+    querySearchingDataByDate();
+  }
+}, [date]); // ✅ This will ensure the query runs when the date is updated
+
+  const filterDataByDate = useMemo(() => {
+    return getDataStructuringFormat(searchDateResult);
+  }, [reference]);
+
+  const options = {
+    0: getDataStructuringFormat(renderedListItems),
+    1: searchItem && searchingData(),
+    2: chosen.value !== null && filterByProps(),
+    3: date !== null && filterDataByDate,
+  };
+  const dataToDisplay = useCallback(() => {
+    if (chosenConditionState === 3) {
+      return getDataStructuringFormat(searchDateResult);
+    }
+    return options[chosenConditionState] || [];
+  }, [chosenConditionState, searchDateResult, renderedListItems]);
+  
   const filterOptions = {
     0: filterOptionsBasedOnProps("brand"),
     1: filterOptionsBasedOnProps("item_group"),
@@ -499,7 +563,11 @@ const ItemTable = ({ searchItem }) => {
                   {new Array(6).fill(null).map((item, index) => {
                     return (
                       <Select
-                        style={{ margin: "0 5px 0 0" }}
+                        style={{
+                          margin: "0 5px 0 0",
+                          width: "fit-content",
+                          overflowY: "hidden",
+                        }}
                         key={index}
                         title={dicSelectedOptions[index]}
                         prefix={dicSelectedOptions[index]}
