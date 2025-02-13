@@ -13,8 +13,8 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
-import FeedbackEvent from "../../../../../components/notification/email/FeedbackEvent";
-import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
+// import FeedbackEvent from "../../../../../components/notification/email/FeedbackEvent";
+// import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
 );
@@ -32,7 +32,7 @@ const ButtonSections = () => {
     customizedEmailNotificationModal,
     setCustomizedEmailNotificationModal,
   ] = useState(false);
-  const [feedbackEventModal, setFeedbackEventModal] = useState(false);
+  // const [feedbackEventModal, setFeedbackEventModal] = useState(false);
 
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
@@ -88,12 +88,12 @@ const ButtonSections = () => {
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
-    {
-      icon: <FeedbackIcon />,
-      text: "Feedback",
-      disableStatus: !event.active,
-      fn: () => setFeedbackEventModal(true),
-    },
+    // {
+    //   icon: <FeedbackIcon />,
+    //   text: "Feedback",
+    //   disableStatus: !event.active,
+    //   fn: () => setFeedbackEventModal(true),
+    // },
   ];
 
   const groupingByCompany = groupBy(
@@ -202,7 +202,7 @@ const ButtonSections = () => {
           alignItems={"center"}
           container
         >
-          {options.map((item, index) => {
+          {options.map((item) => {
             return (
               <Grid
                 key={item.text}
@@ -218,7 +218,7 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <Button
-                  loading={index === 3 && feedbackEventModal}
+                  // loading={index === 3 && feedbackEventModal}
                   disabled={item.disableStatus}
                   onClick={() => item.fn()}
                   style={
@@ -302,12 +302,12 @@ const ButtonSections = () => {
           setCreateUserButton={setCreateUserButton}
         />
       )}
-      {feedbackEventModal && (
+      {/* {feedbackEventModal && (
         <FeedbackEvent
           feedbackEventModal={feedbackEventModal}
           setFeedbackEventModal={setFeedbackEventModal}
         />
-      )}
+      )} */}
     </Suspense>
   );
 };
