@@ -1,14 +1,17 @@
 /* eslint-disable no-unused-vars */
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Calendar, Divider, Dropdown, theme } from "antd";
+import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
+import CalendarIcon from "../../components/icons/CalendarIcon";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import "../../styles/global/ant-select.css";
@@ -21,10 +24,6 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
-import CalendarIcon from "../../components/icons/CalendarIcon";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { set } from "lodash";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -49,6 +48,8 @@ const MainPage = () => {
   }, []);
 
   const [begin, setBegin] = useState(null);
+  const [reference, setReference] = useState(null);
+  const [isLoadingState, setIsLoadingState] = useState(true);
   return (
     <Suspense
       fallback={
@@ -175,11 +176,11 @@ const MainPage = () => {
                   <DatePicker
                     id="calender-event"
                     autoComplete="checking"
-                    minDate={new Date()}
+                    // minDate={new Date()}
                     selected={begin}
-                    onChange={(date) => setBegin(date.toString())}
+                    onChange={(date) =>{ setBegin(new Date(date)); setReference(new Date(date).getTime())}}
                     placeholderText="Choose a date"
-                    startDate={new Date()}
+                    // startDate={new Date()}
                     style={{
                       ...OutlinedInputStyle,
                       margin: "0.1rem 0 1.5rem",
@@ -194,7 +195,7 @@ const MainPage = () => {
                       height: "95%",
                       boxShadow: "none",
                     }}
-                    onClick={() => setBegin(null)}
+                    onClick={() =>{ setBegin(null); setReference(null)}}
                   >
                     X
                   </Button>
@@ -209,14 +210,14 @@ const MainPage = () => {
                 item
                 xs={12}
               >
-                <ItemTable searchItem={watch("searchItem")} date={begin} />
+                <ItemTable searchItem={watch("searchItem")} date={begin} loadingState={setIsLoadingState} companyInventoryExisting={companyHasInventoryQuery.data} reference={reference}/>
               </Grid>
             </Grid>
           </>
         ) : (
           <Grid
             textAlign={"right"}
-            display={"flex"}
+            display={companyHasInventoryQuery?.data?.data?.total > 0 ? "flex" : "none"}
             justifyContent={"center"}
             alignItems={"center"}
             gap={1}
@@ -240,6 +241,7 @@ const MainPage = () => {
           </Grid>
         )}{" "}
       </Grid>
+      {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
     </Suspense>
   );
 };
