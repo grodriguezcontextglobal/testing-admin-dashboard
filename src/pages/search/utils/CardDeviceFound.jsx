@@ -24,7 +24,6 @@ const CardDeviceFound = ({
       color: "#027A48",
     },
   };
-
   const subtitleCardStyle = {
     width: "100%",
     textAlign: "left",
@@ -49,6 +48,7 @@ const CardDeviceFound = ({
         flexDirection: "column",
         alignItems: "flex-start",
         gap: "20px",
+        height:"100%"
       }}
       styles={{
         body: {
@@ -87,7 +87,8 @@ const CardDeviceFound = ({
       <div
         style={{
           ...subtitleCardStyle,
-          backgroundColor: styleDic[props.active].backgroundColor,
+          backgroundColor:
+            styleDic[props.active]?.backgroundColor ?? "transparent",
           borderRadius: "16px",
           justifyContent: "center",
           display: "flex",
@@ -96,7 +97,12 @@ const CardDeviceFound = ({
           margin: "5px 0",
         }}
       >
-        <p style={{ ...Subtitle, color: styleDic[props.active].color }}>
+        <p
+          style={{
+            ...Subtitle,
+            color: styleDic[props.active]?.color ?? "transparent",
+          }}
+        >
           {props?.active ? "In transaction" : "In event's stock"}
         </p>
       </div>
@@ -117,7 +123,10 @@ const CardDeviceFound = ({
         >
           <p style={BlueButtonText}>Details</p>
         </Button>
-        <Popconfirm title="Are you sure to return this device?" onConfirm={() => returnFn(props)}>
+        <Popconfirm
+          title="Are you sure to return this device?"
+          onConfirm={() => returnFn(props)}
+        >
           <Button
             loading={loadingStatus}
             style={{

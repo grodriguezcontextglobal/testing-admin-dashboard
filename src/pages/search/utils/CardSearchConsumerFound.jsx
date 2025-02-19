@@ -11,7 +11,8 @@ const CardSearchConsumersFound = ({ props, fn }) => {
       flexDirection: 'column',
       alignItems: 'flex-start',
       gap: '20px',
-      cursor: "pointer"
+      cursor: "pointer",
+      height:"100%"
     }}
       styles={{
         body: {

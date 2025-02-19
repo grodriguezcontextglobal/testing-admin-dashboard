@@ -12,6 +12,7 @@ const CardEventsFound = ({ props, fn }) => {
             padding: '5px',
             flexDirection: 'column',
             alignItems: 'flex-start',
+            height:"100%",
             gap: '20px',
             cursor: "pointer"
         }}
