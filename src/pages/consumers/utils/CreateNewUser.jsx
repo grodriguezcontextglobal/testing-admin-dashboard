@@ -4,28 +4,31 @@ import {
   InputLabel,
   MenuItem,
   OutlinedInput,
-  Select,
+  // Select,
   Typography,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, notification, Button } from "antd";
+import { Button, Modal, notification, Select } from "antd";
 import { PropTypes } from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
-import { useSelector } from "react-redux";
+import "react-phone-number-input/style.css";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
+import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import "../../../styles/global/ant-select.css";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import "react-phone-number-input/style.css";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
+import { onAddCustomer } from "../../../store/slices/stripeSlice";
 
 const schema = yup
   .object({
@@ -54,16 +57,15 @@ export const CreateNewConsumer = ({
   createUserButton,
   setCreateUserButton,
 }) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     resolver: yupResolver(schema),
   });
   const [contactPhoneNumber, setContactPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const { event } = useSelector((state) => state.event);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [api, contextHolder] = notification.useNotification();
@@ -74,7 +76,41 @@ export const CreateNewConsumer = ({
       description: msg,
     });
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (location.pathname === "/events/event-quickglance") {
+      const eventInfo = listOfAvailableEventsPerAdmin.find(
+        (item) =>
+          item.eventInfoDetail.eventName === event.eventInfoDetail.eventName
+      );
+      setValue("eventAssignedTo", JSON.stringify(eventInfo));
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [location.key, location.pathname, event.eventInfoDetail.eventName]);
+
   const queryClient = useQueryClient();
+
+  const redirectingStaffBasedOnConsumerEventPage = (props) => {
+    if (location.pathname === "/events/event-quickglance") {
+      let userFormatData = {
+        ...props,
+        uid: props.id ?? props.uid,
+      };
+          dispatch(onAddCustomerInfo(userFormatData));
+          dispatch(onAddCustomer(userFormatData));
+          queryClient.invalidateQueries([
+            "transactionsList",
+            "listOfDevicesAssigned",
+            "listOfNoOperatingDevices",
+          ]);
+
+      return navigate(`/events/event-attendees/${userFormatData.uid}/transactions-details`);
+    }
+    return null;
+  };
   const newConsumerAfterBeingCheck = async (data) => {
     const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
     const newUserProfile = {
@@ -105,9 +141,10 @@ export const CreateNewConsumer = ({
       });
       openNotificationWithIcon("Success", "New consumer added");
       setLoading(false);
-      closeDeviceModal();
+      return redirectingStaffBasedOnConsumerEventPage(newUser.data);
     }
   };
+
   const zeroDuplications = (props) => {
     const result = new Set();
     for (let data of props) {
@@ -115,6 +152,7 @@ export const CreateNewConsumer = ({
     }
     return Array.from(result);
   };
+
   const updateExistingUserInRecord = async (data) => {
     const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
     const { event_providers, company_providers, eventSelected, provider, id } =
@@ -125,7 +163,10 @@ export const CreateNewConsumer = ({
       alert(
         `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
       );
-      return setLoading(false);
+      setLoading(false);
+      return redirectingStaffBasedOnConsumerEventPage(
+        data.consumersList.at(-1)
+      );
     } else {
       const updateConsumerProfile = {
         id: id,
@@ -159,10 +200,13 @@ export const CreateNewConsumer = ({
         });
         openNotificationWithIcon("Success", "New consumer added");
         setLoading(false);
-        closeDeviceModal();
+        return redirectingStaffBasedOnConsumerEventPage(
+          data.consumersList.at(-1)
+        );
       }
     }
   };
+
   const handleNewConsumer = async (data) => {
     setLoading(true);
     try {
@@ -181,6 +225,7 @@ export const CreateNewConsumer = ({
       return setLoading(false);
     } catch (error) {
       setLoading(false);
+      return openNotificationWithIcon("error", `${error.message}`);
     }
   };
 
@@ -192,6 +237,7 @@ export const CreateNewConsumer = ({
     setContactPhoneNumber("");
     setCreateUserButton(false);
   };
+
   const titleRender = () => {
     return (
       <p style={{ ...TextFontsize18LineHeight28, textAlign: "center" }}>
@@ -274,15 +320,13 @@ export const CreateNewConsumer = ({
                         <p style={paragraphStyle}>First name</p>
                       </InputLabel>
                       <OutlinedInput
-                        {...register("firstName", { required: true })}
-                        aria-invalid={errors.firstName}
+                        required
+                        {...register("firstName")}
                         style={{
                           ...OutlinedInputStyle,
-                          border: `${errors.firstName && "solid 1px #004EEB"}`,
                         }}
                         placeholder="First name"
                       />
-                      <p style={Subtitle}>{errors?.firstName?.message}</p>
                     </div>
                     <div
                       style={{
@@ -294,15 +338,13 @@ export const CreateNewConsumer = ({
                         <p style={paragraphStyle}>Last name</p>
                       </InputLabel>
                       <OutlinedInput
-                        {...register("lastName", { required: true })}
-                        aria-invalid={errors.lastName}
+                        required
+                        {...register("lastName")}
                         style={{
                           ...OutlinedInputStyle,
-                          border: `${errors.lastName && "solid 1px #004EEB"}`,
                         }}
                         placeholder="Last name"
                       />
-                      {errors?.lastName?.message}
                     </div>
                   </div>
                   <div
@@ -320,16 +362,18 @@ export const CreateNewConsumer = ({
                       <p style={paragraphStyle}>Email</p>
                     </InputLabel>
                     <OutlinedInput
-                      {...register("email", { required: true, minLength: 10 })}
-                      aria-invalid={errors.email}
+                      required
+                      type="email"
+                      {...register("email", {
+                        minLength: 10,
+                        pattern: /^\S+@\S+$/i,
+                      })}
                       style={{
                         ...OutlinedInputStyle,
-                        border: `${errors.email && "solid 1px #004EEB"}`,
                       }}
                       placeholder="Enter your email"
                       fullWidth
                     />
-                    {errors?.email?.message}
                   </div>
                   <div
                     style={{
@@ -368,18 +412,19 @@ export const CreateNewConsumer = ({
                     </InputLabel>
                     <Select
                       className="custom-autocomplete"
+                      aria-required
                       displayEmpty
-                      {...register("eventAssignedTo", { required: true })}
-                      aria-invalid={errors.eventAssignedTo}
                       style={{
                         ...AntSelectorStyle,
                         width: "100%",
                         margin: "0 0 0.3rem",
+                        backgroundColor: "transparent",
+                        display:
+                          location.pathname === "/events/event-quickglance"
+                            ? "none"
+                            : "flex",
                       }}
                     >
-                      <MenuItem disabled value="">
-                        <em>Select event</em>
-                      </MenuItem>
                       {listOfAvailableEventsPerAdmin?.map((event) => {
                         return (
                           <MenuItem
@@ -393,7 +438,20 @@ export const CreateNewConsumer = ({
                         );
                       })}
                     </Select>
-                    {errors?.eventAssignedTo?.message}
+                    <OutlinedInput
+                      required
+                      readOnly
+                      type="text"
+                      style={{
+                        ...OutlinedInputStyle,
+                        display:
+                          location.pathname === "/events/event-quickglance"
+                            ? "flex"
+                            : "none",
+                      }}
+                      defaultValue={event.eventInfoDetail.eventName}
+                      fullWidth
+                    />
                   </div>
                   <Button
                     loading={loading}
