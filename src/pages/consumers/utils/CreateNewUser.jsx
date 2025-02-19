@@ -38,9 +38,8 @@ const schema = yup
       .string()
       .email("email has an invalid format")
       .required("email is required"),
-    eventAssignedTo: yup.string().required(),
+    // eventAssignedTo: yup.string().required(),
   })
-  .required();
 
 const paragraphStyle = {
   textTransform: "none",
@@ -61,6 +60,7 @@ export const CreateNewConsumer = ({
     resolver: yupResolver(schema),
   });
   const [contactPhoneNumber, setContactPhoneNumber] = useState("");
+  const [eventAssignedTo, setEventAssignedTo] = useState("");
   const [loading, setLoading] = useState(false);
   const { event } = useSelector((state) => state.event);
   const location = useLocation();
@@ -76,7 +76,6 @@ export const CreateNewConsumer = ({
       description: msg,
     });
   };
-
   useEffect(() => {
     const controller = new AbortController();
     if (location.pathname === "/events/event-quickglance") {
@@ -84,7 +83,7 @@ export const CreateNewConsumer = ({
         (item) =>
           item.eventInfoDetail.eventName === event.eventInfoDetail.eventName
       );
-      setValue("eventAssignedTo", JSON.stringify(eventInfo));
+      setEventAssignedTo(JSON.stringify(eventInfo));
     }
     return () => {
       controller.abort();
@@ -109,10 +108,10 @@ export const CreateNewConsumer = ({
 
       return navigate(`/events/event-attendees/${userFormatData.uid}/transactions-details`);
     }
-    return null;
+    return closeDeviceModal();
   };
   const newConsumerAfterBeingCheck = async (data) => {
-    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
+    const newEventToAddConsumer = JSON.parse(eventAssignedTo);
     const newUserProfile = {
       name: data.firstName,
       lastName: data.lastName,
@@ -154,7 +153,7 @@ export const CreateNewConsumer = ({
   };
 
   const updateExistingUserInRecord = async (data) => {
-    const newEventToAddConsumer = JSON.parse(data.eventAssignedTo);
+    const newEventToAddConsumer = JSON.parse(eventAssignedTo);
     const { event_providers, company_providers, eventSelected, provider, id } =
       data.consumersList.at(-1);
     if (
@@ -208,11 +207,13 @@ export const CreateNewConsumer = ({
   };
 
   const handleNewConsumer = async (data) => {
+    console.log(data);
     setLoading(true);
     try {
       const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
         email: data.email,
       });
+      console.log(listOfConsumersQuery.data);
       if (listOfConsumersQuery.data.ok) {
         if (listOfConsumersQuery.data.users.length > 0) {
           return updateExistingUserInRecord({
@@ -412,19 +413,23 @@ export const CreateNewConsumer = ({
                     </InputLabel>
                     <Select
                       className="custom-autocomplete"
-                      aria-required
                       displayEmpty
+                      name="eventAssignedTo"
+                      value={eventAssignedTo}
+                      onChange={(value) => setEventAssignedTo(value)}
                       style={{
                         ...AntSelectorStyle,
                         width: "100%",
                         margin: "0 0 0.3rem",
-                        backgroundColor: "transparent",
                         display:
-                          location.pathname === "/events/event-quickglance"
-                            ? "none"
-                            : "flex",
-                      }}
+                        location.pathname === "/events/event-quickglance"
+                          ? "none"
+                          : "flex",
+}}
                     >
+                      <MenuItem disabled value="">
+                        <em>Select event</em>
+                      </MenuItem>
                       {listOfAvailableEventsPerAdmin?.map((event) => {
                         return (
                           <MenuItem
@@ -437,8 +442,7 @@ export const CreateNewConsumer = ({
                           </MenuItem>
                         );
                       })}
-                    </Select>
-                    <OutlinedInput
+                    </Select>                    <OutlinedInput
                       required
                       readOnly
                       type="text"
