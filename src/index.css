@@ -1,7 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
 :root {
-  min-width: calc(100vw - 12px);
+  min-width: 100vw;
+  /* calc(100vw - 12px); */
   min-height: 100dvh;
   display: flex;
   margin: 0;
@@ -18,7 +19,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
   /* colors pallet */
