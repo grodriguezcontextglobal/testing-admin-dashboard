@@ -5,7 +5,7 @@
   min-height: 100dvh;
   display: flex;
   margin: 0;
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
   align-self: stretch;
   text-align: center;
   color-scheme: light dark;
