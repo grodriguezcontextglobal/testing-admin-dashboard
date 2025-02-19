@@ -1,7 +1,10 @@
 #root {
-  width: 100%;
+  width: calc(100% - 12px);
   margin: 0 auto;
-  padding: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  /* padding-left: min(24px, 8%);
+  padding-right: min(24px, 8%); */
   text-align: center;
   border-top: transparent;
   border-left: 0.1px solid var(--gray100);
@@ -60,10 +63,10 @@
 
 .bug-report-container {
   position: absolute;
-  top:50%;
+  top: 50%;
   right: 1%;
   transform: translate(100%, -50%);
-  border:0.01px solid
+  border: 0.01px solid;
 }
 
 .bugs-button {

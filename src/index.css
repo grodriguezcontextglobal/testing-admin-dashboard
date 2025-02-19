@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
 :root {
-  min-width: calc(100vw - 10px);
+  min-width: calc(100vw - 12px);
   min-height: 100dvh;
   display: flex;
   margin: 0;
@@ -19,6 +19,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
   /* colors pallet */
   --white: rgba(255, 255, 255, 0);
@@ -197,5 +198,11 @@ button:focus-visible {
   }
   a:hover {
     color: #747bff;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  :root{
+    scrollbar-width: none;  
   }
 }
