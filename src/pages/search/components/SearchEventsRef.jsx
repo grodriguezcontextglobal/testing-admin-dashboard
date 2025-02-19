@@ -95,7 +95,7 @@ const SearchEventsRef = ({ data }) => {
         >
           {data?.results?.length > 0 ? (
             data?.results?.map((item) => (
-              <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+              <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
                 {" "}
                 <CardEventsFound
                   props={{

@@ -287,7 +287,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           >
             {data.pool && foundDeviceData.length > 0
               ? foundDeviceData?.map((item) => (
-                  <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+                  <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
                     <CardDeviceFound
                       key={item.id}
                       props={item}

@@ -100,7 +100,7 @@ const SearchStaffRef = ({ data }) => {
         >
           {data?.length > 0 ? (
             data?.map((item) => (
-              <Grid key={item?.id} item xs={12} sm={12} md={4} lg={4}>
+              <Grid key={item?.id} item xs={12} sm={12} md={3} lg={3}>
                 {" "}
                 <CardSearchStaffFound
                   props={{

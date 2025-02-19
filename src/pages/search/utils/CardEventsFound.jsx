@@ -63,7 +63,9 @@ const CardEventsFound = ({ props, fn }) => {
                 fontStyle: 'normal',
                 fontWeight: 400,
                 lineHeight: '24px', /* 150% */
-                textWrap: "pretty"
+                textWrap: "pretty",
+                overflowWrap: "anywhere",
+      
             }}>{props.address}</p></div>
         </Card >
     )
