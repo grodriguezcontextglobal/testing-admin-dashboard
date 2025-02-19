@@ -1,16 +1,17 @@
 import { Grid } from "@mui/material";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useLocation } from "react-router-dom";
 import HeaderSearch from "./components/HeaderSearch";
-import SearchConsumer from "./components/SearchConsumer";
-import SearchDevice from "./components/SearchDevice";
-import SearchEvents from "./components/SearchEvents";
-// import SearchPosts from "./components/SearchPosts";
-import SearchStaff from "./components/SearchStaff";
+import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../api/devitrakApi";
+import SearchConsumerRef from "./components/SearchConsumerRef";
+import SearchDeviceRef from "./components/SearchDeviceRef";
+import SearchEventsRef from "./components/SearchEventsRef";
+import SearchStaffRef from "./components/SearchStaffRef";
 import SearchTransaction from "./components/SearchTransaction";
 
 const SearchMainPage = () => {
-  const [countingResult, setCountingResult] = useState([0]);
   const [filterOptions, setFilterOptions] = useState({
     "View All": 1,
     Consumers: 0,
@@ -20,6 +21,16 @@ const SearchMainPage = () => {
   }); //'Posts': 0,
   const [searchParams, setSearchParams] = useState("");
   const location = useLocation();
+  const { user } = useSelector((state) => state.admin);
+  const generalSearch = useQuery({
+    queryKey: ["generalSearch", searchParams],
+    queryFn: () =>
+      devitrakApi.get(
+        `/search/searching_?variable=${searchParams}&company=${user.companyData.id}`
+      ),
+    refetchOnWindowFocus: false,
+  });
+
   const styleSection = {
     display: "flex",
     justifyContent: "flex-start",
@@ -39,15 +50,13 @@ const SearchMainPage = () => {
   const searching_device = useId();
   const searching_events = useId();
   const searching_transaction = useId();
-  const sumOfResultDisplayed = useCallback(() => {
-    const initialValue = 0;
-    const count = countingResult.reduce(
-      (accu, curr) => accu + curr,
-      initialValue
-    );
-    return count;
-  }, [searchParams]);
-
+  const sum = () => {
+    const consumers = generalSearch?.data?.data?.consumer?.consumers.length ?? 0;
+    const staff = generalSearch?.data?.data?.staff?.length ?? 0;
+    const devices = generalSearch?.data?.data?.devicePool?.devicePool?.length ?? 0;
+    const events = generalSearch?.data?.data?.event?.results?.length ?? 0;
+    return consumers + staff + devices + events;
+  };
   return (
     <Grid
       display={"flex"}
@@ -58,7 +67,7 @@ const SearchMainPage = () => {
       key={`${location.key} - ${searchParams}`}
     >
       <HeaderSearch
-        countingResults={sumOfResultDisplayed()}
+        countingResults={sum}
         filterOptions={filterOptions}
         setFilterOptions={setFilterOptions}
       />
@@ -72,49 +81,40 @@ const SearchMainPage = () => {
       >
         {(filterOptions["View All"] === 1 || filterOptions.Consumers === 1) && (
           <section style={styleSection}>
-            <SearchConsumer
+            <SearchConsumerRef
               id={searching_consumer}
               searchParams={searchParams}
-              countingResult={countingResult}
-              setCountingResult={setCountingResult}
-              
+              data={generalSearch?.data?.data?.consumer}
             />
           </section>
         )}
         {(filterOptions["View All"] === 1 || filterOptions.Staff === 1) && (
           <section style={styleSection}>
-            <SearchStaff
+            <SearchStaffRef
               id={searching_staff}
               searchParams={searchParams}
-              countingResult={countingResult}
-              setCountingResult={setCountingResult}
-              
+              data={generalSearch?.data?.data?.staff}
             />
           </section>
         )}
         {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) && (
           <section style={styleSection}>
-            <SearchDevice
+            <SearchDeviceRef
               id={searching_device}
               searchParams={searchParams}
-              countingResult={countingResult}
-              setCountingResult={setCountingResult}
-              
+              data={{
+                pool: generalSearch?.data?.data?.devicePool?.devicePool,
+                device: generalSearch?.data?.data?.deviceTransaction,
+              }}
             />
           </section>
         )}
-        {/* {(filterOptions["View All"] === 1 || filterOptions.Posts === 1) && <section style={styleSection}>
-                    <SearchPosts id={searching_device} searchParams={searchParams} countingResult={countingResult} setCountingResult={setCountingResult}
-                    
-                </section>} */}
         {(filterOptions["View All"] === 1 || filterOptions.Events === 1) && (
           <section style={styleSection}>
-            <SearchEvents
+            <SearchEventsRef
               id={searching_events}
               searchParams={searchParams}
-              countingResult={countingResult}
-              setCountingResult={setCountingResult}
-              
+              data={generalSearch?.data?.data?.event}
             />
           </section>
         )}
@@ -132,3 +132,76 @@ const SearchMainPage = () => {
 };
 
 export default SearchMainPage;
+{
+  /* <div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
+  }}
+>
+  {(filterOptions["View All"] === 1 || filterOptions.Consumers === 1) && (
+    <section style={styleSection}>
+      <SearchConsumer
+        id={searching_consumer}
+        searchParams={searchParams}
+        countingResult={countingResult}
+        setCountingResult={setCountingResult}
+        countingResults={countingResult}
+      />
+    </section>
+  )}
+  {(filterOptions["View All"] === 1 || filterOptions.Staff === 1) && (
+    <section style={styleSection}>
+      <SearchStaff
+        id={searching_staff}
+        searchParams={searchParams}
+        countingResult={countingResult}
+        setCountingResult={setCountingResult}
+        countingResults={countingResult}
+      />
+    </section>
+  )}
+  {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) && (
+    <section style={styleSection}>
+      <SearchDevice
+        id={searching_device}
+        searchParams={searchParams}
+        countingResult={countingResult}
+        setCountingResult={setCountingResult}
+        countingResults={countingResult}
+      />
+    </section>
+  )}
+  {(filterOptions["View All"] === 1 || filterOptions.Posts === 1) && (
+    <section style={styleSection}>
+      <SearchPosts
+        id={searching_device}
+        searchParams={searchParams}
+        countingResult={countingResult}
+        setCountingResult={setCountingResult}
+      />
+    </section>
+  )}
+  {(filterOptions["View All"] === 1 || filterOptions.Events === 1) && (
+    <section style={styleSection}>
+      <SearchEvents
+        id={searching_events}
+        searchParams={searchParams}
+        countingResult={countingResult}
+        setCountingResult={setCountingResult}
+        countingResults={countingResult}
+      />
+    </section>
+  )}
+  {filterOptions["View All"] === 1 && (
+    <section style={styleSection}>
+      <SearchTransaction
+        id={searching_transaction}
+        searchParams={searchParams}
+      />
+    </section>
+  )}
+</div>; */
+}
