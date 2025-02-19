@@ -75,7 +75,7 @@ const HeaderSearch = ({ countingResults, setFilterOptions }) => {
           Search results
         </Typography>
         <Typography style={{ ...Subtitle, width: "100%" }}>
-          There are {countingResults} results to your query
+          There are {countingResults()} results to your query
         </Typography>
       </div>
       <div
