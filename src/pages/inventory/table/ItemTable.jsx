@@ -11,7 +11,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,10 +27,19 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../style/details.css";
 // import DownloadPdf from "../actions/DownloadPdf";
+
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
-const ItemTable = ({ searchItem, date, loadingState, reference }) => {
+
+const ItemTable = ({
+  searchItem,
+  date,
+  loadingState,
+  reference,
+  openAdvanceSearchModal,
+  setOpenAdvanceSearchModal,
+}) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
   const [chosen, setChosen] = useState({ category: null, value: null });
@@ -57,7 +66,7 @@ const ItemTable = ({ searchItem, date, loadingState, reference }) => {
       devitrakApi.get(
         `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
       ),
-    refetchOnMount: false,
+    // refetchOnMount: false,
   });
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
@@ -186,11 +195,11 @@ const ItemTable = ({ searchItem, date, loadingState, reference }) => {
     setSearchDateResult(responseQuery.data.events);
     return responseQuery?.data?.events;
   };
-useEffect(() => {
-  if (date) {
-    querySearchingDataByDate();
-  }
-}, [date]); // ✅ This will ensure the query runs when the date is updated
+  useEffect(() => {
+    if (date) {
+      querySearchingDataByDate();
+    }
+  }, [date]); // ✅ This will ensure the query runs when the date is updated
 
   const filterDataByDate = useMemo(() => {
     return getDataStructuringFormat(searchDateResult);
@@ -208,7 +217,7 @@ useEffect(() => {
     }
     return options[chosenConditionState] || [];
   }, [chosenConditionState, searchDateResult, renderedListItems]);
-  
+
   const filterOptions = {
     0: filterOptionsBasedOnProps("brand"),
     1: filterOptionsBasedOnProps("item_group"),
@@ -235,6 +244,7 @@ useEffect(() => {
       title: "Device category",
       dataIndex: "data",
       key: "data",
+      responsive: ["lg"],
       sorter: {
         compare: (a, b) =>
           ("" + a.data.item_group).localeCompare(b.data.item_group),
@@ -468,6 +478,7 @@ useEffect(() => {
       title: "",
       dataIndex: "data",
       key: "data",
+      responsive: ["lg"],
       render: (record) => (
         <button
           style={{
@@ -496,6 +507,8 @@ useEffect(() => {
           dataToDisplay={dataToDisplay}
           searchItem={searchItem}
           user={user}
+          openAdvanceSearchModal={openAdvanceSearchModal}
+          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         />
         <Grid
           display={"flex"}
@@ -505,6 +518,9 @@ useEffect(() => {
           margin={"20px 0 0 0"}
           item
           xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
           <div //details
             style={{
