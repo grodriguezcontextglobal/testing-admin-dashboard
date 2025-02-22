@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
+import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -258,6 +259,10 @@ const AuthRoutes = () => {
               <Route
                 path="/inventory/inventory-in-use"
                 element={<InventoryInUsePage />}
+              />
+              <Route
+                path="/inventory/advance_search_result"
+                element={<AdvanceSearchResultPage />}
               />
               <Route path="/consumers" element={<ConsumersMainPage />} />
               <Route path="/consumers/:id" element={<ConsumerDetail />} />
