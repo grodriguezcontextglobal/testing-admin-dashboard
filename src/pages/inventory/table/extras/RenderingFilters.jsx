@@ -2,7 +2,7 @@ import { Grid } from "@mui/material";
 import { Divider, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { useState } from "react";
+import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -14,7 +14,17 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import CardLocations from "../../utils/CardLocations";
-const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
+import AdvanceSearchModal from "./AdvanceSearchModal";
+// import CenteringGrid from "../../../../styles/global/CenteringGrid";
+export const AdvanceSearchContext = createContext();
+
+const RenderingFilters = ({
+  user,
+  dataToDisplay,
+  searchItem,
+  openAdvanceSearchModal,
+  setOpenAdvanceSearchModal,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dictionary = {
@@ -143,6 +153,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
 
   const optionsToRenderInDetailsHtmlTags = [
     {
+      key: "location",
       title: `Locations`,
       buttonFn: true,
       data: displayTotalDevicesAndTotalAvailbalePerLocation("location"), //sortingByParameters
@@ -220,6 +231,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       ],
     },
     {
+      key: "category_name",
       title: "Category",
       data: sortingByParameters("category_name"),
       totalUnits: sortingByParameters("category_name").length ?? 0,
@@ -235,6 +247,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       ],
     },
     {
+      key: "item_group",
       title: "Groups",
       data: sortingByParameters("item_group"),
       totalUnits: sortingByParameters("item_group").length ?? 0,
@@ -250,6 +263,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       ],
     },
     {
+      key: "brand",
       title: "Brands",
       data: sortingByParameters("brand"),
       totalUnits: sortingByParameters("brand").length ?? 0,
@@ -265,6 +279,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
       ],
     },
     {
+      key: "ownership",
       title: "Ownership",
       data: sortingByParameters("ownership"),
       totalUnits: sortingByParameters("ownership").length ?? 0,
@@ -308,11 +323,11 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
   };
 
   return (
-    <>
-      {optionsToRenderInDetailsHtmlTags.map((item) => {
+    <Grid container>
+      {optionsToRenderInDetailsHtmlTags.map((item, index) => {
         return (
           <Grid
-            key={item.title}
+            key={`${item.title}_${index}`}
             display={"flex"}
             flexDirection={"column"}
             justifyContent={"flex-start"}
@@ -320,6 +335,9 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
             margin={"20px 0 0 0"}
             item
             xs={12}
+            sm={12}
+            md={12}
+            lg={12}
           >
             <details
               style={{
@@ -332,6 +350,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
               open={item.open}
             >
               <summary
+                key={`${item.title}-*-*${index}`}
                 style={{
                   width: "100%",
                 }}
@@ -376,6 +395,7 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                 </p>
               </summary>
               <div
+                key={`_${index}-${item.title}`}
                 style={{
                   maxWidth: "1228px",
                   width: "99.5vw",
@@ -393,8 +413,8 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                           key={opt}
                           alignSelf={"flex-start"}
                           item
-                          xs={12}
-                          sm={12}
+                          xs={11}
+                          sm={11}
                           md={12}
                           lg={12}
                         >
@@ -421,8 +441,8 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
                           key={opt}
                           alignSelf={"flex-start"}
                           item
-                          xs={12}
-                          sm={12}
+                          xs={11}
+                          sm={11}
                           md={4}
                           lg={4}
                         >
@@ -467,7 +487,22 @@ const RenderingFilters = ({ user, dataToDisplay, searchItem }) => {
           </Grid>
         );
       })}
-    </>
+      {openAdvanceSearchModal && (
+        <AdvanceSearchContext.Provider
+          value={{
+            location: displayTotalDevicesAndTotalAvailbalePerLocation("location"),
+            category: sortingByParameters("category_name"),
+            group: sortingByParameters("item_group"),
+            brand: sortingByParameters("brand"),
+          }}
+        >
+          <AdvanceSearchModal
+            openAdvanceSearchModal={openAdvanceSearchModal}
+            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+          />
+        </AdvanceSearchContext.Provider>
+      )}
+    </Grid>
   );
 };
 
