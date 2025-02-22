@@ -1,30 +1,61 @@
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { Title } from "../../../../styles/global/Title";
+import { Grid } from "@mui/material";
 import { Button, Divider } from "antd";
-import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
-import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
-import { BluePlusIcon } from "../../../../components/icons/BluePlusIcon";
+import { groupBy } from "lodash";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { BluePlusIcon } from "../../../../components/icons/BluePlusIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { onAddAdvanceSearch } from "../../../../store/slices/searchBarResultSlice";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
+import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import Bars from "../../charts/Bars";
 
 const AdvanceSearchResultPage = () => {
   const { advanceSearch } = useSelector((state) => state.searchResult);
   const { user } = useSelector((state) => state.admin);
-  console.log(advanceSearch);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleReturnNavigation = () => {
     dispatch(onAddAdvanceSearch(null));
     return navigate("/inventory");
   };
+  const renderingBasedOnCategoryQuantity = () => {
+    const categoryQuantity = groupBy(advanceSearch, "item_group");
+    const data = Object.keys(categoryQuantity).map((key) => [
+      categoryQuantity[key].length,
+      key,
+    ]);
+    return data;
+  };
+
+  const renderingBasedOnOwnershipQuantity = () => {
+    const categoryQuantity = groupBy(advanceSearch, "ownership");
+    const data = Object.keys(categoryQuantity).map((key) => [
+      categoryQuantity[key].length,
+      key,
+    ]);
+    return data;
+  };
+  const renderingBasedOnStatusQuantity = () => {
+    const categoryQuantity = groupBy(advanceSearch, "status");
+    const data = Object.keys(categoryQuantity).map((key) => [
+      categoryQuantity[key].length,
+      key,
+    ]);
+    return data;
+  };
+  const renderingBasedOnLocationQuantity = () => {
+    const categoryQuantity = groupBy(advanceSearch, "location");
+    const data = Object.keys(categoryQuantity).map((key) => [
+      categoryQuantity[key].length,
+      key,
+    ]);
+    return data;
+  };
+
   return (
     <Grid
       style={{
@@ -131,18 +162,6 @@ const AdvanceSearchResultPage = () => {
           </button>
         </Link>
       </Grid>
-      <Grid
-        style={{
-          paddingTop: "0px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        container
-        marginTop={4}
-      >
-        <Grid textAlign={"right"} item xs={4}></Grid>
-      </Grid>
       <Divider />
       <Grid
         display={"flex"}
@@ -158,25 +177,60 @@ const AdvanceSearchResultPage = () => {
           <p style={BlueButtonText}>Return</p>
         </Button>{" "}
       </Grid>
+      <Divider />
       <Grid
         display={"flex"}
-        justifyContent={"center"}
+        justifyContent={"flex-start"}
         alignItems={"center"}
+        gap={2}
         container
       >
-        <Grid
+        {/* <Grid
           display={"flex"}
-          justifyContent={"center"}
+          justifyContent={"flex-start"}
           alignItems={"center"}
           style={CenteringGrid}
+          gap={2}
           item
           xs={12}
           sm={12}
           md={12}
           lg={12}
-        >
-          {/* {renderingOption[currentTab]} */}
-        </Grid>
+        > */}
+          <Bars
+            key={"CHART_CATEGORY"}
+            dataToRender={renderingBasedOnCategoryQuantity()}
+            title="Groups"
+          />{" "}
+          <Bars
+            key={"CHART_LOCATION"}
+            dataToRender={renderingBasedOnLocationQuantity()}
+            title="Location"
+          />
+        {/* </Grid> */}
+        {/* <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          style={CenteringGrid}
+          gap={2}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        > */}
+          <Bars
+            key={"CHART_OWNERSHIP"}
+            dataToRender={renderingBasedOnOwnershipQuantity()}
+            title="Ownership"
+          />
+          <Bars
+            key={"CHART_STATUS"}
+            dataToRender={renderingBasedOnStatusQuantity()}
+            title="Status"
+          />
+        {/* </Grid> */}
       </Grid>
     </Grid>
   );
