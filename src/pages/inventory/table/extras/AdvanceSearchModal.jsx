@@ -209,9 +209,9 @@ const AdvanceSearchModal = ({
             onChange={(value) => setValue("date", value)}
           />
         </div>
-        <Tooltip title="In construction">
+        <Tooltip title="Still in construction">
           <Button
-            disabled
+            // disabled
             htmlType="submit"
             loading={isLoadingState}
             style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
