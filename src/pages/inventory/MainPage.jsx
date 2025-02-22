@@ -3,7 +3,7 @@ import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
-import CalendarIcon from "../../components/icons/CalendarIcon";
+// import CalendarIcon from "../../components/icons/CalendarIcon";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import "../../styles/global/ant-select.css";
@@ -29,6 +29,7 @@ const ItemTable = lazy(() => import("./table/ItemTable"));
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
+  const [currentTab, setCurrentTab] = useState(0);
   const { register, watch } = useForm();
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery"],
@@ -45,11 +46,49 @@ const MainPage = () => {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [currentTab]);
 
   const [begin, setBegin] = useState(null);
+  const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [reference, setReference] = useState(null);
-  const [isLoadingState, setIsLoadingState] = useState(true);
+  const [isLoadingState, setIsLoadingState] = useState(false);
+
+  useEffect(() => {
+    if (companyHasInventoryQuery?.data?.data?.total > 0) {
+      setIsLoadingState(true)
+      setCurrentTab(1);
+      setIsLoadingState(false);
+    }
+  }, [companyHasInventoryQuery.data, companyHasInventoryQuery.isSuccess]);
+
+  const renderingOption = {
+    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    1: (
+      <ItemTable
+        searchItem={watch("searchItem")}
+        date={begin}
+        loadingState={setIsLoadingState}
+        companyInventoryExisting={companyHasInventoryQuery.data}
+        reference={reference}
+        openAdvanceSearchModal={openAdvanceSearchModal}
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+      />
+    ),
+    2: (
+      <BannerMsg
+        props={{
+          title: "Add to your inventory",
+          message:
+            "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
+          link: "/inventory/new-item",
+          button: BlueButton,
+          paragraphStyle: BlueButtonText,
+          paragraphText: "Add to inventory",
+        }}
+      />
+    ),
+  };
+
   return (
     <Suspense
       fallback={
@@ -60,7 +99,7 @@ const MainPage = () => {
     >
       <Grid
         style={{
-          padding: "5px",
+          padding: "5px 0",
           display: "flex",
           flexDirection: "row",
           justifyContent: "center",
@@ -74,7 +113,11 @@ const MainPage = () => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
           <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
             <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
@@ -87,9 +130,8 @@ const MainPage = () => {
             justifyContent={"flex-end"}
             alignItems={"center"}
             gap={1}
+            sx={{ display: { xs: "none", sm: "none", md: "flex", lg: "flex" } }}
             item
-            xs={12}
-            sm={12}
             md={8}
             lg={8}
           >
@@ -123,6 +165,46 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Grid
+          textAlign={"right"}
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          sx={{
+            display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
+            marginTop: "10px",
+          }}
+          item
+          xs={12}
+          sm={12}
+        >
+          <Link to="/inventory/edit-group">
+            <button style={{ ...LightBlueButton, width: "fit-content" }}>
+              <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
+                Update a group of device
+              </p>
+            </button>
+          </Link>
+          <Link to="/inventory/new-bulk-items">
+            <button style={{ ...BlueButton, width: "fit-content" }}>
+              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+              &nbsp;
+              <p style={{ ...BlueButtonText, textTransform: "none" }}>
+                Add a group of devices
+              </p>
+            </button>
+          </Link>
+          <Link to="/inventory/new-item">
+            <button style={{ ...LightBlueButton, width: "fit-content" }}>
+              <BluePlusIcon />
+              &nbsp;
+              <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
+                Add one device
+              </p>
+            </button>
+          </Link>
+        </Grid>
+        <Grid
           style={{
             paddingTop: "0px",
             display: "flex",
@@ -135,111 +217,76 @@ const MainPage = () => {
           <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
         <Divider />
-        {companyHasInventoryQuery?.data?.data?.total > 0 ? (
-          <>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <p
+            style={{
+              ...Title,
+              fontSize: "28px",
+              padding: 0,
+              width: "fit-content",
+            }}
+          >
+            Search inventory:&nbsp;
+          </p>
+          <Grid style={{ ...CenteringGrid, gap: "5px" }} item xs sm md lg>
+            <OutlinedInput
+              {...register("searchItem")}
+              style={OutlinedInputStyle}
+              fullWidth
+              placeholder="Search device here"
+              startAdornment={
+                <InputAdornment position="start">
+                  <MagnifyIcon />
+                </InputAdornment>
+              }
+            />
+            <Button
+              style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
+              onClick={() => {
+                setOpenAdvanceSearchModal(true);
+              }}
             >
-              <p
-                style={{
-                  ...Title,
-                  fontSize: "28px",
-                  padding: 0,
-                  width: "fit-content",
-                }}
-              >
-                Search inventory:&nbsp;
-              </p>
-              <Grid style={{ ...CenteringGrid, gap: "5px" }} item xs sm md lg>
-                <OutlinedInput
-                  {...register("searchItem")}
-                  style={OutlinedInputStyle}
-                  fullWidth
-                  placeholder="Search device here"
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <MagnifyIcon />
-                    </InputAdornment>
-                  }
-                />
-                <Button
-                  style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
-                >
-                  <CalendarIcon />
-                  <DatePicker
-                    id="calender-event"
-                    autoComplete="checking"
-                    // minDate={new Date()}
-                    selected={begin}
-                    onChange={(date) =>{ setBegin(new Date(date)); setReference(new Date(date).getTime())}}
-                    placeholderText="Choose a date"
-                    // startDate={new Date()}
-                    style={{
-                      ...OutlinedInputStyle,
-                      margin: "0.1rem 0 1.5rem",
-                      width: "100%",
-                    }}
-                  />
-                  <Button
-                    style={{
-                      ...OutlinedInputStyle,
-                      gap: 0,
-                      border: "none",
-                      height: "95%",
-                      boxShadow: "none",
-                    }}
-                    onClick={() =>{ setBegin(null); setReference(null)}}
-                  >
-                    X
-                  </Button>
-                </Button>
-              </Grid>
-            </Grid>
-            <Grid container>
-              <Grid
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <ItemTable searchItem={watch("searchItem")} date={begin} loadingState={setIsLoadingState} companyInventoryExisting={companyHasInventoryQuery.data} reference={reference}/>
-              </Grid>
-            </Grid>
-          </>
-        ) : (
+              Advance search
+            </Button>
+            <Button
+              style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
+              onClick={() => {
+                setCurrentTab(3);
+              }}
+            >
+              Reload
+            </Button>
+          </Grid>
+        </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          container
+        >
           <Grid
-            textAlign={"right"}
-            display={companyHasInventoryQuery?.data?.data?.total > 0 ? "flex" : "none"}
+            display={"flex"}
             justifyContent={"center"}
             alignItems={"center"}
-            gap={1}
+            style={CenteringGrid}
             item
             xs={12}
             sm={12}
-            md={10}
-            lg={10}
+            md={12}
+            lg={12}
           >
-            <BannerMsg
-              props={{
-                title: "Add to your inventory",
-                message:
-                  "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-                link: "/inventory/new-item",
-                button: BlueButton,
-                paragraphStyle: BlueButtonText,
-                paragraphText: "Add to inventory",
-              }}
-            />
+            {renderingOption[currentTab]}
           </Grid>
-        )}{" "}
+        </Grid>
       </Grid>
       {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
     </Suspense>
