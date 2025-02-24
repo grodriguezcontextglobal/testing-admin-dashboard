@@ -23,7 +23,7 @@ const Dashboard = () => {
   const { register, watch, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
   useEffect(() => {
-    if (user.companyData.stripe_connected_account[stripeEnvMode.current].id) {
+    if (user.companyData.stripe_connected_account[stripeEnvMode.current]?.id) {
       return setClientSecret(true);
     }
   }, []);
@@ -31,7 +31,7 @@ const Dashboard = () => {
   if (clientSecret) {
     return (
       <div style={{ width: "100%" }}>
-        {user.companyData.stripe_connected_account[stripeEnvMode.current].id && clientSecret && (
+        {user.companyData.stripe_connected_account[stripeEnvMode.current]?.id && clientSecret && (
           <StripeConnectedAccountDashboard />
         )}
       </div>
@@ -83,7 +83,7 @@ const Dashboard = () => {
         width: "100%",
       }}
     >
-      {!user.companyData.stripe_connected_account[stripeEnvMode.current].id &&
+      {!user.companyData.stripe_connected_account[stripeEnvMode.current]?.id &&
         !openModalStripeConnectedAccount && (
           <Button
             onClick={() => setOpenModalStripeConnectedAccount(true)}
