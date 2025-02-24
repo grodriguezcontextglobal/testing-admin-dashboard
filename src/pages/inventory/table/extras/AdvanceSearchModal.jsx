@@ -1,5 +1,5 @@
 import { InputLabel, Typography } from "@mui/material";
-import { Button, DatePicker, Modal, Select, Tooltip } from "antd";
+import { Button, DatePicker, message, Modal, Select, Tooltip } from "antd";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,9 +20,11 @@ const AdvanceSearchModal = ({
   setOpenAdvanceSearchModal,
 }) => {
   const values = useContext(AdvanceSearchContext);
-  const [advanceSearchResultState, setAdvanceSearchResultState] = useState(null);
+  const [advanceSearchResultState, setAdvanceSearchResultState] =
+    useState(null);
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
+  const [displayMessage, setDisplayMessage] = useState(false);
   const { register, handleSubmit, setValue } = useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,12 +33,16 @@ const AdvanceSearchModal = ({
       <Typography style={TextFontsize18LineHeight28}>Advance search</Typography>
     );
   };
-
+  console.log(displayMessage);
+  console.log(advanceSearchResultState);
   const closeModal = () => {
     return setOpenAdvanceSearchModal(false);
   };
 
   const handleSearchQuery = async (data) => {
+    if (!data.date) {
+      return message.error("Please select a date");
+    }
     try {
       setIsLoadingState(true);
       const date_start = `${new Date(data.date[0].$d).getFullYear()}-${
@@ -56,6 +62,7 @@ const AdvanceSearchModal = ({
           advanceSearchResponseQuery.data.advanceSearchResult
         );
         return setTimeout(() => {
+          setDisplayMessage(false);
           setIsLoadingState(false);
           dispatch(
             onAddAdvanceSearch(
@@ -64,6 +71,8 @@ const AdvanceSearchModal = ({
           );
           return navigate("/inventory/advance_search_result");
         }, 2000);
+      } else {
+        return setDisplayMessage(true);
       }
     } catch (error) {
       setIsLoadingState(false);
@@ -222,15 +231,15 @@ const AdvanceSearchModal = ({
       </form>
       <div
         style={{
-          display: advanceSearchResultState?.length < 1 ? "none" : "flex",
-          ...CenteringGrid,
+          display:
+            displayMessage ? "flex" : "none",
           backgroundColor: "var(--danger-action)",
-          margin:"0.5rem 0",
+          margin: "0.5rem 0",
           borderRadius: "12px",
           padding: "0.5rem",
         }}
       >
-        <p style={{ ...Subtitle, color: "var(--basewhite)" }}>
+        <p style={{ ...Subtitle, ...CenteringGrid, color: "var(--basewhite)" }}>
           There is not result based on parameters passed.
         </p>
       </div>
