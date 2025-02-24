@@ -1,7 +1,7 @@
 import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -9,30 +9,54 @@ import countryList from "../../components/json/countries.json";
 import { devitrakApi } from "../../api/devitrakApi";
 import { checkArray } from "../../components/utils/checkArray";
 import { useSelector } from "react-redux";
+import { ConfigEnvExport } from "../../config/ConfigEnvExport";
 const RegisterStripeConnectedAccount = () => {
   const { register, handleSubmit, watch } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
+  const stripeEnvMode = useRef(
+    String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
+  );
   const onSubmitRegister = async (data) => {
     try {
       setLoadingStatus(true);
+
+      // 1. Create the connected Stripe account
       const createConnectedAccount = await devitrakApi.post(
         "/stripe/accounts",
         data
       );
+
       if (createConnectedAccount.data) {
+        // 2. Extract the new account data (adjust "checkArray" usage as needed)
         const newConnectedAccount = checkArray(
           createConnectedAccount.data.account
         );
+
+        // 3. Define the environment (e.g., "test" or "live")
+        const env = stripeEnvMode.current;
+
+        // 4. Initialize the account object with null placeholders
+        const stripeSessionAccount = {
+          test: null,
+          live: null,
+        };
+
+        // 5. Assign the new account details to the matching environment key
+        stripeSessionAccount[env] = {
+          id: newConnectedAccount.id,
+          login_links: newConnectedAccount.login_links,
+        };
+
+        // 6. Update the company data with the newly assigned environment key
         await devitrakApi.patch(
           `/company/update-company/${user.companyData.id}`,
           {
-            stripe_connected_account: {
-              id: newConnectedAccount.id,
-              login_links: newConnectedAccount.login_links,
-            },
+            stripe_connected_account: stripeSessionAccount,
           }
         );
+
+        // 7. Generate a Stripe account link for onboarding
         const responseCreateAccount = await devitrakApi.post(
           "/stripe/account_link",
           {
@@ -40,15 +64,19 @@ const RegisterStripeConnectedAccount = () => {
             origin: window.location.origin,
           }
         );
+
+        // 8. Redirect to the Stripe onboarding URL if successful
         if (responseCreateAccount.data) {
           setLoadingStatus(false);
           return window.location.assign(responseCreateAccount.data.account.url);
         }
       }
     } catch (error) {
+      // 9. Handle errors and reset loading status
       setLoadingStatus(false);
     }
   };
+
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
@@ -150,10 +178,7 @@ const RegisterStripeConnectedAccount = () => {
           <Grid item xs={12} textAlign="center">
             <p style={{ color: "#475467", fontSize: "14px" }}>
               Already have an account?{" "}
-              <Link
-                to="/login"
-                style={{ color: "#004EEB", fontWeight: "600" }}
-              >
+              <Link to="/login" style={{ color: "#004EEB", fontWeight: "600" }}>
                 Sign in
               </Link>
             </p>
@@ -173,184 +198,184 @@ const RegisterStripeConnectedAccount = () => {
 
 export default RegisterStripeConnectedAccount;
 
-      // console.log(data);
-      // console.log({
-      //   id: "acct_1QIGXUQvEEZGaW3J",
-      //   object: "account",
-      //   business_profile: {
-      //     annual_revenue: null,
-      //     estimated_worker_count: null,
-      //     mcc: null,
-      //     name: null,
-      //     product_description: null,
-      //     support_address: null,
-      //     support_email: null,
-      //     support_phone: null,
-      //     support_url: null,
-      //     url: null,
-      //   },
-      //   business_type: null,
-      //   capabilities: {
-      //     card_payments: "inactive",
-      //     transfers: "inactive",
-      //   },
-      //   charges_enabled: false,
-      //   controller: {
-      //     fees: {
-      //       payer: "application",
-      //     },
-      //     is_controller: true,
-      //     losses: {
-      //       payments: "application",
-      //     },
-      //     requirement_collection: "stripe",
-      //     stripe_dashboard: {
-      //       type: "express",
-      //     },
-      //     type: "application",
-      //   },
-      //   country: "US",
-      //   created: 1730927602,
-      //   default_currency: "usd",
-      //   details_submitted: false,
-      //   email: "as@garslkj.xyz",
-      //   external_accounts: {
-      //     object: "list",
-      //     data: [],
-      //     has_more: false,
-      //     total_count: 0,
-      //     url: "/v1/accounts/acct_1QIGXUQvEEZGaW3J/external_accounts",
-      //   },
-      //   future_requirements: {
-      //     alternatives: [],
-      //     current_deadline: null,
-      //     currently_due: [],
-      //     disabled_reason: null,
-      //     errors: [],
-      //     eventually_due: [],
-      //     past_due: [],
-      //     pending_verification: [],
-      //   },
-      //   login_links: {
-      //     object: "list",
-      //     data: [],
-      //     has_more: false,
-      //     total_count: 0,
-      //     url: "/v1/accounts/acct_1QIGXUQvEEZGaW3J/login_links",
-      //   },
-      //   metadata: {},
-      //   payouts_enabled: false,
-      //   requirements: {
-      //     alternatives: [],
-      //     current_deadline: 1732137203,
-      //     currently_due: [
-      //       "business_profile.mcc",
-      //       "business_profile.url",
-      //       "business_type",
-      //       "external_account",
-      //       "representative.dob.day",
-      //       "representative.dob.month",
-      //       "representative.dob.year",
-      //       "representative.email",
-      //       "representative.first_name",
-      //       "representative.last_name",
-      //       "settings.payments.statement_descriptor",
-      //       "tos_acceptance.date",
-      //       "tos_acceptance.ip",
-      //     ],
-      //     disabled_reason: "requirements.past_due",
-      //     errors: [],
-      //     eventually_due: [
-      //       "business_profile.mcc",
-      //       "business_profile.url",
-      //       "business_type",
-      //       "external_account",
-      //       "representative.dob.day",
-      //       "representative.dob.month",
-      //       "representative.dob.year",
-      //       "representative.email",
-      //       "representative.first_name",
-      //       "representative.last_name",
-      //       "settings.payments.statement_descriptor",
-      //       "tos_acceptance.date",
-      //       "tos_acceptance.ip",
-      //     ],
-      //     past_due: [
-      //       "business_profile.mcc",
-      //       "business_profile.url",
-      //       "business_type",
-      //       "external_account",
-      //       "representative.dob.day",
-      //       "representative.dob.month",
-      //       "representative.dob.year",
-      //       "representative.email",
-      //       "representative.first_name",
-      //       "representative.last_name",
-      //       "settings.payments.statement_descriptor",
-      //       "tos_acceptance.date",
-      //       "tos_acceptance.ip",
-      //     ],
-      //     pending_verification: [],
-      //   },
-      //   settings: {
-      //     bacs_debit_payments: {
-      //       display_name: null,
-      //       service_user_number: null,
-      //     },
-      //     branding: {
-      //       icon: null,
-      //       logo: null,
-      //       primary_color: null,
-      //       secondary_color: null,
-      //     },
-      //     card_issuing: {
-      //       tos_acceptance: {
-      //         date: null,
-      //         ip: null,
-      //       },
-      //     },
-      //     card_payments: {
-      //       decline_on: {
-      //         avs_failure: false,
-      //         cvc_failure: false,
-      //       },
-      //       statement_descriptor_prefix: null,
-      //       statement_descriptor_prefix_kana: null,
-      //       statement_descriptor_prefix_kanji: null,
-      //     },
-      //     dashboard: {
-      //       display_name: null,
-      //       timezone: "Etc/UTC",
-      //     },
-      //     invoices: {
-      //       default_account_tax_ids: null,
-      //     },
-      //     payments: {
-      //       statement_descriptor: null,
-      //       statement_descriptor_kana: null,
-      //       statement_descriptor_kanji: null,
-      //     },
-      //     payouts: {
-      //       debit_negative_balances: true,
-      //       schedule: {
-      //         delay_days: 2,
-      //         interval: "daily",
-      //       },
-      //       statement_descriptor: null,
-      //     },
-      //     sepa_debit_payments: {},
-      //   },
-      //   tos_acceptance: {
-      //     date: null,
-      //     ip: null,
-      //     user_agent: null,
-      //   },
-      //   type: "none",
-      // });
-      //
-      // console.log("connect account link", {
-      //   object: "account_link",
-      //   created: 1730928560,
-      //   expires_at: 1730928860,
-      //   url: "https://connect.stripe.com/setup/e/acct_1QIGXUQvEEZGaW3J/BUudCHBkyi8P",
-      // });
+// console.log(data);
+// console.log({
+//   id: "acct_1QIGXUQvEEZGaW3J",
+//   object: "account",
+//   business_profile: {
+//     annual_revenue: null,
+//     estimated_worker_count: null,
+//     mcc: null,
+//     name: null,
+//     product_description: null,
+//     support_address: null,
+//     support_email: null,
+//     support_phone: null,
+//     support_url: null,
+//     url: null,
+//   },
+//   business_type: null,
+//   capabilities: {
+//     card_payments: "inactive",
+//     transfers: "inactive",
+//   },
+//   charges_enabled: false,
+//   controller: {
+//     fees: {
+//       payer: "application",
+//     },
+//     is_controller: true,
+//     losses: {
+//       payments: "application",
+//     },
+//     requirement_collection: "stripe",
+//     stripe_dashboard: {
+//       type: "express",
+//     },
+//     type: "application",
+//   },
+//   country: "US",
+//   created: 1730927602,
+//   default_currency: "usd",
+//   details_submitted: false,
+//   email: "as@garslkj.xyz",
+//   external_accounts: {
+//     object: "list",
+//     data: [],
+//     has_more: false,
+//     total_count: 0,
+//     url: "/v1/accounts/acct_1QIGXUQvEEZGaW3J/external_accounts",
+//   },
+//   future_requirements: {
+//     alternatives: [],
+//     current_deadline: null,
+//     currently_due: [],
+//     disabled_reason: null,
+//     errors: [],
+//     eventually_due: [],
+//     past_due: [],
+//     pending_verification: [],
+//   },
+//   login_links: {
+//     object: "list",
+//     data: [],
+//     has_more: false,
+//     total_count: 0,
+//     url: "/v1/accounts/acct_1QIGXUQvEEZGaW3J/login_links",
+//   },
+//   metadata: {},
+//   payouts_enabled: false,
+//   requirements: {
+//     alternatives: [],
+//     current_deadline: 1732137203,
+//     currently_due: [
+//       "business_profile.mcc",
+//       "business_profile.url",
+//       "business_type",
+//       "external_account",
+//       "representative.dob.day",
+//       "representative.dob.month",
+//       "representative.dob.year",
+//       "representative.email",
+//       "representative.first_name",
+//       "representative.last_name",
+//       "settings.payments.statement_descriptor",
+//       "tos_acceptance.date",
+//       "tos_acceptance.ip",
+//     ],
+//     disabled_reason: "requirements.past_due",
+//     errors: [],
+//     eventually_due: [
+//       "business_profile.mcc",
+//       "business_profile.url",
+//       "business_type",
+//       "external_account",
+//       "representative.dob.day",
+//       "representative.dob.month",
+//       "representative.dob.year",
+//       "representative.email",
+//       "representative.first_name",
+//       "representative.last_name",
+//       "settings.payments.statement_descriptor",
+//       "tos_acceptance.date",
+//       "tos_acceptance.ip",
+//     ],
+//     past_due: [
+//       "business_profile.mcc",
+//       "business_profile.url",
+//       "business_type",
+//       "external_account",
+//       "representative.dob.day",
+//       "representative.dob.month",
+//       "representative.dob.year",
+//       "representative.email",
+//       "representative.first_name",
+//       "representative.last_name",
+//       "settings.payments.statement_descriptor",
+//       "tos_acceptance.date",
+//       "tos_acceptance.ip",
+//     ],
+//     pending_verification: [],
+//   },
+//   settings: {
+//     bacs_debit_payments: {
+//       display_name: null,
+//       service_user_number: null,
+//     },
+//     branding: {
+//       icon: null,
+//       logo: null,
+//       primary_color: null,
+//       secondary_color: null,
+//     },
+//     card_issuing: {
+//       tos_acceptance: {
+//         date: null,
+//         ip: null,
+//       },
+//     },
+//     card_payments: {
+//       decline_on: {
+//         avs_failure: false,
+//         cvc_failure: false,
+//       },
+//       statement_descriptor_prefix: null,
+//       statement_descriptor_prefix_kana: null,
+//       statement_descriptor_prefix_kanji: null,
+//     },
+//     dashboard: {
+//       display_name: null,
+//       timezone: "Etc/UTC",
+//     },
+//     invoices: {
+//       default_account_tax_ids: null,
+//     },
+//     payments: {
+//       statement_descriptor: null,
+//       statement_descriptor_kana: null,
+//       statement_descriptor_kanji: null,
+//     },
+//     payouts: {
+//       debit_negative_balances: true,
+//       schedule: {
+//         delay_days: 2,
+//         interval: "daily",
+//       },
+//       statement_descriptor: null,
+//     },
+//     sepa_debit_payments: {},
+//   },
+//   tos_acceptance: {
+//     date: null,
+//     ip: null,
+//     user_agent: null,
+//   },
+//   type: "none",
+// });
+//
+// console.log("connect account link", {
+//   object: "account_link",
+//   created: 1730928560,
+//   expires_at: 1730928860,
+//   url: "https://connect.stripe.com/setup/e/acct_1QIGXUQvEEZGaW3J/BUudCHBkyi8P",
+// });
