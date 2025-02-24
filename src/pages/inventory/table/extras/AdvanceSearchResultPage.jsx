@@ -11,7 +11,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import Bars from "../../charts/Bars";
+import Pie from "../../charts/Pie";
 
 const AdvanceSearchResultPage = () => {
   const { advanceSearch } = useSelector((state) => state.searchResult);
@@ -180,57 +180,31 @@ const AdvanceSearchResultPage = () => {
       <Divider />
       <Grid
         display={"flex"}
-        justifyContent={"flex-start"}
+        justifyContent={"space-between"}
         alignItems={"center"}
         gap={2}
         container
       >
-        {/* <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          style={CenteringGrid}
-          gap={2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        > */}
-          <Bars
-            key={"CHART_CATEGORY"}
-            dataToRender={renderingBasedOnCategoryQuantity()}
-            title="Groups"
-          />{" "}
-          <Bars
-            key={"CHART_LOCATION"}
-            dataToRender={renderingBasedOnLocationQuantity()}
-            title="Location"
-          />
-        {/* </Grid> */}
-        {/* <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          style={CenteringGrid}
-          gap={2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        > */}
-          <Bars
-            key={"CHART_OWNERSHIP"}
-            dataToRender={renderingBasedOnOwnershipQuantity()}
-            title="Ownership"
-          />
-          <Bars
-            key={"CHART_STATUS"}
-            dataToRender={renderingBasedOnStatusQuantity()}
-            title="Status"
-          />
-        {/* </Grid> */}
+        <Pie
+          key={"_STATUS"}
+          dataToRender={renderingBasedOnCategoryQuantity()}
+          title="Groups"
+        />
+        <Pie
+          key={"_STATUS"}
+          dataToRender={renderingBasedOnLocationQuantity()}
+          title="Location"
+        />
+        <Pie
+          key={"_STATUS"}
+          dataToRender={renderingBasedOnOwnershipQuantity()}
+          title="Ownership"
+        />
+        <Pie
+          key={"_STATUS"}
+          dataToRender={renderingBasedOnStatusQuantity()}
+          title="Status"
+        />
       </Grid>
     </Grid>
   );
