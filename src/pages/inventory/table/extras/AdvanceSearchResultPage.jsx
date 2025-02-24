@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Alert, Button, Divider } from "antd";
 import { groupBy } from "lodash";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -178,6 +178,12 @@ const AdvanceSearchResultPage = () => {
         </Button>{" "}
       </Grid>
       <Divider />
+      <Alert
+        message="Please note that this projection may not be entirely accurate due to various factors. Use it for reference only."
+        type="warning"
+        showIcon
+        style={{ width: "100%", margin: "15px auto" }}
+      />
       <Grid
         display={"flex"}
         justifyContent={"space-between"}
