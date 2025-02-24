@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import StripeConnectedAccountDashboard from "../../../components/stripe/connected_account/dashboard";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -11,7 +11,11 @@ import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import countryList from "../../../components/json/countries.json";
 import { useForm } from "react-hook-form";
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 const Dashboard = () => {
+  const stripeEnvMode = useRef(
+    String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
+  );
   const [clientSecret, setClientSecret] = useState(null);
   const [openModalStripeConnectedAccount, setOpenModalStripeConnectedAccount] =
     useState(false);
@@ -19,14 +23,15 @@ const Dashboard = () => {
   const { register, watch, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
   useEffect(() => {
-    if (user.companyData.stripe_connected_account) {
+    if (user.companyData.stripe_connected_account[stripeEnvMode.current].id) {
       return setClientSecret(true);
     }
   }, []);
+
   if (clientSecret) {
     return (
       <div style={{ width: "100%" }}>
-        {user.companyData.stripe_connected_account.id && clientSecret && (
+        {user.companyData.stripe_connected_account[stripeEnvMode.current].id && clientSecret && (
           <StripeConnectedAccountDashboard />
         )}
       </div>
@@ -78,7 +83,7 @@ const Dashboard = () => {
         width: "100%",
       }}
     >
-      {!user.companyData.stripe_connected_account &&
+      {!user.companyData.stripe_connected_account[stripeEnvMode.current].id &&
         !openModalStripeConnectedAccount && (
           <Button
             onClick={() => setOpenModalStripeConnectedAccount(true)}
