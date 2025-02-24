@@ -7,7 +7,7 @@ import {
   ConnectPayments,
   ConnectPayouts,
 } from "@stripe/react-connect-js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import "./dashboard.css";
@@ -16,11 +16,15 @@ import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 const StripeConnectedAccountDashboard = () => {
   const { user } = useSelector((state) => state.admin);
   const [isLoading, setIsLoading] = useState(true);
+    const stripeEnvMode = useRef(
+      String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
+    );
+  
   const [stripeConnectInstance] = useState(() => {
     const fetchClientSecret = async () => {
       // Fetch the AccountSession client secret
       const response = await devitrakApi.post("/stripe/account_sessions", {
-        connectedAccountId: user.companyData.stripe_connected_account.id,
+        connectedAccountId: user.companyData.stripe_connected_account[stripeEnvMode.current].id,
       });
       if (response.data.ok) {
         return response.data.client_secret;
