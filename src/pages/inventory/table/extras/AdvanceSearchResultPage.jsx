@@ -1,6 +1,5 @@
 import { Grid } from "@mui/material";
 import { Alert, Button, Divider } from "antd";
-import { groupBy } from "lodash";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { BluePlusIcon } from "../../../../components/icons/BluePlusIcon";
@@ -11,7 +10,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import Pie from "../../charts/Pie";
+import BarAnimation from "../../charts/BarAnimation";
 
 const AdvanceSearchResultPage = () => {
   const { advanceSearch } = useSelector((state) => state.searchResult);
@@ -21,39 +20,6 @@ const AdvanceSearchResultPage = () => {
   const handleReturnNavigation = () => {
     dispatch(onAddAdvanceSearch(null));
     return navigate("/inventory");
-  };
-  const renderingBasedOnCategoryQuantity = () => {
-    const categoryQuantity = groupBy(advanceSearch, "item_group");
-    const data = Object.keys(categoryQuantity).map((key) => [
-      categoryQuantity[key].length,
-      key,
-    ]);
-    return data;
-  };
-
-  const renderingBasedOnOwnershipQuantity = () => {
-    const categoryQuantity = groupBy(advanceSearch, "ownership");
-    const data = Object.keys(categoryQuantity).map((key) => [
-      categoryQuantity[key].length,
-      key,
-    ]);
-    return data;
-  };
-  const renderingBasedOnStatusQuantity = () => {
-    const categoryQuantity = groupBy(advanceSearch, "status");
-    const data = Object.keys(categoryQuantity).map((key) => [
-      categoryQuantity[key].length,
-      key,
-    ]);
-    return data;
-  };
-  const renderingBasedOnLocationQuantity = () => {
-    const categoryQuantity = groupBy(advanceSearch, "location");
-    const data = Object.keys(categoryQuantity).map((key) => [
-      categoryQuantity[key].length,
-      key,
-    ]);
-    return data;
   };
 
   return (
@@ -191,6 +157,11 @@ const AdvanceSearchResultPage = () => {
         gap={2}
         container
       >
+        <BarAnimation
+          dataToRender={advanceSearch}
+          title="Location"
+        />
+        {/* <Divider />
         <Pie
           key={"_STATUS"}
           dataToRender={renderingBasedOnCategoryQuantity()}
@@ -210,7 +181,7 @@ const AdvanceSearchResultPage = () => {
           key={"_STATUS"}
           dataToRender={renderingBasedOnStatusQuantity()}
           title="Status"
-        />
+        /> */}
       </Grid>
     </Grid>
   );
