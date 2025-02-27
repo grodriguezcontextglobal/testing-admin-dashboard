@@ -11,6 +11,7 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import BarAnimation from "../../charts/BarAnimation";
+import Bars from "../../charts/Bars";
 
 const AdvanceSearchResultPage = () => {
   const { advanceSearch } = useSelector((state) => state.searchResult);
@@ -158,30 +159,13 @@ const AdvanceSearchResultPage = () => {
         container
       >
         <BarAnimation
-          dataToRender={advanceSearch}
-          title="Location"
+          dataToRender={advanceSearch.advanceSearchResult}
+          title="Availability per location"
         />
-        {/* <Divider />
-        <Pie
-          key={"_STATUS"}
-          dataToRender={renderingBasedOnCategoryQuantity()}
-          title="Groups"
+        <Bars
+          dataToRender={advanceSearch.plannedInventoryToUseInEvents}
+          title="Availability per type reflects the remaining inventory from events occurring during the consulted time period."
         />
-        <Pie
-          key={"_STATUS"}
-          dataToRender={renderingBasedOnLocationQuantity()}
-          title="Location"
-        />
-        <Pie
-          key={"_STATUS"}
-          dataToRender={renderingBasedOnOwnershipQuantity()}
-          title="Ownership"
-        />
-        <Pie
-          key={"_STATUS"}
-          dataToRender={renderingBasedOnStatusQuantity()}
-          title="Status"
-        /> */}
       </Grid>
     </Grid>
   );
