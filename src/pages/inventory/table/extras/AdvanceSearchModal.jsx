@@ -59,14 +59,14 @@ const AdvanceSearchModal = ({
         advanceSearchResponseQuery.data.advanceSearchResult.length > 0
       ) {
         setAdvanceSearchResultState(
-          advanceSearchResponseQuery.data.advanceSearchResult
+          advanceSearchResponseQuery.data //.advanceSearchResult
         );
         return setTimeout(() => {
           setDisplayMessage(false);
           setIsLoadingState(false);
           dispatch(
             onAddAdvanceSearch(
-              advanceSearchResponseQuery.data.advanceSearchResult
+              advanceSearchResponseQuery.data //.advanceSearchResult
             )
           );
           return navigate("/inventory/advance_search_result");
