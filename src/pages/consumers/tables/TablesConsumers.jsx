@@ -334,8 +334,8 @@ export default function TablesConsumers({
               rotate={3}
               color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`} //!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
             />
-            {/* {!currentConsumerActive ? "No active" : "Active"} */}
-            {currentConsumerActive === 0 ? "No active" : "Active"}
+            {/* {!currentConsumerActive ? "Inactive" : "Active"} */}
+            {currentConsumerActive === 0 ? "Inactive" : "Active"}
           </p>
         </span>
       ),
