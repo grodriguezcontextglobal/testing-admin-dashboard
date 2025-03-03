@@ -20,14 +20,6 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   const { event } = useSelector((state) => state.event);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const attendeesEventQuery = useQuery({
-  //   queryKey: ["consumersList"],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
-  //     ),
-  //   refetchOnMount: false,
-  // });
   const attendeesAndTransactionsEventQuery = useQuery({
     queryKey: ["checking_new_path_to"],
     queryFn: () =>
@@ -39,7 +31,6 @@ export const CustomerDatabase = ({ searchAttendees }) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    // attendeesEventQuery.refetch();
     attendeesAndTransactionsEventQuery.refetch();
     return () => {
       controller.abort();
@@ -62,10 +53,6 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       `/events/event-attendees/${record.entireData.id}/transactions-details`
     );
   };
-  //status = 0 means user has no transaction
-  //status = 1 means user has devices pending
-  //status = 2 means user has device in use
-  //status = 3 means user has devices returned
 
   const styleDic = {
     0: {
@@ -191,6 +178,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       key: "action",
       align: "right",
       width: "5%",
+      responsive:["lg"],
       render: () => (
         <Icon
           icon="fluent:arrow-circle-right-20-regular"
