@@ -52,11 +52,15 @@ const MainPage = () => {
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [reference, setReference] = useState(null);
   const [isLoadingState, setIsLoadingState] = useState(false);
-
   useEffect(() => {
     if (companyHasInventoryQuery?.data?.data?.total > 0) {
-      setIsLoadingState(true)
+      setIsLoadingState(true);
       setCurrentTab(1);
+      setIsLoadingState(false);
+    }
+    if (companyHasInventoryQuery?.data?.data?.total === 0) {
+      setIsLoadingState(true);
+      setCurrentTab(2);
       setIsLoadingState(false);
     }
   }, [companyHasInventoryQuery.data, companyHasInventoryQuery.isSuccess]);
@@ -218,7 +222,7 @@ const MainPage = () => {
         </Grid>
         <Divider />
         <Grid
-          display={"flex"}
+          display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
           justifyContent={"flex-start"}
           alignItems={"center"}
           item
