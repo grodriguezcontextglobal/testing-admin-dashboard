@@ -24,7 +24,7 @@ const BannerMsg = ({props}) => {
         item
         xs={10}
       >
-        <p style={Title}>{props.title}</p>
+        <p style={props.titleStyle ? props.titleStyle :  Title}>{props.title}</p>
         <p
           style={{
             ...TextFontSize20LineHeight30, //*global attribute
