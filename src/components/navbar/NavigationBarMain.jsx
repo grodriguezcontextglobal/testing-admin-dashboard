@@ -1,17 +1,17 @@
 import { Icon } from "@iconify/react";
 import {
   AppBar,
+  Badge,
   Box,
   Divider,
   Drawer,
   Grid,
-  IconButton,
   InputAdornment,
   List,
   ListItem,
   ListItemButton,
   OutlinedInput,
-  Toolbar,
+  Toolbar
 } from "@mui/material";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -60,7 +60,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user, status } = useSelector((state) => state.admin);
+  const { user } = useSelector((state) => state.admin);
   const [searchValue, setSearchValue] = useState("");
   const [rowId, setRowId] = useState(null);
   const dispatch = useDispatch();
@@ -262,21 +262,22 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             }}
           >
             <Grid item sm={2} md={8} lg={8}>
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={handleDrawerToggle}
-                sx={{
-                  mr: 2,
-                  display: { sm: "flex", md: "none", lg: "none" },
-                  backgroundColor: "var(--blue700)",
-                  borderBottom: "solid 1px var(--blue-dark--600)",
-                }}
-              >
-                <Icon icon="material-symbols:menu" />
-              </IconButton>
-
+                <Badge
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="start"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    mr: 2,
+                    display: { sm: "flex", md: "none", lg: "none" },
+                    backgroundColor: "var(--blue700)",
+                    borderBottom: "solid 1px var(--blue-dark--600)",
+                    padding: "0 24px 0 0",
+                    borderRadius: "50%",
+                  }}
+                >
+                  <Icon icon="material-symbols:menu" width={30} height={30} />
+                </Badge>
               <Box
                 sx={{
                   display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
@@ -287,7 +288,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 <NavLink
                   key={"devitrakName"}
                   to={`${Number(user.role) === 4 ? "/events" : "/"}`}
-                  style={{ margin: "0 3px 0 0", width: "fit-content" }}
+                  style={{ margin: "0 16px 0 0", width: "fit-content" }}
                 >
                   <DevitrakLogo />
                   <DevitrakName />{" "}
@@ -422,7 +423,42 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                   </article>
                 </div>
               </NavLink>
-              {status === "authenticated" && (
+            </Grid>
+          </div>
+        </Toolbar>
+      </AppBar>
+      <nav>
+        <Drawer
+          container={container}
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: "block", sm: "block" },
+            "& .MuiDrawer-paper": {
+              GridSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </nav>
+    </Grid>
+  );
+});
+
+export default NavigationBarMain;
+
+NavigationBarMain.propTypes = {
+  window: PropTypes.func,
+};
+
+{
+  /* {status === "authenticated" && (
                 <NavLink>
                   <div className="content-main-navbar-updated">
                     <article
@@ -467,37 +503,5 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                     </article>
                   </div>
                 </NavLink>
-              )}
-            </Grid>
-          </div>
-        </Toolbar>
-      </AppBar>
-      <nav>
-        <Drawer
-          container={container}
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: "block", sm: "block" },
-            "& .MuiDrawer-paper": {
-              GridSizing: "border-box",
-              width: drawerWidth,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </nav>
-    </Grid>
-  );
-});
-
-export default NavigationBarMain;
-
-NavigationBarMain.propTypes = {
-  window: PropTypes.func,
-};
+              )} */
+}
