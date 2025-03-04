@@ -45,8 +45,10 @@
   --gray600: rgba(71, 84, 102, 1);
   --gray500: rgba(102, 112, 132, 1);
   --gray300: rgba(207, 212, 220, 1);
+  --gray300a: #d0d5dd;
   --blue-dark--100: rgba(209, 224, 255, 1);
   --gray200: rgba(234, 236, 240, 1);
+  --gray100: #f2f4f7;
   --success50: rgba(235, 253, 242, 1);
   --gray100: rgba(242, 243, 246, 1);
   --gray-modern--50: rgba(248, 249, 251, 1);
@@ -90,11 +92,10 @@
   --font-family-inter: "Inter";
   --font-family-open_sans: "Open Sans";
 
-
   --box-sizing: border-box;
 }
 
-.MuiOutlinedInput-root input{
+.MuiOutlinedInput-root input {
   box-sizing: var(--box-sizing);
   height: auto;
 }
@@ -190,7 +191,7 @@ button:focus-visible {
   background: #f9fafb;
 }
 
-.css-16w1hsz-MuiInputBase-root-MuiOutlinedInput-root{
+.css-16w1hsz-MuiInputBase-root-MuiOutlinedInput-root {
   box-sizing: border-box;
 }
 @media (prefers-color-scheme: light) {
@@ -204,7 +205,7 @@ button:focus-visible {
 }
 
 @media only screen and (max-width: 600px) {
-  :root{
-    scrollbar-width: none;  
+  :root {
+    scrollbar-width: none;
   }
 }
