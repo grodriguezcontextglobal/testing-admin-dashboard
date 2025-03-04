@@ -58,6 +58,8 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
           style={{
             ...TextFontSize20LineHeight30,
             color: "var(--graphic-status-damage)",
+            width:"100%",
+            textWrap: "balance",
           }}
         >
           {error.message}
