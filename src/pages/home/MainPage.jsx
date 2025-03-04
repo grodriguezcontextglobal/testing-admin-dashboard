@@ -19,6 +19,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { Title } from "../../styles/global/Title";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -34,12 +35,13 @@ const MainPage = () => {
     setLeasedEquipmentNotificationStatus,
   ] = useState(false);
   const { user } = useSelector((state) => state.admin);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
-    queryFn: () => devitrakApi.post(`/company/search-company`, {
-      _id: user.companyData.id
-    }),
+    queryFn: () =>
+      devitrakApi.post(`/company/search-company`, {
+        _id: user.companyData.id,
+      }),
     refetchOnMount: false,
   });
 
@@ -77,10 +79,10 @@ const MainPage = () => {
 
   const displayingLeasedInventory = () => {
     const checking = inventory.filter(
-      (item) =>(
+      (item) =>
         String(item.ownership).toLowerCase() === "rent" &&
         new Date(`${item.return_date}`).getTime() < new Date().getTime()
-    ));
+    );
     return setLeasedEquipmentNotificationStatus(checking.length > 0);
   };
 
@@ -113,14 +115,14 @@ const MainPage = () => {
       <p>
         Please be aware that there is&nbsp;
         <button
-        onClick={() => navigate("/inventory/ownership?Rent&search=")}
+          onClick={() => navigate("/inventory/ownership?Rent&search=")}
           style={{
             outline: "none",
             backgroundColor: "transparent",
             margin: 0,
             padding: 0,
             textDecoration: "underline",
-            color:Subtitle.color,
+            color: Subtitle.color,
             fontWeight: 500,
           }}
         >
@@ -358,6 +360,10 @@ const MainPage = () => {
             <BannerMsg
               props={{
                 title: "Add to your inventory",
+                titleStyle: {
+                  ...Title,
+                  textAlign: "center",
+                },
                 message:
                   "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
                 link: "/inventory/new-item",
@@ -369,6 +375,10 @@ const MainPage = () => {
             <BannerMsg
               props={{
                 title: "Create your first event",
+                titleStyle: {
+                  ...Title,
+                  textAlign: "center",
+                },
                 message:
                   "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
                 link: "/create-event-page/event-detail",
