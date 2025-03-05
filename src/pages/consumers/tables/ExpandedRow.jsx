@@ -21,6 +21,7 @@ import {
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
 // import "../../../styles/global/ant-table.css";
+import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../styles/global/DangerButton";
@@ -34,7 +35,6 @@ import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
-import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -460,7 +460,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     <div style={{ gap: "10px" }}>
       {contextHolder}
       <div
-        style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}
+        style={{ display: "flex", justifyContent: "flex-start", gap: "10px", padding:" 0 2rem" }}
       >
         <Button
           disabled={!rowRecord.eventInfo[0].active}
