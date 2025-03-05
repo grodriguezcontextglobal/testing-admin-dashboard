@@ -87,3 +87,7 @@
 .table-ant-expanded-row-customized .ant-table-tbody {
   background-color: var(--gray100);
 }
+
+tr.ant-table-expanded-row.ant-table-expanded-row-level-1 > td {
+  padding:20px 0 0;
+}
