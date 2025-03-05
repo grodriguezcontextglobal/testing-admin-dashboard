@@ -96,10 +96,15 @@ const BannerNotificationTemplate = ({
           </Grid>
         </Grid>
         <Grid
-          style={{
+          sx={{
             ...CenteringGrid,
             justifyContent: "flex-start",
-            padding: "1rem 0 0 0",
+            padding: {
+              sx: "1rem 0",
+              sm: "1rem 0",
+              md: "1rem 0 0 0.5rem",
+              lg: "1rem 0 0 0.5rem",
+            },
             cursor: "pointer",
           }}
           item
