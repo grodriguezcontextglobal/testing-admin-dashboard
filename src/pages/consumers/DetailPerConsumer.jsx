@@ -61,6 +61,10 @@ const DetailPerConsumer = () => {
     };
   }, [customerInfoTemplate.id, user.companyData.id, user.id]);
 
+  const refetchingAfterReturnDeviceAssignedInTransaction = () => {
+    return transactionsConsumerQuery.refetch();
+  };
+
   const [eventsAttendedForCustomer, setEventsAttendedForCustomer] = useState(0);
   const renderingNumberOfEventsConsumerAttended = async () => {
     const result = new Map();
@@ -376,7 +380,7 @@ const DetailPerConsumer = () => {
             md={5}
             lg={5}
           >
-            <AssigmentAction />
+            <AssigmentAction refetching={refetchingAfterReturnDeviceAssignedInTransaction} />
           </Grid>
         </Grid>
         <Grid
