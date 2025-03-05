@@ -20,7 +20,7 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
-import "../../../styles/global/ant-table.css";
+// import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../styles/global/DangerButton";
@@ -34,7 +34,7 @@ import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
-
+import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -199,19 +199,15 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             }
             style={{
               ...BlueButton,
-              display: renderingTernary(
-                record.status,
-                "string",
-                "none",
-                "flex",
-                "none"
-              ),
             }}
           >
             {record.transactionData.type === "lease" ? (
               <p style={BlueButtonText}>Mark as ended lease</p>
             ) : (
-              <p style={BlueButtonText}>Mark as returned</p>
+              <p style={BlueButtonText}>
+                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
+                &nbsp;Mark as returned
+              </p>
             )}
           </Button>
           <Button
@@ -219,13 +215,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             onClick={() => handleLostSingleDevice(record)}
             style={{
               ...GrayButton,
-              display: renderingTernary(
-                record.status,
-                "string",
-                "none",
-                "flex",
-                "none"
-              ),
             }}
           >
             <p
@@ -236,13 +225,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
                     ? GrayButtonText.color
                     : "var(--disabled0gray-button-text)"
                 }`,
-                display: renderingTernary(
-                  record.status,
-                  "string",
-                  "none",
-                  "flex",
-                  "none"
-                ),
               }}
             >
               Mark as lost
@@ -464,8 +446,18 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   }, [refetching, assignedDevicesQuery.data]);
 
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const onSelectChange = (newSelectedRowKeys) => {
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    columnWidth: 10,
+  };
+
   return (
-    <>
+    <div style={{ gap: "10px" }}>
       {contextHolder}
       <div
         style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}
@@ -558,8 +550,19 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           key={rowRecord.key}
           columns={columns}
           dataSource={dataRendering()}
-          pagination={false}
+          pagination={{
+            defaultPageSize: 10,
+            position: ["bottomCenter"],
+            style: {
+              backgroundColor: "var(--gray100)",
+              padding: "16px 0",
+              margin: 0,
+            },
+          }}
           className="table-ant-expanded-row-customized"
+          rowSelection={rowSelection}
+          virtual={true}
+          rowHoverable={false}
         />
       )}
 
@@ -571,6 +574,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         returningDevice={handleReturnSingleDevice}
         formattedData={dataRendering()}
         paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
+        deviceListInfo={dataRendering()}
       />
 
       {openModal && (
@@ -603,7 +607,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           rowRecord={rowRecord}
         />
       )}
-    </>
+    </div>
   );
 };
 
