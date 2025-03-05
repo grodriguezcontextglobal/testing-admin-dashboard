@@ -1,8 +1,16 @@
-import { Space, Table } from "antd";
+import { Button, Popconfirm, Table } from "antd";
 import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
+import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
+import ScanIcon from "../../../components/icons/scan.svg";
+import Report from "../../../components/icons/table.svg";
+import Lost from "../../../components/icons/credit-card-x.svg";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../localStyles.css";
+import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
+import { useSelector } from "react-redux";
 const FooterExpandedRow = ({
   // handleReturnSingleDevice,
   // handleLostSingleDevice,
@@ -11,6 +19,8 @@ const FooterExpandedRow = ({
   formattedData,
   paymentIntentInfoRetrieved,
 }) => {
+  const { user } = useSelector((state) => state.admin);
+  const [isLoadingState, setIsLoading] = useState(false);
   const returningAllAtOnce = () => {
     for (let data of formattedData) {
       returningDevice(data);
@@ -39,6 +49,27 @@ const FooterExpandedRow = ({
     };
   }, []);
 
+  const reportTemplate = {
+    customerInfo: dataRendering?.eventInfo[0]?.consumerInfo,
+    event: {
+      eventInfoDetail: {
+        eventName: formattedData[0]?.entireData?.eventSelected[0],
+      },
+      id: formattedData[0]?.entireData?.event_id,
+    },
+    paymentIntent: dataRendering?.paymentIntent,
+    user: user,
+    devicesInfo: [
+      ...formattedData.map((item) => {
+        return {
+          serialNumber: item.serial_number,
+          deviceType: item.type,
+          status: item.status,
+        };
+      }),
+    ],
+    setLoadingState: setIsLoading,
+  };
   const dataToBeRendered = () => {
     if (dataRendering.paymentIntent.length < 16) {
       return "Free deposit transaction";
@@ -65,104 +96,151 @@ const FooterExpandedRow = ({
       title: "Deposit",
       dataIndex: "deposit",
       key: "deposit",
-      render: (deposit) => (
-        <p style={{ ...Subtitle, height: "0.5dvh" }}>{deposit}</p>
+      render: () => (
+        <div
+          style={{
+            ...CenteringGrid,
+            flexDirection: "column",
+            width: "100%",
+            gap: "5px",
+          }}
+        >
+          <Button style={{ ...GrayButton, width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              <img src={ReverseRightArrow} alt="ReverseRightArrow" /> &nbsp;Mark
+              selected as returned
+            </p>
+          </Button>
+          <Button style={{ ...GrayButton, width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              <img src={ScanIcon} alt="ScanIcon" /> &nbsp;Scan-in devices
+            </p>
+          </Button>
+          <Popconfirm
+            onConfirm={() => returningAllAtOnce()}
+            title="Are you sure?"
+          >
+            <Button style={{ ...GrayButton, width: "100%" }}>
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
+                &nbsp;Mark all as returned
+              </p>
+            </Button>
+          </Popconfirm>
+        </div>
       ),
     },
     {
       title: "Device",
-      key: "serial_number",
-      // render: () => (
-      //   <button
-      //     disabled
-      //     style={{
-      //       ...Subtitle,
-      //       color: "var(--blue-dark--800)",
-      //       outline: "none",
-      //       margin: "0",
-      //       backgroundColor: "transparent",
-      //       border: "none",
-      //     }}
-      //   >
-      //     Change card
-      //   </button>
-      // ),
+      render: () => (
+        <Button
+          loading={isLoadingState}
+          style={{ ...GrayButton, width: "100%" }}
+          onClick={() => itemReportForClient(reportTemplate)}
+        >
+          <p
+            style={{
+              ...Subtitle,
+              ...CenteringGrid,
+              fontWeight: 600,
+              color: "var(--gray700)",
+            }}
+          >
+            <img src={Report} alt="Report" /> &nbsp;Send report to client
+          </p>
+        </Button>
+      ),
     },
     {
       title: "Cost of device",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <p style={{ ...Subtitle, height: "0.5dvh" }}>{status}</p>
+      render: () => (
+        <p style={{ ...Subtitle }}>${Number(2500).toLocaleString()} total</p>
       ),
     },
-
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <p style={{ ...Subtitle, height: "0.5dvh" }}>{status}</p>
+      render: () => (
+        <ul style={{ ...Subtitle }}>
+          <li style={{ ...Subtitle }}>{Number(0)} Active</li>
+          <li style={{ ...Subtitle }}>{Number(0)} Returned</li>
+          <li style={{ ...Subtitle }}>{Number(0)} Lost</li>
+        </ul>
       ),
     },
     {
-      title: "Action",
-      key: "operation",
+      title: "Deposit",
+      dataIndex: "deposit",
+      key: "deposit",
       render: () => (
-        <Space
-          size="middle"
+        <div
           style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
+            ...CenteringGrid,
+            flexDirection: "column",
+            width: "100%",
+            gap: "20px",
           }}
         >
-          <button
-            onClick={() => returningAllAtOnce()}
+          <Button style={{ ...GrayButton, width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
+            </p>
+          </Button>
+          <p
             style={{
               ...Subtitle,
-              color: "var(--blue-dark--800)",
-              outline: "none",
-              margin: "0",
-              backgroundColor: "transparent",
-              border: "none",
+              ...CenteringGrid,
+              fontWeight: 500,
+              color: "var(--gray700)",
             }}
           >
-            Mark all as returned
-          </button>
-        </Space>
+            Credit card ending in: 4567
+          </p>
+        </div>
       ),
     },
   ];
   return (
-    // <>
-      <Table
-        showHeader={false}
-        columns={footerColumn}
-        dataSource={rendering}
-        pagination={false}
-        className="footer-expanded-table"
-      />
-      // {/* {openModal && (
-      //   <>
-      //     <StripeElementUpadatePaymentMethod
-      //       clientSecret={ccInfo.client_secret}
-      //       paymentIntentId={ccInfo.id}
-      //     />
-      //     <button
-      //       onClick={() => setOpenModal(false)}
-      //       style={{ ...GrayButton, margin: "1rem auto", width: "100%" }}
-      //     >
-      //       <span
-      //         style={{ ...GrayButtonText, ...CenteringGrid }}
-      //         id="button-text"
-      //       >
-      //         Cancel
-      //       </span>
-      //     </button>
-      //   </>
-      // )} */}
-    // {/* </> */}
+    <Table
+      showHeader={false}
+      columns={footerColumn}
+      dataSource={rendering}
+      pagination={false}
+      className="footer-expanded-table"
+      rowHoverable={false}
+      style={{ width: "100%", padding: 0 }}
+    />
   );
 };
 
