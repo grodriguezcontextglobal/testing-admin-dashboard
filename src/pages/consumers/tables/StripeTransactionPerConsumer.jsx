@@ -21,8 +21,11 @@ import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
-import UpDoubleArrow from "../../../components/icons/UpDoubleArrow";
-import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
+// import UpDoubleArrow from "../../../components/icons/UpDoubleArrow";
+// import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
+import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
@@ -72,6 +75,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                 ),
             eventInfo: value,
             extra_data: transactionData ?? [],
+            timestamp: value[0].created_at,
           },
         ]);
       } else {
@@ -91,6 +95,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                 ),
             eventInfo: value,
             extra_data: transactionData ?? [],
+            timestamp: value[0].created_at,
           },
         ]);
       }
@@ -117,6 +122,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         status: value[0]?.device > 0 ? value[0]?.status : null,
         eventInfo: value[0].eventInfo,
         type: value[0].eventInfo[0].type,
+        date: value[0].timestamp,
       });
     });
     return Array.from(result);
@@ -177,7 +183,78 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     }
   };
 
+  // const chipStyle = (props) => {
+  //   return {
+  //     display: "flex",
+  //     padding: "2px 8px",
+  //     alignItems: "center",
+  //     borderRadius: "16px",
+  //     background: `${
+  //       props ? "var(--Primary-50, #F9F5FF)" : "var(--Success-50, #ECFDF3)"
+  //     }`,
+  //     mixBlendMode: "multiply",
+  //   };
+  // };
+
+  // const chipTextStyle = (props) => {
+  //   return {
+  //     color: `${
+  //       props ? "var(--Primary-700, #6941C6)" : "var(--success-700, #027A48)"
+  //     }`,
+  //     fontFamily: "Inter",
+  //     fontSize: "12px",
+  //     fontStyle: "normal",
+  //     fontWeight: 500,
+  //     lineHeight: "18px",
+  //     textTransform: "capitalize",
+  //   };
+  // };
+
   const columns = [
+    {
+      title: "Transaction date",
+      dataIndex: "date",
+      key: "date",
+      width: "20%",
+      render: (date) => {
+        const weekdayDic = {
+          Sun: "Sunday",
+          Mon: "Monday",
+          Tue: "Tuesday",
+          Wed: "Wednesday",
+          Thu: "Thursday",
+          Fri: "Friday",
+          Sat: "Saturday",
+        };
+        const dateSplit = new Date(date).toString().split(" ");
+        return (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+          >
+            <p
+              style={{
+                ...Subtitle,
+                color: "#000",
+                fontWeight: 500,
+                width: "100%",
+                textAlign: "left",
+              }}
+            >
+              {weekdayDic[dateSplit[0]]}&nbsp;
+              {dateSplit.slice(1, 4).join(" ")}
+            </p>
+            <p style={{ ...Subtitle, fontSize:"12px", width: "100%", textAlign: "left" }}>
+              {dateSplit[4]}{" "}{dateSplit.slice(6).join(" ")}
+            </p>
+          </div>
+        );
+      },
+    },
     {
       title: "Event",
       dataIndex: "eventSelected",
@@ -243,20 +320,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       render: (_, record) => (
         <p style={Subtitle}>
           {record.device} {record.device > 1 ? "devices" : "device"}&nbsp;
-          <Badge
-            style={{
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              borderRadius: "16px",
-              background: `${
-                record.status === record.device
-                  ? "var(--Primary-50, #F9F5FF)"
-                  : "var(--Success-50, #ECFDF3)"
-              }`,
-              mixBlendMode: "multiply",
-            }}
-          >
+          {/* <Badge style={chipStyle(record.status === record.device)}>
             <Chip
               style={{
                 backgroundColor: `${
@@ -266,20 +330,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                 }`,
               }}
               label={
-                <p
-                  style={{
-                    color: `${
-                      record.status === record.device
-                        ? "var(--Primary-700, #6941C6)"
-                        : "var(--success-700, #027A48)"
-                    }`,
-                    fontFamily: "Inter",
-                    fontSize: "12px",
-                    fontStyle: "normal",
-                    fontWeight: 500,
-                    lineHeight: "18px",
-                  }}
-                >
+                <p style={chipTextStyle(record.status === record.device)}>
                   {record.status !== null
                     ? record?.status === record?.device
                       ? "Returned"
@@ -288,67 +339,40 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                 </p>
               }
             />
-          </Badge>
+          </Badge> */}
         </p>
       ),
     },
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      responsive: ["lg"],
-      render: (type, record) => (
-        <p style={Subtitle}>
-          <Badge
-            style={{
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              borderRadius: "16px",
-              background: `${
-                type === "event"
-                  ? "var(--Primary-50, #F9F5FF)"
-                  : "var(--Success-50, #ECFDF3)"
-              }`,
-              mixBlendMode: "multiply",
-            }}
-          >
-            <Chip
-              style={{
-                backgroundColor: `${
-                  type === "event"
-                    ? "var(--Primary-50, #F9F5FF)"
-                    : "var(--Success-50, #ECFDF3)"
-                }`,
-              }}
-              label={
-                <p
-                  style={{
-                    color: `${
-                      type === "event"
-                        ? "var(--Primary-700, #6941C6)"
-                        : "var(--success-700, #027A48)"
-                    }`,
-                    fontFamily: "Inter",
-                    fontSize: "12px",
-                    fontStyle: "normal",
-                    fontWeight: 500,
-                    lineHeight: "18px",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {type === "event"
-                    ? record.device > 0
-                      ? type
-                      : `${type} | Service`
-                    : "Lease"}
-                </p>
-              }
-            />
-          </Badge>
-        </p>
-      ),
-    },
+    // {
+    //   title: "Type",
+    //   dataIndex: "type",
+    //   key: "type",
+    //   responsive: ["lg"],
+    //   render: (type, record) => (
+    //     <p style={Subtitle}>
+    //       <Badge style={chipStyle(type === "event")}>
+    //         <Chip
+    //           style={{
+    //             backgroundColor: `${
+    //               type === "event"
+    //                 ? "var(--Primary-50, #F9F5FF)"
+    //                 : "var(--Success-50, #ECFDF3)"
+    //             }`,
+    //           }}
+    //           label={
+    //             <p style={chipTextStyle(type === "event")}>
+    //               {type === "event"
+    //                 ? record.device > 0
+    //                   ? type
+    //                   : `${type} | Service`
+    //                 : "Lease"}
+    //             </p>
+    //           }
+    //         />
+    //       </Badge>
+    //     </p>
+    //   ),
+    // },
     {
       title: "",
       dataIndex: "action",
@@ -441,69 +465,128 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
   const customExpandIcon = (props) => {
-    if (props.expanded) {
-      return (
-        <Button
-          onClick={(e) => {
-            props.onExpand(props.record, e);
-          }}
+    const buttonStyle = (color) => {
+      return {
+        backgroundColor: color,
+      };
+    };
+    return (
+      <p
+        onClick={(e) => {
+          props.onExpand(props.record, e);
+        }}
+        key={props.expanded}
+        style={{ ...Subtitle, cursor: "pointer" }}
+      >
+        <Badge
+          style={buttonStyle(
+            props.expanded ? "var(--gray100)" : "var(--success50)"
+          )}
         >
-          <UpDoubleArrow />
-        </Button>
-      );
-    } else {
-      return (
-        <Button
-          onClick={(e) => {
-            props.onExpand(props.record, e);
-          }}
-        >
-          <DownDoubleArrowIcon />
-        </Button>
-      );
-    }
+          <Chip
+            style={{
+              ...CenteringGrid,
+              width: "100%",
+              backgroundColor: `${
+                props.expanded ? "var(--gray100)" : "var(--success50)"
+              }`,
+            }}
+            label={
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    color: props.expanded
+                      ? "var(--gray700)"
+                      : "var(--success700)",
+                  }}
+                >
+                  {props.expanded ? "Close" : "Open"}
+                </p>
+                {props.expanded ? <UpNarrowIcon /> : <DownNarrow />}
+              </div>
+            }
+          />
+        </Badge>
+      </p>
+    );
+
+    // if (props.expanded) {
+    //   return (
+    //     <Badge
+    //       style={buttonStyle("var(--gray100)")}
+    //       onClick={(e) => {
+    //         props.onExpand(props.record, e);
+    //       }}
+    //     >
+    //       <p style={{ ...Subtitle, color: "var(--gray700)" }}>Close</p>
+    //       <UpNarrowIcon />
+    //       {/* <UpDoubleArrow /> */}
+    //     </Badge>
+    //   );
+    // } else {
+    //   return (
+    //     <Button
+    //       style={buttonStyle("var(--success50)")}
+    //       onclick={props.onExpand}
+    //       onClick={(e) => {
+    //         props.onExpand(props.record, e);
+    //       }}
+    //     >
+    //       <p style={{ ...Subtitle, color: "var(--success700)" }}>Open</p>
+    //       <DownNarrow />
+    //       {/* <DownDoubleArrowIcon /> */}
+    //     </Button>
+    //   );
+    // }
   };
 
   return (
     <div>
-        <div
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          margin: "2rem auto -0.5rem",
+          // padding: "1rem 1.5rem",
+          border: "1px solid var(--gray-200, #eaecf0)",
+          borderRadius: "12px 12px 0 0",
+          background: "var(--gray-50, #F9F9F9)",
+        }}
+      >
+        <p
           style={{
+            ...TextFontSize20LineHeight30,
+            fontWeight: 500,
+            color: "#000",
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
             alignItems: "center",
-            margin: "2rem auto -0.5rem",
-            padding: "1rem 1.5rem",
-            border:"1px solid var(--gray-200, #eaecf0)",
-            borderRadius:"12px 12px 0 0",
-            background:"var(--gray-50, #F9F9F9)",
           }}
         >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              fontWeight: 500,
-              color: "#000",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            Transactions
-          </p>
-          <Button
-          onAbort={()=>{refetchingAfterReturnDeviceInRow();}}
-            style={{
-              ...BlueButton,
-              width: "fit-content",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <p 
-            style={BlueButtonText}
-            >Refresh</p>
-          </Button>
-        </div>
+          Transactions
+        </p>
+        <Button
+          onAbort={() => {
+            refetchingAfterReturnDeviceInRow();
+          }}
+          style={{
+            ...BlueButton,
+            width: "fit-content",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <p style={BlueButtonText}>Refresh</p>
+        </Button>
+      </div>
       <Table
         key={customerFormat.id}
         id={customerFormat.id}
@@ -523,12 +606,12 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             />
           ),
         }}
+        expandIconColumnIndex={columns.length - 1}
         dataSource={finalDataToDisplayIncludeSearchFN()}
         className="table-ant-customized"
         pagination={{
           position: ["bottomCenter"],
         }}
-        // style={{ cursor: "pointer" }}
       />
     </div>
   );
