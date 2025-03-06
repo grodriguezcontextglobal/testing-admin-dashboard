@@ -7,10 +7,8 @@ const itemReportForClient = async ({
   paymentIntent,
   user,
   devicesInfo,
-  setLoadingState,
 }) => {
   try {
-    setLoadingState(true);
     const response = await devitrakApi.post(
       "/nodemailer/device-report-per-transaction",
       {
@@ -35,13 +33,11 @@ const itemReportForClient = async ({
       }
     );
     if (response.data.ok) {
-      setLoadingState(false);
       return message.success(
         `Device report was sent successfully to ${customerInfo.email}`
       );
     }
   } catch (error) {
-    setLoadingState(false);
     return message.error(`There was an error. ${error}`);
   }
 };
