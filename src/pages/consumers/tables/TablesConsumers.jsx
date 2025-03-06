@@ -40,75 +40,6 @@ export default function TablesConsumers({
     dispatch(onAddCustomer(userFormatData));
     navigate(`/consumers/${record.entireData.id ?? record.entireData._id}`);
   };
-
-  // if (data.result) {
-  //   const checking = data;
-  //   const result =
-  //     typeof checking?.result?.usersList === "string"
-  //       ? JSON.parse(checking?.result?.usersList)
-  //       : checking?.result?.usersList;
-  //   dataRef.current = result;
-  // }
-
-  // const eventsInfo = useQuery({
-  //   queryKey: ["allEventsInfoPerCompanyList"],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
-  //     ),
-  //   refetchOnMount: false,
-  // });
-
-  // const listOfEventsPerAdmin = () => {
-  //   const active = eventsPerAdmin.active ?? [];
-  //   const completed = eventsPerAdmin.completed ?? [];
-  //   let events = [...active, ...completed];
-  //   const result = new Map();
-  //   for (let data of events) {
-  //     if (!result.has(data.id)) {
-  //       result.set(data.id, data);
-  //     }
-  //   }
-  //   return result;
-  // };
-
-  // const consumersPerAllowEvents = async () => {
-  //   // setLoadingState(true);
-  //   const finalReturn = new Map();
-  //   if (listOfEventsPerAdmin().size > 0) {
-  //     const data = [
-  //       ...listOfEventsPerAdmin()
-  //         .keys()
-  //         .map((item) => item),
-  //     ];
-  //     const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
-  //       event_providers: { $in: data },
-  //       company_providers: user.companyData.id,
-  //     });
-  //     if (fetchUsersAttendees.data.ok) {
-  //       const responseData = fetchUsersAttendees.data.users;
-  //       for (let data of responseData) {
-  //         if (!finalReturn.has(data.id)) {
-  //           finalReturn.set(data.id, data);
-  //         }
-  //       }
-  //     }
-  //   }
-  //   const formattingResponse = [...finalReturn.values().map((item) => item)];
-  //   getCounting(formattingResponse.length);
-  //   return setResponseData(formattingResponse);
-  // };
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   consumersPerAllowEvents();
-  //   // eventsInfo.refetch();
-
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
-
   useEffect(() => {
     dataRef.current =
       typeof data?.result?.usersList === "string"
@@ -147,50 +78,6 @@ export default function TablesConsumers({
     }
     return Array.from(result).reverse();
   }, [responseData?.length, dataRef.current]);
-
-  // const sortEventsDataPerCompany = () => {
-  //   const events = new Map();
-  //   if (eventsInfo.data) {
-  //     const info = [...eventsInfo.data.data.list];
-  //     for (let data of info) {
-  //       events.set(data.id, data);
-  //     }
-  //   }
-  //   return events;
-  // };
-
-  // const currentStatus = (props) => {
-  //   const grouping = groupBy(props, "device.status");
-  //   return grouping[true] ? grouping[true].length > 0 : false;
-  // };
-  // const checkingActiveEventForActiveConsumer = (props) => {
-  //   let result = false;
-  //   for (let [key, value] of sortEventsDataPerCompany()) {
-  //     if (props.some((element) => element === key)) {
-  //       if (value.active) return (result = value.active);
-  //     }
-  //   }
-  //   return result;
-  // };
-
-  // const renderingTransactionsPerEventPerConsumer = async () => {
-  //   const fetching = await devitrakApi.post(
-  //     "/receiver/receiver-assigned-list",
-  //     {
-  //       user: {
-  //         $in: [
-  //           ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
-  //         ],
-  //       },
-  //       company: user.companyData.id,
-  //     }
-  //   );
-  //   if (fetching.data.ok) {
-  //     const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
-  //     return groupingbyUser;
-  //   }
-  //   return [];
-  // };
 
   const dataToRenderInTable = async () => {
     const result = new Set();
@@ -425,3 +312,117 @@ export default function TablesConsumers({
     </>
   );
 }
+
+  // const sortEventsDataPerCompany = () => {
+  //   const events = new Map();
+  //   if (eventsInfo.data) {
+  //     const info = [...eventsInfo.data.data.list];
+  //     for (let data of info) {
+  //       events.set(data.id, data);
+  //     }
+  //   }
+  //   return events;
+  // };
+
+  // const currentStatus = (props) => {
+  //   const grouping = groupBy(props, "device.status");
+  //   return grouping[true] ? grouping[true].length > 0 : false;
+  // };
+  // const checkingActiveEventForActiveConsumer = (props) => {
+  //   let result = false;
+  //   for (let [key, value] of sortEventsDataPerCompany()) {
+  //     if (props.some((element) => element === key)) {
+  //       if (value.active) return (result = value.active);
+  //     }
+  //   }
+  //   return result;
+  // };
+
+  // const renderingTransactionsPerEventPerConsumer = async () => {
+  //   const fetching = await devitrakApi.post(
+  //     "/receiver/receiver-assigned-list",
+  //     {
+  //       user: {
+  //         $in: [
+  //           ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
+  //         ],
+  //       },
+  //       company: user.companyData.id,
+  //     }
+  //   );
+  //   if (fetching.data.ok) {
+  //     const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
+  //     return groupingbyUser;
+  //   }
+  //   return [];
+  // };
+
+
+  // if (data.result) {
+  //   const checking = data;
+  //   const result =
+  //     typeof checking?.result?.usersList === "string"
+  //       ? JSON.parse(checking?.result?.usersList)
+  //       : checking?.result?.usersList;
+  //   dataRef.current = result;
+  // }
+
+  // const eventsInfo = useQuery({
+  //   queryKey: ["allEventsInfoPerCompanyList"],
+  //   queryFn: () =>
+  //     devitrakApi.get(
+  //       `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
+  //     ),
+  //   refetchOnMount: false,
+  // });
+
+  // const listOfEventsPerAdmin = () => {
+  //   const active = eventsPerAdmin.active ?? [];
+  //   const completed = eventsPerAdmin.completed ?? [];
+  //   let events = [...active, ...completed];
+  //   const result = new Map();
+  //   for (let data of events) {
+  //     if (!result.has(data.id)) {
+  //       result.set(data.id, data);
+  //     }
+  //   }
+  //   return result;
+  // };
+
+  // const consumersPerAllowEvents = async () => {
+  //   // setLoadingState(true);
+  //   const finalReturn = new Map();
+  //   if (listOfEventsPerAdmin().size > 0) {
+  //     const data = [
+  //       ...listOfEventsPerAdmin()
+  //         .keys()
+  //         .map((item) => item),
+  //     ];
+  //     const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
+  //       event_providers: { $in: data },
+  //       company_providers: user.companyData.id,
+  //     });
+  //     if (fetchUsersAttendees.data.ok) {
+  //       const responseData = fetchUsersAttendees.data.users;
+  //       for (let data of responseData) {
+  //         if (!finalReturn.has(data.id)) {
+  //           finalReturn.set(data.id, data);
+  //         }
+  //       }
+  //     }
+  //   }
+  //   const formattingResponse = [...finalReturn.values().map((item) => item)];
+  //   getCounting(formattingResponse.length);
+  //   return setResponseData(formattingResponse);
+  // };
+
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   consumersPerAllowEvents();
+  //   // eventsInfo.refetch();
+
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
+
