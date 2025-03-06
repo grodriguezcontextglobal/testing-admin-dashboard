@@ -192,6 +192,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           }}
         >
           <Button
+            disabled={!record.status || typeof record.status === "string"}
             onClick={() =>
               record.transactionData.type === "lease"
                 ? handleReturnItemFromLeaseTransaction(record)
@@ -199,19 +200,41 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             }
             style={{
               ...BlueButton,
+              backgroundColor: record.status
+                ? BlueButton.background
+                : "var(--disabled-blue-button)",
+                border: record.status
+                  ? BlueButton.border
+                  : "1px solid var(--disabled-blue-button)",
             }}
           >
             {record.transactionData.type === "lease" ? (
-              <p style={BlueButtonText}>Mark as ended lease</p>
+              <p
+                style={{
+                  ...BlueButtonText,
+                  color: record.status
+                    ? BlueButtonText.color
+                    : "var(--gray200)",
+                }}
+              >
+                Mark as ended lease
+              </p>
             ) : (
-              <p style={BlueButtonText}>
+              <p
+                style={{
+                  ...BlueButtonText,
+                  color: record.status
+                    ? BlueButtonText.color
+                    : "var(--gray200)",
+                }}
+              >
                 <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
                 &nbsp;Mark as returned
               </p>
             )}
           </Button>
           <Button
-            // disabled
+            disabled={!record.status || typeof record.status === "string"}
             onClick={() => handleLostSingleDevice(record)}
             style={{
               ...GrayButton,
@@ -447,9 +470,23 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   }, [refetching, assignedDevicesQuery.data]);
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
   const onSelectChange = (newSelectedRowKeys) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
+
+  useEffect(() => {
+    const selectedDeviceInfo = () => {
+      const data = dataRendering();
+      const result = data.filter((element) =>
+        selectedRowKeys.includes(element.key)
+      );
+      return setSelectedRows(result);
+    };
+
+    selectedDeviceInfo();
+  }, [selectedRowKeys.length]);
+
   const rowSelection = {
     selectedRowKeys,
     onChange: onSelectChange,
@@ -460,7 +497,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     <div style={{ gap: "10px" }}>
       {contextHolder}
       <div
-        style={{ display: "flex", justifyContent: "flex-start", gap: "10px", padding:" 0 2rem" }}
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          gap: "10px",
+          padding: " 0 2rem",
+        }}
       >
         <Button
           disabled={!rowRecord.eventInfo[0].active}
@@ -575,6 +617,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         formattedData={dataRendering()}
         paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
         deviceListInfo={dataRendering()}
+        selectedItems={selectedRows}
+        setSelectedItems={setSelectedRows}
       />
 
       {openModal && (
