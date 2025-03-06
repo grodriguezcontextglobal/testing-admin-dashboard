@@ -14,6 +14,7 @@ import "../localStyles.css";
 import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
 import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
 import { useQueryClient } from "@tanstack/react-query";
+import { groupBy } from "lodash";
 const FooterExpandedRow = ({
   dataRendering,
   returningDevice,
@@ -238,13 +239,32 @@ const FooterExpandedRow = ({
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: () => (
-        <ul style={{ ...Subtitle }}>
-          <li style={{ ...Subtitle }}>{Number(0)} Active</li>
-          <li style={{ ...Subtitle }}>{Number(0)} Returned</li>
-          <li style={{ ...Subtitle }}>{Number(0)} Lost</li>
-        </ul>
-      ),
+      render: () => {
+        const groupingByStatus = groupBy(transactionDeviceData, "status");
+        console.log(groupingByStatus);
+        return (
+          <ul style={{ ...Subtitle }}>
+            <li style={{ ...Subtitle }}>
+              {groupingByStatus[true]
+                ? Number(groupingByStatus[true].length)
+                : 0}{" "}
+              Active
+            </li>
+            <li style={{ ...Subtitle }}>
+              {groupingByStatus[false]
+                ? Number(groupingByStatus[false].length)
+                : 0}{" "}
+              Returned
+            </li>
+            <li style={{ ...Subtitle }}>
+              {groupingByStatus["lost"] || groupingByStatus["Lost"]
+                ? Number(groupingByStatus["lost"].length)
+                : 0}{" "}
+              Lost
+            </li>
+          </ul>
+        );
+      },
     },
     {
       title: "Deposit",
