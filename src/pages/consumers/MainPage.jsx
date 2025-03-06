@@ -194,9 +194,9 @@ const MainPage = () => {
         </Grid>
         <Grid
           display={"flex"}
-          justifyContent={"flex-start"}
+          justifyContent={"space-between"}
           alignItems={"center"}
-          overflow={"hidden"}
+          // overflow={"hidden"}
           gap={2}
           item
           xs={12}
@@ -204,13 +204,18 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <div
+          <Grid
             style={{
               width: "100%",
               display: "flex",
               justifyContent: "flex-start",
               alignSelf: "flex-start",
             }}
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
           >
             {" "}
             <RenderingConsumersChartsBehavior
@@ -229,20 +234,25 @@ const MainPage = () => {
               props={{
                 title: "General activity",
                 description:
-                  "Active consumers refers to those users currently holding one or more devices.",// from the database
+                  "Active consumers refers to those users currently holding one or more devices.", // from the database
                 total:
                   allConsumersBasedOnEventsPerCompany?.data?.data?.result
                     ?.total ?? 0,
               }}
             />
-          </div>
-          <div
+          </Grid>
+          <Grid
             style={{
               width: "100%",
               display: "flex",
               justifyContent: "flex-start",
               alignSelf: "flex-start",
             }}
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
           >
             {" "}
             <RenderingConsumersChartsBehavior
@@ -273,7 +283,7 @@ const MainPage = () => {
                   ),
               }}
             />
-          </div>
+          </Grid>
         </Grid>
         <Grid
           display={"flex"}
