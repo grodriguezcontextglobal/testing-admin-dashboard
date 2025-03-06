@@ -1,4 +1,4 @@
-import { Button, message, Popconfirm, Table } from "antd";
+import { Button, message, Popconfirm, Table, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -11,23 +11,40 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../localStyles.css";
+import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
+import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
+import { useQueryClient } from "@tanstack/react-query";
 const FooterExpandedRow = ({
-  // handleReturnSingleDevice,
-  // handleLostSingleDevice,
   dataRendering,
   returningDevice,
   formattedData,
   paymentIntentInfoRetrieved,
+  selectedItems,
+  setSelectedItems,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
-  const returningAllAtOnce = () => {
-    for (let data of formattedData) {
-      returningDevice(data);
-    }
+  const queryClient = useQueryClient();
+  const returningAllItemsAtOnce = (props) => {
+    setIsLoadingState(true);
+    returningItemsInBulkMethod({
+      user,
+      event: {
+        eventInfoDetail: { eventName: dataRendering?.eventSelected },
+        id: dataRendering?.eventInfo[0]?.id,
+      },
+      selectedItems: props,
+      setSelectedItems: setSelectedItems,
+      loadingStatus: isLoadingState,
+    });
+    queryClient.invalidateQueries("assignedDeviceList", { exact: true });
+    queryClient.invalidateQueries("allConsumersBasedOnEventsPerCompany", {
+      exact: true,
+    });
+    return setIsLoadingState(false);
   };
   const [ccInfo, setCcInfo] = useState([]);
-  // const [openModal, setOpenModal] = useState(false);
+  const [expressCheckoutModal, setExpressCheckoutModal] = useState(false);
   const retrieveCCInfo = async () => {
     const resp = await devitrakApi
       .get(`/stripe/payment_intents/${dataRendering.paymentIntent}`)
@@ -117,20 +134,42 @@ const FooterExpandedRow = ({
             gap: "5px",
           }}
         >
-          <Button style={{ ...GrayButton, width: "100%" }}>
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
+          <Tooltip title="Still in construction.">
+            {/* <Popconfirm
+              onConfirm={() =>
+                returningAllItemsAtOnce([
+                  ...transactionDeviceData.filter((item) =>
+                    selectedItems.serial_number.includes(
+                      item.device.serialNumber
+                    )
+                  ),
+                ])
+              }
+              title="Are you sure?"
+            > */}
+            <Button
+              disabled
+              loading={isLoadingState}
+              style={{ ...GrayButton, width: "100%" }}
             >
-              <img src={ReverseRightArrow} alt="ReverseRightArrow" /> &nbsp;Mark
-              selected as returned
-            </p>
-          </Button>
-          <Button style={{ ...GrayButton, width: "100%" }}>
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
+                &nbsp;Mark selected as returned
+              </p>
+            </Button>
+            {/* </Popconfirm> */}
+          </Tooltip>
+          <Button
+            style={{ ...GrayButton, width: "100%" }}
+            onClick={() => setExpressCheckoutModal(true)}
+          >
             <p
               style={{
                 ...Subtitle,
@@ -143,10 +182,13 @@ const FooterExpandedRow = ({
             </p>
           </Button>
           <Popconfirm
-            onConfirm={() => returningAllAtOnce()}
+            onConfirm={() => returningAllItemsAtOnce(transactionDeviceData)}
             title="Are you sure?"
           >
-            <Button style={{ ...GrayButton, width: "100%" }}>
+            <Button
+              loading={isLoadingState}
+              style={{ ...GrayButton, width: "100%" }}
+            >
               <p
                 style={{
                   ...Subtitle,
@@ -217,18 +259,20 @@ const FooterExpandedRow = ({
             gap: "20px",
           }}
         >
-          <Button style={{ ...GrayButton, width: "100%" }}>
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
-            >
-              <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
-            </p>
-          </Button>
+          <Tooltip title="Still in construction.">
+            <Button disabled style={{ ...GrayButton, width: "100%" }}>
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
+              </p>
+            </Button>
+          </Tooltip>{" "}
           <p
             style={{
               ...Subtitle,
@@ -243,16 +287,51 @@ const FooterExpandedRow = ({
       ),
     },
   ];
+
+  const [transactionDeviceData, setTransactionDeviceData] = useState([]);
+  const formatItemsInfoAsProps = async () => {
+    const response = await devitrakApi.post(
+      "/receiver/receiver-assigned-list",
+      {
+        user: dataRendering?.eventInfo[0]?.consumerInfo.email,
+        company: user.companyData.id,
+        eventSelected: formattedData[0]?.entireData?.eventSelected[0],
+        paymentIntent: dataRendering?.paymentIntent,
+      }
+    );
+    return setTransactionDeviceData([
+      ...response.data.listOfReceivers.map((item) => item.device),
+    ]);
+  };
+
+  useEffect(() => {
+    formatItemsInfoAsProps();
+  }, []);
+
   return (
-    <Table
-      showHeader={false}
-      columns={footerColumn}
-      dataSource={rendering}
-      pagination={false}
-      className="footer-expanded-table"
-      rowHoverable={false}
-      style={{ width: "100%", padding: 0 }}
-    />
+    <>
+      <Table
+        showHeader={false}
+        columns={footerColumn}
+        dataSource={rendering}
+        pagination={false}
+        className="footer-expanded-table"
+        rowHoverable={false}
+        style={{ width: "100%", padding: 0 }}
+      />
+      {expressCheckoutModal && (
+        <ExpressCheckoutItems
+          openReturnDeviceBulkModal={expressCheckoutModal}
+          setOpenReturnDeviceInBulkModal={setExpressCheckoutModal}
+          event={reportTemplate.event}
+          user={user}
+          refetching={null}
+          selectedItems={transactionDeviceData}
+          setSelectedItems={setSelectedItems}
+          emailNotification={sendEmailDeviceReport}
+        />
+      )}
+    </>
   );
 };
 
