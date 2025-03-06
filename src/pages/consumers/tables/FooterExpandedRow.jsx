@@ -1,16 +1,16 @@
-import { Button, Popconfirm, Table } from "antd";
+import { Button, message, Popconfirm, Table } from "antd";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Lost from "../../../components/icons/credit-card-x.svg";
 import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
 import ScanIcon from "../../../components/icons/scan.svg";
 import Report from "../../../components/icons/table.svg";
-import Lost from "../../../components/icons/credit-card-x.svg";
+import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../localStyles.css";
-import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
-import { useSelector } from "react-redux";
 const FooterExpandedRow = ({
   // handleReturnSingleDevice,
   // handleLostSingleDevice,
@@ -20,7 +20,7 @@ const FooterExpandedRow = ({
   paymentIntentInfoRetrieved,
 }) => {
   const { user } = useSelector((state) => state.admin);
-  const [isLoadingState, setIsLoading] = useState(false);
+  const [isLoadingState, setIsLoadingState] = useState(false);
   const returningAllAtOnce = () => {
     for (let data of formattedData) {
       returningDevice(data);
@@ -68,7 +68,18 @@ const FooterExpandedRow = ({
         };
       }),
     ],
-    setLoadingState: setIsLoading,
+    setLoadingState: setIsLoadingState,
+  };
+
+  const sendEmailDeviceReport = async () => {
+    try {
+      setIsLoadingState(true);
+      await itemReportForClient(reportTemplate);
+      return setIsLoadingState(false);
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+      return setIsLoadingState(false);
+    }
   };
   const dataToBeRendered = () => {
     if (dataRendering.paymentIntent.length < 16) {
@@ -91,6 +102,7 @@ const FooterExpandedRow = ({
       data: [dataRendering],
     },
   ];
+
   const footerColumn = [
     {
       title: "Deposit",
@@ -157,7 +169,7 @@ const FooterExpandedRow = ({
         <Button
           loading={isLoadingState}
           style={{ ...GrayButton, width: "100%" }}
-          onClick={() => itemReportForClient(reportTemplate)}
+          onClick={() => sendEmailDeviceReport()}
         >
           <p
             style={{
