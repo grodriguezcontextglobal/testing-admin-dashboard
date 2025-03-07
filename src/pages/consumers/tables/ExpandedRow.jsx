@@ -203,9 +203,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
               backgroundColor: record.status
                 ? BlueButton.background
                 : "var(--disabled-blue-button)",
-                border: record.status
-                  ? BlueButton.border
-                  : "1px solid var(--disabled-blue-button)",
+              border: record.status
+                ? BlueButton.border
+                : "1px solid var(--disabled-blue-button)",
             }}
           >
             {record.transactionData.type === "lease" ? (
@@ -493,6 +493,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     columnWidth: 10,
   };
 
+  const refetchingQueries = () => {
+    return assignedDevicesQuery.refetch();
+  };
   return (
     <div style={{ gap: "10px" }}>
       {contextHolder}
@@ -619,6 +622,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         deviceListInfo={dataRendering()}
         selectedItems={selectedRows}
         setSelectedItems={setSelectedRows}
+        refetchingDevicePerTransaction={refetchingQueries}
       />
 
       {openModal && (
