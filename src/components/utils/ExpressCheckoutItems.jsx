@@ -1,29 +1,26 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { Chip, OutlinedInput } from "@mui/material";
 import { Button, message, Modal, notification, Popconfirm, Space } from "antd";
+import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { devitrakApi } from "../../api/devitrakApi";
-import { Chip, OutlinedInput } from "@mui/material";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { BlueButton } from "../../styles/global/BlueButton";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import { PropTypes } from "prop-types";
+import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
   setOpenReturnDeviceInBulkModal,
   event,
   user,
-  refetching = null,
+  refetchingDevicePerTransaction,
   selectedItems,
   setSelectedItems,
-  emailNotification,
 }) => {
   const { register, handleSubmit, setValue } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [scannedDevice, setScannedDevice] = useState([]);
-  const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg) => {
     api.open({
@@ -58,7 +55,6 @@ const ExpressCheckoutItems = ({
       `/receiver/update-bulk-items-in-transaction`,
       template
     );
-    queryClient.invalidateQueries("assginedDeviceList", { exact: true });
   };
 
   const returnDeviceInPool = async () => {
@@ -70,17 +66,6 @@ const ExpressCheckoutItems = ({
     };
 
     await devitrakApi.patch(`/receiver/update-bulk-items-in-pool`, template);
-
-    queryClient.invalidateQueries({
-      queryKey: ["assginedDeviceList"],
-      exact: true,
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ["listOfreceiverInPool"],
-      exact: true,
-    });
-
     return null;
   };
 
@@ -95,16 +80,9 @@ const ExpressCheckoutItems = ({
       setLoadingStatus(true);
       await returnDevicesInTransaction();
       await returnDeviceInPool();
-      await queryClient.invalidateQueries("assginedDeviceList", {
-        exact: true,
-      });
-      queryClient.invalidateQueries("allConsumersBasedOnEventsPerCompany", {
-        exact: true,
-      });  
-      refetching !== null && refetching();
       setLoadingStatus(false);
-      await emailNotification();
       openNotificationWithIcon("Success", "All devices returned!");
+      refetchingDevicePerTransaction()
       message.success("All devices returned!");
       await devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
@@ -112,7 +90,7 @@ const ExpressCheckoutItems = ({
       await devitrakApi.post("/cache_update/remove-cache", {
         key: `eventSelected=${event.id}&company=${user.companyData.id}`,
       });
-
+      
       setSelectedItems([]);
       return closeModal();
     } catch (error) {
