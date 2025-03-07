@@ -479,12 +479,12 @@ const Form = () => {
             openToDate={new Date(begin)}
             startDate={new Date(begin)}
             minDate={new Date(begin)}
-            minTime={
-              end.getDate() === begin.getDate()
-                ? begin
-                : new Date().setHours(0, 0, 0)
-            }
-            maxTime={new Date().setHours(23, 59, 59)}
+            // minTime={
+            //   end.getDate() === begin.getDate()
+            //     ? begin
+            //     : new Date().setHours(0, 0, 0)
+            // }
+            // maxTime={new Date().setHours(23, 59, 59)}
             selected={new Date(end)}
             onChange={(date) => setEnd(date)}
             placeholderText="Event close date"
