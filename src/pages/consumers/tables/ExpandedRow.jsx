@@ -1,12 +1,15 @@
 import { Chip } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { Badge, Button, Space, Table, message } from "antd";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Badge, Button, Space, Spin, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Loading from "../../../components/animation/Loading";
+import Lost from "../../../components/icons/credit-card-x_whitebase.svg";
+import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 import { checkArray } from "../../../components/utils/checkArray";
-import { formatDate } from "../../../components/utils/dateFormat";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
+import handleReturnSingleDevice from "../../../components/utils/ReturnSingleItemInTransaction";
 import {
   onAddEventData,
   onAddEventInfoDetail,
@@ -20,19 +23,18 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
-// import "../../../styles/global/ant-table.css";
-import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
+import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import Capturing from "../action/deposit/Capturing";
 import Releasing from "../action/deposit/Releasing";
 import ModalReturnItem from "../action/ModalReturnItem";
 import Choice from "../components/markedLostOption/Choice";
+import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
+import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
@@ -45,6 +47,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     useState(false);
   const [openModalReleasingDeposit, setOpenModalReleasingDeposit] =
     useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const assignedDevicesQuery = useQuery({
@@ -55,7 +58,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       }),
     refetchOnMount: false,
   });
-
+  const queryClient = useQueryClient();
   const matchingEventInventoryForValueItems = (props) => {
     const { device, type } = checkArray(rowRecord["eventInfo"]);
     if (type === "lease") {
@@ -96,168 +99,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   };
 
-  const columns = [
-    {
-      title: "Device name",
-      dataIndex: "type",
-      key: "type",
-      render: (type) => <p style={Subtitle}>{type}</p>,
-    },
-    {
-      title: "Serial number",
-      dataIndex: "serial_number",
-      key: "serial_number",
-      render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
-    },
-    {
-      title: "Cost of device",
-      dataIndex: "deviceValue",
-      key: "deviceValue",
-      render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
-    },
-
-    {
-      title: "Status of device",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Badge
-          style={{
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            borderRadius: "16px",
-            background: renderingTernary(
-              status,
-              "string",
-              "#ffb5b5",
-              "var(--Primary-50, #F9F5FF)",
-              "var(--Success-50, #ECFDF3)"
-            ),
-            mixBlendMode: "multiply",
-          }}
-        >
-          <Chip
-            style={{
-              backgroundColor: renderingTernary(
-                status,
-                "string",
-                "#ffb5b5",
-                "var(--Success-50, #ECFDF3)",
-                "var(--Primary-50, #F9F5FF)"
-              ),
-            }}
-            label={
-              <p
-                style={{
-                  color: renderingTernary(
-                    status,
-                    "string",
-                    "#f71212",
-                    "var(--success-700, #027A48)",
-                    "var(--Primary-700, #6941C6)"
-                  ),
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  fontStyle: "normal",
-                  fontWeight: 500,
-                  lineHeight: "18px",
-                }}
-              >
-                {renderingTernary(
-                  status,
-                  "string",
-                  status,
-                  "Active",
-                  "Returned"
-                )}
-              </p>
-            }
-          />
-        </Badge>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "operation",
-      render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: `${
-              typeof record.status !== "string" && record.status && "flex"
-            }`,
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            disabled={!record.status || typeof record.status === "string"}
-            onClick={() =>
-              record.transactionData.type === "lease"
-                ? handleReturnItemFromLeaseTransaction(record)
-                : handleReturnSingleDevice(record)
-            }
-            style={{
-              ...BlueButton,
-              backgroundColor: record.status
-                ? BlueButton.background
-                : "var(--disabled-blue-button)",
-              border: record.status
-                ? BlueButton.border
-                : "1px solid var(--disabled-blue-button)",
-            }}
-          >
-            {record.transactionData.type === "lease" ? (
-              <p
-                style={{
-                  ...BlueButtonText,
-                  color: record.status
-                    ? BlueButtonText.color
-                    : "var(--gray200)",
-                }}
-              >
-                Mark as ended lease
-              </p>
-            ) : (
-              <p
-                style={{
-                  ...BlueButtonText,
-                  color: record.status
-                    ? BlueButtonText.color
-                    : "var(--gray200)",
-                }}
-              >
-                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
-                &nbsp;Mark as returned
-              </p>
-            )}
-          </Button>
-          <Button
-            disabled={!record.status || typeof record.status === "string"}
-            onClick={() => handleLostSingleDevice(record)}
-            style={{
-              ...GrayButton,
-            }}
-          >
-            <p
-              style={{
-                ...GrayButtonText,
-                color: `${
-                  record.status
-                    ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
-                }`,
-              }}
-            >
-              Mark as lost
-            </p>
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
   const dataRendering = () => {
     if (assignedDevicesQuery.data) {
       const query = assignedDevicesQuery.data.data.listOfReceivers;
@@ -285,94 +126,63 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     dataRendering();
   }, [assignedDevicesQuery.data, rowRecord.key]);
 
-  const handleReturnSingleDevice = async (props) => {
+  const handleReturnItemInTransaction = async (props) => {
     try {
-      const respUpdate = await devitrakApi.patch(
-        `/receiver/receiver-update/${props.entireData._id}`,
+      setActionInProgress(true);
+      const responseDeviceInfoInTransaction = await devitrakApi.post(
+        "/receiver/receiver-assigned-list",
         {
-          id: props.entireData._id,
-          device: {
-            serialNumber: props.serial_number,
-            deviceType: props.type,
-            status: false,
-          },
+          paymentIntent: rowRecord.paymentIntent,
+          "device.serialNumber": props.serial_number,
+          "device.deviceType": props.type,
         }
       );
-      if (respUpdate.data) {
-        const deviceInPoolListQuery = await devitrakApi.post(
-          "/receiver/receiver-pool-list",
-          {
-            eventSelected: props.entireData.eventSelected[0], //pass event id
-            company: user.companyData.id,
-            device: props.serial_number,
-            type: props.type,
-          }
-        );
-        if (deviceInPoolListQuery.data) {
-          const deviceInPoolProfile = {
-            id: deviceInPoolListQuery.data.receiversInventory[0].id,
-            activity: false,
-          };
-
-          const returningInPool = await devitrakApi.patch(
-            `/receiver/receivers-pool-update/${deviceInPoolListQuery.data.receiversInventory[0].id}`,
-            deviceInPoolProfile
-          );
-          if (returningInPool.data) {
-            const checkItemDetails = await devitrakApi.post(
-              "/db_item/consulting-item",
-              {
-                serial_number: props.serial_number,
-                item_group: props.type,
-                company_id: user.sqlInfo.company_id,
-              }
-            );
-            if (checkItemDetails.data.ok) {
-              await devitrakApi.post("/db_event/returning-item", {
-                warehouse: 1,
-                status: "Operational",
-                update_at: formatDate(new Date()),
-                serial_number: props.serial_number,
-                category_name: checkItemDetails.data.items[0].category_name,
-                item_group: props.type,
-                company_id: user.sqlInfo.company_id,
-              });
-            }
-            await assignedDevicesQuery.refetch();
-            await refetching();
-            return success();
-          }
+      const eventInfoInTransaction = await devitrakApi.post(
+        "/event/event-list",
+        {
+          company: user.companyData.company_name,
+          _id: props.entireData.event_id,
         }
+      );
+      if (responseDeviceInfoInTransaction.data.listOfReceivers.length > 0) {
+        const dataAsProps = checkArray(
+          responseDeviceInfoInTransaction.data.listOfReceivers
+        );
+        await handleReturnSingleDevice({
+          user,
+          serialNumber: dataAsProps.device.serialNumber,
+          deviceType: dataAsProps.device.deviceType,
+          deviceData: dataAsProps,
+          event: checkArray(eventInfoInTransaction.data.list),
+          customer,
+          status: props.new_status ? props.new_status : false,
+        });
+        await refetching();
+        queryClient.refetchQueries({
+          queryKey: ["transactionsPerCustomer", customer.id ?? customer.uid],
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["transactionsPerCustomer", customer.id ?? customer.uid],
+          exact: true,
+        });
+        success();
+        return setActionInProgress(false);
       }
+      return setActionInProgress(false);
     } catch (error) {
-      return null;
+      setActionInProgress(false);
+      return message.error(error.message);
     }
   };
 
-  const handleLostSingleDevice = (props) => {
+  const handleLostSingleDevice = async (props) => {
     try {
-      setOpenModal(true);
-      dispatch(onAddEventData(rowRecord.eventInfo));
-      dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
-      dispatch(onSelectCompany(rowRecord.eventInfo.company));
-      dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
-      dispatch(
-        onReceiverObjectToReplace({
-          serialNumber: props.serial_number,
-          deviceType: props.type,
-          status: props.status,
-        })
-      );
-      dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
-      dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
-      dispatch(
-        onAddPaymentIntentDetailSelected({
-          serialNumber: props.serial_number,
-          deviceType: props.type,
-          status: props.status,
-        })
-      );
-      dispatch(onAddCustomer(props.entireData.userInfo));
+      const lostPropsToPass = {
+        ...props,
+        new_status: "Lost",
+      };
+      await handleReturnItemInTransaction(lostPropsToPass);
     } catch (error) {
       return null;
     }
@@ -496,6 +306,150 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const refetchingQueries = () => {
     return assignedDevicesQuery.refetch();
   };
+
+  const lostFeeChargeCustomer = (props) => {
+    setOpenModal(true);
+    dispatch(onAddEventData(rowRecord.eventInfo));
+    dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
+    dispatch(onSelectCompany(rowRecord.eventInfo.company));
+    dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
+    dispatch(
+      onReceiverObjectToReplace({
+        serialNumber: props.serial_number,
+        deviceType: props.type,
+        status: props.status,
+      })
+    );
+    dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
+    dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
+    dispatch(
+      onAddPaymentIntentDetailSelected({
+        serialNumber: props.serial_number,
+        deviceType: props.type,
+        status: props.status,
+      })
+    );
+    dispatch(onAddCustomer(props.entireData.userInfo));
+  };
+
+  const columns = [
+    {
+      title: "Device name",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => <p style={Subtitle}>{type}</p>,
+    },
+    {
+      title: "Serial number",
+      dataIndex: "serial_number",
+      key: "serial_number",
+      render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
+    },
+    {
+      title: "Cost of device",
+      dataIndex: "deviceValue",
+      key: "deviceValue",
+      render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
+    },
+
+    {
+      title: "Status of device",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Badge
+          style={{
+            display: "flex",
+            padding: "2px 8px",
+            alignItems: "center",
+            borderRadius: "16px",
+            background: renderingTernary(
+              status,
+              "string",
+              "#ffb5b5",
+              "var(--Primary-50, #F9F5FF)",
+              "var(--Success-50, #ECFDF3)"
+            ),
+            mixBlendMode: "multiply",
+          }}
+        >
+          <Chip
+            style={{
+              backgroundColor: renderingTernary(
+                status,
+                "string",
+                "#ffb5b5",
+                "var(--Success-50, #ECFDF3)",
+                "var(--Primary-50, #F9F5FF)"
+              ),
+            }}
+            label={
+              <p
+                style={{
+                  color: renderingTernary(
+                    status,
+                    "string",
+                    "#f71212",
+                    "var(--success-700, #027A48)",
+                    "var(--Primary-700, #6941C6)"
+                  ),
+                  fontFamily: "Inter",
+                  fontSize: "12px",
+                  fontStyle: "normal",
+                  fontWeight: 500,
+                  lineHeight: "18px",
+                }}
+              >
+                {renderingTernary(
+                  status,
+                  "string",
+                  status,
+                  "Active",
+                  "Returned"
+                )}
+              </p>
+            }
+          />
+        </Badge>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "operation",
+      render: (record) => (
+        <Space
+          size="middle"
+          style={{
+            display: `${
+              typeof record.status !== "string" && record.status && "flex"
+            }`,
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          {typeof record.status !== "string" ? (
+            <ExpandedRowTableButtons
+              record={record}
+              handleReturnItemInTransaction={handleReturnItemInTransaction}
+              handleLostSingleDevice={handleLostSingleDevice}
+              handleReturnItemFromLeaseTransaction={
+                handleReturnItemFromLeaseTransaction
+              }
+              ReverseRightArrow={ReverseRightArrow}
+            />
+          ) : (
+            <ExpandedLostButton
+              record={record}
+              handleLostSingleDevice={lostFeeChargeCustomer}
+              Lost={Lost}
+            />
+          )}
+        </Space>
+      ),
+    },
+  ];
+
+
   return (
     <div style={{ gap: "10px" }}>
       {contextHolder}
@@ -613,10 +567,10 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
 
       <FooterExpandedRow
         displayTernary={displayTernary}
-        handleReturnSingleDevice={handleReturnSingleDevice}
+        handleReturnSingleDevice={handleReturnItemInTransaction}
         handleLostSingleDevice={handleLostSingleDevice}
         dataRendering={rowRecord}
-        returningDevice={handleReturnSingleDevice}
+        returningDevice={handleReturnItemInTransaction}
         formattedData={dataRendering()}
         paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
         deviceListInfo={dataRendering()}
@@ -634,7 +588,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           openReturnDeviceStaffModal={openReturnDeviceStaffModal}
           setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
           deviceInfo={infoNeededToBeRenderedInTable}
-          returnFunction={handleReturnSingleDevice}
+          returnFunction={handleReturnItemInTransaction}
         />
       )}
 
@@ -655,8 +609,37 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           rowRecord={rowRecord}
         />
       )}
+      {actionInProgress && <Spin indicator={<Loading />} fullscreen />}
     </div>
   );
 };
 
 export default ExpandedRow;
+
+{
+  /*
+  props to pass when lost fee will be collected
+  setOpenModal(true);
+  dispatch(onAddEventData(rowRecord.eventInfo));
+  dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
+dispatch(onSelectCompany(rowRecord.eventInfo.company));
+dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
+dispatch(
+    onReceiverObjectToReplace({
+        serialNumber: props.serial_number,
+        deviceType: props.type,
+    status: props.status,
+  })
+);
+dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
+dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
+dispatch(
+  onAddPaymentIntentDetailSelected({
+    serialNumber: props.serial_number,
+    deviceType: props.type,
+    status: props.status,
+  })
+);
+dispatch(onAddCustomer(props.entireData.userInfo));
+*/
+}
