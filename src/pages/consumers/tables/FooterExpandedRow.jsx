@@ -1,34 +1,35 @@
-import { Button, message, Popconfirm, Table, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { Button, message, Popconfirm, Spin, Table, Tooltip } from "antd";
+import { groupBy } from "lodash";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Loading from "../../../components/animation/Loading";
 import Lost from "../../../components/icons/credit-card-x.svg";
 import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
 import ScanIcon from "../../../components/icons/scan.svg";
 import Report from "../../../components/icons/table.svg";
 import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
+import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
+import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../localStyles.css";
-import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
-import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
-import { useQueryClient } from "@tanstack/react-query";
-import { groupBy } from "lodash";
 const FooterExpandedRow = ({
   dataRendering,
-  returningDevice,
   formattedData,
   paymentIntentInfoRetrieved,
   selectedItems,
   setSelectedItems,
+  refetchingDevicePerTransaction,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
-  const queryClient = useQueryClient();
-  const returningAllItemsAtOnce = (props) => {
+  const [selectedItemsToMarkAsReturned, setSelectedItemsToMarkAsReturned] =
+    useState([]);
+  const returningAllItemsAtOnce = async (props) => {
     setIsLoadingState(true);
-    returningItemsInBulkMethod({
+    await returningItemsInBulkMethod({
       user,
       event: {
         eventInfoDetail: { eventName: dataRendering?.eventSelected },
@@ -38,10 +39,8 @@ const FooterExpandedRow = ({
       setSelectedItems: setSelectedItems,
       loadingStatus: isLoadingState,
     });
-    queryClient.invalidateQueries("assignedDeviceList", { exact: true });
-    queryClient.invalidateQueries("allConsumersBasedOnEventsPerCompany", {
-      exact: true,
-    });
+    await refetchingDevicePerTransaction();
+    await formatItemsInfoAsProps()
     return setIsLoadingState(false);
   };
   const [ccInfo, setCcInfo] = useState([]);
@@ -135,21 +134,13 @@ const FooterExpandedRow = ({
             gap: "5px",
           }}
         >
-          <Tooltip title="Still in construction.">
-            {/* <Popconfirm
+            <Popconfirm
               onConfirm={() =>
-                returningAllItemsAtOnce([
-                  ...transactionDeviceData.filter((item) =>
-                    selectedItems.serial_number.includes(
-                      item.device.serialNumber
-                    )
-                  ),
-                ])
+                returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
               }
               title="Are you sure?"
-            > */}
+            >
             <Button
-              disabled
               loading={isLoadingState}
               style={{ ...GrayButton, width: "100%" }}
             >
@@ -165,8 +156,7 @@ const FooterExpandedRow = ({
                 &nbsp;Mark selected as returned
               </p>
             </Button>
-            {/* </Popconfirm> */}
-          </Tooltip>
+            </Popconfirm>
           <Button
             style={{ ...GrayButton, width: "100%" }}
             onClick={() => setExpressCheckoutModal(true)}
@@ -241,7 +231,6 @@ const FooterExpandedRow = ({
       key: "status",
       render: () => {
         const groupingByStatus = groupBy(transactionDeviceData, "status");
-        console.log(groupingByStatus);
         return (
           <ul style={{ ...Subtitle }}>
             <li style={{ ...Subtitle }}>
@@ -328,6 +317,21 @@ const FooterExpandedRow = ({
     formatItemsInfoAsProps();
   }, []);
 
+  useMemo(() => {
+    let result = new Set();
+    transactionDeviceData.forEach((item) => {
+      if (
+        selectedItems.some(
+          (c) =>
+            c.serial_number === item.serialNumber && c.type === item.deviceType
+        )
+      ) {
+        result.add(item);
+      }
+    });
+    return setSelectedItemsToMarkAsReturned(Array.from(result));
+  }, [selectedItems]);
+
   return (
     <>
       <Table
@@ -339,6 +343,7 @@ const FooterExpandedRow = ({
         rowHoverable={false}
         style={{ width: "100%", padding: 0 }}
       />
+      {isLoadingState && <Spin indicator={<Loading />} fullscreen />}
       {expressCheckoutModal && (
         <ExpressCheckoutItems
           openReturnDeviceBulkModal={expressCheckoutModal}
@@ -349,6 +354,7 @@ const FooterExpandedRow = ({
           selectedItems={transactionDeviceData}
           setSelectedItems={setSelectedItems}
           emailNotification={sendEmailDeviceReport}
+          refetchingDevicePerTransaction={refetchingDevicePerTransaction}
         />
       )}
     </>
