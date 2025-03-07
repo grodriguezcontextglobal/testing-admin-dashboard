@@ -231,6 +231,7 @@ const FooterExpandedRow = ({
       key: "status",
       render: () => {
         const groupingByStatus = groupBy(transactionDeviceData, "status");
+        const lostNumber = groupingByStatus["lost"] || groupingByStatus["Lost"];
         return (
           <ul style={{ ...Subtitle }}>
             <li style={{ ...Subtitle }}>
@@ -247,7 +248,7 @@ const FooterExpandedRow = ({
             </li>
             <li style={{ ...Subtitle }}>
               {groupingByStatus["lost"] || groupingByStatus["Lost"]
-                ? Number(groupingByStatus["lost"].length)
+                ? Number(lostNumber.length)
                 : 0}{" "}
               Lost
             </li>
