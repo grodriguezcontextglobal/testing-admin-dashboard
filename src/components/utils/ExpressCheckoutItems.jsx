@@ -98,6 +98,9 @@ const ExpressCheckoutItems = ({
       await queryClient.invalidateQueries("assginedDeviceList", {
         exact: true,
       });
+      queryClient.invalidateQueries("allConsumersBasedOnEventsPerCompany", {
+        exact: true,
+      });  
       refetching !== null && refetching();
       setLoadingStatus(false);
       await emailNotification();
