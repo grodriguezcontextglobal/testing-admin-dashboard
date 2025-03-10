@@ -183,33 +183,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     }
   };
 
-  // const chipStyle = (props) => {
-  //   return {
-  //     display: "flex",
-  //     padding: "2px 8px",
-  //     alignItems: "center",
-  //     borderRadius: "16px",
-  //     background: `${
-  //       props ? "var(--Primary-50, #F9F5FF)" : "var(--Success-50, #ECFDF3)"
-  //     }`,
-  //     mixBlendMode: "multiply",
-  //   };
-  // };
-
-  // const chipTextStyle = (props) => {
-  //   return {
-  //     color: `${
-  //       props ? "var(--Primary-700, #6941C6)" : "var(--success-700, #027A48)"
-  //     }`,
-  //     fontFamily: "Inter",
-  //     fontSize: "12px",
-  //     fontStyle: "normal",
-  //     fontWeight: 500,
-  //     lineHeight: "18px",
-  //     textTransform: "capitalize",
-  //   };
-  // };
-
   const columns = [
     {
       title: "Transaction date",
@@ -343,36 +316,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         </p>
       ),
     },
-    // {
-    //   title: "Type",
-    //   dataIndex: "type",
-    //   key: "type",
-    //   responsive: ["lg"],
-    //   render: (type, record) => (
-    //     <p style={Subtitle}>
-    //       <Badge style={chipStyle(type === "event")}>
-    //         <Chip
-    //           style={{
-    //             backgroundColor: `${
-    //               type === "event"
-    //                 ? "var(--Primary-50, #F9F5FF)"
-    //                 : "var(--Success-50, #ECFDF3)"
-    //             }`,
-    //           }}
-    //           label={
-    //             <p style={chipTextStyle(type === "event")}>
-    //               {type === "event"
-    //                 ? record.device > 0
-    //                   ? type
-    //                   : `${type} | Service`
-    //                 : "Lease"}
-    //             </p>
-    //           }
-    //         />
-    //       </Badge>
-    //     </p>
-    //   ),
-    // },
     {
       title: "",
       dataIndex: "action",
