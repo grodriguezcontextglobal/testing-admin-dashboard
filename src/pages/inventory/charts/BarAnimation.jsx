@@ -31,7 +31,7 @@ const BarAnimation = ({ dataToRender, title }) => {
       left: "10%",
       right: "10%",
       bottom: 40,
-      containLabel: true,
+      containLabel: false,
     },
     toolbox: {
       show: true,

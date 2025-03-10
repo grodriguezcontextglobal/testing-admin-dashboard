@@ -4,7 +4,7 @@ import { PropTypes } from "prop-types";
 
 const Bars = ({ dataToRender, title }) => {
   const labelOption = {
-    show: true,
+    show: false,
     position: "insideBottom",
     distance: 15,
     align: "left",

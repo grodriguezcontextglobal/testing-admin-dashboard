@@ -2,15 +2,17 @@ import { groupBy } from "lodash";
 
 const getBarChartData = (advanceSearch) => {
   const labelOption = {
-    show: true,
+    show: false,
     position: "insideBottom",
     distance: 15,
     align: "left",
     verticalAlign: "middle",
     rotate: 90,
-    formatter: "{c}  {name|{a}}",
+    textWrap: 'wrap',
+    formatter:"{name|{a}}", // "{c}  {name|{a}}",
     fontSize: 16,
     fontFamily:"Inter",
+    innerHeight:"100%",
     color:"#000",
     rich: {
       name: {},
