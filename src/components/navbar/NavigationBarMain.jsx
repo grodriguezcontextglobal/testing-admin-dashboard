@@ -11,7 +11,7 @@ import {
   ListItem,
   ListItemButton,
   OutlinedInput,
-  Toolbar
+  Toolbar,
 } from "@mui/material";
 import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -39,8 +39,9 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 import { LogoutIcon } from "../icons/LogoutIcon";
-import { MagnifyIcon } from "../icons/MagnifyIcon";
-import { ProfileIcon } from "../icons/ProfileIcon";
+// import { ProfileIcon } from "../icons/ProfileIcon";
+import Profile from "../icons/user-03.svg";
+import MagnifyIcon from "../icons/search-lg.svg";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -262,22 +263,22 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             }}
           >
             <Grid item sm={2} md={8} lg={8}>
-                <Badge
-                  color="inherit"
-                  aria-label="open drawer"
-                  edge="start"
-                  onClick={handleDrawerToggle}
-                  sx={{
-                    mr: 2,
-                    display: { sm: "flex", md: "none", lg: "none" },
-                    backgroundColor: "var(--blue700)",
-                    borderBottom: "solid 1px var(--blue-dark--600)",
-                    padding: "0 24px 0 0",
-                    borderRadius: "50%",
-                  }}
-                >
-                  <Icon icon="material-symbols:menu" width={30} height={30} />
-                </Badge>
+              <Badge
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{
+                  mr: 2,
+                  display: { sm: "flex", md: "none", lg: "none" },
+                  backgroundColor: "var(--blue700)",
+                  borderBottom: "solid 1px var(--blue-dark--600)",
+                  padding: "0 24px 0 0",
+                  borderRadius: "50%",
+                }}
+              >
+                <Icon icon="material-symbols:menu" width={30} height={30} />
+              </Badge>
               <Box
                 sx={{
                   display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
@@ -392,7 +393,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                             fontSize: "25px",
                           }}
                         >
-                          <MagnifyIcon />
+                          <img src={MagnifyIcon} alt="search-icon" />
                         </p>
                       </div>
                     </div>
@@ -416,7 +417,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                             fontSize: "25px",
                           }}
                         >
-                          <ProfileIcon />
+                          <img src={Profile} alt="Logo" />
                         </p>
                       </div>
                     </div>
