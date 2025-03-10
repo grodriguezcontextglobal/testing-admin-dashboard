@@ -166,6 +166,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           queryKey: ["transactionsPerCustomer", customer.id ?? customer.uid],
           exact: true,
         });
+        await refetchingQueries();
         success();
         return setActionInProgress(false);
       }
@@ -180,7 +181,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     try {
       const lostPropsToPass = {
         ...props,
-        new_status: "Lost",
+        new_status: props.new_status,
       };
       await handleReturnItemInTransaction(lostPropsToPass);
     } catch (error) {
@@ -304,6 +305,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   };
 
   const refetchingQueries = () => {
+    queryClient.refetchQueries({
+      queryKey: ["transactionsPerCustomer", customer.uid]
+    })
     return assignedDevicesQuery.refetch();
   };
 
@@ -351,7 +355,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       key: "deviceValue",
       render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
     },
-
     {
       title: "Status of device",
       dataIndex: "status",
@@ -440,6 +443,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           ) : (
             <ExpandedLostButton
               record={record}
+              handleFoundSingleDevice={handleLostSingleDevice}
               handleLostSingleDevice={lostFeeChargeCustomer}
               Lost={Lost}
             />
@@ -448,7 +452,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       ),
     },
   ];
-
 
   return (
     <div style={{ gap: "10px" }}>
