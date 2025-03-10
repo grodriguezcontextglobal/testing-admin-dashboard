@@ -498,7 +498,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           justifyContent: "space-between",
           alignItems: "center",
           margin: "2rem auto -0.5rem",
-          // padding: "1rem 1.5rem",
+          padding: "15px 24px",
           border: "1px solid var(--gray-200, #eaecf0)",
           borderRadius: "12px 12px 0 0",
           background: "var(--gray-50, #F9F9F9)",
