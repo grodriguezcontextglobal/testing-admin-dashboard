@@ -40,7 +40,7 @@ const FooterExpandedRow = ({
       loadingStatus: isLoadingState,
     });
     await refetchingDevicePerTransaction();
-    await formatItemsInfoAsProps()
+    await formatItemsInfoAsProps();
     return setIsLoadingState(false);
   };
   const [ccInfo, setCcInfo] = useState([]);
@@ -134,12 +134,12 @@ const FooterExpandedRow = ({
             gap: "5px",
           }}
         >
-            <Popconfirm
-              onConfirm={() =>
-                returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
-              }
-              title="Are you sure?"
-            >
+          <Popconfirm
+            onConfirm={() =>
+              returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
+            }
+            title="Are you sure?"
+          >
             <Button
               loading={isLoadingState}
               style={{ ...GrayButton, width: "100%" }}
@@ -156,7 +156,7 @@ const FooterExpandedRow = ({
                 &nbsp;Mark selected as returned
               </p>
             </Button>
-            </Popconfirm>
+          </Popconfirm>
           <Button
             style={{ ...GrayButton, width: "100%" }}
             onClick={() => setExpressCheckoutModal(true)}
@@ -221,9 +221,29 @@ const FooterExpandedRow = ({
       title: "Cost of device",
       dataIndex: "status",
       key: "status",
-      render: () => (
-        <p style={{ ...Subtitle }}>${Number(2500).toLocaleString()} total</p>
-      ),
+      render: (_, record) => {
+        const paymentIntent = record.data[0].eventInfo[0].paymentIntent;
+        const retrieveAmount = () => {
+          if (
+            paymentIntent.length > 15 &&
+            String(paymentIntent).includes("cash")
+          ) {
+            const paymentIntent = record.data[0].eventInfo[0].paymentIntent;
+            const splitting = String(paymentIntent).split(":");
+            const amountRetrieved = String(splitting[1]).split("_")[0];
+            return String(amountRetrieved).split("$")[1];
+          } else if (paymentIntent.length < 16) {
+            return 0;
+          } else {
+            return 0
+          }
+        };
+        return (
+          <p style={{ ...Subtitle }}>
+            ${Number(retrieveAmount()).toLocaleString()} total
+          </p>
+        );
+      },
     },
     {
       title: "Status",
