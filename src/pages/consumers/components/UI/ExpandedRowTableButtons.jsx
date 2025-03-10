@@ -11,10 +11,14 @@ const ExpandedRowTableButtons = ({
   handleReturnItemFromLeaseTransaction,
   ReverseRightArrow,
 }) => {
+  const propsLostSingleDevice = {
+    ...record,
+    new_status: "Lost",
+  };
   return (
-    <div style={{ display: "flex", gap: "5px" }}>
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
       <Button
-        disabled={!record.status || typeof record.status === "string"}
+        disabled={!record.status}
         onClick={() =>
           record.transactionData.type === "lease"
             ? handleReturnItemFromLeaseTransaction(record)
@@ -52,8 +56,8 @@ const ExpandedRowTableButtons = ({
         )}
       </Button>
       <Button
-        disabled={!record.status || typeof record.status === "string"}
-        onClick={() => handleLostSingleDevice(record)}
+        disabled={!record.status}
+        onClick={() => handleLostSingleDevice(propsLostSingleDevice)}
         style={{
           ...GrayButton,
         }}
