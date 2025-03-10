@@ -1,7 +1,7 @@
 import { notification } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom"; // Assuming you're using react-router
+import { Navigate, useNavigate } from "react-router-dom"; // Assuming you're using react-router
 import { onLogout } from "../store/slices/adminSlice";
 
 const InactivityLogout = ({ children }) => {
@@ -59,7 +59,7 @@ const InactivityLogout = ({ children }) => {
   return (
     <>
       {contextHolder}
-      {isActive ? children : null}
+      {isActive ? children : <Navigate to="/login" replace={true} />}
     </>
   );
 };
