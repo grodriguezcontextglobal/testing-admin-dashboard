@@ -3,8 +3,6 @@ import { DangerButton } from "../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import ChargeLostFee from "../../action/ChargeLostFee";
-import { useState } from "react";
 
 const ExpandedLostButton = ({
   record,
@@ -12,7 +10,7 @@ const ExpandedLostButton = ({
   handleLostSingleDevice,
   Lost,
 }) => {
-  const [chargeLostFeeModal, setChargeLostFeeModal] = useState(false);
+  // const [chargeLostFeeModal, setChargeLostFeeModal] = useState(false);
   const propsUpdateSingleDevice = {
     ...record,
     new_status: true,
@@ -51,13 +49,13 @@ const ExpandedLostButton = ({
           </p>
         </Button>
       </div>
-      {chargeLostFeeModal && (
+      {/* {chargeLostFeeModal && (
         <ChargeLostFee
           openModal={chargeLostFeeModal}
           setOpenModal={setChargeLostFeeModal}
           record={record}
         />
-      )}
+      )} */}
 
     </>
   );
