@@ -18,7 +18,7 @@ const ExpandedLostButton = ({
   return (
     <>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
-        <Button disabled onClick={() => handleLostSingleDevice(record)} style={{ ...DangerButton, alignItems: "center" }}>
+        <Button onClick={() => handleLostSingleDevice(record)} style={{ ...DangerButton, alignItems: "center" }}>
           <img src={Lost} alt="Lost" />
           <p
             style={{
