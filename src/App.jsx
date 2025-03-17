@@ -20,9 +20,11 @@ import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import Loading from "./components/animation/Loading";
 import CenteringGrid from "./styles/global/CenteringGrid";
-const InactivityLogout = lazy(() => import("./utils/CheckingInactivityAndTakeAction"));
+const InactivityLogout = lazy(() =>
+  import("./utils/CheckingInactivityAndTakeAction")
+);
 const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
-const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes")); 
+const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes"));
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -80,13 +82,19 @@ const App = () => {
   // Function to render the network status message based on connection type
   const renderNetworkStatusMessage = () => {
     if (connectionType === "slow-2g" || connectionType === "2g") {
-      setTimeout(
-        () =>
-          openNotificationWithIcon(
-            "The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection."
-          ),
-        3000
-      );
+      const networkNotification = sessionStorage.getItem("network-status");
+      if (networkNotification) {
+        return null;
+      } else {
+        sessionStorage.setItem("network-status", true);
+        setTimeout(
+          () =>
+            openNotificationWithIcon(
+              "The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection."
+            ),
+          3000
+        );
+      }
     } else {
       return null;
     }
@@ -100,13 +108,20 @@ const App = () => {
   }, [status, adminToken, location.pathname]);
 
   return (
-    <Suspense fallback={<div style={CenteringGrid}><Loading /></div>}>
+    <Suspense
+      fallback={
+        <div style={CenteringGrid}>
+          <Loading />
+        </div>
+      }
+    >
       {renderNetworkStatusMessage()}
       {contextHolder}
       {status === "authenticated" && adminToken ? (
         <InactivityLogout>
           <AuthRoutes />
         </InactivityLogout>
+        // <AuthRoutes />
       ) : (
         <NoAuthRoutes />
       )}
