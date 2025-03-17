@@ -84,7 +84,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   };
 
   const handleSubmitForm = async () => {
-    console.log(localStorage.getItem("total"));
+    // console.log(localStorage.getItem("total"));
     let cashReportProfile = {
       attendee: customer?.email,
       admin: user.email,
