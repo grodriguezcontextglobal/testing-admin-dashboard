@@ -235,7 +235,7 @@ const ModalMultipleCompanies = ({
             display: "flex",
             justifyContent: "flex-start",
             alignItems: "center",
-            height: "2.5rem",
+            // height: "2.5rem",
           }}
           onChange={handleChange}
           options={[
@@ -264,14 +264,8 @@ const ModalMultipleCompanies = ({
                         ? renderingExtraCompanyInfo(item.company).company_logo
                         : "https://res.cloudinary.com/dsuynhcgd/image/upload/c_thumb,w_200,g_face/v1738169822/material-symbols--enterprise-outline_vmmi7y.svg"
                     }
+                    alt={item.company}
                   />{" "}
-                  {/* <Avatar
-                    size={"large"}
-                    shape="circle"
-                    src={renderingExtraCompanyInfo(item.company).company_logo}
-                  >
-                    {item.company}
-                  </Avatar> */}
                   &nbsp;
                   <span
                     style={{
