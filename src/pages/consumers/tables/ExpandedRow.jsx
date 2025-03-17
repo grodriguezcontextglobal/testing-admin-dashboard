@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Space, Spin, Table, message } from "antd";
+import { Badge, Space, Spin, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -18,16 +18,11 @@ import {
 } from "../../../store/slices/eventSlice";
 import { onReceiverObjectToReplace } from "../../../store/slices/helperSlice";
 import {
-  onAddCustomer,
   onAddDevicesAssignedInPaymentIntent,
   onAddPaymentIntentDetailSelected,
-  onAddPaymentIntentSelected,
+  onAddPaymentIntentSelected
 } from "../../../store/slices/stripeSlice";
 import "../../../styles/global/ant-table.css";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import Capturing from "../action/deposit/Capturing";
 import Releasing from "../action/deposit/Releasing";
@@ -38,6 +33,7 @@ import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
+  console.log(rowRecord)
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -227,35 +223,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       return setInfoNeededToBeRenderedInTable(template);
     }
   };
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleRefund = async (record) => {
-    try {
-      setIsLoading(true);
-      await devitrakApi.post(`/stripe/refund`, {
-        paymentIntent: record.paymentIntent,
-      });
-      await devitrakApi.patch(
-        `/transaction/update-transaction/${record.eventInfo[0].id}`,
-        {
-          id: record.eventInfo[0].id,
-          active: false,
-        }
-      );
-      const emailTemplate = {
-        email: customer.email,
-        amount: String(record.eventInfo[0].device[0].deviceValue),
-        date: new Date().toString().slice(4, 15),
-        paymentIntent: record.paymentIntent,
-        customer: `${customer.name} ${customer.lastName}`,
-      };
-      await devitrakApi.post("/nodemailer/refund-notification", emailTemplate);
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      message.error(`There was an error. ${error}`);
-    }
-  };
 
   const checkTransaction = async () => {
     const transactionInfo = await devitrakApi.post("/transaction/transaction", {
@@ -306,17 +273,28 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
 
   const refetchingQueries = () => {
     queryClient.refetchQueries({
-      queryKey: ["transactionsPerCustomer", customer.uid]
-    })
+      queryKey: ["transactionsPerCustomer", customer.uid],
+    });
     return assignedDevicesQuery.refetch();
   };
 
-  const lostFeeChargeCustomer = (props) => {
+  const lostFeeChargeCustomer = async (props) => {
     setOpenModal(true);
-    dispatch(onAddEventData(rowRecord.eventInfo));
-    dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
-    dispatch(onSelectCompany(rowRecord.eventInfo.company));
-    dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
+    const responseEvent = await devitrakApi.post("/event/event-list", {
+      company: user.company,
+      "eventInfoDetail.eventName": rowRecord.eventSelected,
+    });
+    const receiversList = assignedDevicesQuery?.data?.data?.listOfReceivers;
+    const foundDeviceToChargeLostFee =
+      receiversList?.filter(
+        (element) =>
+          element.device.serialNumber === props.serial_number &&
+          element.device.status === "Lost"
+      );
+    dispatch(onAddEventData(checkArray(responseEvent.data?.list)));
+    dispatch(onAddEventInfoDetail(rowRecord.eventSelected));
+    dispatch(onSelectCompany(rowRecord.company));
+    dispatch(onSelectEvent(rowRecord.eventSelected));
     dispatch(
       onReceiverObjectToReplace({
         serialNumber: props.serial_number,
@@ -324,8 +302,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         status: props.status,
       })
     );
-    dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
-    dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
+    dispatch(
+      onAddDevicesAssignedInPaymentIntent(
+        checkArray(foundDeviceToChargeLostFee)
+      )
+    );
+    dispatch(onAddPaymentIntentSelected(rowRecord.paymentIntent));
     dispatch(
       onAddPaymentIntentDetailSelected({
         serialNumber: props.serial_number,
@@ -333,7 +315,6 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         status: props.status,
       })
     );
-    dispatch(onAddCustomer(props.entireData.userInfo));
   };
 
   const columns = [
@@ -428,6 +409,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             }`,
             justifyContent: "flex-end",
             alignItems: "center",
+            width: "100%",
           }}
         >
           {typeof record.status !== "string" ? (
@@ -439,6 +421,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
                 handleReturnItemFromLeaseTransaction
               }
               ReverseRightArrow={ReverseRightArrow}
+              refetchingAfterAction={refetchingQueries}
             />
           ) : (
             <ExpandedLostButton
@@ -446,6 +429,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
               handleFoundSingleDevice={handleLostSingleDevice}
               handleLostSingleDevice={lostFeeChargeCustomer}
               Lost={Lost}
+              refetchingAfterAction={refetchingQueries}
             />
           )}
         </Space>
@@ -456,6 +440,141 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   return (
     <div style={{ gap: "10px" }}>
       {contextHolder}
+
+      {rowRecord.device > 0 && (
+        <Table
+          id={rowRecord.key}
+          key={rowRecord.key}
+          columns={columns}
+          dataSource={dataRendering()}
+          pagination={{
+            defaultPageSize: 10,
+            position: ["bottomCenter"],
+            style: {
+              backgroundColor: "var(--gray100)",
+              padding: "16px 0",
+              margin: 0,
+            },
+          }}
+          className="table-ant-expanded-row-customized"
+          rowSelection={rowSelection}
+          virtual={true}
+          rowHoverable={false}
+        />
+      )}
+
+      <FooterExpandedRow
+        displayTernary={displayTernary}
+        handleReturnSingleDevice={handleReturnItemInTransaction}
+        handleLostSingleDevice={handleLostSingleDevice}
+        dataRendering={rowRecord}
+        returningDevice={handleReturnItemInTransaction}
+        formattedData={dataRendering()}
+        paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
+        deviceListInfo={dataRendering()}
+        selectedItems={selectedRows}
+        setSelectedItems={setSelectedRows}
+        refetchingDevicePerTransaction={refetchingQueries}
+        setOpenModalReleasingDeposit={setOpenModalReleasingDeposit}
+        setOpenModalCapturingDeposit={setOpenModalCapturingDeposit}
+      />
+
+      {openModal && (
+        <Choice openModal={openModal} setOpenModal={setOpenModal} />
+      )}
+
+      {openReturnDeviceStaffModal && (
+        <ModalReturnItem
+          openReturnDeviceStaffModal={openReturnDeviceStaffModal}
+          setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
+          deviceInfo={infoNeededToBeRenderedInTable}
+          returnFunction={handleReturnItemInTransaction}
+        />
+      )}
+
+      {openModalCapturingDeposit && (
+        <Capturing
+          openCapturingDepositModal={openModalCapturingDeposit}
+          setOpenCapturingDepositModal={setOpenModalCapturingDeposit}
+          refetchingTransactionFn={refetching}
+          rowRecord={rowRecord}
+        />
+      )}
+
+      {openModalReleasingDeposit && (
+        <Releasing
+          openCancelingDepositModal={openModalReleasingDeposit}
+          setOpenCancelingDepositModal={setOpenModalReleasingDeposit}
+          refetchingTransactionF={refetching}
+          rowRecord={rowRecord}
+        />
+      )}
+      {actionInProgress && <Spin indicator={<Loading />} fullscreen />}
+    </div>
+  );
+};
+
+export default ExpandedRow;
+
+/*
+   const handleRefund = async (record) => {
+     try {
+       setIsLoading(true);
+       await devitrakApi.post(`/stripe/refund`, {
+         paymentIntent: record.paymentIntent,
+       });
+       await devitrakApi.patch(
+         `/transaction/update-transaction/${record.eventInfo[0].id}`,
+         {
+           id: record.eventInfo[0].id,
+           active: false,
+         }
+       );
+       const emailTemplate = {
+         email: customer.email,
+         amount: String(record.eventInfo[0].device[0].deviceValue),
+         date: new Date().toString().slice(4, 15),
+         paymentIntent: record.paymentIntent,
+         customer: `${customer.name} ${customer.lastName}`,
+       };
+       await devitrakApi.post("/nodemailer/refund-notification", emailTemplate);
+       setIsLoading(false);
+     } catch (error) {
+       setIsLoading(false);
+       message.error(`There was an error. ${error}`);
+     }
+   };
+
+ */
+{
+  /*
+  props to pass when lost fee will be collected
+  setOpenModal(true);
+  dispatch(onAddEventData(rowRecord.eventInfo));
+  dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
+dispatch(onSelectCompany(rowRecord.eventInfo.company));
+dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
+dispatch(
+    onReceiverObjectToReplace({
+        serialNumber: props.serial_number,
+        deviceType: props.type,
+    status: props.status,
+  })
+);
+dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
+dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
+dispatch(
+  onAddPaymentIntentDetailSelected({
+    serialNumber: props.serial_number,
+    deviceType: props.type,
+    status: props.status,
+  })
+);
+dispatch(onAddCustomer(props.entireData.userInfo));
+*/
+}
+
+/*
       <div
         style={{
           display: "flex",
@@ -546,103 +665,4 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         </Button>
       </div>
 
-      {rowRecord.device > 0 && (
-        <Table
-          id={rowRecord.key}
-          key={rowRecord.key}
-          columns={columns}
-          dataSource={dataRendering()}
-          pagination={{
-            defaultPageSize: 10,
-            position: ["bottomCenter"],
-            style: {
-              backgroundColor: "var(--gray100)",
-              padding: "16px 0",
-              margin: 0,
-            },
-          }}
-          className="table-ant-expanded-row-customized"
-          rowSelection={rowSelection}
-          virtual={true}
-          rowHoverable={false}
-        />
-      )}
-
-      <FooterExpandedRow
-        displayTernary={displayTernary}
-        handleReturnSingleDevice={handleReturnItemInTransaction}
-        handleLostSingleDevice={handleLostSingleDevice}
-        dataRendering={rowRecord}
-        returningDevice={handleReturnItemInTransaction}
-        formattedData={dataRendering()}
-        paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
-        deviceListInfo={dataRendering()}
-        selectedItems={selectedRows}
-        setSelectedItems={setSelectedRows}
-        refetchingDevicePerTransaction={refetchingQueries}
-      />
-
-      {openModal && (
-        <Choice openModal={openModal} setOpenModal={setOpenModal} />
-      )}
-
-      {openReturnDeviceStaffModal && (
-        <ModalReturnItem
-          openReturnDeviceStaffModal={openReturnDeviceStaffModal}
-          setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
-          deviceInfo={infoNeededToBeRenderedInTable}
-          returnFunction={handleReturnItemInTransaction}
-        />
-      )}
-
-      {openModalCapturingDeposit && (
-        <Capturing
-          openCapturingDepositModal={openModalCapturingDeposit}
-          setOpenCapturingDepositModal={setOpenModalCapturingDeposit}
-          refetchingTransactionFn={refetching}
-          rowRecord={rowRecord}
-        />
-      )}
-
-      {openModalReleasingDeposit && (
-        <Releasing
-          openCancelingDepositModal={openModalReleasingDeposit}
-          setOpenCancelingDepositModal={setOpenModalReleasingDeposit}
-          refetchingTransactionF={refetching}
-          rowRecord={rowRecord}
-        />
-      )}
-      {actionInProgress && <Spin indicator={<Loading />} fullscreen />}
-    </div>
-  );
-};
-
-export default ExpandedRow;
-
-{
-  /*
-  props to pass when lost fee will be collected
-  setOpenModal(true);
-  dispatch(onAddEventData(rowRecord.eventInfo));
-  dispatch(onAddEventInfoDetail(rowRecord.eventInfo.eventInfoDetail));
-dispatch(onSelectCompany(rowRecord.eventInfo.company));
-dispatch(onSelectEvent(rowRecord.eventInfo.eventInfoDetail.eventName));
-dispatch(
-    onReceiverObjectToReplace({
-        serialNumber: props.serial_number,
-        deviceType: props.type,
-    status: props.status,
-  })
-);
-dispatch(onAddDevicesAssignedInPaymentIntent(props.entireData));
-dispatch(onAddPaymentIntentSelected(props.entireData.paymentIntent));
-dispatch(
-  onAddPaymentIntentDetailSelected({
-    serialNumber: props.serial_number,
-    deviceType: props.type,
-    status: props.status,
-  })
-);
-dispatch(onAddCustomer(props.entireData.userInfo));
 */
-}
