@@ -22,6 +22,8 @@ const FooterExpandedRow = ({
   selectedItems,
   setSelectedItems,
   refetchingDevicePerTransaction,
+  setOpenModalReleasingDeposit,
+  setOpenModalCapturingDeposit,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
@@ -100,7 +102,7 @@ const FooterExpandedRow = ({
   };
   const dataToBeRendered = () => {
     if (dataRendering.paymentIntent.length < 16) {
-      return "Free deposit transaction";
+      return "Deposit's method: free";
     } else if (
       dataRendering.paymentIntent.length > 15 &&
       String(dataRendering.paymentIntent).includes("cash")
@@ -199,22 +201,65 @@ const FooterExpandedRow = ({
     {
       title: "Device",
       render: () => (
-        <Button
-          loading={isLoadingState}
-          style={{ ...GrayButton, width: "100%" }}
-          onClick={() => sendEmailDeviceReport()}
+        <div
+          style={{
+            ...CenteringGrid,
+            flexDirection: "column",
+            width: "100%",
+            gap: "5px",
+          }}
         >
-          <p
-            style={{
-              ...Subtitle,
-              ...CenteringGrid,
-              fontWeight: 600,
-              color: "var(--gray700)",
-            }}
+          <Button
+            loading={isLoadingState}
+            style={{ ...GrayButton, width: "100%" }}
+            onClick={() => sendEmailDeviceReport()}
           >
-            <img src={Report} alt="Report" /> &nbsp;Send report to client
-          </p>
-        </Button>
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              <img src={Report} alt="Report" /> &nbsp;Send report to client
+            </p>
+          </Button>
+          <Button
+            loading={isLoadingState}
+            style={{ ...GrayButton, width: "100%" }}
+            onClick={() => setOpenModalCapturingDeposit(true)}
+          >
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              {/* <img src={Report} alt="Report" /> &nbsp; */}
+              Capture deposit
+            </p>
+          </Button>
+          <Button
+            loading={isLoadingState}
+            style={{ ...GrayButton, width: "100%" }}
+            onClick={() => setOpenModalReleasingDeposit(true)}
+          >
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 600,
+                color: "var(--gray700)",
+              }}
+            >
+              {/* <img src={Report} alt="Report" /> &nbsp; */}
+              Release deposit
+            </p>
+          </Button>
+        </div>
       ),
     },
     {
@@ -235,7 +280,7 @@ const FooterExpandedRow = ({
           } else if (paymentIntent.length < 16) {
             return 0;
           } else {
-            return 0
+            return 0;
           }
         };
         return (
@@ -311,7 +356,7 @@ const FooterExpandedRow = ({
               color: "var(--gray700)",
             }}
           >
-            Credit card ending in: 4567
+            {dataToBeRendered()}
           </p>
         </div>
       ),
@@ -336,7 +381,7 @@ const FooterExpandedRow = ({
 
   useEffect(() => {
     formatItemsInfoAsProps();
-  }, []);
+  }, [refetchingDevicePerTransaction]);
 
   useMemo(() => {
     let result = new Set();
