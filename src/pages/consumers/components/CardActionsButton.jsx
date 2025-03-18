@@ -37,7 +37,7 @@ const CardActionsButton = () => {
             <AlarmIcon />
             &nbsp;
             <p style={{ ...GrayButtonText, textAlign: "center" }}>
-              Send notification to return
+              Send notification to consumer
             </p>
           </button>
         </div>
