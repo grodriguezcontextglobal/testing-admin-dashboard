@@ -20,9 +20,9 @@ import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import Loading from "./components/animation/Loading";
 import CenteringGrid from "./styles/global/CenteringGrid";
-const InactivityLogout = lazy(() =>
-  import("./utils/CheckingInactivityAndTakeAction")
-);
+// const InactivityLogout = lazy(() =>
+//   import("./utils/CheckingInactivityAndTakeAction")
+// );
 const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
 const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes"));
 
@@ -118,10 +118,10 @@ const App = () => {
       {renderNetworkStatusMessage()}
       {contextHolder}
       {status === "authenticated" && adminToken ? (
-        <InactivityLogout>
-          <AuthRoutes />
-        </InactivityLogout>
-        // <AuthRoutes />
+        // <InactivityLogout>
+        //   <AuthRoutes />
+        // </InactivityLogout>
+        <AuthRoutes />
       ) : (
         <NoAuthRoutes />
       )}
