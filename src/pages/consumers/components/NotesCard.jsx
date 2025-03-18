@@ -117,7 +117,7 @@ const NotesRendering = ({ props, title }) => {
             >
               <TextArea
                 disabled
-                rows={4}
+                // rows={4}
                 style={{
                   ...Subtitle,
                   border: "transparent",
