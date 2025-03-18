@@ -19,6 +19,8 @@ import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import CustomerHeader from "../UI/header";
+import { nanoid } from "@reduxjs/toolkit";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ConsumerDeviceLostFeeCash = () => {
   const navigator = useNavigate();
@@ -30,7 +32,7 @@ const ConsumerDeviceLostFeeCash = () => {
   const { paymentIntentReceiversAssigned } = useSelector(
     (state) => state.stripe
   );
-
+  const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
   const loading = () => {
     messageApi.open({
@@ -67,6 +69,10 @@ const ConsumerDeviceLostFeeCash = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const handleLostDeviceCashLostFee = async (data) => {
+    const id = nanoid();
+    const transactionGenerated =
+      `pi_cash_amount:$${data.total}_received_by:**${user.email}**&` + id;
+
     let cashReportProfile = {
       attendee: customer?.email,
       admin: user.email,
@@ -79,6 +85,7 @@ const ConsumerDeviceLostFeeCash = () => {
       amount: data.total,
       event: event.id,
       company: user.companyData.id,
+      paymentIntent_charge_transaction: transactionGenerated,
       typeCollection: "Cash",
     };
     loading();
@@ -107,6 +114,10 @@ const ConsumerDeviceLostFeeCash = () => {
           transaction:
             checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
           link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["assignedDevicesByTransaction", checkTypeOfPaymentIntentReceiversAssigned().paymentIntent],
+          exact: true,
         });
         await messageApi.destroy;
         navigator(`/consumers/${customer.uid}`);

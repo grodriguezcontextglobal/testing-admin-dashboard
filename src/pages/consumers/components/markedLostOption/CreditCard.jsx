@@ -29,6 +29,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   const refRender = useRef(0);
   const refTotal = useRef(0);
   const { event } = useSelector((state) => state.event);
+  console.log("ConsumerDeviceLostFeeCreditCard ", event);
   const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
   const { paymentIntentReceiversAssigned } = useSelector(
@@ -48,6 +49,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     );
     return result;
   };
+
   const { handleSubmit, register, watch } = useForm({
     defaultValues: {
       total: `${returnDeviceValue().value}`,
@@ -66,6 +68,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
       return [paymentIntentReceiversAssigned];
     }
   };
+
   const triggerStripePaymentIntent = async (data) => {
     localStorage.setItem("total", data.total);
     refTotal.current = watch("total");
@@ -98,12 +101,13 @@ const ConsumerDeviceLostFeeCreditCard = () => {
       event: event.id,
       company: user.companyData.id,
       typeCollection: "Credit Card",
+      paymentIntent_charge_transaction: transactionPaymentIntent,
     };
+    console.log("cashReportProfile", cashReportProfile);
     const respo = await devitrakApi.post(
       "/cash-report/create-cash-report",
       cashReportProfile
     );
-    console.log(respo);
     if (respo) {
       const stringDate = new Date().toString();
       const dateSplitting = stringDate.split(" ");
@@ -116,7 +120,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
         amount: refTotal.current,
         event: event.eventInfoDetail.eventName,
         company: event.company,
-        date: dateSplitting.slice(0, 4),
+        date: dateSplitting.slice(0, 4).toLocaleString().replaceAll(",", " "),
         time: dateSplitting[4],
         transaction:
           verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
@@ -140,9 +144,8 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     dispatchFnAfterPaymentIntentSuccessfully();
     transactionStatus = "";
     transactionPaymentIntent = "";
-    localStorage.setItem("total", "");
+    // localStorage.setItem("total", "");
     refRender.current = 1;
-    console.log("inside");
     return navigator(`/consumers/${customer.uid}`);
   }
 
