@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import {
   FormControlLabel,
   FormLabel,
@@ -8,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Checkbox, message, notification, Typography } from "antd";
 import PropTypes from "prop-types";
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +45,7 @@ const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
 const Login = () => {
   const { register, handleSubmit, setValue } = useForm();
+  const [rememberMe, setRememberMe] = useState(false);
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
@@ -199,11 +201,13 @@ const Login = () => {
   };
 
   const onSubmitLogin = async (data) => {
+    console.log({data});
     try {
       dispatch(onChecking());
       const respo = await devitrakApiAdmin.post("/login", {
         email: data.email,
         password: data.password,
+        rememberMe: rememberMe,
       });
       if (respo.data) {
         const checkCompanyUserSet = await devitrakApi.post(
@@ -446,7 +450,12 @@ const Login = () => {
                       lineHeight: "20px",
                     }}
                     labelPlacement="end"
-                    control={<Checkbox style={{ paddingRight: "0.5rem" }} />}
+                    control={
+                      <Checkbox
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        style={{ paddingRight: "0.5rem" }}
+                      />
+                    }
                     label={`${" "}Remember for 30 days`}
                   />
                 </Grid>
@@ -512,7 +521,7 @@ const Login = () => {
                 />
               </div>
               <Button
-                disabled={token === null}
+                // disabled={token === null}
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%" }}
               >
