@@ -16,6 +16,7 @@ const ExpandedLostButton = ({
   refetchingQueries,
 }) => {
   const [cashReportList, setCashReportList] = useState([]);
+  const [isLoadingState, setIsLoadingState] = useState(false);
   const propsUpdateSingleDevice = {
     ...record,
     new_status: true,
@@ -50,69 +51,74 @@ const ExpandedLostButton = ({
 
   const handleRefund = async (record) => {
     try {
+      setIsLoadingState(true);
       for (let data of cashReportList[record.serial_number]) {
-        console.log(data)
-        if(data.paymentIntent_charge_transaction.length > 15 && !data.paymentIntent_charge_transaction.includes("cash")){
-        await devitrakApi.post(`/stripe/refund`, {
-          paymentIntent: data.paymentIntent_charge_transaction,
-        });
+        if (
+          data.paymentIntent_charge_transaction.length > 15 &&
+          !data.paymentIntent_charge_transaction.includes("cash")
+        ) {
+          await devitrakApi.post(`/stripe/refund`, {
+            paymentIntent: data.paymentIntent_charge_transaction,
+          });
+        }
+        await devitrakApi.post(`/cash-report/remove-cash-report/${data.id}`);
       }
-      await devitrakApi.post(`/cash-report/remove-cash-report/${data.id}`);
-    }
+      setIsLoadingState(false);
       return refetchingQueries();
     } catch (error) {
+      setIsLoadingState(false);
       return null;
     }
   };
-
   return (
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
-        <Button
-          disabled={cashReportList[record.serial_number]?.length > 0}
-          onClick={() => handleLostSingleDevice(record)}
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
+      <Button
+        disabled={cashReportList[record.serial_number]?.length > 0}
+        onClick={() => handleLostSingleDevice(record)}
+        style={{
+          ...DangerButton,
+          alignItems: "center",
+        }}
+      >
+        <img src={Lost} alt="Lost" />
+        <p
           style={{
-            ...DangerButton,
-            alignItems: "center",
+            ...DangerButtonText,
+            alignSelf: "center",
           }}
         >
-          <img src={Lost} alt="Lost" />
-          <p
-            style={{
-              ...DangerButtonText,
-              alignSelf: "center",
-            }}
-          >
-            {cashReportList[record.serial_number]?.length > 0
-              ? "Charged"
-              : "Charge customer"}
-          </p>
-        </Button>
-        <Button
-          onClick={() =>
-            cashReportList[record.serial_number]?.length > 0
-              ? handleRefund(record)
-              : handleFoundSingleDevice(propsUpdateSingleDevice)
-          }
+          {cashReportList[record.serial_number]?.length > 0
+            ? "Charged"
+            : "Charge customer"}
+        </p>
+      </Button>
+      <Button
+        loading={isLoadingState}
+        onClick={() =>
+          cashReportList[record.serial_number]?.length > 0
+            ? handleRefund(record)
+            : handleFoundSingleDevice(propsUpdateSingleDevice)
+        }
+        style={{
+          ...GrayButton,
+        }}
+      >
+        <p
           style={{
-            ...GrayButton,
+            ...GrayButtonText,
+            color: `${
+              record.status
+                ? GrayButtonText.color
+                : "var(--disabled0gray-button-text)"
+            }`,
           }}
         >
-          <p
-            style={{
-              ...GrayButtonText,
-              color: `${
-                record.status
-                  ? GrayButtonText.color
-                  : "var(--disabled0gray-button-text)"
-              }`,
-            }}
-          >
-            {cashReportList[record.serial_number]?.length > 0
-              ? "Refund"
-              : "Mark as found"}
-          </p>
-        </Button>
-      </div>
+          {cashReportList[record.serial_number]?.length > 0
+            ? "Refund"
+            : "Mark as found"}
+        </p>
+      </Button>
+    </div>
   );
 };
 
