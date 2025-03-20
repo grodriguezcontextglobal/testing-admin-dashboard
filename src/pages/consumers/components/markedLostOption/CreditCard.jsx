@@ -71,7 +71,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
 
   const triggerStripePaymentIntent = async (data) => {
     localStorage.setItem("total", data.total);
-    refTotal.current = watch("total");
+    refTotal.current = data.total; //watch("total");
     const response = await devitrakApi.post(
       "/stripe/create-payment-intent-subscription",
       {
@@ -103,7 +103,6 @@ const ConsumerDeviceLostFeeCreditCard = () => {
       typeCollection: "Credit Card",
       paymentIntent_charge_transaction: transactionPaymentIntent,
     };
-    console.log("cashReportProfile", cashReportProfile);
     const respo = await devitrakApi.post(
       "/cash-report/create-cash-report",
       cashReportProfile
@@ -116,8 +115,10 @@ const ConsumerDeviceLostFeeCreditCard = () => {
           name: `${customer.name} ${customer.lastName}`,
           email: customer.email,
         },
-        device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
-        amount: refTotal.current,
+        device: {
+          type: `${receiverToReplaceObject.deviceType}, serialNumber: ${receiverToReplaceObject.serialNumber}`,
+        },
+        amount: localStorage.getItem("total"), //refTotal.current,
         event: event.eventInfoDetail.eventName,
         company: event.company,
         date: dateSplitting.slice(0, 4).toLocaleString().replaceAll(",", " "),
