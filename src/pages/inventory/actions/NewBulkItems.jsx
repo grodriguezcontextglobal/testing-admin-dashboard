@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Chip,
   Grid,
   InputAdornment,
@@ -12,6 +11,7 @@ import {
 import { groupBy } from "lodash";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Button,
   AutoComplete,
   Avatar,
   Divider,
@@ -78,11 +78,13 @@ const AddNewBulkItems = () => {
   });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
+  const openNotificationWithIcon = (type, msg, progress, hover) => {
     api.open({
       message: msg,
       placement: "bottomRight",
       duration: 0,
+      showProgress: progress,
+      pauseOnHover: hover,
     });
   };
   const [loading, setLoading] = useState(false);
@@ -168,31 +170,41 @@ const AddNewBulkItems = () => {
     if (selectedItem === "")
       return openNotificationWithIcon(
         "warning",
-        "A group of item must be provided."
+        "A group of item must be provided.",
+        false,
+        false
       );
     if (taxableLocation === "") {
       return openNotificationWithIcon(
         "warning",
-        "A taxable location must be provided."
+        "A taxable location must be provided.",
+        false,
+        false
       );
     }
     if (valueSelection === "") {
       return openNotificationWithIcon(
         "warning",
-        "Ownership status must be provided."
+        "Ownership status must be provided.",
+        false,
+        false
       );
     }
 
     if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
         "warning",
-        "As ownership was set as 'Rent', returning date must be provided."
+        "As ownership was set as 'Rent', returning date must be provided.",
+        false,
+        false
       );
     }
     if (Number(data.startingNumber) > Number(data.endingNumber)) {
       return openNotificationWithIcon(
         "warning",
-        "Sequence of serial number must be in ascending order."
+        "Sequence of serial number must be in ascending order.",
+        false,
+        false
       );
     }
 
@@ -229,7 +241,9 @@ const AddNewBulkItems = () => {
     if (checkExistingDevice.length > 0) {
       return openNotificationWithIcon(
         "warning",
-        `Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.`
+        `Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.`,
+        false,
+        false
       );
     }
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -240,7 +254,9 @@ const AddNewBulkItems = () => {
     } else if (data.photo.length > 0) {
       openNotificationWithIcon(
         "warning",
-        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
+        true,
+        false
       );
       setLoading(true);
       base64 = await convertToBase64(data.photo[0]);
@@ -304,7 +320,9 @@ const AddNewBulkItems = () => {
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
         "warning",
-        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
+        true,
+        false
       );
       setLoading(true);
 
@@ -352,7 +370,10 @@ const AddNewBulkItems = () => {
       }
       openNotificationWithIcon(
         "success",
-        "items were created and stored in database."
+        "items were created and stored in database.",
+        false,
+        false
+
       );
       setLoading(false);
       return navigate("/inventory");
@@ -1054,7 +1075,7 @@ const AddNewBulkItems = () => {
               fontWeight: "600",
               fontFamily: "Inter",
               lineHeight: "20px",
-              ...CenteringGrid
+              ...CenteringGrid,
             }}
           >
             <Icon
@@ -1184,8 +1205,9 @@ const AddNewBulkItems = () => {
             }}
           >
             <Button
+              loading={loading}
               disabled={loading}
-              type="submit"
+              htmlType="submit"
               style={{
                 ...BlueButton,
                 width: "100%",
