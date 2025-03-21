@@ -423,31 +423,6 @@ const EditGroup = () => {
             }}
           >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography style={stylingInputs}>Category</Typography>
-            </InputLabel>
-            <OutlinedInput
-              disabled={isLoadingStatus}
-              required
-              {...register("category_name")}
-              aria-invalid={errors.category_name}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Electronic"
-              fullWidth
-            />
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography style={stylingInputs}>Device name</Typography>
             </InputLabel>
             <AutoComplete
@@ -473,6 +448,31 @@ const EditGroup = () => {
               }
             />
 
+            <div
+              style={{
+                textAlign: "left",
+                width: "50%",
+              }}
+            ></div>
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography style={stylingInputs}>Category</Typography>
+            </InputLabel>
+            <OutlinedInput
+              disabled={isLoadingStatus}
+              required
+              {...register("category_name")}
+              aria-invalid={errors.category_name}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Electronic"
+              fullWidth
+            />
             <div
               style={{
                 textAlign: "left",
@@ -927,17 +927,19 @@ const EditGroup = () => {
               <Button
                 htmlType="button"
                 disabled={isLoadingStatus}
-                style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
+                style={{ ...GrayButton, width: "100%" }}
               >
-                <Icon
-                  icon="ri:arrow-go-back-line"
-                  color="#344054"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Go back
+                <Typography
+                  textTransform={"none"}
+                  style={{ ...GrayButtonText, ...CenteringGrid }}
+                >
+                  <Icon
+                    icon="ri:arrow-go-back-line"
+                    color="#344054"
+                    width={20}
+                    height={20}
+                  />
+                  &nbsp; Go back
                 </Typography>
               </Button>
             </Link>
@@ -953,20 +955,23 @@ const EditGroup = () => {
               loading={isLoadingStatus}
               htmlType="submit"
               style={{
-                ...CenteringGrid,
                 ...BlueButton,
                 width: "100%",
               }}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />
-              &nbsp;
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Update group
+              {/*  */}
+              <Typography
+                textTransform={"none"}
+                style={{ ...CenteringGrid, ...BlueButtonText }}
+              >
+                <Icon
+                  icon="ic:baseline-plus"
+                  color="var(--base-white, #FFF)"
+                  width={20}
+                  height={20}
+                  style={CenteringGrid}
+                />
+                &nbsp;Update group
               </Typography>
             </Button>
           </div>

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import {
   Button,
   Grid,
+  Chip,
   InputAdornment,
   InputLabel,
   OutlinedInput,
@@ -377,6 +378,13 @@ const AddNewItem = () => {
     padding: "6px 12px",
     cursor: "pointer",
   };
+
+  const handleDeleteMoreInfo = (index) => {
+    const result = [...moreInfo];
+    const removingResult = result.filter((_, i) => i !== index);
+    return setMoreInfo(removingResult);
+  };
+
   return (
     <Grid
       display={"flex"}
@@ -420,40 +428,6 @@ const AddNewItem = () => {
               width: "50%",
             }}
           >
-            <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-              <Typography style={styling}>Category</Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("category_name")}
-              aria-invalid={errors.category_name}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Electronic"
-              fullWidth
-            />
-            {errors?.category_name && (
-              <Typography
-                style={styling}
-                color={"red"}
-                width={"100%"}
-                padding={"0.5rem 0"}
-              >
-                {errors.category_name.type}
-              </Typography>
-            )}
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography style={styling}>Device name</Typography>
             </InputLabel>
@@ -479,6 +453,41 @@ const AddNewItem = () => {
               }
             />
           </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
+              <Typography style={styling}>Category</Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("category_name")}
+              aria-invalid={errors.category_name}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Electronic"
+              fullWidth
+            />
+            {errors?.category_name && (
+              <Typography
+                style={styling}
+                color={"red"}
+                width={"100%"}
+                padding={"0.5rem 0"}
+              >
+                {errors.category_name.type}
+              </Typography>
+            )}
+            {/* <div
+              style={{
+                textAlign: "left",
+                width: "50%",
+              }}
+            ></div> */}
+          </div>
+
         </div>
         <div
           style={{
@@ -895,6 +904,7 @@ const AddNewItem = () => {
           onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
           style={buttonStyleLoading}
         >
+          <Typography textTransform={"none"} style={BlueButtonText}>
           <Icon
             icon="ic:baseline-plus"
             color="var(--base-white, #FFF)"
@@ -902,8 +912,7 @@ const AddNewItem = () => {
             height={20}
           />
           &nbsp;
-          <Typography textTransform={"none"} style={BlueButtonText}>
-            Add more information
+Add more information
           </Typography>
         </button>
         {moreInfoDisplay && (
@@ -962,19 +971,21 @@ const AddNewItem = () => {
           }}
         >
           {moreInfo.length > 0 &&
-            moreInfo.map((item) => (
-              <div
-                style={{
-                  backgroundColor: "var(--basewhite)",
-                  padding: "2.5px 5px",
-                  margin: "0 1px",
-                  border: "solid 0.1px var(--gray900)",
-                  borderRadius: "8px",
-                }}
-                key={`${item.keyObject}-${item.valueObject}`}
-              >
-                {item.keyObject}:{item.valueObject}
-              </div>
+            moreInfo.map((item, index) => (
+              <Chip
+              style={{
+                backgroundColor: "var(--basewhite)",
+                padding: "2.5px 5px",
+                margin: "0 1px",
+                border: "solid 0.1px var(--gray900)",
+                borderRadius: "8px",
+              }}
+              key={`${item.keyObject}-${item.valueObject}`}
+              label={`${item.keyObject}:${item.valueObject}`}
+              onDelete={() => handleDeleteMoreInfo(index)}
+            >
+              {item.keyObject}:{item.valueObject}
+            </Chip>
             ))}
         </div>
         <Divider />
@@ -1005,11 +1016,15 @@ const AddNewItem = () => {
               >
                 <Typography
                   textTransform={"none"}
-                  style={{
-                    ...GrayButtonText,
-                  }}
+                  style={{ ...GrayButtonText, ...CenteringGrid }}
                 >
-                  Go back
+                  <Icon
+                    icon="ri:arrow-go-back-line"
+                    color="#344054"
+                    width={20}
+                    height={20}
+                  />
+                  &nbsp; Go back
                 </Typography>
               </Button>
             </Link>
@@ -1025,6 +1040,7 @@ const AddNewItem = () => {
               type="submit"
               style={buttonStyleLoading}
             >
+              <Typography textTransform={"none"} style={{ ...BlueButtonText,  ...CenteringGrid}}>
               <Icon
                 icon="ic:baseline-plus"
                 color="var(--base-white, #FFF)"
@@ -1032,8 +1048,7 @@ const AddNewItem = () => {
                 height={20}
               />
               &nbsp;
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Save new item
+Save new item
               </Typography>
             </Button>
           </div>

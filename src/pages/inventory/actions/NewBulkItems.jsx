@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react";
 import {
   Button,
+  Chip,
   Grid,
   InputAdornment,
   InputLabel,
@@ -65,15 +66,15 @@ const AddNewBulkItems = () => {
   } = useForm({
     defaultValues: {
       photo: [],
-      category_name:"",
-      cost:"",
-      brand:"",
-      descript_item:"",
-      startingNumber:"",
-      endingNumber:"",
-      container:"false",
-      containerSpotLimit:"0",    },
-
+      category_name: "",
+      cost: "",
+      brand: "",
+      descript_item: "",
+      startingNumber: "",
+      endingNumber: "",
+      container: "false",
+      containerSpotLimit: "0",
+    },
   });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
@@ -329,7 +330,7 @@ const AddNewBulkItems = () => {
         enableAssignFeature: true,
         container: data.container === "true",
         containerSpotLimit: data.containerSpotLimit,
-};
+      };
       await devitrakApi.post("/db_item/bulk-item", template);
       if (
         !renderLocationOptions().some(
@@ -418,6 +419,12 @@ const AddNewBulkItems = () => {
     color: "var(--gray-700, #344054)",
   };
 
+  const handleDeleteMoreInfo = (index) => {
+    const result = [...moreInfo];
+    const removingResult = result.filter((_, i) => i !== index);
+    return setMoreInfo(removingResult);
+  };
+
   return (
     <Grid
       display={"flex"}
@@ -454,36 +461,7 @@ const AddNewBulkItems = () => {
             gap: "10px",
           }}
         >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Category
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("category_name")}
-              aria-invalid={errors.category_name}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Electronic"
-              fullWidth
-            />
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
+          {" "}
           <div
             style={{
               textAlign: "left",
@@ -521,12 +499,42 @@ const AddNewBulkItems = () => {
               }
             />
 
-            <div
+            {/* <div
               style={{
                 textAlign: "left",
                 width: "50%",
               }}
-            ></div>
+            ></div> */}
+          </div>
+          <div
+            style={{
+              textAlign: "left",
+              width: "50%",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Category
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("category_name")}
+              aria-invalid={errors.category_name}
+              style={OutlinedInputStyle}
+              placeholder="e.g. Electronic"
+              fullWidth
+            />
+            {/* <div
+              style={{
+                textAlign: "left",
+                width: "50%",
+              }}
+            ></div> */}
           </div>
         </div>
         <div
@@ -1038,13 +1046,6 @@ const AddNewBulkItems = () => {
             cursor: "pointer",
           }}
         >
-          <Icon
-            icon="ic:baseline-plus"
-            color="var(--base-white, #FFF)"
-            width={20}
-            height={20}
-          />
-          &nbsp;
           <Typography
             textTransform={"none"}
             style={{
@@ -1053,9 +1054,16 @@ const AddNewBulkItems = () => {
               fontWeight: "600",
               fontFamily: "Inter",
               lineHeight: "20px",
+              ...CenteringGrid
             }}
           >
-            Add more information
+            <Icon
+              icon="ic:baseline-plus"
+              color="var(--base-white, #FFF)"
+              width={20}
+              height={20}
+            />
+            &nbsp; Add more information
           </Typography>
         </button>
         {moreInfoDisplay && (
@@ -1114,8 +1122,8 @@ const AddNewBulkItems = () => {
           }}
         >
           {moreInfo.length > 0 &&
-            moreInfo.map((item) => (
-              <div
+            moreInfo.map((item, index) => (
+              <Chip
                 style={{
                   backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
@@ -1124,9 +1132,11 @@ const AddNewBulkItems = () => {
                   borderRadius: "8px",
                 }}
                 key={`${item.keyObject}-${item.valueObject}`}
+                label={`${item.keyObject}:${item.valueObject}`}
+                onDelete={() => handleDeleteMoreInfo(index)}
               >
                 {item.keyObject}:{item.valueObject}
-              </div>
+              </Chip>
             ))}
         </div>
         <Divider />
@@ -1152,8 +1162,17 @@ const AddNewBulkItems = () => {
                 disabled={loading}
                 style={{ ...GrayButton, width: "100%" }}
               >
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Go back
+                <Typography
+                  textTransform={"none"}
+                  style={{ ...GrayButtonText, ...CenteringGrid }}
+                >
+                  <Icon
+                    icon="ri:arrow-go-back-line"
+                    color="#344054"
+                    width={20}
+                    height={20}
+                  />
+                  &nbsp; Go back
                 </Typography>
               </Button>
             </Link>
@@ -1177,15 +1196,17 @@ const AddNewBulkItems = () => {
                 }`,
               }}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />
-              &nbsp;
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Save new item
+              <Typography
+                textTransform={"none"}
+                style={{ ...BlueButtonText, ...CenteringGrid }}
+              >
+                <Icon
+                  icon="ic:baseline-plus"
+                  color="var(--base-white, #FFF)"
+                  width={20}
+                  height={20}
+                />
+                &nbsp; Save new item
               </Typography>
             </Button>
           </div>
