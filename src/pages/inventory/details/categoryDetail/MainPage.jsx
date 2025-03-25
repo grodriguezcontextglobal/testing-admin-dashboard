@@ -11,15 +11,14 @@ import { Divider } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import Loading from "../../../../components/animation/Loading";
 // import TableDeviceCategory from "./components/Table";
 // import TotalInventoryCard from "./components/TotalInventoryCard";
 // import TotalValueDevicesLocation from "./components/TotalValueDevices";
@@ -104,15 +103,12 @@ const MainPage = () => {
             md={6}
           >
             <Button
-              style={{ ...BlueButton }}
-              onClick={() => navigate("/inventory/new-item")}
+              onClick={() => navigate("/inventory/edit-group")}
+              style={{ ...BlueButton, width: "fit-content" }}
             >
-              <WhitePlusIcon />
-              &nbsp;{" "}
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                {" "}
-                Add new device{" "}
-              </Typography>
+              <p style={{ ...BlueButtonText, textTransform: "none" }}>
+                Update a group of device
+              </p>
             </Button>
           </Grid>
         </Grid>
