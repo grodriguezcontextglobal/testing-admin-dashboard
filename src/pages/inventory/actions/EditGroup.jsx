@@ -79,10 +79,10 @@ const EditGroup = () => {
     refetchOnMount: false,
   });
 
-  const openNotificationWithIcon = (msg) => {
+  const openNotificationWithIcon = (msg, progress) => {
     api.open({
       message: msg,
-      showProgress: isLoadingStatus,
+      showProgress: progress,
       pauseOnHover: false,
     });
   };
@@ -246,7 +246,7 @@ const EditGroup = () => {
       setValue("ownership", "");
       setValue("serial_number", "");
       setValueSelection(options[0]);
-      openNotificationWithIcon("items were updated.");
+      openNotificationWithIcon("items were updated.", false);
       setIsLoadingStatus(false);
       return navigate("/inventory");
     }
@@ -275,14 +275,24 @@ const EditGroup = () => {
     const slicingData = groupData.slice(starting, ending + 1);
     let base64;
     if (selectedItem === "")
-      return openNotificationWithIcon("A group of item must be provided.");
+      return openNotificationWithIcon(
+        "A group of item must be provided.",
+        false
+      );
     if (taxableLocation === "")
-      return openNotificationWithIcon("A taxable location must be provided.");
+      return openNotificationWithIcon(
+        "A taxable location must be provided.",
+        false
+      );
     if (valueSelection === "")
-      return openNotificationWithIcon("Ownership status must be provided.");
+      return openNotificationWithIcon(
+        "Ownership status must be provided.",
+        false
+      );
     if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
-        "As ownership was set as 'Rent', returning date must be provided."
+        "As ownership was set as 'Rent', returning date must be provided.",
+        false
       );
     }
     if (data.photo.length > 0 && data.photo[0].size > 1048576) {
@@ -292,7 +302,8 @@ const EditGroup = () => {
       );
     } else if (data.photo.length > 0) {
       openNotificationWithIcon(
-        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
+        true
       );
       setIsLoadingStatus(true);
       base64 = await convertToBase64(data.photo[0]);
@@ -325,7 +336,8 @@ const EditGroup = () => {
       }
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
-        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
+        "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
+        true
       );
       try {
         setIsLoadingStatus(true);
