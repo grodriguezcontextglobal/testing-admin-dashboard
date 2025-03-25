@@ -24,7 +24,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { UploadIcon } from "../../../components/icons/UploadIcon";
@@ -65,6 +65,8 @@ const EditGroup = () => {
     watch,
     formState: { errors },
   } = useForm();
+  const location = useLocation();
+  console.log(location);
   const navigate = useNavigate();
   const submitRef = useRef();
   const [api, contextHolder] = notification.useNotification();
@@ -99,6 +101,9 @@ const EditGroup = () => {
     const controller = new AbortController();
     companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
+    if(location.state !== null){
+      setSelectedItem(location.state.deviceName)
+    }
     return () => {
       controller.abort();
     };
