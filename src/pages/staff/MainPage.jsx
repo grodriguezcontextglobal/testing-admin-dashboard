@@ -54,7 +54,7 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <p style={{ ...Title, textTransform: "none", textAlign: "left" }}>
+          <p style={{ ...Title,padding:"16px 24px 16px 0", textTransform: "none", textAlign: "left" }}>
             Staff
           </p>
           <Grid
@@ -63,21 +63,21 @@ const MainPage = () => {
             justifyContent={"flex-end"}
             gap={2}
             item
-            xs={2}
-            sm={2}
+            xs={6}
+            sm={6}
             md={9}
             lg={9}
           >
             <button style={BlueButton} onClick={() => setModalState(true)}>
               <WhitePlusIcon />
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
+              <p style={{ ...BlueButtonText, textTransform: "none",width:"fit-content" }}>
                 Add new staff
               </p>
             </button>
             <button
               style={{
                 ...DangerButton,
-                display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+                display: `${Number(user.role) > 1 ? "none" : "flex"}`,width:"fit-content"
               }}
               onClick={() => setDeleteModalState(true)}
             >
