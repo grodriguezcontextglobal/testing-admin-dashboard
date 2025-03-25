@@ -15,7 +15,7 @@ const DeviceInformationDetail = ({ dataFound }) => {
     queryKey: ["imagePerItem"],
     queryFn: () =>
       devitrakApi.post("/image/images", {
-        company: user.company,
+        company: user.companyData.id,
         category: dataFound[0]?.category_name,
         item_group: dataFound[0]?.item_group,
       }),
