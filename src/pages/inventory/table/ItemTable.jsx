@@ -56,7 +56,7 @@ const ItemTable = ({
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
+    queryFn: () => devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
 
