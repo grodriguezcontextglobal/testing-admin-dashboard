@@ -19,6 +19,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "./Body.css";
 import { useRef, useState } from "react";
+import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -147,11 +148,21 @@ const Body = () => {
       } else if (data.photo.length > 0) {
         base64 = await convertToBase64(data.photo[0]);
         const fileBase64 = await convertToBase64(data.photo[0]);
-        const staffMemberProfileImage = await devitrakApi.post('cloudinary/upload-image', {
-          imageFile: fileBase64,
-          imageID: user.uid,
-        });
-        if(staffMemberProfileImage.data){
+        const templateStaffImageUploader = new ImageUploaderFormat(
+          fileBase64,
+          "",
+          "",
+          "",
+          "",
+          "",
+          user.uid,
+          ""
+        );
+        const staffMemberProfileImage = await devitrakApi.post(
+          "cloudinary/upload-image",
+          templateStaffImageUploader.staff_uploader()
+        );
+        if (staffMemberProfileImage.data) {
           base64 = staffMemberProfileImage.data.imageUploaded.secure_url;
         }
 
