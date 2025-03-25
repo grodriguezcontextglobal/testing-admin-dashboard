@@ -1,4 +1,5 @@
 import { devitrakApi } from "../../../api/devitrakApi";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 
 const userRegistrationProcess = async ({ user, companyValue, ref }) => {
   try {
@@ -33,12 +34,19 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
     );
     if (resp.data) {
       if (user.imageProfile.length > 0) {
+        const templateImageUpload = new ImageUploaderFormat(
+          user.imageProfile,
+          "",
+          "",
+          "",
+          user.name,
+          user.lastName,
+          resp.data.uid,
+          ""
+        );
         const uploadingProfileImage = await devitrakApi.post(
           "/cloudinary/upload-image",
-          {
-            imageFile: user.imageProfile,
-            imageID: resp.data.uid,
-          }
+          templateImageUpload.staff_uploader()
         );
         if (uploadingProfileImage.data) {
           await devitrakApi.post(`/admin-user/${resp.data.uid}`, {
@@ -62,7 +70,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           },
         };
       }
-      return         ref.current = {
+      return (ref.current = {
         ...ref.current,
         userRegistration: {
           data: resp.data.entire,
@@ -76,8 +84,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           imageProfile: "",
           // token: resp.data.token,
         },
-      };
-
+      });
     }
     return resp.data;
   } catch (error) {
