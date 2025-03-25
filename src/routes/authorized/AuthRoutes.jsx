@@ -4,6 +4,7 @@ import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
+import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -278,7 +279,10 @@ const AuthRoutes = () => {
                 path="/consumers/:id/lost-device-fee/credit_card"
                 element={<ConsumerDeviceLostFeeCreditCard />}
               />
-
+              <Route
+                path="/consumers/:id/payment-confirmation"
+                element={<ConsumerConfirmationPayment />}
+              />
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
                 <Route
