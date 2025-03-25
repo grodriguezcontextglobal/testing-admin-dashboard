@@ -12,6 +12,8 @@ import { PlusIcon } from "../../../components/icons/PlusIcon";
 import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { checkArray } from "../../../components/utils/checkArray";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import { onAddEventData } from "../../../store/slices/eventSlice";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -31,11 +33,10 @@ import Report from "./components/lostFee/Report";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import EditingInventory from "./inventory/action/EditingForEventInventory";
+import EditingServiceInEvent from "./inventory/action/components/EditingServiceInEvent";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
-import { convertToBase64 } from "../../../components/utils/convertToBase64";
-import { onAddEventData } from "../../../store/slices/eventSlice";
-import EditingServiceInEvent from "./inventory/action/components/EditingServiceInEvent";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -230,13 +231,23 @@ const MainPageQuickGlance = () => {
       try {
         setIsLoading(true);
         const imageUrl = await convertToBase64(info.file.originFileObj);
-        const imageDataFormat = {
-          imageFile: imageUrl,
-          imageID: event.id,
-        };
+        const imageDataFormat = new ImageUploaderFormat(
+          imageUrl,
+          user.companyData.id,
+          "",
+          "",
+          "",
+          "",
+          "",
+          event.id
+        );
+        // const imageDataFormat = {
+        //   imageFile: imageUrl,
+        //   imageID: event.id,
+        // };
         const responseCloudinary = await devitrakApi.post(
           "/cloudinary/upload-image",
-          imageDataFormat
+          imageDataFormat.event_uploader()
         );
         if (responseCloudinary.data) {
           await devitrakApi.patch(`/event/edit-event/${event.id}`, {
