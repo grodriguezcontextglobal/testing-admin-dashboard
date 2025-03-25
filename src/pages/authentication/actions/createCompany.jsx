@@ -1,4 +1,5 @@
 import { devitrakApi } from "../../../api/devitrakApi";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import { checkArray } from "../../../components/utils/checkArray";
 
 const createCompany = async ({
@@ -55,12 +56,19 @@ const createCompany = async ({
   if (checkingExistingCompany.data.company.length > 0) {
     const companyData = checkArray(checkingExistingCompany.data.company);
     if (props.company_logo.length > 0) {
+      const templateImageUpload = new ImageUploaderFormat(
+        props.company_logo,
+        companyData.id,
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      );
       const registerCompanyLogo = await devitrakApi.post(
         "/cloudinary/upload-image",
-        {
-          imageID: companyData.id,
-          imageFile: props.company_logo,
-        }
+        templateImageUpload.company_uploader()
       );
       const updateCompanyLogo = await devitrakApi.patch(
         `/company/update-company/${companyData.id}`,
@@ -82,12 +90,20 @@ const createCompany = async ({
     if (resp.data) {
       const companyData = checkArray(resp.data.company);
       if (props.company_logo.length > 0) {
+        const templateImageUpload = new ImageUploaderFormat(
+          props.company_logo,
+          companyData.id,
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        );
+
         const registerCompanyLogo = await devitrakApi.post(
           "/cloudinary/upload-image",
-          {
-            imageID: companyData.id,
-            imageFile: props.company_logo,
-          }
+          templateImageUpload.company_uploader()
         );
         const updateCompanyLogo = await devitrakApi.patch(
           `/company/update-company/${companyData.id}`,
