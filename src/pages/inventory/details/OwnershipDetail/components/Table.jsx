@@ -28,7 +28,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
+    queryFn: () => devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
 

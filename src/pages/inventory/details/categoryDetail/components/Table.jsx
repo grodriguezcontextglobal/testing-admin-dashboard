@@ -29,11 +29,12 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
+    queryFn: () =>
+      devitrakApi.post("/image/images", { company: user.companyData.id, category: decodeURI(categoryName[0].slice(1)), }),
     // enabled: false,
     refetchOnMount: false,
   });
-
+  console.log(listImagePerItemQuery?.data?.data);
   const itemsInInventoryQuery = useQuery({
     queryKey: ["deviceInInventoryPerCategory"],
     queryFn: () =>
