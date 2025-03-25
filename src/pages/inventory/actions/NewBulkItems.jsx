@@ -79,7 +79,7 @@ const AddNewBulkItems = () => {
   });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, progress, hover) => {
+  const openNotificationWithIcon = (msg, progress, hover) => {
     api.open({
       message: msg,
       placement: "bottomRight",
@@ -170,14 +170,12 @@ const AddNewBulkItems = () => {
     let base64;
     if (selectedItem === "")
       return openNotificationWithIcon(
-        "warning",
         "A group of item must be provided.",
         false,
         false
       );
     if (taxableLocation === "") {
       return openNotificationWithIcon(
-        "warning",
         "A taxable location must be provided.",
         false,
         false
@@ -185,7 +183,6 @@ const AddNewBulkItems = () => {
     }
     if (valueSelection === "") {
       return openNotificationWithIcon(
-        "warning",
         "Ownership status must be provided.",
         false,
         false
@@ -194,7 +191,6 @@ const AddNewBulkItems = () => {
 
     if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
-        "warning",
         "As ownership was set as 'Rent', returning date must be provided.",
         false,
         false
@@ -202,7 +198,6 @@ const AddNewBulkItems = () => {
     }
     if (Number(data.startingNumber) > Number(data.endingNumber)) {
       return openNotificationWithIcon(
-        "warning",
         "Sequence of serial number must be in ascending order.",
         false,
         false
@@ -241,7 +236,6 @@ const AddNewBulkItems = () => {
     }
     if (checkExistingDevice.length > 0) {
       return openNotificationWithIcon(
-        "warning",
         `Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store.`,
         false,
         false
@@ -254,7 +248,6 @@ const AddNewBulkItems = () => {
       );
     } else if (data.photo.length > 0) {
       openNotificationWithIcon(
-        "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
         true,
         false
@@ -326,8 +319,10 @@ const AddNewBulkItems = () => {
           );
         }
         openNotificationWithIcon(
-          "success",
-          "items were created and stored in database."
+          "items were created and stored in database.",
+          false,
+          false
+  
         );
         setLoading(false);
         api.destroy();
@@ -335,7 +330,6 @@ const AddNewBulkItems = () => {
       }
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
-        "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
         true,
         false
@@ -385,7 +379,6 @@ const AddNewBulkItems = () => {
         );
       }
       openNotificationWithIcon(
-        "success",
         "items were created and stored in database.",
         false,
         false
