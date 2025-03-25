@@ -9,7 +9,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import ModalAssignDeviceInEvent from "../action/ModalAssignDeviceInEvent";
 
-const AssigmentAction = () => {
+const AssigmentAction = ({refetching}) => {
   const [assignDevice, setAssignDevice] = useState(false);
   const [assignDeviceEvent, setAssignDeviceEvent] = useState(false);
 
@@ -77,6 +77,7 @@ const AssigmentAction = () => {
       )}
       {assignDeviceEvent && (
         <ModalAssignDeviceInEvent
+          refetching={refetching}
           assignDevice={assignDeviceEvent}
           setAssignDevice={setAssignDeviceEvent}
         />
