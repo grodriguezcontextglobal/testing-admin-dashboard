@@ -40,6 +40,7 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import "./style.css";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
@@ -202,8 +203,23 @@ const AddNewItem = () => {
       } else if (data.photo.length > 0) {
         setLoadingStatus(true);
         base64 = await convertToBase64(data.photo[0]);
+        const templateImageUpload = new ImageUploaderFormat(
+          base64,
+          user.companyData.id,
+          data.category_name,
+          selectedItem,
+          "",
+          "",
+          "",
+          ""
+        );
+        const registerImage = await devitrakApi.post(
+          "/cloudinary/upload-image",
+          templateImageUpload.item_uploader()
+        );
+
         const resp = await devitrakApi.post(`/image/new_image`, {
-          source: base64,
+          source: registerImage.data.secure_url,
           category: data.category_name,
           item_group: selectedItem,
           company: user.company,
@@ -487,7 +503,6 @@ const AddNewItem = () => {
               }}
             ></div> */}
           </div>
-
         </div>
         <div
           style={{
@@ -905,14 +920,13 @@ const AddNewItem = () => {
           style={buttonStyleLoading}
         >
           <Typography textTransform={"none"} style={BlueButtonText}>
-          <Icon
-            icon="ic:baseline-plus"
-            color="var(--base-white, #FFF)"
-            width={20}
-            height={20}
-          />
-          &nbsp;
-Add more information
+            <Icon
+              icon="ic:baseline-plus"
+              color="var(--base-white, #FFF)"
+              width={20}
+              height={20}
+            />
+            &nbsp; Add more information
           </Typography>
         </button>
         {moreInfoDisplay && (
@@ -973,19 +987,19 @@ Add more information
           {moreInfo.length > 0 &&
             moreInfo.map((item, index) => (
               <Chip
-              style={{
-                backgroundColor: "var(--basewhite)",
-                padding: "2.5px 5px",
-                margin: "0 1px",
-                border: "solid 0.1px var(--gray900)",
-                borderRadius: "8px",
-              }}
-              key={`${item.keyObject}-${item.valueObject}`}
-              label={`${item.keyObject}:${item.valueObject}`}
-              onDelete={() => handleDeleteMoreInfo(index)}
-            >
-              {item.keyObject}:{item.valueObject}
-            </Chip>
+                style={{
+                  backgroundColor: "var(--basewhite)",
+                  padding: "2.5px 5px",
+                  margin: "0 1px",
+                  border: "solid 0.1px var(--gray900)",
+                  borderRadius: "8px",
+                }}
+                key={`${item.keyObject}-${item.valueObject}`}
+                label={`${item.keyObject}:${item.valueObject}`}
+                onDelete={() => handleDeleteMoreInfo(index)}
+              >
+                {item.keyObject}:{item.valueObject}
+              </Chip>
             ))}
         </div>
         <Divider />
@@ -1040,15 +1054,17 @@ Add more information
               type="submit"
               style={buttonStyleLoading}
             >
-              <Typography textTransform={"none"} style={{ ...BlueButtonText,  ...CenteringGrid}}>
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />
-              &nbsp;
-Save new item
+              <Typography
+                textTransform={"none"}
+                style={{ ...BlueButtonText, ...CenteringGrid }}
+              >
+                <Icon
+                  icon="ic:baseline-plus"
+                  color="var(--base-white, #FFF)"
+                  width={20}
+                  height={20}
+                />
+                &nbsp; Save new item
               </Typography>
             </Button>
           </div>

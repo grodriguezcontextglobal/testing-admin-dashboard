@@ -46,6 +46,7 @@ import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import costValueInputFormat from "../utils/costValueInputFormat";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 const { Option } = Select;
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
@@ -304,13 +305,23 @@ const EditGroup = () => {
       );
       setIsLoadingStatus(true);
       base64 = await convertToBase64(data.photo[0]);
-      const templateImageUpload = {
-        imageFile: base64,
-        imageID: `${user.companyData.id}_inventory:${submitRef.current.category_name}_${submitRef.current.item_group}`,
-      };
+      // const templateImageUpload = {
+      //   imageFile: base64,
+      //   imageID: `${user.companyData.id}_inventory:${submitRef.current.category_name}_${submitRef.current.item_group}`,
+      // };
+      const templateImageUpload = new ImageUploaderFormat(
+        base64,
+        user.companyData.id,
+        data.category_name,
+        selectedItem,
+        "",
+        "",
+        "",
+        ""
+      );
       const uploadingImage = await devitrakApi.post(
         `/cloudinary/upload-image`,
-        templateImageUpload
+        templateImageUpload.item_uploader()
       );
       const resp = await devitrakApi.post(`/image/new_image`, {
         source: uploadingImage.data.imageUploaded.secure_url,

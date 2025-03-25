@@ -46,6 +46,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/reactInput.css";
 import "./style.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [selectedItem, setSelectedItem] = useState("");
@@ -260,8 +261,23 @@ const AddNewBulkItems = () => {
       );
       setLoading(true);
       base64 = await convertToBase64(data.photo[0]);
+      const templateImageUpload = new ImageUploaderFormat(
+        base64,
+        user.companyData.id,
+        data.category_name,
+        selectedItem,
+        "",
+        "",
+        "",
+        ""
+      );
+      const registerImage = await devitrakApi.post(
+        "/cloudinary/upload-image",
+        templateImageUpload.item_uploader()
+      );
+      
       const resp = await devitrakApi.post(`/image/new_image`, {
-        source: base64,
+        source: registerImage.data.secure_url,
         category: data.category_name,
         item_group: selectedItem,
         company: user.company,
@@ -373,7 +389,6 @@ const AddNewBulkItems = () => {
         "items were created and stored in database.",
         false,
         false
-
       );
       setLoading(false);
       return navigate("/inventory");
