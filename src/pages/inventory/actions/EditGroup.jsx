@@ -68,11 +68,6 @@ const EditGroup = () => {
   const navigate = useNavigate();
   const submitRef = useRef();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
-  };
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [locationSelection, setLocationSelection] = useState("");
   const companiesQuery = useQuery({
@@ -84,6 +79,13 @@ const EditGroup = () => {
     refetchOnMount: false,
   });
 
+  const openNotificationWithIcon = (msg) => {
+    api.open({
+      message: msg,
+      showProgress: isLoadingStatus,
+      pauseOnHover: false,
+    });
+  };
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -244,7 +246,7 @@ const EditGroup = () => {
       setValue("ownership", "");
       setValue("serial_number", "");
       setValueSelection(options[0]);
-      openNotificationWithIcon("Success", "items were updated.");
+      openNotificationWithIcon("items were updated.");
       setIsLoadingStatus(false);
       return navigate("/inventory");
     }
@@ -273,23 +275,13 @@ const EditGroup = () => {
     const slicingData = groupData.slice(starting, ending + 1);
     let base64;
     if (selectedItem === "")
-      return openNotificationWithIcon(
-        "warning",
-        "A group of item must be provided."
-      );
+      return openNotificationWithIcon("A group of item must be provided.");
     if (taxableLocation === "")
-      return openNotificationWithIcon(
-        "warning",
-        "A taxable location must be provided."
-      );
+      return openNotificationWithIcon("A taxable location must be provided.");
     if (valueSelection === "")
-      return openNotificationWithIcon(
-        "warning",
-        "Ownership status must be provided."
-      );
+      return openNotificationWithIcon("Ownership status must be provided.");
     if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
-        "warning",
         "As ownership was set as 'Rent', returning date must be provided."
       );
     }
@@ -300,7 +292,6 @@ const EditGroup = () => {
       );
     } else if (data.photo.length > 0) {
       openNotificationWithIcon(
-        "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
       );
       setIsLoadingStatus(true);
@@ -334,7 +325,6 @@ const EditGroup = () => {
       }
     } else if (data.photo.length < 1) {
       openNotificationWithIcon(
-        "warning",
         "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done."
       );
       try {
