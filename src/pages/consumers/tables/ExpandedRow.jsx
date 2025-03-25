@@ -78,10 +78,16 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
 
   const dispatch = useDispatch();
   const [messageApi, contextHolder] = message.useMessage();
-  const success = () => {
+  const returned = () => {
     messageApi.open({
       type: "success",
-      content: "Device was returned",
+      content: "Device was marked as returned",
+    });
+  };
+  const lost = () => {
+    messageApi.open({
+      type: "success",
+      content: "Device was marked as lost",
     });
   };
 
@@ -164,7 +170,11 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           exact: true,
         });
         await refetchingQueries();
-        success();
+        if (props.new_status) {
+          lost();
+        } else {
+          returned();
+        }
         return setActionInProgress(false);
       }
       return setActionInProgress(false);
@@ -447,7 +457,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
-          padding:"0 2rem 0 0",
+          padding: "0 2rem 0 0",
         }}
       >
         <Button onClick={refetchingQueries} style={BlueButton}>
