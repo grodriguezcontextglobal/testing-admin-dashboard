@@ -29,7 +29,6 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   const refRender = useRef(0);
   const refTotal = useRef(0);
   const { event } = useSelector((state) => state.event);
-  console.log("ConsumerDeviceLostFeeCreditCard ", event);
   const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
   const { paymentIntentReceiversAssigned } = useSelector(
@@ -87,7 +86,6 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   };
 
   const handleSubmitForm = async () => {
-    // console.log(localStorage.getItem("total"));
     let cashReportProfile = {
       attendee: customer?.email,
       admin: user.email,
