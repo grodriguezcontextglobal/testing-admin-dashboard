@@ -21,6 +21,7 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 import CustomerHeader from "../UI/header";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQueryClient } from "@tanstack/react-query";
+import { checkArray } from "../../../../components/utils/checkArray";
 
 const ConsumerDeviceLostFeeCash = () => {
   const navigator = useNavigate();
@@ -46,11 +47,11 @@ const ConsumerDeviceLostFeeCash = () => {
     const result = event.deviceSetup.find(
       (element) => element.group === receiverToReplaceObject.deviceType
     );
-    if (Array.isArray(result)) {
-      return result.at(-1);
-    } else {
-      return result;
-    }
+    // if (Array.isArray(result)) {
+    //   return result.at(-1);
+    // } else {
+    // }
+    return checkArray(result);
   };
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -59,9 +60,9 @@ const ConsumerDeviceLostFeeCash = () => {
   });
 
   const checkTypeOfPaymentIntentReceiversAssigned = () => {
-    if (Array.isArray(paymentIntentReceiversAssigned))
-      return paymentIntentReceiversAssigned[0];
-    return paymentIntentReceiversAssigned;
+    // if (Array.isArray(paymentIntentReceiversAssigned))
+    //   return paymentIntentReceiversAssigned[0];
+    return checkArray(paymentIntentReceiversAssigned);
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
