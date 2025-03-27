@@ -14,6 +14,8 @@ import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import sendRefundReceiptEmail from "../../utils/sendRefundReceiptEmail";
+import { useSelector } from "react-redux";
 
 const ExpandedLostButton = ({
   record,
@@ -22,6 +24,8 @@ const ExpandedLostButton = ({
   Lost,
   refetchingQueries,
 }) => {
+  console.log(record);
+  const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit } = useForm();
   const [isLoadingState, setIsLoadingState] = useState(false);
   const propsUpdateSingleDevice = {
@@ -70,7 +74,7 @@ const ExpandedLostButton = ({
         await devitrakApi.post(`/stripe/partial-refund`, {
           paymentIntent: checkArray(cashReportToPassAsProps)
             .paymentIntent_charge_transaction,
-          total: data.total,
+          total: data.amount,
         });
       }
       await devitrakApi.patch(
@@ -82,8 +86,17 @@ const ExpandedLostButton = ({
           template,
         }
       );
+      sendRefundReceiptEmail({
+        event:record.entireData.eventSelected[0],
+        company: user.companyData.company_name,
+        customer: record.entireData.userInfo,
+        amount: data.amount,
+        paymentIntent: checkArray(cashReportToPassAsProps)
+          .paymentIntent_charge_transaction,
+      });
       setIsLoadingState(false);
       setOpenPartialRefundModal(false);
+      checkChargedLostFee.refetch();
       return refetchingQueries();
     } catch (error) {
       return error;
@@ -115,7 +128,17 @@ const ExpandedLostButton = ({
           }`
         );
       }
+      sendRefundReceiptEmail({
+        event:record.entireData.eventSelected[0],
+        company: user.companyData.company_name,
+        customer: record.entireData.userInfo,
+        amount: checkArray(cashReportToPassAsProps).amount,
+        paymentIntent: checkArray(cashReportToPassAsProps)
+          .paymentIntent_charge_transaction,
+      });
+
       setIsLoadingState(false);
+      checkChargedLostFee.refetch();
       return refetchingQueries();
     } catch (error) {
       setIsLoadingState(false);
@@ -238,7 +261,10 @@ const ExpandedLostButton = ({
               <Button
                 htmlType="reset"
                 style={{ ...GrayButton }}
-                onClick={() => setOpenPartialRefundModal(false)}
+                onClick={() => {
+                  setOpenPartialRefundModal(false);
+                  setIsLoadingState(false);
+                }}
               >
                 <p style={GrayButtonText}>X</p>
               </Button>
