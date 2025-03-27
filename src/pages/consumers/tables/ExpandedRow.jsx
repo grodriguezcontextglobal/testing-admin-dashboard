@@ -170,8 +170,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           exact: true,
         });
         await refetchingQueries();
-        if (props.new_status) {
-          lost();
+        if (props.new_status !== undefined) {
+          if(props.new_status === "Lost"){
+            lost();
+          }else{
+            returned();
+          }
         } else {
           returned();
         }
