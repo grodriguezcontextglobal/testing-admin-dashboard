@@ -24,7 +24,6 @@ const ExpandedLostButton = ({
   Lost,
   refetchingQueries,
 }) => {
-  console.log(record);
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit } = useForm();
   const [isLoadingState, setIsLoadingState] = useState(false);
