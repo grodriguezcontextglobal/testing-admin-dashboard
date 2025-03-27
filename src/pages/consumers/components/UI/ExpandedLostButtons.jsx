@@ -1,12 +1,19 @@
-import { Button } from "antd";
+import { InputAdornment, OutlinedInput, Tooltip } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { Button, Popconfirm } from "antd";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { checkArray } from "../../../../components/utils/checkArray";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { useQuery } from "@tanstack/react-query";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { useEffect, useState } from "react";
-import { groupBy } from "lodash";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 
 const ExpandedLostButton = ({
   record,
@@ -15,7 +22,7 @@ const ExpandedLostButton = ({
   Lost,
   refetchingQueries,
 }) => {
-  const [cashReportList, setCashReportList] = useState([]);
+  const { register, handleSubmit } = useForm();
   const [isLoadingState, setIsLoadingState] = useState(false);
   const propsUpdateSingleDevice = {
     ...record,
@@ -37,31 +44,76 @@ const ExpandedLostButton = ({
     refetchOnMount: false,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const groupingData = groupBy(
-      checkChargedLostFee?.data?.data?.report,
-      "deviceLost[0].label"
-    );
-    setCashReportList(groupingData);
-    return () => {
-      controller.abort();
-    };
-  }, [checkChargedLostFee.data]);
+  const [openPartialRefundModal, setOpenPartialRefundModal] = useState(false);
+  const [cashReportToPassAsProps, setCashReportToPassAsProps] = useState(null);
 
-  const handleRefund = async (record) => {
+  const partialRefund = async (data) => {
+    try {
+      const newAmount =
+        Number(checkArray(cashReportToPassAsProps).amount) -
+        Number(data.amount);
+      const updatedDeviceLostList = checkArray(
+        cashReportToPassAsProps
+      ).deviceLost.filter((ele) => ele.label !== record.serial_number);
+      const template = {
+        ...cashReportToPassAsProps,
+        deviceLost: [...updatedDeviceLostList],
+        amount: String(newAmount),
+      };
+      if (
+        checkArray(cashReportToPassAsProps).paymentIntent_charge_transaction
+          .length > 15 &&
+        !checkArray(
+          cashReportToPassAsProps
+        ).paymentIntent_charge_transaction.includes("cash")
+      ) {
+        await devitrakApi.post(`/stripe/partial-refund`, {
+          paymentIntent: checkArray(cashReportToPassAsProps)
+            .paymentIntent_charge_transaction,
+          total: data.total,
+        });
+      }
+      await devitrakApi.patch(
+        `/cash-report/update-cash-report/${
+          checkArray(cashReportToPassAsProps).id
+        }`,
+        {
+          id: checkArray(cashReportToPassAsProps).id,
+          template,
+        }
+      );
+      setIsLoadingState(false);
+      setOpenPartialRefundModal(false);
+      return refetchingQueries();
+    } catch (error) {
+      return error;
+    }
+  };
+  const handleRefund = async () => {
     try {
       setIsLoadingState(true);
-      for (let data of cashReportList[record.serial_number]) {
+      const cashReportTransactionData = checkChargedLostFee?.data?.data?.report;
+      if (checkArray(cashReportTransactionData).deviceLost.length > 1) {
+        setCashReportToPassAsProps(checkArray(cashReportTransactionData));
+        return setOpenPartialRefundModal(true);
+      } else {
         if (
-          data.paymentIntent_charge_transaction.length > 15 &&
-          !data.paymentIntent_charge_transaction.includes("cash")
+          checkArray(cashReportTransactionData).paymentIntent_charge_transaction
+            .length > 15 &&
+          !checkArray(
+            cashReportTransactionData
+          ).paymentIntent_charge_transaction.includes("cash")
         ) {
           await devitrakApi.post(`/stripe/refund`, {
-            paymentIntent: data.paymentIntent_charge_transaction,
+            paymentIntent: checkArray(cashReportTransactionData)
+              .paymentIntent_charge_transaction,
           });
         }
-        await devitrakApi.post(`/cash-report/remove-cash-report/${data.id}`);
+        await devitrakApi.post(
+          `/cash-report/remove-cash-report/${
+            checkArray(cashReportTransactionData).id
+          }`
+        );
       }
       setIsLoadingState(false);
       return refetchingQueries();
@@ -70,55 +122,140 @@ const ExpandedLostButton = ({
       return null;
     }
   };
+
+  const checkingExistingData = () => {
+    return (
+      checkChargedLostFee?.data &&
+      checkChargedLostFee?.data?.data?.report?.length > 0
+    );
+  };
+
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
-      <Button
-        disabled={cashReportList[record.serial_number]?.length > 0}
-        onClick={() => handleLostSingleDevice(record)}
-        style={{
-          ...DangerButton,
-          alignItems: "center",
-        }}
+    <>
+      <div
+        key={record.serial_number}
+        style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}
       >
-        <img src={Lost} alt="Lost" />
-        <p
+        <Button
+          disabled={checkingExistingData()}
+          onClick={() => handleLostSingleDevice(record)}
           style={{
-            ...DangerButtonText,
-            alignSelf: "center",
+            ...DangerButton,
+            alignItems: "center",
           }}
         >
-          {cashReportList[record.serial_number]?.length > 0
-            ? "Charged"
-            : "Charge customer"}
-        </p>
-      </Button>
-      <Button
-        loading={isLoadingState}
-        onClick={() =>
-          cashReportList[record.serial_number]?.length > 0
-            ? handleRefund(record)
-            : handleFoundSingleDevice(propsUpdateSingleDevice)
-        }
-        style={{
-          ...GrayButton,
-        }}
-      >
-        <p
-          style={{
-            ...GrayButtonText,
-            color: `${
-              record.status
-                ? GrayButtonText.color
-                : "var(--disabled0gray-button-text)"
-            }`,
-          }}
+          <img src={Lost} alt="Lost" />
+          <p
+            style={{
+              ...DangerButtonText,
+              alignSelf: "center",
+            }}
+          >
+            {checkingExistingData() ? "Charged" : "Charge customer"}
+          </p>
+        </Button>
+        <Popconfirm
+          title={
+            checkingExistingData()
+              ? "Are you sure that you want to refund?"
+              : "Are you sure that you want to mark as found?"
+          }
+          onConfirm={() =>
+            checkingExistingData()
+              ? handleRefund(record)
+              : handleFoundSingleDevice(propsUpdateSingleDevice)
+          }
         >
-          {cashReportList[record.serial_number]?.length > 0
-            ? "Refund"
-            : "Mark as found"}
-        </p>
-      </Button>
-    </div>
+          <Button
+            loading={isLoadingState}
+            style={{
+              ...GrayButton,
+            }}
+          >
+            <p
+              style={{
+                ...GrayButtonText,
+                color: `${
+                  record.status
+                    ? GrayButtonText.color
+                    : "var(--disabled0gray-button-text)"
+                }`,
+              }}
+            >
+              {checkingExistingData() ? "Refund" : "Mark as found"}
+            </p>
+          </Button>
+        </Popconfirm>
+      </div>
+      {openPartialRefundModal && (
+        <form
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+          onSubmit={handleSubmit(partialRefund)}
+        >
+          <label
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            Amount to refund:
+            <OutlinedInput
+              {...register("amount")}
+              style={OutlinedInputStyle}
+              type="text"
+              placeholder={`${cashReportToPassAsProps.amount}`}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+              endAdornment={
+                <InputAdornment
+                  position="end"
+                  style={{
+                    width: "fit-content",
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Tooltip title="Max amount to refund" placement="top">
+                    <QuestionIcon />{" "}
+                  </Tooltip>
+                </InputAdornment>
+              }
+            />
+            <div
+              style={{
+                display: "flex",
+                margin: "5px 0 0",
+                gap: "5px",
+              }}
+            >
+              <Button
+                htmlType="reset"
+                style={{ ...GrayButton }}
+                onClick={() => setOpenPartialRefundModal(false)}
+              >
+                <p style={GrayButtonText}>X</p>
+              </Button>
+              <Button
+                htmlType="submit"
+                style={{ ...BlueButton }}
+                onClick={() => false}
+              >
+                <p style={BlueButtonText}>
+                  <CheckIcon />
+                </p>
+              </Button>
+            </div>
+          </label>
+        </form>
+      )}
+    </>
   );
 };
 
