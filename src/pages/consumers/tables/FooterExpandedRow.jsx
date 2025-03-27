@@ -28,6 +28,8 @@ import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
+import PaymentIcon from "../../../components/icons/paymentIcon";
+import WithdrawIcon from "../../../components/icons/WithdrawIcon";
 const FooterExpandedRow = ({
   dataRendering,
   formattedData,
@@ -285,7 +287,8 @@ const FooterExpandedRow = ({
               }}
             >
               {/* <img src={Report} alt="Report" /> &nbsp; */}
-              Capture deposit
+              <PaymentIcon />
+              &nbsp;Capture deposit
             </p>
           </Button>
           <Button
@@ -302,7 +305,8 @@ const FooterExpandedRow = ({
               }}
             >
               {/* <img src={Report} alt="Report" /> &nbsp; */}
-              Release deposit
+              <WithdrawIcon />
+              &nbsp;Release deposit
             </p>
           </Button>
         </div>
