@@ -1,7 +1,7 @@
-import { Button, message, Popconfirm, Spin, Table, Tooltip } from "antd";
+import { Button, message, Popconfirm, Spin, Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import Lost from "../../../components/icons/credit-card-x.svg";
@@ -9,11 +9,24 @@ import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
 import ScanIcon from "../../../components/icons/scan.svg";
 import Report from "../../../components/icons/table.svg";
 import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
+import { checkArray } from "../../../components/utils/checkArray";
 import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
 import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
+import {
+  onAddEventData,
+  onAddEventInfoDetail,
+  onSelectCompany,
+  onSelectEvent,
+} from "../../../store/slices/eventSlice";
+import { onReceiverObjectToReplace } from "../../../store/slices/helperSlice";
+import {
+  onAddDevicesAssignedInPaymentIntent,
+  onAddPaymentIntentSelected,
+} from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
 const FooterExpandedRow = ({
   dataRendering,
@@ -24,9 +37,12 @@ const FooterExpandedRow = ({
   refetchingDevicePerTransaction,
   setOpenModalReleasingDeposit,
   setOpenModalCapturingDeposit,
+  assignedItemsPerTransactionData,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
+  const [openChargeAllLostDevicesModal, setOpenChargeAllLostDevicesModal] =
+    useState(false);
   const [selectedItemsToMarkAsReturned, setSelectedItemsToMarkAsReturned] =
     useState([]);
   const returningAllItemsAtOnce = async (props) => {
@@ -54,7 +70,7 @@ const FooterExpandedRow = ({
     paymentIntentInfoRetrieved(resp.paymentIntent);
     return setCcInfo(resp.paymentIntent);
   };
-
+  const dispatch = useDispatch();
   useEffect(() => {
     const controller = new AbortController();
     if (
@@ -121,6 +137,36 @@ const FooterExpandedRow = ({
       data: [dataRendering],
     },
   ];
+
+  const lostFeeChargeCustomer = async (props) => {
+    // setOpenModal(true);
+    const responseEvent = await devitrakApi.post("/event/event-list", {
+      company: user.company,
+      "eventInfoDetail.eventName": props[0].entireData.eventSelected[0],
+    });
+    const receiversList = groupBy(
+      assignedItemsPerTransactionData,
+      "device.status"
+    )["Lost"];
+    dispatch(onAddEventData(checkArray(responseEvent.data?.list)));
+    dispatch(onAddEventInfoDetail(props[0].entireData.eventSelected[0]));
+    dispatch(onSelectCompany(user.company));
+    dispatch(onSelectEvent(props[0].entireData.eventSelected[0]));
+    dispatch(
+      onReceiverObjectToReplace([
+        ...receiversList.map((item) => ({
+          serialNumber: item.device.serialNumber,
+          deviceType: item.device.deviceType,
+          status: item.device.status,
+        })),
+      ])
+    );
+    dispatch(onAddDevicesAssignedInPaymentIntent(receiversList));
+    dispatch(
+      onAddPaymentIntentSelected(props[0].transactionData.paymentIntent)
+    );
+    return setOpenChargeAllLostDevicesModal(true);
+  };
 
   const footerColumn = [
     {
@@ -280,7 +326,7 @@ const FooterExpandedRow = ({
           } else if (paymentIntent.length < 16) {
             return 0;
           } else {
-            return 0;
+            return String(ccInfo.amount).slice(0, -2) ?? 0;
           }
         };
         return (
@@ -325,41 +371,50 @@ const FooterExpandedRow = ({
       title: "Deposit",
       dataIndex: "deposit",
       key: "deposit",
-      render: () => (
-        <div
-          style={{
-            ...CenteringGrid,
-            flexDirection: "column",
-            width: "100%",
-            gap: "20px",
-          }}
-        >
-          <Tooltip title="Still in construction.">
-            <Button disabled style={{ ...GrayButton, width: "100%" }}>
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
-              </p>
-            </Button>
-          </Tooltip>{" "}
-          <p
+      render: () => {
+        const lostItemsList = groupBy(formattedData, "status")["Lost"];
+        return (
+          <div
             style={{
-              ...Subtitle,
               ...CenteringGrid,
-              fontWeight: 500,
-              color: "var(--gray700)",
+              flexDirection: "column",
+              width: "100%",
+              gap: "20px",
             }}
           >
-            {dataToBeRendered()}
-          </p>
-        </div>
-      ),
+            <Popconfirm
+              title="Are you sure that you want to charge consumer for all devices marked as lost?"
+              onConfirm={() => lostFeeChargeCustomer(lostItemsList)}
+            >
+              <Button
+                style={{ ...GrayButton, width: "100%" }}
+                // onClick={() => lostFeeChargeCustomer(lostItemsList)}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    ...CenteringGrid,
+                    fontWeight: 600,
+                    color: "var(--gray700)",
+                  }}
+                >
+                  <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
+                </p>
+              </Button>
+            </Popconfirm>{" "}
+            <p
+              style={{
+                ...Subtitle,
+                ...CenteringGrid,
+                fontWeight: 500,
+                color: "var(--gray700)",
+              }}
+            >
+              {dataToBeRendered()}
+            </p>
+          </div>
+        );
+      },
     },
   ];
 
@@ -421,6 +476,12 @@ const FooterExpandedRow = ({
           setSelectedItems={setSelectedItems}
           emailNotification={sendEmailDeviceReport}
           refetchingDevicePerTransaction={refetchingDevicePerTransaction}
+        />
+      )}
+      {openChargeAllLostDevicesModal && (
+        <ChargeOptionsModal
+          openChargeAllLostDevicesModal={openChargeAllLostDevicesModal}
+          setOpenChargeAllLostDevicesModal={setOpenChargeAllLostDevicesModal}
         />
       )}
     </>
