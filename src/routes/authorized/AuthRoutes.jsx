@@ -5,6 +5,8 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
 import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
+import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
+import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCreditCard";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -278,6 +280,14 @@ const AuthRoutes = () => {
               <Route
                 path="/consumers/:id/lost-device-fee/credit_card"
                 element={<ConsumerDeviceLostFeeCreditCard />}
+              />
+              <Route
+                path="/consumers/:id/charge-all-lost-devices/cash"
+                element={<ChargeAllListDeviceCash />}
+              />
+              <Route
+                path="/consumers/:id/charge-all-lost-devices/credit_card"
+                element={<ChargeAllListDeviceCreditCard />}
               />
               <Route
                 path="/consumers/:id/payment-confirmation"
