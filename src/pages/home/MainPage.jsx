@@ -153,7 +153,7 @@ const MainPage = () => {
       >
         {notificationStatus && (
           <Grid
-            style={{ display: `${inventory.length > 0 && "none"}` }}
+            style={{ display: `${inventory.length > 0 && "none"}`, alignSelf:"flex-start" }}
             margin={"0.5rem 0 1rem"}
             item
             xs={12}
@@ -172,7 +172,7 @@ const MainPage = () => {
         )}
         {leasedEquipmentNotificationStatus && (
           <Grid
-            style={{ display: "flex" }}
+            style={{ display: "flex", alignSelf:"flex-start" }}
             margin={"0.5rem 0 1rem"}
             item
             xs={12}
