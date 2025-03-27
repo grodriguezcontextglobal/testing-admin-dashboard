@@ -221,8 +221,15 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               {weekdayDic[dateSplit[0]]}&nbsp;
               {dateSplit.slice(1, 4).join(" ")}
             </p>
-            <p style={{ ...Subtitle, fontSize:"12px", width: "100%", textAlign: "left" }}>
-              {dateSplit[4]}{" "}{dateSplit.slice(6).join(" ")}
+            <p
+              style={{
+                ...Subtitle,
+                fontSize: "12px",
+                width: "100%",
+                textAlign: "left",
+              }}
+            >
+              {dateSplit[4]} {dateSplit.slice(6).join(" ")}
             </p>
           </div>
         );
@@ -245,7 +252,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             <Avatar>{initials.map((item) => item[0])}</Avatar>&nbsp;
             <p
               style={{
-                color: "var(--Blue-dark-600, #155EEF)",
+                color: "var(--blue-dark-600, #155EEF)",
                 fontFamily: "Inter",
                 fontSize: "14px",
                 fontStyle: "normal",
