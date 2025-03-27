@@ -9,12 +9,15 @@ import { useSelector } from "react-redux";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 
-export const CustomerLostItemFeeCheckout = ({ total }) => {
+export const CustomerLostItemFeeCheckout = ({
+  total,
+  redirectUrl,
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { customer } = useSelector(state => state.stripe)
+  const { customer } = useSelector((state) => state.stripe);
 
   useEffect(() => {
     if (!stripe) {
@@ -83,7 +86,7 @@ export const CustomerLostItemFeeCheckout = ({ total }) => {
       elements,
       confirmParams: {
         // Make sure to change this to your payment completion page
-        return_url: myUrl + `/consumers/${customer.uid}/lost-device-fee/credit_card`,
+        return_url: myUrl + `/consumers/${customer.uid}/${redirectUrl}`,
       },
     });
     // This point will only be reached if there is an immediate error when
@@ -109,7 +112,13 @@ export const CustomerLostItemFeeCheckout = ({ total }) => {
         disabled={isLoading || !stripe || !elements}
         id="submit"
       >
-        <span style={{ ...BlueButtonText, margin: 'auto', textTransform: "capitalize" }}>
+        <span
+          style={{
+            ...BlueButtonText,
+            margin: "auto",
+            textTransform: "capitalize",
+          }}
+        >
           {isLoading ? (
             <div className="spinner" id="spinner"></div>
           ) : (

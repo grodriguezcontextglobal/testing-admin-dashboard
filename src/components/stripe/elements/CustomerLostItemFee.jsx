@@ -3,7 +3,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 import { CustomerLostItemFeeCheckout } from "../checkout/CustomerLostItemFeeCheckout";
 const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key);
-const CustomerLostItemFee = ({ clientSecret, total }) => {
+const CustomerLostItemFee = ({ clientSecret, total, redirectUrl = "lost-device-fee/credit_card" }) => {
 
 /**
  * @description StripeChecoutElementAdmin - Elements display after verify a valid clientSecret
@@ -26,7 +26,7 @@ const CustomerLostItemFee = ({ clientSecret, total }) => {
 
   return (
     <Elements options={options} stripe={stripePromise}>
-      <CustomerLostItemFeeCheckout total={total} />
+      <CustomerLostItemFeeCheckout total={total} redirectUrl={redirectUrl} />
     </Elements>
   )
 }
