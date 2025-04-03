@@ -111,12 +111,17 @@ export const CreateNewConsumer = ({
     return closeDeviceModal();
   };
   const newConsumerAfterBeingCheck = async (data) => {
-    const newEventToAddConsumer = JSON.parse(eventAssignedTo);
-    const newUserProfile = {
-      name: data.firstName,
+    try {
+      if(contactPhoneNumber.length === 0) {
+        alert("Please enter a phone number");
+        return setLoading(false);
+      }
+      const newEventToAddConsumer = JSON.parse(eventAssignedTo);
+      const newUserProfile = {
+        name: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      phoneNumber: contactPhoneNumber.length > 0 ? contactPhoneNumber : "000-000-0000",
+      phoneNumber: contactPhoneNumber,
       privacyPolicy: true,
       category: "Regular",
       provider: [user.company],
@@ -142,6 +147,10 @@ export const CreateNewConsumer = ({
       setLoading(false);
       return redirectingStaffBasedOnConsumerEventPage(newUser.data);
     }
+  } catch (error) {
+    setLoading(false);
+    return openNotificationWithIcon("error", `${error.message}`);
+  }
   };
 
   const zeroDuplications = (props) => {
@@ -207,7 +216,6 @@ export const CreateNewConsumer = ({
   };
 
   const handleNewConsumer = async (data) => {
-    console.log(data);
     setLoading(true);
     try {
       const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
