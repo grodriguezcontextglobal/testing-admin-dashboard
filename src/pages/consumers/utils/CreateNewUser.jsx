@@ -116,7 +116,7 @@ export const CreateNewConsumer = ({
       name: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      phoneNumber: contactPhoneNumber,
+      phoneNumber: contactPhoneNumber.length > 0 ? contactPhoneNumber : "000-000-0000",
       privacyPolicy: true,
       category: "Regular",
       provider: [user.company],
