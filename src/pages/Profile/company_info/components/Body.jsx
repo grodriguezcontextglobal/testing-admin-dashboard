@@ -20,6 +20,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
 import "./Body.css";
+import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -180,12 +181,19 @@ const Body = () => {
         } else {
           if (data.companyLogo[0]) {
             const fileBase64 = await convertToBase64(data.companyLogo[0]);
+            const imageUploader = new ImageUploaderFormat(
+              fileBase64,
+              user.companyData.id,
+              "",
+              "",
+              "",
+              "",
+              "",
+              ""
+            );
             const uploadingCompanyLogo = await devitrakApi.post(
               "cloudinary/upload-image",
-              {
-                imageFile: fileBase64,
-                imageID: user.companyData.id,
-              }
+              imageUploader.company_uploader()
             );
             if (uploadingCompanyLogo.data) {
               base64 = uploadingCompanyLogo.data.imageUploaded.secure_url;
@@ -248,13 +256,15 @@ const Body = () => {
       api.destroy();
       if (resp.data.ok) {
         setLoading(false);
-        dispatch(onLogin({
-          ...user,
-          companyData: {
-            ...user.companyData,
-            company_logo: ""
-          }
-        }))
+        dispatch(
+          onLogin({
+            ...user,
+            companyData: {
+              ...user.companyData,
+              company_logo: "",
+            },
+          })
+        );
         return openNotificationWithIcon(
           "Company logo removed. Please log out and log in to see the changes.",
           3
