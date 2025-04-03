@@ -146,8 +146,8 @@ const MainProfileSettings = () => {
         marginTop={1}
         container
       >
-        <Grid marginY={0} item xs={12} sm={12} md={6}>
-          <nav style={{ display: "flex" }}>
+        <Grid marginY={0} item xs={12} sm={12} md={12}>
+          <nav style={{ display: "flex", gap:"16px" }}>
             {tabOptions.map((option) => {
               if (
                 option.permission.some(
