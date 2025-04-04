@@ -187,7 +187,7 @@ const AuthRoutes = () => {
         }
       >
         <div
-          style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto" }}
+          style={{ minWidth: "768px", maxWidth: "1228px", margin: "auto auto 0" }}
         >
           <Routes>
             <Route path="/" element={<ParentRenderingChildrenPage />}>
