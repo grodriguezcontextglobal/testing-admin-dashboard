@@ -1,8 +1,6 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { Divider } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
-import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { Subtitle } from "../../styles/global/Subtitle";
@@ -153,7 +151,10 @@ const MainPage = () => {
       >
         {notificationStatus && (
           <Grid
-            style={{ display: `${inventory.length > 0 && "none"}`, alignSelf:"flex-start" }}
+            style={{
+              display: `${inventory.length > 0 && "none"}`,
+              alignSelf: "flex-start",
+            }}
             margin={"0.5rem 0 1rem"}
             item
             xs={12}
@@ -172,7 +173,7 @@ const MainPage = () => {
         )}
         {leasedEquipmentNotificationStatus && (
           <Grid
-            style={{ display: "flex", alignSelf:"flex-start" }}
+            style={{ display: "flex", alignSelf: "flex-start" }}
             margin={"0.5rem 0 1rem"}
             item
             xs={12}
@@ -225,7 +226,7 @@ const MainPage = () => {
             to="/inventory/new-item"
           >
             <Button style={BlueButton}>
-              <WhitePlusIcon />
+              {/* <WhitePlusIcon /> */}
               <Typography textTransform={"none"} style={BlueButtonText}>
                 Add to inventory
               </Typography>
@@ -238,9 +239,13 @@ const MainPage = () => {
               width: "fit-content",
             }}
           >
-            <Button style={GrayButton}>
-              <BluePlusIcon />
-              <Typography textTransform={"none"} style={GrayButtonText}>
+            <Button style={{ ...GrayButton, alignItems: "center" }}>
+              {/* <BluePlusIcon
+                width={25}
+                height={20}
+                stroke={GrayButtonText.color}
+              /> */}
+              <Typography textTransform={"none"} style={{ ...GrayButtonText }}>
                 Create new event
               </Typography>
             </Button>
