@@ -201,7 +201,6 @@ const Login = () => {
   };
 
   const onSubmitLogin = async (data) => {
-    console.log({data});
     try {
       dispatch(onChecking());
       const respo = await devitrakApiAdmin.post("/login", {
@@ -521,7 +520,7 @@ const Login = () => {
                 />
               </div>
               <Button
-                // disabled={token === null}
+                disabled={token === null}
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%" }}
               >
