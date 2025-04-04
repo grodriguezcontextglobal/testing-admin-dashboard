@@ -7,7 +7,6 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
-import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -88,12 +87,12 @@ const ButtonSections = () => {
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
-    {
-      icon: <FeedbackIcon />,
-      text: "Feedback",
-      disableStatus: !event.active,
-      fn: () => setFeedbackEventModal(true),
-    },
+    // {
+    //   icon: <FeedbackIcon />,
+    //   text: "Feedback",
+    //   disableStatus: !event.active,
+    //   fn: () => setFeedbackEventModal(true),
+    // },
   ];
 
   const groupingByCompany = groupBy(
