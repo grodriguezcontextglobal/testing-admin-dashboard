@@ -19,16 +19,18 @@ const FeedbackEvent = ({ setFeedbackEventModal }) => {
         emailNotificationProfile
       );
       if (resp.data.ok) {
+        message.success("Email sent successfully");
         return setFeedbackEventModal(false);
       }
     } catch (error) {
+      message.error("Something went wrong. Please try again.");
       return setFeedbackEventModal(false);
     }
   };
 
   useMemo(() => {
     handleSubmitEmailNotification();
-    return message.success("Email sent successfully");
+    return;
   }, []);
 };
 
