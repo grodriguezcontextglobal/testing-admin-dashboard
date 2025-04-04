@@ -1,20 +1,20 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Card, Button } from "antd";
+import { Button, Card } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
+import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
-import FeedbackEvent from "../../../../../components/notification/email/FeedbackEvent";
-import FeedbackIcon from "../../../../../components/icons/FeedbackIcon";
+import FeedbackModal from "../FeedbackModal";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
 );
@@ -218,7 +218,6 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <Button
-                  // loading={index === 3 && feedbackEventModal}
                   disabled={item.disableStatus}
                   onClick={() => item.fn()}
                   style={
@@ -303,7 +302,7 @@ const ButtonSections = () => {
         />
       )}
       {feedbackEventModal && (
-        <FeedbackEvent
+        <FeedbackModal
           feedbackEventModal={feedbackEventModal}
           setFeedbackEventModal={setFeedbackEventModal}
         />
