@@ -522,7 +522,7 @@ const Login = () => {
               <Button
                 disabled={token === null}
                 htmlType="submit"
-                style={{ ...BlueButton, width: "100%" }}
+                style={{ ...BlueButton, width: "100%", background: token === null ? "var(--disabled-blue-button)" : BlueButton.background }}
               >
                 <p style={BlueButtonText}>Sign in</p>
               </Button>
