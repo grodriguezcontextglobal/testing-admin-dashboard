@@ -46,12 +46,48 @@ import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
-  { title: "home", route: "/", permission: [0, 1, 2, 3] },
-  { title: "inventory", route: "/inventory", permission: [0, 1] },
-  { title: "events", route: "/events", permission: [0, 1, 2, 3, 4] },
-  { title: "consumers", route: "/consumers", permission: [0, 1] },
-  { title: "staff", route: "/staff", permission: [0, 1, 2, 3] },
-  // { title: "profile", route: "/profile", permission: [0, 1, 2, 3, 4] },
+  {
+    title: "home",
+    route: "/",
+    permission: [0, 1, 2, 3],
+    mobile: true,
+    desktop: true,
+  },
+  {
+    title: "inventory",
+    route: "/inventory",
+    permission: [0, 1],
+    mobile: true,
+    desktop: true,
+  },
+  {
+    title: "events",
+    route: "/events",
+    permission: [0, 1, 2, 3, 4],
+    mobile: true,
+    desktop: true,
+  },
+  {
+    title: "consumers",
+    route: "/consumers",
+    permission: [0, 1],
+    mobile: true,
+    desktop: true,
+  },
+  {
+    title: "staff",
+    route: "/staff",
+    permission: [0, 1, 2, 3],
+    mobile: true,
+    desktop: true,
+  },
+  {
+    title: "profile",
+    route: "/profile",
+    permission: [0, 1, 2, 3, 4],
+    mobile: true,
+    desktop: false,
+  },
 ];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
@@ -298,7 +334,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 {navItems.map((item) => {
                   if (
                     item.permission.some(
-                      (element) => element === Number(user.role)
+                      (element) => element === Number(user.role) && item.desktop
                     )
                   ) {
                     return (
