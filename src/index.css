@@ -29,10 +29,10 @@
   --baseblack: rgba(0, 0, 0, 1);
   --gray900: rgba(15, 23, 40, 1);
   --main-background-color: #f9fafb;
-  --blue-dark--800: rgba(0, 64, 193, 1);
+  --blue-dark--800: #0040c1;
   --blue-dark--700: rgba(0, 78, 234, 1);
-  --blue700: rgba(23, 92, 211, 1);
-  --blue-dark-600: rgba(21, 93, 238, 1);
+  --blue700: #175cd3;
+  --blue-dark-600: #155dee;
   --haddocks-sweater: rgba(30, 115, 190, 1);
   --main-colorsfresh-blue-of-bel-air: rgba(21, 170, 245, 1);
   --bunting: rgba(22, 22, 81, 0.502);
@@ -97,7 +97,8 @@
 
 .MuiOutlinedInput-root input {
   box-sizing: var(--box-sizing);
-  height: auto;
+  height: -webkit-fill-available;
+  /* height: auto; */
 }
 
 a {
