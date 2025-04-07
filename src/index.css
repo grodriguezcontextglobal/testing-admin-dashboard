@@ -98,7 +98,6 @@
 .MuiOutlinedInput-root input {
   box-sizing: var(--box-sizing);
   height: -webkit-fill-available;
-  /* height: auto; */
 }
 
 a {
@@ -128,7 +127,7 @@ input {
   background: #fff;
   color: #000;
   border: none;
-  height: 0 dvh;
+  height: auto;
   box-sizing: border-box;
 }
 
@@ -195,6 +194,11 @@ button:focus-visible {
 .css-16w1hsz-MuiInputBase-root-MuiOutlinedInput-root {
   box-sizing: border-box;
 }
+
+.photo_input input{
+  height: auto;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
