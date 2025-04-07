@@ -207,8 +207,8 @@ const MainPageQuickGlance = () => {
         style={{
           border: 0,
           background: "none",
-          width:"100%",
-          height:"100%",
+          width: "100%",
+          height: "100%",
           overflow: "hidden",
         }}
         type="button"
@@ -313,7 +313,10 @@ const MainPageQuickGlance = () => {
                 }}
               >
                 <WhitePlusIcon />
-                <p style={BlueButtonText}><WhiteCirclePlusIcon />&nbsp;Add new event</p>
+                <p style={BlueButtonText}>
+                  <WhiteCirclePlusIcon />
+                  &nbsp;Add new event
+                </p>
               </button>
             </Link>
           )}
@@ -379,7 +382,10 @@ const MainPageQuickGlance = () => {
                     <WhitePlusIcon />
                   </span>
                   {/* &nbsp; */}
-                  <p style={BlueButtonText}><WhiteCirclePlusIcon />&nbsp;Add new event</p>
+                  <p style={BlueButtonText}>
+                    <WhiteCirclePlusIcon />
+                    &nbsp;Add new event
+                  </p>
                 </button>
               </Link>
             )}
@@ -481,8 +487,12 @@ const MainPageQuickGlance = () => {
               <div
                 style={{
                   alignSelf: "stretch",
-                  width: "15%",
+                  // width: "35%",
                   margin: "0 1rem 0 0",
+                  height: "auto",
+                  overflow: "hidden",
+                  borderRadius: "50%",
+                  border: "1px solid var(--gray500)",
                 }}
               >
                 <Upload
@@ -494,6 +504,8 @@ const MainPageQuickGlance = () => {
                   onChange={handleUploadImage}
                   style={{
                     backgroundColor: "var(--gray500)",
+                    height: "100%",
+                    width: "100%",
                   }}
                 >
                   {event?.eventInfoDetail?.logo ? (
@@ -502,8 +514,10 @@ const MainPageQuickGlance = () => {
                       alt="avatar"
                       style={{
                         width: "100%",
-                        height: "auto",
-                        zIndex:"-1"
+                        height: "100%",
+                        zIndex: "-1",
+                        objectFit: "cover",
+                        objectPosition: "center",
                       }}
                     />
                   ) : (
