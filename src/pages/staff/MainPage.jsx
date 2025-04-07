@@ -3,20 +3,20 @@ import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import Loading from "../../components/animation/Loading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
-import { WhitePlusIcon } from "../../components/icons/WhitePlusIcon";
+import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
+import { DangerButton } from "../../styles/global/DangerButton";
+import { DangerButtonText } from "../../styles/global/DangerButtonText";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
 import MainAdminSettingPage from "./MainAdminSettingPage";
-import { NewStaffMember } from "./action/NewStaffMember";
-import Loading from "../../components/animation/Loading";
-import { DangerButton } from "../../styles/global/DangerButton";
-import { DangerButtonText } from "../../styles/global/DangerButtonText";
 import DeleteStaffMember from "./action/DeleteStaffMember";
+import { NewStaffMember } from "./action/NewStaffMember";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
@@ -69,7 +69,8 @@ const MainPage = () => {
             lg={9}
           >
             <button style={BlueButton} onClick={() => setModalState(true)}>
-              <WhitePlusIcon />
+              {/* <WhitePlusIcon /> */}
+              <WhiteCirclePlusIcon />
               <p style={{ ...BlueButtonText, textTransform: "none",width:"fit-content" }}>
                 Add new staff
               </p>
