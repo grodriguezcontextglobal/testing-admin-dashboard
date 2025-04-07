@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
+import { message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,11 +21,10 @@ import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
-  const { paymentIntentDetailSelected } = useSelector(
-    (state) => state.stripe
-  );
+  const { paymentIntentDetailSelected } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { choice, event } = useSelector((state) => state.event);
+  const { customer } = useSelector((state) => state.stripe);
   const dispatch = useDispatch();
   const { deviceSetup } = event;
   const [submittedAction, setSubmittedAction] = useState(false);
@@ -79,6 +78,27 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     sortAndFilterDeviceListPerCompanyAndEvent(),
     "device"
   );
+
+  const assignItemEmailNotification = async (props) => {
+    try {
+      await devitrakApi.post("/nodemailer/assignig-device-notification", {
+        consumer: {
+          email: customer.email,
+          firstName: customer.name,
+          lastName: customer.lastName,
+        },
+        devices: [{ ...props.device, paymentIntent: props.paymentIntent }],
+        event: props.eventSelected ?? props.event,
+        transaction: props.paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${props.event_id}&company=${user.companyData.id}`,
+        admin: user.email,
+      });
+      message.success("Assignment email has been sent successfully");
+    } catch (error) {
+      message.error(`There was an error. ${error}`);
+    }
+  };
 
   const retrieveDeviceInfoSetInEventForConsumers = () => {
     const sortInventory = groupBy(
@@ -291,6 +311,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
             "devices are being added, they will be displayed shortly."
           );
           setValue("serialNumber", "");
+          await assignItemEmailNotification(template.render());
           setSubmittedAction(false);
         }
       }
