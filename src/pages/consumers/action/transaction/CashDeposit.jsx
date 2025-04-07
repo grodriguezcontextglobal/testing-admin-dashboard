@@ -74,8 +74,8 @@ const CashDeposit = ({
           deviceType: deviceInfToStoreParsed.group,
           deviceValue:
             deviceInfToStoreParsed.value.length > 0
-              ? deviceInfToStoreParsed.value
-              : "0",
+              ? Number(deviceInfToStoreParsed.value)
+              : 0,
           deviceNeeded: totalDeviceAssigned,
         };
         const transactionProfile = {
