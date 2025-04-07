@@ -155,6 +155,22 @@ const Form = () => {
     }
   };
 
+  const tagStyles = {
+    ...CenteringGrid,
+    borderRadius: "8px",
+    border: "1px solid var(--gray-300, #D0D5DD)",
+    background: "var(--gray-100, #F2F4F7)",
+    color: "var(--danger-action)",
+    padding: "4px 8px",
+    width: "fit-content",
+  };
+
+  const cardBackgroundStyles = {
+    borderRadius: "8px",
+    border: "1px solid var(--gray-300, #D0D5DD)",
+    background: "var(--gray-100, #F2F4F7)",
+    padding: "24px",
+  };
   return (
     <Grid
       display={"flex"}
@@ -188,12 +204,7 @@ const Form = () => {
             alignItems={"flex-start"}
             alignSelf={"stretch"}
             gap={"24px"}
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              background: "var(--gray-100, #F2F4F7)",
-              padding: "24px",
-            }}
+            style={cardBackgroundStyles}
             item
             xs={12}
           >
@@ -296,10 +307,7 @@ const Form = () => {
             alignSelf={"stretch"}
             gap={"24px"}
             style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              background: "var(--gray-100, #F2F4F7)",
-              padding: "24px",
+              ...cardBackgroundStyles,
               width: "100%",
             }}
             item
@@ -335,19 +343,10 @@ const Form = () => {
                         </div>{" "}
                         <button
                           type="button"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            borderRadius: "8px",
-                            border: "1px solid var(--gray-300, #D0D5DD)",
-                            background: "var(--gray-100, #F2F4F7)",
-                            color: "var(--danger-action)",
-                            padding: "4px 8px",
-                            width: "fit-content",
-                          }}
+                          style={tagStyles}
                           onClick={() => handleDeleteMember(index)}
                         >
-                          x
+                          X
                         </button>
                       </div>
                       <EmailIcon /> {member.email}
@@ -371,10 +370,7 @@ const Form = () => {
             alignSelf={"stretch"}
             gap={"24px"}
             style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              background: "var(--gray-100, #F2F4F7)",
-              padding: "24px",
+              ...cardBackgroundStyles,
               width: "100%",
             }}
             item
@@ -410,16 +406,7 @@ const Form = () => {
                         </div>{" "}
                         <button
                           type="button"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            borderRadius: "8px",
-                            border: "1px solid var(--gray-300, #D0D5DD)",
-                            background: "var(--gray-100, #F2F4F7)",
-                            color: "var(--danger-action)",
-                            padding: "4px 8px",
-                            width: "fit-content",
-                          }}
+                          style={tagStyles}
                           onClick={() =>
                             handleHeadsetAttendeeDeleteMember(index)
                           }
@@ -443,18 +430,17 @@ const Form = () => {
               margin: "3dvh 0",
             }}
           >
-            <Icon
-              icon="ic:baseline-plus"
-              color={"var(--blue-dark-800, #0040C1)"}
-              width={20}
-              height={20}
-            />
-            &nbsp;
             <Typography
               style={{ ...LightBlueButtonText, textTransform: "none" }}
             >
-              {" "}
-              Save and add more staff
+              {/* {" "} */}
+              <Icon
+                icon="ic:baseline-plus"
+                color={"var(--blue-dark-800, #0040C1)"}
+                width={20}
+                height={20}
+              />
+              &nbsp; Save and add more staff
             </Typography>
           </Button>
           <Button
