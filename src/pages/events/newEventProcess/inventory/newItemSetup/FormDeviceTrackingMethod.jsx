@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Button,
+  Chip,
   Grid,
   InputAdornment,
   InputLabel,
@@ -283,6 +284,7 @@ const FormDeviceTrackingMethod = ({
       // }
     }
   };
+  
   const handleMoreInfoPerDevice = () => {
     const result = [...moreInfo, { keyObject, valueObject }];
     setKeyObject("");
@@ -324,6 +326,12 @@ const FormDeviceTrackingMethod = ({
       </>
     );
   };
+
+  const handleRemoveItem = (props) => {
+    const result = moreInfo.filter((_, index) => index !== props);
+    return setMoreInfo(result);
+  };
+
   return (
     <Grid
       display={"flex"}
@@ -854,44 +862,30 @@ const FormDeviceTrackingMethod = ({
           </Grid>
         </Grid>
         <Divider />
-        <button
-          type="button"
+        <Button
+          htmlType="button"
           onClick={() => setMoreInfoDisplay(true)}
           style={{
-            ...CenteringGrid,
-            width: "100%",
+            ...BlueButton,
             border: `1px solid ${
               loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
             }`,
-            borderRadius: "8px",
             background: `${
               loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
             }`,
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            padding: "6px 12px",
-            cursor: "pointer",
+            width: "100%",
           }}
         >
-          <Icon
-            icon="ic:baseline-plus"
-            color="var(--base-white, #FFF)"
-            width={20}
-            height={20}
-          />
-          &nbsp;
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--base-white, #FFF)",
-              fontSize: "14px",
-              fontWeight: "600",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
-            Add more information
+          <Typography textTransform={"none"} style={BlueButtonText}>
+            <Icon
+              icon="ic:baseline-plus"
+              color="var(--base-white, #FFF)"
+              width={20}
+              height={20}
+            />
+            &nbsp; Add more information
           </Typography>
-        </button>
+        </Button>
         {moreInfoDisplay && (
           <div
             style={{
@@ -916,6 +910,7 @@ const FormDeviceTrackingMethod = ({
               onChange={(e) => setValueObject(e.target.value)}
             />
             <Button
+              htmlType="button"
               onClick={() => handleMoreInfoPerDevice()}
               style={{ ...BlueButton, ...CenteringGrid }}
             >
@@ -938,8 +933,10 @@ const FormDeviceTrackingMethod = ({
           }}
         >
           {moreInfo.length > 0 &&
-            moreInfo.map((item) => (
-              <div
+            moreInfo.map((item, index) => (
+              <Chip
+                onDelete={() => handleRemoveItem(index)}
+                key={`${item.keyObject}-${item.valueObject}`}
                 style={{
                   backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
@@ -947,10 +944,10 @@ const FormDeviceTrackingMethod = ({
                   border: "solid 0.1px var(--gray900)",
                   borderRadius: "8px",
                 }}
-                key={`${item.keyObject}-${item.valueObject}`}
-              >
-                {item.keyObject}:{item.valueObject}
-              </div>
+                label={`${item.keyObject}:${item.valueObject}`}
+              />
+              //   {item.keyObject}:{item.valueObject}
+              // </Chip>
             ))}
         </div>
         <Divider />
@@ -965,48 +962,33 @@ const FormDeviceTrackingMethod = ({
             gap: "10px",
           }}
         >
-          <div
+          <Button
+            disabled={loading}
+            onClick={() => setDisplayFormToCreateCategory(false)}
+            style={{ ...GrayButton, width: "100%" }}
+          >
+            <Typography textTransform={"none"} style={GrayButtonText}>
+              Go back
+            </Typography>
+          </Button>
+          <Button
+            disabled={loading}
+            type="submit"
             style={{
-              textAlign: "left",
-              width: "50%",
+              ...BlueButton,
+              width: "100%",
             }}
           >
-            <Button
-              disabled={loading}
-              onClick={() => setDisplayFormToCreateCategory(false)}
-              style={{ ...GrayButton, width: "100%" }}
-            >
-              <Typography textTransform={"none"} style={GrayButtonText}>
-                Go back
-              </Typography>
-            </Button>
-          </div>
-          <div
-            style={{
-              textAlign: "right",
-              width: "50%",
-            }}
-          >
-            <Button
-              disabled={loading}
-              type="submit"
-              style={{
-                ...BlueButton,
-                width: "100%",
-              }}
-            >
+            <Typography textTransform={"none"} style={BlueButtonText}>
               <Icon
                 icon="ic:baseline-plus"
                 color="var(--base-white, #FFF)"
                 width={20}
                 height={20}
               />
-              &nbsp;
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Save new item
-              </Typography>
-            </Button>
-          </div>
+              &nbsp; Save new item
+            </Typography>
+          </Button>
         </div>
       </form>
       {openReturnDateModal && (
