@@ -2,20 +2,21 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-import AssigmentAction from "../AssigmentAction";
-import NotesRendering from "../NotesCard";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { Link, useNavigate } from "react-router-dom";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CardRendered from "../../../inventory/utils/CardRendered";
+import AssigmentAction from "../AssigmentAction";
+import CardActionsButton from "../CardActionsButton";
 import ConsumerDetailInformation from "../ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "../ConsumerDetailinfoContact";
-import CardActionsButton from "../CardActionsButton";
-import CardRendered from "../../../inventory/utils/CardRendered";
-import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
+import NotesRendering from "../NotesCard";
 
 const CustomerHeader = () => {
   const { customer } = useSelector((state) => state.customer);
@@ -74,20 +75,13 @@ const CustomerHeader = () => {
                 ...CenteringGrid,
               }}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF"
-                width={20}
-                height={20}
-              />
-              &nbsp;
               <Typography
                 textTransform={"none"}
                 style={{
                   ...BlueButtonText,
                 }}
               >
-                Add new event
+                <WhiteCirclePlusIcon />&nbsp;Add new event
               </Typography>
             </Button>
           </Link>

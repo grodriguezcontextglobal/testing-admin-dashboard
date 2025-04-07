@@ -25,11 +25,12 @@ import CardActionsButton from "./components/CardActionsButton";
 import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
 import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 // import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
+import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
+import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
 import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
-import { groupBy } from "lodash";
 
 const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
@@ -175,20 +176,13 @@ const DetailPerConsumer = () => {
                   ...CenteringGrid,
                 }}
               >
-                <Icon
-                  icon="ic:baseline-plus"
-                  color="var(--base-white, #FFF"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
                 <Typography
                   textTransform={"none"}
                   style={{
                     ...BlueButtonText,
                   }}
                 >
-                  Add new event
+                  <WhiteCirclePlusIcon />&nbsp;Add new event
                 </Typography>
               </Button>
             </Link>

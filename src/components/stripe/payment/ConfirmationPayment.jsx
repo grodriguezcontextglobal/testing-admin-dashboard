@@ -20,7 +20,10 @@ import FormatToDisplayDetail from "../../components/admin/Attendees/quickGlanceP
 import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
 import "../../style/pages/admin/confirmedPaymentAdmin.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import DeviceAssigned from "../../../classes/deviceAssigned";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { WhiteCirclePlusIcon } from "../../icons/WhiteCirclePlusIcon";
+// import DeviceAssigned from "../../../classes/deviceAssigned";
 const ConfirmationPaymentPage = () => {
   const { event } = useSelector((state) => state.event);
   const { deviceSelection, deviceSelectionPaidTransaction } = useSelector(
@@ -117,13 +120,14 @@ const ConfirmationPaymentPage = () => {
         countingPerDeviceGroup[data.group] = {
           deviceNeeded: 1,
           deviceType: data.group,
-          deviceValue: data.value,
+          deviceValue: Number(data.value),
         };
       } else {
         countingPerDeviceGroup[data.group].deviceNeeded += 1;
       }
     }
-    for (let [key, value] of Object.entries(countingPerDeviceGroup)) {
+    // eslint-disable-next-line no-unused-vars
+    for (let [_, value] of Object.entries(countingPerDeviceGroup)) {
       finalFormat.add({ ...value });
     }
     return Array.from(finalFormat);
@@ -144,6 +148,7 @@ const ConfirmationPaymentPage = () => {
           eventSelected: event.eventInfoDetail.eventName,
           provider: event.company,
           user: customer.email,
+          event_id: event.id,
         });
       }
       return (ref.current = false);
@@ -171,7 +176,8 @@ const ConfirmationPaymentPage = () => {
     return [];
   };
   checkIfDeviceIsInUsed();
-  const createDevicesInPool = useMemo(async () => {
+  // const createDevicesInPool =
+  useMemo(async () => {
     if (checkIfDeviceIsInUsed().length > 0) {
       const groupingByDevice = groupBy(checkIfDeviceIsInUsed(), "device");
       for (let data of deviceSelectionPaidTransaction) {
@@ -187,7 +193,8 @@ const ConfirmationPaymentPage = () => {
     }
   }, [payment_intent, checkIfDeviceIsInUsed().length]); /// eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveTransaction = useMemo(async () => {
+  // const saveTransaction =
+  useMemo(async () => {
     const resp = await devitrakApi.post("/stripe/stripe-transaction-admin", {
       paymentIntent: payment_intent,
       clientSecret,
@@ -204,6 +211,7 @@ const ConfirmationPaymentPage = () => {
         consumerInfo: customer,
         provider: event.company,
         eventSelected: event.eventInfoDetail.eventName,
+        event_id: event.id,
         date: new Date(),
       };
       await devitrakApi.post("/stripe/save-transaction", transactionProfile);
@@ -220,10 +228,7 @@ const ConfirmationPaymentPage = () => {
         ref.current = true;
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: NoticePaymentTransactionConfirmed.js:54 ~ confirmPaymentIntent ~ error:",
-        error
-      );
+      return null;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -317,31 +322,13 @@ const ConfirmationPaymentPage = () => {
             <Link to="/create-event-page/event-detail">
               <Button
                 style={{
+                  ...BlueButton,
                   width: "fit-content",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  borderRadius: "8px",
-                  background: "var(--blue-dark-600, #155EEF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
                 }}
               >
-                <Icon
-                  icon="ic:baseline-plus"
-                  color="var(--base-white, #FFF"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
-                <Typography
-                  textTransform={"none"}
-                  style={{
-                    color: "var(--base-white, #FFF",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
-                  }}
-                >
-                  Add new event
+                <Typography textTransform={"none"} style={BlueButtonText}>
+                  <WhiteCirclePlusIcon />
+                  &nbsp;Add new event
                 </Typography>
               </Button>
             </Link>

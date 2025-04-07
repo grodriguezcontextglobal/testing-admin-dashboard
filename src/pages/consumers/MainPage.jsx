@@ -246,13 +246,6 @@ const MainPage = () => {
           lg={10}
         >
           <Button onClick={() => setCreateUserButton(true)} style={BlueButton}>
-            <Icon
-              icon="ic:baseline-plus"
-              color="var(--base-white, #FFF"
-              width={20}
-              height={20}
-            />
-            &nbsp;
             <Typography textTransform={"none"} style={BlueButtonText}>
               Add new consumer
             </Typography>

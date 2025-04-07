@@ -1,15 +1,15 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { Button, Divider } from "antd";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import RenderingConsumersChartsBehavior from "./RenderingConsumersChartsBehavior";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import RenderingConsumersChartsBehavior from "./RenderingConsumersChartsBehavior";
 
 const ConsumerHeader = ({
   setCreateUserButton,
@@ -48,15 +48,8 @@ const ConsumerHeader = ({
           xs={6}
         >
           <Button onClick={() => setCreateUserButton(true)} style={BlueButton}>
-            <Icon
-              icon="ic:baseline-plus"
-              color="var(--base-white, #FFF"
-              width={20}
-              height={20}
-            />
-            &nbsp;
             <Typography textTransform={"none"} style={BlueButtonText}>
-              Add new consumer
+              <WhiteCirclePlusIcon />&nbsp;Add new consumer
             </Typography>
           </Button>
         </Grid>

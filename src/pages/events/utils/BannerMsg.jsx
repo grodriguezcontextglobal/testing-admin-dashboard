@@ -1,10 +1,10 @@
-import { Grid, Typography, Button } from "@mui/material";
-import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
+import { Button, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import { Title } from "../../../styles/global/Title";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { Title } from "../../../styles/global/Title";
 
 const BannerMsg = () => {
   return (
@@ -40,11 +40,13 @@ const BannerMsg = () => {
           assign devices to consumers, collect retain deposits, collect fees for
           damaged devices, and keep track of your full inventory.
         </Typography>
-            {/* /event/new_subscription */}
-            <Link to="/create-event-page/event-detail">
+        {/* /event/new_subscription */}
+        <Link to="/create-event-page/event-detail">
           <Button style={BlueButton}>
-            <WhitePlusIcon />
-            <Typography style={BlueButtonText}>Add new event</Typography>
+            <Typography style={BlueButtonText}>
+              <WhiteCirclePlusIcon />
+              &nbsp;Add new event
+            </Typography>
           </Button>
         </Link>
       </Grid>

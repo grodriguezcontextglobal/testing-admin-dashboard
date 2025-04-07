@@ -37,6 +37,7 @@ import EditingServiceInEvent from "./inventory/action/components/EditingServiceI
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -206,6 +207,9 @@ const MainPageQuickGlance = () => {
         style={{
           border: 0,
           background: "none",
+          width:"100%",
+          height:"100%",
+          overflow: "hidden",
         }}
         type="button"
       >
@@ -309,7 +313,7 @@ const MainPageQuickGlance = () => {
                 }}
               >
                 <WhitePlusIcon />
-                <p style={BlueButtonText}>Add new event</p>
+                <p style={BlueButtonText}><WhiteCirclePlusIcon />&nbsp;Add new event</p>
               </button>
             </Link>
           )}
@@ -375,7 +379,7 @@ const MainPageQuickGlance = () => {
                     <WhitePlusIcon />
                   </span>
                   {/* &nbsp; */}
-                  <p style={BlueButtonText}>Add new event</p>
+                  <p style={BlueButtonText}><WhiteCirclePlusIcon />&nbsp;Add new event</p>
                 </button>
               </Link>
             )}
@@ -498,6 +502,8 @@ const MainPageQuickGlance = () => {
                       alt="avatar"
                       style={{
                         width: "100%",
+                        height: "auto",
+                        zIndex:"-1"
                       }}
                     />
                   ) : (
