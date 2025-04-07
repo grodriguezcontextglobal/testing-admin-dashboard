@@ -1,4 +1,4 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
+import { Grid, InputLabel } from "@mui/material";
 import { useSelector } from "react-redux";
 
 const Event = () => {
@@ -15,6 +15,28 @@ const Event = () => {
   };
   const formatter = new Intl.DateTimeFormat("en-US", options);
   const address = eventInfoDetail?.address?.split(" ");
+  const styleTitle = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "20px",
+    fontStyle: "normal",
+    fontWeight: 600,
+    lineHeight: "30px",
+    color: "var(--gray-600, #475467)",
+    alignSelf: "stretch",
+  };
+
+  const inputValueStyle = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "16px",
+    fontStyle: "normal",
+    fontWeight: 400,
+    lineHeight: "24px",
+    color: "var(--gray-600, #475467)",
+  };
   return (
     <Grid
       display={"flex"}
@@ -32,63 +54,19 @@ const Event = () => {
         xs={12}
       >
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Event name
-          </Typography>
+          <h1 style={styleTitle}>Event name</h1>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"24px"}
-            color={"var(--gray-600, #475467)"}
-          >
-            {eventInfoDetail.eventName}
-          </Typography>
+          <h4 style={inputValueStyle}>{eventInfoDetail.eventName}</h4>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Main point of contact
-          </Typography>
+          <h1 style={styleTitle}>Main point of contact</h1>
         </InputLabel>
         <InputLabel
           id="eventName"
           style={{ marginBottom: "0.2rem", width: "100%" }}
         >
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"24px"}
-            color={"var(--gray-600, #475467)"}
-          >
+          <h4 style={inputValueStyle}>
             {contactInfo.name}
             <br />
             {contactInfo.email}
@@ -101,100 +79,38 @@ const Event = () => {
                 </span>
               );
             })}
-          </Typography>
+          </h4>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Date of the event
-          </Typography>
+          <h1 style={styleTitle}>Date of the event</h1>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"24px"}
-            color={"var(--gray-600, #475467)"}
-          >
+          <h4 style={inputValueStyle}>
+            {" "}
             Start: {`${formatter.format(new Date(eventInfoDetail.dateBegin))}`}
             <br />
             End: {`${formatter.format(new Date(eventInfoDetail.dateEnd))}`}
-          </Typography>
+          </h4>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Location of the event
-          </Typography>
+          <h1 style={styleTitle}>Location of the event</h1>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"24px"}
-            color={"var(--gray-600, #475467)"}
-          >
+          <h4 style={inputValueStyle}>
             {eventInfoDetail.floor}
             <br />
             {address.slice(0, -3).toString().replaceAll(",", " ")}
             <br />
             {address.at(-3)} {address.at(-2)} {address.at(-1)}
-          </Typography>
+          </h4>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={600}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
-            alignSelf={"stretch"}
-          >
-            Will this event need a merchant service?
-          </Typography>
+          <h1 style={styleTitle}>Will this event need a merchant service?</h1>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"16px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"24px"}
-            color={"var(--gray-600, #475467)"}
-          >
+          <h4 style={inputValueStyle}>
             {eventInfoDetail.merchant ? "Yes" : "No"}
-          </Typography>
+          </h4>
         </InputLabel>
       </Grid>
     </Grid>
