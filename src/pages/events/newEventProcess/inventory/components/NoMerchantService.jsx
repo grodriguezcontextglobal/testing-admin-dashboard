@@ -111,10 +111,9 @@ const NoMerchantService = ({
               width: "100%",
             }}
           >
-            <RectangleBluePlusIcon />
-            &nbsp;
             <Typography textTransform="none" style={LightBlueButtonText}>
-              Add item
+              <RectangleBluePlusIcon />
+              &nbsp; Add item
             </Typography>
           </Button>
         </Grid>

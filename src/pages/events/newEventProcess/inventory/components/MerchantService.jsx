@@ -44,13 +44,13 @@ const MerchantService = ({
       >
         <Grid item xs={6} sm={6} md={6} lg={6}>
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-          <Checkbox
-          style={{width: "100%", textAlign: "left"}}
-            onChange={(e) => setAssignAllDevices(e.target.checked)}
-            value={assignAllDevices}
-          >
-            <p style={Subtitle}>Assign all</p>
-          </Checkbox>
+            <Checkbox
+              style={{ width: "100%", textAlign: "left" }}
+              onChange={(e) => setAssignAllDevices(e.target.checked)}
+              value={assignAllDevices}
+            >
+              <p style={Subtitle}>Assign all</p>
+            </Checkbox>
           </InputLabel>
         </Grid>
       </Grid>
@@ -137,10 +137,9 @@ const MerchantService = ({
             width: "100%",
           }}
         >
-          <RectangleBluePlusIcon />
-          &nbsp;
           <Typography textTransform="none" style={LightBlueButtonText}>
-            Add item
+            <RectangleBluePlusIcon />
+            &nbsp; Add item
           </Typography>
         </Button>
       </Grid>
