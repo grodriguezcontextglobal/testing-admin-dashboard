@@ -20,7 +20,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import "./Body.css";
 import { useRef, useState } from "react";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
-
+// import "../../../../index.css";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -563,6 +563,7 @@ const Body = () => {
                   {...register("photo")}
                   id="file-upload"
                   type="file"
+                  className="photo_input"
                   accept=".jpeg, .png, .jpg"
                   style={{
                     outline: "none",

@@ -319,6 +319,7 @@ const EditProfileModal = ({ editProfile, setEditProfile }) => {
               {...register("image")}
               id="file-upload"
               type="file"
+              className="photo_input"
               accept=".jpeg, .png, .jpg"
               prefix="File size 1MB max"
               style={{

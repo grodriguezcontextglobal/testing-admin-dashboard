@@ -1036,6 +1036,7 @@ const AddNewBulkItems = () => {
               {...register("photo")}
               id="file-upload"
               type="file"
+              className="photo_input"
               accept=".jpeg, .png, .jpg"
               style={{
                 outline: "none",

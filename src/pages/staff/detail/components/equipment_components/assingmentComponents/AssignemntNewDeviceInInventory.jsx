@@ -315,8 +315,7 @@ const AssignemntNewDeviceInInventory = () => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      console.log("🚀 ~ createEvent ~ error:", error);
-    }
+      return null    }
   };
 
   const addDeviceToEvent = async (props) => {
@@ -934,6 +933,7 @@ const AssignemntNewDeviceInInventory = () => {
               {...register("photo")}
               id="file-upload"
               type="file"
+              className="photo_input"
               accept=".jpeg, .png, .jpg"
               style={{
                 outline: "none",
