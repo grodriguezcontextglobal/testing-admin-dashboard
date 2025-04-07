@@ -146,8 +146,8 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
         let deviceInfToStoreParsed = JSON.parse(deviceSelection);
         let deviceSelectedOption = {
           deviceType: deviceInfToStoreParsed.group,
-          deviceValue: deviceInfToStoreParsed.value,
-          deviceNeeded: totalDeviceAssigned,
+          deviceValue: Number(deviceInfToStoreParsed.value),
+          deviceNeeded: Number(totalDeviceAssigned),
         };
         const transactionProfile = {
           paymentIntent: reference.current,

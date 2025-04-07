@@ -156,7 +156,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           let deviceInfToStoreParsed = JSON.parse(deviceSelection);
           let deviceSelectedOption = {
             deviceType: deviceInfToStoreParsed.group,
-            deviceValue: deviceInfToStoreParsed.value,
+            deviceValue: Number(deviceInfToStoreParsed.value),
             deviceNeeded: 1,
           };
           const transactionProfile = {
