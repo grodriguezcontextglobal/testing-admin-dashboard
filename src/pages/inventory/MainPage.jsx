@@ -10,9 +10,10 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { BluePlusIcon } from "../../components/icons/BluePlusIcon";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
+import { EditIcon } from "../../components/icons/EditIcon";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
+import { RectangleBluePlusIcon } from "../../components/icons/RectangleBluePlusIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import "../../styles/global/ant-select.css";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -141,8 +142,19 @@ const MainPage = () => {
           >
             <Link to="/inventory/edit-group">
               <button style={{ ...LightBlueButton, width: "fit-content" }}>
-                <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                  Update a group of device
+                <p
+                  style={{
+                    ...LightBlueButtonText,
+                    textTransform: "none",
+                    gap: "2px",
+                  }}
+                >
+                  <EditIcon
+                    stroke={"var(--blue-dark--800)"}
+                    width={"18"}
+                    height={"18"}
+                  />
+                  &nbsp;Update a group of device
                 </p>
               </button>
             </Link>
@@ -159,7 +171,8 @@ const MainPage = () => {
             </Link>
             <Link to="/inventory/new-item">
               <button style={{ ...LightBlueButton, width: "fit-content" }}>
-                <BluePlusIcon />
+              <RectangleBluePlusIcon />
+              {/* <BluePlusIcon /> */}
                 &nbsp;
                 <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
                   Add one device
@@ -184,8 +197,19 @@ const MainPage = () => {
         >
           <Link to="/inventory/edit-group">
             <button style={{ ...LightBlueButton, width: "fit-content" }}>
-              <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                Update a group of device
+              <p
+                style={{
+                  ...LightBlueButtonText,
+                  textTransform: "none",
+                  gap: "2px",
+                }}
+              >
+                <EditIcon
+                  stroke={"var(--blue-dark--800)"}
+                  width={"21"}
+                  height={"18"}
+                />
+                &nbsp;Update a group of device
               </p>
             </button>
           </Link>
@@ -200,10 +224,10 @@ const MainPage = () => {
           </Link>
           <Link to="/inventory/new-item">
             <button style={{ ...LightBlueButton, width: "fit-content" }}>
-              <BluePlusIcon />
-              &nbsp;
               <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                Add one device
+                {/* <BluePlusIcon /> */}
+                <RectangleBluePlusIcon />
+                &nbsp; Add one device
               </p>
             </button>
           </Link>
