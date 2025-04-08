@@ -151,7 +151,7 @@ const MainPage = () => {
                 >
                   <EditIcon
                     stroke={"var(--blue-dark--800)"}
-                    width={"18"}
+                    width={"20"}
                     height={"18"}
                   />
                   &nbsp;Update a group of device
