@@ -88,7 +88,7 @@ const AssignStaffMemberToEvent = () => {
             JSON.parse(data.event).eventInfoDetail.eventName
           }`
         );
-        devitrakApi.post("cache_update/remove-cache", {
+        devitrakApi.post("/cache_update/remove-cache", {
           key: `event_staff_info=${JSON.parse(data.event).id}`,
         });
         return navigate(`/staff/${profile.adminUserInfo.id}/main`);
