@@ -83,7 +83,7 @@ const Body = () => {
           password: data.password1,
         });
         if ((await resp).data) {
-          openNotificationWithIcon("success", "Password updated!");
+          openNotificationWithIcon("Success", "Password updated!");
           dispatch(onLogout());
           return window.location.reload(true);
         }

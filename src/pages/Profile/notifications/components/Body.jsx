@@ -90,7 +90,7 @@ const Body = () => {
       eventReminder: eventsReminders,
     });
     if (resp.data) {
-      openNotificationWithIcon("success");
+      openNotificationWithIcon("Success");
       dispatch(
         onLogin({
           ...user,
