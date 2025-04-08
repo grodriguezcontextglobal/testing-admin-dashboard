@@ -7,6 +7,7 @@ import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceS
 import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
 import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
 import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCreditCard";
+import NewPost from "../../pages/posts/action/NewPost";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -171,6 +172,8 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
     "../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"
   )
 );
+
+const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -187,7 +190,11 @@ const AuthRoutes = () => {
         }
       >
         <div
-          style={{ minWidth: "768px", maxWidth: "1228px", margin: "auto auto 0" }}
+          style={{
+            minWidth: "768px",
+            maxWidth: "1228px",
+            margin: "auto auto 0",
+          }}
         >
           <Routes>
             <Route path="/" element={<ParentRenderingChildrenPage />}>
@@ -354,6 +361,9 @@ const AuthRoutes = () => {
                 element={<ConfirmSubscription />}
               />
 
+              <Route path="posts" element={<MainPagePosts />} />
+              <Route path="posts/new-post" element={<NewPost />} />
+              <Route path="posts/post/:id" element={<MainPagePosts />} />
               <Route path="login" element={<RedirectionPage />} />
               <Route
                 path="register/company-setup"
