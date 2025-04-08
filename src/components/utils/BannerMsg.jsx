@@ -23,6 +23,9 @@ const BannerMsg = ({ props }) => {
         alignItems={"center"}
         item
         xs={10}
+        sm={10}
+        md={9}
+        lg={9}
       >
         <p style={Title}>{props.title}</p>
         <p
