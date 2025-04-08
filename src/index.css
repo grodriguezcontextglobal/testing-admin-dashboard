@@ -129,6 +129,8 @@ input {
   border: none;
   height: auto;
   box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+  
 }
 
 input::placeholder {
