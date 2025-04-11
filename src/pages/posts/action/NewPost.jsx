@@ -1,9 +1,12 @@
 import { Grid, OutlinedInput, styled } from "@mui/material";
-import { Button, Select } from "antd";
-import { createContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button, message, Select } from "antd";
+import { createContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../styles/global/DangerButton";
@@ -11,10 +14,10 @@ import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import ImageUploaderUX from "../components/image/ImageUploaderUX";
 import "../style/rooter.css";
-import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { useSelector } from "react-redux";
-import { useQuery } from "@tanstack/react-query";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import { useNavigate } from "react-router-dom";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
 export const ImageUploaderContext = createContext();
 
@@ -45,7 +48,9 @@ const NewPost = () => {
   const [value, setValue] = useState("");
   const [eventList, setEventList] = useState([]);
   const [assignedEvent, setAssignedEvent] = useState([]);
+  const [isLoadingState, setIsLoadingState] = useState(false);
   const { user } = useSelector((state) => state.admin);
+  const imageUploadedRef = useRef(null);
   const eventsCompanyList = useQuery({
     queryKey: ["eventsCompanyList"],
     queryFn: () =>
@@ -54,6 +59,7 @@ const NewPost = () => {
       }),
     refetchOnMount: false,
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -105,27 +111,91 @@ const NewPost = () => {
     toolbar: toolbarOptions,
   };
 
-  const onSubmit = (data) => {
-    console.log("data", {
-      ...data,
-      image: imageUploadedValue,
-      description: value,
-      displayed_in: [ ...assignedEvent],
-    });
+  const onSubmit = async (data) => {
+    try {
+      setIsLoadingState(true);
+      if (assignedEvent.length < 1) {
+        setIsLoadingState(false);
+        return alert("Please select at least one event");
+      }
+      if (
+        imageUploadedRef.current !== null &&
+        imageUploadedRef.current.length > 0 &&
+        imageUploadedRef.current[0].size > 3145728
+      ) {
+        setIsLoadingState(false);
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
+      }
+      imageUploadedRef.current = imageUploadedValue;
+      const template = {
+        title: data.title,
+        subtitle: data.subtitle,
+        description: value,
+        displayed_in: [...assignedEvent],
+        media: {
+          cover: "",
+          content: [],
+        },
+        company_id: user.companyData.id,
+        published: true,
+        published_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_for: user.id,
+        updated_for: user.id,
+      };
+      const response = await devitrakApi.post("/post/new-post", template);
+      if (response.data) {
+        if (imageUploadedRef.current !== null && imageUploadedRef.current?.length > 0) {
+          const mediaUrl = await convertToBase64(imageUploadedRef.current[0]);
+          const savedPostID = response.data.post.id;
+          const mediaUploader = new ImageUploaderFormat(
+            mediaUrl,
+            user.companyData.id,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            savedPostID
+          );
+          const coverMediaArticleCompany = await devitrakApi.post(
+            "/cloudinary/upload-image",
+            mediaUploader.article_media_uploader()
+          );
+
+          const template = {
+            ...response.data.post,
+            media: {
+              cover: coverMediaArticleCompany.data.imageUploaded.secure_url,
+              content: [...response.data.post.media.content],
+            },
+          };
+          await devitrakApi.patch(`/post/post-update/${savedPostID}`, template);
+          setIsLoadingState(false);
+          return navigate("/posts");
+        }
+        setIsLoadingState(false);
+        return navigate("/posts");
+      }
+    } catch (error) {
+      setIsLoadingState(false);
+      return message.error(error);
+    }
   };
 
   const onChange = (value) => {
-    console.log("value", value);
     if (value.some((item) => item === 0)) {
-      console.log("all events");
-      return setAssignedEvent([ ...eventList.map((item) => item.id)]);
+      return setAssignedEvent([...eventList.map((item) => item.id)]);
     }
     return setAssignedEvent(value);
   };
 
-  console.log("assignedEvent", assignedEvent);
   return (
-    <Grid container spacing={2}>
+    <Grid container>
       {/* Header */}
       <Grid
         item
@@ -133,15 +203,16 @@ const NewPost = () => {
         sm={12}
         md={6}
         lg={6}
-      sx={{ display: "flex", justifyContent: "flex-start", mb: 2 }}
+        padding={0}
+        sx={{ display: "flex", justifyContent: "flex-start", mb: 2, padding: 0 }}
       >
-        <h1>New article</h1>
+        <h1 style={TextFontSize30LineHeight38}>New article</h1>
       </Grid>
 
       {/* Image uploader */}
-      <ImageUploaderContext.Provider value={setImageUploadedValue}>
-        <ImageUploaderUX />
-      </ImageUploaderContext.Provider>
+      {/* <ImageUploaderContext.Provider value={{setImageUploadedValue}}> */}
+        <ImageUploaderUX CSS={stylingLabel} setImageUploadedValue={setImageUploadedValue}/>
+      {/* </ImageUploaderContext.Provider> */}
       {/* <Grid paddingLeft={0} item xs={12} id="image-uploader">
       </Grid> */}
 
@@ -163,6 +234,8 @@ const NewPost = () => {
           <h1 style={stylingLabel}>Title</h1>
           <div style={stylingLabel}>
             <OutlinedInput
+              required
+              type="text"
               {...register("title")}
               style={{ ...OutlinedInputStyle, width: "100%" }}
             />
@@ -182,6 +255,8 @@ const NewPost = () => {
           <h1 style={stylingLabel}>Subtitle</h1>
           <div style={stylingLabel}>
             <OutlinedInput
+              required
+              type="text"
               {...register("subtitle")}
               style={{ ...OutlinedInputStyle, width: "100%" }}
             />
@@ -200,18 +275,38 @@ const NewPost = () => {
           <h1 style={stylingLabel}>Event where post will be published</h1>
           <div style={stylingLabel}>
             <Select
-              className="custom-autocomplete"
+              className="custom-autocomplete-selector"
               showSearch
               mode="multiple"
               allowClear
-              placeholder="Select event where post will be published"
               optionFilterProp="children"
-              style={{ ...AntSelectorStyle, width: "100%" }}
+              style={{ width: "100%" }}
               onChange={onChange}
               options={[
                 {
                   value: 0,
-                  label: "All events",
+                  label: (
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: "#000",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          lineHeight: "20px",
+                          marginBottom: "0px",
+                        }}
+                      >
+                        All events
+                      </p>
+                    </div>
+                  ),
                 },
                 ...eventList.map((item) => ({
                   value: item.id,
@@ -258,10 +353,14 @@ const NewPost = () => {
             gap: "15px",
           }}
         >
-          <Button style={DangerButton} htmlType="reset">
+          <Button
+            style={DangerButton}
+            htmlType="reset"
+            onClick={() => navigate("/posts")}
+          >
             <p style={DangerButtonText}>Cancel</p>
           </Button>
-          <Button htmlType="submit" style={BlueButton}>
+          <Button loading={isLoadingState} htmlType="submit" style={BlueButton}>
             <p style={BlueButtonText}>Submit</p>
           </Button>
         </div>
