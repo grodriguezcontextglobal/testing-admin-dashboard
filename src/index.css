@@ -28,6 +28,9 @@
   --gray-background: #fafafa;
   --baseblack: rgba(0, 0, 0, 1);
   --gray900: rgba(15, 23, 40, 1);
+  --gray-900: rgba(15, 23, 40, 1);
+  --Gray-900: rgba(15, 23, 40, 1);
+  --Gray900: rgba(15, 23, 40, 1);
   --main-background-color: #f9fafb;
   --blue-dark--800: #0040c1;
   --blue-dark--700: rgba(0, 78, 234, 1);
@@ -130,7 +133,6 @@ input {
   height: auto;
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
-  
 }
 
 input::placeholder {
@@ -197,7 +199,7 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
-.photo_input input{
+.photo_input input {
   height: auto;
 }
 
