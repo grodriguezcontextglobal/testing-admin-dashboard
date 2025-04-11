@@ -39,7 +39,7 @@ const MainGridPosts = ({ data, refetch }) => {
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid container marginY={4} spacing={2}>
         {data.map((article) => (
           <Grid item xs={12} sm={12} md={4} lg={4} key={article.id}>
             <Card
