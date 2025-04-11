@@ -8,6 +8,8 @@ import ConsumerConfirmationPayment from "../../pages/consumers/components/Consum
 import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
 import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCreditCard";
 import NewPost from "../../pages/posts/action/NewPost";
+import EditPost from "../../pages/posts/action/EditPost";
+import DisplayArticle from "../../pages/posts/components/DisplayArticle";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -363,7 +365,8 @@ const AuthRoutes = () => {
 
               <Route path="posts" element={<MainPagePosts />} />
               <Route path="posts/new-post" element={<NewPost />} />
-              <Route path="posts/post/:id" element={<MainPagePosts />} />
+              <Route path="posts/post-edit/:id" element={<EditPost />} />
+              <Route path="posts/post/:id" element={<DisplayArticle />} />
               <Route path="login" element={<RedirectionPage />} />
               <Route
                 path="register/company-setup"
