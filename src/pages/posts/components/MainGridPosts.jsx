@@ -1,18 +1,17 @@
-import { Grid } from "@mui/material";
+import { Grid, Pagination, PaginationItem } from "@mui/material";
 import { Card, message, Switch } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { useMediaQuery } from "@uidotdev/usehooks";
 const { Meta } = Card;
 
 const MainGridPosts = ({ data, refetch }) => {
   const navigate = useNavigate();
-  // const [page, setPage] = useState(0);
+  const [page, setPage] = useState(0);
   const [loadingStatus, setLoadingStatus] = useState(null);
-  // const handleChange = (_, value) => {
-  //   setPage(value);
-  // };
+  const handleChange = (_, value) => {
+    setPage(value);
+  };
 
   const handleSwitchChange = async (props) => {
     try {
@@ -35,39 +34,16 @@ const MainGridPosts = ({ data, refetch }) => {
     }
   };
 
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
-
-  const [width, setWidth] = useState(300);
-  useEffect(() => {
-    const controller = new AbortController();
-    if (isSmallDevice || isMediumDevice) {
-      setWidth(300);
-    }
-    if (isLargeDevice || isExtraLargeDevice) {
-      setWidth(400);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const urlImageDefault =
+    "https://res.cloudinary.com/dsuynhcgd/image/upload/v1744215579/xdvbbekjz1uebexwopx3.png";
 
   return (
-    <div style={{ padding: "1rem 0" }}>
-      <Grid container spacing={3}>
-        {/* <Space size={[8, 16]} wrap> */}
+    <>
+      <Grid container spacing={2}>
         {data.map((article) => (
           <Grid item xs={12} sm={12} md={4} lg={4} key={article.id}>
             <Card
-              style={{ padding: "24px", width: width }}
+              style={{ padding: "24px", width: "100%" }}
               styles={{
                 actions: {
                   border: "none",
@@ -75,20 +51,42 @@ const MainGridPosts = ({ data, refetch }) => {
                 },
                 cover: {
                   cursor: "pointer",
+                  height: "200px",
+                  width: "100%",
                 },
               }}
               cover={
-                <img
-                  src={article.media.cover}
-                  alt={article.media.cover}
-                  width={"100%"}
-                  height={"100%"}
+                <button
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "0",
+                    margin: "0",
+                    width: "100%",
+                    height: "100%",
+                  }}
                   onClick={() =>
                     navigate(`/posts/post/${article.id}`, {
                       state: { id: article.id },
                     })
                   }
-                />
+                >
+                  <img
+                    src={
+                      article.media.cover.length > 0
+                        ? article.media.cover
+                        : urlImageDefault
+                    }
+                    alt={
+                      article.media.cover.length > 0
+                        ? article.media.cover
+                        : urlImageDefault
+                    }
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                  />
+                </button>
               }
               actions={[
                 <Switch
@@ -112,10 +110,10 @@ const MainGridPosts = ({ data, refetch }) => {
             </Card>{" "}
           </Grid>
         ))}
-        {/* </Space> */}
       </Grid>
-      {/* <Grid container>
+      <Grid container>
         <Grid
+          marginY={2}
           item
           xs={12}
           sm={12}
@@ -134,12 +132,12 @@ const MainGridPosts = ({ data, refetch }) => {
               mt: "1rem",
               justifyContent: "center",
               alignItems: "center",
-              display: "flex",
+              display: "none",
             }}
           />{" "}
         </Grid>
-      </Grid> */}
-    </div>
+      </Grid>
+    </>
   );
 };
 
