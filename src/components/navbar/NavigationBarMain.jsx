@@ -75,6 +75,13 @@ const navItems = [
     desktop: true,
   },
   {
+    title: "Posts",
+    route: "/posts",
+    permission: [0, 1, 2, 3],
+    mobile: true,
+    desktop: true,
+  },
+  {
     title: "staff",
     route: "/staff",
     permission: [0, 1, 2, 3],

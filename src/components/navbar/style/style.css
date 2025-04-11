@@ -243,6 +243,13 @@
   font-weight: 600;
   font-style: normal;
 }
+.MuiInputBase-root .MuiOutlinedInput-root {
+  box-sizing: var(--box-sizing);
+}
+
+.MuiInputBase-input-MuiOutlinedInput-input:invalid{
+  box-sizing: border-box;
+}
 
 .MuiFilledInput-input {
   background-color: #fff;
