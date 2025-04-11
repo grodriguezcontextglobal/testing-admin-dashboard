@@ -92,6 +92,7 @@ const EditPost = () => {
     const gettingArticle = async () => {
       const response = await devitrakApi.post(`/post/posts`, {
         _id: location.state.id,
+        company_id:user.companyData.id
       });
       if (response.data.ok) {
         setArticle(response.data.companyPosts[0]);

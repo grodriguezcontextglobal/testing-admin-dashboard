@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DOMPurify from "dompurify";
 import Header from "./Header";
+import { useSelector } from "react-redux";
 
 const DisplayArticle = () => {
   const location = useLocation();
   const [article, setArticle] = useState({});
+  const [clean, setClean] = useState({});
+  const { user } = useSelector((state) => state.admin)
   useEffect(() => {
     const controller = new AbortController();
     const first = async () => {
       const response = await devitrakApi.post(`/post/posts`, {
         _id: location.state.id,
+        company_id:user.companyData.id
       });
-      if (response.data.ok) {
-        console.log(response.data.companyPosts[0]);
+      if (response.data) {
         setArticle(response.data.companyPosts[0]);
       }
     };
@@ -25,7 +28,18 @@ const DisplayArticle = () => {
     };
   }, []);
 
-  const clean = DOMPurify.sanitize(article.description);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (article.description) {
+      const sanitized = DOMPurify.sanitize(article.description);
+      setClean(sanitized);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [article.description && article.description.length > 0]);
+
   return (
     <Grid container>
       <Header />
