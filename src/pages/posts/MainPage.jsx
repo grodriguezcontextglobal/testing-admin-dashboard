@@ -14,7 +14,9 @@ const MainPage = () => {
   const postsCompanyData = useQuery({
     queryKey: ["postsCompanyData"],
     queryFn: () =>
-      devitrakApi.get(`/posts/posts-company?company=${user.companyData.id}`),
+      devitrakApi.post(`/post/posts`, {
+        company_id: user.companyData.id,
+      }),
     refetchOnMount: false,
   });
   useEffect(() => {
@@ -29,22 +31,22 @@ const MainPage = () => {
   useEffect(() => {
     const controller = new AbortController();
     if (postsCompanyData.data) {
-      setPosts(postsCompanyData.data.data.list);
+      setPosts(postsCompanyData.data.data.companyPosts);
     }
     return () => {
       controller.abort();
     };
   }, [postsCompanyData.data]);
 
+  const refetching = () => {
+    return postsCompanyData.refetch();
+  };
+  
   return (
     <Grid container>
       <Header />
-      {posts.length > 0 ? (
-        <MainGridPosts
-          props={{
-            data: posts,
-          }}
-        />
+      {posts?.length > 0 ? (
+        <MainGridPosts data={posts} refetch={refetching} />
       ) : (
         <BannerMsg
           props={{
