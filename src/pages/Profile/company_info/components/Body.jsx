@@ -189,6 +189,7 @@ const Body = () => {
               "",
               "",
               "",
+              "",
               ""
             );
             const uploadingCompanyLogo = await devitrakApi.post(

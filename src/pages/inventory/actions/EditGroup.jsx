@@ -101,8 +101,8 @@ const EditGroup = () => {
     const controller = new AbortController();
     companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
-    if(location.state !== null){
-      setSelectedItem(location.state.deviceName)
+    if (location.state !== null) {
+      setSelectedItem(location.state.deviceName);
     }
     return () => {
       controller.abort();
@@ -321,6 +321,7 @@ const EditGroup = () => {
         user.companyData.id,
         data.category_name,
         selectedItem,
+        "",
         "",
         "",
         "",

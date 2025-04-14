@@ -156,6 +156,7 @@ const Body = () => {
           "",
           "",
           user.uid,
+          "",
           ""
         );
         const staffMemberProfileImage = await devitrakApi.post(

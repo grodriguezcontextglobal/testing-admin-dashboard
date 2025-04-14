@@ -243,7 +243,8 @@ const MainPageQuickGlance = () => {
           "",
           "",
           "",
-          event.id
+          event.id,
+          ""
         );
         // const imageDataFormat = {
         //   imageFile: imageUrl,

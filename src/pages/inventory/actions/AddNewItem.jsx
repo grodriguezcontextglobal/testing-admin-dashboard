@@ -211,6 +211,7 @@ const AddNewItem = () => {
           "",
           "",
           "",
+          "",
           ""
         );
         const registerImage = await devitrakApi.post(

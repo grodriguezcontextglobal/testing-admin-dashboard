@@ -42,6 +42,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           user.name,
           user.lastName,
           resp.data.uid,
+          "",
           ""
         );
         const uploadingProfileImage = await devitrakApi.post(

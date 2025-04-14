@@ -64,6 +64,7 @@ const createCompany = async ({
         "",
         "",
         "",
+        "",
         ""
       );
       const registerCompanyLogo = await devitrakApi.post(
@@ -93,6 +94,7 @@ const createCompany = async ({
         const templateImageUpload = new ImageUploaderFormat(
           props.company_logo,
           companyData.id,
+          "",
           "",
           "",
           "",

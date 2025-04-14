@@ -262,13 +262,14 @@ const AddNewBulkItems = () => {
         "",
         "",
         "",
+        "",
         ""
       );
       const registerImage = await devitrakApi.post(
         "/cloudinary/upload-image",
         templateImageUpload.item_uploader()
       );
-      
+
       const resp = await devitrakApi.post(`/image/new_image`, {
         source: registerImage.data.secure_url,
         category: data.category_name,
@@ -322,7 +323,6 @@ const AddNewBulkItems = () => {
           "items were created and stored in database.",
           false,
           false
-  
         );
         setLoading(false);
         api.destroy();
