@@ -150,14 +150,20 @@ const EditPost = () => {
         setIsLoadingState(false);
         return alert("Please select at least one event");
       }
+      if (valueDescription.length < 10) {
+        setIsLoadingState(false);
+        return alert("Please enter a description");
+      }
+
       if (
         imageUploadedValue !== null &&
         imageUploadedValue.length > 0 &&
-        imageUploadedValue[0].size > 3145728
+        imageUploadedValue[0].size > 5242880
       ) {
         setIsLoadingState(false);
+
         return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
+          `Image is bigger than allow. Please resize the image or select a new one. Image size: ${imageUploadedValue[0].size} bytes`
         );
       }
       if (imageUploadedValue !== null && imageUploadedValue?.length > 0) {
@@ -172,8 +178,7 @@ const EditPost = () => {
           "",
           "",
           "",
-          savedPostID,
-          ""
+          savedPostID
         );
         const coverMediaArticleCompany = await devitrakApi.post(
           "/cloudinary/upload-image",
@@ -405,7 +410,11 @@ const EditPost = () => {
           <Button
             style={DangerButton}
             htmlType="reset"
-            onClick={() => navigate("/posts")}
+            onClick={() =>
+              navigate(`/posts/post/${location.state.id}`, {
+                state: { id: location.state.id },
+              })
+            }
           >
             <p style={DangerButtonText}>Cancel</p>
           </Button>
