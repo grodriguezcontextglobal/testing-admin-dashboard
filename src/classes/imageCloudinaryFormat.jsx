@@ -7,7 +7,8 @@ export default class ImageUploaderFormat {
     name = "",
     lastName = "",
     UID = "",
-    eventID = ""
+    eventID = "",
+    postID = ""
   ) {
     this.file = file;
     this.companyID = companyID;
@@ -17,6 +18,7 @@ export default class ImageUploaderFormat {
     this.lastName = lastName;
     this.UID = UID;
     this.eventID = eventID;
+    this.postID = postID;
   }
 
   staff_uploader() {
@@ -42,6 +44,7 @@ export default class ImageUploaderFormat {
       }|created_at:${new Date().getTime()}|updated_at:${new Date().getTime()}`,
     };
   }
+
   company_uploader() {
     return {
       imageFile: this.file,
@@ -62,5 +65,17 @@ export default class ImageUploaderFormat {
         this.companyID
       }|created_at:${new Date().getTime()}|updated_at:${new Date().getTime()}`,
     };
+  }
+
+  article_media_uploader() {
+    return {
+      imageFile: this.file,
+      imageID: this.postID,
+      tags: [this.postID, this.companyID],
+      context: `post_id:${this.postID}|company_id:${
+        this.companyID
+      }|created_at:${new Date().getTime()}|updated_at:${new Date().getTime()}`,
+    };
+
   }
 }
