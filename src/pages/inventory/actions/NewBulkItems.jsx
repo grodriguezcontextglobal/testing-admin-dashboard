@@ -62,6 +62,9 @@ const AddNewBulkItems = () => {
       descript_item: "",
       min_serial_number: "",
       max_serial_number: "",
+      sub_location: null,
+      sub_location_2: null,
+      sub_location_3: null,
       quantity: 0,
       container: "",
       containerSpotLimit: "0",
@@ -223,7 +226,7 @@ const AddNewBulkItems = () => {
           source: registerImage.data.secure_url,
           category: data.category_name,
           item_group: data.item_group,
-          company: user.company,
+          company: user.companyData.id,
         });
       }
       const template = {
@@ -242,6 +245,11 @@ const AddNewBulkItems = () => {
         company: user.company,
         location: data.location,
         current_location: data.location,
+        sub_location: JSON.stringify([
+          data.sub_location,
+          data.sub_location_2,
+          data.sub_location_3,
+        ]),
         extra_serial_number: JSON.stringify(moreInfo),
         company_id: user.sqlInfo.company_id,
         return_date: `${
@@ -250,7 +258,7 @@ const AddNewBulkItems = () => {
         container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
       };
-      const respNewItem = await devitrakApi.post("/db_item/new_item", template);
+      const respNewItem = await devitrakApi.post("/db_item/bulk-item", template);
       if (respNewItem.data.ok) {
         setValue("category_name", "");
         setValue("item_group", "");
@@ -265,10 +273,12 @@ const AddNewBulkItems = () => {
         setValue("tax_location", "");
         setValue("container", "");
         openNotificationWithIcon(
-          "New item was created and stored in database."
+          "New group of items were created and stored in database."
         );
+        setLoadingStatus(false);
         return navigate("/inventory");
       }
+      return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);
@@ -443,6 +453,42 @@ const AddNewBulkItems = () => {
       name: "location",
       placeholder: "Select a location",
       label: "Main location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+    },
+    {
+      name: "sub_location",
+      placeholder: "Select a location",
+      label: "Sub location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+    },
+    {
+      name: "sub_location_2",
+      placeholder: "Select a location",
+      label: "Sub location 2",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+    },
+    {
+      name: "sub_location_3",
+      placeholder: "Select a location",
+      label: "Sub location 3",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,

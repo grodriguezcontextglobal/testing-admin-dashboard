@@ -6,37 +6,37 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import "../../../styles/global/ant-select.css";
-import "../../../styles/global/OutlineInput.css";
-import "../../../styles/global/reactInput.css";
-import "./style.css";
+import { useQuery } from "@tanstack/react-query";
+import { AutoComplete, Button, Divider, notification } from "antd";
+import { groupBy } from "lodash";
+import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Controller, useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
+import { QuestionIcon } from "../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
+import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-import { Button, AutoComplete, Divider, notification } from "antd";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { Controller, useForm } from "react-hook-form";
-import { convertToBase64 } from "../../../components/utils/convertToBase64";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { formatDate } from "../utils/dateFormat";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../styles/global/GrayButton";
-import { groupBy } from "lodash";
-import { Link, useNavigate } from "react-router-dom";
+import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { QuestionIcon } from "../../../components/icons/QuestionIcon";
+import "../../../styles/global/OutlineInput.css";
+import "../../../styles/global/reactInput.css";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import costValueInputFormat from "../utils/costValueInputFormat";
-import DatePicker from "react-datepicker";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
-import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
-import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
+import { formatDate } from "../utils/dateFormat";
+import "./style.css";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -64,6 +64,11 @@ const AddNewItem = () => {
       descript_item: "",
       serial_number: "",
       container: "",
+      location: "",
+      sub_location: null,
+      sub_location_2: null,
+      sub_location_3: null,
+      tax_location: "",
       containerSpotLimit: "0",
     },
   });
@@ -216,7 +221,7 @@ const AddNewItem = () => {
           source: registerImage.data.secure_url,
           category: data.category_name,
           item_group: data.item_group,
-          company: user.company,
+          company: user.companyData.id,
         });
       }
       const template = {
@@ -233,6 +238,11 @@ const AddNewItem = () => {
         updated_at: formatDate(new Date()),
         company: user.company,
         location: data.location,
+        sub_location: JSON.stringify([
+          data.sub_location,
+          data.sub_location_2,
+          data.sub_location_3,
+        ]),
         current_location: data.location,
         extra_serial_number: JSON.stringify(moreInfo),
         company_id: user.sqlInfo.company_id,
@@ -257,8 +267,10 @@ const AddNewItem = () => {
         openNotificationWithIcon(
           "New item was created and stored in database."
         );
+        setLoadingStatus(false);
         return navigate("/inventory");
       }
+      return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);
@@ -378,6 +390,7 @@ const AddNewItem = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayedButton: false,
     },
     {
       name: "category_name",
@@ -390,6 +403,7 @@ const AddNewItem = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayedButton: false,
     },
     {
       name: "brand",
@@ -402,6 +416,7 @@ const AddNewItem = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayedButton: false,
     },
     {
       name: "cost",
@@ -414,6 +429,7 @@ const AddNewItem = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayedButton: false,
     },
     {
       name: "tax_location",
@@ -427,6 +443,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
+      displayedButton: false,
     },
     {
       name: "location",
@@ -439,6 +456,46 @@ const AddNewItem = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
+      displayedButton: false,
+    },
+    {
+      name: "sub_location",
+      placeholder: "Select a location",
+      label: "Sub location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayedButton: true,
+    },
+    {
+      name: "sub_location_2",
+      placeholder: "Select a location",
+      label: "Sub location 2",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayedButton: true,
+    },
+    {
+      name: "sub_location_3",
+      placeholder: "Select a location",
+      label: "Sub location 3",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayedButton: true,
     },
     {
       name: "serial_number",
@@ -451,6 +508,7 @@ const AddNewItem = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayedButton: false,
     },
     {
       name: "container",
@@ -470,6 +528,7 @@ const AddNewItem = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
+      displayedButton: false,
     },
     {
       name: "ownership",
@@ -482,6 +541,7 @@ const AddNewItem = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayedButton: false,
     },
     {
       name: "",
@@ -494,7 +554,21 @@ const AddNewItem = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayedButton: false,
     },
+    {
+      name: "image_uploader",
+      placeholder: "",
+      label: "Image uploader",
+      htmlElement: "Day",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 6,
+      tooltip: false,
+      tooltipMessage: null,
+    },
+
     {
       name: "descript_item",
       placeholder:
@@ -507,6 +581,7 @@ const AddNewItem = () => {
       htmlOption: 4,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayedButton: false,
     },
   ];
 
@@ -572,6 +647,48 @@ const AddNewItem = () => {
         <Grid container spacing={1}>
           {/* style={styleDivParent} */}
           {renderFields.map((item, index) => {
+            if (item.htmlOption === 6) {
+              return (
+                <Grid
+                  key={item.name}
+                  style={{
+                    textAlign: "left",
+                  }}
+                  marginY={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={
+                    renderFields[index].name === "descript_item"
+                      ? 12
+                      : 6
+                  }
+                  lg={
+                    renderFields[index].name === "descript_item"
+                      ? 12
+                      : 6
+                  }
+                >
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <Tooltip
+                      placement="top"
+                      title={item.tooltipMessage}
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      <Typography style={styling}>
+                        {item.label} {item.tooltip && <QuestionIcon />}
+                      </Typography>
+                    </Tooltip>
+                  </InputLabel>
+
+                  <ImageUploaderUX
+                    setImageUploadedValue={setImageUploadedValue}
+                  />
+                </Grid>
+              );
+            }
             return (
               <Grid
                 key={item.name}
@@ -582,8 +699,16 @@ const AddNewItem = () => {
                 item
                 xs={12}
                 sm={12}
-                md={index > 9 ? 12 : 6}
-                lg={index > 9 ? 12 : 6}
+                md={
+                  renderFields[index].name === "descript_item"
+                    ? 12
+                    : 6
+                }
+                lg={
+                  renderFields[index].name === "descript_item"
+                    ? 12
+                    : 6
+                }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
@@ -639,7 +764,6 @@ const AddNewItem = () => {
             );
           })}
         </Grid>
-        <ImageUploaderUX setImageUploadedValue={setImageUploadedValue} />
         <Divider />
         <Button
           htmlType="button"
@@ -674,7 +798,7 @@ const AddNewItem = () => {
               onChange={(e) => setValueObject(e.target.value)}
             />
             <Button
-            htmlType="button"
+              htmlType="button"
               onClick={() => handleMoreInfoPerDevice()}
               style={{ ...BlueButton, ...CenteringGrid }}
             >
