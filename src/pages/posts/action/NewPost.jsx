@@ -118,14 +118,19 @@ const NewPost = () => {
         setIsLoadingState(false);
         return alert("Please select at least one event");
       }
+      if (value.length < 2) {
+        setIsLoadingState(false);
+        return alert("Please enter a description");
+      }
       if (
-        imageUploadedRef.current !== null &&
-        imageUploadedRef.current.length > 0 &&
-        imageUploadedRef.current[0].size > 3145728
+        imageUploadedValue !== null &&
+        imageUploadedValue.length > 0 &&
+        imageUploadedValue[0].size > 5242880
       ) {
         setIsLoadingState(false);
+
         return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
+          `Image is bigger than allow. Please resize the image or select a new one. Image size: ${imageUploadedValue[0].size} bytes`
         );
       }
       imageUploadedRef.current = imageUploadedValue;
@@ -148,7 +153,10 @@ const NewPost = () => {
       };
       const response = await devitrakApi.post("/post/new-post", template);
       if (response.data) {
-        if (imageUploadedRef.current !== null && imageUploadedRef.current?.length > 0) {
+        if (
+          imageUploadedRef.current !== null &&
+          imageUploadedRef.current?.length > 0
+        ) {
           const mediaUrl = await convertToBase64(imageUploadedRef.current[0]);
           const savedPostID = response.data.post.id;
           const mediaUploader = new ImageUploaderFormat(
@@ -204,14 +212,22 @@ const NewPost = () => {
         md={6}
         lg={6}
         padding={0}
-        sx={{ display: "flex", justifyContent: "flex-start", mb: 2, padding: 0 }}
+        sx={{
+          display: "flex",
+          justifyContent: "flex-start",
+          mb: 2,
+          padding: 0,
+        }}
       >
         <h1 style={TextFontSize30LineHeight38}>New article</h1>
       </Grid>
 
       {/* Image uploader */}
       {/* <ImageUploaderContext.Provider value={{setImageUploadedValue}}> */}
-        <ImageUploaderUX CSS={stylingLabel} setImageUploadedValue={setImageUploadedValue}/>
+      <ImageUploaderUX
+        CSS={stylingLabel}
+        setImageUploadedValue={setImageUploadedValue}
+      />
       {/* </ImageUploaderContext.Provider> */}
       {/* <Grid paddingLeft={0} item xs={12} id="image-uploader">
       </Grid> */}
