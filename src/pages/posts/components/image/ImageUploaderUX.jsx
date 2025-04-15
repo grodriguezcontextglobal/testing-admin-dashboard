@@ -35,7 +35,6 @@ const ImageUploaderUX = ({ CSS, setImageUploadedValue }) => {
   useEffect(() => {
     const controller = new AbortController();
     const media = watch("photo");
-    console.log(media)
     if (media !== null && media.length > 0) {
       setImageUploadedValue(media);
     }
