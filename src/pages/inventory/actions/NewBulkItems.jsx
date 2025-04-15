@@ -221,9 +221,9 @@ const AddNewBulkItems = () => {
           "/cloudinary/upload-image",
           templateImageUpload.item_uploader()
         );
-
+        console.log(registerImage.data);
         await devitrakApi.post(`/image/new_image`, {
-          source: registerImage.data.secure_url,
+          source: registerImage.data.imageUploaded.secure_url,
           category: data.category_name,
           item_group: data.item_group,
           company: user.companyData.id,

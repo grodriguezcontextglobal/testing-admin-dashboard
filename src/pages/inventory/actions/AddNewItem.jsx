@@ -218,7 +218,7 @@ const AddNewItem = () => {
         );
 
         await devitrakApi.post(`/image/new_image`, {
-          source: registerImage.data.secure_url,
+          source: registerImage.data.imageUploaded.secure_url,
           category: data.category_name,
           item_group: data.item_group,
           company: user.companyData.id,
@@ -658,16 +658,8 @@ const AddNewItem = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={
-                    renderFields[index].name === "descript_item"
-                      ? 12
-                      : 6
-                  }
-                  lg={
-                    renderFields[index].name === "descript_item"
-                      ? 12
-                      : 6
-                  }
+                  md={renderFields[index].name === "descript_item" ? 12 : 6}
+                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
@@ -699,16 +691,8 @@ const AddNewItem = () => {
                 item
                 xs={12}
                 sm={12}
-                md={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : 6
-                }
-                lg={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : 6
-                }
+                md={renderFields[index].name === "descript_item" ? 12 : 6}
+                lg={renderFields[index].name === "descript_item" ? 12 : 6}
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
