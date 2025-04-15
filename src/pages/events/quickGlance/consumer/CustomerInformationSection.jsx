@@ -1,13 +1,13 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { Icon } from "@iconify/react";
-import { useForm } from "react-hook-form";
-import { Button, Space, Tag, Tooltip } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { CustomerDatabase } from "./table/CustomerDatabase";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Space, Tag, Tooltip } from "antd";
+import { useForm } from "react-hook-form";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { Title } from "../../../../styles/global/Title";
+import RefreshButton from "../../../../components/utils/UX/RefreshButton";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
+import { Title } from "../../../../styles/global/Title";
+import { CustomerDatabase } from "./table/CustomerDatabase";
 
 const CustomerInformationSection = () => {
   const { register, watch } = useForm();
@@ -136,28 +136,7 @@ const CustomerInformationSection = () => {
               marginRight: "5px",
             }}
           >
-            <Button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                outline: "none",
-                backgroundColor: "transparent",
-              }}
-              onClick={() => queryClient.invalidateQueries("listOfAttendees")}
-            >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={500}
-                fontSize={"12px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-700, #004EEB)"}
-                padding={"0px 8px"}
-              >
-                <Icon icon="jam:refresh" /> Refresh
-              </Typography>
-            </Button>
+            <RefreshButton propsFn={queryClient.invalidateQueries} /> 
           </div>
         </Grid>
         <Grid item xs={12}>
@@ -169,3 +148,27 @@ const CustomerInformationSection = () => {
 };
 
 export default CustomerInformationSection;
+
+
+{/* <Button
+style={{
+  display: "flex",
+  alignItems: "center",
+  outline: "none",
+  backgroundColor: "transparent",
+}}
+onClick={() => queryClient.invalidateQueries("listOfAttendees")}
+>
+<Typography
+  textTransform={"none"}
+  textAlign={"left"}
+  fontWeight={500}
+  fontSize={"12px"}
+  fontFamily={"Inter"}
+  lineHeight={"28px"}
+  color={"var(--blue-dark-700, #004EEB)"}
+  padding={"0px 8px"}
+>
+  <Icon icon="jam:refresh" /> Refresh
+</Typography>
+</Button> */}

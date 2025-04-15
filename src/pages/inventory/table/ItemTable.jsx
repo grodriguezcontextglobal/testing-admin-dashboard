@@ -2,7 +2,7 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Divider, Select, Table } from "antd";
+import { Avatar, Divider, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import {
@@ -19,6 +19,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -26,6 +27,8 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../style/details.css";
+import { dictionary } from "../utils/dicSelectedOptions";
+import FilterOptionsUX from "../utils/filterOptionsUX";
 // import DownloadPdf from "../actions/DownloadPdf";
 
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
@@ -56,7 +59,8 @@ const ItemTable = ({
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.companyData.id }),
+    queryFn: () =>
+      devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
 
@@ -72,14 +76,6 @@ const ItemTable = ({
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-  const dicSelectedOptions = {
-    0: "Brand",
-    1: "Model",
-    2: "Serial Number",
-    3: "Location",
-    4: "Ownership",
-    5: "Status",
-  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -195,6 +191,7 @@ const ItemTable = ({
     setSearchDateResult(responseQuery.data.events);
     return responseQuery?.data?.events;
   };
+
   useEffect(() => {
     if (date) {
       querySearchingDataByDate();
@@ -211,6 +208,7 @@ const ItemTable = ({
     2: chosen.value !== null && filterByProps(),
     3: date !== null && filterDataByDate,
   };
+
   const dataToDisplay = useCallback(() => {
     if (chosenConditionState === 3) {
       return getDataStructuringFormat(searchDateResult);
@@ -225,12 +223,6 @@ const ItemTable = ({
     3: filterOptionsBasedOnProps("location"),
     4: filterOptionsBasedOnProps("ownership"),
     5: filterOptionsBasedOnProps("status"),
-  };
-
-  const dictionary = {
-    Permanent: "Owned",
-    Rent: "Leased",
-    Sale: "For sale",
   };
 
   const cellStyle = {
@@ -494,6 +486,12 @@ const ItemTable = ({
     },
   ];
 
+  const refreshFn = () => {
+    listImagePerItemQuery.refetch();
+    listItemsQuery.refetch();
+    return itemsInInventoryQuery.refetch();
+  };
+
   return (
     <Suspense
       fallback={
@@ -565,58 +563,11 @@ const ItemTable = ({
                   </span>{" "}
                   &nbsp;{" "}
                 </p>
-                <div
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    width: "100%",
-                    textAlign: "right",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  {new Array(6).fill(null).map((item, index) => {
-                    return (
-                      <Select
-                        style={{
-                          margin: "0 5px 0 0",
-                          width: "fit-content",
-                          overflowY: "hidden",
-                        }}
-                        key={index}
-                        title={dicSelectedOptions[index]}
-                        prefix={dicSelectedOptions[index]}
-                        suffixIcon={
-                          <Icon
-                            icon="fluent:chevron-down-12-filled"
-                            style={{ color: "var(--gray-600, #475467)" }}
-                          />
-                        }
-                        value={chosen.category === index ? chosen.value : null}
-                        options={[
-                          ...filterOptions[index].map((item) => ({
-                            value: item,
-                            label: item,
-                          })),
-                        ]}
-                        allowClear
-                        onChange={(value) => {
-                          if (value === undefined || value === null) {
-                            return setChosen({
-                              category: null,
-                              value: null,
-                            });
-                          }
-                          return setChosen({
-                            category: value === null ? null : index,
-                            value: value,
-                          });
-                        }}
-                      />
-                    );
-                  })}
-                </div>
+                <FilterOptionsUX
+                  filterOptions={filterOptions}
+                  setChosen={setChosen}
+                  chosen={chosen}
+                />
               </div>
             </div>
             <Divider />
@@ -640,7 +591,8 @@ const ItemTable = ({
                     padding: "0 0 0 0",
                   }}
                 >
-                  <Button
+                  <RefreshButton propsFn={refreshFn()} />
+                  {/* <Button
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -669,7 +621,7 @@ const ItemTable = ({
                     >
                       <Icon icon="jam:refresh" /> Refresh
                     </p>
-                  </Button>
+                  </Button> */}
                 </div>
                 <div
                   style={{

@@ -1,5 +1,5 @@
 import { Chip } from "@mui/material";
-import { Avatar, Badge, Button, Table } from "antd";
+import { Avatar, Badge, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -25,6 +25,7 @@ import ExpandedRow from "./ExpandedRow";
 // import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
@@ -300,26 +301,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       render: (_, record) => (
         <p style={Subtitle}>
           {record.device} {record.device > 1 ? "devices" : "device"}&nbsp;
-          {/* <Badge style={chipStyle(record.status === record.device)}>
-            <Chip
-              style={{
-                backgroundColor: `${
-                  record.status === record.device
-                    ? "var(--Primary-50, #F9F5FF)"
-                    : "var(--Success-50, #ECFDF3)"
-                }`,
-              }}
-              label={
-                <p style={chipTextStyle(record.status === record.device)}>
-                  {record.status !== null
-                    ? record?.status === record?.device
-                      ? "Returned"
-                      : "Active"
-                    : "Service"}
-                </p>
-              }
-            />
-          </Badge> */}
         </p>
       ),
     },
@@ -467,34 +448,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       </p>
     );
 
-    // if (props.expanded) {
-    //   return (
-    //     <Badge
-    //       style={buttonStyle("var(--gray100)")}
-    //       onClick={(e) => {
-    //         props.onExpand(props.record, e);
-    //       }}
-    //     >
-    //       <p style={{ ...Subtitle, color: "var(--gray700)" }}>Close</p>
-    //       <UpNarrowIcon />
-    //       {/* <UpDoubleArrow /> */}
-    //     </Badge>
-    //   );
-    // } else {
-    //   return (
-    //     <Button
-    //       style={buttonStyle("var(--success50)")}
-    //       onclick={props.onExpand}
-    //       onClick={(e) => {
-    //         props.onExpand(props.record, e);
-    //       }}
-    //     >
-    //       <p style={{ ...Subtitle, color: "var(--success700)" }}>Open</p>
-    //       <DownNarrow />
-    //       {/* <DownDoubleArrowIcon /> */}
-    //     </Button>
-    //   );
-    // }
   };
 
   return (
@@ -523,19 +476,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         >
           Transactions
         </p>
-        <Button
-          onAbort={() => {
-            refetchingAfterReturnDeviceInRow();
-          }}
-          style={{
-            ...BlueButton,
-            width: "fit-content",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <p style={BlueButtonText}>Refresh</p>
-        </Button>
+        <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
       </div>
       <Table
         key={customerFormat.id}
@@ -571,3 +512,71 @@ StripeTransactionPerConsumer.propTypes = {
   searchValue: PropTypes.string,
 };
 export default StripeTransactionPerConsumer;
+
+
+
+        {/* <Button
+          onAbort={() => {
+            refetchingAfterReturnDeviceInRow();
+          }}
+          style={{
+            ...BlueButton,
+            width: "fit-content",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <p style={BlueButtonText}>Refresh</p>
+        </Button> */}
+
+    // if (props.expanded) {
+    //   return (
+    //     <Badge
+    //       style={buttonStyle("var(--gray100)")}
+    //       onClick={(e) => {
+    //         props.onExpand(props.record, e);
+    //       }}
+    //     >
+    //       <p style={{ ...Subtitle, color: "var(--gray700)" }}>Close</p>
+    //       <UpNarrowIcon />
+    //       {/* <UpDoubleArrow /> */}
+    //     </Badge>
+    //   );
+    // } else {
+    //   return (
+    //     <Button
+    //       style={buttonStyle("var(--success50)")}
+    //       onclick={props.onExpand}
+    //       onClick={(e) => {
+    //         props.onExpand(props.record, e);
+    //       }}
+    //     >
+    //       <p style={{ ...Subtitle, color: "var(--success700)" }}>Open</p>
+    //       <DownNarrow />
+    //       {/* <DownDoubleArrowIcon /> */}
+    //     </Button>
+    //   );
+    // }
+
+              {/* <Badge style={chipStyle(record.status === record.device)}>
+            <Chip
+              style={{
+                backgroundColor: `${
+                  record.status === record.device
+                    ? "var(--Primary-50, #F9F5FF)"
+                    : "var(--Success-50, #ECFDF3)"
+                }`,
+              }}
+              label={
+                <p style={chipTextStyle(record.status === record.device)}>
+                  {record.status !== null
+                    ? record?.status === record?.device
+                      ? "Returned"
+                      : "Active"
+                    : "Service"}
+                </p>
+              }
+            />
+          </Badge> */}
+
+          

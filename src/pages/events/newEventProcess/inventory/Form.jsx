@@ -27,6 +27,7 @@ import MerchantService from "./components/MerchantService";
 import NoMerchantService from "./components/NoMerchantService";
 import SelectedItemsRendered from "./components/SelectedItemsRendered";
 import Services from "./extra/Services";
+import RefreshButton from "../../../../components/utils/UX/RefreshButton";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -53,7 +54,11 @@ const Form = () => {
   const itemQuery = useQuery({
     queryKey: ["listOfItems"],
     queryFn: () =>
-      devitrakApi.get(`/db_item/check-item?company_id=${user.sqlInfo.company_id}&warehouse=${1}&enableAssignFeature=${1}`),
+      devitrakApi.get(
+        `/db_item/check-item?company_id=${
+          user.sqlInfo.company_id
+        }&warehouse=${1}&enableAssignFeature=${1}`
+      ),
   });
 
   useEffect(() => {
@@ -349,17 +354,8 @@ const Form = () => {
                 >
                   Select from existing inventory
                 </Typography>
-                <button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                  padding: "2px 5px",
-                }}
-                onClick={() => handleRefresh()}
-              >
-                <p style={{ ...BlueButtonText, padding: "2px 5px" }}>Refresh</p>
-              </button>
 
+                <RefreshButton propsFn={handleRefresh} />
               </InputLabel>
               <Select
                 className="custom-autocomplete"
