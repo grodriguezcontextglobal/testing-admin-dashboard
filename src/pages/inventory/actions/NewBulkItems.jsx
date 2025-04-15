@@ -258,7 +258,10 @@ const AddNewBulkItems = () => {
         container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
       };
-      const respNewItem = await devitrakApi.post("/db_item/bulk-item", template);
+      const respNewItem = await devitrakApi.post(
+        "/db_item/bulk-item",
+        template
+      );
       if (respNewItem.data.ok) {
         setValue("category_name", "");
         setValue("item_group", "");
@@ -450,6 +453,26 @@ const AddNewBulkItems = () => {
         "Address where tax deduction for equipment will be applied.",
     },
     {
+      name: "container",
+      placeholder: "e.g. Permanent",
+      label: "Is it a container?",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [
+        {
+          value: "No - It is not a container",
+        },
+        {
+          value: "Yes - It is a container",
+        },
+      ],
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "This item will contain other items inside.",
+    },
+
+    {
       name: "location",
       placeholder: "Select a location",
       label: "Main location",
@@ -533,25 +556,6 @@ const AddNewBulkItems = () => {
       tooltip: false,
       tooltipMessage:
         "This is the quantity from starting serial number and ending serial number.",
-    },
-    {
-      name: "container",
-      placeholder: "e.g. Permanent",
-      label: "Is it a container?",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [
-        {
-          value: "No - It is not a container",
-        },
-        {
-          value: "Yes - It is a container",
-        },
-      ],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "This item will contain other items inside.",
     },
     {
       name: "ownership",
