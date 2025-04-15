@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { Icon } from "@iconify/react";
 import {
   Button,
   Grid,
@@ -13,11 +12,9 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import BannerMsg from "../../components/utils/BannerMsg";
+import RefreshButton from "../../components/utils/UX/RefreshButton";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import { GrayButton } from "../../styles/global/GrayButton";
-import GrayButtonText from "../../styles/global/GrayButtonText";
 import "../../styles/global/OutlineInput.css";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import ConsumerHeader from "./components/ConsumerHeader";
@@ -173,29 +170,7 @@ const MainPage = () => {
               </p>
             </div>
           </p>
-          <Button
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              height: "fit-content",
-              margin: "15px 10px",
-            }}
-            onClick={() => allConsumersBasedOnEventsPerCompany.refetch()}
-          >
-            <p
-              style={{
-                ...GrayButtonText,
-                textTransform: "none",
-                fontWeight: 500,
-                fontSize: "12px",
-                color: "var(--blue-dark-700, #004EEB)",
-                padding: "0px 8px",
-              }}
-            >
-              <Icon icon="jam:refresh" />
-              &nbsp;Refresh
-            </p>
-          </Button>
+          <RefreshButton propsFn={allConsumersBasedOnEventsPerCompany.refetch} />
         </Grid>
         <Grid item xs={12}>
           <TablesConsumers
@@ -266,3 +241,28 @@ const MainPage = () => {
 };
 
 export default MainPage;
+
+
+          {/* <Button
+            style={{
+              ...GrayButton,
+              ...CenteringGrid,
+              height: "fit-content",
+              margin: "15px 10px",
+            }}
+            onClick={() => allConsumersBasedOnEventsPerCompany.refetch()}
+          >
+            <p
+              style={{
+                ...GrayButtonText,
+                textTransform: "none",
+                fontWeight: 500,
+                fontSize: "12px",
+                color: "var(--blue-dark-700, #004EEB)",
+                padding: "0px 8px",
+              }}
+            >
+              <Icon icon="jam:refresh" />
+              &nbsp;Refresh
+            </p>
+          </Button> */}
