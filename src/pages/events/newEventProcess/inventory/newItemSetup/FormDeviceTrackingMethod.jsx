@@ -180,7 +180,7 @@ const FormDeviceTrackingMethod = ({
         source: base64,
         category: data.category_name,
         item_group: choose,
-        company: user.company,
+        company: user.companyData.id,
       });
       if (resp.data) {
         try {

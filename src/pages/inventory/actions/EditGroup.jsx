@@ -66,7 +66,6 @@ const EditGroup = () => {
     formState: { errors },
   } = useForm();
   const location = useLocation();
-  console.log(location);
   const navigate = useNavigate();
   const submitRef = useRef();
   const [api, contextHolder] = notification.useNotification();
@@ -409,19 +408,6 @@ const EditGroup = () => {
       {renderTitle()}
       {isLoadingStatus && <Spin indicator={<Loading />} fullscreen />}
       <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          display: "flex",
-          padding: "24px",
-          flexDirection: "column",
-          gap: "24px",
-          borderRadius: "8px",
-          border: "1px solid var(--gray-300, #D0D5DD)",
-          background: "var(--gray-100, #F2F4F7)",
-        }}
         onSubmit={handleSubmit(savingNewItem)}
         className="form"
       >

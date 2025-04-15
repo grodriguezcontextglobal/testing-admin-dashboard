@@ -463,7 +463,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           source: base64,
           category: data.category_name,
           item_group: selectedItem,
-          company: user.company,
+          company: user.companyData.id,
         });
         if (resp.data) {
           const respNewItem = await devitrakApi.post("/db_item/new_item", {
