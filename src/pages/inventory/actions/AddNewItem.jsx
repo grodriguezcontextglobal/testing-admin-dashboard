@@ -46,6 +46,8 @@ const AddNewItem = () => {
   const [valueObject, setValueObject] = useState("");
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
+  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
+    useState(false);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -161,6 +163,16 @@ const AddNewItem = () => {
     };
   }, [watch("item_group")]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
+
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
@@ -189,6 +201,7 @@ const AddNewItem = () => {
     }
     try {
       let base64;
+      let img_url;
       setLoadingStatus(true);
       if (
         imageUploadedValue?.length > 0 &&
@@ -223,6 +236,8 @@ const AddNewItem = () => {
           item_group: data.item_group,
           company: user.companyData.id,
         });
+
+        img_url = registerImage.data.imageUploaded.secure_url;
       }
       const template = {
         category_name: data.category_name,
@@ -251,6 +266,7 @@ const AddNewItem = () => {
         }`,
         container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
+        image_url: img_url,
       };
       const respNewItem = await devitrakApi.post("/db_item/new_item", template);
       if (respNewItem.data.ok) {
@@ -264,6 +280,7 @@ const AddNewItem = () => {
         setValue("location", "");
         setValue("tax_location", "");
         setValue("container", "");
+        setValue("containerSpotLimit", "0");
         openNotificationWithIcon(
           "New item was created and stored in database."
         );
@@ -391,6 +408,7 @@ const AddNewItem = () => {
       tooltip: false,
       tooltipMessage: null,
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "category_name",
@@ -404,6 +422,7 @@ const AddNewItem = () => {
       tooltip: false,
       tooltipMessage: null,
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "brand",
@@ -417,6 +436,7 @@ const AddNewItem = () => {
       tooltip: false,
       tooltipMessage: null,
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "cost",
@@ -430,6 +450,7 @@ const AddNewItem = () => {
       tooltip: false,
       tooltipMessage: null,
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "tax_location",
@@ -444,6 +465,7 @@ const AddNewItem = () => {
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "location",
@@ -457,6 +479,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "sub_location",
@@ -470,6 +493,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayedButton: true,
+      displayField: true,
     },
     {
       name: "sub_location_2",
@@ -483,6 +507,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayedButton: true,
+      displayField: true,
     },
     {
       name: "sub_location_3",
@@ -496,6 +521,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayedButton: true,
+      displayField: true,
     },
     {
       name: "serial_number",
@@ -509,6 +535,7 @@ const AddNewItem = () => {
       tooltip: false,
       tooltipMessage: null,
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "container",
@@ -529,6 +556,21 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayedButton: false,
+      displayField: true,
+    },
+    {
+      name: "containerSpotLimit",
+      placeholder: "e.g. Permanent",
+      label: "Container Spot Limit",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "How many items can be stored inside the container.",
+      displayedButton: false,
+      displayField: displayContainerSplotLimitField,
     },
     {
       name: "ownership",
@@ -542,6 +584,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "",
@@ -555,6 +598,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
       displayedButton: false,
+      displayField: true,
     },
     {
       name: "image_uploader",
@@ -582,6 +626,7 @@ const AddNewItem = () => {
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
       displayedButton: false,
+      displayField: true,
     },
   ];
 
@@ -647,7 +692,43 @@ const AddNewItem = () => {
         <Grid container spacing={1}>
           {/* style={styleDivParent} */}
           {renderFields.map((item, index) => {
-            if (item.htmlOption === 6) {
+            if (item.displayField) {
+              if (item.htmlOption === 6) {
+                return (
+                  <Grid
+                    key={item.name}
+                    style={{
+                      textAlign: "left",
+                    }}
+                    marginY={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={renderFields[index].name === "descript_item" ? 12 : 6}
+                    lg={renderFields[index].name === "descript_item" ? 12 : 6}
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
+                        style={{
+                          width: "100%",
+                        }}
+                      >
+                        <Typography style={styling}>
+                          {item.label} {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                    </InputLabel>
+
+                    <ImageUploaderUX
+                      setImageUploadedValue={setImageUploadedValue}
+                    />
+                  </Grid>
+                );
+              }
               return (
                 <Grid
                   key={item.name}
@@ -674,78 +755,46 @@ const AddNewItem = () => {
                       </Typography>
                     </Tooltip>
                   </InputLabel>
-
-                  <ImageUploaderUX
-                    setImageUploadedValue={setImageUploadedValue}
-                  />
+                  {item.htmlElement.length < 1 ? (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          aria-required={true}
+                          className="custom-autocomplete" // Add a custom className here
+                          variant="outlined"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3 var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(value) => onChange(value)}
+                          options={item.options.map((x) => {
+                            if (item.htmlOption === 0) {
+                              return { value: x };
+                            } else {
+                              return { value: x.value };
+                            }
+                          })}
+                          placeholder={item.placeholder}
+                          filterOption={(inputValue, option) =>
+                            option.value
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    />
+                  ) : (
+                    renderOptional(item.htmlElement)
+                  )}{" "}
                 </Grid>
               );
             }
-            return (
-              <Grid
-                key={item.name}
-                style={{
-                  textAlign: "left",
-                }}
-                marginY={1}
-                item
-                xs={12}
-                sm={12}
-                md={renderFields[index].name === "descript_item" ? 12 : 6}
-                lg={renderFields[index].name === "descript_item" ? 12 : 6}
-              >
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <Tooltip
-                    placement="top"
-                    title={item.tooltipMessage}
-                    style={{
-                      width: "100%",
-                    }}
-                  >
-                    <Typography style={styling}>
-                      {item.label} {item.tooltip && <QuestionIcon />}
-                    </Typography>
-                  </Tooltip>
-                </InputLabel>
-                {item.htmlElement.length < 1 ? (
-                  <Controller
-                    control={control}
-                    name={item.name}
-                    render={({ field: { value, onChange } }) => (
-                      <AutoComplete
-                        aria-required={true}
-                        className="custom-autocomplete" // Add a custom className here
-                        variant="outlined"
-                        style={{
-                          ...AntSelectorStyle,
-                          border: "solid 0.3 var(--gray600)",
-                          fontFamily: "Inter",
-                          fontSize: "14px",
-                          width: "100%",
-                        }}
-                        value={value}
-                        onChange={(value) => onChange(value)}
-                        options={item.options.map((x) => {
-                          if (item.htmlOption === 0) {
-                            return { value: x };
-                          } else {
-                            return { value: x.value };
-                          }
-                        })}
-                        placeholder={item.placeholder}
-                        filterOption={(inputValue, option) =>
-                          option.value
-                            .toUpperCase()
-                            .indexOf(inputValue.toUpperCase()) !== -1
-                        }
-                      />
-                    )}
-                  />
-                ) : (
-                  renderOptional(item.htmlElement)
-                )}{" "}
-              </Grid>
-            );
           })}
         </Grid>
         <Divider />

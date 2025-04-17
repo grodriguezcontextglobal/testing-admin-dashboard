@@ -44,6 +44,9 @@ const AddNewBulkItems = () => {
   const [valueObject, setValueObject] = useState("");
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
+  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
+    useState(false);
+
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -159,6 +162,16 @@ const AddNewBulkItems = () => {
     };
   }, [watch("item_group")]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
+
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
@@ -194,6 +207,7 @@ const AddNewBulkItems = () => {
     }
     try {
       let base64;
+      let img_url;
       setLoadingStatus(true);
       if (
         imageUploadedValue?.length > 0 &&
@@ -221,13 +235,15 @@ const AddNewBulkItems = () => {
           "/cloudinary/upload-image",
           templateImageUpload.item_uploader()
         );
-        console.log(registerImage.data);
+
         await devitrakApi.post(`/image/new_image`, {
           source: registerImage.data.imageUploaded.secure_url,
           category: data.category_name,
           item_group: data.item_group,
           company: user.companyData.id,
         });
+
+        img_url = registerImage.data.imageUploaded.secure_url;
       }
       const template = {
         category_name: data.category_name,
@@ -257,6 +273,7 @@ const AddNewBulkItems = () => {
         }`,
         container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
+        image_url: img_url,
       };
       const respNewItem = await devitrakApi.post(
         "/db_item/bulk-item",
@@ -275,6 +292,7 @@ const AddNewBulkItems = () => {
         setValue("location", "");
         setValue("tax_location", "");
         setValue("container", "");
+        setValue("containerSpotLimit", "0");
         openNotificationWithIcon(
           "New group of items were created and stored in database."
         );
@@ -402,6 +420,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "category_name",
@@ -414,6 +433,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "brand",
@@ -426,6 +446,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "cost",
@@ -438,6 +459,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "tax_location",
@@ -470,8 +492,22 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
+      displayField: true,
     },
-
+    {
+      name: "containerSpotLimit",
+      placeholder: "e.g. Permanent",
+      label: "Container Spot Limit",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "How many items can be stored inside the container.",
+      displayedButton: false,
+      displayField: displayContainerSplotLimitField,
+    },
     {
       name: "location",
       placeholder: "Select a location",
@@ -483,6 +519,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
+      displayField: true,
     },
     {
       name: "sub_location",
@@ -495,6 +532,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
+      displayField: true,
     },
     {
       name: "sub_location_2",
@@ -507,6 +545,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
+      displayField: true,
     },
     {
       name: "sub_location_3",
@@ -519,6 +558,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
+      displayField: true,
     },
     {
       name: "min_serial_number",
@@ -531,6 +571,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "max_serial_number",
@@ -543,6 +584,7 @@ const AddNewBulkItems = () => {
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "quantity",
@@ -568,6 +610,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
     },
     {
       name: "",
@@ -580,6 +623,7 @@ const AddNewBulkItems = () => {
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
     },
     {
       name: "image_uploader",
@@ -592,6 +636,7 @@ const AddNewBulkItems = () => {
       htmlOption: 6,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
     {
       name: "descript_item",
@@ -605,6 +650,7 @@ const AddNewBulkItems = () => {
       htmlOption: 4,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
     },
   ];
 
@@ -710,7 +756,51 @@ const AddNewBulkItems = () => {
         <Grid container spacing={1}>
           {/* style={styleDivParent} */}
           {renderFields.map((item, index) => {
-            if (item.htmlOption === 6) {
+            if (item.displayField) {
+              if (item.htmlOption === 6) {
+                return (
+                  <Grid
+                    key={item.name}
+                    style={{
+                      textAlign: "left",
+                    }}
+                    marginY={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={
+                      renderFields[index].name === "descript_item"
+                        ? 12
+                        : gripingFields(index)
+                    }
+                    lg={
+                      renderFields[index].name === "descript_item"
+                        ? 12
+                        : gripingFields(index)
+                    }
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
+                        style={{
+                          width: "100%",
+                        }}
+                      >
+                        <Typography style={styling}>
+                          {item.label} {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                    </InputLabel>
+
+                    <ImageUploaderUX
+                      setImageUploadedValue={setImageUploadedValue}
+                    />
+                  </Grid>
+                );
+              }
               return (
                 <Grid
                   key={item.name}
@@ -721,16 +811,8 @@ const AddNewBulkItems = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={
-                    renderFields[index].name === "descript_item"
-                      ? 12
-                      : gripingFields(index)
-                  }
-                  lg={
-                    renderFields[index].name === "descript_item"
-                      ? 12
-                      : gripingFields(index)
-                  }
+                  md={renderFields[index].name === "descript_item" ? 12 : 6}
+                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
@@ -745,86 +827,46 @@ const AddNewBulkItems = () => {
                       </Typography>
                     </Tooltip>
                   </InputLabel>
-
-                  <ImageUploaderUX
-                    setImageUploadedValue={setImageUploadedValue}
-                  />
+                  {item.htmlElement.length < 1 ? (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          aria-required={true}
+                          className="custom-autocomplete" // Add a custom className here
+                          variant="outlined"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3 var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(value) => onChange(value)}
+                          options={item.options.map((x) => {
+                            if (item.htmlOption === 0) {
+                              return { value: x };
+                            } else {
+                              return { value: x.value };
+                            }
+                          })}
+                          placeholder={item.placeholder}
+                          filterOption={(inputValue, option) =>
+                            option.value
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    />
+                  ) : (
+                    renderOptional(item.htmlElement)
+                  )}{" "}
                 </Grid>
               );
             }
-            return (
-              <Grid
-                key={item.name}
-                style={{
-                  textAlign: "left",
-                }}
-                marginY={1}
-                item
-                xs={12}
-                sm={12}
-                md={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : gripingFields(index)
-                }
-                lg={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : gripingFields(index)
-                }
-              >
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <Tooltip
-                    placement="top"
-                    title={item.tooltipMessage}
-                    style={{
-                      width: "100%",
-                    }}
-                  >
-                    <Typography style={styling}>
-                      {item.label} {item.tooltip && <QuestionIcon />}
-                    </Typography>
-                  </Tooltip>
-                </InputLabel>
-                {item.htmlElement.length < 1 ? (
-                  <Controller
-                    control={control}
-                    name={item.name}
-                    render={({ field: { value, onChange } }) => (
-                      <AutoComplete
-                        aria-required={true}
-                        className="custom-autocomplete" // Add a custom className here
-                        variant="outlined"
-                        style={{
-                          ...AntSelectorStyle,
-                          border: "solid 0.3 var(--gray600)",
-                          fontFamily: "Inter",
-                          fontSize: "14px",
-                          width: "100%",
-                        }}
-                        value={value}
-                        onChange={(value) => onChange(value)}
-                        options={item.options.map((x) => {
-                          if (item.htmlOption === 0) {
-                            return { value: x };
-                          } else {
-                            return { value: x.value };
-                          }
-                        })}
-                        placeholder={item.placeholder}
-                        filterOption={(inputValue, option) =>
-                          option.value
-                            .toUpperCase()
-                            .indexOf(inputValue.toUpperCase()) !== -1
-                        }
-                      />
-                    )}
-                  />
-                ) : (
-                  renderOptional(item.htmlElement)
-                )}{" "}
-              </Grid>
-            );
           })}
         </Grid>
         <Divider />
