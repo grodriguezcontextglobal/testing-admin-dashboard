@@ -613,8 +613,8 @@ const AddNewItem = () => {
       htmlOption: 6,
       tooltip: false,
       tooltipMessage: null,
+      displayField: true,
     },
-
     {
       name: "descript_item",
       placeholder:
