@@ -1,14 +1,8 @@
 import { Icon } from "@iconify/react";
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Divider } from "antd";
+import { Button, Divider } from "antd";
 import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -95,6 +89,12 @@ const MainPage = () => {
       </div>
     );
   if (trackingHistoryItemQuery.data) {
+    const itemExtraSerialNumber =
+      extraData.ok &&
+      typeof extraData.items[0]?.extra_serial_number === "object"
+        ? extraData.items[0]?.extra_serial_number
+        : JSON.parse(extraData.items[0].extra_serial_number);
+
     const dataFound = [
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
@@ -147,7 +147,10 @@ const MainPage = () => {
               >
                 <WhitePlusIcon />
                 &nbsp;{" "}
-                <Typography textTransform={"none"} style={BlueButtonText}>
+                <Typography
+                  textTransform={"none"}
+                  style={{ ...BlueButtonText }}
+                >
                   {" "}
                   Add new group of devices{" "}
                 </Typography>
@@ -181,11 +184,12 @@ const MainPage = () => {
                 style={{ ...BlueButton }}
                 onClick={() => navigate("/inventory/new-bulk-items")}
               >
-                <WhitePlusIcon />
-                &nbsp;{" "}
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  {" "}
-                  Add new group of devices{" "}
+                <Typography
+                  textTransform={"none"}
+                  style={{ ...BlueButtonText, ...CenteringGrid }}
+                >
+                  <WhitePlusIcon />
+                  &nbsp; Add new group of devices{" "}
                 </Typography>
               </Button>
             </Grid>
@@ -211,16 +215,9 @@ const MainPage = () => {
                 <Link to="/inventory">
                   <p
                     style={{
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      textTransform: "none",
-                      textAlign: "left",
+                      ...TextFontsize18LineHeight28,
+                      color: BlueButton.background,
                       fontWeight: 600,
-                      fontSize: "18px",
-                      fontFamily: "Inter",
-                      lineHeight: "28px",
-                      color: "var(--blue-dark-600, #155EEF)",
                     }}
                   >
                     Back
@@ -321,8 +318,8 @@ const MainPage = () => {
           >
             {Array.isArray(extraData.items) &&
               extraData.items?.length > 0 &&
-              extraData.items[0].extra_serial_number?.length > 0 &&
-              extraData.items[0].extra_serial_number.map((item) => {
+              itemExtraSerialNumber?.length > 0 &&
+              itemExtraSerialNumber?.map((item) => {
                 return (
                   <Grid
                     key={item.valueObject}
@@ -335,6 +332,27 @@ const MainPage = () => {
                     <CardRendered
                       props={item.valueObject}
                       title={item.keyObject}
+                      optional={null}
+                    />
+                  </Grid>
+                );
+              })}
+          </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            container
+          >
+            {Array.isArray(extraData.items) &&
+              extraData.items?.length > 0 &&
+              extraData.items[0]?.sub_location?.length > 0 &&
+              extraData.items[0]?.sub_location?.map((location, index) => {
+                return (
+                  <Grid key={location} item xs={12} sm={12} md={3} lg={4}>
+                    <CardRendered
+                      props={location}
+                      title={`Sub location ${index + 1}`}
                       optional={null}
                     />
                   </Grid>
