@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
 const CardRendered = ({ props, title, optional }) => {
     const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -105,16 +106,9 @@ const CardRendered = ({ props, title, optional }) => {
                         xs={12}
                     >
                         <Typography
-                            paddingTop={"8px"}
-                            fontFamily={"Inter"}
-                            fontSize={"30px"}
-                            fontStyle={"normal"}
-                            fontWeight={600}
-                            lineHeight={"38px"}
-                            color={"var(--gray-900, #101828)"}
-                            textAlign={"left"}
                             style={{
-                                textOverflow: "ellipsis"
+                                ...TextFontSize30LineHeight38,
+                                textWrap: "balance",
                             }}
                         >
                             {props}
