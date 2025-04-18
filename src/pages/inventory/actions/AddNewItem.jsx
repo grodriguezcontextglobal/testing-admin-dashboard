@@ -167,6 +167,8 @@ const AddNewItem = () => {
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
+    }else {
+      setDisplayContainerSplotLimitField(false);
     }
     return () => {
       controller.abort();

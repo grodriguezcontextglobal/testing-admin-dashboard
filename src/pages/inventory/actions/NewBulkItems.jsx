@@ -166,12 +166,14 @@ const AddNewBulkItems = () => {
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
+    }else {
+      setDisplayContainerSplotLimitField(false);
     }
     return () => {
       controller.abort();
     };
   }, [watch("container")]);
-
+  
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
