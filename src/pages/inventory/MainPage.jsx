@@ -25,10 +25,23 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
+import FilterOptionsUX from "./utils/filterOptionsUX";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
 const MainPage = () => {
+  const [chosenOption, setChosenOption] = useState({
+    category: null,
+    value: null,
+  });
+  const [dataFilterOptions, setDataFilterOptions] = useState({
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+  });
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
   const { register, watch } = useForm();
@@ -49,9 +62,7 @@ const MainPage = () => {
     };
   }, [currentTab]);
 
-  const [begin, setBegin] = useState(null);
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
-  const [reference, setReference] = useState(null);
   const [isLoadingState, setIsLoadingState] = useState(false);
   useEffect(() => {
     if (companyHasInventoryQuery?.data?.data?.total > 0) {
@@ -71,12 +82,14 @@ const MainPage = () => {
     1: (
       <ItemTable
         searchItem={watch("searchItem")}
-        date={begin}
+        date={null}
         loadingState={setIsLoadingState}
         companyInventoryExisting={companyHasInventoryQuery.data}
-        reference={reference}
+        reference={null}
         openAdvanceSearchModal={openAdvanceSearchModal}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+        chosen={chosenOption}
+        setDataFilterOptions={setDataFilterOptions}
       />
     ),
     2: (
@@ -171,8 +184,8 @@ const MainPage = () => {
             </Link>
             <Link to="/inventory/new-item">
               <button style={{ ...LightBlueButton, width: "fit-content" }}>
-              <RectangleBluePlusIcon />
-              {/* <BluePlusIcon /> */}
+                <RectangleBluePlusIcon />
+                {/* <BluePlusIcon /> */}
                 &nbsp;
                 <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
                   Add one device
@@ -255,16 +268,32 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <p
+          <div
             style={{
-              ...Title,
-              fontSize: "28px",
-              padding: 0,
-              width: "fit-content",
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              margin:"0px 0px 1rem 0px",
             }}
           >
-            Search inventory:&nbsp;
-          </p>
+            <p
+              style={{
+                ...Title,
+                fontSize: "28px",
+                padding: 0,
+                textAlign: "left",
+                width: "100%",
+              }}
+            >
+              Search inventory:&nbsp;
+            </p>
+            <FilterOptionsUX
+              filterOptions={dataFilterOptions}
+              chosen={chosenOption}
+              setChosen={setChosenOption}
+            />
+          </div>
           <Grid style={{ ...CenteringGrid, gap: "5px" }} item xs sm md lg>
             <OutlinedInput
               {...register("searchItem")}
