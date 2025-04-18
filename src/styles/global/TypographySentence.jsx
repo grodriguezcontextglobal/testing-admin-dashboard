@@ -5,7 +5,7 @@ const TypographySentence = {
     fontSize: "14px",
     fontStyle: "normal",
     lineHeight: "20px",
-    color: "var(--gray-600, #475467)",
+    color: "var(--gray600)", //#475467
 }
 
 export default TypographySentence
