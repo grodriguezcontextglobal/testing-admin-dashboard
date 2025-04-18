@@ -1,10 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { Icon } from "@iconify/react";
-import { Grid, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { Avatar, Divider, Table } from "antd";
-import { groupBy } from "lodash";
-import { PropTypes } from "prop-types";
 import {
   lazy,
   Suspense,
@@ -13,24 +7,27 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
-import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
-import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import "../../../styles/global/ant-table.css";
+import "../style/details.css";
+import { Avatar, Divider, Table } from "antd";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import "../style/details.css";
+import { devitrakApi } from "../../../api/devitrakApi";
 import { dictionary } from "../utils/dicSelectedOptions";
-import FilterOptionsUX from "../utils/filterOptionsUX";
-// import DownloadPdf from "../actions/DownloadPdf";
-
+import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
+import { Grid, Typography } from "@mui/material";
+import { groupBy } from "lodash";
+import { Icon } from "@iconify/react";
+import { PropTypes } from "prop-types";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import { Subtitle } from "../../../styles/global/Subtitle";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import Loading from "../../../components/animation/Loading";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -42,10 +39,12 @@ const ItemTable = ({
   reference,
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
+  setDataFilterOptions,
+  chosen
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
-  const [chosen, setChosen] = useState({ category: null, value: null });
+  // const [chosen, setChosen] = useState({ category: null, value: null });
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchDateResult, setSearchDateResult] = useState([]);
   const listItemsQuery = useQuery({
@@ -224,6 +223,14 @@ const ItemTable = ({
     4: filterOptionsBasedOnProps("ownership"),
     5: filterOptionsBasedOnProps("status"),
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setDataFilterOptions(filterOptions);
+    return () => {
+      controller.abort();
+    };
+  }, [chosen]);
 
   const cellStyle = {
     display: "flex",
@@ -563,11 +570,6 @@ const ItemTable = ({
                   </span>{" "}
                   &nbsp;{" "}
                 </p>
-                <FilterOptionsUX
-                  filterOptions={filterOptions}
-                  setChosen={setChosen}
-                  chosen={chosen}
-                />
               </div>
             </div>
             <Divider />
@@ -592,36 +594,6 @@ const ItemTable = ({
                   }}
                 >
                   <RefreshButton propsFn={refreshFn()} />
-                  {/* <Button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      borderTop: "transparent",
-                      borderLeft: "transparent",
-                      borderBottom: "transparent",
-                      borderRadius: "8px 8px 0 0",
-                    }}
-                    onClick={() => {
-                      listImagePerItemQuery.refetch();
-                      listItemsQuery.refetch();
-                      itemsInInventoryQuery.refetch();
-                    }}
-                  >
-                    <p
-                      style={{
-                        textTransform: "none",
-                        textAlign: "left",
-                        fontWeight: 500,
-                        fontSize: "12px",
-                        fontFamily: "Inter",
-                        lineHeight: "28px",
-                        color: "var(--blue-dark-700, #004EEB)",
-                        padding: "0px",
-                      }}
-                    >
-                      <Icon icon="jam:refresh" /> Refresh
-                    </p>
-                  </Button> */}
                 </div>
                 <div
                   style={{
