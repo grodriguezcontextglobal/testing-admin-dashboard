@@ -40,7 +40,7 @@ const ItemTable = ({
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
   setDataFilterOptions,
-  chosen
+  chosen,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -230,7 +230,7 @@ const ItemTable = ({
     return () => {
       controller.abort();
     };
-  }, [chosen]);
+  }, [chosen, listItemsQuery.data, listImagePerItemQuery.data, itemsInInventoryQuery.data]);
 
   const cellStyle = {
     display: "flex",
