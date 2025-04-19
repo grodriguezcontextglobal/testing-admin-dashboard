@@ -1,25 +1,22 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import {
-  Button,
   Chip,
   Grid,
-  InputAdornment,
   InputLabel,
   OutlinedInput,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { AutoComplete, Avatar, Divider, Tooltip } from "antd";
+import { AutoComplete, Divider, notification, Tooltip, Button } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import DatePicker from "react-datepicker";
+import { Controller, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { CheckIcon } from "../../../../../components/icons/CheckIcon";
+import ImageUploaderFormat from "../../../../../classes/imageCloudinaryFormat";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
-import { UploadIcon } from "../../../../../components/icons/UploadIcon";
-import { WarningIcon } from "../../../../../components/icons/WarningIcon";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -30,74 +27,118 @@ import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import "../../../../../styles/global/ant-select.css";
 import "../../../../../styles/global/reactInput.css";
+import costValueInputFormat from "../../../../inventory/utils/costValueInputFormat";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
-import ReturnDateModal from "./ReturnDateModal";
+import "./style.css";
+
+const options = [{ value: "Rent" }];
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
   setSelectedItem,
   setDisplayFormToCreateCategory,
-  existingData,
 }) => {
-  const [taxableLocation, setTaxableLocation] = useState("");
+  const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
   const [keyObject, setKeyObject] = useState("");
   const [valueObject, setValueObject] = useState("");
-  const [choose, setChoose] = useState([]);
+  const [returningDate, setReturningDate] = useState(new Date());
+  const [imageUploadedValue, setImageUploadedValue] = useState(null);
+  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
+    useState(false);
+
   const { user } = useSelector((state) => state.admin);
-  const [newDeviceGroupToPass, setNewDeviceGroupToPass] = useState([]);
-  const [openReturnDateModal, setOpenReturnDateModal] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
-  } = useForm();
-  const [loading, setLoading] = useState(false);
-  const [locationSelection, setLocationSelection] = useState("");
+  } = useForm({
+    defaultValues: {
+      item_group: "",
+      photo: [],
+      category_name: "",
+      cost: "",
+      brand: "",
+      descript_item: "",
+      ownership: "Rent",
+      min_serial_number: "",
+      max_serial_number: "",
+      sub_location: null,
+      sub_location_2: null,
+      sub_location_3: null,
+      quantity: 0,
+      container: "",
+      containerSpotLimit: "0",
+    },
+  });
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (msg) => {
+    api.open({
+      message: msg,
+    });
+  };
+  const companiesQuery = useQuery({
+    queryKey: ["locationOptionsPerCompany"],
+    queryFn: () =>
+      devitrakApi.post("/company/search-company", {
+        _id: user.companyData.id,
+      }),
+    refetchOnMount: false,
+  });
 
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
-      devitrakApi.get(
-        `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
-      ),
+      devitrakApi.post("/db_item/consulting-item", {
+        company_id: user.sqlInfo.company_id,
+      }),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
+    companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
     return () => {
       controller.abort();
     };
   }, []);
 
-  const retrieveItemOptions = () => {
+  const retrieveItemOptions = (props) => {
     const result = new Set();
-    if (existingData) {
-      for (let [, value] of existingData) {
-        result.add(value?.item_group);
+    if (itemsInInventoryQuery.data) {
+      const itemsOptions = itemsInInventoryQuery.data.data.items;
+      const groupingBy = groupBy(itemsOptions, `${props}`);
+      for (let data of Object.keys(groupingBy)) {
+        result.add(data);
       }
     }
     return Array.from(result);
   };
+
   const renderLocationOptions = () => {
-    const locations = user.companyData.location;
-    const result = new Set();
-    for (let data of locations) {
-      result.add({ value: data });
+    if (companiesQuery.data) {
+      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+      const result = new Set();
+      for (let data of locations) {
+        result.add({ value: data });
+      }
+      return Array.from(result);
     }
-    return Array.from(result);
+    return [];
   };
 
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
-      const industryData = itemsInInventoryQuery?.data?.data?.items;
+      const industryData = itemsInInventoryQuery.data.data.items;
       for (let data of industryData) {
         result.set(data.item_group, data);
       }
@@ -107,184 +148,166 @@ const FormDeviceTrackingMethod = ({
 
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(choose)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(choose);
+    if (retrieveItemDataSelected().has(watch("item_group"))) {
+      const dataToRetrieve = retrieveItemDataSelected().get(
+        watch("item_group")
+      );
       setValue("category_name", `${dataToRetrieve.category_name}`);
       setValue("cost", `${dataToRetrieve.cost}`);
       setValue("brand", `${dataToRetrieve.brand}`);
       setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setLocationSelection(`${dataToRetrieve.location}`);
-      setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
+      setValue("location", `${dataToRetrieve.location}`);
+      setValue("tax_location", `${dataToRetrieve.main_warehouse}`);
+      setValue("container", "");
     }
     return () => {
       controller.abort();
     };
-  }, [choose]);
+  }, [watch("item_group")]);
 
-  const dataDevices = itemsInInventoryQuery?.data?.data?.items;
-  const checkExistingSerialNumberInCompanyInventory = (props) => {
-    const groupingBySerialNumber = groupBy(dataDevices, "serial_number");
-    const existingSerialNumber = groupingBySerialNumber[props];
-    return existingSerialNumber;
-  };
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    } else {
+      setDisplayContainerSplotLimitField(false);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
 
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
-    let checkExistingDevice = [];
-    let base64;
-    if (choose === "") return alert("A group of item must be provided.");
-    if (taxableLocation === "")
-      return alert("A taxable location must be provided.");
-    for (
-      let index = Number(data.startingNumber);
-      index < Number(data.endingNumber);
-      index++
-    ) {
-      if (groupingByDeviceType[choose]) {
-        const dataRef = groupBy(groupingByDeviceType[choose], "serial_number");
-        if (
-          dataRef[
-            String(index).padStart(
-              data.startingNumber.length,
-              `${data.startingNumber[0]}`
-            )
-          ]
-        ) {
-          checkExistingDevice = [
-            ...checkExistingDevice,
-            ...dataRef[
-              String(index).padStart(
-                data.startingNumber.length,
-                `${data.startingNumber[0]}`
-              )
-            ],
-          ];
-        }
-      }
-    }
-    if (checkExistingDevice.length > 0) {
-      return alert(
-        "Devices were not stored due to some devices already exists in company records. Please check the data you're trying to store."
+    if (data.item_group === "")
+      return openNotificationWithIcon("A group of item must be provided.");
+    if (data.tax_location === "")
+      return openNotificationWithIcon("A taxable location must be provided.");
+    if (data.ownership === "")
+      return openNotificationWithIcon("Ownership status must be provided.");
+    if (String(data.ownership).toLowerCase() === "rent" && !returningDate) {
+      return openNotificationWithIcon(
+        "As ownership was set as 'Rent', returning date must be provided."
       );
     }
-    if (data.photo.length > 0 && data.photo[0].size > 1048576) {
-      setLoading(false);
-      return alert(
-        "Image is bigger than allow. Please resize the image or select a new one."
+    if (Number(qtyDiff()) < 1) {
+      return openNotificationWithIcon("Quantity must be greater than 0.");
+    }
+    if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
+      return openNotificationWithIcon(
+        "Max serial number must be greater than min serial number."
       );
-    } else if (data.photo.length > 0) {
-      setLoading(true);
-      base64 = await convertToBase64(data.photo[0]);
-      const resp = await devitrakApi.post(`/image/new_image`, {
-        source: base64,
-        category: data.category_name,
-        item_group: choose,
-        company: user.companyData.id,
-      });
-      if (resp.data) {
-        try {
-          const resulting = [
-            ...selectedItem,
-            {
-              category_name: data.category_name,
-              item_group: choose,
-              cost: data.cost,
-              brand: data.brand,
-              descript_item: data.descript_item,
-              ownership: "Rent",
-              startingNumber: data.startingNumber,
-              endingNumber: data.endingNumber,
-              main_warehouse: taxableLocation,
-              location: locationSelection,
-              current_location: locationSelection,
-              created_at: formatDate(new Date()),
-              updated_at: formatDate(new Date()),
-              company: user.company,
-              quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
-              existing: false,
-              extra_serial_number: JSON.stringify(moreInfo),
-              company_id: user.sqlInfo.company_id,
-            },
-          ];
-          setOpenReturnDateModal(true);
-          setLoading(false);
-          if (
-            !renderLocationOptions().some(
-              (element) => element.value === locationSelection
-            )
-          ) {
-            let template = [...user.companyData.location, locationSelection];
-            await devitrakApi.patch(
-              `/company/update-company/:${user.companyData.id}`,
-              {
-                location: template,
-              }
-            );
-          }
-          setNewDeviceGroupToPass(resulting);
-          setValue("category_name", "");
-          setValue("item_group", "");
-          setValue("cost", "");
-          setValue("brand", "");
-          setValue("descript_item", "");
-          setValue("ownership", "");
-          setValue("startingNumber", "");
-          setValue("endingNumber", "");
-          setLoading(false);
-        } catch (error) {
-          setLoading(false);
-        }
+    }
+    if (groupingByDeviceType[data.item_group]) {
+      const dataRef = groupBy(
+        groupingByDeviceType[data.item_group],
+        "serial_number"
+      );
+      if (dataRef[data.serial_number]?.length > 0) {
+        return openNotificationWithIcon(
+          "Device serial number already exists in company records."
+        );
       }
-    } else if (data.photo.length < 1) {
-      setLoading(true);
-      try {
-        const resulting = [
-          ...selectedItem,
-          {
-            category_name: data.category_name,
-            item_group: choose,
-            cost: data.cost,
-            brand: data.brand,
-            descript_item: data.descript_item,
-            ownership: "Rent",
-            startingNumber: data.startingNumber,
-            endingNumber: data.endingNumber,
-            main_warehouse: taxableLocation,
-            location: locationSelection,
-            current_location: locationSelection,
-            created_at: formatDate(new Date()),
-            updated_at: formatDate(new Date()),
-            company: user.company,
-            quantity: `${data.endingNumber - (data.startingNumber - 1)}`,
-            existing: false,
-            extra_serial_number: JSON.stringify(moreInfo),
-            company_id: user.sqlInfo.company_id,
-          },
-        ];
-        if (
-          !renderLocationOptions().some(
-            (element) => element.value === locationSelection
-          )
-        ) {
-          let template = [...user.companyData.location, locationSelection];
-          await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              location: template,
-            }
-          );
-        }
-        setNewDeviceGroupToPass(resulting);
-        setOpenReturnDateModal(true);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
+    }
+    try {
+      let base64;
+      let img_url;
+      setLoadingStatus(true);
+      if (
+        imageUploadedValue?.length > 0 &&
+        imageUploadedValue[0].size > 5242880
+      ) {
+        setLoadingStatus(false);
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
       }
-      // }
+      if (imageUploadedValue?.length > 0) {
+        base64 = await convertToBase64(imageUploadedValue[0]);
+        const templateImageUpload = new ImageUploaderFormat(
+          base64,
+          user.companyData.id,
+          data.category_name,
+          data.item_group,
+          "",
+          "",
+          "",
+          "",
+          ""
+        );
+        const registerImage = await devitrakApi.post(
+          "/cloudinary/upload-image",
+          templateImageUpload.item_uploader()
+        );
+
+        await devitrakApi.post(`/image/new_image`, {
+          source: registerImage.data.imageUploaded.secure_url,
+          category: data.category_name,
+          item_group: data.item_group,
+          company: user.companyData.id,
+        });
+
+        img_url = registerImage.data.imageUploaded.secure_url;
+      }
+      const template = {
+        category_name: data.category_name,
+        item_group: data.item_group,
+        cost: data.cost,
+        brand: data.brand,
+        descript_item: data.descript_item,
+        ownership: data.ownership,
+        min_serial_number: data.min_serial_number,
+        max_serial_number: data.max_serial_number,
+        warehouse: true,
+        main_warehouse: data.tax_location,
+        created_at: formatDate(new Date()),
+        updated_at: formatDate(new Date()),
+        company: user.company,
+        location: data.location,
+        current_location: data.location,
+        sub_location: JSON.stringify([
+          data.sub_location,
+          data.sub_location_2,
+          data.sub_location_3,
+        ]),
+        extra_serial_number: JSON.stringify(moreInfo),
+        company_id: user.sqlInfo.company_id,
+        return_date: `${
+          data.ownership === "Rent" ? formatDate(returningDate) : null
+        }`,
+        container: String(data.container).includes("Yes"),
+        containerSpotLimit: data.containerSpotLimit,
+        enableAssignFeature: 1,
+        image_url: img_url,
+        quantity: qtyDiff(),
+        existing: false,
+      };
+      const respNewItem = [...selectedItem, template];
+      setSelectedItem(respNewItem);
+      setValue("category_name", "");
+      setValue("item_group", "");
+      setValue("cost", "");
+      setValue("brand", "");
+      setValue("descript_item", "");
+      setValue("min_serial_number", "");
+      setValue("max_serial_number", "");
+      setValue("quantity", 0);
+      setValue("location", "");
+      setValue("tax_location", "");
+      setValue("container", "");
+      setValue("containerSpotLimit", "0");
+      openNotificationWithIcon(
+        "New group of items were created and stored in database."
+      );
+      setLoadingStatus(false);
+      return setDisplayFormToCreateCategory(false);
+    } catch (error) {
+      openNotificationWithIcon(`${error.message}`);
+      setLoadingStatus(false);
     }
   };
-  
+
   const handleMoreInfoPerDevice = () => {
     const result = [...moreInfo, { keyObject, valueObject }];
     setKeyObject("");
@@ -297,26 +320,25 @@ const FormDeviceTrackingMethod = ({
       <>
         <InputLabel
           id="eventName"
-          style={{ marginBottom: "0.2rem", width: "100%" }}
+          style={{ marginBottom: "6px", width: "100%" }}
         >
           <Typography
             textAlign={"left"}
-            textTransform={"none"}
-            style={TextFontSize20LineHeight30}
-            color={"var(--gray600, #475467)"}
+            style={TextFontSize30LineHeight38}
+            color={"var(--gray-600, #475467)"}
           >
-            Add a rental equipment to company inventory.
+            Add a group of devices
           </Typography>
         </InputLabel>
         <InputLabel
           id="eventName"
-          style={{ marginBottom: "0.2rem", width: "100%" }}
+          style={{ marginBottom: "6px", width: "100%" }}
         >
           <Typography
             textAlign={"left"}
             textTransform={"none"}
-            style={{ ...TextFontSize20LineHeight30, textWrap: "pretty" }}
-            color={"var(--gray600, #475467)"}
+            style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
+            color={"var(--gray-600, #475467)"}
           >
             Devices serial numbers can be created by inputting a serial number
             base to define the category of device, and then a range from one
@@ -327,9 +349,400 @@ const FormDeviceTrackingMethod = ({
     );
   };
 
-  const handleRemoveItem = (props) => {
-    const result = moreInfo.filter((_, index) => index !== props);
-    return setMoreInfo(result);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!moreInfoDisplay) {
+      setMoreInfo([]);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [moreInfoDisplay]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    costValueInputFormat({ props: watch("cost"), setValue });
+    return () => {
+      controller.abort();
+    };
+  }, [watch("cost")]);
+
+  const styling = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: 500,
+    lineHeight: "20px",
+    color: "var(--gray-700, #344054)",
+  };
+
+  const buttonStyleLoading = {
+    ...BlueButton,
+    ...CenteringGrid,
+    width: "100%",
+    border: `1px solid ${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    borderRadius: "8px",
+    background: `${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+    padding: "6px 12px",
+    cursor: "pointer",
+  };
+
+  const handleDeleteMoreInfo = (index) => {
+    const result = [...moreInfo];
+    const removingResult = result.filter((_, i) => i !== index);
+    return setMoreInfo(removingResult);
+  };
+
+  const styleDivParent = {
+    width: "100%",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    textAlign: "left",
+    gap: "10px",
+  };
+
+  const renderFields = [
+    {
+      name: "item_group",
+      placeholder: "Type the name of the device",
+      label: "Device name",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("item_group"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "category_name",
+      placeholder: "e.g. Electronic",
+      label: "Category",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("category_name"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "brand",
+      placeholder: "e.g. Apple",
+      label: "Brand",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("brand"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "cost",
+      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      label: "Replacement cost",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("cost"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "tax_location",
+      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      label: "Taxable location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage:
+        "Address where tax deduction for equipment will be applied.",
+    },
+    {
+      name: "container",
+      placeholder: "e.g. Permanent",
+      label: "Is it a container?",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [
+        {
+          value: "No - It is not a container",
+        },
+        {
+          value: "Yes - It is a container",
+        },
+      ],
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "This item will contain other items inside.",
+      displayField: true,
+    },
+    {
+      name: "containerSpotLimit",
+      placeholder: "e.g. Permanent",
+      label: "Container Spot Limit",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "How many items can be stored inside the container.",
+      displayedButton: false,
+      displayField: displayContainerSplotLimitField,
+    },
+    {
+      name: "location",
+      placeholder: "Select a location",
+      label: "Main location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayField: true,
+    },
+    {
+      name: "sub_location",
+      placeholder: "Select a location",
+      label: "Sub location",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayField: true,
+    },
+    {
+      name: "sub_location_2",
+      placeholder: "Select a location",
+      label: "Sub location 2",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayField: true,
+    },
+    {
+      name: "sub_location_3",
+      placeholder: "Select a location",
+      label: "Sub location 3",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: renderLocationOptions(),
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Where the item is location physically.",
+      displayField: true,
+    },
+    {
+      name: "min_serial_number",
+      placeholder: "e.g. 300",
+      label: "Starting Serial number",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("serial_number"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "max_serial_number",
+      placeholder: "e.g. 300",
+      label: "Ending Serial number",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: retrieveItemOptions("serial_number"),
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "quantity",
+      placeholder: "e.g. 300",
+      label: "Quantity",
+      htmlElement: "Quantity",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage:
+        "This is the quantity from starting serial number and ending serial number.",
+    },
+    {
+      name: "ownership",
+      placeholder: "e.g. Permanent",
+      label: "Ownership status of item",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: options,
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
+    },
+    {
+      name: "",
+      placeholder: "",
+      label: "Returning date",
+      htmlElement: "Day",
+      style: OutlinedInputStyle,
+      required: true,
+      options: options,
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
+    },
+    {
+      name: "image_uploader",
+      placeholder: "",
+      label: "Image uploader",
+      htmlElement: "Day",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 6,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: true,
+    },
+    {
+      name: "descript_item",
+      placeholder:
+        "Please provide a brief description of the new device to be added.",
+      label: "Description of the device",
+      htmlElement: "TextArea",
+      style: OutlinedInputStyle,
+      required: true,
+      options: options,
+      htmlOption: 4,
+      tooltip: true,
+      tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: true,
+    },
+  ];
+
+  const renderOptional = (props) => {
+    if (props === "Day") {
+      return (
+        <div
+          style={{
+            width: "100%",
+            display: watch("ownership") === "Rent" ? "flex" : "none",
+          }}
+        >
+          <DatePicker
+            id="calender-event"
+            autoComplete="checking"
+            showTimeSelect
+            dateFormat="Pp"
+            minDate={new Date()}
+            selected={returningDate}
+            openToDate={new Date()}
+            startDate={new Date()}
+            onChange={(date) => setReturningDate(date)}
+            style={{
+              ...OutlinedInputStyle,
+              width: "100%",
+              borderRadius: "8px",
+            }}
+          />
+        </div>
+      );
+    }
+    if (props === "Quantity") {
+      return (
+        <OutlinedInput
+          readOnly
+          value={qtyDiff()}
+          {...register("quantity", { setValueAs: qtyDiff() })}
+          fullWidth
+          style={{
+            ...OutlinedInputStyle,
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        />
+      );
+    }
+
+    return (
+      <OutlinedInput
+        required
+        multiline
+        minRows={5}
+        {...register("descript_item", { required: true })}
+        fullWidth
+        aria-invalid={errors.descript_item}
+        style={{
+          borderRadius: "8px",
+          backgroundColor: "#fff",
+          color: "#000",
+          verticalAlign: "center",
+          boxShadow: "1px 1px 2px rgba(16, 24, 40, 0.05)",
+          outline: "none",
+        }}
+        placeholder="Please provide a brief description of the new device to be added."
+      />
+    );
+  };
+
+  const gripingFields = (props) => {
+    if (
+      renderFields[props].name === "min_serial_number" ||
+      renderFields[props].name === "max_serial_number" ||
+      renderFields[props].name === "quantity"
+    )
+      return 4;
+    return 6;
+  };
+
+  const qtyDiff = () => {
+    if (
+      watch("min_serial_number").length < 1 ||
+      watch("max_serial_number").length < 1
+    ) {
+      return 0;
+    }
+    return (
+      Number(watch("max_serial_number")) -
+      Number(watch("min_serial_number")) +
+      1
+    );
   };
 
   return (
@@ -339,552 +752,133 @@ const FormDeviceTrackingMethod = ({
       alignItems={"center"}
       container
     >
+      {contextHolder}
       {renderTitle()}
-      <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          display: "flex",
-          padding: "24px",
-          flexDirection: "column",
-          gap: "24px",
-          borderRadius: "8px",
-          border: "1px solid var(--gray300, #D0D5DD)",
-          background: "var(--gray100, #F2F4F7)",
-        }}
-        onSubmit={handleSubmit(savingNewItem)}
-        className="form"
-      >
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Category
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("category_name")}
-              aria-invalid={errors.category_name}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Electronic"
-              fullWidth
-            />
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Device name
-              </Typography>
-            </InputLabel>
-            <AutoComplete
-              className="custom-autocomplete" // Add a custom className here
-              variant="outlined"
-              style={{
-                ...AntSelectorStyle,
-                border: "solid 0.3 var(--gray600)",
-                fontFamily: "Inter",
-                fontSize: "14px",
-                width: "100%",
-              }}
-              value={choose}
-              onChange={(value) => setChoose(value)}
-              options={retrieveItemOptions().map((item) => {
-                return { value: item };
-              })}
-              placeholder="Type the name of the device"
-              filterOption={(inputValue, option) =>
-                String(option.value)
-                  ?.toUpperCase()
-                  .indexOf(String(inputValue)?.toUpperCase()) !== -1
-              }
-            />
-
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Brand
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("brand")}
-              aria-invalid={errors.brand}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Apple"
-              fullWidth
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                <Tooltip title="Address where tax deduction for equipment will be applied.">
-                  Taxable location <QuestionIcon />
-                </Tooltip>
-              </Typography>
-            </InputLabel>
-            <AutoComplete
-              className="custom-autocomplete"
-              style={{ width: "100%", height: "2.5rem" }}
-              options={renderLocationOptions()}
-              value={taxableLocation}
-              placeholder="Select a location"
-              filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                -1
-              }
-              onChange={(value) => setTaxableLocation(value)}
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Cost of replace device
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("cost", { required: true })}
-              aria-invalid={errors.cost}
-              style={OutlinedInputStyle}
-              placeholder="e.g. $200"
-              startAdornment={
-                <InputAdornment position="start">
-                  <Typography
-                    textTransform={"none"}
-                    textAlign={"left"}
-                    style={{ ...Subtitle, fontWeight: 400 }}
+      <form onSubmit={handleSubmit(savingNewItem)} className="form">
+        <Grid container spacing={1}>
+          {/* style={styleDivParent} */}
+          {renderFields.map((item, index) => {
+            if (item.displayField) {
+              if (item.htmlOption === 6) {
+                return (
+                  <Grid
+                    key={item.name}
+                    style={{
+                      textAlign: "left",
+                    }}
+                    marginY={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={
+                      renderFields[index].name === "descript_item"
+                        ? 12
+                        : gripingFields(index)
+                    }
+                    lg={
+                      renderFields[index].name === "descript_item"
+                        ? 12
+                        : gripingFields(index)
+                    }
                   >
-                    $
-                  </Typography>
-                </InputAdornment>
-              }
-              fullWidth
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "5px",
-            }}
-          >
-            {/* <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-                display: "flex",
-                alignSelf: "flex-start",
-              }}
-            > */}
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Tooltip title="Device added from this option would be set as rented Device.">
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Ownership status of items{" "}
-                  {/* <strong>
-                      <QuestionIcon />
-                    </strong> */}
-                </Typography>
-              </Tooltip>
-              <OutlinedInput
-                disabled
-                style={OutlinedInputStyle}
-                readOnly
-                value={"Rent"}
-                fullWidth
-              />
-            </InputLabel>
-            {/* </div> */}
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                From starting number
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("startingNumber")}
-              aria-invalid={errors.startingNumber}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 0001"
-              fullWidth
-              endAdornment={
-                <Tooltip
-                  placement="right"
-                  title={
-                    checkExistingSerialNumberInCompanyInventory(
-                      watch("startingNumber")
-                    )?.length > 0
-                      ? "Serial number already exists in company inventory."
-                      : ""
-                  }
-                >
-                  <InputAdornment position="end">
-                    {checkExistingSerialNumberInCompanyInventory(
-                      watch("startingNumber")
-                    )?.length > 0 ? (
-                      <div
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
                         style={{
-                          backgroundColor:
-                            checkExistingSerialNumberInCompanyInventory(
-                              watch("startingNumber")
-                            )?.length > 0
-                              ? "var(--danger-action)"
-                              : null,
-                          borderRadius: "50%",
-                          padding: "2px 5px",
+                          width: "100%",
                         }}
                       >
-                        <WarningIcon color={"#fff"} />
-                      </div>
-                    ) : (
-                      <CheckIcon />
-                    )}
-                  </InputAdornment>
-                </Tooltip>
-              }
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                To ending number
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("endingNumber")}
-              aria-invalid={errors.endingNumber}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 1000"
-              fullWidth
-              endAdornment={
-                <Tooltip
-                  placement="right"
-                  title={
-                    checkExistingSerialNumberInCompanyInventory(
-                      watch("endingNumber")
-                    )?.length > 0
-                      ? "Serial number already exists in company inventory."
-                      : ""
-                  }
-                >
-                  <InputAdornment position="end">
-                    {checkExistingSerialNumberInCompanyInventory(
-                      watch("endingNumber")
-                    )?.length > 0 ? (
-                      <div
-                        style={{
-                          backgroundColor: "var(--danger-action)",
-                          borderRadius: "50%",
-                          padding: "2px 5px",
-                        }}
-                      >
-                        <WarningIcon color={"#fff"} />
-                      </div>
-                    ) : (
-                      <CheckIcon />
-                    )}
-                  </InputAdornment>
-                </Tooltip>
-              }
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-          }}
-        >
-          <InputLabel style={{ width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{ ...Subtitle, fontWeight: 500 }}
-            >
-              Location{" "}
-              <Tooltip title="Where the item is location physically.">
-                <QuestionIcon />
-              </Tooltip>
-            </Typography>
-          </InputLabel>
-          <AutoComplete
-            className="custom-autocomplete"
-            value={locationSelection}
-            style={{ width: "100%", height: "2.5rem" }}
-            options={renderLocationOptions()}
-            placeholder="Select a location"
-            filterOption={(inputValue, option) =>
-              option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-              -1
-            }
-            onChange={(value) => setLocationSelection(value)}
-          />
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-          }}
-        >
-          <InputLabel style={{ width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{ ...Subtitle, fontWeight: 500 }}
-            >
-              Description of the device
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            required
-            multiline
-            minRows={5}
-            {...register("descript_item", { required: true })}
-            aria-invalid={errors.descript_item}
-            style={{
-              borderRadius: "12px",
-              margin: "0.1rem auto 1rem",
-              display: "flex",
-              width: "100%",
-              justifyContent: "flex-start",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            }}
-            placeholder="Please provide a brief description of the new device to be added."
-          />
-        </div>
+                        <Typography style={styling}>
+                          {item.label} {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                    </InputLabel>
 
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          style={{
-            width: "100%",
-            borderRadius: "12px",
-            border: "1px solid var(--gray200, #EAECF0)",
-            background: "var(--base-white, #FFF)",
-          }}
-          item
-          xs={12}
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            marginY={2}
-            item
-            xs={12}
-          >
-            <Avatar
-              style={{
-                width: "3rem",
-                height: "auto",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                border: "6px solid var(--gray50, #F9FAFB)",
-                background: "6px solid var(--gray50, #F9FAFB)",
-                borderRadius: "28px",
-              }}
-            >
-              {" "}
-              <UploadIcon />
-            </Avatar>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <TextField
-              {...register("photo")}
-              id="file-upload"
-              type="file"
-              className="photo_input"
-              accept=".jpeg, .png, .jpg"
-              style={{
-                outline: "none",
-                border: "transparent",
-              }}
-            />
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            marginBottom={2}
-            item
-            xs={12}
-          >
-            <Typography style={Subtitle}>
-              SVG, PNG, JPG or GIF (max. 1MB)
-            </Typography>
-          </Grid>
+                    <ImageUploaderUX
+                      setImageUploadedValue={setImageUploadedValue}
+                    />
+                  </Grid>
+                );
+              }
+              return (
+                <Grid
+                  key={item.name}
+                  style={{
+                    textAlign: "left",
+                  }}
+                  marginY={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={renderFields[index].name === "descript_item" ? 12 : 6}
+                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
+                >
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <Tooltip
+                      placement="top"
+                      title={item.tooltipMessage}
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      <Typography style={styling}>
+                        {item.label} {item.tooltip && <QuestionIcon />}
+                      </Typography>
+                    </Tooltip>
+                  </InputLabel>
+                  {item.htmlElement.length < 1 ? (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          aria-required={true}
+                          className="custom-autocomplete" // Add a custom className here
+                          variant="outlined"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3 var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(value) => onChange(value)}
+                          options={item.options.map((x) => {
+                            if (item.htmlOption === 0) {
+                              return { value: x };
+                            } else {
+                              return { value: x.value };
+                            }
+                          })}
+                          placeholder={item.placeholder}
+                          filterOption={(inputValue, option) =>
+                            option.value
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    />
+                  ) : (
+                    renderOptional(item.htmlElement)
+                  )}{" "}
+                </Grid>
+              );
+            }
+          })}
         </Grid>
         <Divider />
         <Button
-          htmlType="button"
-          onClick={() => setMoreInfoDisplay(true)}
-          style={{
-            ...BlueButton,
-            border: `1px solid ${
-              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-            }`,
-            background: `${
-              loading ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-            }`,
-            width: "100%",
-          }}
+          type="button"
+          onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
+          style={buttonStyleLoading}
         >
           <Typography textTransform={"none"} style={BlueButtonText}>
-            <Icon
-              icon="ic:baseline-plus"
-              color="var(--base-white, #FFF)"
-              width={20}
-              height={20}
-            />
-            &nbsp; Add more information
+            <WhiteCirclePlusIcon /> &nbsp; Add more information
           </Typography>
         </Button>
         {moreInfoDisplay && (
@@ -915,20 +909,30 @@ const FormDeviceTrackingMethod = ({
               onClick={() => handleMoreInfoPerDevice()}
               style={{ ...BlueButton, ...CenteringGrid }}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />{" "}
+              <WhiteCirclePlusIcon />
             </Button>
           </div>
         )}
-        <Divider />
+        <Divider
+          style={{
+            marginBottom: "-15px",
+            display: moreInfoDisplay ? "" : "none",
+          }}
+        />
         <div
           style={{
             width: "100%",
-            display: "flex",
+            display: moreInfoDisplay ? "flex" : "none",
+            justifyContent: "flex-start",
+            alignSelf: "flex-start",
+          }}
+        >
+          <p style={Subtitle}>More information</p>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: moreInfoDisplay ? "flex" : "none",
             justifyContent: "flex-start",
             alignItems: "center",
           }}
@@ -936,8 +940,6 @@ const FormDeviceTrackingMethod = ({
           {moreInfo.length > 0 &&
             moreInfo.map((item, index) => (
               <Chip
-                onDelete={() => handleRemoveItem(index)}
-                key={`${item.keyObject}-${item.valueObject}`}
                 style={{
                   backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
@@ -945,62 +947,68 @@ const FormDeviceTrackingMethod = ({
                   border: "solid 0.1px var(--gray900)",
                   borderRadius: "8px",
                 }}
+                key={`${item.keyObject}-${item.valueObject}`}
                 label={`${item.keyObject}:${item.valueObject}`}
-              />
-              //   {item.keyObject}:{item.valueObject}
-              // </Chip>
+                onDelete={() => handleDeleteMoreInfo(index)}
+              >
+                {item.keyObject}:{item.valueObject}
+              </Chip>
             ))}
         </div>
-        <Divider />
-
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <Button
-            disabled={loading}
-            onClick={() => setDisplayFormToCreateCategory(false)}
-            style={{ ...GrayButton, width: "100%" }}
-          >
-            <Typography textTransform={"none"} style={GrayButtonText}>
-              Go back
-            </Typography>
-          </Button>
-          <Button
-            disabled={loading}
-            type="submit"
+        <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
+        <div style={styleDivParent}>
+          <div
             style={{
-              ...BlueButton,
-              width: "100%",
+              textAlign: "left",
+              width: "50%",
             }}
           >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />
-              &nbsp; Save new item
-            </Typography>
-          </Button>
+            <Button
+              onClick={() => setDisplayFormToCreateCategory(false)}
+              htmlType="reset"
+              disabled={loadingStatus}
+              style={{
+                ...GrayButton,
+                ...CenteringGrid,
+                width: "100%",
+              }}
+            >
+              <p
+                style={{
+                  ...GrayButtonText,
+                  ...CenteringGrid,
+                  textTransform: "none",
+                }}
+              >
+                Go back
+              </p>
+            </Button>
+          </div>
+          <div
+            style={{
+              textAlign: "right",
+              width: "50%",
+            }}
+          >
+            <Button
+              disabled={loadingStatus}
+              htmlType="submit"
+              style={buttonStyleLoading}
+            >
+              <p
+                style={{
+                  ...BlueButtonText,
+                  ...CenteringGrid,
+                  textTransform: "none",
+                }}
+              >
+                <WhiteCirclePlusIcon />
+                &nbsp; Save new item
+              </p>
+            </Button>
+          </div>
         </div>
       </form>
-      {openReturnDateModal && (
-        <ReturnDateModal
-          openReturnDateModal={openReturnDateModal}
-          setOpenReturnDateModal={setOpenReturnDateModal}
-          data={newDeviceGroupToPass}
-          setSelectedItem={setSelectedItem}
-          setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
-        />
-      )}
     </Grid>
   );
 };
