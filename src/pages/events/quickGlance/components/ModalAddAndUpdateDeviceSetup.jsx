@@ -57,7 +57,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       }),
     refetchOnMount: false,
   });
-  
+
   const recordNoSqlDevicesQuery = useQuery({
     queryKey: ["recordNoSqlDevices"],
     queryFn: () =>
@@ -550,10 +550,9 @@ const ModalAddAndUpdateDeviceSetup = ({
               width: "100%",
             }}
           >
-            <RectangleBluePlusIcon />
-            &nbsp;
             <Typography textTransform="none" style={LightBlueButtonText}>
-              Add qty from location
+              <RectangleBluePlusIcon />
+              &nbsp; Add qty from location
             </Typography>
           </button>
         </div>
