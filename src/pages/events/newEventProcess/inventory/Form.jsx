@@ -28,6 +28,7 @@ import NoMerchantService from "./components/NoMerchantService";
 import SelectedItemsRendered from "./components/SelectedItemsRendered";
 import Services from "./extra/Services";
 import RefreshButton from "../../../../components/utils/UX/RefreshButton";
+import { groupBy } from "lodash";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -72,46 +73,25 @@ const Form = () => {
   }, []);
 
   const dataFound = itemQuery?.data?.data?.items ?? [];
-  const groupingItemByCategoriesToRenderThemInSelector = () => {
-    const result = new Map();
-    for (let data of dataFound) {
-      if (!result.has(data.category_name)) {
-        result.set(data.category_name, [data]);
-      } else {
-        result.set(data.category_name, [
-          ...result.get(data.category_name),
-          data,
-        ]);
+  const optionsToRenderInSelector = () => {
+    const checkLocation = new Map();
+    const groupingByCategories = groupBy(dataFound, "category_name");
+    for (let [key, value] of Object.entries(groupingByCategories)) {
+      groupingByCategories[key] = groupBy(value, "item_group");
+      for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
+        checkLocation.set(`${key}-${key2}`, {
+          category_name: key,
+          item_group: key2,
+          total: value2.length,
+          data: JSON.stringify(value2),
+        });
       }
     }
-    return result;
-  };
-  const optionsToRenderInSelector = () => {
     const result = new Set();
-    for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
+    for (let [ , value] of checkLocation) {
       result.add(value);
     }
-    const checkLocation = new Map();
-    for (let data of Array.from(result)) {
-      for (let item of data) {
-        if (!checkLocation.has(`${item.category_name}-${item.item_group}`)) {
-          checkLocation.set(`${item.category_name}-${item.item_group}`, [item]);
-        } else {
-          checkLocation.set(`${item.category_name}-${item.item_group}`, [
-            ...checkLocation.get(`${item.category_name}-${item.item_group}`),
-            item,
-          ]);
-        }
-      }
-    }
-    let finalResultAfterSortValueByLocation = [];
-    for (const [, value] of checkLocation) {
-      finalResultAfterSortValueByLocation = [
-        ...finalResultAfterSortValueByLocation,
-        value,
-      ];
-    }
-    return finalResultAfterSortValueByLocation;
+    return Array.from(result);
   };
 
   const onChange = (value) => {
@@ -379,16 +359,16 @@ const Form = () => {
                       >
                         <span style={{ width: "50%" }}>
                           <span style={{ fontWeight: 700 }}>
-                            {item[0].category_name}
+                            {item.category_name}
                           </span>{" "}
-                          {item[0].item_group}
+                          {item.item_group}
                         </span>
                         <span style={{ textAlign: "right", width: "20%" }}>
-                          Total available: {item.length}
+                          Total available: {item.total}
                         </span>
                       </Typography>
                     ),
-                    value: JSON.stringify(item),
+                    value: item.data,
                   };
                 })}
               />
