@@ -160,7 +160,7 @@ const ReviewAndSubmitEvent = () => {
       active: true,
       contactInfo: contactInfo,
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
-      company_id:user.companyData.id
+      company_id: user.companyData.id,
     });
     if (newEventInfo.data.ok) {
       const eventId = checkArray(newEventInfo.data.event);
@@ -215,7 +215,7 @@ const ReviewAndSubmitEvent = () => {
 
   const checkAndCreateNewDevicesInSqlDB = async () => {
     if (deviceSetup.some((element) => element.existing === false)) {
-      const check = await "there is devices to be created in db";
+      const check = "there is devices to be created in db";
       for (let data of deviceSetup) {
         if (!data.existing) {
           const template = {
@@ -225,19 +225,23 @@ const ReviewAndSubmitEvent = () => {
             brand: data.brand,
             descript_item: data.descript_item,
             ownership: data.ownership,
-            min_serial_number: data.startingNumber,
-            max_serial_number: data.endingNumber,
-            warehouse: true,
+            min_serial_number: data.min_serial_number,
+            max_serial_number: data.max_serial_number,
+            warehouse: data.warehouse,
             main_warehouse: data.main_warehouse,
-            location: data.location,
-            current_location: data.location,
-            created_at: formatDate(new Date()),
-            updated_at: formatDate(new Date()),
+            created_at: formatDate(data.created_at),
+            updated_at: formatDate(data.updated_at),
             company: data.company,
+            location: data.location,
+            current_location: data.current_location,
+            sub_location: data.sub_location,
             extra_serial_number: data.extra_serial_number,
             company_id: data.company_id,
             return_date: data.return_date,
-            enableAssignFeature: false,
+            container: data.container,
+            containerSpotLimit: data.containerSpotLimit,
+            enableAssignFeature: data.enableAssignFeature,
+            image_url: data.image_url,
           };
           await devitrakApi.post("/db_item/bulk-item", template);
         }
