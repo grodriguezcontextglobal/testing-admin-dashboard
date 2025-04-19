@@ -1,44 +1,47 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import {
-  Button,
+  Chip,
   Grid,
-  InputAdornment,
   InputLabel,
   OutlinedInput,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AutoComplete,
-  Avatar,
+  Button,
   Divider,
-  Tooltip,
+  message,
   notification,
-  Select,
+  Tooltip,
 } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import DatePicker from "react-datepicker";
+import { Controller, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import ImageUploaderFormat from "../../../../../../classes/imageCloudinaryFormat";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
-import { UploadIcon } from "../../../../../../components/icons/UploadIcon";
+import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import { convertToBase64 } from "../../../../../../components/utils/convertToBase64";
+import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import costValueInputFormat from "../../../../../inventory/utils/costValueInputFormat";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
-import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../../../../styles/global/reactInput.css";
-import { TextFontSize14LineHeight20 } from "../../../../../../styles/global/TextFontSize14LineHeight20";
-import { checkArray } from "../../../../../../components/utils/checkArray";
+import "./style.css";
+import { renderFields } from "./components/utils/Fields";
 
 const options = [
   { value: "Select an option" },
@@ -46,31 +49,49 @@ const options = [
   { value: "Rent" },
   { value: "Sale" },
 ];
-
 const AssignemntNewDeviceInInventory = () => {
-  const [returningDate, setReturningDate] = useState(new Date());
-  const [selectedItem, setSelectedItem] = useState("");
-  const [taxableLocation, setTaxableLocation] = useState("");
-  const [valueSelection, setValueSelection] = useState(options[0].value);
-  const [locationSelection, setLocationSelection] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
   const [keyObject, setKeyObject] = useState("");
   const [valueObject, setValueObject] = useState("");
+  const [returningDate, setReturningDate] = useState(new Date());
+  const [imageUploadedValue, setImageUploadedValue] = useState(null);
+  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
+    useState(false);
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
-  const newEventInfo = {};
   const queryClient = useQueryClient();
+  const dataRef = useRef(null);
+  const newEventInfo = {};
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
+    control,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      item_group: "",
+      photo: [],
+      category_name: "",
+      cost: "",
+      brand: "",
+      descript_item: "",
+      serial_number: "",
+      container: "",
+      location: "",
+      sub_location: null,
+      sub_location_2: null,
+      sub_location_3: null,
+      tax_location: "",
+      containerSpotLimit: "0",
+    },
+  });
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
+  const openNotificationWithIcon = (msg) => {
     api.open({
       message: msg,
     });
@@ -83,6 +104,7 @@ const AssignemntNewDeviceInInventory = () => {
       }),
     refetchOnMount: false,
   });
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -91,6 +113,7 @@ const AssignemntNewDeviceInInventory = () => {
       }),
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     companiesQuery.refetch();
@@ -100,12 +123,13 @@ const AssignemntNewDeviceInInventory = () => {
     };
   }, []);
 
-  const retrieveItemOptions = () => {
+  const retrieveItemOptions = (props) => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
       const itemsOptions = itemsInInventoryQuery.data.data.items;
-      for (let data of itemsOptions) {
-        result.add(data.item_group);
+      const groupingBy = groupBy(itemsOptions, `${props}`);
+      for (let data of Object.keys(groupingBy)) {
+        result.add(data);
       }
     }
     return Array.from(result);
@@ -123,9 +147,6 @@ const AssignemntNewDeviceInInventory = () => {
     return [];
   };
 
-  const onChange = (value) => {
-    return setValueSelection(value);
-  };
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -136,27 +157,38 @@ const AssignemntNewDeviceInInventory = () => {
     }
     return result;
   };
+
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(selectedItem)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(selectedItem);
+    if (retrieveItemDataSelected().has(watch("item_group"))) {
+      const dataToRetrieve = retrieveItemDataSelected().get(
+        watch("item_group")
+      );
       setValue("category_name", `${dataToRetrieve.category_name}`);
       setValue("cost", `${dataToRetrieve.cost}`);
       setValue("brand", `${dataToRetrieve.brand}`);
       setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setLocationSelection(`${dataToRetrieve.location}`);
-      setTaxableLocation(`${dataToRetrieve.main_warehouse}`);
+      setValue("location", `${dataToRetrieve.location}`);
+      setValue("tax_location", `${dataToRetrieve.main_warehouse}`);
+      setValue("ownership", `${dataToRetrieve.ownership}`);
+      setValue("container", "");
     }
     return () => {
       controller.abort();
     };
-  }, [selectedItem]);
-  const handleMoreInfoPerDevice = () => {
-    const result = [...moreInfo, { keyObject, valueObject }];
-    setKeyObject("");
-    setValueObject("");
-    return setMoreInfo(result);
-  };
+  }, [watch("item_group")]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    } else {
+      setDisplayContainerSplotLimitField(false);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
 
   const createNewLease = async (props) => {
     const staffMember = await devitrakApi.post("/db_staff/consulting-member", {
@@ -194,104 +226,6 @@ const AssignemntNewDeviceInInventory = () => {
       }
     }
   };
-  const createDeviceRecordInNoSQLDatabase = async (props) => {
-    const db = props.deviceInfo;
-    for (let index = 0; index < db.length; index++) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: db[index].serial_number,
-        status: "Operational",
-        activity: true,
-        comment: "No comment",
-        eventSelected: `${profile.firstName} ${profile.lastName} / ${
-          profile.email
-        } / ${new Date().toLocaleDateString()}`,
-        provider: user.company,
-        type: db[index].item_group,
-        company: user.companyData.id,
-      });
-    }
-    return null;
-  };
-
-
-  const createEventNoSQL = async (props) => {
-    const eventName = `${profile.firstName} ${profile.lastName} / ${
-      profile.email
-    } / ${new Date().toLocaleDateString()}`;
-    const leasedTime = new Date();
-    leasedTime.setFullYear(leasedTime.getFullYear() + 2);
-    const eventLink = eventName.replace(/ /g, "%20");
-    const eventFormat = {
-      user: user.email,
-      company: user.company,
-      subscription: [],
-      eventInfoDetail: {
-        eventName: eventName,
-        eventLocation: `${props.state}, ${props.zip}`,
-        address: `${props.street}, ${props.city} ${props.state}, ${props.zip}`,
-        building: eventName,
-        floor: "",
-        merchant: false,
-        dateBegin: new Date().toString(),
-        dateEnd: leasedTime.toString(),
-        dateBeginTime: new Date().getTime(),
-      },
-      staff: {
-        adminUser: [
-          {
-            firstName: user.name,
-            lastName: user.lastName,
-            email: user.email,
-            role: "Administrator",
-          },
-        ],
-        headsetAttendees: [],
-      },
-      deviceSetup: [
-        {
-          category: props.deviceInfo[0].category_name,
-          group: props.deviceInfo[0].item_group,
-          value: props.deviceInfo[0].cost,
-          description: props.deviceInfo[0].descript_item,
-          company: props.deviceInfo[0].company_id,
-          ownership: props.deviceInfo[0].ownership,
-          createdBy: user.email,
-          key: props.deviceInfo[0].item_id,
-          dateCreated: props.deviceInfo[0].create_at,
-          resume: props.deviceInfo[0].descript_item,
-          existing: true,
-          quantity: props.quantity,
-          consumerUses: false,
-          startingNumber: props.deviceInfo[0].serial_number,
-          endingNumber: props.deviceInfo.at(-1).serial_number,
-        },
-      ],
-      extraServicesNeeded: false,
-      extraServices: [],
-      active: true,
-      contactInfo: {
-        name: `${user.name} ${user.lastName}`,
-        phone: [user.phone],
-        email: user.email,
-      },
-      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
-      type: "lease",
-    };
-    const newEventInfo = await devitrakApi.post(
-      "/event/create-event",
-      eventFormat
-    );
-    if (newEventInfo.data.ok) {
-      const eventId = checkArray(newEventInfo.data.event);
-      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
-        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
-      });
-      await createDeviceRecordInNoSQLDatabase({
-        deviceInfo: props.deviceInfo,
-        event_id: eventId.id,
-      });
-    }
-  };
 
   const createEvent = async (props) => {
     try {
@@ -315,7 +249,8 @@ const AssignemntNewDeviceInInventory = () => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      return null    }
+      return message.error(error.message);
+    }
   };
 
   const addDeviceToEvent = async (props) => {
@@ -337,7 +272,10 @@ const AssignemntNewDeviceInInventory = () => {
     setValue("descript_item", "");
     setValue("ownership", "");
     setValue("serial_number", "");
-    setValueSelection(options[0]);
+    setValue("location", "");
+    setValue("tax_location", "");
+    setValue("container", "");
+    setValue("containerSpotLimit", "0");
     openNotificationWithIcon("Equipment assigned to staff member.");
     setLoadingStatus(false);
     queryClient.invalidateQueries({
@@ -355,17 +293,12 @@ const AssignemntNewDeviceInInventory = () => {
 
     await navigate(`/staff/${profile.adminUserInfo._id}/main`);
   };
+
   const option1 = async (props) => {
     await createEvent(props.template);
     const deviceInfo = props.deviceInfo; //*array of existing devices in sql db
     if (newEventInfo.insertId) {
       await createNewLease({ ...props.template, deviceInfo });
-      // await createEventNoSQL({
-      //   ...props.template,
-      //   quantity: props.quantity,
-      //   deviceInfo,
-      // });
-
       await addDeviceToEvent([
         {
           item_group: deviceInfo[0].item_group,
@@ -378,12 +311,13 @@ const AssignemntNewDeviceInInventory = () => {
       await closingProcess();
     }
   };
+
   const retrieveDataNewAddedItem = async (props) => {
     const newAddedItem = await devitrakApi.post("/db_item/consulting-item", {
       company_id: user.sqlInfo.company_id,
-      item_group: selectedItem,
-      category_name: props.category_name,
-      serial_number: props.serial_number,
+      item_group: props.deviceInfo.item_group,
+      category_name: props.deviceInfo.category_name,
+      serial_number: props.deviceInfo.serial_number,
     });
     if (newAddedItem.data) {
       return await option1({
@@ -393,123 +327,131 @@ const AssignemntNewDeviceInInventory = () => {
       });
     }
   };
+
   const savingNewItem = async (data) => {
-    const template = {
-      street: data.street,
-      city: data.city,
-      state: data.state,
-      zip: data.zip,
-    };
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
-    if (selectedItem === "")
+    if (data.item_group === "")
+      return openNotificationWithIcon("A group of item must be provided.");
+    if (data.tax_location === "")
+      return openNotificationWithIcon("A taxable location must be provided.");
+    if (data.ownership === "")
+      return openNotificationWithIcon("Ownership status must be provided.");
+    if (String(data.ownership).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
-        "warning",
-        "A group of item must be provided."
+        "As ownership was set as 'Rent', returning date must be provided."
       );
-    if (taxableLocation === "")
-      return openNotificationWithIcon(
-        "warning",
-        "A taxable location must be provided."
-      );
-    if (valueSelection === "")
-      return openNotificationWithIcon(
-        "warning",
-        "Ownership status must be provided."
-      );
-    if (groupingByDeviceType[selectedItem]) {
+    }
+
+    if (groupingByDeviceType[data.item_group]) {
       const dataRef = groupBy(
-        groupingByDeviceType[selectedItem],
+        groupingByDeviceType[data.item_group],
         "serial_number"
       );
       if (dataRef[data.serial_number]?.length > 0) {
         return openNotificationWithIcon(
-          "warning",
           "Device serial number already exists in company records."
         );
       }
     }
     try {
       let base64;
-      if (data.photo.length > 0 && data.photo[0].size > 1048576) {
+      let img_url;
+      setLoadingStatus(true);
+      if (
+        imageUploadedValue?.length > 0 &&
+        imageUploadedValue[0].size > 5242880
+      ) {
         setLoadingStatus(false);
         return alert(
           "Image is bigger than allow. Please resize the image or select a new one."
         );
-      } else if (data.photo.length > 0) {
-        setLoadingStatus(true);
-        base64 = await convertToBase64(data.photo[0]);
-        const resp = await devitrakApi.post(`/image/new_image`, {
-          source: base64,
-          category: data.category_name,
-          item_group: selectedItem,
-          company: user.company,
-        });
-        if (resp.data) {
-          const respNewItem = await devitrakApi.post("/db_item/new_item", {
-            category_name: data.category_name,
-            item_group: selectedItem,
-            cost: data.cost,
-            brand: data.brand,
-            descript_item: data.descript_item,
-            ownership: valueSelection,
-            serial_number: data.serial_number,
-            warehouse: false,
-            main_warehouse: taxableLocation,
-            created_at: formatDate(new Date()),
-            updated_at: formatDate(new Date()),
-            company: user.company,
-            location: locationSelection,
-            current_location: locationSelection,
-            extra_serial_number: JSON.stringify(moreInfo),
-            company_id: user.sqlInfo.company_id,
-            return_date: `${
-              valueSelection === "Rent" ? formatDate(returningDate) : null
-            }`,
-          });
-          if (respNewItem.data.ok) {
-            await retrieveDataNewAddedItem({
-              ...data,
-              template: template,
-              quantity: "1",
-            });
-          }
-        }
-      } else if (data.photo.length < 1) {
-        setLoadingStatus(true);
-        const respNewItem = await devitrakApi.post("/db_item/new_item", {
-          category_name: data.category_name,
-          item_group: selectedItem,
-          cost: data.cost,
-          brand: data.brand,
-          descript_item: data.descript_item,
-          ownership: valueSelection,
-          serial_number: data.serial_number,
-          warehouse: false,
-          main_warehouse: taxableLocation,
-          created_at: formatDate(new Date()),
-          updated_at: formatDate(new Date()),
-          company: user.company,
-          location: locationSelection,
-          current_location: locationSelection,
-          extra_serial_number: JSON.stringify(moreInfo),
-          company_id: user.sqlInfo.company_id,
-          return_date: `${
-            valueSelection === "Rent" ? formatDate(returningDate) : null
-          }`,
-        });
-        if (respNewItem.data.ok) {
-          await retrieveDataNewAddedItem({
-            ...data,
-            template: template,
-            quantity: "1",
-          });
-        }
       }
+      if (imageUploadedValue?.length > 0) {
+        base64 = await convertToBase64(imageUploadedValue[0]);
+        const templateImageUpload = new ImageUploaderFormat(
+          base64,
+          user.companyData.id,
+          data.category_name,
+          data.item_group,
+          "",
+          "",
+          "",
+          "",
+          ""
+        );
+        const registerImage = await devitrakApi.post(
+          "/cloudinary/upload-image",
+          templateImageUpload.item_uploader()
+        );
+
+        await devitrakApi.post(`/image/new_image`, {
+          source: registerImage.data.imageUploaded.secure_url,
+          category: data.category_name,
+          item_group: data.item_group,
+          company: user.companyData.id,
+        });
+
+        img_url = registerImage.data.imageUploaded.secure_url;
+      }
+      const template = {
+        category_name: data.category_name,
+        item_group: data.item_group,
+        cost: data.cost,
+        brand: data.brand,
+        descript_item: data.descript_item,
+        ownership: data.ownership,
+        serial_number: data.serial_number,
+        warehouse: true,
+        main_warehouse: data.tax_location,
+        created_at: formatDate(new Date()),
+        updated_at: formatDate(new Date()),
+        company: user.company,
+        location: data.location,
+        sub_location: JSON.stringify([
+          data.sub_location,
+          data.sub_location_2,
+          data.sub_location_3,
+        ]),
+        current_location: data.location,
+        extra_serial_number: JSON.stringify(moreInfo),
+        company_id: user.sqlInfo.company_id,
+        return_date: `${
+          data.ownership === "Rent" ? formatDate(returningDate) : null
+        }`,
+        container: String(data.container).includes("Yes"),
+        containerSpotLimit: data.containerSpotLimit,
+        image_url: img_url,
+      };
+      const fullTemplate = {
+        ...template,
+        template: {
+          street: data.street,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
+        },
+      };
+      dataRef.current = fullTemplate;
+      const respNewItem = await devitrakApi.post("/db_item/new_item", template);
+      if (respNewItem.data.ok) {
+        retrieveDataNewAddedItem(fullTemplate);
+        openNotificationWithIcon(
+          "New item was created and stored in database."
+        );
+      }
+      return setLoadingStatus(false);
     } catch (error) {
-      openNotificationWithIcon("error", `${error.message}`);
+      openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);
     }
+  };
+
+  const handleMoreInfoPerDevice = () => {
+    const result = [...moreInfo, { keyObject, valueObject }];
+    setKeyObject("");
+    setValueObject("");
+    return setMoreInfo(result);
   };
 
   const renderTitle = () => {
@@ -519,35 +461,142 @@ const AssignemntNewDeviceInInventory = () => {
           id="eventName"
           style={{ marginBottom: "6px", width: "100%" }}
         >
-          <p
-            style={{
-              ...TextFontSize30LineHeight38,
-              textAlign: "left",
-              color: "var(--gray600, #475467)",
-            }}
+          <Typography
+            textAlign={"left"}
+            style={TextFontSize30LineHeight38}
+            color={"var(--gray-600, #475467)"}
           >
-            Add one device to inventory and assign it to staff member
-          </p>
+            Add one device
+          </Typography>
         </InputLabel>
         <InputLabel
           id="eventName"
           style={{ marginBottom: "6px", width: "100%" }}
         >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              color: "var(--gray600, #475467)",
-              textAlign: "left",
-              textTransform: "none",
-            }}
+          <Typography
+            textAlign={"left"}
+            textTransform={"none"}
+            style={TextFontSize20LineHeight30}
+            color={"var(--gray-600, #475467)"}
           >
             You can enter all the details manually or use a scanner to enter the
             serial number.
-          </p>
+          </Typography>
         </InputLabel>
       </>
     );
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!moreInfoDisplay) {
+      setMoreInfo([]);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [moreInfoDisplay]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    costValueInputFormat({ props: watch("cost"), setValue });
+    return () => {
+      controller.abort();
+    };
+  }, [watch("cost")]);
+
+  const styling = {
+    textTransform: "none",
+    textAlign: "left",
+    fontFamily: "Inter",
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: 500,
+    lineHeight: "20px",
+    color: "var(--gray-700, #344054)",
+  };
+
+  const buttonStyleLoading = {
+    ...BlueButton,
+    ...CenteringGrid,
+    width: "100%",
+    border: `1px solid ${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    borderRadius: "8px",
+    background: `${
+      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+    }`,
+    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+    padding: "6px 12px",
+    cursor: "pointer",
+  };
+
+  const handleDeleteMoreInfo = (index) => {
+    const result = [...moreInfo];
+    const removingResult = result.filter((_, i) => i !== index);
+    return setMoreInfo(removingResult);
+  };
+
+  const styleDivParent = {
+    width: "100%",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    textAlign: "left",
+    gap: "10px",
+  };
+
+  const renderOptional = (props) => {
+    if (props === "Day") {
+      return (
+        <div
+          style={{
+            width: "100%",
+            display: watch("ownership") === "Rent" ? "flex" : "none",
+          }}
+        >
+          <DatePicker
+            id="calender-event"
+            autoComplete="checking"
+            showTimeSelect
+            dateFormat="Pp"
+            minDate={new Date()}
+            selected={returningDate}
+            openToDate={new Date()}
+            startDate={new Date()}
+            onChange={(date) => setReturningDate(date)}
+            style={{
+              ...OutlinedInputStyle,
+              width: "100%",
+              borderRadius: "8px",
+            }}
+          />
+        </div>
+      );
+    }
+    return (
+      <OutlinedInput
+        required
+        multiline
+        minRows={5}
+        {...register("descript_item", { required: true })}
+        fullWidth
+        aria-invalid={errors.descript_item}
+        style={{
+          borderRadius: "8px",
+          backgroundColor: "#fff",
+          color: "#000",
+          verticalAlign: "center",
+          boxShadow: "1px 1px 2px rgba(16, 24, 40, 0.05)",
+          outline: "none",
+        }}
+        placeholder="Please provide a brief description of the new device to be added."
+      />
+    );
+  };
+
   return (
     <Grid
       display={"flex"}
@@ -557,543 +606,131 @@ const AssignemntNewDeviceInInventory = () => {
     >
       {contextHolder}
       {renderTitle()}
-      <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          display: "flex",
-          padding: "24px",
-          flexDirection: "column",
-          gap: "24px",
-          alignSelf: "stretch",
-          borderRadius: "8px",
-          border: "1px solid var(--gray-300, #D0D5DD)",
-          background: "var(--gray-100, #F2F4F7)",
-        }}
-        onSubmit={handleSubmit(savingNewItem)}
-        className="form"
-      >
-        <div style={{ width: "100%" }}>
-          <InputLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-            <p style={Subtitle}>Location where device is going to be used.</p>
-          </InputLabel>
-          <div
-            style={{
-              ...CenteringGrid,
-              justifyContent: "space-between",
-              margin: "0 0 20px 0",
-              gap: "1rem",
-            }}
-          >
-            <div style={{ width: "50%" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p style={Subtitle}>Street</p>
-              </InputLabel>
-              <OutlinedInput
-                {...register("street")}
-                disabled={loadingStatus}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                fullWidth
-              />
-            </div>
-            <div style={{ width: "50%" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p style={Subtitle}>City</p>
-              </InputLabel>
-              <OutlinedInput
-                disabled={loadingStatus}
-                {...register("city")}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                fullWidth
-              />
-            </div>
-          </div>
-          <div
-            style={{
-              ...CenteringGrid,
-              justifyContent: "space-between",
-              margin: "0 0 20px 0",
-              gap: "1rem",
-            }}
-          >
-            <div style={{ width: "50%" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p style={Subtitle}>State</p>
-              </InputLabel>
-              <OutlinedInput
-                {...register("state")}
-                disabled={loadingStatus}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                fullWidth
-              />
-            </div>
-            <div style={{ width: "50%" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p style={Subtitle}>Zip</p>
-              </InputLabel>
-              <OutlinedInput
-                disabled={loadingStatus}
-                {...register("zip")}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                fullWidth
-              />
-            </div>
-          </div>
-        </div>
+      <form onSubmit={handleSubmit(savingNewItem)} className="form">
+        <Grid container spacing={1}>
+          {/* style={styleDivParent} */}
+          {renderFields({
+            OutlinedInputStyle,
+            retrieveItemOptions,
+            options,
+            renderLocationOptions,
+            displayContainerSplotLimitField,
+          }).map((item) => {
+            if (item.displayField) {
+              if (item.htmlOption === 6) {
+                return (
+                  <Grid
+                    key={item.name}
+                    style={{
+                      textAlign: "left",
+                    }}
+                    marginY={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={item.name === "descript_item" ? 12 : 6}
+                    lg={item.name === "descript_item" ? 12 : 6}
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
+                        style={{
+                          width: "100%",
+                        }}
+                      >
+                        <Typography style={styling}>
+                          {item.label} {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                    </InputLabel>
 
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-              <p
-                style={{
-                  ...Subtitle,
-                  textAlign: "left",
-                  textTransform: "none",
-                }}
-              >
-                Category
-              </p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("category_name")}
-              aria-invalid={errors.category_name}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Electronic"
-              fullWidth
-            />
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            ></div>
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <p
-                style={{
-                  ...Subtitle,
-                  textAlign: "left",
-                  textTransform: "none",
-                }}
-              >
-                Device name
-              </p>
-            </InputLabel>
-            <AutoComplete
-              className="custom-autocomplete" // Add a custom className here
-              variant="outlined"
-              style={{
-                ...AntSelectorStyle,
-                border: "solid 0.3 var(--gray600)",
-                fontFamily: "Inter",
-                fontSize: "14px",
-                width: "100%",
-              }}
-              value={selectedItem}
-              onChange={(value) => setSelectedItem(value)}
-              options={retrieveItemOptions().map((item) => {
-                return { value: item };
-              })}
-              placeholder="Type the name of the device"
-              filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                -1
+                    <ImageUploaderUX
+                      setImageUploadedValue={setImageUploadedValue}
+                    />
+                  </Grid>
+                );
               }
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <p
-                style={{
-                  ...Subtitle,
-                  textAlign: "left",
-                  textTransform: "none",
-                }}
-              >
-                Brand
-              </p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("brand")}
-              aria-invalid={errors.brand}
-              style={OutlinedInputStyle}
-              placeholder="e.g. Apple"
-              fullWidth
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <p style={{ ...Subtitle, textAlign: "left" }}>
-                <Tooltip title="Address where tax deduction for equipment will be applied.">
-                  Taxable location <QuestionIcon />
-                </Tooltip>
-              </p>
-            </InputLabel>
-            <AutoComplete
-              className="custom-autocomplete"
-              style={{ width: "100%", height: "2.5rem" }}
-              options={renderLocationOptions()}
-              value={taxableLocation}
-              placeholder="Select a location"
-              filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                -1
-              }
-              onChange={(value) => setTaxableLocation(value)}
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ width: "100%" }}>
-              <p style={{ ...Subtitle, textAlign: "left" }}>
-                Cost of replace device
-              </p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("cost", { required: true })}
-              aria-invalid={errors.cost}
-              style={OutlinedInputStyle}
-              placeholder="e.g. $200"
-              startAdornment={
-                <InputAdornment position="start">
-                  <p style={{ ...Subtitle, textAlign: "left" }}>$</p>
-                </InputAdornment>
-              }
-              fullWidth
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <InputLabel style={{ width: "100%" }}>
-              <p style={{ ...Subtitle, textAlign: "left" }}>Serial number</p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("serial_number", { required: true })}
-              aria-invalid={errors.serial_number}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 300"
-              fullWidth
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-          }}
-        >
-          <InputLabel style={{ width: "100%", marginBottom: "6px" }}>
-            <p style={{ ...Subtitle, textAlign: "left" }}>
-              Description of the device
-            </p>
-          </InputLabel>
-          <OutlinedInput
-            required
-            multiline
-            minRows={5}
-            {...register("descript_item", { required: true })}
-            fullWidth
-            aria-invalid={errors.descript_item}
-            style={{
-              borderRadius: "8px",
-              backgroundColor: "#fff",
-              color: "#000",
-              verticalAlign: "center",
-              boxShadow: "1px 1px 2px rgba(16, 24, 40, 0.05)",
-              outline: "none",
-            }}
-            placeholder="Please provide a brief description of the new device to be added."
-          />
-        </div>
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          style={{
-            width: "100%",
-            borderRadius: "12px",
-            border: "1px solid var(--gray-200, #EAECF0)",
-            background: "var(--base-white, #FFF)",
-          }}
-          item
-          xs={12}
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <Avatar
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                border: "6px solid var(--gray-50, #F9FAFB)",
-                background: "6px solid var(--gray-50, #F9FAFB)",
-                borderRadius: "28px",
-              }}
-            >
-              {" "}
-              <UploadIcon />
-            </Avatar>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <TextField
-              {...register("photo")}
-              id="file-upload"
-              type="file"
-              className="photo_input"
-              accept=".jpeg, .png, .jpg"
-              style={{
-                outline: "none",
-                border: "transparent",
-              }}
-            />
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            marginBottom={2}
-            item
-            xs={12}
-          >
-            <p style={{ ...Subtitle, textAlign: "left" }}>
-              SVG, PNG, JPG or GIF (max. 1MB)
-            </p>
-          </Grid>
+              return (
+                <Grid
+                  key={item.name}
+                  style={{
+                    textAlign: "left",
+                  }}
+                  marginY={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={item.name === "descript_item" ? 12 : 6}
+                  lg={item.name === "descript_item" ? 12 : 6}
+                >
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <Tooltip
+                      placement="top"
+                      title={item.tooltipMessage}
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      <Typography style={styling}>
+                        {item.label} {item.tooltip && <QuestionIcon />}
+                      </Typography>
+                    </Tooltip>
+                  </InputLabel>
+                  {item.htmlElement.length < 1 ? (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          aria-required={true}
+                          className="custom-autocomplete" // Add a custom className here
+                          variant="outlined"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3 var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(value) => onChange(value)}
+                          options={item.options.map((x) => {
+                            if (item.htmlOption === 0) {
+                              return { value: x };
+                            } else {
+                              return { value: x.value };
+                            }
+                          })}
+                          placeholder={item.placeholder}
+                          filterOption={(inputValue, option) =>
+                            option.value
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    />
+                  ) : (
+                    renderOptional(item.htmlElement)
+                  )}{" "}
+                </Grid>
+              );
+            }
+          })}
         </Grid>
         <Divider />
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "10px",
-          }}
+        <Button
+          htmlType="button"
+          onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
+          style={buttonStyleLoading}
         >
-          <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-            <p style={{ ...Subtitle, textAlign: "left" }}>
-              Ownership status of item
-            </p>
-            <Select
-              showSearch
-              style={{ ...AntSelectorStyle, width: "100%" }}
-              placeholder="Select an option"
-              optionFilterProp="children"
-              onChange={onChange}
-              filterOption={(input, option) =>
-                (option?.label ?? "").includes(input)
-              }
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={options}
-            />
-          </InputLabel>
-          <div
-            style={{
-              width: "100%",
-              flexDirection: "column",
-              display: `${
-                valueSelection === "Rent" || valueSelection === ""
-                  ? "flex"
-                  : "none"
-              }`,
-            }}
-          >
-            <Tooltip
-              placement="top"
-              title="Where the item is location physically."
-              style={{
-                width: "100%",
-              }}
-            >
-              <Typography
-                style={{
-                  ...TextFontSize14LineHeight20,
-                  fontWeight: 500,
-                  color: "var(--gray700, #344054)",
-                }}
-              >
-                Returning date <QuestionIcon />
-              </Typography>
-            </Tooltip>
-            <DatePicker
-              id="calender-event"
-              autoComplete="checking"
-              showTimeSelect
-              dateFormat="Pp"
-              minDate={new Date()}
-              selected={returningDate}
-              openToDate={new Date()}
-              startDate={new Date()}
-              onChange={(date) => setReturningDate(date)}
-              style={{
-                ...OutlinedInputStyle,
-                width: "100%",
-              }}
-            />
-          </div>
-          <div style={{ width: "100%" }}>
-            <InputLabel style={{ width: "100%" }}>
-              <p style={{ ...Subtitle, textAlign: "left" }}>
-                Location{" "}
-                <Tooltip title="Where the item is location physically.">
-                  <QuestionIcon />
-                </Tooltip>
-              </p>
-            </InputLabel>
-            <AutoComplete
-              className="custom-autocomplete"
-              style={{ width: "100%", height: "2.5rem" }}
-              options={renderLocationOptions()}
-              placeholder="Select a location"
-              value={locationSelection}
-              filterOption={(inputValue, option) =>
-                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                -1
-              }
-              onChange={(value) => setLocationSelection(value)}
-            />
-          </div>
-        </div>
-        <Divider />
-        <span
-          onClick={() => setMoreInfoDisplay(true)}
-          style={{
-            ...CenteringGrid,
-            width: "100%",
-            border: `1px solid ${
-              loadingStatus
-                ? "var(--disabled-blue-button)"
-                : "var(--blue-dark-600)"
-            }`,
-            borderRadius: "8px",
-            background: `${
-              loadingStatus
-                ? "var(--disabled-blue-button)"
-                : "var(--blue-dark-600)"
-            }`,
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-            padding: "6px 12px",
-            cursor: "pointer",
-          }}
-        >
-          <Icon
-            icon="ic:baseline-plus"
-            color="var(--base-white, #FFF)"
-            width={20}
-            height={20}
-          />
-          &nbsp;
-          <p
-            style={{
-              color: "var(--base-white, #FFF)",
-              fontSize: "14px",
-              fontWeight: "600",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-              textTransform: "none",
-            }}
-          >
-            Add more information
-          </p>
-        </span>
+          <Typography textTransform={"none"} style={BlueButtonText}>
+            <WhiteCirclePlusIcon /> &nbsp; Add more information
+          </Typography>
+        </Button>
         {moreInfoDisplay && (
           <div
             style={{
@@ -1118,30 +755,41 @@ const AssignemntNewDeviceInInventory = () => {
               onChange={(e) => setValueObject(e.target.value)}
             />
             <Button
+              htmlType="button"
               onClick={() => handleMoreInfoPerDevice()}
               style={{ ...BlueButton, ...CenteringGrid }}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />{" "}
+              <WhiteCirclePlusIcon />
             </Button>
           </div>
         )}
-        <Divider />
+        <Divider
+          style={{
+            marginBottom: "-15px",
+            display: moreInfoDisplay ? "" : "none",
+          }}
+        />
         <div
           style={{
             width: "100%",
-            display: "flex",
+            display: moreInfoDisplay ? "flex" : "none",
+            justifyContent: "flex-start",
+            alignSelf: "flex-start",
+          }}
+        >
+          <p style={Subtitle}>More information</p>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            display: moreInfoDisplay ? "flex" : "none",
             justifyContent: "flex-start",
             alignItems: "center",
           }}
         >
           {moreInfo.length > 0 &&
-            moreInfo.map((item) => (
-              <div
+            moreInfo.map((item, index) => (
+              <Chip
                 style={{
                   backgroundColor: "var(--basewhite)",
                   padding: "2.5px 5px",
@@ -1150,23 +798,15 @@ const AssignemntNewDeviceInInventory = () => {
                   borderRadius: "8px",
                 }}
                 key={`${item.keyObject}-${item.valueObject}`}
+                label={`${item.keyObject}:${item.valueObject}`}
+                onDelete={() => handleDeleteMoreInfo(index)}
               >
                 {item.keyObject}:{item.valueObject}
-              </div>
+              </Chip>
             ))}
         </div>
-        <Divider />
-
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
+        <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
+        <div style={styleDivParent}>
           <div
             style={{
               textAlign: "left",
@@ -1174,33 +814,19 @@ const AssignemntNewDeviceInInventory = () => {
             }}
           >
             <Button
+              htmlType="reset"
               disabled={loadingStatus}
-              onClick={() =>
-                navigate(`/staff/${profile.adminUserInfo._id}/main`)
-              }
               style={{
+                ...GrayButton,
+                ...CenteringGrid,
                 width: "100%",
-                border: "1px solid var(--gray-300, #D0D5DD)",
-                borderRadius: "8px",
-                background: "var(--base-white, #FFF)",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
               }}
             >
-              <Icon
-                icon="ri:arrow-go-back-line"
-                color="#344054"
-                width={20}
-                height={20}
-              />
-              &nbsp;
               <p
                 style={{
+                  ...GrayButtonText,
+                  ...CenteringGrid,
                   textTransform: "none",
-                  color: "#344054",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
                 }}
               >
                 Go back
@@ -1215,41 +841,18 @@ const AssignemntNewDeviceInInventory = () => {
           >
             <Button
               disabled={loadingStatus}
-              type="submit"
-              style={{
-                width: "100%",
-                border: `1px solid ${
-                  loadingStatus
-                    ? "var(--disabled-blue-button)"
-                    : "var(--blue-dark-600)"
-                }`,
-                borderRadius: "8px",
-                background: `${
-                  loadingStatus
-                    ? "var(--disabled-blue-button)"
-                    : "var(--blue-dark-600)"
-                }`,
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-              }}
+              htmlType="submit"
+              style={buttonStyleLoading}
             >
-              <Icon
-                icon="ic:baseline-plus"
-                color="var(--base-white, #FFF)"
-                width={20}
-                height={20}
-              />
-              &nbsp;
               <p
                 style={{
+                  ...BlueButtonText,
+                  ...CenteringGrid,
                   textTransform: "none",
-                  color: "var(--base-white, #FFF)",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
                 }}
               >
-                Save and assign new item
+                <WhiteCirclePlusIcon />
+                &nbsp; Assign device to staff member
               </p>
             </Button>
           </div>
