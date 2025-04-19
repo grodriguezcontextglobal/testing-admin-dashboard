@@ -1,4 +1,4 @@
-import { Grid, InputLabel, OutlinedInput } from "@mui/material";
+import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification, Select, Button } from "antd";
 import { groupBy } from "lodash";
@@ -69,59 +69,31 @@ const AssignmentFromExistingInventory = () => {
     };
   }, [itemsInInventoryQuery.data, dataFound.current?.length]);
   dataFound.current = itemsInInventoryQuery?.data?.data?.items;
-  const groupingItemByCategoriesToRenderThemInSelector = () => {
-    const result = new Map();
-    const dataToIterate = dataFound.current ?? [];
-    for (let data of dataToIterate) {
-      if (!result.has(data.category_name)) {
-        result.set(data.category_name, [data]);
-      } else {
-        result.set(data.category_name, [
-          ...result.get(data.category_name),
-          data,
-        ]);
-      }
-    }
-    return result;
-  };
+
   const optionsToRenderInSelector = () => {
-    const result = new Set();
-    for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
-      result.add(value);
-    }
     const checkLocation = new Map();
-    for (let data of Array.from(result)) {
-      for (let item of data) {
-        if (
-          !checkLocation.has(
-            `${item.category_name}-${item.item_group}-${item.location}`
-          )
-        ) {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [item]
-          );
-        } else {
-          checkLocation.set(
-            `${item.category_name}-${item.item_group}-${item.location}`,
-            [
-              ...checkLocation.get(
-                `${item.category_name}-${item.item_group}-${item.location}`
-              ),
-              item,
-            ]
-          );
+    const dataToIterate = dataFound.current ?? [];
+    const groupingByCategories = groupBy(dataToIterate, "category_name");
+    for (let [key, value] of Object.entries(groupingByCategories)) {
+      groupingByCategories[key] = groupBy(value, "item_group");
+      for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
+        const groupingByLocaiton = groupBy(value2, "location");
+        for (let [key3, value3] of Object.entries(groupingByLocaiton)) {
+          checkLocation.set(`${key}-${key2}-${key3}`, {
+            category_name: key,
+            item_group: key2,
+            location: key3,
+            total: value3.length,
+            data: JSON.stringify(value3),
+          });
         }
       }
     }
-    let finalResultAfterSortValueByLocation = [];
-    for (const [, value] of checkLocation) {
-      finalResultAfterSortValueByLocation = [
-        ...finalResultAfterSortValueByLocation,
-        value,
-      ];
+    const result = new Set();
+    for (let [, value] of checkLocation) {
+      result.add(value);
     }
-    return finalResultAfterSortValueByLocation;
+    return Array.from(result);
   };
 
   const onChange = (value) => {
@@ -203,7 +175,7 @@ const AssignmentFromExistingInventory = () => {
         return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
       }
     } catch (error) {
-      console.log("🚀 ~ createEvent ~ error:", error);
+      return null;
     }
   };
   const createDeviceRecordInNoSQLDatabase = async (props) => {
@@ -603,34 +575,34 @@ const AssignmentFromExistingInventory = () => {
                     options={optionsToRenderInSelector().map((item) => {
                       return {
                         label: (
-                          <p
+                          <Typography
+                            textTransform={"capitalize"}
                             style={{
                               ...Subtitle,
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
                               width: "100%",
-                              textTransform: "capitalize",
                             }}
                           >
-                            <span style={{ textAlign: "left", width: "50%" }}>
+                            <span style={{ width: "50%" }}>
                               <span style={{ fontWeight: 700 }}>
-                                {item[0].category_name}
+                                {item.category_name}
                               </span>{" "}
-                              {item[0].item_group}
+                              {item.item_group}
                             </span>
                             <span style={{ textAlign: "left", width: "30%" }}>
                               Location:{" "}
                               <span style={{ fontWeight: 700 }}>
-                                {item[0].location}
+                                {item.location}
                               </span>
                             </span>
                             <span style={{ textAlign: "right", width: "20%" }}>
-                              Total available: {item.length}
+                              Total available: {item.total}
                             </span>
-                          </p>
-                        ), //renderOptionAsNeededFormat(JSON.stringify(option))
-                        value: JSON.stringify(item),
+                          </Typography>
+                        ),
+                        value: item.data,
                       };
                     })}
                   />
