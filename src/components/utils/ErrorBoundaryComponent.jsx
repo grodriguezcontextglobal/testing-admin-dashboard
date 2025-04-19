@@ -26,6 +26,15 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
       </h3>
     );
   };
+  if (
+    String(error.message).includes(
+      "Failed to fetch dynamically imported module:"
+    )
+  ) {
+    return window.location.reload({
+      force: true,
+    });
+  }
   return (
     <Card
       style={{
@@ -58,7 +67,7 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
           style={{
             ...TextFontSize20LineHeight30,
             color: "var(--graphic-status-damage)",
-            width:"100%",
+            width: "100%",
             textWrap: "balance",
           }}
         >
