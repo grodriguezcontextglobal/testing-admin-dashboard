@@ -35,6 +35,7 @@ import DatePicker from "react-datepicker";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
+import { renderFields } from "./utils/BulkItemsFields";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -166,14 +167,14 @@ const AddNewBulkItems = () => {
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
-    }else {
+    } else {
       setDisplayContainerSplotLimitField(false);
     }
     return () => {
       controller.abort();
     };
   }, [watch("container")]);
-  
+
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
@@ -410,252 +411,6 @@ const AddNewBulkItems = () => {
     gap: "10px",
   };
 
-  const renderFields = [
-    {
-      name: "item_group",
-      placeholder: "Type the name of the device",
-      label: "Device name",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("item_group"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "category_name",
-      placeholder: "e.g. Electronic",
-      label: "Category",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("category_name"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "brand",
-      placeholder: "e.g. Apple",
-      label: "Brand",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("brand"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Replacement cost",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("cost"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Taxable location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage:
-        "Address where tax deduction for equipment will be applied.",
-    },
-    {
-      name: "container",
-      placeholder: "e.g. Permanent",
-      label: "Is it a container?",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [
-        {
-          value: "No - It is not a container",
-        },
-        {
-          value: "Yes - It is a container",
-        },
-      ],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "This item will contain other items inside.",
-      displayField: true,
-    },
-    {
-      name: "containerSpotLimit",
-      placeholder: "e.g. Permanent",
-      label: "Container Spot Limit",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "How many items can be stored inside the container.",
-      displayedButton: false,
-      displayField: displayContainerSplotLimitField,
-    },
-    {
-      name: "location",
-      placeholder: "Select a location",
-      label: "Main location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location",
-      placeholder: "Select a location",
-      label: "Sub location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_2",
-      placeholder: "Select a location",
-      label: "Sub location 2",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_3",
-      placeholder: "Select a location",
-      label: "Sub location 3",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "min_serial_number",
-      placeholder: "e.g. 300",
-      label: "Starting Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "max_serial_number",
-      placeholder: "e.g. 300",
-      label: "Ending Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "quantity",
-      placeholder: "e.g. 300",
-      label: "Quantity",
-      htmlElement: "Quantity",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage:
-        "This is the quantity from starting serial number and ending serial number.",
-    },
-    {
-      name: "ownership",
-      placeholder: "e.g. Permanent",
-      label: "Ownership status of item",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-    {
-      name: "",
-      placeholder: "",
-      label: "Returning date",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-    {
-      name: "image_uploader",
-      placeholder: "",
-      label: "Image uploader",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 6,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "descript_item",
-      placeholder:
-        "Please provide a brief description of the new device to be added.",
-      label: "Description of the device",
-      htmlElement: "TextArea",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 4,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-  ];
-
   const renderOptional = (props) => {
     if (props === "Day") {
       return (
@@ -723,9 +478,9 @@ const AddNewBulkItems = () => {
 
   const gripingFields = (props) => {
     if (
-      renderFields[props].name === "min_serial_number" ||
-      renderFields[props].name === "max_serial_number" ||
-      renderFields[props].name === "quantity"
+      props.name === "min_serial_number" ||
+      props.name === "max_serial_number" ||
+      props.name === "quantity"
     )
       return 4;
     return 6;
@@ -757,7 +512,13 @@ const AddNewBulkItems = () => {
       <form onSubmit={handleSubmit(savingNewItem)} className="form">
         <Grid container spacing={1}>
           {/* style={styleDivParent} */}
-          {renderFields.map((item, index) => {
+          {renderFields({
+            OutlinedInputStyle,
+            retrieveItemOptions,
+            renderLocationOptions,
+            options,
+            displayContainerSplotLimitField
+          }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
                 return (
@@ -771,14 +532,14 @@ const AddNewBulkItems = () => {
                     xs={12}
                     sm={12}
                     md={
-                      renderFields[index].name === "descript_item"
+                     item.name === "descript_item"
                         ? 12
-                        : gripingFields(index)
+                        : gripingFields(item)
                     }
                     lg={
-                      renderFields[index].name === "descript_item"
+                     item.name === "descript_item"
                         ? 12
-                        : gripingFields(index)
+                        : gripingFields(item)
                     }
                   >
                     <InputLabel
@@ -813,8 +574,8 @@ const AddNewBulkItems = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={renderFields[index].name === "descript_item" ? 12 : 6}
-                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
+                  md={item.name === "descript_item" ? 12 : 6}
+                  lg={item.name === "descript_item" ? 12 : 6}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip

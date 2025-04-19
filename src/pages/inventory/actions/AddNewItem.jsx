@@ -37,6 +37,7 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import "./style.css";
+import { renderFields } from "./utils/SingleItemFields";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -167,7 +168,7 @@ const AddNewItem = () => {
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
-    }else {
+    } else {
       setDisplayContainerSplotLimitField(false);
     }
     return () => {
@@ -397,241 +398,6 @@ const AddNewItem = () => {
     gap: "10px",
   };
 
-  const renderFields = [
-    {
-      name: "item_group",
-      placeholder: "Type the name of the device",
-      label: "Device name",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("item_group"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "category_name",
-      placeholder: "e.g. Electronic",
-      label: "Category",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("category_name"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "brand",
-      placeholder: "e.g. Apple",
-      label: "Brand",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("brand"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Replacement cost",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("cost"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Taxable location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage:
-        "Address where tax deduction for equipment will be applied.",
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "location",
-      placeholder: "Select a location",
-      label: "Main location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "sub_location",
-      placeholder: "Select a location",
-      label: "Sub location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayedButton: true,
-      displayField: true,
-    },
-    {
-      name: "sub_location_2",
-      placeholder: "Select a location",
-      label: "Sub location 2",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayedButton: true,
-      displayField: true,
-    },
-    {
-      name: "sub_location_3",
-      placeholder: "Select a location",
-      label: "Sub location 3",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayedButton: true,
-      displayField: true,
-    },
-    {
-      name: "serial_number",
-      placeholder: "e.g. 300",
-      label: "Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "container",
-      placeholder: "e.g. Permanent",
-      label: "Is it a container?",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [
-        {
-          value: "No - It is not a container",
-        },
-        {
-          value: "Yes - It is a container",
-        },
-      ],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "This item will contain other items inside.",
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "containerSpotLimit",
-      placeholder: "e.g. Permanent",
-      label: "Container Spot Limit",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "How many items can be stored inside the container.",
-      displayedButton: false,
-      displayField: displayContainerSplotLimitField,
-    },
-    {
-      name: "ownership",
-      placeholder: "e.g. Permanent",
-      label: "Ownership status of item",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "",
-      placeholder: "",
-      label: "Returning date",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayedButton: false,
-      displayField: true,
-    },
-    {
-      name: "image_uploader",
-      placeholder: "",
-      label: "Image uploader",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 6,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "descript_item",
-      placeholder:
-        "Please provide a brief description of the new device to be added.",
-      label: "Description of the device",
-      htmlElement: "TextArea",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 4,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayedButton: false,
-      displayField: true,
-    },
-  ];
-
   const renderOptional = (props) => {
     if (props === "Day") {
       return (
@@ -693,7 +459,13 @@ const AddNewItem = () => {
       <form onSubmit={handleSubmit(savingNewItem)} className="form">
         <Grid container spacing={1}>
           {/* style={styleDivParent} */}
-          {renderFields.map((item, index) => {
+          {renderFields({
+            OutlinedInputStyle,
+            retrieveItemOptions,
+            options,
+            renderLocationOptions,
+            displayContainerSplotLimitField,
+          }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
                 return (
@@ -706,8 +478,8 @@ const AddNewItem = () => {
                     item
                     xs={12}
                     sm={12}
-                    md={renderFields[index].name === "descript_item" ? 12 : 6}
-                    lg={renderFields[index].name === "descript_item" ? 12 : 6}
+                    md={item.name === "descript_item" ? 12 : 6}
+                    lg={item.name === "descript_item" ? 12 : 6}
                   >
                     <InputLabel
                       style={{ marginBottom: "0.2rem", width: "100%" }}
@@ -741,8 +513,8 @@ const AddNewItem = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={renderFields[index].name === "descript_item" ? 12 : 6}
-                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
+                  md={item.name === "descript_item" ? 12 : 6}
+                  lg={item.name === "descript_item" ? 12 : 6}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
