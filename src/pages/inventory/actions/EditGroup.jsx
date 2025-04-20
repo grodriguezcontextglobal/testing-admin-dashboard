@@ -35,6 +35,7 @@ import DatePicker from "react-datepicker";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
+import { renderFields } from "./utils/BulkItemsFields";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -45,6 +46,9 @@ const EditGroup = () => {
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const [slicingData, setSlicingData] = useState([]);
+  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
+    useState(false);
+
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -199,6 +203,18 @@ const EditGroup = () => {
       controller.abort();
     };
   }, [watch("max_serial_number")]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    } else {
+      setDisplayContainerSplotLimitField(false);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
 
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
@@ -437,237 +453,6 @@ const EditGroup = () => {
     gap: "10px",
   };
 
-  const renderFields = [
-    {
-      name: "item_group",
-      placeholder: "Type the name of the device",
-      label: "Device name",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("item_group"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "category_name",
-      placeholder: "e.g. Electronic",
-      label: "Category",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("category_name"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "brand",
-      placeholder: "e.g. Apple",
-      label: "Brand",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("brand"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Replacement cost",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("cost"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Taxable location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage:
-        "Address where tax deduction for equipment will be applied.",
-    },
-    {
-      name: "container",
-      placeholder: "e.g. Permanent",
-      label: "Is it a container?",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [
-        {
-          value: "No - It is not a container",
-        },
-        {
-          value: "Yes - It is a container",
-        },
-      ],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "This item will contain other items inside.",
-    },
-
-    {
-      name: "location",
-      placeholder: "Select a location",
-      label: "Main location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-    },
-    {
-      name: "sub_location",
-      placeholder: "Select a location",
-      label: "Sub location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-    },
-    {
-      name: "sub_location_2",
-      placeholder: "Select a location",
-      label: "Sub location 2",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-    },
-    {
-      name: "sub_location_3",
-      placeholder: "Select a location",
-      label: "Sub location 3",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-    },
-    {
-      name: "min_serial_number",
-      placeholder: "e.g. 300",
-      label: "Starting Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "max_serial_number",
-      placeholder: "e.g. 300",
-      label: "Ending Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "quantity",
-      placeholder: "e.g. 300",
-      label: "Quantity",
-      htmlElement: "Quantity",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage:
-        "This is the quantity from starting serial number and ending serial number.",
-    },
-    {
-      name: "ownership",
-      placeholder: "e.g. Permanent",
-      label: "Ownership status of item",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-    },
-    {
-      name: "",
-      placeholder: "",
-      label: "Returning date",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-    },
-    {
-      name: "image_uploader",
-      placeholder: "",
-      label: "Image uploader",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 6,
-      tooltip: false,
-      tooltipMessage: null,
-    },
-    {
-      name: "enableAssignFeature",
-      placeholder: "",
-      label: "Assignable to staff/events",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: ["Enabled", "Disabled"],
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage:
-        "This options is to enable the device to be assigned to staff or events.",
-    },
-    {
-      name: "descript_item",
-      placeholder:
-        "Please provide a brief description of the new device to be added.",
-      label: "Description of the device",
-      htmlElement: "TextArea",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 4,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-    },
-  ];
-
   const renderOptional = (props) => {
     if (props === "Day") {
       return (
@@ -735,9 +520,9 @@ const EditGroup = () => {
 
   const gripingFields = (props) => {
     if (
-      renderFields[props].name === "min_serial_number" ||
-      renderFields[props].name === "max_serial_number" ||
-      renderFields[props].name === "quantity"
+      props === "min_serial_number" ||
+      props === "max_serial_number" ||
+      props === "quantity"
     )
       return 4;
     return 6;
@@ -758,9 +543,58 @@ const EditGroup = () => {
       {renderTitle()}
       <form onSubmit={handleSubmit(savingNewItem)} className="form">
         <Grid container spacing={1}>
-          {/* style={styleDivParent} */}
-          {renderFields.map((item, index) => {
-            if (item.htmlOption === 6) {
+          {renderFields({
+            OutlinedInputStyle,
+            retrieveItemOptions,
+            renderLocationOptions,
+            options,
+            displayContainerSplotLimitField,
+          }).map((item) => {
+            if (item.displayField) {
+              if (item.htmlOption === 6) {
+                return (
+                  <Grid
+                    key={item.name}
+                    style={{
+                      textAlign: "left",
+                    }}
+                    marginY={1}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={
+                      item.name === "descript_item"
+                        ? 12
+                        : gripingFields(item.name)
+                    }
+                    lg={
+                      item.name === "descript_item"
+                        ? 12
+                        : gripingFields(item.name)
+                    }
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
+                        style={{
+                          width: "100%",
+                        }}
+                      >
+                        <Typography style={styling}>
+                          {item.label} {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                    </InputLabel>
+
+                    <ImageUploaderUX
+                      setImageUploadedValue={setImageUploadedValue}
+                    />
+                  </Grid>
+                );
+              }
               return (
                 <Grid
                   key={item.name}
@@ -772,14 +606,14 @@ const EditGroup = () => {
                   xs={12}
                   sm={12}
                   md={
-                    renderFields[index].name === "descript_item"
+                    item.name === "descript_item"
                       ? 12
-                      : gripingFields(index)
+                      : gripingFields(item.name)
                   }
                   lg={
-                    renderFields[index].name === "descript_item"
+                    item.name === "descript_item"
                       ? 12
-                      : gripingFields(index)
+                      : gripingFields(item.name)
                   }
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -795,86 +629,46 @@ const EditGroup = () => {
                       </Typography>
                     </Tooltip>
                   </InputLabel>
-
-                  <ImageUploaderUX
-                    setImageUploadedValue={setImageUploadedValue}
-                  />
+                  {item.htmlElement.length < 1 ? (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          aria-required={true}
+                          className="custom-autocomplete" // Add a custom className here
+                          variant="outlined"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3 var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(value) => onChange(value)}
+                          options={item.options.map((x) => {
+                            if (item.htmlOption === 0) {
+                              return { value: x };
+                            } else {
+                              return { value: x.value };
+                            }
+                          })}
+                          placeholder={item.placeholder}
+                          filterOption={(inputValue, option) =>
+                            option.value
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    />
+                  ) : (
+                    renderOptional(item.htmlElement)
+                  )}{" "}
                 </Grid>
               );
             }
-            return (
-              <Grid
-                key={item.name}
-                style={{
-                  textAlign: "left",
-                }}
-                marginY={1}
-                item
-                xs={12}
-                sm={12}
-                md={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : gripingFields(index)
-                }
-                lg={
-                  renderFields[index].name === "descript_item"
-                    ? 12
-                    : gripingFields(index)
-                }
-              >
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <Tooltip
-                    placement="top"
-                    title={item.tooltipMessage}
-                    style={{
-                      width: "100%",
-                    }}
-                  >
-                    <Typography style={styling}>
-                      {item.label} {item.tooltip && <QuestionIcon />}
-                    </Typography>
-                  </Tooltip>
-                </InputLabel>
-                {item.htmlElement.length < 1 ? (
-                  <Controller
-                    control={control}
-                    name={item.name}
-                    render={({ field: { value, onChange } }) => (
-                      <AutoComplete
-                        aria-required={true}
-                        className="custom-autocomplete" // Add a custom className here
-                        variant="outlined"
-                        style={{
-                          ...AntSelectorStyle,
-                          border: "solid 0.3 var(--gray600)",
-                          fontFamily: "Inter",
-                          fontSize: "14px",
-                          width: "100%",
-                        }}
-                        value={value}
-                        onChange={(value) => onChange(value)}
-                        options={item.options.map((x) => {
-                          if (item.htmlOption === 0) {
-                            return { value: x };
-                          } else {
-                            return { value: x.value };
-                          }
-                        })}
-                        placeholder={item.placeholder}
-                        filterOption={(inputValue, option) =>
-                          option.value
-                            .toUpperCase()
-                            .indexOf(inputValue.toUpperCase()) !== -1
-                        }
-                      />
-                    )}
-                  />
-                ) : (
-                  renderOptional(item.htmlElement)
-                )}{" "}
-              </Grid>
-            );
           })}
         </Grid>
         <Divider />
@@ -1021,162 +815,3 @@ const EditGroup = () => {
 };
 
 export default EditGroup;
-
-// export default EditGroup;
-// const fetchingUpdateGroupItems = async (props) => {
-//   const { submitRef, groupData, slicingData } = props;
-//   const templateUpdate = {
-//     category_name: submitRef.current.category_name,
-//     item_group: submitRef.current.item_group,
-//     cost: submitRef.current.cost,
-//     brand: submitRef.current.brand,
-//     descript_item: submitRef.current.descript_item,
-//     ownership: submitRef.current.ownership,
-//     main_warehouse: submitRef.current.main_warehouse,
-//     update_at: formatDate(new Date()),
-//     location: submitRef.current.location,
-//     current_location: submitRef.current.current_location,
-//     extra_serial_number: JSON.stringify(groupData[0].extra_serial_number),
-//     return_date:
-//       submitRef.current.ownership === "Rent"
-//         ? formatDate(returningDate)
-//         : groupData[0].return_date,
-//     enableAssignFeature: submitRef.current.enableAssignFeature,
-//     data: JSON.stringify(slicingData),
-//   };
-
-//   const updatingGroupItems = await devitrakApi.post(
-//     "/db_company/update-group-items",
-//     templateUpdate
-//   );
-//   if (updatingGroupItems.data) {
-//     if (
-//       !renderLocationOptions().some(
-//         (element) => element.value === submitRef.current.location
-//       )
-//     ) {
-//       let template = [
-//         ...companiesQuery.data.data.company.at(-1).location,
-//         submitRef.current.location,
-//       ];
-//       await devitrakApi.patch(
-//         `/company/update-company/${
-//           companiesQuery.data.data.company.at(-1).id
-//         }`,
-//         {
-//           location: template,
-//         }
-//       );
-//     }
-
-//     setValue("category_name", "");
-//     setValue("item_group", "");
-//     setValue("cost", "");
-//     setValue("brand", "");
-//     setValue("descript_item", "");
-//     setValue("ownership", "");
-//     setValue("serial_number", "");
-//     setValueSelection(options[0]);
-//     openNotificationWithIcon("items were updated.", false);
-//     setIsLoadingStatus(false);
-//     return navigate("/inventory");
-//   }
-// };
-
-// const savingNewItem = async (data) => {
-//   submitRef.current = {
-//     ...data,
-//     item_group: selectedItem,
-//     ownership: valueSelection,
-//     main_warehouse: taxableLocation,
-//     location: locationSelection,
-//     company: user.company,
-//     return_date: formatDate(returningDate),
-//     enableAssignFeature: disabling,
-//     taxable_location: taxableLocation,
-//     current_location: locationSelection,
-//   };
-//   const starting = groupData.findIndex(
-//     (element) =>
-//       element.serial_number === `${submitRef.current.startingNumber}`
-//   );
-//   const ending = groupData.findIndex(
-//     (element) => element.serial_number === `${submitRef.current.endingNumber}`
-//   );
-//   const slicingData = groupData.slice(starting, ending + 1);
-//   let base64;
-//   if (selectedItem === "")
-//     return openNotificationWithIcon(
-//       "A group of item must be provided.",
-//       false
-//     );
-//   if (taxableLocation === "")
-//     return openNotificationWithIcon(
-//       "A taxable location must be provided.",
-//       false
-//     );
-//   if (valueSelection === "")
-//     return openNotificationWithIcon(
-//       "Ownership status must be provided.",
-//       false
-//     );
-//   if (String(valueSelection).toLowerCase() === "rent" && !returningDate) {
-//     return openNotificationWithIcon(
-//       "As ownership was set as 'Rent', returning date must be provided.",
-//       false
-//     );
-//   }
-//   if (data.photo.length > 0 && data.photo[0].size > 1048576) {
-//     setIsLoadingStatus(false);
-//     return alert(
-//       "Image is bigger than allow. Please resize the image or select a new one."
-//     );
-//   } else if (data.photo.length > 0) {
-//     openNotificationWithIcon(
-//       "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
-//       true
-//     );
-//     setIsLoadingStatus(true);
-//     base64 = await convertToBase64(data.photo[0]);
-//     // const templateImageUpload = {
-//     //   imageFile: base64,
-//     //   imageID: `${user.companyData.id}_inventory:${submitRef.current.category_name}_${submitRef.current.item_group}`,
-//     // };
-//     const templateImageUpload = new ImageUploaderFormat(
-//       base64,
-//       user.companyData.id,
-//       data.category_name,
-//       selectedItem,
-//       "",
-//       "",
-//       "",
-//       "",
-//       ""
-//     );
-//     const uploadingImage = await devitrakApi.post(
-//       `/cloudinary/upload-image`,
-//       templateImageUpload.item_uploader()
-//     );
-//     const resp = await devitrakApi.post(`/image/new_image`, {
-//       source: uploadingImage.data.imageUploaded.secure_url,
-//       category: data.category_name,
-//       item_group: selectedItem,
-//       company: user.companyData.id,
-//     });
-//     if (resp.data) {
-//       await fetchingUpdateGroupItems({ submitRef, groupData, slicingData });
-//     }
-//   } else if (data.photo.length < 1) {
-//     openNotificationWithIcon(
-//       "We're working on your request. Please wait until the action is finished. We redirect you to main page when request is done.",
-//       true
-//     );
-//     try {
-//       setIsLoadingStatus(true);
-//       await fetchingUpdateGroupItems({ submitRef, groupData, slicingData });
-//     } catch (error) {
-//       console.log("error", error);
-//       setIsLoadingStatus(false);
-//     }
-//   }
-// };
