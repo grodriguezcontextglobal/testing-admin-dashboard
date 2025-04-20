@@ -36,6 +36,7 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
 import { renderFields } from "./utils/BulkItemsFields";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -500,6 +501,10 @@ const AddNewBulkItems = () => {
     );
   };
 
+  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
+    itemsInInventoryQuery
+  );
+
   return (
     <Grid
       display={"flex"}
@@ -518,6 +523,7 @@ const AddNewBulkItems = () => {
             renderLocationOptions,
             options,
             displayContainerSplotLimitField,
+            subLocationsOptions,
           }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
@@ -574,8 +580,16 @@ const AddNewBulkItems = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={item.name === "descript_item" ? 12 : gripingFields(item.name)}
-                  lg={item.name === "descript_item" ? 12 : gripingFields(item.name)}
+                  md={
+                    item.name === "descript_item"
+                      ? 12
+                      : gripingFields(item.name)
+                  }
+                  lg={
+                    item.name === "descript_item"
+                      ? 12
+                      : gripingFields(item.name)
+                  }
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip

@@ -36,6 +36,7 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import ImageUploaderUX from "../../../components/utils/UX/ImageUploaderUX";
 import { renderFields } from "./utils/BulkItemsFields";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -532,6 +533,10 @@ const EditGroup = () => {
     return slicingData.length;
   };
 
+  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
+    itemsInInventoryQuery
+  );
+
   return (
     <Grid
       display={"flex"}
@@ -549,6 +554,7 @@ const EditGroup = () => {
             renderLocationOptions,
             options,
             displayContainerSplotLimitField,
+            subLocationsOptions,
           }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {

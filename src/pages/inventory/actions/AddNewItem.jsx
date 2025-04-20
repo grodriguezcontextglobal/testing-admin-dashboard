@@ -38,6 +38,7 @@ import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import "./style.css";
 import { renderFields } from "./utils/SingleItemFields";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -447,6 +448,10 @@ const AddNewItem = () => {
     );
   };
 
+  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
+    itemsInInventoryQuery
+  );
+
   return (
     <Grid
       display={"flex"}
@@ -465,6 +470,7 @@ const AddNewItem = () => {
             options,
             renderLocationOptions,
             displayContainerSplotLimitField,
+            subLocationsOptions,
           }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
