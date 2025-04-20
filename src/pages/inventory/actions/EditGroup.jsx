@@ -166,7 +166,12 @@ const EditGroup = () => {
       setValue("min_serial_number", `${dataToRetrieve[0].serial_number}`);
       setValue("max_serial_number", `${dataToRetrieve.at(-1).serial_number}`);
       setValue("quantity", `${dataToRetrieve.length}`);
-      setSlicingData(dataToRetrieve);
+      setSlicingData([
+        ...dataToRetrieve.map((item) => ({
+          serial_number: item.serial_number,
+          item_id: item.item_id,
+        })),
+      ]);
     }
     return () => {
       controller.abort();
@@ -293,7 +298,11 @@ const EditGroup = () => {
         containerSpotLimit: data.containerSpotLimit,
         image_url: img_url,
         company_id: user.sqlInfo.company_id,
-        enableAssignFeature: String(data.enableAssignFeature).includes("Enabled") ? 1 : 0,
+        enableAssignFeature: String(data.enableAssignFeature).includes(
+          "Enabled"
+        )
+          ? 1
+          : 0,
         data: JSON.stringify(slicingData),
       };
       const respNewItem = await devitrakApi.post(
@@ -692,7 +701,7 @@ const EditGroup = () => {
         <OutlinedInput
           readOnly
           value={qtyDiff()}
-          {...register("quantity" )}
+          {...register("quantity")}
           fullWidth
           style={{
             ...OutlinedInputStyle,
