@@ -478,9 +478,9 @@ const AddNewBulkItems = () => {
 
   const gripingFields = (props) => {
     if (
-      props.name === "min_serial_number" ||
-      props.name === "max_serial_number" ||
-      props.name === "quantity"
+      props === "min_serial_number" ||
+      props === "max_serial_number" ||
+      props === "quantity"
     )
       return 4;
     return 6;
@@ -517,7 +517,7 @@ const AddNewBulkItems = () => {
             retrieveItemOptions,
             renderLocationOptions,
             options,
-            displayContainerSplotLimitField
+            displayContainerSplotLimitField,
           }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
@@ -532,14 +532,14 @@ const AddNewBulkItems = () => {
                     xs={12}
                     sm={12}
                     md={
-                     item.name === "descript_item"
+                      item.name === "descript_item"
                         ? 12
-                        : gripingFields(item)
+                        : gripingFields(item.name)
                     }
                     lg={
-                     item.name === "descript_item"
+                      item.name === "descript_item"
                         ? 12
-                        : gripingFields(item)
+                        : gripingFields(item.name)
                     }
                   >
                     <InputLabel
@@ -574,8 +574,8 @@ const AddNewBulkItems = () => {
                   item
                   xs={12}
                   sm={12}
-                  md={item.name === "descript_item" ? 12 : 6}
-                  lg={item.name === "descript_item" ? 12 : 6}
+                  md={item.name === "descript_item" ? 12 : gripingFields(item.name)}
+                  lg={item.name === "descript_item" ? 12 : gripingFields(item.name)}
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
