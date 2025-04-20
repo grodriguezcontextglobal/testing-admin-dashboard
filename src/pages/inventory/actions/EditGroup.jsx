@@ -297,7 +297,7 @@ const EditGroup = () => {
         ownership: data.ownership,
         warehouse: true,
         main_warehouse: data.tax_location,
-        updated_at: formatDate(new Date()),
+        update_at: formatDate(new Date()),
         company: user.company,
         location: data.location,
         current_location: data.location,
