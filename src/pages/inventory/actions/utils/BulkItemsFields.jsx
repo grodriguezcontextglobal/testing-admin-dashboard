@@ -70,6 +70,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
+      displayField: true,
     },
     {
       name: "container",
@@ -195,6 +196,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage:
         "This is the quantity from starting serial number and ending serial number.",
+      displayField: true,
     },
     {
       name: "ownership",
