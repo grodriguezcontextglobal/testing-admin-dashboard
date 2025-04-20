@@ -1,0 +1,51 @@
+.tree-container {
+  display: grid;
+  align-self: baseline;
+  width: 100%;
+  gap: 12px;
+}
+
+.tree-card {
+  background-color: var(--base-white, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200, #eaecf0);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06),
+    0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  padding: 20px;
+  transition: box-shadow 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.tree-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.tree-title {
+  font-family: "Inter", serif;
+  font-size: 30px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 38px;
+  color: var(--gray-900, #101828);
+  text-wrap: pretty;
+  text-align: left;
+}
+
+.tree-sub {
+  margin-top: 4px;
+  font-family: "Inter", serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 0;
+  line-height: 20px;
+  text-align: left;
+  color: var(--gray-600, #475467);
+}
+
+.tree-children {
+  margin-top: 12px;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
