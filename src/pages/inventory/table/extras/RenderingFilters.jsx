@@ -2,9 +2,9 @@ import { Grid } from "@mui/material";
 import { Divider, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import { onLogin } from "../../../../store/slices/adminSlice";
@@ -12,10 +12,10 @@ import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
+import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
-import CardLocations from "../../utils/CardLocations";
+import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import AdvanceSearchModal from "./AdvanceSearchModal";
-// import CenteringGrid from "../../../../styles/global/CenteringGrid";
 export const AdvanceSearchContext = createContext();
 
 const RenderingFilters = ({
@@ -66,7 +66,7 @@ const RenderingFilters = ({
     return 0;
   };
 
-  const displayTotalDevicesAndTotalAvailbalePerLocation = (props) => {
+  const displayTotalDevicesAndTotalAvailablePerLocation = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
     if (dataToDisplay()?.length > 0) {
@@ -91,9 +91,33 @@ const RenderingFilters = ({
     }
     return Array.from(result);
   };
+
+  const testing = () => {
+    const result = groupBy(dataToDisplay(), "data.location");
+    const template = new Set();
+    if (dataToDisplay()?.length > 0) {
+      for (let [key, value] of Object.entries(result)) {
+        template.add({
+          location: key,
+          value,
+        });
+      }
+    }
+    return organizeInventoryBySubLocation(result);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    testing();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
+
   const [selectedRowKeys, setSelectedRowKeys] = useState(
     renderingCardData ? renderingCardData.preference.inventory_location : []
   );
@@ -156,7 +180,7 @@ const RenderingFilters = ({
       key: "location",
       title: `Locations`,
       buttonFn: true,
-      data: displayTotalDevicesAndTotalAvailbalePerLocation("location"), //sortingByParameters
+      data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
       totalUnits: renderingTotalUnits(sortingByParameters("location")),
       renderedCardData: selectedRowKeys,
       open: true,
@@ -164,6 +188,8 @@ const RenderingFilters = ({
       routeTitle: "location",
       renderSelectedOptions: [],
       renderMoreOptions: true,
+      tree: false,
+      identifierRender: 0,
       rowSelection: {
         selectedRowKeys,
         onChange: onSelectChange,
@@ -231,6 +257,24 @@ const RenderingFilters = ({
       ],
     },
     {
+      key: "location_1",
+      title: "Locations/Sub-locations",
+      data: testing(), //sortingByParameters
+      totalUnits: renderingTotalUnits(sortingByParameters("location")),
+      open: true,
+      routeTitle: "location",
+      renderMoreOptions: false,
+      tree: true,
+      identifierRender: 1,
+      columns: [
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ],
+    },
+    {
       key: "category_name",
       title: "Category",
       data: sortingByParameters("category_name"),
@@ -238,6 +282,8 @@ const RenderingFilters = ({
       open: false,
       routeTitle: "category_name",
       renderMoreOptions: false,
+      tree: false,
+      identifierRender: 0,
       columns: [
         {
           title: "Name",
@@ -254,6 +300,8 @@ const RenderingFilters = ({
       open: false,
       routeTitle: "group",
       renderMoreOptions: false,
+      tree: false,
+      identifierRender: 0,
       columns: [
         {
           title: "Name",
@@ -270,6 +318,8 @@ const RenderingFilters = ({
       open: false,
       routeTitle: "brand",
       renderMoreOptions: false,
+      tree: false,
+      identifierRender: 0,
       columns: [
         {
           title: "Name",
@@ -286,6 +336,8 @@ const RenderingFilters = ({
       open: false,
       routeTitle: "ownership",
       renderMoreOptions: false,
+      tree: false,
+      identifierRender: 0,
       columns: [
         {
           title: "Name",
@@ -358,11 +410,11 @@ const RenderingFilters = ({
                 <p
                   style={{
                     ...TextFontsize18LineHeight28,
-                    width: "100%",
+                    width: "fit-content",
                     textAlign: "left",
                     cursor: "pointer",
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-start",
                     alignItems: "center",
                   }}
                 >
@@ -370,8 +422,7 @@ const RenderingFilters = ({
                   <span
                     style={{
                       ...Subtitle,
-                      // fontWeight: 400,
-                      width: "100%",
+                      width: "fit-content",
                       textAlign: "left",
                     }}
                   >
@@ -406,71 +457,49 @@ const RenderingFilters = ({
                   flexWrap: "wrap",
                 }}
               >
-                {item.renderedCardData
-                  ? item.renderedCardData.map((opt) => {
-                      return (
-                        <Grid
+                {item.renderedCardData ? (
+                  item.renderedCardData.map((opt) => {
+                    return (
+                      <Grid
+                        key={opt}
+                        alignSelf={"flex-start"}
+                        item
+                        xs={12}
+                        sm={12}
+                        md={3}
+                        lg={3}
+                      >
+                        <CardInventoryLocationPreference
                           key={opt}
-                          alignSelf={"flex-start"}
-                          item
-                          xs={11}
-                          sm={11}
-                          md={12}
-                          lg={12}
-                        >
-                          <CardInventoryLocationPreference
-                            key={opt}
-                            title={opt.key}
-                            props={`${opt.value} total devices`}
-                            route={`/inventory/${String(
-                              item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                              searchItem && searchItem
-                            }`}
-                            style={{
-                              width: "fit-content",
-                            }}
-                            width="fit-content"
-                          />
-                        </Grid>
-                      );
-                    })
-                  : item.data.map((opt) => {
-                      return (
-                        <Grid
-                          key={opt}
-                          alignSelf={"flex-start"}
-                          item
-                          xs={11}
-                          sm={11}
-                          md={4}
-                          lg={4}
-                        >
-                          {" "}
-                          <Link
-                            to={`/inventory/${String(
-                              item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                              searchItem && searchItem
-                            }`}
-                          >
-                            <CardLocations
-                              title={dictionary[opt.key] ?? opt.key}
-                              props={`${opt.value} total devices`}
-                              optional={null}
-                              style={{ width: "fit-content" }}
-                              width="fit-content"
-                            />
-                          </Link>
-                        </Grid>
-                      );
-                    })}
+                          title={opt.key}
+                          props={`${opt.value} total devices`}
+                          route={`/inventory/${String(
+                            item.routeTitle
+                          ).toLowerCase()}?${decodeURI(opt.key)}&search=${
+                            searchItem && searchItem
+                          }`}
+                          style={{
+                            width: "fit-content",
+                          }}
+                          width="fit-content"
+                        />
+                      </Grid>
+                    );
+                  })
+                ) : (
+                  <Grid alignSelf={"flex-start"} container spacing={1}>
+                      <CardForTreeView
+                        item={item}
+                        dictionary={dictionary}
+                        searchItem={searchItem}
+                      />
+                    </Grid>
+                )}
               </div>
               {item.renderMoreOptions && (
                 <Table
                   pagination={{
                     position: ["bottomCenter"],
-                    pageSizeOptions: [10, 20, 30, 50, 100],
                     total: item?.data?.length,
                     defaultPageSize: 10,
                     defaultCurrent: 1,
@@ -490,7 +519,8 @@ const RenderingFilters = ({
       {openAdvanceSearchModal && (
         <AdvanceSearchContext.Provider
           value={{
-            location: displayTotalDevicesAndTotalAvailbalePerLocation("location"),
+            location:
+              displayTotalDevicesAndTotalAvailablePerLocation("location"),
             category: sortingByParameters("category_name"),
             group: sortingByParameters("item_group"),
             brand: sortingByParameters("brand"),
