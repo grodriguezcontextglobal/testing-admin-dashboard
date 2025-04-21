@@ -36,6 +36,7 @@ import { renderFields } from "../../../actions/utils/SingleItemFields";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../../../actions/utils/SubLocationRenderer";
 import costValueInputFormat from "../../../utils/costValueInputFormat";
 import { formatDate } from "../../../utils/dateFormat";
+import { checkValidJSON } from "../../../../../components/utils/checkValidJSON";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditItemModal = ({
@@ -146,13 +147,6 @@ const EditItemModal = ({
     return [];
   };
 
-  const checkValidJSON = (json) => {
-    if (typeof json === "string") {
-      JSON.parse(json);
-    } else {
-      return json;
-    }
-  };
   useEffect(() => {
     const controller = new AbortController();
     if (dataFound.length > 0) {
@@ -196,7 +190,9 @@ const EditItemModal = ({
   useEffect(() => {
     const controller = new AbortController();
     setSubLocationsOptions(
-      retrieveExistingSubLocationsForCompanyInventory(itemsInInventoryQuery)
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items
+      )
     );
     return () => {
       controller.abort();
@@ -204,7 +200,6 @@ const EditItemModal = ({
   }, [itemsInInventoryQuery.data]);
 
   const savingNewItem = async (data) => {
-    console.log(data);
     if (data.item_group === "")
       return openNotificationWithIcon("A group of item must be provided.");
     if (data.tax_location === "")
