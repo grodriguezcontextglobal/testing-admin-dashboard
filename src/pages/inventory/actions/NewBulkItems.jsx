@@ -502,7 +502,7 @@ const AddNewBulkItems = () => {
   };
 
   const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery
+    itemsInInventoryQuery?.data?.data?.items
   );
 
   return (
