@@ -7,26 +7,28 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
   const sortAndMergeData = () => {
     const result = new Set();
     for (let [key, value] of Object.entries(dataFound[0])) {
-      if (key === "sub_location" && checkValidJSON(value).length > 0) {
+      if (key === "sub_location") {
         const subLocations = checkValidJSON(value);
-        subLocations.map((item, index) => {
-          if (index === 0)
-            return result.add({ name: "sub_location", value: item });
-          else
-            return result.add({
-              name: `sub_location_${index + 1}`,
-              value: item,
-            });
-        });
-      }
-      if (key === "extra_serial_number" && checkValidJSON(value).length > 0) {
-        const extraSerialNumber = checkValidJSON(value);
-        extraSerialNumber.map((item) => {
-          return result.add({
-            name: item.keyObject,
-            value: item.valueObject,
+        subLocations?.length > 0 &&
+          subLocations.map((item, index) => {
+            if (index === 0)
+              return result.add({ name: "sub_location", value: item });
+            else
+              return result.add({
+                name: `sub_location_${index + 1}`,
+                value: item,
+              });
           });
-        });
+      }
+      if (key === "extra_serial_number") {
+        const extraSerialNumber = checkValidJSON(value);
+        extraSerialNumber?.length > 0 &&
+          extraSerialNumber.map((item) => {
+            return result.add({
+              name: item.keyObject,
+              value: item.valueObject,
+            });
+          });
       }
     }
     return Array.from(result);
@@ -34,7 +36,16 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
 
   return (
     <>
-      <h1 style={{ ...TextFontsize18LineHeight28, width: "100%", textAlign:"left", margin:".5rem 0" }}>Extra information</h1>
+      <h1
+        style={{
+          ...TextFontsize18LineHeight28,
+          width: "100%",
+          textAlign: "left",
+          margin: ".5rem 0",
+        }}
+      >
+        Extra information
+      </h1>
       <Grid
         display={"flex"}
         justifyContent={"flex-start"}
