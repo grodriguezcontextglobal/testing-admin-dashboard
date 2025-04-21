@@ -103,6 +103,11 @@ const MainPage = () => {
       },
     ];
 
+    const refetchingFn = () => {
+      trackingHistoryItemQuery.refetch();
+      infoItemQuery.refetch();
+      return null;
+    };
     return (
       <Suspense
         fallback={
@@ -290,7 +295,9 @@ const MainPage = () => {
               {Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
                 <DeleteItem dataFound={dataFound} />
               )}
-              {Number(user.role) < 2 && <EditItem dataFound={dataFound} />}
+              {Number(user.role) < 2 && (
+                <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
+              )}
             </Grid>
           </Grid>
           <Grid
