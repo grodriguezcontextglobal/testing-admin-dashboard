@@ -16,8 +16,8 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import useFetchingDeviceInfoBasedOnFeature from "../utils/useFetchingDeviceInfoBasedOnFeature";
 import ExtraInformation from "./detailComponent/components/ExtraInformation";
+import ExtraInformationItemComponent from "./detailComponent/components/ExtraInformationItemComponent";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
 const DeviceDescriptionTags = lazy(() =>
   import("./detailComponent/DeviceDescriptionTags")
@@ -38,7 +38,6 @@ const TotalReturnedDevice = lazy(() =>
   import("./detailComponent/components/TotalReturnedDevice")
 );
 const EditItem = lazy(() => import("./detailComponent/actions/EditItem"));
-const CardRendered = lazy(() => import("../utils/CardRendered"));
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const item_id = new URLSearchParams(window.location.search).get("id");
@@ -77,11 +76,6 @@ const MainPage = () => {
     };
   }, [item_id]);
 
-  const props = {
-    variableName: "item_id",
-    value: location.search.split("=")[1],
-  };
-  const extraData = useFetchingDeviceInfoBasedOnFeature(props);
   if (trackingHistoryItemQuery.isLoading)
     return (
       <div style={CenteringGrid}>
@@ -89,12 +83,6 @@ const MainPage = () => {
       </div>
     );
   if (trackingHistoryItemQuery.data) {
-    const itemExtraSerialNumber =
-      extraData.ok &&
-      typeof extraData.items[0]?.extra_serial_number === "object"
-        ? extraData.items[0]?.extra_serial_number
-        : JSON.parse(extraData.items[0].extra_serial_number);
-
     const dataFound = [
       {
         ...trackingHistoryItemQuery?.data?.data?.result[0],
@@ -317,69 +305,13 @@ const MainPage = () => {
               <TotalReturnedDevice dataFound={dataFound} />
             </Grid>
           </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            container
-          >
-            {Array.isArray(extraData.items) &&
-              extraData.items?.length > 0 &&
-              itemExtraSerialNumber?.length > 0 &&
-              itemExtraSerialNumber?.map((item) => {
-                return (
-                  <Grid
-                    key={item.valueObject}
-                    item
-                    xs={12}
-                    sm={12}
-                    md={3}
-                    lg={4}
-                  >
-                    <CardRendered
-                      props={item.valueObject}
-                      title={item.keyObject}
-                      optional={null}
-                    />
-                  </Grid>
-                );
-              })}
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            container
-          >
-            {Array.isArray(extraData.items) &&
-              extraData.items?.length > 0 &&
-              extraData.items[0]?.sub_location?.length > 0 &&
-              extraData.items[0]?.sub_location?.map((location, index) => {
-                return (
-                  <Grid key={location} item xs={12} sm={12} md={3} lg={4}>
-                    <CardRendered
-                      props={location}
-                      title={`Sub location ${index + 1}`}
-                      optional={null}
-                    />
-                  </Grid>
-                );
-              })}
-          </Grid>
-          <Grid
-            display={dataFound[0]?.container > 0 ? "flex" : "none"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            container
-          >
-            {dataFound[0]?.container > 0 && (
-              <ExtraInformation
-                dataFound={dataFound[0]}
-                containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
-              />
-            )}
-          </Grid>
-
+          <ExtraInformationItemComponent dataFound={dataFound} />
+          {dataFound[0]?.container > 0 && (
+            <ExtraInformation
+              dataFound={dataFound[0]}
+              containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
+            />
+          )}
           <Divider />
           <Grid
             marginY={3}
