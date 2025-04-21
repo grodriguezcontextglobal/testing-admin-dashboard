@@ -2,6 +2,8 @@ import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 
 const TotalReturnedDevice = ({ dataFound }) => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -48,11 +50,7 @@ const TotalReturnedDevice = ({ dataFound }) => {
             xs={12}
           >
             <Typography
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
+              style={TextFontSize14LineHeight20}
               color={"var(--gray-600, #475467)"}
             >
               Condition
@@ -67,12 +65,7 @@ const TotalReturnedDevice = ({ dataFound }) => {
           >
             <Grid item xs={12}>
               <Typography
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                textAlign={"right"}
+                style={{ ...TextFontSize14LineHeight20, textAlign: "right" }}
                 color={"var(--gray-600, #475467)"}
               >
                 <Icon
@@ -93,14 +86,10 @@ const TotalReturnedDevice = ({ dataFound }) => {
           >
             <Typography
               paddingTop={"8px"}
-              fontFamily={"Inter"}
-              fontSize={"30px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"38px"}
               color={"var(--gray-900, #101828)"}
+              style={TextFontSize30LineHeight38}
             >
-              {dataFound[0]?.itemInfo?.status ?? "Operational"}
+              {dataFound[0].itemInfo[0].status ?? "Operational"}
             </Typography>
           </Grid>
         </Grid>
