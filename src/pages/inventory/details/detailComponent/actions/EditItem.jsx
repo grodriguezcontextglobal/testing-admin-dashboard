@@ -5,7 +5,7 @@ import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import EditItemModal from "../components/EditItemModal";
 
-const EditItem = ({ dataFound }) => {
+const EditItem = ({ dataFound, refetchingFn }) => {
   const [{ x, y }, scrollTo] = useWindowScroll();
   const [openEditItemModal, setOpenEditItemModal] = useState(false);
   return (
@@ -31,6 +31,7 @@ const EditItem = ({ dataFound }) => {
           dataFound={dataFound}
           openEditItemModal={openEditItemModal}
           setOpenEditItemModal={setOpenEditItemModal}
+          refetchingFn={refetchingFn}
         />
       )}
     </>
