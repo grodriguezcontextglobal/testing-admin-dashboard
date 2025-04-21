@@ -233,7 +233,7 @@ export const renderFields = ({
       style: OutlinedInputStyle,
       required: true,
       options: ["Enabled", "Disabled"],
-      htmlOption: 2,
+      htmlOption: 0,
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
