@@ -254,7 +254,7 @@ const AddNewItem = () => {
         warehouse: true,
         main_warehouse: data.tax_location,
         created_at: formatDate(new Date()),
-        updated_at: formatDate(new Date()),
+        update_at: formatDate(new Date()),
         company: user.company,
         location: data.location,
         sub_location: JSON.stringify([
@@ -699,6 +699,7 @@ const AddNewItem = () => {
           >
             <Button
               disabled={loadingStatus}
+              loading={loadingStatus}
               htmlType="submit"
               style={buttonStyleLoading}
             >
