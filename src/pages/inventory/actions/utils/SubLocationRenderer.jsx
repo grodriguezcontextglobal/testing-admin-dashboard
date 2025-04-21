@@ -6,8 +6,8 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
     1: [],
     2: [],
   };
-  if (props.data) {
-    const industryData = props.data.data.items;
+  if (props) {
+    const industryData = props;
     const groupingByItemGroup = groupBy(industryData, "sub_location");
     for (let key of Object.keys(groupingByItemGroup)) {
       const sub_locations_split = String(key).split(",");
@@ -23,4 +23,5 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
     }
     return result;
   }
+  return result;
 };
