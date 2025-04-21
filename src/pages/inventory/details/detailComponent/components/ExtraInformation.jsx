@@ -33,12 +33,17 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
       });
       return setOpenModal(false);
     } catch (error) {
-      message.error("Something went wrong");
+      return message.error("Something went wrong: " + error.message);
     }
   };
 
   return (
-    <>
+    <Grid
+      display={dataFound[0]?.container > 0 ? "flex" : "none"}
+      justifyContent={"flex-start"}
+      alignItems={"center"}
+      container
+    >
       <Grid item xs={12} sm={12} md={12}>
         <Card
           style={{
@@ -112,7 +117,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           containerInfo={containerInfo}
         />
       )}
-    </>
+    </Grid>
   );
 };
 
