@@ -108,6 +108,9 @@ const ItemTable = ({
               },
               location:
                 groupingBySerialNumber[data.serial_number].at(-1).location,
+              image_url:
+                groupingBySerialNumber[data.serial_number].at(-1).image_url ??
+                null,
             });
           }
         }
@@ -230,7 +233,12 @@ const ItemTable = ({
     return () => {
       controller.abort();
     };
-  }, [chosen, listItemsQuery.data, listImagePerItemQuery.data, itemsInInventoryQuery.data]);
+  }, [
+    chosen,
+    listItemsQuery.data,
+    listImagePerItemQuery.data,
+    itemsInInventoryQuery.data,
+  ]);
 
   const cellStyle = {
     display: "flex",
@@ -256,7 +264,10 @@ const ItemTable = ({
           >
             {groupingByDeviceType[record.item_group] ? (
               <img
-                src={groupingByDeviceType[record.item_group][0].source}
+                src={
+                  record.image_url ??
+                  groupingByDeviceType[record.item_group][0].source
+                }
                 alt={`${record.item_group}-${record.serial_number}`}
                 style={{ width: "100%", height: "auto" }}
               />
