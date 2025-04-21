@@ -300,8 +300,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       });
       const templateProps = {
         ...props,
-        event_id: eventId.id
-      }
+        event_id: eventId.id,
+      };
       await transactionDeviceAdded(templateProps);
     }
   };
@@ -477,7 +477,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
             warehouse: false,
             main_warehouse: taxableLocation,
             created_at: formatDate(new Date()),
-            updated_at: formatDate(new Date()),
+            update_at: formatDate(new Date()),
             company: user.company,
             location: locationSelection,
             current_location: locationSelection,
@@ -508,7 +508,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           warehouse: false,
           main_warehouse: taxableLocation,
           created_at: formatDate(new Date()),
-          updated_at: formatDate(new Date()),
+          update_at: formatDate(new Date()),
           company: user.company,
           location: locationSelection,
           current_location: locationSelection,
@@ -697,7 +697,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
                   ...TextFontSize20LineHeight30,
                   fontWeight: 600,
                   textTransform: "none",
-                  textWrap:"balance"
+                  textWrap: "balance",
                 }}
               >
                 Expect equipment return date from consumer to company:

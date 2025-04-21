@@ -230,7 +230,7 @@ const ReviewAndSubmitEvent = () => {
             warehouse: data.warehouse,
             main_warehouse: data.main_warehouse,
             created_at: formatDate(data.created_at),
-            updated_at: formatDate(data.updated_at),
+            update_at: formatDate(data.updated_at),
             company: data.company,
             location: data.location,
             current_location: data.current_location,
