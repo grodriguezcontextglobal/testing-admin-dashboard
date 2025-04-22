@@ -28,7 +28,7 @@ const ParentRenderingChildrenPage = () => {
           margin: {
             xs: "6rem 0 1rem",
             sm: "6rem 0 1rem",
-            md: "6.5rem 0 1rem",
+            md: "7rem 0 1rem",
             lg: "6rem 0 1rem",
           },
         }}
