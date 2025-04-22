@@ -62,10 +62,11 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                margin:"0 0 10px 0",
               }}
             >
               <Typography style={TextFontSize14LineHeight20}>
-                Items in container
+                Items in container (serial number) | {dataFound[0]?.container_items?.length ?? 0}/{dataFound[0]?.containerSpotLimit} cap
               </Typography>
               <div
                 style={{
@@ -98,7 +99,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           </Grid>
           <Grid container>
             <Space size={[8, 16]} wrap style={{ margin: "10px 0" }}>
-              {dataFound?.container_items?.map((item) => (
+              {dataFound[0]?.container_items?.map((item) => (
                 <Chip
                   key={item.item_id}
                   label={item.serial_number}
