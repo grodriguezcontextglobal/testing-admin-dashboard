@@ -96,6 +96,7 @@ const MainPage = () => {
       infoItemQuery.refetch();
       return null;
     };
+
     return (
       <Suspense
         fallback={
@@ -306,12 +307,11 @@ const MainPage = () => {
             </Grid>
           </Grid>
           <ExtraInformationItemComponent dataFound={dataFound} />
-          {dataFound[0]?.container > 0 && (
-            <ExtraInformation
-              dataFound={dataFound[0]}
-              containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
-            />
-          )}
+          <Divider />
+          <ExtraInformation
+            dataFound={dataFound}
+            containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
+          />
           <Divider />
           <Grid
             marginY={3}
