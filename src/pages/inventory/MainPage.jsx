@@ -51,16 +51,16 @@ const MainPage = () => {
       devitrakApi.get(
         `/db_item/check-company-has-inventory?company_id=${user.sqlInfo.company_id}`
       ),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    companyHasInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [currentTab]);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   companyHasInventoryQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, [currentTab]);
 
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);

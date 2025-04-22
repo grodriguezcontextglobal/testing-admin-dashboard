@@ -53,14 +53,14 @@ const ItemTable = ({
       devitrakApi.get(
         `/db_item/check-inventory?company_id=${user.sqlInfo.company_id}`
       ),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
-    refetchOnMount: false,
+    enabled: !!user.companyData.id,
   });
 
   const itemsInInventoryQuery = useQuery({
@@ -69,22 +69,22 @@ const ItemTable = ({
       devitrakApi.get(
         `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
       ),
-    // refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    listItemsQuery.refetch();
-    listImagePerItemQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []); // ✅ Moves function execution to useEffect
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   listItemsQuery.refetch();
+  //   listImagePerItemQuery.refetch();
+  //   itemsInInventoryQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []); // ✅ Moves function execution to useEffect
 
   const getDataStructuringFormat = useCallback(
     (props) => {
