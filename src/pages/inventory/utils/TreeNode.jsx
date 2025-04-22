@@ -14,7 +14,7 @@ const TreeNode = ({ nodeName, nodeData }) => {
   };
 
   return (
-    <div className="tree-card">
+    <div key={nodeName} className="tree-card">
       <div onClick={toggleOpen} style={{ cursor: children ? "pointer" : "default" }}>
         <div className="tree-title">{nodeName}</div>
         <div className="tree-sub">

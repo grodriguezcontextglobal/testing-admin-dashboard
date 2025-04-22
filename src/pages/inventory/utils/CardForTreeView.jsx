@@ -2,12 +2,16 @@ import { Grid } from "@mui/material";
 import { Link } from "react-router-dom";
 import CardLocations from "./CardLocations";
 import TreeView from "./TreeView";
+import { useId } from "react";
 
 const CardForTreeView = (props) => {
   const { item, dictionary, searchItem } = props;
+  const elemId = useId();
   if (item.tree) {
     return (
       <Grid
+        key={elemId}
+        id="grip-tree-view"
         alignSelf={"flex-start"}
         item
         xs={12}
@@ -22,7 +26,7 @@ const CardForTreeView = (props) => {
     return item.data.map((opt) => {
       return (
         <Grid
-          key={opt}
+          key={`${elemId}-${opt.key}`}
           alignSelf={"flex-start"}
           item
           xs={11}
