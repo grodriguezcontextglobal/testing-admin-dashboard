@@ -25,14 +25,6 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
     containerInfo?.container_items ?? []
   );
   const { register, watch, setValue } = useForm();
-  // const itemsInInventoryQuery = useQuery({
-  //   queryKey: ["listOfItemsInStock"],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/db_item/check-inventory?company_id=${user.sqlInfo.company_id}`
-  //     ),
-  //   refetchOnMount: false,
-  // });
   const queryClient = useQueryClient();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["retrievingItemsInInventoryQuery"],
@@ -273,8 +265,6 @@ const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
             total={renderingItems().length}
             pageSize={50}
             style={{ margin: "5px 0" }}
-            // jumpNextIcon={<RightArrowIcon />}
-            // jumpPrevIcon={<LeftArrowIcon />}
             showSizeChanger={false}
             showQuickJumper={false}
           />
