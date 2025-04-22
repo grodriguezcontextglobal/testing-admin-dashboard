@@ -11,16 +11,28 @@ const ParentRenderingChildrenPage = () => {
       alignItems={"center"}
       maxWidth={"1228px"}
       minWidth={"768px"}
-      alignSelf={'flex-start'}
+      alignSelf={"flex-start"}
       container
     >
       <Grid
+        id="child-container"
         alignSelf={"flex-start"}
         sx={{
-          minHeight: "80dvh",
-          padding: { xs: "0 12px", sm: "0 12px", md: 0, lg: 0 },
+          minHeight: {
+            xs: "calc(100dvh - 80px)",
+            sm: "calc(100dvh - 80px)",
+            md: "calc(100dvh - 80px)",
+            lg: "calc(100dvh - 80px)",
+          },
+          padding: { xs: "0 12px", sm: "0 20px", md: "0 20px", lg: "0" },
+          margin: {
+            xs: "6rem 0 1rem",
+            sm: "6rem 0 1rem",
+            md: "6.5rem 0 1rem",
+            lg: "6rem 0 1rem",
+          },
         }}
-        margin={"8rem 0 1rem"}
+        // margin={"8rem 0 1rem"}
         item
         xs={11}
         sm={12}
