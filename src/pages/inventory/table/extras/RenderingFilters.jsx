@@ -2,12 +2,7 @@ import { Grid } from "@mui/material";
 import { Divider, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
-import { onLogin } from "../../../../store/slices/adminSlice";
+import { createContext, useEffect } from "react";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -25,8 +20,8 @@ const RenderingFilters = ({
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
 }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  // const dispatch = useDispatch();
+  // const navigate = useNavigate();
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -118,54 +113,54 @@ const RenderingFilters = ({
     (element) => element.user === user.email
   );
 
-  const [selectedRowKeys, setSelectedRowKeys] = useState(
-    renderingCardData ? renderingCardData.preference.inventory_location : []
-  );
-  const updateEmployeesPreference = () => {
-    let employCopy = user.companyData.employees.map((employee) => ({
-      ...employee,
-    }));
-    const index = employCopy.findIndex(
-      (element) => element.user === user.email
-    );
-    if (index > -1) {
-      const newData = {
-        ...employCopy[index],
-        preference: { inventory_location: [...selectedRowKeys] },
-      };
-      employCopy[index] = newData;
-      return employCopy;
-    }
-    return employCopy;
-  };
-  const updateInventoryLocationPreferences = async () => {
-    const updatedCompany = await devitrakApi.patch(
-      `/company/update-company/${user.companyData.id}`,
-      {
-        employees: updateEmployeesPreference(),
-      }
-    );
-    if (updatedCompany.data.ok) {
-      return dispatch(
-        onLogin({ ...user, companyData: updatedCompany.data.company })
-      );
-    }
-  };
-  const onSelectChange = async (newSelectedRowKeys) => {
-    if (
-      selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
-    ) {
-      const result = selectedRowKeys.filter(
-        (element) => element.key !== newSelectedRowKeys[0]
-      );
-      return setSelectedRowKeys(result);
-    }
-    const locationInfo = sortingByParameters("location");
-    const result = locationInfo.find(
-      (element) => element.key === newSelectedRowKeys[0]
-    );
-    setSelectedRowKeys([...selectedRowKeys, result]);
-  };
+  // const [selectedRowKeys, setSelectedRowKeys] = useState(
+  //   renderingCardData ? renderingCardData.preference.inventory_location : []
+  // );
+  // const updateEmployeesPreference = () => {
+  //   let employCopy = user.companyData.employees.map((employee) => ({
+  //     ...employee,
+  //   }));
+  //   const index = employCopy.findIndex(
+  //     (element) => element.user === user.email
+  //   );
+  //   if (index > -1) {
+  //     const newData = {
+  //       ...employCopy[index],
+  //       preference: { inventory_location: [...selectedRowKeys] },
+  //     };
+  //     employCopy[index] = newData;
+  //     return employCopy;
+  //   }
+  //   return employCopy;
+  // };
+  // const updateInventoryLocationPreferences = async () => {
+  //   const updatedCompany = await devitrakApi.patch(
+  //     `/company/update-company/${user.companyData.id}`,
+  //     {
+  //       employees: updateEmployeesPreference(),
+  //     }
+  //   );
+  //   if (updatedCompany.data.ok) {
+  //     return dispatch(
+  //       onLogin({ ...user, companyData: updatedCompany.data.company })
+  //     );
+  //   }
+  // };
+  // const onSelectChange = async (newSelectedRowKeys) => {
+  //   if (
+  //     selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
+  //   ) {
+  //     const result = selectedRowKeys.filter(
+  //       (element) => element.key !== newSelectedRowKeys[0]
+  //     );
+  //     return setSelectedRowKeys(result);
+  //   }
+  //   const locationInfo = sortingByParameters("location");
+  //   const result = locationInfo.find(
+  //     (element) => element.key === newSelectedRowKeys[0]
+  //   );
+  //   setSelectedRowKeys([...selectedRowKeys, result]);
+  // };
 
   const renderingTotalUnits = (props) => {
     let result = 0;
@@ -176,86 +171,86 @@ const RenderingFilters = ({
   };
 
   const optionsToRenderInDetailsHtmlTags = [
-    {
-      key: "location",
-      title: `Locations`,
-      buttonFn: true,
-      data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
-      totalUnits: renderingTotalUnits(sortingByParameters("location")),
-      renderedCardData: selectedRowKeys,
-      open: true,
-      displayCards: selectedRowKeys?.length > 0,
-      routeTitle: "location",
-      renderSelectedOptions: [],
-      renderMoreOptions: true,
-      tree: false,
-      identifierRender: 0,
-      rowSelection: {
-        selectedRowKeys,
-        onChange: onSelectChange,
-      },
-      columns: [
-        {
-          title: "Locations name",
-          dataIndex: "key",
-          key: "key",
-          render: (key) => <p style={Subtitle}>{key}</p>,
-        },
-        {
-          title: "Total device",
-          dataIndex: "valueParameter",
-          key: "valueParameter",
-          width: "20%",
-          render: (valueParameter) => (
-            <p style={Subtitle}>{valueParameter.total}</p>
-          ),
-        },
-        {
-          title: "Total available devices",
-          dataIndex: "valueParameter",
-          key: "valueParameter",
-          width: "20%",
-          render: (valueParameter) => (
-            <p style={Subtitle}>{valueParameter.available}</p>
-          ),
-        },
+    // {
+    //   key: "location",
+    //   title: `Locations`,
+    //   buttonFn: true,
+    //   data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
+    //   totalUnits: renderingTotalUnits(sortingByParameters("location")),
+    //   renderedCardData: selectedRowKeys,
+    //   open: true,
+    //   displayCards: selectedRowKeys?.length > 0,
+    //   routeTitle: "location",
+    //   renderSelectedOptions: [],
+    //   renderMoreOptions: true,
+    //   tree: false,
+    //   identifierRender: 0,
+    //   rowSelection: {
+    //     selectedRowKeys,
+    //     onChange: onSelectChange,
+    //   },
+    //   columns: [
+    //     {
+    //       title: "Locations name",
+    //       dataIndex: "key",
+    //       key: "key",
+    //       render: (key) => <p style={Subtitle}>{key}</p>,
+    //     },
+    //     {
+    //       title: "Total device",
+    //       dataIndex: "valueParameter",
+    //       key: "valueParameter",
+    //       width: "20%",
+    //       render: (valueParameter) => (
+    //         <p style={Subtitle}>{valueParameter.total}</p>
+    //       ),
+    //     },
+    //     {
+    //       title: "Total available devices",
+    //       dataIndex: "valueParameter",
+    //       key: "valueParameter",
+    //       width: "20%",
+    //       render: (valueParameter) => (
+    //         <p style={Subtitle}>{valueParameter.available}</p>
+    //       ),
+    //     },
 
-        {
-          title: "",
-          dataIndex: "action",
-          key: "action",
-          width: "10%",
-          render: (_, record) => (
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-              }}
-            >
-              <button
-                onClick={() =>
-                  navigate(
-                    `/inventory/location?${record.key}&search=${
-                      searchItem && searchItem
-                    }`
-                  )
-                }
-                style={{
-                  backgroundColor: "transparent",
-                  outline: "none",
-                  margin: 0,
-                  padding: 0,
-                }}
-              >
-                <RightNarrowInCircle />
-              </button>
-            </div>
-          ),
-        },
-      ],
-    },
+    //     {
+    //       title: "",
+    //       dataIndex: "action",
+    //       key: "action",
+    //       width: "10%",
+    //       render: (_, record) => (
+    //         <div
+    //           style={{
+    //             width: "100%",
+    //             display: "flex",
+    //             justifyContent: "flex-end",
+    //             alignItems: "center",
+    //           }}
+    //         >
+    //           <button
+    //             onClick={() =>
+    //               navigate(
+    //                 `/inventory/location?${record.key}&search=${
+    //                   searchItem && searchItem
+    //                 }`
+    //               )
+    //             }
+    //             style={{
+    //               backgroundColor: "transparent",
+    //               outline: "none",
+    //               margin: 0,
+    //               padding: 0,
+    //             }}
+    //           >
+    //             <RightNarrowInCircle />
+    //           </button>
+    //         </div>
+    //       ),
+    //     },
+    //   ],
+    // },
     {
       key: "location_1",
       title: "Locations/Sub-locations",
@@ -431,11 +426,12 @@ const RenderingFilters = ({
                   &nbsp;{" "}
                   {item.buttonFn &&
                     !compareArraysOfObjects(
-                      selectedRowKeys,
+                      [],
+                      // selectedRowKeys,
                       renderingCardData.preference.inventory_location
                     ) && (
                       <button
-                        onClick={() => updateInventoryLocationPreferences()}
+                        // onClick={() => updateInventoryLocationPreferences()}
                         style={BlueButton}
                       >
                         <p style={BlueButtonText}>
