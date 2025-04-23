@@ -9,7 +9,7 @@ import {
   List,
   ListItem,
   ListItemButton,
-  OutlinedInput
+  OutlinedInput,
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -295,181 +295,198 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         component="nav"
       >
         <Toolbar> */}
-          <div
-            id="grid-container-inside"
-            style={{
-              ...CenteringGrid,
-              justifyContent: "space-between",
+      <div
+        id="grid-container-inside"
+        style={{
+          ...CenteringGrid,
+          justifyContent: "space-between",
+          backgroundColor: "var(--blue700)",
+          width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
+        }}
+      >
+        <Grid
+          sx={{
+            padding: {
+              xs: "0 20px",
+              sm: "0 20px",
+              md:0,
+              lg:0,
+            },
+          }}
+          item
+          sm={2}
+          md={8}
+          lg={8}
+        >
+          <Badge
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{
+              mr: 2,
+              display: { sm: "flex", md: "none", lg: "none" },
               backgroundColor: "var(--blue700)",
-              width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
+              borderBottom: "solid 1px var(--blue-dark--600)",
+              padding: "0 24px 0 0",
+              borderRadius: "50%",
             }}
           >
-            <Grid item sm={2} md={8} lg={8}>
-              <Badge
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={handleDrawerToggle}
-                sx={{
-                  mr: 2,
-                  display: { sm: "flex", md: "none", lg: "none" },
-                  backgroundColor: "var(--blue700)",
-                  borderBottom: "solid 1px var(--blue-dark--600)",
-                  padding: "0 24px 0 0",
-                  borderRadius: "50%",
-                }}
-              >
-                <Icon icon="material-symbols:menu" width={30} height={30} />
-              </Badge>
-              <Box
-                sx={{
-                  display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-              >
-                <NavLink
-                  key={"devitrakName"}
-                  to={`${Number(user.role) === 4 ? "/events" : "/"}`}
-                  style={{ margin: "0 16px 0 0", width: "fit-content" }}
-                >
-                  <DevitrakLogo />
-                  <DevitrakName />{" "}
-                </NavLink>
-
-                {navItems.map((item) => {
-                  if (
-                    item.permission.some(
-                      (element) => element === Number(user.role) && item.desktop
-                    )
-                  ) {
-                    return (
-                      <NavLink key={item.title} to={`${item.route}`}
-                      preventScrollReset>
-                        <div className="content-main-navbar-updated">
-                          <article
-                            className={
-                              location.pathname === `${item.route}`
-                                ? "nav-item-base-main-navbar-updated"
-                                : "nav-item-base-1-main-navbar-updated"
-                            }
-                          >
-                            <div className="content-2-main-navbar-updated">
-                              <div className="text-1-main-navbar-updated text-mdsemibold">
-                                <p style={{ textTransform: "capitalize" }}>
-                                  {item.title}
-                                </p>
-                              </div>
-                            </div>
-                          </article>
-                        </div>
-                      </NavLink>
-                    );
-                  }
-                })}
-              </Box>
-            </Grid>
-
-            <Grid
-              item
-              sm={10}
-              md={4}
-              lg={4}
-              sx={{
-                display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
-                justifyContent: "flex-end",
-                alignItems: "center",
-                margin: 0,
-                // gap: "5px",
-              }}
+            <Icon icon="material-symbols:menu" width={30} height={30} />
+          </Badge>
+          <Box
+            sx={{
+              display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+              justifyContent: "flex-start",
+              alignItems: "center",
+              padding:0,
+            }}
+          >
+            <NavLink
+              key={"devitrakName"}
+              to={`${Number(user.role) === 4 ? "/events" : "/"}`}
+              style={{ margin: "0 16px 0 0", width: "fit-content", padding:0 }}
             >
-              <form
-                style={{ margin: "0 5px 0 0", width: "100%" }}
-                onSubmit={handleSearch}
-                method="get"
-                action="/search-result-page?search="
-              >
-                <OutlinedInput
-                  placeholder="Search"
-                  required
-                  style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
-                  onChange={(e) => onChange(e)}
-                  name={"searchValue"}
-                  value={searchValue}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <Icon
-                        cursor={"pointer"}
-                        icon="ic:baseline-delete-forever"
-                        color="#1e73be"
-                        width="25"
-                        height="25"
-                        opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
-                        display={`${
-                          String(searchValue)?.length > 0 ? "auto" : "none"
-                        }`}
-                        onClick={() => handleResetSearchValue()}
-                      />
-                    </InputAdornment>
-                  }
-                  fullWidth
-                />
-              </form>
-              <button
-                style={{
-                  outline: "none",
-                  border: "transparent",
-                  margin: 0,
-                  padding: 0,
-                  backgroundColor: "transparent",
-                }}
-                key={"item.title"}
-                onClick={(e) => handleSearch(e)}
-              >
-                <div className="content-main-navbar-updated">
-                  <article className={"nav-item-base-1-main-navbar-updated"}>
-                    <div className="content-2-main-navbar-updated">
-                      <div className="text-1-main-navbar-updated text-mdsemibold">
-                        <p
-                          style={{
-                            textTransform: "capitalize",
-                            fontSize: "25px",
-                          }}
-                        >
-                          <img src={MagnifyIcon} alt="search-icon" />
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-              </button>
-              <NavLink key={"/profile/my_details"} to={`/profile/my_details`}>
-                <div className="content-main-navbar-updated">
-                  <article
-                    className={
-                      location.pathname === `/profile/my_details`
-                        ? "nav-item-base-main-navbar-updated"
-                        : "nav-item-base-1-main-navbar-updated"
-                    }
+              <DevitrakLogo />
+              <DevitrakName />{" "}
+            </NavLink>
+
+            {navItems.map((item) => {
+              if (
+                item.permission.some(
+                  (element) => element === Number(user.role) && item.desktop
+                )
+              ) {
+                return (
+                  <NavLink
+                    key={item.title}
+                    to={`${item.route}`}
+                    preventScrollReset
                   >
-                    <div className="content-2-main-navbar-updated">
-                      <div className="text-1-main-navbar-updated text-mdsemibold">
-                        <p
-                          style={{
-                            textTransform: "capitalize",
-                            fontSize: "25px",
-                          }}
-                        >
-                          <img src={Profile} alt="Logo" />
-                        </p>
-                      </div>
+                    <div className="content-main-navbar-updated">
+                      <article
+                        className={
+                          location.pathname === `${item.route}`
+                            ? "nav-item-base-main-navbar-updated"
+                            : "nav-item-base-1-main-navbar-updated"
+                        }
+                      >
+                        <div className="content-2-main-navbar-updated">
+                          <div className="text-1-main-navbar-updated text-mdsemibold">
+                            <p style={{ textTransform: "capitalize" }}>
+                              {item.title}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
                     </div>
-                  </article>
+                  </NavLink>
+                );
+              }
+            })}
+          </Box>
+        </Grid>
+
+        <Grid
+          item
+          sm={10}
+          md={4}
+          lg={4}
+          sx={{
+            display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
+            justifyContent: "flex-end",
+            alignItems: "center",
+            margin: 0,
+            // gap: "5px",
+          }}
+        >
+          <form
+            style={{ margin: "0 5px 0 0", width: "100%" }}
+            onSubmit={handleSearch}
+            method="get"
+            action="/search-result-page?search="
+          >
+            <OutlinedInput
+              placeholder="Search"
+              required
+              style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
+              onChange={(e) => onChange(e)}
+              name={"searchValue"}
+              value={searchValue}
+              endAdornment={
+                <InputAdornment position="end">
+                  <Icon
+                    cursor={"pointer"}
+                    icon="ic:baseline-delete-forever"
+                    color="#1e73be"
+                    width="25"
+                    height="25"
+                    opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
+                    display={`${
+                      String(searchValue)?.length > 0 ? "auto" : "none"
+                    }`}
+                    onClick={() => handleResetSearchValue()}
+                  />
+                </InputAdornment>
+              }
+              fullWidth
+            />
+          </form>
+          <button
+            style={{
+              outline: "none",
+              border: "transparent",
+              margin: 0,
+              padding: 0,
+              backgroundColor: "transparent",
+            }}
+            key={"item.title"}
+            onClick={(e) => handleSearch(e)}
+          >
+            <div className="content-main-navbar-updated">
+              <article className={"nav-item-base-1-main-navbar-updated"}>
+                <div className="content-2-main-navbar-updated">
+                  <div className="text-1-main-navbar-updated text-mdsemibold">
+                    <p
+                      style={{
+                        textTransform: "capitalize",
+                        fontSize: "25px",
+                      }}
+                    >
+                      <img src={MagnifyIcon} alt="search-icon" />
+                    </p>
+                  </div>
                 </div>
-              </NavLink>
-            </Grid>
-          </div>
-        {/* </Toolbar>
+              </article>
+            </div>
+          </button>
+          <NavLink key={"/profile/my_details"} to={`/profile/my_details`}>
+            <div className="content-main-navbar-updated">
+              <article
+                className={
+                  location.pathname === `/profile/my_details`
+                    ? "nav-item-base-main-navbar-updated"
+                    : "nav-item-base-1-main-navbar-updated"
+                }
+              >
+                <div className="content-2-main-navbar-updated">
+                  <div className="text-1-main-navbar-updated text-mdsemibold">
+                    <p
+                      style={{
+                        textTransform: "capitalize",
+                        fontSize: "25px",
+                      }}
+                    >
+                      <img src={Profile} alt="Logo" />
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </NavLink>
+        </Grid>
+      </div>
+      {/* </Toolbar>
       </AppBar> */}
       <nav>
         <Drawer
@@ -485,6 +502,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             "& .MuiDrawer-paper": {
               GridSizing: "border-box",
               width: drawerWidth,
+              padding:{
+                sx:"0 20px",
+                sm:"0 20px",
+              }
             },
           }}
         >
