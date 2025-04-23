@@ -116,13 +116,20 @@ const MainPage = () => {
           </div>
         }
       >
-        <Grid container>
+        <Grid container spacing={1}>
           {renderingDataBasedOnStaffAndActiveEvent().length > 0 ? (
             dataToBeRenderedInUpcomingSection()?.map((event) => {
               return (
                 <Grid
                   key={event.id}
-                  padding={1}
+                  sx={{
+                    padding:{
+                      xs:0,
+                      sm:0,
+                      md:"8px",
+                      lg:"8px"
+                    }
+                  }}
                   alignSelf={"flex-start"}
                   item
                   xs={12}
