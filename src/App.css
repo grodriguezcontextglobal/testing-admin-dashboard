@@ -8,8 +8,8 @@
   padding-right: min(24px, 8%); */
   text-align: center;
   border-top: transparent;
-  border-left: 0.1px solid var(--gray100);
-  border-right: 0.1px solid var(--gray100);
+  /* border-left: 0.1px solid var(--gray100);
+  border-right: 0.1px solid var(--gray100); */
 }
 
 .logo {
