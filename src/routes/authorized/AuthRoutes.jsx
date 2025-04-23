@@ -191,7 +191,7 @@ const AuthRoutes = () => {
       >
         <div
           style={{
-            minWidth: "768px",
+            // minWidth: "768px",
             maxWidth: "1228px",
             margin: "auto auto 0",
             minHeight: "100dvh",
