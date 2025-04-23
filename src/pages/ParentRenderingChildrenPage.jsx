@@ -7,7 +7,7 @@ const ParentRenderingChildrenPage = () => {
     <Grid
       id="parent-container"
       display={"flex"}
-      // justifyContent={"center"}
+      justifyContent={"center"}
       // alignItems={"center"}
       maxWidth={"1228px"}
       minWidth={"325px"} //768px
