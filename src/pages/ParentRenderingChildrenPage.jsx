@@ -25,12 +25,7 @@ const ParentRenderingChildrenPage = () => {
             lg: "calc(100dvh - 80px)",
           },
           padding: { xs: "0 12px", sm: "0 20px", md: "0 20px", lg: "0" },
-          margin: {
-            xs: "6rem 0 1rem",
-            sm: "6rem 0 1rem",
-            md: "7rem 0 1rem",
-            lg: "6rem 0 1rem",
-          },
+          margin: "1rem 0 1rem",
         }}
         // margin={"8rem 0 1rem"}
         item
