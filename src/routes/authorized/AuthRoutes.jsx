@@ -181,17 +181,7 @@ const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
     <div style={{ width: "100%", margin: "auto", minHeight: "100dvh" }}>
-      <header
-        style={{
-          width: "100%",
-          margin: "0 auto 1rem",
-          position: "relative",
-          top: "0",
-          left: "0",
-        }}
-      >
-        <HeaderComponent ref={navbarRef} />
-      </header>
+      <HeaderComponent ref={navbarRef} />
       <Suspense
         fallback={
           <div style={CenteringGrid}>
