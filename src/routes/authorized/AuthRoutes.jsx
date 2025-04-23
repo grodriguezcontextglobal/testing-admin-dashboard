@@ -10,14 +10,15 @@ import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAl
 import NewPost from "../../pages/posts/action/NewPost";
 import EditPost from "../../pages/posts/action/EditPost";
 import DisplayArticle from "../../pages/posts/components/DisplayArticle";
+import HeaderComponent from "../../components/general/HeaderComponent";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
 );
-const UpperBanner = lazy(() => import("../../components/general/UpperBanner"));
-const NavigationBarMain = lazy(() =>
-  import("../../components/navbar/NavigationBarMain")
-);
+// const UpperBanner = lazy(() => import("../../components/general/UpperBanner"));
+// const NavigationBarMain = lazy(() =>
+//   import("../../components/navbar/NavigationBarMain")
+// );
 const FormEventDetail = lazy(() =>
   import("../../pages/events/newEventProcess/eventDetails/Form")
 );
@@ -181,8 +182,7 @@ const AuthRoutes = () => {
   return (
     <div style={{ width: "100%", margin: "auto" }}>
       <header style={{ width: "100%", margin: "0 auto" }}>
-        <UpperBanner ref={navbarRef} />
-        <NavigationBarMain ref={navbarRef} />
+        <HeaderComponent ref={navbarRef} />
       </header>
       <Suspense
         fallback={
