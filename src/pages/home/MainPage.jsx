@@ -208,7 +208,21 @@ const MainPage = () => {
           </Typography>
         </Grid>
         <Grid
-          sx={{ display: { xs: "flex", sm: "flex", md: "flex", lg: "flex" } }}
+          sx={{
+            display: "flex",
+            justifyContent: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "flex-end",
+              lg: "flex-end",
+            },
+            margin: {
+              xs: ".5rem 0",
+              sm: ".5rem 0",
+              md: 0,
+              lg: 0,
+            }
+          }}
           textAlign={"center"}
           justifyContent={"flex-end"}
           alignItems={"center"}
@@ -226,13 +240,11 @@ const MainPage = () => {
             to="/inventory/new-item"
           >
             <Button style={BlueButton}>
-              {/* <WhitePlusIcon /> */}
               <Typography textTransform={"none"} style={BlueButtonText}>
                 Add to inventory
               </Typography>
             </Button>
           </Link>
-          {/* /event/new_subscription */}
           <Link
             to="/create-event-page/event-detail"
             style={{
@@ -240,11 +252,6 @@ const MainPage = () => {
             }}
           >
             <Button style={{ ...GrayButton, alignItems: "center" }}>
-              {/* <BluePlusIcon
-                width={25}
-                height={20}
-                stroke={GrayButtonText.color}
-              /> */}
               <Typography textTransform={"none"} style={{ ...GrayButtonText }}>
                 Create new event
               </Typography>
