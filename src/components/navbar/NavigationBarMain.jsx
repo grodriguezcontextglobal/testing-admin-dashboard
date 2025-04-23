@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import {
-  AppBar,
   Badge,
   Box,
   Divider,
@@ -10,10 +9,9 @@ import {
   List,
   ListItem,
   ListItemButton,
-  OutlinedInput,
-  Toolbar,
+  OutlinedInput
 } from "@mui/material";
-import { useMediaQuery, useWindowScroll } from "@uidotdev/usehooks";
+import { useMediaQuery } from "@uidotdev/usehooks";
 import pkg from "prop-types";
 import { forwardRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,8 +38,9 @@ import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 import { LogoutIcon } from "../icons/LogoutIcon";
 // import { ProfileIcon } from "../icons/ProfileIcon";
-import Profile from "../icons/user-03.svg";
+import UpperBanner from "../general/UpperBanner";
 import MagnifyIcon from "../icons/search-lg.svg";
+import Profile from "../icons/user-03.svg";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -99,7 +98,7 @@ const navItems = [
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
-  const [{ x, y }, scrollTo] = useWindowScroll();
+  // const [{ x, y }, scrollTo] = useWindowScroll();
   // const { register, handleSubmit, watch } = useForm()
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -286,16 +285,16 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         margin: "auto",
       }}
     >
-      <AppBar
+      <UpperBanner />
+      {/* <AppBar
         style={{
-          top: "2.9dvh",
           backgroundColor: "var(--blue700)",
           width: "100%",
           zIndex: 30,
         }}
         component="nav"
       >
-        <Toolbar>
+        <Toolbar> */}
           <div
             id="grid-container-inside"
             style={{
@@ -345,7 +344,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                     )
                   ) {
                     return (
-                      <NavLink key={item.title} to={`${item.route}`}>
+                      <NavLink key={item.title} to={`${item.route}`}
+                      preventScrollReset>
                         <div className="content-main-navbar-updated">
                           <article
                             className={
@@ -469,8 +469,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               </NavLink>
             </Grid>
           </div>
-        </Toolbar>
-      </AppBar>
+        {/* </Toolbar>
+      </AppBar> */}
       <nav>
         <Drawer
           container={container}
