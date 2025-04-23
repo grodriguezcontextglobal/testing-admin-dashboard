@@ -37,15 +37,15 @@ const MainPage = () => {
 
           gap={2}
         >
-          <Grid alignSelf={"flex-start"} item xs={10} sm={10} md={3} lg={3}>
+          <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
             <Graphic />
           </Grid>
           <Grid
             alignSelf={"flex-start"}
             style={{ margin: "-10px 0 0 0", padding: 0 }}
             item
-            xs={10}
-            sm={10}
+            xs={12}
+            sm={12}
             md={4}
             lg={4}
           >
@@ -90,8 +90,8 @@ const MainPage = () => {
             alignSelf={"flex-start"}
             style={{ margin: "-10px 0 0 0", padding: 0 }}
             item
-            xs={10}
-            sm={10}
+            xs={12}
+            sm={12}
             md={4}
             lg={4}
           >
