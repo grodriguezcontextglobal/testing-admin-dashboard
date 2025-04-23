@@ -190,7 +190,7 @@ const MainPage = () => {
           </Grid>
         )}
         <Grid
-          sx={{ display: { xs: "flex", sm: "flex", md: "flex", lg: "flex" } }}
+          sx={{ display: "flex" }} //{ xs: "flex", sm: "flex", md: "flex", lg: "flex" } }}
           textAlign={"center"}
           justifyContent={"flex-start"}
           alignItems={"center"}
@@ -333,6 +333,8 @@ const MainPage = () => {
                 </Typography>
                 <Divider style={{ color: "transparent" }} />
               </Grid>
+              {/* <ActiveEventMainPage /> */}
+
               <Grid
                 textAlign={"right"}
                 display={"flex"}
