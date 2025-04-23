@@ -7,10 +7,10 @@ const ParentRenderingChildrenPage = () => {
     <Grid
       id="parent-container"
       display={"flex"}
-      justifyContent={"center"}
-      alignItems={"center"}
+      // justifyContent={"center"}
+      // alignItems={"center"}
       maxWidth={"1228px"}
-      minWidth={"768px"}
+      minWidth={"325px"} //768px
       alignSelf={"flex-start"}
       container
     >
@@ -24,7 +24,7 @@ const ParentRenderingChildrenPage = () => {
             md: "calc(100dvh - 80px)",
             lg: "calc(100dvh - 80px)",
           },
-          padding: { xs: "0 12px", sm: "0 20px", md: "0 20px", lg: "0" },
+          padding: { xs: "0 12px", sm: "0 12px", md: "0 20px", lg: "0" },
           margin: "1rem 0 1rem",
         }}
         // margin={"8rem 0 1rem"}
