@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -25,6 +25,7 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
+import DownloadingXlslFile from "./actions/DownloadXlsx";
 import FilterOptionsUX from "./utils/filterOptionsUX";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
@@ -42,6 +43,7 @@ const MainPage = () => {
     4: [],
     5: [],
   });
+  const [downloadDataReport, setDownloadDataReport] = useState(null);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
   const { register, watch } = useForm();
@@ -53,14 +55,6 @@ const MainPage = () => {
       ),
     enabled: !!user.sqlInfo.company_id,
   });
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   companyHasInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [currentTab]);
 
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
@@ -90,6 +84,7 @@ const MainPage = () => {
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         chosen={chosenOption}
         setDataFilterOptions={setDataFilterOptions}
+        downloadDataReport={setDownloadDataReport}
       />
     ),
     2: (
@@ -195,67 +190,59 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Grid
-          textAlign={"right"}
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
           gap={1}
           sx={{
             display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
             marginTop: "10px",
           }}
-          item
-          xs={12}
-          sm={12}
-        >
-          <Link to="/inventory/edit-group">
-            <button style={{ ...LightBlueButton, width: "fit-content" }}>
-              <p
-                style={{
-                  ...LightBlueButtonText,
-                  textTransform: "none",
-                  gap: "2px",
-                }}
-              >
-                <EditIcon
-                  stroke={"var(--blue-dark--800)"}
-                  width={"21"}
-                  height={"18"}
-                />
-                &nbsp;Update a group of device
-              </p>
-            </button>
-          </Link>
-          <Link to="/inventory/new-bulk-items">
-            <button style={{ ...BlueButton, width: "fit-content" }}>
-              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-              &nbsp;
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                Add a group of devices
-              </p>
-            </button>
-          </Link>
-          <Link to="/inventory/new-item">
-            <button style={{ ...LightBlueButton, width: "fit-content" }}>
-              <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                {/* <BluePlusIcon /> */}
-                <RectangleBluePlusIcon />
-                &nbsp; Add one device
-              </p>
-            </button>
-          </Link>
-        </Grid>
-        <Grid
-          style={{
-            paddingTop: "0px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
           container
-          marginTop={4}
         >
-          <Grid textAlign={"right"} item xs={4}></Grid>
+          <Grid item xs={12} sm={12}>
+            {" "}
+            <Link style={{ width: "100%" }} to="/inventory/edit-group">
+              <button style={{ ...LightBlueButton, width: "100%" }}>
+                <p
+                  style={{
+                    ...LightBlueButtonText,
+                    textTransform: "none",
+                    gap: "2px",
+                  }}
+                >
+                  <EditIcon
+                    stroke={"var(--blue-dark--800)"}
+                    width={"21"}
+                    height={"18"}
+                  />
+                  &nbsp;Update a group of device
+                </p>
+              </button>
+            </Link>
+          </Grid>
+          <Grid item xs={12} sm={12}>
+            {" "}
+            <Link style={{ width: "100%" }} to="/inventory/new-bulk-items">
+              <button style={{ ...BlueButton, width: "100%" }}>
+                <p style={{ ...BlueButtonText, textTransform: "none" }}>
+                  <WhiteCirclePlusIcon
+                    style={{ height: "21px", margin: "auto" }}
+                  />
+                  &nbsp; Add a group of devices
+                </p>
+              </button>
+            </Link>
+          </Grid>
+          <Grid item xs={12} sm={12}>
+            {" "}
+            <Link style={{ width: "100%" }} to="/inventory/new-item">
+              <button style={{ ...LightBlueButton, width: "100%" }}>
+                <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
+                  {/* <BluePlusIcon /> */}
+                  <RectangleBluePlusIcon />
+                  &nbsp; Add one device
+                </p>
+              </button>
+            </Link>
+          </Grid>
         </Grid>
         <Divider />
         <Grid
@@ -274,54 +261,107 @@ const MainPage = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              margin:"0px 0px 1rem 0px",
+              margin: "0px 0px 1rem 0px",
             }}
           >
-            <p
-              style={{
+            <Typography
+              sx={{
                 ...Title,
                 fontSize: "28px",
                 padding: 0,
                 textAlign: "left",
-                width: "100%",
+                width: {
+                  xs: "100%",
+                  sm: "100%",
+                  md: "50%",
+                  lg: "50%",
+                },
               }}
             >
               Search inventory:&nbsp;
-            </p>
-            <FilterOptionsUX
-              filterOptions={dataFilterOptions}
-              chosen={chosenOption}
-              setChosen={setChosenOption}
-            />
+            </Typography>
+            <Grid
+              item
+              sx={{
+                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+              }}
+              md={12}
+              lg={12}
+            >
+              <FilterOptionsUX
+                filterOptions={dataFilterOptions}
+                chosen={chosenOption}
+                setChosen={setChosenOption}
+              />
+            </Grid>
           </div>
-          <Grid style={{ ...CenteringGrid, gap: "5px" }} item xs sm md lg>
-            <OutlinedInput
-              {...register("searchItem")}
-              style={OutlinedInputStyle}
-              fullWidth
-              placeholder="Search device here"
-              startAdornment={
-                <InputAdornment position="start">
-                  <MagnifyIcon />
-                </InputAdornment>
-              }
-            />
-            <Button
-              style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
-              onClick={() => {
-                setOpenAdvanceSearchModal(true);
-              }}
+          <Grid justifyContent={"flex-start"} gap={1} container>
+            <Grid item xs={12} sm={12} md={9} lg={9}>
+              <OutlinedInput
+                {...register("searchItem")}
+                style={OutlinedInputStyle}
+                fullWidth
+                placeholder="Search device here"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <MagnifyIcon />
+                  </InputAdornment>
+                }
+              />
+            </Grid>
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-end"}
+              gap={1}
+              item
+              xs={12}
+              sm={12}
+              md
+              lg
             >
-              Advance search
-            </Button>
-            <Button
-              style={{ ...OutlinedInputStyle, ...CenteringGrid, gap: 0 }}
-              onClick={() => {
-                setCurrentTab(3);
+              <Button
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                onClick={() => {
+                  setOpenAdvanceSearchModal(true);
+                }}
+              >
+                Advance search
+              </Button>
+              <Button
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                onClick={() => {
+                  setCurrentTab(3);
+                }}
+              >
+                Reload
+              </Button>
+            </Grid>
+            <Grid
+              item
+              sx={{
+                display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
               }}
+              xs={12}
+              sm={12}
             >
-              Reload
-            </Button>
+              <Button style={{ ...OutlinedInputStyle, width: "100%" }}>
+                <DownloadingXlslFile props={downloadDataReport} />
+              </Button>
+            </Grid>
+            <Grid
+              item
+              sx={{
+                display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
+              }}
+              md
+              lg
+            >
+              <FilterOptionsUX
+                filterOptions={dataFilterOptions}
+                chosen={chosenOption}
+                setChosen={setChosenOption}
+              />
+            </Grid>
           </Grid>
         </Grid>
         <Grid
