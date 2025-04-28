@@ -9,7 +9,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import RenderingConsumersChartsBehavior from "./RenderingConsumersChartsBehavior";
+import ChartComponent from "./UI/ChartComponent";
 
 const ConsumerHeader = ({
   setCreateUserButton,
@@ -27,7 +27,7 @@ const ConsumerHeader = ({
         }}
         container
       >
-        <Grid item xs={6}>
+        <Grid item xs={12} sm={12} md={6} lg={6}>
           <Typography
             textTransform={"none"}
             style={{
@@ -39,17 +39,31 @@ const ConsumerHeader = ({
           </Typography>
         </Grid>
         <Grid
-          textAlign={"right"}
           display={"flex"}
-          justifyContent={"flex-end"}
           alignItems={"center"}
           gap={1}
+          sx={{
+            margin: {
+              xs: "0.5rem 0",
+              sm: "0.5rem 0",
+            },
+            justifyContent: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "flex-end",
+              lg: "flex-end",
+            },
+          }}
           item
-          xs={6}
+          xs={12}
+          sm={12}
+          md={6}
+          lg={6}
         >
           <Button onClick={() => setCreateUserButton(true)} style={BlueButton}>
             <Typography textTransform={"none"} style={BlueButtonText}>
-              <WhiteCirclePlusIcon />&nbsp;Add new consumer
+              <WhiteCirclePlusIcon />
+              &nbsp;Add new consumer
             </Typography>
           </Button>
         </Grid>
@@ -90,99 +104,11 @@ const ConsumerHeader = ({
             quick glance at devices locations.
           </p>
         </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          // overflow={"hidden"}
-          gap={2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <Grid
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignSelf: "flex-start",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            {" "}
-            <RenderingConsumersChartsBehavior
-              active={{
-                title: "Active",
-                number:
-                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.activeTransactions ?? 0,
-              }}
-              inactive={{
-                title: "Inactive",
-                number:
-                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.inactiveTransactions ?? 0,
-              }}
-              props={{
-                title: "General activity",
-                description:
-                  "Active consumers refers to those users currently holding one or more devices.", // from the database
-                total:
-                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.total ?? 0,
-              }}
-            />
-          </Grid>
-          <Grid
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignSelf: "flex-start",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            {" "}
-            <RenderingConsumersChartsBehavior
-              active={{
-                title: "Event",
-                number:
-                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.totalConsumersFromEvents ?? 0,
-              }}
-              inactive={{
-                title: "General",
-                number:
-                  allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                    ?.lease ?? 0,
-              }}
-              props={{
-                title: "Consumer origin",
-                description:
-                  "Consumers from an event typically spend a shorter time with your devices.",
-                total:
-                  Number(
-                    allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                      ?.totalConsumersFromEvents ?? 0
-                  ) +
-                  Number(
-                    allConsumersBasedOnEventsPerCompany?.data?.data?.result
-                      ?.lease ?? 0
-                  ),
-              }}
-            />
-          </Grid>
-        </Grid>
+        <ChartComponent
+          allConsumersBasedOnEventsPerCompany={
+            allConsumersBasedOnEventsPerCompany
+          }
+        />
         <Grid
           display={"flex"}
           justifyContent={"space-between"}
