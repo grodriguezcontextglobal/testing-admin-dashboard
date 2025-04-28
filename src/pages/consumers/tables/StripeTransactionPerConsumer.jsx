@@ -190,6 +190,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       dataIndex: "date",
       key: "date",
       width: "20%",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (date) => {
         const weekdayDic = {
           Sun: "Sunday",
@@ -240,6 +241,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       title: "Event",
       dataIndex: "eventSelected",
       key: "eventSelected",
+      responsive: ["md", "lg"],
       render: (eventSelected) => {
         const initials = String(eventSelected).split(" ");
         return (
@@ -271,6 +273,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       title: "Transaction ID",
       dataIndex: "paymentIntent",
       key: "paymentIntent",
+      responsive: ["md", "lg"],
       render: (paymentIntent) => {
         const checkPaymentID = String(paymentIntent).split("_");
         return (
@@ -297,7 +300,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       title: "Devices",
       dataIndex: "device",
       key: "device",
-      responsive: ["lg"],
+      responsive: ["xs", "sm", "md", "lg"],
       render: (_, record) => (
         <p style={Subtitle}>
           {record.device} {record.device > 1 ? "devices" : "device"}&nbsp;
@@ -308,7 +311,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       title: "",
       dataIndex: "action",
       key: "action",
-      responsive: ["md"],
+      responsive: ["xs", "sm", "md", "lg"],
       width: "3%",
       render: (_, record) => {
         const checkPaymentID = String(record.paymentIntent).split("_");
