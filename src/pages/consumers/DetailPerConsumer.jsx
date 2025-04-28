@@ -159,8 +159,8 @@ const DetailPerConsumer = () => {
             item
             xs={12}
             sm={12}
-            md={12}
-            lg={12}
+            md={6}
+            lg={6}
           >
             <Typography
               textTransform={"none"}
@@ -168,7 +168,31 @@ const DetailPerConsumer = () => {
             >
               Consumer
             </Typography>
-            {/* /event/new_subscription */}
+          </Grid>
+          {/* /event/new_subscription */}
+          <Grid
+            sx={{
+              display: "flex",
+              justifyContent: {
+                xs: "flex-start",
+                sm: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
+              },
+              alignItems: "center",
+              margin: {
+                xs: "0.5rem 0",
+                sm: "0.5rem 0",
+                md: "0.5rem 0",
+                lg: "0.5rem 0",
+              },
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
+          >
             <Link to="/create-event-page/event-detail">
               <Button
                 style={{
@@ -182,7 +206,8 @@ const DetailPerConsumer = () => {
                     ...BlueButtonText,
                   }}
                 >
-                  <WhiteCirclePlusIcon />&nbsp;Add new consumer
+                  <WhiteCirclePlusIcon />
+                  &nbsp;Add new consumer
                 </Typography>
               </Button>
             </Link>
@@ -197,7 +222,6 @@ const DetailPerConsumer = () => {
           }}
           container
         >
-          <Grid marginY={0} item xs={8}>
             <Grid
               display={"flex"}
               justifyContent={"flex-start"}
@@ -206,7 +230,7 @@ const DetailPerConsumer = () => {
               xs={12}
             >
               <Typography
-                style={{
+                sx={{
                   ...TextFontsize18LineHeight28,
                   textTransform: "capitalize",
                   textAlign: "left",
@@ -219,7 +243,7 @@ const DetailPerConsumer = () => {
                 All consumers
               </Typography>
               <Typography
-                style={{
+                sx={{
                   ...TextFontsize18LineHeight28,
                   textTransform: "capitalize",
                   textAlign: "left",
@@ -231,8 +255,6 @@ const DetailPerConsumer = () => {
                 {customer?.name} {customer?.lastName}
               </Typography>{" "}
             </Grid>
-          </Grid>
-          <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
         <Divider />
         <Grid
@@ -374,7 +396,9 @@ const DetailPerConsumer = () => {
             md={5}
             lg={5}
           >
-            <AssigmentAction refetching={refetchingAfterReturnDeviceAssignedInTransaction} />
+            <AssigmentAction
+              refetching={refetchingAfterReturnDeviceAssignedInTransaction}
+            />
           </Grid>
         </Grid>
         <Grid
