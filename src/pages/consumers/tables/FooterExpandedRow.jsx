@@ -30,6 +30,7 @@ import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsMo
 import "../localStyles.css";
 import PaymentIcon from "../../../components/icons/paymentIcon";
 import WithdrawIcon from "../../../components/icons/WithdrawIcon";
+import { useMediaQuery } from "@uidotdev/usehooks";
 const FooterExpandedRow = ({
   dataRendering,
   formattedData,
@@ -169,6 +170,11 @@ const FooterExpandedRow = ({
     );
     return setOpenChargeAllLostDevicesModal(true);
   };
+
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isMediumDevice = useMediaQuery(
+    "only screen and (min-width : 769px) and (max-width : 992px)"
+  );
 
   const footerColumn = [
     {
@@ -316,6 +322,7 @@ const FooterExpandedRow = ({
       title: "Cost of device",
       dataIndex: "status",
       key: "status",
+      responsive: ["md", "lg"],
       render: (_, record) => {
         const paymentIntent = record.data[0].eventInfo[0].paymentIntent;
         const retrieveAmount = () => {
@@ -344,6 +351,7 @@ const FooterExpandedRow = ({
       title: "Status",
       dataIndex: "status",
       key: "status",
+      responsive: ["md", "lg"],
       render: () => {
         const groupingByStatus = groupBy(transactionDeviceData, "status");
         const lostNumber = groupingByStatus["lost"] || groupingByStatus["Lost"];
@@ -422,6 +430,159 @@ const FooterExpandedRow = ({
     },
   ];
 
+  const footerColumnMobileScreen = [
+    {
+      title: "Deposit",
+      dataIndex: "deposit",
+      key: "deposit",
+      render: () => {
+        const lostItemsList = groupBy(formattedData, "status")["Lost"];
+
+        return (
+          <div
+            style={{
+              ...CenteringGrid,
+              flexDirection: "column",
+              width: "100%",
+              gap: "5px",
+            }}
+          >
+            <Popconfirm
+              onConfirm={() =>
+                returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
+              }
+              title="Are you sure?"
+            >
+              <Button
+                loading={isLoadingState}
+                style={{ ...GrayButton, width: "100%" }}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    ...CenteringGrid,
+                    fontWeight: 600,
+                    color: "var(--gray700)",
+                  }}
+                >
+                  <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
+                  &nbsp;Mark selected as returned
+                </p>
+              </Button>
+            </Popconfirm>
+            <Button
+              style={{ ...GrayButton, width: "100%" }}
+              onClick={() => setExpressCheckoutModal(true)}
+            >
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                <img src={ScanIcon} alt="ScanIcon" /> &nbsp;Scan-in devices
+              </p>
+            </Button>
+            <Popconfirm
+              onConfirm={() => returningAllItemsAtOnce(transactionDeviceData)}
+              title="Are you sure?"
+            >
+              <Button
+                loading={isLoadingState}
+                style={{ ...GrayButton, width: "100%" }}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    ...CenteringGrid,
+                    fontWeight: 600,
+                    color: "var(--gray700)",
+                  }}
+                >
+                  <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
+                  &nbsp;Mark all as returned
+                </p>
+              </Button>
+            </Popconfirm>
+            <Button
+              loading={isLoadingState}
+              style={{ ...GrayButton, width: "100%" }}
+              onClick={() => sendEmailDeviceReport()}
+            >
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                <img src={Report} alt="Report" /> &nbsp;Send report to client
+              </p>
+            </Button>
+            <Button
+              loading={isLoadingState}
+              style={{ ...GrayButton, width: "100%" }}
+              onClick={() => setOpenModalCapturingDeposit(true)}
+            >
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                {/* <img src={Report} alt="Report" /> &nbsp; */}
+                <PaymentIcon />
+                &nbsp;Capture deposit
+              </p>
+            </Button>
+            <Button
+              loading={isLoadingState}
+              style={{ ...GrayButton, width: "100%" }}
+              onClick={() => setOpenModalReleasingDeposit(true)}
+            >
+              <p
+                style={{
+                  ...Subtitle,
+                  ...CenteringGrid,
+                  fontWeight: 600,
+                  color: "var(--gray700)",
+                }}
+              >
+                {/* <img src={Report} alt="Report" /> &nbsp; */}
+                <WithdrawIcon />
+                &nbsp;Release deposit
+              </p>
+            </Button>
+            <Popconfirm
+              title="Are you sure that you want to charge consumer for all devices marked as lost?"
+              onConfirm={() => lostFeeChargeCustomer(lostItemsList)}
+            >
+              <Button
+                style={{ ...GrayButton, width: "100%" }}
+                // onClick={() => lostFeeChargeCustomer(lostItemsList)}
+              >
+                <p
+                  style={{
+                    ...Subtitle,
+                    ...CenteringGrid,
+                    fontWeight: 600,
+                    color: "var(--gray700)",
+                  }}
+                >
+                  <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
+                </p>
+              </Button>
+            </Popconfirm>{" "}
+          </div>
+        );
+      },
+    },
+  ];
   const [transactionDeviceData, setTransactionDeviceData] = useState([]);
   const formatItemsInfoAsProps = async () => {
     const response = await devitrakApi.post(
@@ -461,7 +622,11 @@ const FooterExpandedRow = ({
     <>
       <Table
         showHeader={false}
-        columns={footerColumn}
+        columns={
+          isSmallDevice || isMediumDevice
+            ? footerColumnMobileScreen
+            : footerColumn
+        }
         dataSource={rendering}
         pagination={false}
         className="footer-expanded-table"
