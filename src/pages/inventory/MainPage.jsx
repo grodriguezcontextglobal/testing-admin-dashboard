@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 // import DatePicker from "react-datepicker";
@@ -55,7 +55,7 @@ const MainPage = () => {
       ),
     enabled: !!user.sqlInfo.company_id,
   });
-
+  const queryClient = useQueryClient();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
   useEffect(() => {
@@ -102,6 +102,17 @@ const MainPage = () => {
     ),
   };
 
+  const refetchingQueriesFn = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["listOfItemsInStock"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ItemsInInventoryCheckingQuery"],
+      exact: true,
+    });
+    return companyHasInventoryQuery.refetch();
+  };
   return (
     <Suspense
       fallback={
@@ -330,7 +341,7 @@ const MainPage = () => {
               <Button
                 style={{ ...OutlinedInputStyle, width: "100%" }}
                 onClick={() => {
-                  setCurrentTab(3);
+                  refetchingQueriesFn();
                 }}
               >
                 Reload
