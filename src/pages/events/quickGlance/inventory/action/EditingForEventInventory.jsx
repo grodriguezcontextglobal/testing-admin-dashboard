@@ -135,7 +135,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const template = {
-      deviceList: JSON.stringify(valueItemSelected),
+      deviceList: JSON.stringify(valueItemSelected.map(item => item.serial_number)),
       status: "Operational",
       activity: false,
       comment: "No comment",

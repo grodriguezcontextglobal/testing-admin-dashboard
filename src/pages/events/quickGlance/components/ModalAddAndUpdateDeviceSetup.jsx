@@ -55,7 +55,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         item_group: deviceTitle,
         enableAssignFeature: 1,
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const recordNoSqlDevicesQuery = useQuery({
@@ -148,7 +148,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         }
       );
       const template = {
-        deviceList: JSON.stringify(database),
+        deviceList: JSON.stringify(database.map((item) => item.serial_number)),
         status: "Operational",
         activity: false,
         comment: "No comment",
@@ -229,7 +229,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       let data = null;
       data = props.deviceInfo.slice(index, index + Number(props.quantity));
       const template = {
-        deviceList: JSON.stringify(data),
+        deviceList: JSON.stringify(data.map((item) => item.serial_number)),
         status: "Operational",
         activity: false,
         comment: "No comment",
