@@ -8,7 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { AutoComplete, Divider, notification, Tooltip, Button } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import { Controller, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -688,8 +688,9 @@ const FormDeviceTrackingMethod = ({
       return (
         <OutlinedInput
           readOnly
-          value={qtyDiff()}
-          {...register("quantity", { setValueAs: qtyDiff() })}
+          // value={qtyDiff()}
+          // {...register("quantity", { setValueAs: qtyDiff() })}
+          { ...register("quantity")}
           fullWidth
           style={{
             ...OutlinedInputStyle,
@@ -731,19 +732,13 @@ const FormDeviceTrackingMethod = ({
     return 6;
   };
 
-  const qtyDiff = () => {
-    if (
-      watch("min_serial_number").length < 1 ||
-      watch("max_serial_number").length < 1
-    ) {
-      return 0;
-    }
-    return (
-      Number(watch("max_serial_number")) -
-      Number(watch("min_serial_number")) +
-      1
-    );
-  };
+  const qtyDiff = useCallback(() => {
+    if (watch("max_serial_number").length < 1) return 0;
+    const result =
+      Number(watch("max_serial_number")) - Number(watch("min_serial_number"));
+    return setValue("quantity", result + 1);
+  },[watch("max_serial_number"), watch("min_serial_number")]);
+  qtyDiff();
 
   return (
     <Grid

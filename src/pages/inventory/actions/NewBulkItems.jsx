@@ -25,7 +25,7 @@ import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
@@ -190,9 +190,7 @@ const AddNewBulkItems = () => {
         "As ownership was set as 'Rent', returning date must be provided."
       );
     }
-    if (Number(qtyDiff()) < 1) {
-      return openNotificationWithIcon("Quantity must be greater than 0.");
-    }
+
     if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
       return openNotificationWithIcon(
         "Max serial number must be greater than min serial number."
@@ -444,8 +442,7 @@ const AddNewBulkItems = () => {
       return (
         <OutlinedInput
           readOnly
-          value={qtyDiff()}
-          {...register("quantity", { setValueAs: qtyDiff() })}
+          {...register("quantity")}
           fullWidth
           style={{
             ...OutlinedInputStyle,
@@ -487,19 +484,13 @@ const AddNewBulkItems = () => {
     return 6;
   };
 
-  const qtyDiff = () => {
-    if (
-      watch("min_serial_number").length < 1 ||
-      watch("max_serial_number").length < 1
-    ) {
-      return 0;
-    }
-    return (
-      Number(watch("max_serial_number")) -
-      Number(watch("min_serial_number")) +
-      1
-    );
-  };
+  const qtyDiff = useCallback(() => {
+    if (watch("max_serial_number").length < 1) return 0;
+    const result =
+      Number(watch("max_serial_number")) - Number(watch("min_serial_number"));
+    return setValue("quantity", result + 1);
+  },[watch("max_serial_number"), watch("min_serial_number")]);
+  qtyDiff();
 
   const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
     itemsInInventoryQuery?.data?.data?.items
