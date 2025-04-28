@@ -405,7 +405,7 @@ const AssignemntNewDeviceInInventory = () => {
         warehouse: true,
         main_warehouse: data.tax_location,
         created_at: formatDate(new Date()),
-        updated_at: formatDate(new Date()),
+        update_at: formatDate(new Date()),
         company: user.company,
         location: data.location,
         sub_location: JSON.stringify([
