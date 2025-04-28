@@ -3,6 +3,7 @@ import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
+import { useMediaQuery } from "@uidotdev/usehooks";
 
 const ExpandedRowTableButtons = ({
   record,
@@ -10,11 +11,17 @@ const ExpandedRowTableButtons = ({
   handleLostSingleDevice,
   handleReturnItemFromLeaseTransaction,
   ReverseRightArrow,
+  LostIcon,
 }) => {
   const propsLostSingleDevice = {
     ...record,
     new_status: "Lost",
   };
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isMediumDevice = useMediaQuery(
+    "only screen and (min-width : 769px) and (max-width : 992px)"
+  );
+
   return (
     <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
       <Button
@@ -50,8 +57,14 @@ const ExpandedRowTableButtons = ({
               color: record.status ? BlueButtonText.color : "var(--gray200)",
             }}
           >
-            <img src={ReverseRightArrow} alt="ReverseRightArrow" /> &nbsp;Mark
-            as returned
+            <img src={ReverseRightArrow} alt="ReverseRightArrow" />
+            <span
+              style={{
+                display: isSmallDevice || isMediumDevice ? "none" : "flex",
+              }}
+            >
+              &nbsp;Mark as returned
+            </span>
           </p>
         )}
       </Button>
@@ -60,6 +73,10 @@ const ExpandedRowTableButtons = ({
         onClick={() => handleLostSingleDevice(propsLostSingleDevice)}
         style={{
           ...GrayButton,
+          background:
+            isSmallDevice || isMediumDevice
+              ? "var(--gray900)"
+              : GrayButton.background,
         }}
       >
         <p
@@ -72,7 +89,20 @@ const ExpandedRowTableButtons = ({
             }`,
           }}
         >
-          Mark as lost
+          <img
+            src={LostIcon}
+            alt="LostIcon"
+            style={{
+              display: isSmallDevice || isMediumDevice ? "flex" : "none",
+            }}
+          />
+          <span
+            style={{
+              display: isSmallDevice || isMediumDevice ? "none" : "flex",
+            }}
+          >
+            Mark as lost
+          </span>
         </p>
       </Button>
     </div>
