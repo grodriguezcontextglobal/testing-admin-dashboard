@@ -177,7 +177,7 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
             </Space>
           </Grid>
           <Grid
-            display={"flex"}
+            display={emailConsumersList.length === 0 ? "none" : "flex"}
             alignItems={"center"}
             justifyContent={"center"}
             margin={"auto"}
