@@ -182,7 +182,7 @@ const DetailPerConsumer = () => {
                     ...BlueButtonText,
                   }}
                 >
-                  <WhiteCirclePlusIcon />&nbsp;Add new event
+                  <WhiteCirclePlusIcon />&nbsp;Add new consumer
                 </Typography>
               </Button>
             </Link>
