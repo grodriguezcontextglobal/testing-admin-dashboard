@@ -336,24 +336,30 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       title: "Device name",
       dataIndex: "type",
       key: "type",
+      responsive: ["md", "lg"],
       render: (type) => <p style={Subtitle}>{type}</p>,
     },
     {
       title: "Serial number",
       dataIndex: "serial_number",
       key: "serial_number",
+      width: "fit-content",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (serial_number) => <p style={Subtitle}>{serial_number}</p>,
     },
     {
       title: "Cost of device",
       dataIndex: "deviceValue",
       key: "deviceValue",
+      responsive: ["md", "lg"],
       render: (deviceValue) => <p style={Subtitle}>${deviceValue}</p>,
     },
     {
       title: "Status of device",
       dataIndex: "status",
       key: "status",
+      width: "fit-content",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (status) => (
         <Badge
           style={{
@@ -414,6 +420,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     {
       title: "Actions",
       key: "operation",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (record) => (
         <Space
           size="middle"
@@ -436,6 +443,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
               }
               ReverseRightArrow={ReverseRightArrow}
               refetchingAfterAction={refetchingQueries}
+              LostIcon={Lost}
             />
           ) : (
             <ExpandedLostButton
