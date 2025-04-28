@@ -40,7 +40,6 @@ const MainPageGrouping = () => {
   });
   const location = useLocation();
   const groupName = location.search.split("&");
-  console.log(decodeURI(groupName[0].split("?")[1]))
   const { register, watch, setValue } = useForm({
     defaultValues: {
       searchDevice: decodeURI(groupName[1].split("=")[1]),

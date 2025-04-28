@@ -33,8 +33,8 @@ const AdvanceSearchModal = ({
       <Typography style={TextFontsize18LineHeight28}>Advance search</Typography>
     );
   };
-  console.log(displayMessage);
-  console.log(advanceSearchResultState);
+  // console.log(displayMessage);
+  // console.log(advanceSearchResultState);
   const closeModal = () => {
     return setOpenAdvanceSearchModal(false);
   };

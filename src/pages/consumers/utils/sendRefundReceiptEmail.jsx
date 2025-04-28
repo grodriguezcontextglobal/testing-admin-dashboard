@@ -1,7 +1,6 @@
 import { devitrakApi } from "../../../api/devitrakApi";
 
 const sendRefundReceiptEmail = (props) => {
-  console.log(props);
   const { customer, amount, paymentIntent, company, event } = props;
   const sendEmail = async () => {
     try {

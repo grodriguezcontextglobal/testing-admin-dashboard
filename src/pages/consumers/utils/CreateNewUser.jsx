@@ -221,7 +221,6 @@ export const CreateNewConsumer = ({
       const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
         email: data.email,
       });
-      console.log(listOfConsumersQuery.data);
       if (listOfConsumersQuery.data.ok) {
         if (listOfConsumersQuery.data.users.length > 0) {
           return updateExistingUserInRecord({

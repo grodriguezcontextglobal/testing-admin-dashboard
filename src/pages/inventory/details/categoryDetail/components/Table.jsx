@@ -34,7 +34,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     // enabled: false,
     refetchOnMount: false,
   });
-  console.log(listImagePerItemQuery?.data?.data);
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["deviceInInventoryPerCategory"],
     queryFn: () =>
