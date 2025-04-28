@@ -3,6 +3,8 @@ import { Button, message } from "antd";
 import { useEffect, useState } from "react";
 import { utils, writeFile } from "xlsx";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import { BlueButton } from "../../../styles/global/BlueButton";
 
 const DownloadingXlslFile = ({ props }) => {
   const [fileName, setFileName] = useState("");
@@ -164,21 +166,16 @@ const DownloadingXlslFile = ({ props }) => {
         style={{
           display: "flex",
           alignItems: "center",
-          borderTop: "transparent",
-          borderRight: "transparent",
-          borderBottom: "transparent",
-          borderRadius: "8px 8px 0 0",
+          border: "transparent",
         }}
       >
         <Typography
-          textTransform={"none"}
-          textAlign={"left"}
-          fontWeight={500}
-          fontSize={"12px"}
-          fontFamily={"Inter"}
-          lineHeight={"28px"}
-          color={"var(--blue-dark--700, #004EEB)"}
-          padding={"0px"}
+          style={{
+            ...TextFontSize14LineHeight20,
+            color: BlueButton.background,
+            fontSize: "12px",
+            lineHeight: "28px",
+          }}
         >
           <XLSXIcon /> Export record (
           <span style={{ textDecoration: "underline" }}>.xlsx</span>)
