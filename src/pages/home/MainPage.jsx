@@ -221,7 +221,7 @@ const MainPage = () => {
               sm: ".5rem 0",
               md: 0,
               lg: 0,
-            }
+            },
           }}
           textAlign={"center"}
           justifyContent={"flex-end"}
@@ -360,47 +360,47 @@ const MainPage = () => {
           </>
         ) : (
           <Grid
-            textAlign={"right"}
-            display={"flex"}
+            container
+            gap={1}
             justifyContent={"space-between"}
             alignItems={"center"}
-            gap={1}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
           >
-            <BannerMsg
-              props={{
-                title: "Add to your inventory",
-                titleStyle: {
-                  ...Title,
-                  textAlign: "center",
-                },
-                message:
-                  "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-                link: "/inventory/new-item",
-                button: BlueButton,
-                paragraphStyle: BlueButtonText,
-                paragraphText: "Add to inventory",
-              }}
-            />
-            <BannerMsg
-              props={{
-                title: "Create your first event",
-                titleStyle: {
-                  ...Title,
-                  textAlign: "center",
-                },
-                message:
-                  "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-                link: "/create-event-page/event-detail",
-                button: GrayButton,
-                paragraphStyle: GrayButtonText,
-                paragraphText: "Create new event",
-              }}
-            />
+            <Grid item xs={12} sm={12} md={5} lg={5}>
+              {" "}
+              <BannerMsg
+                props={{
+                  title: "Add to your inventory",
+                  titleStyle: {
+                    ...Title,
+                    textAlign: "center",
+                  },
+                  message:
+                    "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
+                  link: "/inventory/new-item",
+                  button: BlueButton,
+                  paragraphStyle: BlueButtonText,
+                  paragraphText: "Add to inventory",
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={12} md={5} lg={5}>
+              {" "}
+              <BannerMsg
+                props={{
+                  title: "Create your first event",
+                  titleStyle: {
+                    ...Title,
+                    textAlign: "center",
+                  },
+                  message:
+                    "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
+                  link: "/create-event-page/event-detail",
+                  button: GrayButton,
+                  paragraphStyle: GrayButtonText,
+                  paragraphText: "Create new event",
+                }}
+              />
+            </Grid>
           </Grid>
         )}{" "}
       </Grid>
