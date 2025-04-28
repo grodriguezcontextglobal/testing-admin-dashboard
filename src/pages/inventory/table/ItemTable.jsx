@@ -41,6 +41,7 @@ const ItemTable = ({
   setOpenAdvanceSearchModal,
   setDataFilterOptions,
   chosen,
+  downloadDataReport
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -75,16 +76,6 @@ const ItemTable = ({
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   listItemsQuery.refetch();
-  //   listImagePerItemQuery.refetch();
-  //   itemsInInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []); // ✅ Moves function execution to useEffect
 
   const getDataStructuringFormat = useCallback(
     (props) => {
@@ -230,6 +221,7 @@ const ItemTable = ({
   useEffect(() => {
     const controller = new AbortController();
     setDataFilterOptions(filterOptions);
+    downloadDataReport(dataToDisplay());
     return () => {
       controller.abort();
     };
@@ -584,7 +576,12 @@ const ItemTable = ({
               </div>
             </div>
             <Divider />
-            <Grid container>
+            <Grid
+              sx={{
+                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+              }}
+              container
+            >
               <Grid
                 border={"1px solid var(--gray-200, #eaecf0)"}
                 borderRadius={"12px 12px 0 0"}
@@ -594,7 +591,8 @@ const ItemTable = ({
                 marginBottom={-1}
                 paddingBottom={-1}
                 item
-                xs={12}
+                md={12}
+                lg={12}
               >
                 <div
                   style={{
@@ -632,8 +630,8 @@ const ItemTable = ({
                 dataSource={dataToDisplay()}
                 className="table-ant-customized"
               />
+              <Divider />
             </Grid>
-            <Divider />
           </div>
         </Grid>
         {dataToDisplay()?.length === 0 &&
