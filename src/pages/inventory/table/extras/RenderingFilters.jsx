@@ -113,55 +113,6 @@ const RenderingFilters = ({
     (element) => element.user === user.email
   );
 
-  // const [selectedRowKeys, setSelectedRowKeys] = useState(
-  //   renderingCardData ? renderingCardData.preference.inventory_location : []
-  // );
-  // const updateEmployeesPreference = () => {
-  //   let employCopy = user.companyData.employees.map((employee) => ({
-  //     ...employee,
-  //   }));
-  //   const index = employCopy.findIndex(
-  //     (element) => element.user === user.email
-  //   );
-  //   if (index > -1) {
-  //     const newData = {
-  //       ...employCopy[index],
-  //       preference: { inventory_location: [...selectedRowKeys] },
-  //     };
-  //     employCopy[index] = newData;
-  //     return employCopy;
-  //   }
-  //   return employCopy;
-  // };
-  // const updateInventoryLocationPreferences = async () => {
-  //   const updatedCompany = await devitrakApi.patch(
-  //     `/company/update-company/${user.companyData.id}`,
-  //     {
-  //       employees: updateEmployeesPreference(),
-  //     }
-  //   );
-  //   if (updatedCompany.data.ok) {
-  //     return dispatch(
-  //       onLogin({ ...user, companyData: updatedCompany.data.company })
-  //     );
-  //   }
-  // };
-  // const onSelectChange = async (newSelectedRowKeys) => {
-  //   if (
-  //     selectedRowKeys.some((element) => element.key === newSelectedRowKeys[0])
-  //   ) {
-  //     const result = selectedRowKeys.filter(
-  //       (element) => element.key !== newSelectedRowKeys[0]
-  //     );
-  //     return setSelectedRowKeys(result);
-  //   }
-  //   const locationInfo = sortingByParameters("location");
-  //   const result = locationInfo.find(
-  //     (element) => element.key === newSelectedRowKeys[0]
-  //   );
-  //   setSelectedRowKeys([...selectedRowKeys, result]);
-  // };
-
   const renderingTotalUnits = (props) => {
     let result = 0;
     for (let data of props) {
@@ -253,7 +204,7 @@ const RenderingFilters = ({
     // },
     {
       key: "location_1",
-      title: "Locations/Sub-locations",
+      title: "Locations|Sub-locations",
       data: testing(), //sortingByParameters
       totalUnits: renderingTotalUnits(sortingByParameters("location")),
       open: true,
@@ -342,6 +293,7 @@ const RenderingFilters = ({
       ],
     },
   ];
+
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
@@ -489,7 +441,7 @@ const RenderingFilters = ({
                         dictionary={dictionary}
                         searchItem={searchItem}
                       />
-                    </Grid>
+                  </Grid>
                 )}
               </div>
               {item.renderMoreOptions && (
