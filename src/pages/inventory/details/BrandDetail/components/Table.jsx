@@ -32,10 +32,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.companyData.id }),
+    queryFn: () =>
+      devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
-  
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["deviceInInventoryPerBrand"],
     queryFn: () =>
@@ -145,6 +146,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       title: "Device category",
       dataIndex: "data",
       key: "data",
+      responsive: ["xs", "sm", "md", "lg"],
       sorter: {
         compare: (a, b) =>
           ("" + a.data.item_group).localeCompare(b.data.item_group),
@@ -185,6 +187,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       sorter: {
         compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (item_group) => (
         <span style={cellStyle}>
           {" "}
@@ -201,6 +204,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (warehouse, record) => {
         if (record.data.enableAssignFeature === 1) {
           return (
@@ -274,6 +278,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (ownership) => (
         <span
           style={{
@@ -318,6 +323,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         compare: (a, b) =>
           ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (data) => (
         <span style={cellStyle}>
           {" "}
@@ -335,6 +341,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (data) => (
         <span style={cellStyle}>
           {" "}
@@ -349,6 +356,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       dataIndex: "serial_number",
       key: "serial_number",
       sorter: (a, b) => a.serial_number - b.serial_number,
+      responsive: ["xs", "sm", "md", "lg"],
       render: (serial_number) => (
         <span style={cellStyle}>
           {" "}
@@ -358,26 +366,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         </span>
       ),
     },
-    // {
-    //   title: "Value",
-    //   dataIndex: "cost",
-    //   key: "cost",
-    //   sorter: {
-    //     compare: (a, b) => ("" + a.cost).localeCompare(b.cost),
-    //   },
-    //   render: (cost) => (
-    //     <span style={cellStyle}>
-    //       {" "}
-    //       <Typography style={Subtitle} textTransform={"capitalize"}>
-    //         ${cost}
-    //       </Typography>
-    //     </span>
-    //   ),
-    // },
     {
       title: "",
       dataIndex: "data",
       key: "data",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (record) => (
         <button
           style={{
