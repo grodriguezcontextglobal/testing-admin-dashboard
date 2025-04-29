@@ -3,8 +3,10 @@ import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { useNavigate } from "react-router-dom";
 
-const CardLocations = ({ props, title, optional }) => {
+const CardLocations = ({ props, title, optional, navigate = null }) => {
+  const navigateTo = useNavigate()
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -56,7 +58,9 @@ const CardLocations = ({ props, title, optional }) => {
                 ...TextFontSize30LineHeight38,
                 textWrap: "pretty",
                 textAlign: "left",
+                cursor:"pointer"
               }}
+              onClick={() => navigateTo(navigate)}
             >
               {title}
             </Typography>
