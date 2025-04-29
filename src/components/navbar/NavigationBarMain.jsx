@@ -89,7 +89,7 @@ const navItems = [
   },
   {
     title: "profile",
-    route: "/profile",
+    route: "/profile/my_details",
     permission: [0, 1, 2, 3, 4],
     mobile: true,
     desktop: false,
