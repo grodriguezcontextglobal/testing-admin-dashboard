@@ -41,7 +41,7 @@ const ItemTable = ({
   setOpenAdvanceSearchModal,
   setDataFilterOptions,
   chosen,
-  downloadDataReport
+  downloadDataReport,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -511,19 +511,24 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <RenderingFilters
-          dataToDisplay={dataToDisplay}
-          searchItem={searchItem}
-          user={user}
-          openAdvanceSearchModal={openAdvanceSearchModal}
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-        />
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          <RenderingFilters
+            dataToDisplay={dataToDisplay}
+            searchItem={searchItem}
+            user={user}
+            openAdvanceSearchModal={openAdvanceSearchModal}
+            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+          />
+        </Grid>
         <Grid
-          display={"flex"}
           flexDirection={"column"}
           justifyContent={"flex-start"}
           alignItems={"center"}
           margin={"20px 0 0 0"}
+          sx={{
+            display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+          }}
+
           item
           xs={12}
           sm={12}
@@ -577,9 +582,6 @@ const ItemTable = ({
             </div>
             <Divider />
             <Grid
-              sx={{
-                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
-              }}
               container
             >
               <Grid
