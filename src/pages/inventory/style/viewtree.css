@@ -22,10 +22,8 @@
 
 .tree-title {
   font-family: "Inter", serif;
-  font-size: 30px;
   font-style: normal;
   font-weight: 600;
-  line-height: 38px;
   color: var(--gray-900, #101828);
   text-wrap: pretty;
   text-align: left;
