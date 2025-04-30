@@ -352,6 +352,7 @@ const RenderingFilters = ({
                 key={`${item.title}-*-*${index}`}
                 style={{
                   width: "100%",
+                  margin:"0 0 1rem",
                 }}
               >
                 <p
@@ -397,7 +398,7 @@ const RenderingFilters = ({
                 key={`_${index}-${item.title}`}
                 style={{
                   maxWidth: "1228px",
-                  width: "99.5vw",
+                  width: "100%",
                   display: "flex",
                   justifyContent: "flex-start",
                   alignItems: "center",
@@ -435,7 +436,7 @@ const RenderingFilters = ({
                     );
                   })
                 ) : (
-                  <Grid alignSelf={"flex-start"} container spacing={1}>
+                  <Grid id="parent-container-map" alignSelf={"flex-start"} container spacing={1}>
                       <CardForTreeView
                         item={item}
                         dictionary={dictionary}

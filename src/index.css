@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
 :root {
-  min-width: 99vw;
+  min-width: 99.9vw;
   /* calc(100vw - 12px); */
   min-height: 100dvh;
   display: flex;
@@ -117,7 +117,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  width: 100vw;
+  width: 99.5vw;
   min-height: 100vh;
 }
 

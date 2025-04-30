@@ -49,14 +49,14 @@ const TreeNode = ({ nodeName, nodeData }) => {
             <Typography
               sx={{
                 fontSize: {
-                  xs: "18px",
-                  sm: "18px",
+                  xs: "24px",
+                  sm: "24px",
                   md: "30px",
                   lg: "30px",
                 },
                 lineHeight: {
-                  xs: "24px",
-                  sm: "24px",
+                  xs: "32px",
+                  sm: "32px",
                   md: "38px",
                   lg: "38px",
                 },

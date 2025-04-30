@@ -14,7 +14,7 @@ const CardForTreeView = (props) => {
     );
   } else {
     return (
-      <Grid container spacing={1}>
+      <Grid width={'100%'} container spacing={1}>
         {item.data.map((opt) => {
           return (
             <Grid
@@ -45,7 +45,6 @@ const CardForTreeView = (props) => {
                 props={`${opt.value} total devices`}
                 optional={null}
                 style={{ width: "100%", padding: 0 }}
-                width="100%"
               />
             </Grid>
           );
