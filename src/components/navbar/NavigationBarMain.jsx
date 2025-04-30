@@ -312,8 +312,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               md:0,
               lg:0,
             },
+            display: "flex",
+            justifyContent:"flex-start",
+            alignItems:"center",
           }}
           item
+          xs={2}
           sm={2}
           md={8}
           lg={8}
@@ -488,7 +492,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
       </div>
       {/* </Toolbar>
       </AppBar> */}
-      <nav>
+      <nav style={{width:"100%"}}>
         <Drawer
           container={container}
           variant="temporary"
