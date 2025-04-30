@@ -1,5 +1,6 @@
 #root {
   width: 100%;
+  min-width: 755px;
   /* calc(100% - 12px); */
   margin: 0 auto;
   padding-top: 0;
