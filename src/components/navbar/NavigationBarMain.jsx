@@ -332,7 +332,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               borderRadius: "50%",
             }}
           >
-            <Icon icon="material-symbols:menu" width={30} height={30} />
+            <Icon icon="material-symbols:menu" width={30} height={30} color="#fff" />
           </Badge>
           <Box
             sx={{
