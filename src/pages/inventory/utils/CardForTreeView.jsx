@@ -30,8 +30,8 @@ const CardForTreeView = (props) => {
                 padding: 0,
               }}
               item
-              xs={10}
-              sm={10}
+              xs={12}
+              sm={12}
               md={4}
               lg={4}
             >

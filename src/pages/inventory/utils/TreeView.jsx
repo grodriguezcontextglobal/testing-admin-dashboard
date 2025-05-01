@@ -7,7 +7,7 @@ const TreeView = ({ data }) => {
   return (
     <Grid container gap={2}>
       {Object.entries(data).map(([location, details]) => (
-        <Grid key={location} margin={'auto'} item xs={10} sm={10} md={12} lg={12}>
+        <Grid key={location} margin={'auto'} item xs={12} sm={12} md={12} lg={12}>
           <TreeNode key={location} nodeName={location} nodeData={details} />
         </Grid>
       ))}
