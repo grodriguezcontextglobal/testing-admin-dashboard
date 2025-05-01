@@ -22,6 +22,7 @@ const TreeNode = ({ nodeName, nodeData }) => {
     margin: 0,
     padding: 0,
     width: "fit-content",
+    boxShadow: "none",
   };
 
   return (
