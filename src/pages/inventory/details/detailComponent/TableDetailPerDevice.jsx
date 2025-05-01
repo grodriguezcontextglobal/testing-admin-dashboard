@@ -19,7 +19,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
   const dispatch = useDispatch();
   const sortingAssignedDeviceTrack = () => {
     const renderingData = new Map();
-    const dbToRender =  dataFound[0].data
+    const dbToRender = dataFound[0].data;
 
     for (let event of dbToRender) {
       if (!renderingData.has(event.event_id)) {
@@ -144,6 +144,18 @@ const TableDetailPerDevice = ({ dataFound }) => {
     return checkIfEventShowedExistsInAdminEventList(event_name);
   };
 
+  const columnsStyles = {
+    textTransform: "none",
+    textAlign: "left",
+    fontSize: "14px",
+    fontFamily: "Inter",
+    fontStyle: "normal",
+    fontWeight: 400,
+    lineHeight: "20px",
+    // color: "var(--blue-dark-600)",
+    width: "100%",
+  };
+
   const columns = [
     {
       title: "Event",
@@ -152,6 +164,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
       sorter: {
         compare: (a, b) => ("" + a.event_name).localeCompare(b.event_name),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (event_name) => {
         return (
           <button
@@ -169,15 +182,8 @@ const TableDetailPerDevice = ({ dataFound }) => {
           >
             <p
               style={{
-                textTransform: "none",
-                textAlign: "left",
-                fontSize: "14px",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "20px",
+                ...columnsStyles,
                 color: "var(--blue-dark-600)",
-                width: "100%",
               }}
             >
               {event_name ?? "Warehouse"}
@@ -194,6 +200,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         compare: (a, b) =>
           ("" + a.state_address).localeCompare(b.state_address),
       },
+      responsive: ["xs", "sm", "md", "lg"],
       render: (record) => (
         <span
           style={{
@@ -206,19 +213,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
             width: "100%",
           }}
         >
-          <p
-            style={{
-              textTransform: "none",
-              textAlign: "left",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontWeight: 400,
-              lineHeight: "20px",
-              // color: "var(--blue-dark-600)",
-              width: "100%",
-            }}
-          >
+          <p style={{}}>
             {record.warehouse === 1 ? record.location : record.event_name}
           </p>
         </span>
@@ -231,6 +226,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
+      responsive: ["md", "lg"],
       render: (ownership) => (
         <span
           // onClick={() => navigate("/events/event-quickglance")}
@@ -238,15 +234,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         >
           <p
             style={{
-              textTransform: "none",
-              textAlign: "left",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontWeight: 400,
-              lineHeight: "20px",
-              // color: "var(--blue-dark-600)",
-              width: "100%",
+              ...columnsStyles,
             }}
           >
             {ownership === "Rent" ? "Leased" : ownership}
@@ -266,15 +254,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
         <span style={{ margin: "auto" }}>
           <p
             style={{
-              textTransform: "none",
-              textAlign: "left",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontWeight: 400,
-              lineHeight: "20px",
-              // color: "var(--blue-dark-600)",
-              width: "100%",
+              ...columnsStyles,
             }}
           >
             {condition ?? "Operational"}
