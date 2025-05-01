@@ -55,47 +55,64 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           }}
         >
           <Grid container>
-            <div
+            <Grid
               id="container-items"
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 alignItems: "center",
-                margin:"0 0 10px 0",
+                margin: "0 0 10px 0",
               }}
+              item
+              xs={12}
+              sm={12}
+              md={6}
+              lg={6}
             >
               <Typography style={TextFontSize14LineHeight20}>
-                Items in container (serial number) | {dataFound[0]?.container_items?.length ?? 0}/{dataFound[0]?.containerSpotLimit} cap
+                Items in container (serial number) |{" "}
+                {dataFound[0]?.container_items?.length ?? 0}/
+                {dataFound[0]?.containerSpotLimit} cap
               </Typography>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  gap: "5px",
-                }}
+            </Grid>
+            <Grid
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: {
+                  xs: "flex-start",
+                  sm: "flex-start",
+                  md: "flex-end",
+                  lg: "flex-end",
+                },
+                gap: "5px",
+              }}
+              item
+              xs={12}
+              sm={12}
+              md={6}
+              lg={6}
+            >
+              <Popconfirm
+                title="Are you sure you want to remove all items inside this container?"
+                onConfirm={() => handleContainerItemsRemoval()}
               >
-                <Popconfirm
-                  title="Are you sure you want to remove all items inside this container?"
-                  onConfirm={() => handleContainerItemsRemoval()}
-                >
-                  <Button style={{ ...DangerButton, margin: 0 }}>
-                    <Typography style={{ ...DangerButtonText }}>
-                      Empty case
-                    </Typography>
-                  </Button>
-                </Popconfirm>
-                <Button
-                  onClick={() => setOpenModal(true)}
-                  style={{ ...BlueButton, margin: 0 }}
-                >
-                  <Typography style={{ ...BlueButtonText, ...CenteringGrid }}>
-                    Add/Update
+                <Button style={{ ...DangerButton, margin: 0 }}>
+                  <Typography style={{ ...DangerButtonText }}>
+                    Empty case
                   </Typography>
                 </Button>
-              </div>
-            </div>
+              </Popconfirm>
+              <Button
+                onClick={() => setOpenModal(true)}
+                style={{ ...BlueButton, margin: 0 }}
+              >
+                <Typography style={{ ...BlueButtonText, ...CenteringGrid }}>
+                  Add/Update
+                </Typography>
+              </Button>
+            </Grid>
           </Grid>
           <Grid container>
             <Space size={[8, 16]} wrap style={{ margin: "10px 0" }}>
