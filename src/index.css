@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
 :root {
-  min-width: 99.9vw;
+  min-width: 100vw;
   /* calc(100vw - 12px); */
   min-height: 100dvh;
   display: flex;
@@ -19,9 +19,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scrollbar-width: auto;
+  scrollbar-width: none;
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
+  border: none;
   /* colors pallet */
   --white: rgba(255, 255, 255, 0);
   --main-colorscarbon: rgba(51, 51, 51, 1);
@@ -115,9 +116,10 @@ a:hover {
 
 body {
   margin: 0;
+  padding: 0;
   display: flex;
   place-items: center;
-  /* width: 100%; */
+  width: 100%;
   min-height: 100vh;
 }
 
