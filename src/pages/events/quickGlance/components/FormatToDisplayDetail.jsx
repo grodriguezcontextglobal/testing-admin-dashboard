@@ -73,13 +73,9 @@ const FormatToDisplayDetail = () => {
     };
 
     const foundDevicesOut = () => {
-      let index = 0;
-      for (let data of foundAllDevicesGivenInEvent()) {
-        if (data.activity) {
-          index++;
-        }
-      }
-      return index;
+      const groupingByActivity = groupBy(foundAllDevicesGivenInEvent(), "activity");
+      if(groupingByActivity?.true?.length > 0) return groupingByActivity?.true?.length;
+      return 0;
     };
 
     const deviceRangeDisplay = () => {
