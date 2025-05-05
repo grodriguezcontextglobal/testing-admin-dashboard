@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { Divider, Table } from "antd";
+import { Divider, Table, Space } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { createContext, useEffect } from "react";
@@ -322,22 +322,24 @@ const RenderingFilters = ({
   };
 
   return (
-    <Grid container>
+    // <Grid container>
+    <div style={{ width: "100%" }}>
       {optionsToRenderInDetailsHtmlTags.map((item, index) => {
         return (
-          <Grid
-            key={`${item.title}_${index}`}
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            margin={"20px 0 0 0"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
+          // <Grid
+          //   key={`${item.title}_${index}`}
+          //   display={"flex"}
+          //   flexDirection={"column"}
+          //   justifyContent={"flex-start"}
+          //   alignItems={"center"}
+          //   margin={"20px 0 0 0"}
+          //   item
+          //   xs={12}
+          //   sm={12}
+          //   md={12}
+          //   lg={12}
+          // >
+          <div key={`${item.title}_${index}`} style={{ width: "100%" }}>
             <details
               style={{
                 width: "100%",
@@ -352,7 +354,7 @@ const RenderingFilters = ({
                 key={`${item.title}-*-*${index}`}
                 style={{
                   width: "100%",
-                  margin:"0 0 1rem",
+                  margin: "0 0 1rem",
                 }}
               >
                 <p
@@ -394,17 +396,12 @@ const RenderingFilters = ({
                     )}
                 </p>
               </summary>
-              <div
+              <Grid
+                container
+                spacing={1}
                 key={`_${index}-${item.title}`}
-                style={{
-                  maxWidth: "1228px",
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                  alignSelf: "flex-start",
-                  flexWrap: "wrap",
-                }}
+                display={"flex"}
+                justifyContent={"flex-start"}
               >
                 {item.renderedCardData ? (
                   item.renderedCardData.map((opt) => {
@@ -415,8 +412,8 @@ const RenderingFilters = ({
                         item
                         xs={12}
                         sm={12}
-                        md={3}
-                        lg={3}
+                        md={4}
+                        lg={4}
                       >
                         <CardInventoryLocationPreference
                           key={opt}
@@ -436,15 +433,15 @@ const RenderingFilters = ({
                     );
                   })
                 ) : (
-                  <Grid id="parent-container-map" alignSelf={"flex-start"} container spacing={1}>
-                      <CardForTreeView
-                        item={item}
-                        dictionary={dictionary}
-                        searchItem={searchItem}
-                      />
-                  </Grid>
+                  <div style={{ width:"100%", display:"flex", justifyContent:"flex-start", alignItems:"center", margin: ".5rem 0 0" }}>
+                  <CardForTreeView
+                    item={item}
+                    dictionary={dictionary}
+                    searchItem={searchItem}
+                    />
+                    </div>
                 )}
-              </div>
+              </Grid>
               {item.renderMoreOptions && (
                 <Table
                   pagination={{
@@ -462,7 +459,8 @@ const RenderingFilters = ({
               )}
             </details>
             <Divider />
-          </Grid>
+          </div>
+          // </Grid>
         );
       })}
       {openAdvanceSearchModal && (
@@ -481,7 +479,8 @@ const RenderingFilters = ({
           />
         </AdvanceSearchContext.Provider>
       )}
-    </Grid>
+    </div>
+    // </Grid>
   );
 };
 

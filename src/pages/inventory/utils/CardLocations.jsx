@@ -6,131 +6,128 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import { useNavigate } from "react-router-dom";
 
 const CardLocations = ({ props, title, optional, navigate = null }) => {
-  const navigateTo = useNavigate()
+  const navigateTo = useNavigate();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
   return (
-    <Grid
-      padding={`${
-        isSmallDevice || isMediumDevice || isLargeDevice
-          ? "10px 0px"
-          : "10px 10px 10px 0"
-      }`}
-      item
-      xs={12}
-      sm={12}
-      md={12}
-      lg={12}
+    // <Grid
+    //   padding={`${
+    //     isSmallDevice || isMediumDevice || isLargeDevice
+    //       ? "10px 0px"
+    //       : "10px 10px 10px 0"
+    //   }`}
+    //   item
+    //   xs={12}
+    //   sm={12}
+    //   md={12}
+    //   lg={12}
+    // >
+    <Card
+      style={{
+        width: "100%",
+        borderRadius: "12px",
+        border: "1px solid var(--gray-200, #EAECF0)",
+        background: "var(--base-white, #FFF)",
+        boxShadow:
+          "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+      }}
     >
-      <Card
-        style={{
-          width: "100%",
-          borderRadius: "12px",
-          border: "1px solid var(--gray-200, #EAECF0)",
-          background: "var(--base-white, #FFF)",
-          boxShadow:
-            "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-        }}
+      <Grid
+        display={"flex"}
+        justifyContent={"space-around"}
+        alignItems={"center"}
+        container
       >
         <Grid
           display={"flex"}
-          justifyContent={"space-around"}
+          justifyContent={"space-between"}
           alignItems={"center"}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+          <Typography
+            style={{
+              ...TextFontSize30LineHeight38,
+              textWrap: "pretty",
+              textAlign: "left",
+              cursor: "pointer",
+            }}
+            onClick={() => navigateTo(navigate)}
           >
-            <Typography
+            {title}
+          </Typography>
+          {optional !== null && (
+            <span
               style={{
-                ...TextFontSize30LineHeight38,
-                textWrap: "pretty",
-                textAlign: "left",
-                cursor:"pointer"
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `${
+                  !optional
+                    ? "var(--blue-50, #EFF8FF)"
+                    : "var(--success-50, #ECFDF3)"
+                }`,
+                width: "fit-content",
               }}
-              onClick={() => navigateTo(navigate)}
             >
-              {title}
-            </Typography>
-            {optional !== null && (
-              <span
-                style={{
-                  borderRadius: "16px",
-                  justifyContent: "center",
-                  display: "flex",
-                  padding: "2px 8px",
-                  alignItems: "center",
-                  background: `${
-                    !optional
-                      ? "var(--blue-50, #EFF8FF)"
-                      : "var(--success-50, #ECFDF3)"
-                  }`,
-                  width: "fit-content",
-                }}
+              <Typography
+                color={`${
+                  !optional
+                    ? "var(--blue-700, #175CD3)"
+                    : "var(--success-700, #027A48)"
+                }`}
+                fontSize={"12px"}
+                fontFamily={"Inter"}
+                fontStyle={"normal"}
+                fontWeight={500}
+                lineHeight={"18px"}
+                textAlign={"center"}
+                textTransform={"capitalize"}
               >
-                <Typography
-                  color={`${
-                    !optional
-                      ? "var(--blue-700, #175CD3)"
-                      : "var(--success-700, #027A48)"
-                  }`}
-                  fontSize={"12px"}
-                  fontFamily={"Inter"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"18px"}
-                  textAlign={"center"}
-                  textTransform={"capitalize"}
-                >
-                  <Icon
-                    icon="tabler:point-filled"
-                    rotate={3}
-                    color={`${!optional ? "#2E90FA" : "#12B76A"}`}
-                  />
-                  {!optional ? "In Use" : "In Stock"}
-                </Typography>
-              </span>
-            )}
-          </Grid>
+                <Icon
+                  icon="tabler:point-filled"
+                  rotate={3}
+                  color={`${!optional ? "#2E90FA" : "#12B76A"}`}
+                />
+                {!optional ? "In Use" : "In Stock"}
+              </Typography>
+            </span>
+          )}
         </Grid>
-        <Grid container>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+      </Grid>
+      <Grid container>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <Typography
+            textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
+            fontFamily={"Inter"}
+            fontSize={"14px"}
+            fontStyle={"normal"}
+            fontWeight={500}
+            lineHeight={"20px"}
+            color={"var(--gray-600, #475467)"}
           >
-            <Typography
-              textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"20px"}
-              color={"var(--gray-600, #475467)"}
-            >
-              {props}
-            </Typography>
-          </Grid>
+            {props}
+          </Typography>
         </Grid>
-      </Card>
-    </Grid>
+      </Grid>
+    </Card>
+    // </Grid>
   );
 };
 
