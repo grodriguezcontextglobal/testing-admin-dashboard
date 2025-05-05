@@ -421,8 +421,8 @@ const ModalAddAndUpdateDeviceSetup = ({
                 ),
                 value: JSON.stringify({
                   data: item?.value?.data,
-                  start: item?.start,
-                  end: item?.end,
+                  start: item?.value?.start,
+                  end: item?.value?.end,
                 }),
               };
             })}
