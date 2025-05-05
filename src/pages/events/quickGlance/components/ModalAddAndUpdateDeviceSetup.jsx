@@ -7,7 +7,6 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Modal, Select, Space, Tooltip } from "antd";
-import { groupBy, orderBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -18,7 +17,6 @@ import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { RectangleBluePlusIcon } from "../../../../components/icons/RectangleBluePlusIcon";
 import { checkArray } from "../../../../components/utils/checkArray";
-import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -28,6 +26,7 @@ import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { groupBy } from "lodash";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -49,9 +48,9 @@ const ModalAddAndUpdateDeviceSetup = ({
   const itemQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList"],
     queryFn: () =>
-      devitrakApi.post("/db_item/warehouse-items", {
+      devitrakApi.post("/db_event/retrieve-item-location-quantity", {
         company_id: user.sqlInfo.company_id,
-        warehouse: true,
+        warehouse: 1,
         item_group: deviceTitle,
         enableAssignFeature: 1,
       }),
@@ -89,32 +88,31 @@ const ModalAddAndUpdateDeviceSetup = ({
     };
   }, []);
 
-  const dataFound = itemQuery?.data?.data?.items ?? [];
   const existingDevice =
     recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
 
-  const optionsToRenderInSelector = () => {
-    const dataToIterate = checkTypeFetchResponse(dataFound);
-    const locations = groupBy(dataToIterate, "location");
-    const options = new Map();
-    for (const [key, value] of Object.entries(locations)) {
-      const serialNumberListOrderedAsc = orderBy(
-        value,
-        ["serial_number"],
-        ["asc"]
-      );
-      options.set(key, {
-        qty: value.length,
-        data: JSON.stringify(value),
-        start: serialNumberListOrderedAsc[0].serial_number,
-        end: serialNumberListOrderedAsc.at(-1).serial_number,
-        serialNumberList: JSON.stringify(
-          groupBy(orderBy(value, ["serial_number"], ["asc"]), "serial_number")
-        ),
-      });
-    }
-    return options;
-  };
+  // const optionsToRenderInSelector = () => {
+  //   const dataToIterate = checkTypeFetchResponse(dataFound);
+  //   const locations = groupBy(dataToIterate, "location");
+  //   const options = new Map();
+  //   for (const [key, value] of Object.entries(locations)) {
+  //     const serialNumberListOrderedAsc = orderBy(
+  //       value,
+  //       ["serial_number"],
+  //       ["asc"]
+  //     );
+  //     options.set(key, {
+  //       qty: value.length,
+  //       data: JSON.stringify(value),
+  //       start: serialNumberListOrderedAsc[0].serial_number,
+  //       end: serialNumberListOrderedAsc.at(-1).serial_number,
+  //       serialNumberList: JSON.stringify(
+  //         groupBy(orderBy(value, ["serial_number"], ["asc"]), "serial_number")
+  //       ),
+  //     });
+  //   }
+  //   return options;
+  // };
 
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
@@ -344,18 +342,24 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
 
   const checkIfSerialNumberExists = () => {
-    if (valueItemSelected?.serialNumberList?.length > 0) {
-      const checkingSerialNumber = JSON.parse(
-        valueItemSelected.serialNumberList
+    if (valueItemSelected?.data?.length > 0) {
+      const checkingSerialNumber = groupBy(
+        JSON.parse(valueItemSelected.data),
+        "serial_number"
       );
       return checkingSerialNumber[watch("serial_number")]?.length > 0;
     }
+    return false;
   };
 
   const renderOptionAsNeededFormat = () => {
     const result = new Set();
-    for (const [key, value] of optionsToRenderInSelector()) {
-      result.add({ key, value });
+    if (itemQuery.data) {
+      const dataFound = itemQuery?.data?.data?.items ?? [];
+      for (const [key, value] of Object.entries(dataFound)) {
+        //optionsToRenderInSelector()
+        result.add({ key, value });
+      }
     }
     return Array.from(result);
   };
@@ -415,7 +419,11 @@ const ModalAddAndUpdateDeviceSetup = ({
                     </span>
                   </Typography>
                 ),
-                value: JSON.stringify(item?.value),
+                value: JSON.stringify({
+                  data: item?.value?.data,
+                  start: item?.start,
+                  end: item?.end,
+                }),
               };
             })}
           />
@@ -447,6 +455,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("quantity")}
               style={OutlinedInputStyle}
               placeholder="e.g. 150"
@@ -471,6 +480,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               </Typography>
             </InputLabel>
             <OutlinedInput
+              required
               {...register("serial_number")}
               style={OutlinedInputStyle}
               placeholder="e.g. 154580"
