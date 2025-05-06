@@ -4,6 +4,8 @@ import "../style/viewtree.css";
 import { Button } from "antd";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { Grid, Typography } from "@mui/material";
+import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 
 const TreeNode = ({ nodeName, nodeData }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,6 +67,7 @@ const TreeNode = ({ nodeName, nodeData }) => {
               }}
               className="tree-title"
             >
+              {nodeData.children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
               {nodeName}
             </Typography>
           </Button>{" "}
