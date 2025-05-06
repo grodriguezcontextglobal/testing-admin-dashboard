@@ -46,7 +46,6 @@ const ModalAddAndUpdateDeviceSetup = ({
   const [listOfLocations, setListOfLocations] = useState([]);
   const [deviceInfo, setDeviceInfo] = useState([]);
   const [loading, setLoading] = useState(false);
-console.log(listOfLocations)
   // Query definitions with proper configurations
   const itemQuery = useQuery({
     queryKey: [
@@ -163,7 +162,6 @@ console.log(listOfLocations)
 
   const checkIfSerialNumberExists = useCallback(() => {
     const serialNumber = watch("serial_number");
-    console.log(valueItemSelected);
     if (!serialNumber || !valueItemSelected?.serialNumberList) return false;
     try {
       const parsedData = checkValidJSON(valueItemSelected.serialNumberList);
@@ -214,7 +212,6 @@ console.log(listOfLocations)
       }
 
       try {
-        console.log(valueItemSelected)
         await fullDetailForSelectedData({ ...data, location: valueItemSelected?.location });
         const result = [
           ...listOfLocations,
