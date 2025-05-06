@@ -1,3 +1,6 @@
+import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { nanoid } from "@reduxjs/toolkit";
+import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -8,22 +11,17 @@ import {
   Space,
   notification,
 } from "antd";
-import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { nanoid } from "@reduxjs/toolkit";
-import { useQuery } from "@tanstack/react-query";
-import { groupBy } from "lodash";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { DangerButton } from "../../../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
@@ -40,9 +38,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const [assignAllDevices, setAssignAllDevices] = useState(false);
   const dispatch = useDispatch();
   const itemQuery = useQuery({
-    queryKey: ["listOfItems"],
+    queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.post("/db_item/warehouse-items", {
+      devitrakApi.post("/db_event/retrieve-item-group-location-quantity", {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
@@ -55,32 +53,74 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       message: msg,
     });
   };
-  const dataFound = itemQuery?.data?.data?.items ?? [];
-  const optionsToRenderInSelector = () => {
-    const checkLocation = new Map();
-    const dataToIterate = checkTypeFetchResponse(dataFound);
-    const groupingByCategories = groupBy(dataToIterate, "category_name");
-    for (let [key, value] of Object.entries(groupingByCategories)) {
-      groupingByCategories[key] = groupBy(value, "item_group");
-      for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
-        const groupingByLocaiton = groupBy(value2, "location");
-        for (let [key3, value3] of Object.entries(groupingByLocaiton)) {
-          checkLocation.set(`${key}-${key2}-${key3}`, {
-            category_name: key,
-            item_group: key2,
-            location: key3,
-            total: value3.length,
-            data: JSON.stringify(value3),
-          });
+
+  const selectOptions = useMemo(() => {
+    const result = [];
+
+    if (itemQuery.data) {
+      const groupedInventory = itemQuery.data.data.groupedInventory;
+
+      for (const [categoryName, itemGroups] of Object.entries(
+        groupedInventory
+      )) {
+        for (const [itemGroup, locations] of Object.entries(itemGroups)) {
+          for (const [location, quantity] of Object.entries(locations)) {
+            // Render Location Row with quantity
+            result.push({
+              key: `${itemGroup}-${location}`,
+              label: (
+                <Typography
+                  textTransform={"capitalize"}
+                  style={{
+                    ...Subtitle,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        width: "fit-content",
+                        marginRight: "5px",
+                      }}
+                    >
+                      {categoryName}
+                    </span>
+                    {itemGroup}
+                  </div>
+                  <span style={{ textAlign: "left", width: "50%" }}>
+                    Location:{" "}
+                    <span style={{ fontWeight: 700 }}>{location}</span>
+                  </span>
+                  <span style={{ textAlign: "right", width: "50%" }}>
+                    Available: {quantity}
+                  </span>
+                </Typography>
+              ),
+              value: JSON.stringify({
+                category_name: categoryName,
+                item_group: itemGroup,
+                location,
+                qty: quantity,
+              }),
+            });
+          }
         }
       }
     }
-    const result = new Set();
-    for (let [, value] of checkLocation) {
-      result.add(value);
-    }
-    return Array.from(result);
-  };
+
+    return result;
+  }, [itemQuery.data]);
 
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
@@ -90,28 +130,28 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const handleUpdateDeviceInEvent = async (props) => {
     const limit = Number(props.quantity) - 1;
     const inventoryEventUpdate = {
-      category: valueItemSelected[0].category_name,
-      group: valueItemSelected[0].item_group,
-      value: valueItemSelected[0].cost,
-      description: valueItemSelected[0].descript_item,
-      company: valueItemSelected[0].company,
+      category: props.inventoryData[0].category_name,
+      group: props.inventoryData[0].item_group,
+      value: props.inventoryData[0].cost,
+      description: props.inventoryData[0].descript_item,
+      company: props.inventoryData[0].company,
       quantity: props.quantity,
-      ownership: valueItemSelected[0].ownership,
+      ownership: props.inventoryData[0].ownership,
       createdBy: user.email,
       key: nanoid(),
       dateCreated: new Date().toString(),
-      resume: `${valueItemSelected[0].category_name} ${
-        valueItemSelected[0].item_group
-      } ${valueItemSelected[0].cost} ${valueItemSelected[0].descript_item} ${
-        valueItemSelected[0].company
-      } ${valueItemSelected[0].quantity} ${valueItemSelected[0].ownership} ${
+      resume: `${props.inventoryData[0].category_name} ${
+        props.inventoryData[0].item_group
+      } ${props.inventoryData[0].cost} ${props.inventoryData[0].descript_item} ${
+        props.inventoryData[0].company
+      } ${props.inventoryData[0].quantity} ${props.inventoryData[0].ownership} ${
         user.email
       } ${new Date().toString()} ${true} ${
-        valueItemSelected[0].startingNumber
-      } ${valueItemSelected[0].endingNumber}`,
+        props.inventoryData[0].startingNumber
+      } ${props.inventoryData[0].endingNumber}`,
       consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
-      startingNumber: valueItemSelected[0].serial_number,
-      endingNumber: valueItemSelected[limit].serial_number,
+      startingNumber: props.inventoryData[0].serial_number,
+      endingNumber: props.inventoryData[limit].serial_number,
       existing: true,
     };
     const deviceInventoryUpdated = [...event.deviceSetup, inventoryEventUpdate];
@@ -135,13 +175,15 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const template = {
-      deviceList: JSON.stringify(valueItemSelected.map(item => item.serial_number)),
+      deviceList: JSON.stringify(
+       props.inventoryData.map((item) => item.serial_number)
+      ),
       status: "Operational",
       activity: false,
       comment: "No comment",
       eventSelected: event.eventInfoDetail.eventName,
       provider: user.company,
-      type: valueItemSelected[0].item_group,
+      type: valueItemSelected.item_group,
       company: user.companyData.id,
       qty: Number(props.quantity),
     };
@@ -153,26 +195,41 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const createDeviceInEvent = async (data) => {
     setLoadingStatus(true);
     const event_id = event.sql.event_id;
-    const respoUpdating = await devitrakApi.post("/db_event/event_device", {
-      event_id: event_id,
-      item_group: valueItemSelected[0].item_group,
-      category_name: valueItemSelected[0].category_name,
-      startingNumber: valueItemSelected[0].serial_number,
-      quantity: data.quantity,
-    });
-    if (respoUpdating.data.ok) {
-      await devitrakApi.post("/db_item/item-out-warehouse", {
-        warehouse: false,
+    const response = await devitrakApi.post(
+      "/db_event/retrieve-item-location-quantity-full-details",
+      {
+        location: valueItemSelected.location,
+        category_name: valueItemSelected.category_name,
         company_id: user.sqlInfo.company_id,
-        item_group: valueItemSelected[0].item_group,
-        startingNumber: valueItemSelected[0].serial_number,
+        warehouse: 1,
+        item_group: valueItemSelected.item_group,
+        enableAssignFeature: 1,
+        quantity: Number(valueItemSelected.qty),
+      }
+    );
+    if (response.data) {
+      const inventoryData = response.data.data;
+      const respoUpdating = await devitrakApi.post("/db_event/event_device", {
+        event_id: event_id,
+        item_group: valueItemSelected.item_group,
+        category_name: valueItemSelected.category_name,
+        startingNumber: inventoryData[0].serial_number,
         quantity: data.quantity,
       });
+      if (respoUpdating.data.ok) {
+        await devitrakApi.post("/db_item/item-out-warehouse", {
+          warehouse: false,
+          company_id: user.sqlInfo.company_id,
+          item_group: valueItemSelected.item_group,
+          startingNumber: inventoryData[0].serial_number,
+          quantity: data.quantity,
+        });
+      }
+      await createDeviceRecordInNoSQLDatabase({...data, inventoryData:inventoryData});
+      await openNotification(
+        "Device type and devices range of serial number added to inventory."
+      );
     }
-    await createDeviceRecordInNoSQLDatabase(data);
-    await openNotification(
-      "Device type and devices range of serial number added to inventory."
-    );
   };
 
   const closeModal = () => {
@@ -222,7 +279,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       })
     );
   };
-  
+
   const handleRemoveItemFromInventoryEvent = async (props) => {
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
@@ -269,9 +326,10 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         marginTop: "100px",
       }}
       footer={[]}
+      width={1000}
     >
       {contextHolder}
-      <Grid width={"70vw"} container>
+      <Grid width={"80vw"} container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <Grid
             style={{
@@ -331,37 +389,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               optionFilterProp="children"
               style={{ ...AntSelectorStyle, width: "100%" }}
               onChange={onChange}
-              options={optionsToRenderInSelector().map((item) => {
-                return {
-                  label: (
-                    <Typography
-                      textTransform={"capitalize"}
-                      style={{
-                        ...Subtitle,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <span style={{ width: "50%" }}>
-                        <span style={{ fontWeight: 700 }}>
-                          {item.category_name}
-                        </span>{" "}
-                        {item.item_group}
-                      </span>
-                      <span style={{ textAlign: "left", width: "30%" }}>
-                        Location:{" "}
-                        <span style={{ fontWeight: 700 }}>{item.location}</span>
-                      </span>
-                      <span style={{ textAlign: "right", width: "20%" }}>
-                        Total available: {item.total}
-                      </span>
-                    </Typography>
-                  ),
-                  value: item.data,
-                };
-              })}
+              options={selectOptions}
             />
             <form
               onSubmit={handleSubmit(createDeviceInEvent)}
@@ -491,8 +519,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                           handleRemoveItemFromInventoryEvent(item)
                         }
                       >
-                        <button style={GrayButton}>
-                          <p style={GrayButtonText}>x</p>
+                        <button style={DangerButton}>
+                          <p style={DangerButtonText}>X</p>
                         </button>
                       </Popconfirm>,
                     ]}
