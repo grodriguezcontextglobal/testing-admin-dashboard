@@ -214,6 +214,7 @@ console.log(listOfLocations)
       }
 
       try {
+        console.log(valueItemSelected)
         await fullDetailForSelectedData({ ...data, location: valueItemSelected?.location });
         const result = [
           ...listOfLocations,
@@ -221,6 +222,7 @@ console.log(listOfLocations)
             quantity: data.quantity,
             deviceInfo,
             startingNumber: data.serial_number,
+            location: valueItemSelected?.location,
           },
         ];
 
@@ -578,7 +580,7 @@ console.log(listOfLocations)
             {listOfLocations.map((item, index) => (
               <Chip
                 key={`${item.startingNumber}-${index}`}
-                label={`${item.deviceInfo[0]?.location || "Unknown"} - ${
+                label={`${item.location || "Unknown"} - ${
                   item.quantity
                 }`}
                 onDelete={() => removeItem(index)}
