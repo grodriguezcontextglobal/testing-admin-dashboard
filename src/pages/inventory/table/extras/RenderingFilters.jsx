@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { Divider, Table, Space } from "antd";
+import { Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { createContext, useEffect } from "react";
@@ -20,8 +20,6 @@ const RenderingFilters = ({
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
 }) => {
-  // const dispatch = useDispatch();
-  // const navigate = useNavigate();
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -122,86 +120,6 @@ const RenderingFilters = ({
   };
 
   const optionsToRenderInDetailsHtmlTags = [
-    // {
-    //   key: "location",
-    //   title: `Locations`,
-    //   buttonFn: true,
-    //   data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
-    //   totalUnits: renderingTotalUnits(sortingByParameters("location")),
-    //   renderedCardData: selectedRowKeys,
-    //   open: true,
-    //   displayCards: selectedRowKeys?.length > 0,
-    //   routeTitle: "location",
-    //   renderSelectedOptions: [],
-    //   renderMoreOptions: true,
-    //   tree: false,
-    //   identifierRender: 0,
-    //   rowSelection: {
-    //     selectedRowKeys,
-    //     onChange: onSelectChange,
-    //   },
-    //   columns: [
-    //     {
-    //       title: "Locations name",
-    //       dataIndex: "key",
-    //       key: "key",
-    //       render: (key) => <p style={Subtitle}>{key}</p>,
-    //     },
-    //     {
-    //       title: "Total device",
-    //       dataIndex: "valueParameter",
-    //       key: "valueParameter",
-    //       width: "20%",
-    //       render: (valueParameter) => (
-    //         <p style={Subtitle}>{valueParameter.total}</p>
-    //       ),
-    //     },
-    //     {
-    //       title: "Total available devices",
-    //       dataIndex: "valueParameter",
-    //       key: "valueParameter",
-    //       width: "20%",
-    //       render: (valueParameter) => (
-    //         <p style={Subtitle}>{valueParameter.available}</p>
-    //       ),
-    //     },
-
-    //     {
-    //       title: "",
-    //       dataIndex: "action",
-    //       key: "action",
-    //       width: "10%",
-    //       render: (_, record) => (
-    //         <div
-    //           style={{
-    //             width: "100%",
-    //             display: "flex",
-    //             justifyContent: "flex-end",
-    //             alignItems: "center",
-    //           }}
-    //         >
-    //           <button
-    //             onClick={() =>
-    //               navigate(
-    //                 `/inventory/location?${record.key}&search=${
-    //                   searchItem && searchItem
-    //                 }`
-    //               )
-    //             }
-    //             style={{
-    //               backgroundColor: "transparent",
-    //               outline: "none",
-    //               margin: 0,
-    //               padding: 0,
-    //             }}
-    //           >
-    //             <RightNarrowInCircle />
-    //           </button>
-    //         </div>
-    //       ),
-    //     },
-    //   ],
-    // },
     {
       key: "location_1",
       title: "Locations|Sub-locations",
@@ -326,141 +244,114 @@ const RenderingFilters = ({
     <div style={{ width: "100%" }}>
       {optionsToRenderInDetailsHtmlTags.map((item, index) => {
         return (
-          // <Grid
-          //   key={`${item.title}_${index}`}
-          //   display={"flex"}
-          //   flexDirection={"column"}
-          //   justifyContent={"flex-start"}
-          //   alignItems={"center"}
-          //   margin={"20px 0 0 0"}
-          //   item
-          //   xs={12}
-          //   sm={12}
-          //   md={12}
-          //   lg={12}
-          // >
-          <div key={`${item.title}_${index}`} style={{ width: "100%" }}>
-            <details
+          <details
+            key={`${item.title}_${index}`}
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              margin: "2rem 0",
+            }}
+            open={item.open}
+          >
+            <summary
+              key={`${item.title}-*-*${index}`}
               style={{
                 width: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
+                margin: "0 0 1rem",
               }}
-              open={item.open}
             >
-              <summary
-                key={`${item.title}-*-*${index}`}
+              <p
                 style={{
-                  width: "100%",
-                  margin: "0 0 1rem",
+                  ...TextFontsize18LineHeight28,
+                  width: "fit-content",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
                 }}
               >
-                <p
+                {item.title}&nbsp;{" "}
+                <span
                   style={{
-                    ...TextFontsize18LineHeight28,
+                    ...Subtitle,
                     width: "fit-content",
                     textAlign: "left",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
                   }}
                 >
-                  {item.title}&nbsp;{" "}
-                  <span
-                    style={{
-                      ...Subtitle,
-                      width: "fit-content",
-                      textAlign: "left",
-                    }}
+                  | Total <strong>{item.totalUnits}</strong> units
+                </span>{" "}
+                &nbsp;{" "}
+                {item.buttonFn &&
+                  !compareArraysOfObjects(
+                    [],
+                    // selectedRowKeys,
+                    renderingCardData.preference.inventory_location
+                  ) && (
+                    <button
+                      // onClick={() => updateInventoryLocationPreferences()}
+                      style={BlueButton}
+                    >
+                      <p style={BlueButtonText}>Update locations preferences</p>
+                    </button>
+                  )}
+              </p>
+            </summary>
+            {item.renderedCardData ? (
+              item.renderedCardData.map((opt) => {
+                return (
+                  <Grid
+                    key={opt}
+                    alignSelf={"flex-start"}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={4}
+                    lg={4}
                   >
-                    | Total <strong>{item.totalUnits}</strong> units
-                  </span>{" "}
-                  &nbsp;{" "}
-                  {item.buttonFn &&
-                    !compareArraysOfObjects(
-                      [],
-                      // selectedRowKeys,
-                      renderingCardData.preference.inventory_location
-                    ) && (
-                      <button
-                        // onClick={() => updateInventoryLocationPreferences()}
-                        style={BlueButton}
-                      >
-                        <p style={BlueButtonText}>
-                          Update locations preferences
-                        </p>
-                      </button>
-                    )}
-                </p>
-              </summary>
-              <Grid
-                container
-                spacing={1}
-                key={`_${index}-${item.title}`}
-                display={"flex"}
-                justifyContent={"flex-start"}
-              >
-                {item.renderedCardData ? (
-                  item.renderedCardData.map((opt) => {
-                    return (
-                      <Grid
-                        key={opt}
-                        alignSelf={"flex-start"}
-                        item
-                        xs={12}
-                        sm={12}
-                        md={4}
-                        lg={4}
-                      >
-                        <CardInventoryLocationPreference
-                          key={opt}
-                          title={opt.key}
-                          props={`${opt.value} total devices`}
-                          route={`/inventory/${String(
-                            item.routeTitle
-                          ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                            searchItem && searchItem
-                          }`}
-                          style={{
-                            width: "fit-content",
-                          }}
-                          width="fit-content"
-                        />
-                      </Grid>
-                    );
-                  })
-                ) : (
-                  <div style={{ width:"100%", display:"flex", justifyContent:"flex-start", alignItems:"center", margin: ".5rem 0 0" }}>
-                  <CardForTreeView
-                    item={item}
-                    dictionary={dictionary}
-                    searchItem={searchItem}
+                    <CardInventoryLocationPreference
+                      key={opt}
+                      title={opt.key}
+                      props={`${opt.value} total devices`}
+                      route={`/inventory/${String(
+                        item.routeTitle
+                      ).toLowerCase()}?${decodeURI(opt.key)}&search=${
+                        searchItem && searchItem
+                      }`}
+                      style={{
+                        width: "fit-content",
+                      }}
+                      width="fit-content"
                     />
-                    </div>
-                )}
-              </Grid>
-              {item.renderMoreOptions && (
-                <Table
-                  pagination={{
-                    position: ["bottomCenter"],
-                    total: item?.data?.length,
-                    defaultPageSize: 10,
-                    defaultCurrent: 1,
-                  }}
-                  style={{ maxWidth: "1228px", width: "99.5vw" }}
-                  rowSelection={item.rowSelection}
-                  columns={item.columns}
-                  dataSource={item.data}
-                  className="table-ant-customized"
-                />
-              )}
-            </details>
-            <Divider />
-          </div>
-          // </Grid>
+                  </Grid>
+                );
+              })
+            ) : (
+              <CardForTreeView
+                item={item}
+                dictionary={dictionary}
+                searchItem={searchItem}
+              />
+            )}
+            {item.renderMoreOptions && (
+              <Table
+                pagination={{
+                  position: ["bottomCenter"],
+                  total: item?.data?.length,
+                  defaultPageSize: 10,
+                  defaultCurrent: 1,
+                }}
+                style={{ maxWidth: "1228px", width: "99.5vw" }}
+                rowSelection={item.rowSelection}
+                columns={item.columns}
+                dataSource={item.data}
+                className="table-ant-customized"
+              />
+            )}
+          </details>
         );
       })}
       {openAdvanceSearchModal && (
@@ -490,3 +381,84 @@ RenderingFilters.propType = {
   user: PropTypes.object,
   dataToDisplay: PropTypes.array,
 };
+
+// {
+//   key: "location",
+//   title: `Locations`,
+//   buttonFn: true,
+//   data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
+//   totalUnits: renderingTotalUnits(sortingByParameters("location")),
+//   renderedCardData: selectedRowKeys,
+//   open: true,
+//   displayCards: selectedRowKeys?.length > 0,
+//   routeTitle: "location",
+//   renderSelectedOptions: [],
+//   renderMoreOptions: true,
+//   tree: false,
+//   identifierRender: 0,
+//   rowSelection: {
+//     selectedRowKeys,
+//     onChange: onSelectChange,
+//   },
+//   columns: [
+//     {
+//       title: "Locations name",
+//       dataIndex: "key",
+//       key: "key",
+//       render: (key) => <p style={Subtitle}>{key}</p>,
+//     },
+//     {
+//       title: "Total device",
+//       dataIndex: "valueParameter",
+//       key: "valueParameter",
+//       width: "20%",
+//       render: (valueParameter) => (
+//         <p style={Subtitle}>{valueParameter.total}</p>
+//       ),
+//     },
+//     {
+//       title: "Total available devices",
+//       dataIndex: "valueParameter",
+//       key: "valueParameter",
+//       width: "20%",
+//       render: (valueParameter) => (
+//         <p style={Subtitle}>{valueParameter.available}</p>
+//       ),
+//     },
+
+//     {
+//       title: "",
+//       dataIndex: "action",
+//       key: "action",
+//       width: "10%",
+//       render: (_, record) => (
+//         <div
+//           style={{
+//             width: "100%",
+//             display: "flex",
+//             justifyContent: "flex-end",
+//             alignItems: "center",
+//           }}
+//         >
+//           <button
+//             onClick={() =>
+//               navigate(
+//                 `/inventory/location?${record.key}&search=${
+//                   searchItem && searchItem
+//                 }`
+//               )
+//             }
+//             style={{
+//               backgroundColor: "transparent",
+//               outline: "none",
+//               margin: 0,
+//               padding: 0,
+//             }}
+//           >
+//             <RightNarrowInCircle />
+//           </button>
+//         </div>
+//       ),
+//     },
+//   ],
+// },

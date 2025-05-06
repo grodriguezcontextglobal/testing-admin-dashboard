@@ -12,21 +12,10 @@ const CardLocations = ({ props, title, optional, navigate = null }) => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   return (
-    // <Grid
-    //   padding={`${
-    //     isSmallDevice || isMediumDevice || isLargeDevice
-    //       ? "10px 0px"
-    //       : "10px 10px 10px 0"
-    //   }`}
-    //   item
-    //   xs={12}
-    //   sm={12}
-    //   md={12}
-    //   lg={12}
-    // >
     <Card
       style={{
         width: "100%",
+        minWidth:"350px",
         borderRadius: "12px",
         border: "1px solid var(--gray-200, #EAECF0)",
         background: "var(--base-white, #FFF)",
