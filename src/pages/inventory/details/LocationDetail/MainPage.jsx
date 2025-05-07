@@ -19,10 +19,6 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-// import TableDeviceLocation from "./components/Table";
-// import TotalInventoryCard from "./components/TotalInventoryCard";
-// import TotalValueDevicesLocation from "./components/TotalValueDevices";
-// import TotalAvailableItem from "../../utils/TotalAvailableItem";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
 const TotalInventoryCard = lazy(() =>
   import("./components/TotalInventoryCard")

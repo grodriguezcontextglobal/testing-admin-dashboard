@@ -102,6 +102,8 @@ const MainPage = () => {
             justifyContent: "center",
             alignItems: "center",
           }}
+          id={item_id}
+          key={item_id}
           container
         >
           <Grid
