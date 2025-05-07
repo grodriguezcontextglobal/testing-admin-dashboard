@@ -17,6 +17,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const locationName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  const urlQuery = location.state.sub_location
+    ? `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`
+    : `/db_company/inventory-based-on-location-and-sublocation`;
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
@@ -29,14 +32,15 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerLocation"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.companyData.id }),
+    queryFn: () =>
+      devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
 
   const itemsInInventoryQuery = useQuery({
     queryKey: ["deviceInInventoryPerLocation"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
+      devitrakApi.post(urlQuery, {
         company_id: user.sqlInfo.company_id,
         location: String(decodeURI(locationName[0].slice(1))).toLowerCase(),
       }),
@@ -107,7 +111,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     return result;
   };
   const totalAvailable = () => {
-    const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
+    const itemList = groupBy(itemsInInventoryQuery?.data?.data?.items, "warehouse");
     return itemList[1]?.length;
   };
   useEffect(() => {
@@ -231,7 +235,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
               ["xs", "sm", "md", "lg"],
             ],
           })}
-            dataSource={dataToDisplay()}
+          dataSource={dataToDisplay()}
           className="table-ant-customized"
         />
       </Grid>
