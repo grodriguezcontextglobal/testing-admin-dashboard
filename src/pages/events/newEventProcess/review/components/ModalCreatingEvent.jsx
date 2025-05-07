@@ -23,7 +23,7 @@ const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {
         borderRadius: "8px",
         padding: "24px",
         height: innerHeight - 450,
-        zIndex: 1000,
+        zIndex: 30,
       }}
     >
       <div
