@@ -1,5 +1,4 @@
 import { Grid } from "@mui/material";
-import { Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { createContext, useEffect } from "react";
@@ -47,6 +46,7 @@ const RenderingFilters = ({
     }
     return Array.from(result);
   };
+
   const renderingTotalAvailableDevices = (props) => {
     const result = groupBy(props, "warehouse");
     if (result[1]) {
@@ -89,14 +89,31 @@ const RenderingFilters = ({
     const result = groupBy(dataToDisplay(), "data.location");
     const template = new Set();
     if (dataToDisplay()?.length > 0) {
-      for (let [key, value] of Object.entries(result)) {
+      for (let [key, value] of Object.entries(result)) {        
+        const groupingByAvailableDevices = groupBy(value, "warehouse");
         template.add({
           location: key,
           value,
+          total: value.length,
+          available: groupingByAvailableDevices[1]?.length ?? 0,
         });
       }
     }
     return organizeInventoryBySubLocation(result);
+  };
+
+  const extractingTotalAndAvailableDevices = () => {
+    const groupingByLocation = groupBy(dataToDisplay(), "location");
+    const result = new Map();
+    for (let [key, value] of Object.entries(groupingByLocation)) {
+      if(!result.has(key)){
+        result.set(key, {
+          total: value.length,
+          available: renderingTotalAvailableDevices(value),
+        });
+
+      }
+    }
   };
 
   useEffect(() => {
@@ -111,20 +128,21 @@ const RenderingFilters = ({
     (element) => element.user === user.email
   );
 
-  const renderingTotalUnits = (props) => {
-    let result = 0;
-    for (let data of props) {
-      result = result + data.value;
-    }
-    return result;
-  };
+  // const renderingTotalUnits = (props) => {
+  //   let result = 0;
+  //   for (let data of props) {
+  //     result = result + data.value;
+  //   }
+  //   return result;
+  // };
 
+  
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
       title: "Locations|Sub-locations",
       data: testing(), //sortingByParameters
-      totalUnits: renderingTotalUnits(sortingByParameters("location")),
+      totalUnits: extractingTotalAndAvailableDevices(), //renderingTotalUnits(sortingByParameters("location")),
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
@@ -241,7 +259,7 @@ const RenderingFilters = ({
 
   return (
     // <Grid container>
-    <div style={{ width: "100%" }}>
+    <>
       {optionsToRenderInDetailsHtmlTags.map((item, index) => {
         return (
           <details
@@ -313,6 +331,7 @@ const RenderingFilters = ({
                     lg={4}
                   >
                     <CardInventoryLocationPreference
+                      id="card-inventory-location-preference"
                       key={opt}
                       title={opt.key}
                       props={`${opt.value} total devices`}
@@ -336,21 +355,6 @@ const RenderingFilters = ({
                 searchItem={searchItem}
               />
             )}
-            {item.renderMoreOptions && (
-              <Table
-                pagination={{
-                  position: ["bottomCenter"],
-                  total: item?.data?.length,
-                  defaultPageSize: 10,
-                  defaultCurrent: 1,
-                }}
-                style={{ maxWidth: "1228px", width: "99.5vw" }}
-                rowSelection={item.rowSelection}
-                columns={item.columns}
-                dataSource={item.data}
-                className="table-ant-customized"
-              />
-            )}
           </details>
         );
       })}
@@ -370,7 +374,7 @@ const RenderingFilters = ({
           />
         </AdvanceSearchContext.Provider>
       )}
-    </div>
+    </>
     // </Grid>
   );
 };
@@ -381,84 +385,3 @@ RenderingFilters.propType = {
   user: PropTypes.object,
   dataToDisplay: PropTypes.array,
 };
-
-// {
-//   key: "location",
-//   title: `Locations`,
-//   buttonFn: true,
-//   data: displayTotalDevicesAndTotalAvailablePerLocation("location"), //sortingByParameters
-//   totalUnits: renderingTotalUnits(sortingByParameters("location")),
-//   renderedCardData: selectedRowKeys,
-//   open: true,
-//   displayCards: selectedRowKeys?.length > 0,
-//   routeTitle: "location",
-//   renderSelectedOptions: [],
-//   renderMoreOptions: true,
-//   tree: false,
-//   identifierRender: 0,
-//   rowSelection: {
-//     selectedRowKeys,
-//     onChange: onSelectChange,
-//   },
-//   columns: [
-//     {
-//       title: "Locations name",
-//       dataIndex: "key",
-//       key: "key",
-//       render: (key) => <p style={Subtitle}>{key}</p>,
-//     },
-//     {
-//       title: "Total device",
-//       dataIndex: "valueParameter",
-//       key: "valueParameter",
-//       width: "20%",
-//       render: (valueParameter) => (
-//         <p style={Subtitle}>{valueParameter.total}</p>
-//       ),
-//     },
-//     {
-//       title: "Total available devices",
-//       dataIndex: "valueParameter",
-//       key: "valueParameter",
-//       width: "20%",
-//       render: (valueParameter) => (
-//         <p style={Subtitle}>{valueParameter.available}</p>
-//       ),
-//     },
-
-//     {
-//       title: "",
-//       dataIndex: "action",
-//       key: "action",
-//       width: "10%",
-//       render: (_, record) => (
-//         <div
-//           style={{
-//             width: "100%",
-//             display: "flex",
-//             justifyContent: "flex-end",
-//             alignItems: "center",
-//           }}
-//         >
-//           <button
-//             onClick={() =>
-//               navigate(
-//                 `/inventory/location?${record.key}&search=${
-//                   searchItem && searchItem
-//                 }`
-//               )
-//             }
-//             style={{
-//               backgroundColor: "transparent",
-//               outline: "none",
-//               margin: 0,
-//               padding: 0,
-//             }}
-//           >
-//             <RightNarrowInCircle />
-//           </button>
-//         </div>
-//       ),
-//     },
-//   ],
-// },
