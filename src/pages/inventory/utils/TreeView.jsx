@@ -5,12 +5,29 @@ import { Grid } from "@mui/material";
 
 const TreeView = ({ data }) => {
   return (
-    <Grid container gap={2}>
-      {Object.entries(data).map(([location, details]) => (
-        <Grid key={location} margin={'auto'} item xs={12} sm={12} md={12} lg={12}>
-          <TreeNode key={location} nodeName={location} nodeData={details} />
-        </Grid>
-      ))}
+    <Grid container gap={1}>
+      {Object.entries(data).map(
+        ([location, details]) => (
+          (
+            <Grid
+              key={location}
+              margin={"auto"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <TreeNode
+                key={location}
+                nodeName={location}
+                nodeData={details}
+                path={[location]} // start path
+              />
+            </Grid>
+          )
+        )
+      )}
     </Grid>
   );
 };
