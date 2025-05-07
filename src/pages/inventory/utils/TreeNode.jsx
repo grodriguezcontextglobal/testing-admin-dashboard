@@ -6,9 +6,11 @@ import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCirc
 import { Grid, Typography } from "@mui/material";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import { useNavigate } from "react-router-dom";
 
-const TreeNode = ({ nodeName, nodeData }) => {
+const TreeNode = ({ nodeName, nodeData, path }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (!nodeData) return null;
 
@@ -17,6 +19,7 @@ const TreeNode = ({ nodeName, nodeData }) => {
   const toggleOpen = () => {
     if (children) setIsOpen(!isOpen);
   };
+
   const style = {
     backgroundColor: "transparent",
     border: "none",
@@ -27,14 +30,21 @@ const TreeNode = ({ nodeName, nodeData }) => {
     boxShadow: "none",
   };
 
+  const navigateToLocation = (location) => {
+    if(location.length === 1){
+      return navigate(`/inventory/location?${encodeURI(location[0])}&search=`);
+    } else {
+      const subLocationPath = encodeURIComponent(location.slice(1).join(","));
+      return navigate(`/inventory/location?${encodeURI(location[0])}&search=`, {
+        state: {
+          sub_location: subLocationPath,
+        },
+      });
+    }
+  };
   return (
     <div key={nodeName} className="tree-card">
-      <Grid
-        container
-        style={{
-          cursor: children ? "pointer" : "default",
-        }}
-      >
+      <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
           sx={{
             width: "100%",
@@ -44,42 +54,29 @@ const TreeNode = ({ nodeName, nodeData }) => {
           }}
           item
           xs={12}
-          sm={12}
-          md={12}
-          lg={12}
         >
           <Button htmlType="button" style={style} onClick={toggleOpen}>
             <Typography
               sx={{
-                fontSize: {
-                  xs: "24px",
-                  sm: "24px",
-                  md: "30px",
-                  lg: "30px",
-                },
-                lineHeight: {
-                  xs: "32px",
-                  sm: "32px",
-                  md: "38px",
-                  lg: "38px",
-                },
+                fontSize: { xs: "24px", md: "30px" },
+                lineHeight: { xs: "32px", md: "38px" },
                 textWrap: "balance",
               }}
               className="tree-title"
             >
-              {nodeData.children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
+              {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
               {nodeName}
             </Typography>
-          </Button>{" "}
+          </Button>
           <Button
             htmlType="button"
             style={style}
-            onClick={() => console.log(nodeName)}
+            onClick={() => navigateToLocation(path)}
           >
             <RightNarrowInCircle />
           </Button>
         </Grid>
-        <Grid className="tree-sub" item xs={12} sm={12} md={12} lg={12}>
+        <Grid className="tree-sub" item xs={12}>
           Total: {total}, Available: {available}
         </Grid>
       </Grid>
@@ -93,6 +90,7 @@ const TreeNode = ({ nodeName, nodeData }) => {
                 key={childName}
                 nodeName={childName}
                 nodeData={childData}
+                path={[...path, childName]} // extend path
               />
             ))}
         </div>
