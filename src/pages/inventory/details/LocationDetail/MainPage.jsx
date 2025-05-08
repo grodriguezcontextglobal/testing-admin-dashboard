@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Divider } from "antd";
+import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -53,6 +53,24 @@ const MainPage = () => {
     }
   }, [locationName]);
 
+  const subLocations =
+    location.state !== null
+      ? decodeURI(location?.state?.sub_location)?.split("%2C")
+      : [];
+
+  const navigateToSublocation = (subLocation, index) => {
+    const subLocationPathNavigate = subLocations.slice(0, index);
+    const chosenPath = encodeURIComponent(subLocationPathNavigate.join(","));
+    return (
+      <Link
+        to={`${location.pathname}${location.search}`}
+        state={{ sub_location: chosenPath }}
+        style={{ textDecoration: "none", height: "100%" }}
+      >
+        {subLocation}
+      </Link>
+    );
+  };
 
   return (
     <Suspense
@@ -142,23 +160,19 @@ const MainPage = () => {
                 </Typography>
               </Link>
               <Typography
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
+                style={{
+                  ...TextFontSize30LineHeight38,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+                color={"var(--gray900, #101828)"}
               >
                 <Icon icon="mingcute:right-line" />
                 {decodeURI(locationName.slice(1))}
               </Typography>
             </Grid>
           </Grid>
-          <Grid textAlign={"right"} item xs={4}></Grid>
         </Grid>
         <Divider />
         <Grid
@@ -177,26 +191,27 @@ const MainPage = () => {
             item
             xs={12}
             sm={12}
-            md={6}
-            lg={6}
+            md={12}
+            lg={12}
           >
             <Typography style={TextFontSize30LineHeight38}>
-              {decodeURI(locationName.slice(1))}
+              {decodeURI(locationName.slice(1))}&nbsp;
             </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            textAlign={"left"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            {/* <ButtonActions /> */}
+            &nbsp;
+            <Breadcrumb
+              style={{
+                ...TextFontSize30LineHeight38,
+                fontWeight: 400,
+                display: location.state ? "flex" : "none",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+              items={[
+                ...subLocations.map((item, index) => ({
+                  title: navigateToSublocation(item, index),
+                })),
+              ]}
+            />
           </Grid>
         </Grid>
         <Grid
