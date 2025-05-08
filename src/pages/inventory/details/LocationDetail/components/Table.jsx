@@ -17,9 +17,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const locationName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const urlQuery = location.state.sub_location
-    ? `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`
-    : `/db_company/inventory-based-on-location-and-sublocation`;
+  const urlQuery = location.state === null
+    ? `/db_company/inventory-based-on-location-and-sublocation`
+    : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
