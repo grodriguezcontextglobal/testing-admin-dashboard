@@ -59,7 +59,7 @@ const MainPage = () => {
       : [];
 
   const navigateToSublocation = (subLocation, index) => {
-    const subLocationPathNavigate = subLocations.slice(0, index);
+    const subLocationPathNavigate = subLocations.slice(0, index+1);
     const chosenPath = encodeURIComponent(subLocationPathNavigate.join(","));
     return (
       <Link
@@ -141,24 +141,59 @@ const MainPage = () => {
           container
           marginTop={4}
         >
-          <Grid marginY={0} item xs={12} sm={12} md={8}>
+          <Grid
+            marginY={0}
+            display={"flex"}
+            sx={{
+              flexDirection: {
+                xs: "column",
+                sm: "column",
+                md: "row",
+                lg: "row",
+              },
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
             <Grid
               display={"flex"}
               justifyContent={"flex-start"}
               alignItems={"center"}
               item
               xs={12}
+              sm={12}
+              md={1}
+              lg={1}
             >
-              <Link to="/inventory">
+              <Link style={{textAlign: "left", width: "100%"}} to="/inventory">
                 <Typography
                   display={"flex"}
                   justifyContent={"flex-start"}
                   alignItems={"center"}
-                  style={{ ...LightBlueButtonText, fontWeight: 600 }}
+                  style={{
+                    ...LightBlueButtonText,
+                    fontWeight: 600,
+                    textAlign: "left",
+                  }}
                 >
                   All devices
+                  <Icon icon="mingcute:right-line" color="var(--gray900)" />
                 </Typography>
               </Link>
+            </Grid>
+            <Grid
+              display={"flex"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              item
+              xs={12}
+              sm={12}
+              md={9}
+              lg={9}
+            >
               <Typography
                 style={{
                   ...TextFontSize30LineHeight38,
@@ -168,7 +203,6 @@ const MainPage = () => {
                 }}
                 color={"var(--gray900, #101828)"}
               >
-                <Icon icon="mingcute:right-line" />
                 {decodeURI(locationName.slice(1))}
               </Typography>
             </Grid>
@@ -191,13 +225,32 @@ const MainPage = () => {
             item
             xs={12}
             sm={12}
-            md={12}
-            lg={12}
+            md={6}
+            lg={6}
           >
             <Typography style={TextFontSize30LineHeight38}>
-              {decodeURI(locationName.slice(1))}&nbsp;
+              {decodeURI(locationName.slice(1))}
             </Typography>
-            &nbsp;
+          </Grid>
+          <Grid
+            display={"flex"}
+            textAlign={"left"}
+            alignItems={"center"}
+            alignSelf={"start"}
+            sx={{
+              justifyContent: {
+                xs: "flex-start",
+                sm: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
+              },
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
+          >
             <Breadcrumb
               style={{
                 ...TextFontSize30LineHeight38,
