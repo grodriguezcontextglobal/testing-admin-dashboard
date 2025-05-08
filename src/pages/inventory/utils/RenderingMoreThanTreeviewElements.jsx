@@ -1,6 +1,5 @@
-import { Grid } from "@mui/material";
-import CardLocations from "./CardLocations";
 import { Space } from "antd";
+import CardLocations from "./CardLocations";
 
 const RenderingMoreThanTreeviewElements = ({
   item,
