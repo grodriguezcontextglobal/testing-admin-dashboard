@@ -495,30 +495,6 @@ const ModalAddAndUpdateDeviceSetup = ({
                 textAlign={"left"}
                 style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
               >
-                Qty of devices from {valueItemSelected[0]?.location}
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("quantity")}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 150"
-              type="number" // Better input type for quantities
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "100%",
-              margin: "0.5rem 0",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-              >
                 <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
                   Starting from serial number <QuestionIcon />
                 </Tooltip>
@@ -542,6 +518,31 @@ const ModalAddAndUpdateDeviceSetup = ({
               }
             />
           </div>
+                    <div
+            style={{
+              textAlign: "left",
+              width: "100%",
+              margin: "0.5rem 0",
+            }}
+          >
+            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
+              >
+                Qty of devices from {valueItemSelected[0]?.location}
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              {...register("quantity")}
+              style={OutlinedInputStyle}
+              placeholder="e.g. 150"
+              type="number" // Better input type for quantities
+            />
+          </div>
+
         </div>
         <span style={{ width: "100%", textAlign: "right" }}>
           <p style={Subtitle}>
