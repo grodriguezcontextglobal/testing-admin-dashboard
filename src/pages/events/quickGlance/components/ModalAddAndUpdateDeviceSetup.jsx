@@ -44,7 +44,6 @@ const ModalAddAndUpdateDeviceSetup = ({
   const eventInfoDetail = event.eventInfoDetail;
   const [valueItemSelected, setValueItemSelected] = useState([]);
   const [listOfLocations, setListOfLocations] = useState([]);
-  const [deviceInfo, setDeviceInfo] = useState([]);
   const [loading, setLoading] = useState(false);
   // Query definitions with proper configurations
   const itemQuery = useQuery({
@@ -187,7 +186,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         }
       );
       if (response.data) {
-        return setDeviceInfo(response.data.data);
+        return response.data.data;
       }
     } catch (error) {
       return message.error(JSON.stringify(error));
@@ -212,12 +211,15 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
 
       try {
-        await fullDetailForSelectedData({ ...data, location: valueItemSelected?.location });
+        const deviceInfoResponse = await fullDetailForSelectedData({
+          ...data,
+          location: valueItemSelected?.location,
+        });
         const result = [
           ...listOfLocations,
           {
             quantity: data.quantity,
-            deviceInfo,
+            deviceInfo: deviceInfoResponse,
             startingNumber: data.serial_number,
             location: valueItemSelected?.location,
           },
@@ -413,13 +415,11 @@ const ModalAddAndUpdateDeviceSetup = ({
         const index = data.deviceInfo.findIndex(
           (element) => element.serial_number === data.startingNumber
         );
-
         if (index > -1) {
           const deviceInfo = [...data.deviceInfo].slice(
             index,
             index + Number(data.quantity)
           );
-
           await createDeviceInEvent({ ...data, deviceInfo });
         } else {
           message.warning("Device not found");
@@ -577,9 +577,7 @@ const ModalAddAndUpdateDeviceSetup = ({
             {listOfLocations.map((item, index) => (
               <Chip
                 key={`${item.startingNumber}-${index}`}
-                label={`${item.location || "Unknown"} - ${
-                  item.quantity
-                }`}
+                label={`${item.location || "Unknown"} - ${item.quantity}`}
                 onDelete={() => removeItem(index)}
               />
             ))}
