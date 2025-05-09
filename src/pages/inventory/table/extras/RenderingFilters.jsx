@@ -10,6 +10,8 @@ import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import AdvanceSearchModal from "./AdvanceSearchModal";
+// import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { DownNarrow } from "../../../../components/icons/DownNarrow";
 export const AdvanceSearchContext = createContext();
 
 const RenderingFilters = ({
@@ -118,6 +120,7 @@ const RenderingFilters = ({
   useEffect(() => {
     const controller = new AbortController();
     testing();
+    console.log(extractingTotalAndAvailableDevices());
     return () => {
       controller.abort();
     };
@@ -127,20 +130,20 @@ const RenderingFilters = ({
     (element) => element.user === user.email
   );
 
-  // const renderingTotalUnits = (props) => {
-  //   let result = 0;
-  //   for (let data of props) {
-  //     result = result + data.value;
-  //   }
-  //   return result;
-  // };
+  const renderingTotalUnits = (props) => {
+    let result = 0;
+    for (let data of props) {
+      result = result + data.value;
+    }
+    return result;
+  };
 
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
       title: "Locations|Sub-locations",
       data: testing(), //sortingByParameters
-      totalUnits: extractingTotalAndAvailableDevices(), //renderingTotalUnits(sortingByParameters("location")),
+      totalUnits: renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
@@ -303,6 +306,8 @@ const RenderingFilters = ({
                     alignItems: "center",
                   }}
                 >
+                  {/* {item.open ? <UpNarrowIcon /> : <DownNarrow />} */}
+                  <DownNarrow />&nbsp;
                   {item.title}&nbsp;{" "}
                   <span
                     style={{
