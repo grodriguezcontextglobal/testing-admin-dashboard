@@ -41,7 +41,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   const closeModal = () => {
     return setOpenModalDeviceSetup(false);
   };
-  const eventInfoDetail = event.eventInfoDetail;
+  const eventName = event.eventInfoDetail.eventName;
   const [valueItemSelected, setValueItemSelected] = useState([]);
   const [listOfLocations, setListOfLocations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -82,15 +82,13 @@ const ModalAddAndUpdateDeviceSetup = ({
   const eventInfoSqlDB = useQuery({
     queryKey: [
       "eventInfoSqlDB",
-      user.sqlInfo.company_id,
-      event.eventInfoDetail.eventName,
     ],
     queryFn: () =>
       devitrakApi.post("/db_event/consulting-event", {
-        company_assigned_event_id: user.sqlInfo.company_id,
-        event_name: event.eventInfoDetail.eventName,
+        // company_assigned_event_id: user.sqlInfo.company_id,
+        event_name: eventName,
       }),
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 1 * 60 * 1000, // 5 minutes cache
   });
 
   // Only refetch data when modal opens
@@ -166,7 +164,6 @@ const ModalAddAndUpdateDeviceSetup = ({
       const parsedData = checkValidJSON(valueItemSelected.serialNumberList);
       return parsedData.some((item) => item === serialNumber);
     } catch (error) {
-      console.error("Error checking serial number:", error);
       return false;
     }
   }, [watch, valueItemSelected]);
@@ -288,7 +285,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         status: "Operational",
         activity: false,
         comment: "No comment",
-        eventSelected: eventInfoDetail.eventName,
+        eventSelected: eventName,
         provider: user.company,
         type: database[0].item_group,
         company: user.companyData.id,
@@ -358,18 +355,14 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
-    const index = props.deviceInfo.findIndex(
-      (element) => element.serial_number === props.startingNumber
-    );
-    if (index > -1) {
       let data = null;
-      data = props.deviceInfo.slice(index, index + Number(props.quantity));
+      data = props.deviceInfo;
       const template = {
         deviceList: JSON.stringify(data.map((item) => item.serial_number)),
         status: "Operational",
         activity: false,
         comment: "No comment",
-        eventSelected: eventInfoDetail.eventName,
+        eventSelected: eventName,
         provider: user.company,
         type: data[0].item_group,
         company: user.companyData.id,
@@ -377,16 +370,11 @@ const ModalAddAndUpdateDeviceSetup = ({
       await devitrakApi.post("/receiver/receivers-pool-bulk", template);
       await updateDeviceSetupInEvent(props);
       return null;
-    }
   };
 
   const createDeviceInEvent = async (props) => {
-    const event_id = checkArray(eventInfoSqlDB?.data?.data?.event).event_id;
     let database = [...props.deviceInfo];
-    const index = database.findIndex(
-      (item) => item.serial_number === props.startingNumber
-    );
-    if (index > -1) {
+    const event_id =  event.sql.event_id;
       await devitrakApi.post("/db_event/event_device", {
         event_id: event_id,
         item_group: database[0].item_group,
@@ -401,7 +389,6 @@ const ModalAddAndUpdateDeviceSetup = ({
         startingNumber: database[0].serial_number,
         quantity: props.quantity,
       });
-    }
     await createDeviceRecordInNoSQLDatabase(props);
   };
 
