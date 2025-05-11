@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { message } from "antd";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { XLSXIcon } from "../../../../components/icons/XLSXIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { groupBy } from "lodash";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
   const [itemsUsers, setItemsUsers] = useState([]);
@@ -446,11 +446,11 @@ const SpreadSheet = () => {
     <div style={{ margin: "0 0 0.5rem" }}>
       <button
         onClick={generateExcelFile}
-        style={{ ...BlueButton, width: "100%" }}
+        style={{ ...GrayButton, width: "100%" }}
       >
         <p
           style={{
-            ...BlueButtonText,
+            ...GrayButtonText,
             margin: "auto",
             textTransform: "none",
             textAlign: "left",
