@@ -9,6 +9,7 @@ import {
   Popconfirm,
   Select,
   Space,
+  message,
   notification,
 } from "antd";
 import { useMemo, useState } from "react";
@@ -53,7 +54,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       message: msg,
     });
   };
-
+  const eventName = event.eventInfoDetail.eventName;
   const selectOptions = useMemo(() => {
     const result = [];
 
@@ -128,7 +129,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   };
 
   const handleUpdateDeviceInEvent = async (props) => {
-    const limit = Number(props.quantity) - 1;
     const inventoryEventUpdate = {
       category: props.inventoryData[0].category_name,
       group: props.inventoryData[0].item_group,
@@ -142,16 +142,16 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       dateCreated: new Date().toString(),
       resume: `${props.inventoryData[0].category_name} ${
         props.inventoryData[0].item_group
-      } ${props.inventoryData[0].cost} ${props.inventoryData[0].descript_item} ${
-        props.inventoryData[0].company
-      } ${props.inventoryData[0].quantity} ${props.inventoryData[0].ownership} ${
-        user.email
-      } ${new Date().toString()} ${true} ${
+      } ${props.inventoryData[0].cost} ${
+        props.inventoryData[0].descript_item
+      } ${props.inventoryData[0].company} ${props.inventoryData[0].quantity} ${
+        props.inventoryData[0].ownership
+      } ${user.email} ${new Date().toString()} ${true} ${
         props.inventoryData[0].startingNumber
       } ${props.inventoryData[0].endingNumber}`,
       consumerUses: false, //change this to false to force company to set device for consumer and others to set device for staff
       startingNumber: props.inventoryData[0].serial_number,
-      endingNumber: props.inventoryData[limit].serial_number,
+      endingNumber: props.inventoryData.at(-1).serial_number,
       existing: true,
     };
     const deviceInventoryUpdated = [...event.deviceSetup, inventoryEventUpdate];
@@ -176,12 +176,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const template = {
       deviceList: JSON.stringify(
-       props.inventoryData.map((item) => item.serial_number)
+        props.inventoryData.map((item) => item.serial_number)
       ),
       status: "Operational",
       activity: false,
       comment: "No comment",
-      eventSelected: event.eventInfoDetail.eventName,
+      eventSelected: eventName,
       provider: user.company,
       type: valueItemSelected.item_group,
       company: user.companyData.id,
@@ -194,41 +194,51 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
 
   const createDeviceInEvent = async (data) => {
     setLoadingStatus(true);
-    const event_id = event.sql.event_id;
-    const response = await devitrakApi.post(
-      "/db_event/retrieve-item-location-quantity-full-details",
-      {
-        location: valueItemSelected.location,
-        category_name: valueItemSelected.category_name,
-        company_id: user.sqlInfo.company_id,
-        warehouse: 1,
-        item_group: valueItemSelected.item_group,
-        enableAssignFeature: 1,
-        quantity: Number(valueItemSelected.qty),
-      }
-    );
-    if (response.data) {
-      const inventoryData = response.data.data;
-      const respoUpdating = await devitrakApi.post("/db_event/event_device", {
-        event_id: event_id,
-        item_group: valueItemSelected.item_group,
-        category_name: valueItemSelected.category_name,
-        startingNumber: inventoryData[0].serial_number,
-        quantity: data.quantity,
-      });
-      if (respoUpdating.data.ok) {
-        await devitrakApi.post("/db_item/item-out-warehouse", {
-          warehouse: false,
+    try {
+      const event_id = event.sql.event_id;
+      const response = await devitrakApi.post(
+        "/db_event/retrieve-item-location-quantity-full-details",
+        {
+          location: valueItemSelected.location,
+          category_name: valueItemSelected.category_name,
           company_id: user.sqlInfo.company_id,
+          warehouse: 1,
           item_group: valueItemSelected.item_group,
+          enableAssignFeature: 1,
+          quantity: Number(valueItemSelected.qty),
+        }
+      );
+      if (response.data) {
+        const inventoryData = response.data.data;
+        const respoUpdating = await devitrakApi.post("/db_event/event_device", {
+          event_id: event_id,
+          item_group: valueItemSelected.item_group,
+          category_name: valueItemSelected.category_name,
           startingNumber: inventoryData[0].serial_number,
+          company_id: user.sqlInfo.company_id,
           quantity: data.quantity,
         });
+        if (respoUpdating.data.ok) {
+          await devitrakApi.post("/db_item/item-out-warehouse", {
+            warehouse: 0,
+            company_id: user.sqlInfo.company_id,
+            item_group: valueItemSelected.item_group,
+            startingNumber: inventoryData[0].serial_number,
+            quantity: data.quantity,
+          });
+        }
+        await createDeviceRecordInNoSQLDatabase({
+          ...data,
+          inventoryData: inventoryData.slice(0, Number(data.quantity)),
+        });
+        openNotification(
+          "Device type and devices range of serial number added to inventory."
+        );
+        return setLoadingStatus(false);
       }
-      await createDeviceRecordInNoSQLDatabase({...data, inventoryData:inventoryData});
-      await openNotification(
-        "Device type and devices range of serial number added to inventory."
-      );
+    } catch (error) {
+      message.error(error.response.data.msg);
+      return setLoadingStatus(false);
     }
   };
 
@@ -242,7 +252,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
-        eventSelected: event.eventInfoDetail.eventName,
+        eventSelected: eventName,
         company: user.companyData.id,
         type: props.group,
       }
@@ -286,7 +296,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       {
         // provider: props.company,
         company: user.companyData.id,
-        eventSelected: event.eventInfoDetail.eventName,
+        eventSelected: eventName,
         "device.deviceType": props.group,
         "device.status": true,
       }
