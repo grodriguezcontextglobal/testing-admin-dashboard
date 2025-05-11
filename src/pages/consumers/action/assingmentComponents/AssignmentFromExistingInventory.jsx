@@ -77,7 +77,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     }
     return result;
   };
-  
+
   const optionsToRenderInSelector = () => {
     const result = new Set();
     for (let [, value] of groupingItemByCategoriesToRenderThemInSelector()) {
@@ -312,8 +312,8 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       });
       const templateProps = {
         ...props,
-        event_id: eventId.id
-      }
+        event_id: eventId.id,
+      };
       await transactionDeviceAdded(templateProps);
     }
   };
@@ -351,6 +351,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         item_group: data.item_group,
         category_name: data.category_name,
         startingNumber: data.min_serial_number,
+        company_id: user.sqlInfo.company_id,
         quantity: data.quantity,
       });
     }

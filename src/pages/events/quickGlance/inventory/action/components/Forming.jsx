@@ -192,6 +192,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       item_group: valueItemSelected[0].item_group,
       category_name: valueItemSelected[0].category_name,
       min_serial_number: valueItemSelected[0].serial_number,
+      company_id: user.sqlInfo.company_id,
       max_serial_number: valueItemSelected[limit].serial_number,
     });
     if (respoUpdating.data.ok) {

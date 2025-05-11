@@ -342,6 +342,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         category_name: data.category_name,
         startingNumber: data.min_serial_number,
         quantity: qty,
+        company_id: user.sqlInfo.company_id,
       });
     }
   };
