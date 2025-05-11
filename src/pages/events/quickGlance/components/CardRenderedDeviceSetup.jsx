@@ -1,16 +1,19 @@
-import { lazy, Suspense, useState } from "react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Card, Switch, Tooltip } from "antd";
+import { Button, Card, Switch, Tooltip } from "antd";
+import { lazy, Suspense, useState } from "react";
+import Loading from "../../../../components/animation/Loading";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { DropDownIcon } from "../../../../components/icons/DropDownIcon";
 const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import Loading from "../../../../components/animation/Loading";
 const CardRendered = ({ props, title, onChange, loadingStatus }) => {
+  console.log(props);
+  console.log(title);
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
@@ -57,11 +60,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
               >
                 {title}&nbsp;
               </Typography>
-              <Tooltip title="Add range of serial number for this type.">
-                <p onClick={() => handleOpenModal()}>
-                  <DropDownIcon />
-                </p>
-              </Tooltip>
             </Grid>
           </Grid>
           <Grid container>
@@ -105,12 +103,28 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
             >
               <Typography
                 paddingTop={"8px"}
-                style={{ ...Subtitle, textWrap: "nowrap" }}
+                style={{ ...Subtitle, textWrap: "nowrap", width: "100%" }}
               >
                 {props.startingNumber}
                 &nbsp;-&nbsp;
                 {props.endingNumber}
               </Typography>
+              <Button
+                style={{
+                  ...BlueButton,
+                  display:
+                    props.startingNumber !== "000000" &&
+                    props.endingNumber !== "00000"
+                      ? "none"
+                      : "flex",
+                  width: "100%",
+                }}
+                onClick={() => handleOpenModal()}
+              >
+                <p style={{ ...BlueButtonText }}>
+                  Add range of serial number for this type.
+                </p>
+              </Button>
             </Grid>
           </Grid>
         </Card>
