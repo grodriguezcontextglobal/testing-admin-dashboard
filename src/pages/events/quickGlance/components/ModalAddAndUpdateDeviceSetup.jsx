@@ -80,9 +80,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   });
 
   const eventInfoSqlDB = useQuery({
-    queryKey: [
-      "eventInfoSqlDB",
-    ],
+    queryKey: ["eventInfoSqlDB"],
     queryFn: () =>
       devitrakApi.post("/db_event/consulting-event", {
         // company_assigned_event_id: user.sqlInfo.company_id,
@@ -109,7 +107,6 @@ const ModalAddAndUpdateDeviceSetup = ({
 
     if (itemQuery.data?.data?.items) {
       const dataFound = itemQuery.data.data.items;
-
       for (const [key, valueData] of Object.entries(dataFound)) {
         result.push({
           key,
@@ -152,8 +149,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       const optionRendering = JSON.parse(value);
       setValueItemSelected(optionRendering);
     } catch (error) {
-      console.error("Failed to parse selection:", error);
-      setValueItemSelected([]);
+      return setValueItemSelected([]);
     }
   }, []);
 
@@ -180,6 +176,7 @@ const ModalAddAndUpdateDeviceSetup = ({
           enableAssignFeature: 1,
           serial_number: props.serial_number,
           quantity: Number(props.quantity),
+          category_name: props.category_name,
         }
       );
       if (response.data) {
@@ -355,40 +352,41 @@ const ModalAddAndUpdateDeviceSetup = ({
   };
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
-      let data = null;
-      data = props.deviceInfo;
-      const template = {
-        deviceList: JSON.stringify(data.map((item) => item.serial_number)),
-        status: "Operational",
-        activity: false,
-        comment: "No comment",
-        eventSelected: eventName,
-        provider: user.company,
-        type: data[0].item_group,
-        company: user.companyData.id,
-      };
-      await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-      await updateDeviceSetupInEvent(props);
-      return null;
+    let data = null;
+    data = props.deviceInfo;
+    const template = {
+      deviceList: JSON.stringify(data.map((item) => item.serial_number)),
+      status: "Operational",
+      activity: false,
+      comment: "No comment",
+      eventSelected: eventName,
+      provider: user.company,
+      type: data[0].item_group,
+      company: user.companyData.id,
+    };
+    await devitrakApi.post("/receiver/receivers-pool-bulk", template);
+    await updateDeviceSetupInEvent(props);
+    return null;
   };
 
   const createDeviceInEvent = async (props) => {
     let database = [...props.deviceInfo];
-    const event_id =  event.sql.event_id;
-      await devitrakApi.post("/db_event/event_device", {
-        event_id: event_id,
-        item_group: database[0].item_group,
-        startingNumber: database[0].serial_number,
-        quantity: props.quantity,
-        category_name: database[0].category_name,
-      });
-      await devitrakApi.post("/db_item/item-out-warehouse", {
-        warehouse: false,
-        company_id: user.sqlInfo.company_id,
-        item_group: database[0].item_group,
-        startingNumber: database[0].serial_number,
-        quantity: props.quantity,
-      });
+    const event_id = event.sql.event_id;
+    await devitrakApi.post("/db_event/event_device", {
+      event_id: event_id,
+      item_group: database[0].item_group,
+      startingNumber: database[0].serial_number,
+      quantity: props.quantity,
+      company_id: user.sqlInfo.company_id,
+      category_name: database[0].category_name,
+    });
+    await devitrakApi.post("/db_item/item-out-warehouse", {
+      warehouse: false,
+      company_id: user.sqlInfo.company_id,
+      item_group: database[0].item_group,
+      startingNumber: database[0].serial_number,
+      quantity: props.quantity,
+    });
     await createDeviceRecordInNoSQLDatabase(props);
   };
 
@@ -518,7 +516,7 @@ const ModalAddAndUpdateDeviceSetup = ({
               }
             />
           </div>
-                    <div
+          <div
             style={{
               textAlign: "left",
               width: "100%",
@@ -542,7 +540,6 @@ const ModalAddAndUpdateDeviceSetup = ({
               type="number" // Better input type for quantities
             />
           </div>
-
         </div>
         <span style={{ width: "100%", textAlign: "right" }}>
           <p style={Subtitle}>
