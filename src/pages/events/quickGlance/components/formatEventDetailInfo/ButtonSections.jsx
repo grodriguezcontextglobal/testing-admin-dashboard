@@ -9,9 +9,9 @@ import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import FeedbackModal from "../FeedbackModal";
 const EmailNotification = lazy(() =>
@@ -222,12 +222,12 @@ const ButtonSections = () => {
                   style={
                     item.disableStatus
                       ? {
-                          ...BlueButton,
+                          ...GrayButton,
                           width: "100%",
                           backgroundColor: "var(--disabled-blue-button)",
                           border: "transparent",
                         }
-                      : { ...BlueButton, width: "100%" }
+                      : { ...GrayButton, width: "100%" }
                   }
                 >
                   {" "}
@@ -235,7 +235,7 @@ const ButtonSections = () => {
                     style={
                       item.disableStatus
                         ? {
-                            ...BlueButtonText,
+                            ...GrayButtonText,
                             color: "",
                             textTransform: "none",
                             textAlign: "left",
@@ -244,7 +244,7 @@ const ButtonSections = () => {
                             alignItems: "center",
                           }
                         : {
-                            ...BlueButtonText,
+                            ...GrayButtonText,
                             textTransform: "none",
                             textAlign: "left",
                             display: "flex",
