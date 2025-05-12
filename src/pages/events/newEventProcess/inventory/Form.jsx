@@ -1,13 +1,14 @@
 import { Button, Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select } from "antd";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import { PlusIcon } from "../../../../components/icons/PlusIcon";
+import RefreshButton from "../../../../components/utils/UX/RefreshButton";
 import {
   onAddDeviceSetup,
   onAddExtraServiceListSetup,
@@ -27,8 +28,6 @@ import MerchantService from "./components/MerchantService";
 import NoMerchantService from "./components/NoMerchantService";
 import SelectedItemsRendered from "./components/SelectedItemsRendered";
 import Services from "./extra/Services";
-import RefreshButton from "../../../../components/utils/UX/RefreshButton";
-import { groupBy } from "lodash";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -53,13 +52,15 @@ const Form = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const itemQuery = useQuery({
-    queryKey: ["listOfItems"],
+    queryKey: ["companyInventorySectionQuery", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.get(
-        `/db_item/check-item?company_id=${
-          user.sqlInfo.company_id
-        }&warehouse=${1}&enableAssignFeature=${1}`
-      ),
+      devitrakApi.post("/db_event/retrieve-item-group-quantity-with-format", {
+        company_id: user.sqlInfo.company_id,
+        warehouse: 1,
+        enableAssignFeature: 1,
+      }),
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 1 * 60 * 1000, // 1 minute cache
   });
 
   useEffect(() => {
@@ -72,32 +73,11 @@ const Form = () => {
     };
   }, []);
 
-  const dataFound = itemQuery?.data?.data?.items ?? [];
-  const optionsToRenderInSelector = () => {
-    const checkLocation = new Map();
-    const groupingByCategories = groupBy(dataFound, "category_name");
-    for (let [key, value] of Object.entries(groupingByCategories)) {
-      groupingByCategories[key] = groupBy(value, "item_group");
-      for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
-        checkLocation.set(`${key}-${key2}`, {
-          category_name: key,
-          item_group: key2,
-          total: value2.length,
-          data: JSON.stringify(value2),
-        });
-      }
-    }
-    const result = new Set();
-    for (let [ , value] of checkLocation) {
-      result.add(value);
-    }
-    return Array.from(result);
-  };
-
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
     setValueItemSelected(optionRendering);
   };
+
   const removeItemSelected = (item) => {
     const filter = selectedItem.filter((_, index) => index !== item);
     dispatch(onAddDeviceSetup(filter));
@@ -113,18 +93,19 @@ const Form = () => {
 
   const checkItemToAddAndAvailableQuantity = (props) => {
     const check = selectedItem.some(
-      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+      (element) => element.item_group === `${valueItemSelected.item_group}`
     );
     if (check) {
       const item = selectedItem.find(
-        (element) => element.item_group === `${valueItemSelected[0].item_group}`
+        (element) => element.item_group === `${valueItemSelected.item_group}`
       );
       const checkQuantity = Number(item.quantity) + Number(props);
-      return checkQuantity > valueItemSelected.length;
+      return checkQuantity > valueItemSelected.qty;
     } else {
-      return props > valueItemSelected.length;
+      return props > valueItemSelected.qty;
     }
   };
+
   const addingQuantity = (a = 0, b = 0) => {
     return Number(a) + Number(b);
   };
@@ -132,7 +113,7 @@ const Form = () => {
   const updateQuantity = (props) => {
     let resulting = [...selectedItem];
     let eleIndex = selectedItem.findIndex(
-      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+      (element) => element.item_group === `${valueItemSelected.item_group}`
     );
     if (eleIndex > -1) {
       resulting[eleIndex] = {
@@ -144,16 +125,20 @@ const Form = () => {
     dispatch(onAddDeviceSetup(resulting));
     setValue("quantity", "");
     setAssignAllDevices(false);
-    return;
+    return null;
   };
+
   const checkIfNewAddedItemAlreadyWasAdded = () => {
     const check = selectedItem.some(
-      (element) => element.item_group === `${valueItemSelected[0].item_group}`
+      (element) => element.item_group === `${valueItemSelected.item_group}`
     );
     return check;
   };
   const handleAddingNewItemToDeviceSetupEvent = async (data) => {
-    if (checkItemToAddAndAvailableQuantity(data.quantity)) {
+    if (
+      !assignAllDevices &&
+      checkItemToAddAndAvailableQuantity(data.quantity)
+    ) {
       return alert("Quantity is not available");
     }
     if (checkIfNewAddedItemAlreadyWasAdded()) {
@@ -163,13 +148,15 @@ const Form = () => {
         ...selectedItem,
         {
           ...data,
-          ...valueItemSelected[0],
-          cost: eventInfoDetail.merchant
-            ? data.deposit
-            : valueItemSelected[0].cost,
-          quantity: assignAllDevices ? valueItemSelected.length : data.quantity,
+          ...valueItemSelected,
+          cost: eventInfoDetail.merchant ? data.deposit : 0, //valueItemSelected[0].cost,
+          quantity: assignAllDevices
+            ? valueItemSelected.qty
+            : Number(data.quantity),
           existing: true,
           consumerUses: false,
+          company: user.company,
+          ownership: data.ownership ? data.ownership : "Rent",
         },
       ];
       setSelectedItem(resulting);
@@ -179,10 +166,12 @@ const Form = () => {
       return;
     }
   };
+
   const handleNextStepEventSetup = () => {
     dispatch(onAddDeviceSetup(selectedItem));
     return navigate("/create-event-page/review-submit");
   };
+
   const renderingStyle = () => {
     if (filled) {
       return {
@@ -219,7 +208,7 @@ const Form = () => {
     dispatch(onAddExtraServiceListSetup(resulting));
     setValue("deposit", "");
     setValue("service", "");
-    return;
+    return null;
   };
 
   const filledFields = (props) => {
@@ -229,6 +218,67 @@ const Form = () => {
   const handleRefresh = async () => {
     return itemQuery.refetch();
   };
+
+  const selectOptions = useMemo(() => {
+    const result = [];
+
+    if (itemQuery.data) {
+      const groupedInventory = itemQuery.data.data.groupedInventory;
+      for (const item of groupedInventory) {
+        // Render Location Row with quantity
+        result.push({
+          key: `${item.item_group}-${item.category_name}`,
+          label: (
+            <Typography
+              textTransform={"capitalize"}
+              style={{
+                ...Subtitle,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: 700,
+                    width: "fit-content",
+                    marginRight: "5px",
+                  }}
+                >
+                  {item.category_name}
+                </span>
+                {item.item_group}
+              </div>
+              <span style={{ textAlign: "right", width: "50%" }}>
+                Available: {item.quantity}
+              </span>
+            </Typography>
+          ),
+          value: JSON.stringify({
+            category_name: item.category_name,
+            item_group: item.item_group,
+            brand: item.brand,
+            descript_item: item.descript_item,
+            qty: item.quantity,
+            quantity: item.quantity,
+          }),
+        });
+      }
+    }
+
+    return result;
+  }, [itemQuery.data]);
+
+  console.log("selectedItem", selectedItem);
   return (
     <Suspense
       fallback={
@@ -344,33 +394,7 @@ const Form = () => {
                 optionFilterProp="children"
                 style={{ ...AntSelectorStyle, width: "100%" }}
                 onChange={onChange}
-                options={optionsToRenderInSelector().map((item) => {
-                  return {
-                    label: (
-                      <Typography
-                        textTransform={"capitalize"}
-                        style={{
-                          ...Subtitle,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          width: "100%",
-                        }}
-                      >
-                        <span style={{ width: "50%" }}>
-                          <span style={{ fontWeight: 700 }}>
-                            {item.category_name}
-                          </span>{" "}
-                          {item.item_group}
-                        </span>
-                        <span style={{ textAlign: "right", width: "20%" }}>
-                          Total available: {item.total}
-                        </span>
-                      </Typography>
-                    ),
-                    value: item.data,
-                  };
-                })}
+                options={selectOptions}
               />
               {eventInfoDetail.merchant ? (
                 <MerchantService
@@ -457,7 +481,7 @@ const Form = () => {
         </Button>
         {displayFormToCreateCategory && (
           <FormDeviceTrackingMethod
-            existingData={optionsToRenderInSelector()}
+            // existingData={optionsToRenderInSelector()}
             selectedItem={selectedItem}
             setSelectedItem={setSelectedItem}
             setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
@@ -516,3 +540,34 @@ const Form = () => {
 };
 
 export default Form;
+
+// const itemQuery = useQuery({
+//   queryKey: ["listOfItems"],
+//   queryFn: () =>
+//     devitrakApi.get(
+//       `/db_item/check-item?company_id=${
+//         user.sqlInfo.company_id
+//       }&warehouse=${1}&enableAssignFeature=${1}`
+//     ),
+// });
+// const dataFound = itemQuery?.data?.data?.items ?? [];
+// const optionsToRenderInSelector = () => {
+//   const checkLocation = new Map();
+//   const groupingByCategories = groupBy(dataFound, "category_name");
+//   for (let [key, value] of Object.entries(groupingByCategories)) {
+//     groupingByCategories[key] = groupBy(value, "item_group");
+//     for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
+//       checkLocation.set(`${key}-${key2}`, {
+//         category_name: key,
+//         item_group: key2,
+//         total: value2.length,
+//         data: JSON.stringify(value2),
+//       });
+//     }
+//   }
+//   const result = new Set();
+//   for (let [, value] of checkLocation) {
+//     result.add(value);
+//   }
+//   return Array.from(result);
+// };
