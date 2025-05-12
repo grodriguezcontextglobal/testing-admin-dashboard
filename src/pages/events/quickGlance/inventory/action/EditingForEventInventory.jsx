@@ -257,6 +257,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }
     );
     if (selectedDevicesPool.data) {
+      if(selectedDevicesPool.data.receiversInventory.length === 0) {
+        return null;
+      }
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
       const ids = [...devicesFetchedPool.map((item) => item.id)];
       await devitrakApi.post(`/receiver/delete-bulk-devices-pool`, { ids });
