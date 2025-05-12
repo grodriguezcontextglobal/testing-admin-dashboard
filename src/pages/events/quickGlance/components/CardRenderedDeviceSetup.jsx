@@ -12,8 +12,6 @@ const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
 const CardRendered = ({ props, title, onChange, loadingStatus }) => {
-  console.log(props);
-  console.log(title);
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
