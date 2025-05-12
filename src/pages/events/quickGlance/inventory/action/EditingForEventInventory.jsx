@@ -28,7 +28,6 @@ import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonTex
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { formatDate } from "../../../../inventory/utils/dateFormat";
 
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -259,25 +258,64 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
     if (selectedDevicesPool.data) {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
-      for (let data of devicesFetchedPool) {
-        const deviceSQL = {
-          warehouse: 1,
-          status: data.status,
-          update_at: formatDate(new Date()),
-          serial_number: data.device,
-          category_name: props.category,
-          item_group: data.type,
-          company_id: user.sqlInfo.company_id,
-        };
-        await devitrakApi.post("/db_event/returning-item", deviceSQL);
-        await devitrakApi.delete(`/receiver/delete-device-pool/${data.id}`);
-        await devitrakApi.post("/db_event/remove-item-inventory-event", {
-          event_id: event.sql.event_id,
-          item_group: data.type,
-          category_name: props.category,
-          serial_number: data.device,
-        });
-      }
+      const ids = [...devicesFetchedPool.map((item) => item.id)];
+      await devitrakApi.post(`/receiver/delete-bulk-devices-pool`, { ids });
+      const updateItemInEvent = await devitrakApi.post(
+        "/db_event/inventory-based-on-submitted-parameters",
+        {
+          query:
+            "UPDATE item_inv set warehouse = 1, update_at = NOW() WHERE item_group IN (?) AND category_name IN (?) AND serial_number IN (?) AND company_id = ?",
+          values: [
+            [devicesFetchedPool[0].type],
+            [props.category],
+            [...devicesFetchedPool.map((item) => item.device)],
+            133,
+          ],
+        }
+      );
+
+      const removeItemFromEvent = await devitrakApi.post(
+        "/db_event/inventory-based-on-submitted-parameters",
+        {
+          query: `DELETE FROM item_inv_assigned_event
+                  WHERE event_id = ?
+                    AND item_id IN (
+                      SELECT item_id
+                      FROM item_inv
+                      WHERE item_group = ?
+                        AND category_name = ?
+                        AND serial_number IN (?)
+        )`,
+          values: [
+            event.sql.event_id,
+            devicesFetchedPool[0].type,
+            props.category,
+            [...devicesFetchedPool.map((item) => item.device)],
+          ],
+        }
+      );
+
+      console.log("updateItemInEvent", updateItemInEvent);
+      console.log("removeItemFromEvent", removeItemFromEvent);
+      // for (let data of devicesFetchedPool) {
+      //   const deviceSQL = {
+      //     warehouse: 1,
+      //     status: data.status,
+      //     update_at: formatDate(new Date()),
+      //     serial_numbers: JSON.stringify([...devicesFetchedPool.map(item => item.device)]),
+      //     category_name: props.category,
+      //     item_group: data.type,
+      //     company_id: user.sqlInfo.company_id,
+      //   };
+
+      //   await devitrakApi.post("/db_event/returning-item", deviceSQL);
+      //   await devitrakApi.post("/db_event/remove-item-inventory-event", {
+      //     event_id: event.sql.event_id,
+      //     item_group: data.type,
+      //     category_name: props.category,
+      //     serial_number: data.device,
+      //   });
+      // }
     }
   };
 
@@ -294,7 +332,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     const checkingIfInventoryIsAlreadyInUsed = await devitrakApi.post(
       "/receiver/receiver-assigned-list",
       {
-        // provider: props.company,
         company: user.companyData.id,
         eventSelected: eventName,
         "device.deviceType": props.group,
