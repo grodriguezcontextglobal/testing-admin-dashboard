@@ -1,10 +1,13 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
+import { nanoid } from "@reduxjs/toolkit";
 import { Button, notification } from "antd";
+import { groupBy } from "lodash";
 import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import { checkArray } from "../../../../components/utils/checkArray";
 import {
   onAddEventData,
   onAddQRCodeLink,
@@ -12,15 +15,11 @@ import {
   onSelectEvent,
 } from "../../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
-import { nanoid } from "@reduxjs/toolkit";
-import "./blurring.css";
-import { formatDate } from "../../../inventory/utils/dateFormat";
-import { checkArray } from "../../../../components/utils/checkArray";
-import { groupBy } from "lodash";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import Service from "./review/service";
-import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import "./blurring.css";
+import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
+import Service from "./review/service";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -229,8 +228,8 @@ const ReviewAndSubmitEvent = () => {
             max_serial_number: data.max_serial_number,
             warehouse: data.warehouse,
             main_warehouse: data.main_warehouse,
-            created_at: formatDate(data.created_at),
-            update_at: formatDate(data.updated_at),
+            created_at: data.created_at,
+            update_at: data.updated_at,
             company: data.company,
             location: data.location,
             current_location: data.current_location,
