@@ -260,7 +260,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
       const ids = [...devicesFetchedPool.map((item) => item.id)];
       await devitrakApi.post(`/receiver/delete-bulk-devices-pool`, { ids });
-      const updateItemInEvent = await devitrakApi.post(
+      await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
           query:
@@ -273,49 +273,23 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           ],
         }
       );
-
-      const removeItemFromEvent = await devitrakApi.post(
+      const responseItem = await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
-          query: `DELETE FROM item_inv_assigned_event
-                  WHERE event_id = ?
-                    AND item_id IN (
-                      SELECT item_id
-                      FROM item_inv
-                      WHERE item_group = ?
-                        AND category_name = ?
-                        AND serial_number IN (?)
-        )`,
+          query: `SELECT item_id FROM item_inv WHERE item_group = ? AND category_name = ? AND serial_number IN (${devicesFetchedPool.map((item) => (`${item.device}`)).join(",")})`,
           values: [
-            event.sql.event_id,
             devicesFetchedPool[0].type,
             props.category,
-            [...devicesFetchedPool.map((item) => item.device)],
           ],
         }
       );
-
-      console.log("updateItemInEvent", updateItemInEvent);
-      console.log("removeItemFromEvent", removeItemFromEvent);
-      // for (let data of devicesFetchedPool) {
-      //   const deviceSQL = {
-      //     warehouse: 1,
-      //     status: data.status,
-      //     update_at: formatDate(new Date()),
-      //     serial_numbers: JSON.stringify([...devicesFetchedPool.map(item => item.device)]),
-      //     category_name: props.category,
-      //     item_group: data.type,
-      //     company_id: user.sqlInfo.company_id,
-      //   };
-
-      //   await devitrakApi.post("/db_event/returning-item", deviceSQL);
-      //   await devitrakApi.post("/db_event/remove-item-inventory-event", {
-      //     event_id: event.sql.event_id,
-      //     item_group: data.type,
-      //     category_name: props.category,
-      //     serial_number: data.device,
-      //   });
-      // }
+      await devitrakApi.post(
+        "/db_event/inventory-based-on-submitted-parameters",
+        {
+          query: `DELETE FROM item_inv_assigned_event WHERE event_id = ? AND item_id IN (${responseItem.data.result.map((item) => (`${item.item_id}`)).join(",")})`,
+          values: [event.sql.event_id],
+        }
+      );
     }
   };
 
