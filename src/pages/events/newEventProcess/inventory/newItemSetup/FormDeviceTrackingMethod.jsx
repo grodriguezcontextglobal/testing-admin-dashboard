@@ -212,7 +212,7 @@ const FormDeviceTrackingMethod = ({
     }
     try {
       let base64;
-      let img_url;
+      let img_url = "";
       setLoadingStatus(true);
       if (
         imageUploadedValue?.length > 0 &&
@@ -260,7 +260,7 @@ const FormDeviceTrackingMethod = ({
         min_serial_number: data.min_serial_number,
         max_serial_number: data.max_serial_number,
         warehouse: true,
-        main_warehouse: data.tax_location,
+        main_warehouse: data.location,
         created_at: formatDate(new Date()),
         updated_at: formatDate(new Date()),
         company: user.company,
@@ -280,7 +280,7 @@ const FormDeviceTrackingMethod = ({
         containerSpotLimit: data.containerSpotLimit,
         enableAssignFeature: 1,
         image_url: img_url,
-        quantity: qtyDiff(),
+        quantity: data.quantity,
         existing: false,
       };
       const respNewItem = [...selectedItem, template];
@@ -690,7 +690,7 @@ const FormDeviceTrackingMethod = ({
           readOnly
           // value={qtyDiff()}
           // {...register("quantity", { setValueAs: qtyDiff() })}
-          { ...register("quantity")}
+          {...register("quantity")}
           fullWidth
           style={{
             ...OutlinedInputStyle,
@@ -737,7 +737,7 @@ const FormDeviceTrackingMethod = ({
     const result =
       Number(watch("max_serial_number")) - Number(watch("min_serial_number"));
     return setValue("quantity", result + 1);
-  },[watch("max_serial_number"), watch("min_serial_number")]);
+  }, [watch("max_serial_number"), watch("min_serial_number")]);
   qtyDiff();
 
   return (
