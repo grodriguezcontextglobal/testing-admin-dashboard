@@ -1,27 +1,26 @@
-import { groupBy } from "lodash";
-
 export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
-  const result = {
-    0: [],
-    1: [],
-    2: [],
-  };
-  if (props) {
-    const industryData = props;
-    const groupingByItemGroup = groupBy(industryData, "sub_location");
-    for (let key of Object.keys(groupingByItemGroup)) {
-      const sub_locations_split = String(key).split(",");
-      sub_locations_split.forEach((sub_location, index) => {
+  const result = { 0: [], 1: [], 2: [] };
+  const trackers = { 0: new Set(), 1: new Set(), 2: new Set() };
+
+  if (Array.isArray(props) && props.length > 0) {
+    for (const item of props) {
+      const subLocations = item.sub_location;
+      if (!Array.isArray(subLocations)) continue;
+
+      subLocations.forEach((sub_location, index) => {
         if (
-          sub_location === "" ||
-          sub_location === null ||
+          typeof sub_location !== "string" ||
+          sub_location.trim() === "" ||
           sub_location === "null"
-        )
-          return;
-        result[index] = [...result[index], {value: sub_location}];
+        ) return;
+
+        if (!trackers[index].has(sub_location)) {
+          trackers[index].add(sub_location);
+          result[index].push({ value: sub_location });
+        }
       });
     }
-    return result;
   }
+
   return result;
 };
