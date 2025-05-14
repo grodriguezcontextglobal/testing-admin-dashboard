@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   Button,
   Grid,
@@ -19,15 +18,9 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import CardInfo from "../UX/CardInfo";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
-const TotalInventoryCard = lazy(() =>
-  import("./components/TotalInventoryCard")
-);
-const TotalValueDevicesLocation = lazy(() =>
-  import("./components/TotalValueDevices")
-);
-const TotalAvailableItem = lazy(() => import("../../utils/TotalAvailableItem"));
-
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -58,19 +51,70 @@ const MainPage = () => {
       ? decodeURI(location?.state?.sub_location)?.split("%2C")
       : [];
 
+  const subStyle = {
+    ...Subtitle,
+    textDecoration: "none",
+    height: "100%",
+    fontWeight: 600,
+    textAlign: "left",
+  };
+
   const navigateToSublocation = (subLocation, index) => {
-    const subLocationPathNavigate = subLocations.slice(0, index+1);
+    const subLocationPathNavigate = subLocations.slice(0, index + 1);
     const chosenPath = encodeURIComponent(subLocationPathNavigate.join(","));
+    if (index === subLocations.length - 1) {
+      return (
+        <Typography style={subStyle} color={"var(--gray900)"}>
+          {subLocation}
+        </Typography>
+      );
+    }
     return (
       <Link
         to={`${location.pathname}${location.search}`}
         state={{ sub_location: chosenPath }}
-        style={{ textDecoration: "none", height: "100%" }}
+        style={subStyle}
       >
         {subLocation}
       </Link>
     );
   };
+
+  const options = [
+    {
+      title: (
+        <Link style={{ textAlign: "left", width: "100%" }} to="/inventory">
+          <Typography
+            style={{
+              ...Subtitle,
+              fontWeight: 600,
+              textAlign: "left",
+              color: LightBlueButtonText.color,
+            }}
+          >
+            All devices
+          </Typography>
+        </Link>
+      ),
+    },
+    {
+      title: (
+        <Link to={`${location.pathname}${location.search}`} style={subStyle}>
+          <Typography
+            style={Subtitle}
+            fontWeight={600}
+            color={"var(--gray900)"}
+          >
+            {decodeURI(locationName.slice(1))}
+          </Typography>
+        </Link>
+      ),
+    },
+
+    ...subLocations.map((item, index) => ({
+      title: navigateToSublocation(item, index),
+    })),
+  ];
 
   return (
     <Suspense
@@ -165,166 +209,37 @@ const MainPage = () => {
               item
               xs={12}
               sm={12}
-              md={1}
-              lg={1}
+              md={12}
+              lg={12}
             >
-              <Link style={{textAlign: "left", width: "100%"}} to="/inventory">
-                <Typography
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                  alignItems={"center"}
-                  style={{
-                    ...LightBlueButtonText,
-                    fontWeight: 600,
-                    textAlign: "left",
-                  }}
-                >
-                  All devices
-                  <Icon icon="mingcute:right-line" color="var(--gray900)" />
-                </Typography>
-              </Link>
-            </Grid>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={9}
-              lg={9}
-            >
-              <Typography
-                style={{
-                  ...TextFontSize30LineHeight38,
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-                color={"var(--gray900, #101828)"}
-              >
-                {decodeURI(locationName.slice(1))}
-              </Typography>
+              <Breadcrumb separator=">" items={options} />
             </Grid>
           </Grid>
         </Grid>
         <Divider />
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          alignSelf={"start"}
-          container
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            textAlign={"left"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <Typography style={TextFontSize30LineHeight38}>
-              {decodeURI(locationName.slice(1))}
-            </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            textAlign={"left"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            sx={{
-              justifyContent: {
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "flex-end",
-                lg: "flex-end",
-              },
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <Breadcrumb
-              style={{
-                ...TextFontSize30LineHeight38,
-                fontWeight: 400,
-                display: location.state ? "flex" : "none",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-              items={[
-                ...subLocations.map((item, index) => ({
-                  title: navigateToSublocation(item, index),
-                })),
-              ]}
-            />
-          </Grid>
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          container
-        >
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalInventoryCard props={referenceData.totalDevices} />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalAvailableItem props={referenceData.totalAvailable} />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalValueDevicesLocation props={referenceData.totalValue} />
-          </Grid>
-        </Grid>
+        <CardInfo referenceData={referenceData} />
         <Divider />
         <Grid
-          marginY={3}
           display={"flex"}
-          justifyContent={"flex-start"}
+          justifyContent={"flex-end"}
           alignItems={"center"}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={8}
-          >
-            <Typography style={TextFontSize30LineHeight38}>
-              Inventory at {decodeURI(locationName.slice(1))}
-            </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-          >
-            <OutlinedInput
-              {...register("searchDevice")}
-              fullWidth
-              placeholder="Search devices here"
-              style={OutlinedInputStyle}
-              startAdornment={
-                <InputAdornment position="start">
-                  <MagnifyIcon />
-                </InputAdornment>
-              }
-            />
-          </Grid>
+          <OutlinedInput
+            {...register("searchDevice")}
+            fullWidth
+            placeholder="Search devices here"
+            style={OutlinedInputStyle}
+            startAdornment={
+              <InputAdornment position="start">
+                <MagnifyIcon />
+              </InputAdornment>
+            }
+          />
         </Grid>
         <Grid container>
           <Grid
