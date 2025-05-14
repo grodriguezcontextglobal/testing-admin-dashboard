@@ -1,36 +1,15 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
-import { useMediaQuery } from "@uidotdev/usehooks";
+import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { Divider } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-// import TableDeviceCategory from "./components/Table";
-// import TotalInventoryCard from "./components/TotalInventoryCard";
-// import TotalValueDevicesLocation from "./components/TotalValueDevices";
-// import TotalAvailableItem from "../../utils/TotalAvailableItem";
+import CardInfo from "../UX/CardInfo";
+import Header from "../UX/header";
 const TableDeviceCategory = lazy(() => import("./components/Table"));
-const TotalInventoryCard = lazy(() =>
-  import("./components/TotalInventoryCard")
-);
-const TotalValueDevicesLocation = lazy(() =>
-  import("./components/TotalValueDevices")
-);
-const TotalAvailableItem = lazy(() => import("../../utils/TotalAvailableItem"));
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -44,11 +23,7 @@ const MainPage = () => {
       searchDevice: location.search.split("&")[1].split("=")[1],
     },
   });
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const navigate = useNavigate();
+
   useEffect(() => {
     if (watch("searchDevice") === "undefined") {
       setValue("searchDevice", "");
@@ -73,189 +48,33 @@ const MainPage = () => {
         }}
         container
       >
-        <Grid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-        >
-          <Grid
-            marginY={0}
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-          >
-            <Typography style={TextFontSize30LineHeight38}>Category</Typography>
-          </Grid>
-          <Grid
-            textAlign={"right"}
-            display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            item
-            md={6}
-          >
-            <Button
-              onClick={() => navigate("/inventory/edit-group")}
-              style={{ ...BlueButton, width: "fit-content" }}
-            >
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                Update a group of device
-              </p>
-            </Button>
-          </Grid>
-        </Grid>
-        <Grid
-          style={{
-            paddingTop: "0px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-          marginTop={4}
-        >
-          <Grid marginY={0} item xs={12} sm={12} md={8}>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Link to="/inventory">
-                <Typography
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                  alignItems={"center"}
-                  style={{ ...LightBlueButtonText, fontWeight: 600 }}
-                >
-                  All devices
-                </Typography>
-              </Link>
-              <Typography
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
-              >
-                <Icon icon="mingcute:right-line" />
-                {decodeURI(categoryName.slice(1))}
-              </Typography>
-            </Grid>
-          </Grid>
-          <Grid textAlign={"right"} item xs={4}></Grid>
-        </Grid>
+        <Header
+          title={decodeURI(categoryName.slice(1))}
+          category={"Category"}
+        />
+        <CardInfo referenceData={referenceData} />
         <Divider />
         <Grid
           display={"flex"}
-          justifyContent={"space-between"}
+          justifyContent={"flex-end"}
           alignItems={"center"}
-          alignSelf={"start"}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            textAlign={"left"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <Typography style={TextFontSize30LineHeight38}>
-              {decodeURI(categoryName.slice(1))}
-            </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            textAlign={"left"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            {/* <ButtonActions /> */}
-          </Grid>
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          container
-        >
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalInventoryCard props={referenceData.totalDevices} />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalAvailableItem props={referenceData.totalAvailable} />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={4}>
-            <TotalValueDevicesLocation props={referenceData.totalValue} />
-          </Grid>
-        </Grid>
-        <Divider />
-        <Grid
-          marginY={3}
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          container
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={8}
-          >
-            <Typography style={TextFontSize30LineHeight38}>
-              Inventory of {decodeURI(categoryName.slice(1))}
-            </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-          >
-            <OutlinedInput
-              {...register("searchDevice")}
-              fullWidth
-              placeholder="Search devices here"
-              style={OutlinedInputStyle}
-              startAdornment={
-                <InputAdornment position="start">
-                  <MagnifyIcon />
-                </InputAdornment>
-              }
-            />
-          </Grid>
+          <OutlinedInput
+            {...register("searchDevice")}
+            fullWidth
+            placeholder="Search devices here"
+            style={OutlinedInputStyle}
+            startAdornment={
+              <InputAdornment position="start">
+                <MagnifyIcon />
+              </InputAdornment>
+            }
+          />
         </Grid>
         <Grid container>
           <Grid
