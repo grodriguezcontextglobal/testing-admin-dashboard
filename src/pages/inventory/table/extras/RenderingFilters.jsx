@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useEffect } from "react";
+import { createContext } from "react";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -52,9 +52,13 @@ const RenderingFilters = ({
   const renderingTotalAvailableDevices = (props) => {
     const result = groupBy(props, "warehouse");
     if (result[1]) {
-      const resultAssignable = groupBy(result[1], "data.enableAssignFeature");
+      const resultAssignable = groupBy(result[1], "data.warehouse");
       if (resultAssignable[1]) {
-        return resultAssignable[1]?.length;
+        const assignableOnes = groupBy(resultAssignable[1], "data.enableAssignFeature");
+        if (assignableOnes[1]) {
+          return assignableOnes[1]?.length;
+        }
+        return 0;
       }
       return 0;
     }
@@ -104,27 +108,6 @@ const RenderingFilters = ({
     return organizeInventoryBySubLocation(result);
   };
 
-  const extractingTotalAndAvailableDevices = () => {
-    const groupingByLocation = groupBy(dataToDisplay(), "location");
-    const result = new Map();
-    for (let [key, value] of Object.entries(groupingByLocation)) {
-      if (!result.has(key)) {
-        result.set(key, {
-          total: value.length,
-          available: renderingTotalAvailableDevices(value),
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    testing();
-    console.log(extractingTotalAndAvailableDevices());
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
