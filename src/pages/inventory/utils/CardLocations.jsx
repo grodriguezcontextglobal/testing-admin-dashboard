@@ -15,6 +15,8 @@ const CardLocations = ({ props, title, optional, navigate = null }) => {
   return (
     <Card
       style={{
+        maxWidth: "max-content",
+        width: "100%",
         minWidth: "351px",
         borderRadius: "12px",
         border: "1px solid var(--gray-200, #EAECF0)",
@@ -29,74 +31,77 @@ const CardLocations = ({ props, title, optional, navigate = null }) => {
         alignItems={"center"}
         container
       >
-        <Typography
-          style={{
-            ...TextFontSize30LineHeight38,
-            textWrap: "balance",
-            textAlign: "left",
-            cursor: "pointer",
-            width: "100%",
-          }}
-          onClick={() => navigateTo(navigate)}
-        >
-          {title}
-        </Typography>
-        {optional !== null && (
-          <span
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          {" "}
+          <Typography
             style={{
-              borderRadius: "16px",
-              justifyContent: "center",
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              background: `${
-                !optional
-                  ? "var(--blue-50, #EFF8FF)"
-                  : "var(--success-50, #ECFDF3)"
-              }`,
-              width: "fit-content",
+              ...TextFontSize30LineHeight38,
+              textWrap: "balance",
+              textAlign: "left",
+              cursor: "pointer",
+              width: "100%",
             }}
+            onClick={() => navigateTo(navigate)}
           >
-            <Typography
-              color={`${
-                !optional
-                  ? "var(--blue-700, #175CD3)"
-                  : "var(--success-700, #027A48)"
-              }`}
-              fontSize={"12px"}
-              fontFamily={"Inter"}
-              fontStyle={"normal"}
-              fontWeight={500}
-              lineHeight={"18px"}
-              textAlign={"center"}
-              textTransform={"capitalize"}
+            {title}
+          </Typography>
+          {optional !== null && (
+            <span
+              style={{
+                borderRadius: "16px",
+                justifyContent: "center",
+                display: "flex",
+                padding: "2px 8px",
+                alignItems: "center",
+                background: `${
+                  !optional
+                    ? "var(--blue-50, #EFF8FF)"
+                    : "var(--success-50, #ECFDF3)"
+                }`,
+                width: "fit-content",
+              }}
             >
-              <Icon
-                icon="tabler:point-filled"
-                rotate={3}
-                color={`${!optional ? "#2E90FA" : "#12B76A"}`}
-              />
-              {!optional ? "In Use" : "In Stock"}
-            </Typography>
-          </span>
-        )}
-      </Grid>
-      <Grid container>
-        <Typography
-          textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-          style={{
-            ...Subtitle,
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-          color={"var(--gray-600, #475467)"}
-        >
-          {props}
-        </Typography>
+              <Typography
+                color={`${
+                  !optional
+                    ? "var(--blue-700, #175CD3)"
+                    : "var(--success-700, #027A48)"
+                }`}
+                fontSize={"12px"}
+                fontFamily={"Inter"}
+                fontStyle={"normal"}
+                fontWeight={500}
+                lineHeight={"18px"}
+                textAlign={"center"}
+                textTransform={"capitalize"}
+              >
+                <Icon
+                  icon="tabler:point-filled"
+                  rotate={3}
+                  color={`${!optional ? "#2E90FA" : "#12B76A"}`}
+                />
+                {!optional ? "In Use" : "In Stock"}
+              </Typography>
+            </span>
+          )}
+        </Grid>
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          {" "}
+          <Typography
+            textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
+            style={{
+              ...Subtitle,
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+            color={"var(--gray-600, #475467)"}
+          >
+            {props}
+          </Typography>
+        </Grid>
       </Grid>
     </Card>
-    // </Grid>
   );
 };
 
