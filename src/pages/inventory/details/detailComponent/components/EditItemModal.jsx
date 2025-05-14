@@ -16,8 +16,10 @@ import { Controller, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../../classes/imageCloudinaryFormat";
+import { EditIcon } from "../../../../../components/icons/EditIcon";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import { checkValidJSON } from "../../../../../components/utils/checkValidJSON";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
@@ -29,14 +31,12 @@ import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../styles/global/reactInput.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import "../../../actions/style.css";
 import { renderFields } from "../../../actions/utils/SingleItemFields";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../../../actions/utils/SubLocationRenderer";
 import costValueInputFormat from "../../../utils/costValueInputFormat";
 import { formatDate } from "../../../utils/dateFormat";
-import { checkValidJSON } from "../../../../../components/utils/checkValidJSON";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditItemModal = ({
@@ -330,14 +330,14 @@ const EditItemModal = ({
             style={TextFontSize30LineHeight38}
             color={"var(--gray-600, #475467)"}
           >
-            Add one device
+            Edit item
           </Typography>
         </InputLabel>
         <InputLabel
           id="eventName"
           style={{ marginBottom: "6px", width: "100%" }}
         >
-          <Typography
+          {/* <Typography
             textAlign={"left"}
             textTransform={"none"}
             style={TextFontSize20LineHeight30}
@@ -345,7 +345,7 @@ const EditItemModal = ({
           >
             You can enter all the details manually or use a scanner to enter the
             serial number.
-          </Typography>
+          </Typography> */}
         </InputLabel>
       </>
     );
@@ -754,6 +754,7 @@ const EditItemModal = ({
             >
               <Button
                 htmlType="reset"
+                onClick={() => closeModal()}
                 disabled={loadingStatus}
                 style={{
                   ...GrayButton,
@@ -791,8 +792,11 @@ const EditItemModal = ({
                     textTransform: "none",
                   }}
                 >
-                  <WhiteCirclePlusIcon />
-                  &nbsp; Save new item
+                  <EditIcon
+                    stroke={"var(--basewhite)"}
+                    fill={"var(--basewhite)"}
+                  />
+                  &nbsp; Update item
                 </p>
               </Button>
             </div>
@@ -804,15 +808,3 @@ const EditItemModal = ({
 };
 
 export default EditItemModal;
-
-// const respNewItem = await devitrakApi.post("/db_item/edit-item"
-{
-  /* <Modal
-key={dataFound[0].item_id}
-open={openEditItemModal}
-onCancel={() => closeModal()}
-style={{ top: "20dv", zIndex:30 }}
-width={1000}
-footer={[]}
-> */
-}
