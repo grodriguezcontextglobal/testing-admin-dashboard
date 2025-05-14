@@ -1,4 +1,4 @@
-import { Space } from "antd";
+import { Grid } from "@mui/material";
 import CardLocations from "./CardLocations";
 
 const RenderingMoreThanTreeviewElements = ({
@@ -7,15 +7,33 @@ const RenderingMoreThanTreeviewElements = ({
   searchItem,
 }) => {
   const elemId = item.key;
+  const renderingGridValue = () => {
+    if (item.data.length > 2) {
+      return 4;
+    } else if (item.data.length > 1) {
+      return 6;
+    } else {
+      return 12;
+    }
+  };
   return (
-    <Space
-      align="start"
-      styles={{ margin: 0, padding: 0, justifyContent: "flex-start" }}
-      wrap
+    <Grid
+      spacing={1}
+      container
     >
       {item.data.map((opt) => {
         return (
-          <Space.Compact block={true} key={`${elemId}-${opt?.key}`}>
+          <Grid
+            key={`${elemId}-${opt?.key}`}
+            display={"flex"}
+            alignItems={"flex-start"}
+            justifyContent={"flex-start"}
+            item
+            xs={12}
+            sm={12}
+            md={renderingGridValue()}
+            lg={renderingGridValue()}
+          >
             <CardLocations
               key={`${elemId}-${opt?.key}`}
               id={`card-${elemId}-`}
@@ -28,11 +46,19 @@ const RenderingMoreThanTreeviewElements = ({
               props={`${opt?.value} total devices`}
               optional={null}
             />
-          </Space.Compact>
+          </Grid>
         );
       })}
-    </Space>
+    </Grid>
   );
 };
 
 export default RenderingMoreThanTreeviewElements;
+
+// <Space
+//   align="start"
+//   styles={{ margin: 0, padding: 0, justifyContent: "flex-start" }}
+//   wrap
+// >
+// <Space.Compact block={true} key={`${elemId}-${opt?.key}`}>
+// </Space>
