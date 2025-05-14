@@ -1,7 +1,6 @@
-import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Divider } from "antd";
+import { Breadcrumb, Button, Divider } from "antd";
 import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -9,12 +8,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
-import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ExtraInformation from "./detailComponent/components/ExtraInformation";
 import ExtraInformationItemComponent from "./detailComponent/components/ExtraInformationItemComponent";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
@@ -86,6 +85,24 @@ const MainPage = () => {
       return null;
     };
 
+    const options = [
+      {
+        title: (
+          <Link to="/inventory">
+            <Typography style={{ ...LightBlueButtonText, fontWeight: 600 }}>
+              All devices
+            </Typography>
+          </Link>
+        ),
+      },
+      {
+        title: (
+          <Typography fontWeight={600}>
+            {dataFound[0]?.item_group} {dataFound[0]?.serial_number}
+          </Typography>
+        ),
+      },
+    ];
     return (
       <Suspense
         fallback={
@@ -106,14 +123,6 @@ const MainPage = () => {
           key={item_id}
           container
         >
-          <Grid
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-          >
             <Grid marginY={0} item xs={12} sm={12} md={6} lg={6}>
               <Typography
                 textTransform={"none"}
@@ -162,57 +171,26 @@ const MainPage = () => {
                   textTransform={"none"}
                   style={{ ...BlueButtonText, ...CenteringGrid }}
                 >
-                  <WhitePlusIcon />
+                  <WhiteCirclePlusIcon />
                   &nbsp; Add new group of devices{" "}
                 </Typography>
               </Button>
             </Grid>
-          </Grid>
           <Grid
-            style={{
-              paddingTop: "0px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-            marginTop={4}
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            marginY={2}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
           >
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <Link to="/inventory">
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    color: BlueButton.background,
-                    fontWeight: 600,
-                  }}
-                >
-                  Back
-                </p>
-              </Link>
-              <Typography
-                style={{
-                  ...TextFontsize18LineHeight28,
-                  fontWeight: 600,
-                  color: "var(--gray-900, #101828)",
-                }}
-              >
-                <Icon icon="mingcute:right-line" />
-                {dataFound[0]?.item_group} {dataFound[0]?.serial_number}
-              </Typography>
-            </Grid>
+            <Breadcrumb separator=">" items={options} />
           </Grid>
         </Grid>
-        <Divider />
+        <Divider style={{margin:"0 0 15px 0"}}/>
         <Grid
           display={"flex"}
           justifyContent={"space-between"}
@@ -272,12 +250,12 @@ const MainPage = () => {
                 md: "flex-end",
                 lg: "flex-end",
               },
-              margin:{
+              margin: {
                 xs: "0.5rem 0 0",
                 sm: "0.5rem 0 0",
                 md: "0",
                 lg: "0",
-              }
+              },
             }}
             item
             xs={12}
@@ -316,7 +294,6 @@ const MainPage = () => {
           dataFound={dataFound}
           containerInfo={infoItemQuery?.data?.data?.items[0] ?? {}}
         />
-        <Divider />
         <Grid
           marginY={3}
           display={"flex"}
@@ -332,8 +309,8 @@ const MainPage = () => {
             item
             xs={12}
             sm={12}
-            md={3}
-            lg={3}
+            md={12}
+            lg={12}
           >
             <OutlinedInput
               {...register("searchDevice")}
