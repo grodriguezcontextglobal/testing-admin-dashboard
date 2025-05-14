@@ -44,9 +44,10 @@ const MainPage = () => {
     5: [],
   });
   const [downloadDataReport, setDownloadDataReport] = useState(null);
+  const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
-  const { register, watch } = useForm();
+  const { register, watch, setValue } = useForm();
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery"],
     queryFn: () =>
@@ -113,6 +114,19 @@ const MainPage = () => {
     });
     return companyHasInventoryQuery.refetch();
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setValue("searchItem", "...");
+    setTimeout(() => {
+      setValue("searchItem", "");
+      setRenderingData(false);
+    }, 2500);
+    return () => {
+      controller.abort();
+    };
+  }, [renderingData === true]);
+
   return (
     <Suspense
       fallback={
@@ -124,7 +138,7 @@ const MainPage = () => {
       <Grid
         style={{
           padding: "5px 0",
-          display: "flex",
+          display: renderingData ? "none" : "flex",
           flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
@@ -397,6 +411,7 @@ const MainPage = () => {
         </Grid>
       </Grid>
       {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
+      {renderingData && <Spin indicator={<Loading />} fullscreen={true} />}
     </Suspense>
   );
 };
