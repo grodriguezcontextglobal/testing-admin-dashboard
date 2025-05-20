@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -27,6 +27,7 @@ import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 // import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
 import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
+import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
@@ -36,7 +37,6 @@ const DetailPerConsumer = () => {
   const { register, watch, setValue } = useForm();
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
-  const navigate = useNavigate();
   const rowRef = useRef();
   const customerInfoTemplate = {
     ...customer,
@@ -104,9 +104,6 @@ const DetailPerConsumer = () => {
       </div>
     );
   if (transactionsConsumerQuery.data) {
-    const handleBackAction = () => {
-      navigate("/consumers");
-    };
     const substractingNotesAddedForCompany = () => {
       const result = customer?.data?.notes?.filter(
         (ele) => ele.company === user.companyData.id
@@ -128,6 +125,40 @@ const DetailPerConsumer = () => {
       }
       return 0;
     };
+
+    const style = {
+      titleNavigation: {
+        textTransform: "none",
+        textAlign: "left",
+        fontWeight: 600,
+        fontSize: "18px",
+        fontFamily: "Inter",
+        lineHeight: "28px",
+        color: "var(--blue-dark-600, #155EEF)",
+      },
+    };
+
+    const breadcrumbItems = [
+      {
+        title: (
+          <Link to="/consumers">
+            <p style={style.titleNavigation}>All consumers</p>
+          </Link>
+        ),
+      },
+      {
+        title: (
+          <p
+            style={{
+              ...TextFontsize18LineHeight28,
+              textTransform: "capitalize",
+            }}
+          >
+            {customer?.name} {customer?.lastName}
+          </p>
+        ),
+      },
+    ];
 
     return (
       <Grid
@@ -222,39 +253,15 @@ const DetailPerConsumer = () => {
           }}
           container
         >
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Typography
-                sx={{
-                  ...TextFontsize18LineHeight28,
-                  textTransform: "capitalize",
-                  textAlign: "left",
-                  fontWeight: 600,
-                  color: "var(--blue-dark-600, #155EEF)",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleBackAction()}
-              >
-                All consumers
-              </Typography>
-              <Typography
-                sx={{
-                  ...TextFontsize18LineHeight28,
-                  textTransform: "capitalize",
-                  textAlign: "left",
-                  fontWeight: 600,
-                  color: "var(--gray-900, #101828)",
-                }}
-              >
-                <Icon icon="mingcute:right-line" />
-                {customer?.name} {customer?.lastName}
-              </Typography>{" "}
-            </Grid>
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            item
+            xs={12}
+          >
+            <Breadcrumb path={breadcrumbItems} />
+          </Grid>
         </Grid>
         <Divider />
         <Grid
@@ -351,8 +358,8 @@ const DetailPerConsumer = () => {
             alignSelf={"flex-start"}
             item
             xs={12}
-            md={4}
-            lg={4}
+            md={8}
+            lg={8}
           >
             <OutlinedInput
               {...register("searchEvent")}
@@ -393,8 +400,9 @@ const DetailPerConsumer = () => {
             alignSelf={"flex-start"}
             item
             xs={12}
-            md={5}
-            lg={5}
+            sm={12}
+            md
+            lg
           >
             <AssigmentAction
               refetching={refetchingAfterReturnDeviceAssignedInTransaction}
