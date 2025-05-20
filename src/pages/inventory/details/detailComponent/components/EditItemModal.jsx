@@ -166,7 +166,7 @@ const EditItemModal = ({
     const controller = new AbortController();
     if (dataFound.length > 0) {
       const extraInfo = checkValidJSON(dataFound[0].extra_serial_number);
-      if (extraInfo.length > 0) {
+      if (extraInfo?.length > 0) {
         setMoreInfo(extraInfo);
       }
     }
