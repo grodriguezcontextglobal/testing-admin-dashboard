@@ -114,6 +114,7 @@ const LeasesTable = () => {
         title: "Device name",
         dataIndex: "device_id",
         key: "device_id",
+        responsive: ["sm"],
         render: (device_id) => (
           <span style={Subtitle}>
             {
@@ -127,6 +128,7 @@ const LeasesTable = () => {
         title: "Date and Time Assigned",
         dataIndex: "subscription_initial_date",
         key: "subscription_initial_date",
+        responsive: ["sm"],
         render: (subscription_initial_date) => (
           <span style={Subtitle}>
             {new Date(subscription_initial_date).toUTCString()}
@@ -151,6 +153,7 @@ const LeasesTable = () => {
         title: "Value",
         dataIndex: "address",
         key: "address",
+        responsive: ["sm"],
         render: (_, record) => (
           <span style={Subtitle}>
             {" "}

@@ -28,6 +28,8 @@ import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { useQueryClient } from '@tanstack/react-query';
+
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
@@ -35,6 +37,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     {}
   );
   const [responseData, setResponseData] = useState([]);
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const customerFormat = {
@@ -105,69 +108,42 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     return setResponseData(final);
   };
 
-  const refetchingAfterReturnDeviceInRow = () => {
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchingDataPerAllowed();
+    return () => {
+      controller.abort();
+    };
+  }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
+
+  const refetchingAfterReturnDeviceInRow = async () => {
+    await queryClient.invalidateQueries(['transactionsList']);
+    await queryClient.invalidateQueries(['receiverList']);
     return fetchingDataPerAllowed();
   };
 
-  useEffect(() => {
-    fetchingDataPerAllowed();
-  }, []); //customer.id, customer.uid
-
-  const reformedSourceData = () => {
-    const result = new Set();
-    responseData.forEach((value) => {
-      result.add({
-        eventSelected: value[0]?.eventSelected,
-        paymentIntent: value[0]?.paymentIntent,
-        device: value[0]?.device,
-        status: value[0]?.device > 0 ? value[0]?.status : null,
-        eventInfo: value[0].eventInfo,
-        type: value[0].eventInfo[0].type,
-        date: value[0].timestamp,
-      });
-    });
-    return Array.from(result);
-  };
-
-  const addingKeysToExpandRow = () => {
-    const result = new Set();
-    for (let data of reformedSourceData()) {
-      result.add({
-        key: data.paymentIntent,
-        ...data,
-      });
-    }
-    return Array.from(result);
-  };
-
-  const finalDataToDisplayIncludeSearchFN = () => {
-    if (searchValue?.length > 0 && addingKeysToExpandRow()?.length > 0) {
-      return addingKeysToExpandRow().filter((element) =>
-        JSON.stringify(element)
-          .toLowerCase()
-          .includes(searchValue.toLowerCase())
-      );
-    }
-    return addingKeysToExpandRow();
-  };
-
+  // Update the moreDetailFn to refresh data after actions
   const moreDetailFn = async (record) => {
-    const eventListQuery = await devitrakApi.post("/event/event-list", {
-      company: user.company,
-      "eventInfoDetail.eventName": record.eventSelected[0],
-    });
-    dispatch(
-      onSelectEvent(eventListQuery.data.list[0].eventInfoDetail.eventName)
-    );
-    dispatch(onSelectCompany(eventListQuery.data.list[0].company));
-    dispatch(onAddEventData(eventListQuery.data.list[0]));
-    dispatch(onAddSubscription(eventListQuery.data.list[0].subscription));
-    dispatch(onAddPaymentIntentSelected(record.paymentIntent));
-    navigate(
-      `/events/event-attendees/${
-        customer.uid ?? customer.id
-      }/transactions-details`
-    );
+    try {
+      const eventListQuery = await devitrakApi.post("/event/event-list", {
+        company: user.company,
+        "eventInfoDetail.eventName": record.eventSelected[0],
+      });
+      dispatch(
+        onSelectEvent(eventListQuery.data.list[0].eventInfoDetail.eventName)
+      );
+      dispatch(onSelectCompany(eventListQuery.data.list[0].company));
+      dispatch(onAddEventData(eventListQuery.data.list[0]));
+      dispatch(onAddSubscription(eventListQuery.data.list[0].subscription));
+      dispatch(onAddPaymentIntentSelected(record.paymentIntent));
+      navigate(
+        `/events/event-attendees/${
+          customer.uid ?? customer.id
+        }/transactions-details`
+      );
+    } catch (error) {
+      console.error('Error fetching event details:', error);
+    }
   };
 
   const renderingOptionsBasedOnPaymentIntentStatus = (paymentIntent) => {
@@ -450,7 +426,47 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         </Badge>
       </p>
     );
+  };
 
+  const reformedSourceData = () => {
+    const result = new Set();
+    responseData.forEach((value) => {
+      result.add({
+        eventSelected: value[0]?.eventSelected,
+        paymentIntent: value[0]?.paymentIntent,
+        device: value[0]?.device,
+        status: value[0]?.device > 0 ? value[0]?.status : null,
+        eventInfo: value[0].eventInfo,
+        type: value[0].eventInfo[0].type,
+        date: value[0].timestamp,
+      });
+    });
+    return Array.from(result);
+  };
+
+  const addingKeysToExpandRow = () => {
+    const result = new Set();
+    for (let data of reformedSourceData()) {
+      result.add({
+        key: data.paymentIntent,
+        ...data,
+      });
+    }
+    return Array.from(result);
+  };
+
+  const finalDataToDisplayIncludeSearchFN = () => {
+    const data = addingKeysToExpandRow();
+    if (!searchValue) return data;
+
+    return data.filter((item) => {
+      const searchLower = searchValue.toLowerCase();
+      return (
+        item.eventSelected[0]?.toLowerCase().includes(searchLower) ||
+        item.paymentIntent?.toLowerCase().includes(searchLower) ||
+        new Date(item.date).toLocaleString().toLowerCase().includes(searchLower)
+      );
+    });
   };
 
   return (
@@ -515,71 +531,3 @@ StripeTransactionPerConsumer.propTypes = {
   searchValue: PropTypes.string,
 };
 export default StripeTransactionPerConsumer;
-
-
-
-        {/* <Button
-          onAbort={() => {
-            refetchingAfterReturnDeviceInRow();
-          }}
-          style={{
-            ...BlueButton,
-            width: "fit-content",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <p style={BlueButtonText}>Refresh</p>
-        </Button> */}
-
-    // if (props.expanded) {
-    //   return (
-    //     <Badge
-    //       style={buttonStyle("var(--gray100)")}
-    //       onClick={(e) => {
-    //         props.onExpand(props.record, e);
-    //       }}
-    //     >
-    //       <p style={{ ...Subtitle, color: "var(--gray700)" }}>Close</p>
-    //       <UpNarrowIcon />
-    //       {/* <UpDoubleArrow /> */}
-    //     </Badge>
-    //   );
-    // } else {
-    //   return (
-    //     <Button
-    //       style={buttonStyle("var(--success50)")}
-    //       onclick={props.onExpand}
-    //       onClick={(e) => {
-    //         props.onExpand(props.record, e);
-    //       }}
-    //     >
-    //       <p style={{ ...Subtitle, color: "var(--success700)" }}>Open</p>
-    //       <DownNarrow />
-    //       {/* <DownDoubleArrowIcon /> */}
-    //     </Button>
-    //   );
-    // }
-
-              {/* <Badge style={chipStyle(record.status === record.device)}>
-            <Chip
-              style={{
-                backgroundColor: `${
-                  record.status === record.device
-                    ? "var(--Primary-50, #F9F5FF)"
-                    : "var(--Success-50, #ECFDF3)"
-                }`,
-              }}
-              label={
-                <p style={chipTextStyle(record.status === record.device)}>
-                  {record.status !== null
-                    ? record?.status === record?.device
-                      ? "Returned"
-                      : "Active"
-                    : "Service"}
-                </p>
-              }
-            />
-          </Badge> */}
-
-          
