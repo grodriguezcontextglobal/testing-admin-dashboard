@@ -30,16 +30,15 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 
-const schema = yup
-  .object({
-    firstName: yup.string().required("first name is required"),
-    lastName: yup.string().required("last name is required"),
-    email: yup
-      .string()
-      .email("email has an invalid format")
-      .required("email is required"),
-    // eventAssignedTo: yup.string().required(),
-  })
+const schema = yup.object({
+  firstName: yup.string().required("first name is required"),
+  lastName: yup.string().required("last name is required"),
+  email: yup
+    .string()
+    .email("email has an invalid format")
+    .required("email is required"),
+  // eventAssignedTo: yup.string().required(),
+});
 
 const paragraphStyle = {
   textTransform: "none",
@@ -98,59 +97,61 @@ export const CreateNewConsumer = ({
         ...props,
         uid: props.id ?? props.uid,
       };
-          dispatch(onAddCustomerInfo(userFormatData));
-          dispatch(onAddCustomer(userFormatData));
-          queryClient.invalidateQueries([
-            "transactionsList",
-            "listOfDevicesAssigned",
-            "listOfNoOperatingDevices",
-          ]);
+      dispatch(onAddCustomerInfo(userFormatData));
+      dispatch(onAddCustomer(userFormatData));
+      queryClient.invalidateQueries([
+        "transactionsList",
+        "listOfDevicesAssigned",
+        "listOfNoOperatingDevices",
+      ]);
 
-      return navigate(`/events/event-attendees/${userFormatData.uid}/transactions-details`);
+      return navigate(
+        `/events/event-attendees/${userFormatData.uid}/transactions-details`
+      );
     }
     return closeDeviceModal();
   };
   const newConsumerAfterBeingCheck = async (data) => {
     try {
-      if(contactPhoneNumber.length === 0) {
+      if (contactPhoneNumber.length === 0) {
         alert("Please enter a phone number");
         return setLoading(false);
       }
       const newEventToAddConsumer = JSON.parse(eventAssignedTo);
       const newUserProfile = {
         name: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      phoneNumber: contactPhoneNumber,
-      privacyPolicy: true,
-      category: "Regular",
-      provider: [user.company],
-      eventSelected: [newEventToAddConsumer.eventInfoDetail.eventName],
-      company_providers: [user.companyData.id],
-      event_providers: [newEventToAddConsumer.id],
-      groupName: [],
-    };
-    const newUser = await devitrakApi.post("/auth/new", newUserProfile);
-    if (newUser.data) {
-      queryClient.invalidateQueries([
-        "listOfConsumers",
-        "attendeesList",
-        "consumersList",
-      ]);
-      await devitrakApi.post("/db_consumer/new_consumer", {
-        first_name: data.firstName,
-        last_name: data.lastName,
+        lastName: data.lastName,
         email: data.email,
-        phone_number: `${newUserProfile.phoneNumber}`,
-      });
-      openNotificationWithIcon("Success", "New consumer added");
+        phoneNumber: contactPhoneNumber,
+        privacyPolicy: true,
+        category: "Regular",
+        provider: [user.company],
+        eventSelected: [newEventToAddConsumer.eventInfoDetail.eventName],
+        company_providers: [user.companyData.id],
+        event_providers: [newEventToAddConsumer.id],
+        groupName: [],
+      };
+      const newUser = await devitrakApi.post("/auth/new", newUserProfile);
+      if (newUser.data) {
+        queryClient.invalidateQueries([
+          "listOfConsumers",
+          "attendeesList",
+          "consumersList",
+        ]);
+        await devitrakApi.post("/db_consumer/new_consumer", {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          phone_number: `${newUserProfile.phoneNumber}`,
+        });
+        openNotificationWithIcon("Success", "New consumer added");
+        setLoading(false);
+        return redirectingStaffBasedOnConsumerEventPage(newUser.data);
+      }
+    } catch (error) {
       setLoading(false);
-      return redirectingStaffBasedOnConsumerEventPage(newUser.data);
+      return openNotificationWithIcon("error", `${error.message}`);
     }
-  } catch (error) {
-    setLoading(false);
-    return openNotificationWithIcon("error", `${error.message}`);
-  }
   };
 
   const zeroDuplications = (props) => {
@@ -429,10 +430,10 @@ export const CreateNewConsumer = ({
                         width: "100%",
                         margin: "0 0 0.3rem",
                         display:
-                        location.pathname === "/events/event-quickglance"
-                          ? "none"
-                          : "flex",
-}}
+                          location.pathname === "/events/event-quickglance"
+                            ? "none"
+                            : "flex",
+                      }}
                     >
                       <MenuItem disabled value="">
                         <em>Select event</em>
@@ -449,7 +450,8 @@ export const CreateNewConsumer = ({
                           </MenuItem>
                         );
                       })}
-                    </Select>                    <OutlinedInput
+                    </Select>{" "}
+                    <OutlinedInput
                       required
                       readOnly
                       type="text"
