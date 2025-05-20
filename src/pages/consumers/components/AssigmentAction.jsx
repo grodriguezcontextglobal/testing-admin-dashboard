@@ -9,7 +9,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import ModalAssignDeviceInEvent from "../action/ModalAssignDeviceInEvent";
 
-const AssigmentAction = ({refetching}) => {
+const AssigmentAction = ({ refetching }) => {
   const [assignDevice, setAssignDevice] = useState(false);
   const [assignDeviceEvent, setAssignDeviceEvent] = useState(false);
 
@@ -62,10 +62,9 @@ const AssigmentAction = ({refetching}) => {
             margin: "0 0 12.5px 0",
           }}
         >
-          <WhiteCirclePlusIcon />
-          &nbsp;
           <p style={{ ...BlueButtonText, textAlign: "center" }}>
-            Create new transaction
+            <WhiteCirclePlusIcon />
+            &nbsp; Create new transaction
           </p>
         </button>
       </Dropdown>
