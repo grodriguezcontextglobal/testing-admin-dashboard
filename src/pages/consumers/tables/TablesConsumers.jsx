@@ -82,18 +82,13 @@ export default function TablesConsumers({
 
   const dataToRenderInTable = async () => {
     const result = new Set();
-    // const existingData = await renderingTransactionsPerEventPerConsumer();
     for (let data of getInfoNeededToBeRenderedInTable()) {
-      // const currentActiveStatus = await checkingActiveEventForActiveConsumer(
-      //   data.entireData.event_providers
-      // );
       result.add({
         ...data,
-        currentActivity: data.entireData.totalDeviceRequested, //existingData[data.email] ?? [],
-        status: data.entireData.totalEventsActive, //currentStatus(existingData[data.email]) ?? [],
-        currentConsumerActive: data.entireData.totalEventsActive, //currentActiveStatus,
+        currentActivity: data.entireData.totalDeviceRequested,
+        status: data.entireData.totalEventsActive,
+        currentConsumerActive: data.entireData.totalEventsActive,
       });
-      // await getActiveAndInactiveCount(Array.from(result));
     }
     setIsLoading(false);
     return setDataSortedAndFilterToRender(Array.from(result));
@@ -102,6 +97,19 @@ export default function TablesConsumers({
   useEffect(() => {
     dataToRenderInTable();
   }, [dataRef.current]);
+
+  const filterData = (data) => {
+    if (!searching || searching.length < 1) return data;
+    
+    return data.filter((item) => {
+      const searchLower = searching.toLowerCase();
+      const fullDetailItem = JSON.stringify(item);
+      
+      return fullDetailItem.toLowerCase().includes(searchLower);
+    });
+  };
+
+  const filteredData = filterData(dataSortedAndFilterToRender);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -299,7 +307,7 @@ export default function TablesConsumers({
           sticky
           size="large"
           columns={columns}
-          dataSource={dataSortedAndFilterToRender}
+          dataSource={filteredData}
           onRow={(record) => {
             return {
               onClick: () => {
@@ -324,115 +332,3 @@ export default function TablesConsumers({
     </>
   );
 }
-
-// const sortEventsDataPerCompany = () => {
-//   const events = new Map();
-//   if (eventsInfo.data) {
-//     const info = [...eventsInfo.data.data.list];
-//     for (let data of info) {
-//       events.set(data.id, data);
-//     }
-//   }
-//   return events;
-// };
-
-// const currentStatus = (props) => {
-//   const grouping = groupBy(props, "device.status");
-//   return grouping[true] ? grouping[true].length > 0 : false;
-// };
-// const checkingActiveEventForActiveConsumer = (props) => {
-//   let result = false;
-//   for (let [key, value] of sortEventsDataPerCompany()) {
-//     if (props.some((element) => element === key)) {
-//       if (value.active) return (result = value.active);
-//     }
-//   }
-//   return result;
-// };
-
-// const renderingTransactionsPerEventPerConsumer = async () => {
-//   const fetching = await devitrakApi.post(
-//     "/receiver/receiver-assigned-list",
-//     {
-//       user: {
-//         $in: [
-//           ...getInfoNeededToBeRenderedInTable().map((item) => item.email),
-//         ],
-//       },
-//       company: user.companyData.id,
-//     }
-//   );
-//   if (fetching.data.ok) {
-//     const groupingbyUser = groupBy(fetching.data.listOfReceivers, "user");
-//     return groupingbyUser;
-//   }
-//   return [];
-// };
-
-// if (data.result) {
-//   const checking = data;
-//   const result =
-//     typeof checking?.result?.usersList === "string"
-//       ? JSON.parse(checking?.result?.usersList)
-//       : checking?.result?.usersList;
-//   dataRef.current = result;
-// }
-
-// const eventsInfo = useQuery({
-//   queryKey: ["allEventsInfoPerCompanyList"],
-//   queryFn: () =>
-//     devitrakApi.get(
-//       `/event/event-list-per-company?company=${user.companyData.company_name}&type=event`
-//     ),
-//   refetchOnMount: false,
-// });
-
-// const listOfEventsPerAdmin = () => {
-//   const active = eventsPerAdmin.active ?? [];
-//   const completed = eventsPerAdmin.completed ?? [];
-//   let events = [...active, ...completed];
-//   const result = new Map();
-//   for (let data of events) {
-//     if (!result.has(data.id)) {
-//       result.set(data.id, data);
-//     }
-//   }
-//   return result;
-// };
-
-// const consumersPerAllowEvents = async () => {
-//   // setLoadingState(true);
-//   const finalReturn = new Map();
-//   if (listOfEventsPerAdmin().size > 0) {
-//     const data = [
-//       ...listOfEventsPerAdmin()
-//         .keys()
-//         .map((item) => item),
-//     ];
-//     const fetchUsersAttendees = await devitrakApi.post("/auth/user-query", {
-//       event_providers: { $in: data },
-//       company_providers: user.companyData.id,
-//     });
-//     if (fetchUsersAttendees.data.ok) {
-//       const responseData = fetchUsersAttendees.data.users;
-//       for (let data of responseData) {
-//         if (!finalReturn.has(data.id)) {
-//           finalReturn.set(data.id, data);
-//         }
-//       }
-//     }
-//   }
-//   const formattingResponse = [...finalReturn.values().map((item) => item)];
-//   getCounting(formattingResponse.length);
-//   return setResponseData(formattingResponse);
-// };
-
-// useEffect(() => {
-//   const controller = new AbortController();
-//   consumersPerAllowEvents();
-//   // eventsInfo.refetch();
-
-//   return () => {
-//     controller.abort();
-//   };
-// }, []);
