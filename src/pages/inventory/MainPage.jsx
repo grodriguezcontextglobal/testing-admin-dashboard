@@ -47,7 +47,11 @@ const MainPage = () => {
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
-  const { register, watch, setValue } = useForm();
+  const { register, watch, setValue } = useForm({
+    defaultValues: {
+      searchItem: "...",
+    }
+  });
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery"],
     queryFn: () =>
@@ -60,17 +64,19 @@ const MainPage = () => {
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
   useEffect(() => {
-    if (companyHasInventoryQuery?.data?.data?.total > 0) {
-      setIsLoadingState(true);
-      setCurrentTab(1);
+    setValue("searchItem", "");
+    setRenderingData(false);
+  }, []);
+  
+  useEffect(() => {
+    if (companyHasInventoryQuery.isSuccess) {
+      const total = companyHasInventoryQuery?.data?.data?.total;
+      console.log(total);
+      setCurrentTab(total > 0 ? 1 : 2);
+      setIsLoadingState(true)
       setIsLoadingState(false);
     }
-    if (companyHasInventoryQuery?.data?.data?.total === 0) {
-      setIsLoadingState(true);
-      setCurrentTab(2);
-      setIsLoadingState(false);
-    }
-  }, [companyHasInventoryQuery.data, companyHasInventoryQuery.isSuccess]);
+  }, [companyHasInventoryQuery.isSuccess]);
 
   const renderingOption = {
     0: <Spin indicator={<Loading />} fullscreen={true} />,
@@ -103,29 +109,21 @@ const MainPage = () => {
     ),
   };
 
-  const refetchingQueriesFn = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["listOfItemsInStock"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["ItemsInInventoryCheckingQuery"],
-      exact: true,
-    });
-    return companyHasInventoryQuery.refetch();
+  const refetchingQueriesFn = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["listOfItemsInStock"],
+        exact: true,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      }),
+      companyHasInventoryQuery.refetch()
+    ]);
+    setRenderingData(false);
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setValue("searchItem", "...");
-    setTimeout(() => {
-      setValue("searchItem", "");
-      setRenderingData(false);
-    }, 2500);
-    return () => {
-      controller.abort();
-    };
-  }, [renderingData === true]);
 
   return (
     <Suspense
