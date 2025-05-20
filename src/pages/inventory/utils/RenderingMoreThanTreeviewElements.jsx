@@ -20,19 +20,25 @@ const RenderingMoreThanTreeviewElements = ({
     <Grid
       spacing={1}
       container
+      direction="row"
+      justifyContent="flex-start"
+      alignItems="flex-start"
     >
       {item.data.map((opt) => {
         return (
           <Grid
             key={`${elemId}-${opt?.key}`}
-            display={"flex"}
-            alignItems={"flex-start"}
-            justifyContent={"flex-start"}
             item
             xs={12}
             sm={12}
             md={renderingGridValue()}
             lg={renderingGridValue()}
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'flex-start',
+              width: 'fit-content'
+            }}
           >
             <CardLocations
               key={`${elemId}-${opt?.key}`}
