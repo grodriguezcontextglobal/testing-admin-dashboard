@@ -1,6 +1,5 @@
 import { Grid } from "@mui/material";
 import { Outlet } from "react-router-dom";
-// import OnlineUserBanner from "../components/general/OnlineUserBanner"
 
 const ParentRenderingChildrenPage = () => {
   return (
@@ -8,10 +7,11 @@ const ParentRenderingChildrenPage = () => {
       id="parent-container"
       display={"flex"}
       justifyContent={"center"}
-      // alignItems={"center"}
-      maxWidth={"1228px"}
-      minWidth={"325px"} //768px
-      alignSelf={"flex-start"}
+      sx={{
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: "100%"
+      }}
       container
     >
       <Grid
@@ -24,10 +24,15 @@ const ParentRenderingChildrenPage = () => {
             md: "calc(100dvh - 80px)",
             lg: "calc(100dvh - 80px)",
           },
-          padding: { xs: "0 20px", sm: "0 20px", md:"0 20px", lg: 0 },
+          width: "100%",
+          padding: { 
+            xs: "0 10px", 
+            sm: "0 15px", 
+            md: "0 20px", 
+            lg: "0 20px" 
+          },
           margin: "1rem 0 1rem",
         }}
-        // margin={"8rem 0 1rem"}
         item
         xs={12}
         sm={12}
