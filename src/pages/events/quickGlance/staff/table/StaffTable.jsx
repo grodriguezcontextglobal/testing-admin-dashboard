@@ -22,47 +22,55 @@ const StaffTable = ({ searching }) => {
     queryKey: ["newEndpointQuery"],
     queryFn: () => devitrakApi.get(`/event/event-staff-detail/${event.id}`), //devitrakApi.get("/staff/admin-users"),
     refetchOnMount: false,
+    staleTime: 3 * 60 * 60 * 1000,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    staffEventQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   staffEventQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
   const employeesString = staffEventQuery?.data?.data?.staff;
   const employees = checkTypeFetchResponse(employeesString);
   const renderingStaffInfo = async () => {
     const result = new Set();
-    for (const data of employees) {
-      if (data.admin_id === null) {
-        result.add({
-          id: data.admin_id,
-          name: `${data.staff.firstName} ${data.staff.lastName}`,
-          online: false,
-          role:
-            data.staff.role !== "Administrator" ? "Assistant" : data.staff.role,
-          email: data.staff.email,
-          phone: "000-000-0000",
-          photo: "",
-        });
-      } else {
-        const onlineStatus = await devitrakApi.get(
-          `/admin/check-online-status/${data.staff.email}`
-        );
-        result.add({
-          id: data.admin_id,
-          name: `${data.staff.firstName} ${data.staff.lastName}`,
-          online: onlineStatus?.data?.online,
-          role:
-            data.staff.role !== "Administrator" ? "Assistant" : data.staff.role,
-          email: data.staff.email,
-          phone: data.phone ?? "000-000-0000",
-          photo: data.photo ?? "",
-        });
+    if (employees?.length > 0) {
+      for (const data of employees) {
+        if (data.admin_id === null) {
+          result.add({
+            id: data.admin_id,
+            name: `${data.staff.firstName} ${data.staff.lastName}`,
+            online: false,
+            role:
+              data.staff.role !== "Administrator"
+                ? "Assistant"
+                : data.staff.role,
+            email: data.staff.email,
+            phone: "000-000-0000",
+            photo: "",
+          });
+        } else {
+          const onlineStatus = await devitrakApi.get(
+            `/admin/check-online-status/${data.staff.email}`
+          );
+          result.add({
+            id: data.admin_id,
+            name: `${data.staff.firstName} ${data.staff.lastName}`,
+            online: onlineStatus?.data?.online,
+            role:
+              data.staff.role !== "Administrator"
+                ? "Assistant"
+                : data.staff.role,
+            email: data.staff.email,
+            phone: data.phone ?? "000-000-0000",
+            photo: data.photo ?? "",
+          });
+        }
       }
     }
+
     return setStaff(Array.from(result));
   };
   useEffect(() => {

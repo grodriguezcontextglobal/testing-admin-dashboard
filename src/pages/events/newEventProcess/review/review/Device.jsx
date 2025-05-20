@@ -52,24 +52,28 @@ const Device = () => {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
+      responsive: ["xs", "sm", "md", "lg"],
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {
       title: "Brand",
       dataIndex: "brand",
       key: "brand",
+      responsive: ["sm", "md", "lg"],
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {
       title: "Category",
       dataIndex: "category_name",
       key: "category_name",
+      responsive: ["md", "lg"],
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {
       title: "Group",
       dataIndex: "item_group",
       key: "item_group",
+      responsive: ["md", "lg"],
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {

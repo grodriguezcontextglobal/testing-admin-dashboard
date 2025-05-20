@@ -1,8 +1,8 @@
-import { Icon } from "@iconify/react";
+// import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Divider, Upload, message } from "antd";
+import { Breadcrumb, Divider, Upload, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -19,7 +19,7 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+// import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
@@ -38,6 +38,7 @@ import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -279,6 +280,29 @@ const MainPageQuickGlance = () => {
       }
     };
 
+    const style = {
+      titleNavigation: {
+        textTransform: "none",
+        textAlign: "left",
+        fontWeight: 600,
+        fontSize: "18px",
+        fontFamily: "Inter",
+        lineHeight: "28px",
+        color: "var(--blue-dark-600, #155EEF)",
+      },
+    };
+
+    const breadcrumbItems = [
+      {
+        title: (
+          <Link to="/events">
+            <p style={style.titleNavigation}>All events</p>
+          </Link>
+        ),
+      },
+      { title: <p style={TextFontsize18LineHeight28}>{choice}</p> },
+    ];
+    
     return (
       <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container>
         {notificationStatus && event.active && (
@@ -412,7 +436,7 @@ const MainPageQuickGlance = () => {
           container
           marginTop={4}
         >
-          <Grid marginY={0} item xs={12} sm={12} md={8}>
+          <Grid marginY={0} item xs={12} sm={12} md={12} lg={12}>
             <Grid
               style={{
                 display: "flex",
@@ -421,8 +445,12 @@ const MainPageQuickGlance = () => {
               }}
               item
               xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <Link to="/events">
+              <Breadcrumb separator=">" items={breadcrumbItems} />
+              {/* <Link to="/events">
                 <p
                   style={{
                     textTransform: "none",
@@ -436,11 +464,11 @@ const MainPageQuickGlance = () => {
                 >
                   All events
                 </p>
-              </Link>
-              <p style={TextFontsize18LineHeight28}>
+              </Link> */}
+              {/* <p style={TextFontsize18LineHeight28}>
                 <Icon icon="mingcute:right-line" />
                 {choice}
-              </p>
+              </p> */}
             </Grid>
             <Grid
               style={{
