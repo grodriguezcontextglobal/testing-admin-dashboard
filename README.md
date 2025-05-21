@@ -1,5 +1,3 @@
-
-````markdown
 # Devitrak Admin Dashboard
 
 Welcome to the **Devitrak Admin Dashboard**, a responsive, role-based platform designed for internal management of inventory, events, consumer assignments, and staff operations. This dashboard is tailored for efficient oversight and streamlined control of logistics, devices, and organizational data across the Devitrak system.
@@ -87,5 +85,3 @@ This is a private project maintained by the Devitrak internal development team. 
 **Gustavo Rodriguez**
 Lead Developer – Devitrak Admin Portal
 [https://deepwiki.com/grodriguezcontextglobal](https://deepwiki.com/grodriguezcontextglobal)
-
-```
