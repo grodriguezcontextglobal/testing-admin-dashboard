@@ -288,8 +288,8 @@ const ItemTable = ({
 
   useEffect(() => {
     dataToDisplay();
-  }, [])
-  
+  }, []);
+
   const cellStyle = {
     display: "flex",
     justifyContent: "flex-start",
@@ -307,34 +307,32 @@ const ItemTable = ({
           ("" + a.category_name).localeCompare(b.category_name),
       },
       render: (category_name, record) => (
-        (
-          <span style={cellStyle}>
-            <Avatar
-              size={"80px"}
-              style={{ borderRadius: "8px", background: "transparent" }}
-            >
-              {record.image_url !== undefined ? (
-                <img
-                  src={record.image_url}
-                  alt={`${record.item}-${record.item_group}-${record.serial_number}`}
-                  style={{ width: "100%", height: "auto" }}
-                />
-              ) : (
-                <Avatar size={"80px"}>
-                  <GeneralDeviceIcon />
-                </Avatar>
-              )}
-            </Avatar>
-            {/*  */}
-            &nbsp;{" "}
-            <Typography
-              style={{ ...Subtitle, cellStyle }}
-              textTransform={"capitalize"}
-            >
-              {category_name}
-            </Typography>
-          </span>
-        )
+        <span style={cellStyle}>
+          <Avatar
+            size={"80px"}
+            style={{ borderRadius: "8px", background: "transparent" }}
+          >
+            {record.image_url !== undefined ? (
+              <img
+                src={record.image_url}
+                alt={`${record.item}-${record.item_group}-${record.serial_number}`}
+                style={{ width: "100%", height: "auto" }}
+              />
+            ) : (
+              <Avatar size={"80px"}>
+                <GeneralDeviceIcon />
+              </Avatar>
+            )}
+          </Avatar>
+          {/*  */}
+          &nbsp;{" "}
+          <Typography
+            style={{ ...Subtitle, cellStyle }}
+            textTransform={"capitalize"}
+          >
+            {category_name}
+          </Typography>
+        </span>
       ),
     },
     {
@@ -387,6 +385,10 @@ const ItemTable = ({
                       : "var(--success-700, #027A48)"
                   }`,
                   textTransform: "capitalize",
+                  width: "100%",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 <Icon
@@ -416,6 +418,10 @@ const ItemTable = ({
                 style={{
                   color: "#6941C6",
                   textTransform: "capitalize",
+                  width: "100%",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
@@ -456,7 +462,13 @@ const ItemTable = ({
                 ? "var(--blue-700, #175CD3)"
                 : "var(--success-700, #027A48)"
             }`}
-            style={Subtitle}
+            style={{
+              ...Subtitle,
+              width: "100%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
             textTransform={"capitalize"}
           >
             <Icon
@@ -491,8 +503,7 @@ const ItemTable = ({
       dataIndex: "location",
       key: "location",
       sorter: {
-        compare: (a, b) =>
-          ("" + a.location).localeCompare(b.location),
+        compare: (a, b) => ("" + a.location).localeCompare(b.location),
       },
       render: (location) => {
         let result = location;
@@ -502,15 +513,17 @@ const ItemTable = ({
         } else if (String(result).toLowerCase().split(" / ")?.length === 3) {
           const splittingName = String(result).split(" / ");
           result = splittingName[1];
-          // .slice(1, 2)
-          // .flat()
-          // .toLocaleString()
-          // .replaceAll(",", " ");
         }
         return (
           <span style={cellStyle}>
             <Typography
-              style={{ ...Subtitle, textOverflow: "ellipsis" }}
+              style={{
+                ...Subtitle,
+                width: "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
               textTransform={"capitalize"}
             >
               {result}
