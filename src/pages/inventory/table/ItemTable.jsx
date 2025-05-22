@@ -73,6 +73,18 @@ const ItemTable = ({
     enabled: !!user.sqlInfo.company_id,
   });
 
+  const refactoredListInventoryCompany = useQuery({
+    queryKey: ["RefactoredListInventoryCompany"],
+    queryFn: () =>
+      devitrakApi.post(
+        `/db_company/company-inventory-with-current-warehouse-status`,
+        {
+          company_id: user.sqlInfo.company_id,
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id,
+  });
+  // console.log(refactoredListInventoryCompany?.data?.data);
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
@@ -111,9 +123,51 @@ const ItemTable = ({
     [renderedListItems, itemsInInventoryQuery]
   );
 
+  const refactoredGetDataStructuringFormat = useCallback(() => {
+    const resultFormatToDisplay = [];
+    const data = refactoredListInventoryCompany?.data?.data?.items;
+    const groupingByImage = groupBy(data, "image_url");
+
+    const processItems = (items) => {
+      const groupingByItem = groupBy(items, "item_group");
+      for (let [key, value] of Object.entries(groupingByItem)) {
+        const imageSource = groupingByDeviceType[key]
+          ? groupingByDeviceType[key][0].source
+          : null;
+        for (let data of value) {
+          resultFormatToDisplay.push({
+            key: data.item,
+            item_id: data.item,
+            item_group: data.item_group,
+            category_name: data.category_name,
+            brand: data.brand,
+            ownership: data.ownership,
+            main_warehouse: data.main_warehouse,
+            warehouse: data.warehouse,
+            location: data.usage.length > 0 ? data.usage : data.location,
+            image_url: data.image_url || imageSource,
+            serial_number: data.serial_number,
+            enableAssignFeature: data.enableAssignFeature,
+            usage: data.usage,
+          });
+        }
+      }
+    };
+
+    if (groupingByImage[null]) {
+      processItems(groupingByImage[null]);
+    }
+    if (groupingByImage[""]) {
+      processItems(groupingByImage[""]);
+    }
+
+    return resultFormatToDisplay;
+  }, [refactoredListInventoryCompany, groupingByDeviceType]);
+
   useEffect(() => {
     getDataStructuringFormat(renderedListItems);
     loadingState(false); // ✅ State update happens inside useEffect, not render
+    refactoredGetDataStructuringFormat();
   }, [getDataStructuringFormat, loadingState]);
 
   const filterOptionsBasedOnProps = (props) => {
@@ -232,6 +286,10 @@ const ItemTable = ({
     itemsInInventoryQuery.data,
   ]);
 
+  useEffect(() => {
+    dataToDisplay();
+  }, [])
+  
   const cellStyle = {
     display: "flex",
     justifyContent: "flex-start",
@@ -241,43 +299,40 @@ const ItemTable = ({
   const columns = [
     {
       title: "Device category",
-      dataIndex: "data",
-      key: "data",
       responsive: ["lg"],
       sorter: {
         compare: (a, b) =>
-          ("" + a.data.item_group).localeCompare(b.data.item_group),
+          ("" + a.data.category_name).localeCompare(b.data.category_name),
       },
       render: (record) => (
-        <span style={cellStyle}>
-          <Avatar
-            size={"80px"}
-            style={{ borderRadius: "8px", background: "transparent" }}
-          >
-            {groupingByDeviceType[record.item_group] ? (
-              <img
-                src={
-                  record.image_url ??
-                  groupingByDeviceType[record.item_group][0].source
-                }
-                alt={`${record.item_group}-${record.serial_number}`}
-                style={{ width: "100%", height: "auto" }}
-              />
-            ) : (
-              <Avatar size={"80px"}>
-                <GeneralDeviceIcon />
-              </Avatar>
-            )}
-          </Avatar>
-          {/*  */}
-          &nbsp;{" "}
-          <Typography
-            style={{ ...Subtitle, cellStyle }}
-            textTransform={"capitalize"}
-          >
-            {record.category_name}
-          </Typography>
-        </span>
+        (
+          <span style={cellStyle}>
+            <Avatar
+              size={"80px"}
+              style={{ borderRadius: "8px", background: "transparent" }}
+            >
+              {record.image_url !== undefined ? (
+                <img
+                  src={record.image_url}
+                  alt={`${record.item}-${record.item_group}-${record.serial_number}`}
+                  style={{ width: "100%", height: "auto" }}
+                />
+              ) : (
+                <Avatar size={"80px"}>
+                  <GeneralDeviceIcon />
+                </Avatar>
+              )}
+            </Avatar>
+            {/*  */}
+            &nbsp;{" "}
+            <Typography
+              style={{ ...Subtitle, cellStyle }}
+              textTransform={"capitalize"}
+            >
+              {record.category_name}
+            </Typography>
+          </span>
+        )
       ),
     },
     {
@@ -304,7 +359,7 @@ const ItemTable = ({
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
       render: (warehouse, record) => {
-        if (record.data.enableAssignFeature === 1) {
+        if (record.enableAssignFeature === 1) {
           return (
             <span
               style={{
@@ -414,31 +469,31 @@ const ItemTable = ({
     },
     {
       title: "Taxable address",
-      dataIndex: "data",
-      key: "data",
+      dataIndex: "main_warehouse",
+      key: "main_warehouse",
       sorter: {
         compare: (a, b) =>
           ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
       },
-      render: (data) => (
+      render: (main_warehouse) => (
         <span style={cellStyle}>
           {" "}
           <Typography style={Subtitle} textTransform={"capitalize"}>
-            {data.main_warehouse}
+            {main_warehouse}
           </Typography>
         </span>
       ),
     },
     {
       title: "Location",
-      dataIndex: "data",
-      key: "data",
+      dataIndex: "location",
+      key: "location",
       sorter: {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
       },
-      render: (data) => {
-        let result = data.event_name;
+      render: (location) => {
+        let result = location;
         if (String(result).toLowerCase().includes("leased equipment")) {
           const splittingName = String(result).split(" / ");
           result = splittingName.slice(1).toLocaleString().replaceAll(",", " ");
@@ -456,7 +511,7 @@ const ItemTable = ({
               style={{ ...Subtitle, textOverflow: "ellipsis" }}
               textTransform={"capitalize"}
             >
-              {data.warehouse > 0 ? data.location : result}
+              {result}
             </Typography>
           </span>
         );
@@ -478,17 +533,17 @@ const ItemTable = ({
     },
     {
       title: "",
-      dataIndex: "data",
-      key: "data",
+      dataIndex: "item_id",
+      key: "item_id",
       responsive: ["lg"],
-      render: (record) => (
+      render: (item_id) => (
         <button
           style={{
             ...cellStyle,
             backgroundColor: "transparent",
             border: "none",
           }}
-          onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
+          onClick={() => navigate(`/inventory/item?id=${item_id}`)}
         >
           <RightNarrowInCircle />
         </button>
@@ -528,7 +583,6 @@ const ItemTable = ({
           sx={{
             display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
           }}
-
           item
           xs={12}
           sm={12}
@@ -581,9 +635,7 @@ const ItemTable = ({
               </div>
             </div>
             <Divider />
-            <Grid
-              container
-            >
+            <Grid container>
               <Grid
                 border={"1px solid var(--gray-200, #eaecf0)"}
                 borderRadius={"12px 12px 0 0"}
@@ -629,7 +681,7 @@ const ItemTable = ({
                 }}
                 style={{ width: "100%" }}
                 columns={columns}
-                dataSource={dataToDisplay()}
+                dataSource={refactoredGetDataStructuringFormat()}
                 className="table-ant-customized"
               />
               <Divider />
