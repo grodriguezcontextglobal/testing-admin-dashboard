@@ -299,12 +299,14 @@ const ItemTable = ({
   const columns = [
     {
       title: "Device category",
+      dataIndex: "category_name",
+      key: "category_name",
       responsive: ["lg"],
       sorter: {
         compare: (a, b) =>
-          ("" + a.data.category_name).localeCompare(b.data.category_name),
+          ("" + a.category_name).localeCompare(b.category_name),
       },
-      render: (record) => (
+      render: (category_name, record) => (
         (
           <span style={cellStyle}>
             <Avatar
@@ -329,7 +331,7 @@ const ItemTable = ({
               style={{ ...Subtitle, cellStyle }}
               textTransform={"capitalize"}
             >
-              {record.category_name}
+              {category_name}
             </Typography>
           </span>
         )
@@ -473,7 +475,7 @@ const ItemTable = ({
       key: "main_warehouse",
       sorter: {
         compare: (a, b) =>
-          ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
+          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
       },
       render: (main_warehouse) => (
         <span style={cellStyle}>
@@ -490,7 +492,7 @@ const ItemTable = ({
       key: "location",
       sorter: {
         compare: (a, b) =>
-          ("" + a.data.location).localeCompare(b.data.location),
+          ("" + a.location).localeCompare(b.location),
       },
       render: (location) => {
         let result = location;
