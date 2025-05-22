@@ -12,7 +12,27 @@ import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryDat
 import AdvanceSearchModal from "./AdvanceSearchModal";
 // import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
+import { useQuery } from "@tanstack/react-query";
+import { devitrakApi } from "../../../../api/devitrakApi";
 export const AdvanceSearchContext = createContext();
+function extractDataForRendering(structuredData) {
+  const keys = ["category_name", "item_group", "brand", "ownership"];
+  const extractedData = {};
+
+  keys.forEach((key) => {
+    if (structuredData[key]) {
+      extractedData[key] = Object.entries(structuredData[key]).map(
+        ([subKey, values]) => ({
+          key: subKey,
+          value: values.total,
+          totalAvailable: values.totalAvailable,
+        })
+      );
+    }
+  });
+
+  return extractedData;
+}
 
 const RenderingFilters = ({
   user,
@@ -27,6 +47,14 @@ const RenderingFilters = ({
     Sale: "For sale",
   };
 
+  const structuredCompanyInventory = useQuery({
+    queryKey: ["structuredCompanyInventory"],
+    queryFn: () =>
+      devitrakApi.post(`/db_company/company-inventory-structure`, {
+        company_id: user.sqlInfo.company_id,
+      }),
+    enabled: !!user.sqlInfo.company_id,
+  });
   const sortingByParameters = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
@@ -54,11 +82,7 @@ const RenderingFilters = ({
     if (result[1]) {
       const resultAssignable = groupBy(result[1], "data.warehouse");
       if (resultAssignable[1]) {
-        const assignableOnes = groupBy(resultAssignable[1], "data.enableAssignFeature");
-        if (assignableOnes[1]) {
-          return assignableOnes[1]?.length;
-        }
-        return 0;
+        return resultAssignable[1].length;
       }
       return 0;
     }
@@ -108,7 +132,6 @@ const RenderingFilters = ({
     return organizeInventoryBySubLocation(result);
   };
 
-
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
@@ -121,6 +144,10 @@ const RenderingFilters = ({
     return result;
   };
 
+  const extractedData = extractDataForRendering(
+    structuredCompanyInventory?.data?.data?.groupedData || {}
+  );
+  
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -143,8 +170,8 @@ const RenderingFilters = ({
     {
       key: "category_name",
       title: "Category",
-      data: sortingByParameters("category_name"),
-      totalUnits: sortingByParameters("category_name").length ?? 0,
+      data: extractedData.category_name || [],
+      totalUnits:extractedData.category_name?.length || 0,
       open: true,
       routeTitle: "category_name",
       renderMoreOptions: false,
@@ -161,8 +188,8 @@ const RenderingFilters = ({
     {
       key: "item_group",
       title: "Groups",
-      data: sortingByParameters("item_group"),
-      totalUnits: sortingByParameters("item_group").length ?? 0,
+      data: extractedData.item_group || [],
+      totalUnits:extractedData.item_group?.length || 0,
       open: true,
       routeTitle: "group",
       renderMoreOptions: false,
@@ -179,8 +206,8 @@ const RenderingFilters = ({
     {
       key: "brand",
       title: "Brands",
-      data: sortingByParameters("brand"),
-      totalUnits: sortingByParameters("brand").length ?? 0,
+      data: extractedData.brand || [],
+      totalUnits:extractedData.brand?.length || 0,
       open: true,
       routeTitle: "brand",
       renderMoreOptions: false,
@@ -197,8 +224,8 @@ const RenderingFilters = ({
     {
       key: "ownership",
       title: "Ownership",
-      data: sortingByParameters("ownership"),
-      totalUnits: sortingByParameters("ownership").length ?? 0,
+      data: extractedData.ownership || [],
+      totalUnits:extractedData.ownership?.length || 0,
       open: true,
       routeTitle: "ownership",
       renderMoreOptions: false,
@@ -290,7 +317,8 @@ const RenderingFilters = ({
                   }}
                 >
                   {/* {item.open ? <UpNarrowIcon /> : <DownNarrow />} */}
-                  <DownNarrow />&nbsp;
+                  <DownNarrow />
+                  &nbsp;
                   {item.title}&nbsp;{" "}
                   <span
                     style={{
