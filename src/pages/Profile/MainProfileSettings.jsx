@@ -78,7 +78,11 @@ const MainProfileSettings = () => {
       route: "stripe_connected_account",
       permission: [0],
     },
-
+    {
+      label: "Documents",
+      route: "documents",
+      permission: [0, 1], // Allowing access for admin and managers
+    }
   ];
   return (
     <Grid
