@@ -42,6 +42,7 @@ const ItemTable = ({
   setDataFilterOptions,
   chosen,
   downloadDataReport,
+  total,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -643,7 +644,7 @@ const ItemTable = ({
                       textAlign: "left",
                     }}
                   >
-                    | Total <strong>{dataToDisplay()?.length}</strong> units
+                    | Total <strong>{total}</strong> units
                   </span>{" "}
                   &nbsp;{" "}
                 </p>
@@ -703,7 +704,7 @@ const ItemTable = ({
             </Grid>
           </div>
         </Grid>
-        {dataToDisplay()?.length === 0 &&
+        {total === 0 &&
           (!searchItem || searchItem === "") && (
             <BannerMsg
               props={{
