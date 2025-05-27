@@ -79,15 +79,16 @@ export const CreateNewConsumer = ({
     const controller = new AbortController();
     if (location.pathname === "/events/event-quickglance") {
       const eventInfo = listOfAvailableEventsPerAdmin.find(
-        (item) =>
-          item.eventInfoDetail.eventName === event.eventInfoDetail.eventName
+        (item) => item.eventInfoDetail.eventName === event?.eventInfoDetail?.eventName
       );
       setEventAssignedTo(JSON.stringify(eventInfo));
+    } else if (location.pathname === "/consumers") {
+      setEventAssignedTo("");
     }
     return () => {
       controller.abort();
     };
-  }, [location.key, location.pathname, event.eventInfoDetail.eventName]);
+  }, [location.key, location.pathname, event?.eventInfoDetail?.eventName]);
 
   const queryClient = useQueryClient();
 
@@ -457,12 +458,9 @@ export const CreateNewConsumer = ({
                       type="text"
                       style={{
                         ...OutlinedInputStyle,
-                        display:
-                          location.pathname === "/events/event-quickglance"
-                            ? "flex"
-                            : "none",
+                        display: location.pathname === "/events/event-quickglance" ? "flex" : "none",
                       }}
-                      defaultValue={event.eventInfoDetail.eventName}
+                      defaultValue={location.pathname === "/events/event-quickglance" ? event.eventInfoDetail.eventName : ""}
                       fullWidth
                     />
                   </div>
