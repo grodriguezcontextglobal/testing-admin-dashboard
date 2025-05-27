@@ -11,6 +11,8 @@ import NewPost from "../../pages/posts/action/NewPost";
 import EditPost from "../../pages/posts/action/EditPost";
 import DisplayArticle from "../../pages/posts/components/DisplayArticle";
 import HeaderComponent from "../../components/general/HeaderComponent";
+import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
+import EditDocument from "../../pages/Profile/Documents/EditDocument";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -177,6 +179,8 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
 );
 
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
+const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
+
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -351,6 +355,9 @@ const AuthRoutes = () => {
                   path="stripe_connected_account"
                   element={<Dashboard />}
                 />
+                <Route path="documents" element={<Documents />} />
+                <Route path="documents/view/:id" element={<ViewDocument />} />
+                <Route path="/profile/documents/edit/:id" element={<EditDocument />} />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route
