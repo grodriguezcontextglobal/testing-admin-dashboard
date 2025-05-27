@@ -7,52 +7,32 @@ const RenderingMoreThanTreeviewElements = ({
   searchItem,
 }) => {
   const elemId = item.key;
-  const renderingGridValue = () => {
-    if (item.data.length > 2) {
-      return 4;
-    } else if (item.data.length > 1) {
-      return 6;
-    } else {
-      return 12;
-    }
-  };
+  const r = () => item.data; //ensureThreeItems(item.data);
   return (
     <Grid
-      spacing={1}
       container
-      direction="row"
-      justifyContent="flex-start"
-      alignItems="flex-start"
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "flex-start",
+        alignContent: "flex-start",
+        gap: "10px",
+      }}
     >
-      {item.data.map((opt) => {
+      {r().map((opt) => {
         return (
-          <Grid
+          <CardLocations
             key={`${elemId}-${opt?.key}`}
-            item
-            xs={12}
-            sm={12}
-            md={renderingGridValue()}
-            lg={renderingGridValue()}
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              width: 'fit-content'
-            }}
-          >
-            <CardLocations
-              key={`${elemId}-${opt?.key}`}
-              id={`card-${elemId}-`}
-              navigate={`/inventory/${String(
-                item.routeTitle
-              ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
-                searchItem && searchItem
-              }`}
-              title={dictionary[opt?.key] ?? opt?.key}
-              props={`${opt?.value} total devices`}
-              optional={null}
-            />
-          </Grid>
+            id={`card-${elemId}-`}
+            navigate={`/inventory/${String(
+              item.routeTitle
+            ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
+              searchItem && searchItem
+            }`}
+            title={dictionary[opt?.key] ?? opt?.key}
+            props={`${opt?.value} total devices`}
+            optional={null}
+          />
         );
       })}
     </Grid>
@@ -60,11 +40,3 @@ const RenderingMoreThanTreeviewElements = ({
 };
 
 export default RenderingMoreThanTreeviewElements;
-
-// <Space
-//   align="start"
-//   styles={{ margin: 0, padding: 0, justifyContent: "flex-start" }}
-//   wrap
-// >
-// <Space.Compact block={true} key={`${elemId}-${opt?.key}`}>
-// </Space>
