@@ -268,8 +268,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     window !== undefined ? () => window().document.body : undefined;
 
   const renderOtherWidth = () => {
-    if (isMediumDevice) return "100vw";
-    if (isLargeDevice) return "100vw";
+    if (isMediumDevice) return "99.5vw";
+    if (isLargeDevice) return "99.5vw";
     return "1228px";
   };
 
@@ -301,7 +301,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           ...CenteringGrid,
           justifyContent: "space-between",
           backgroundColor: "var(--blue700)",
-          width: `${isSmallDevice ? "100vw" : renderOtherWidth()}`,
+          width: isSmallDevice ? "100vw" : renderOtherWidth(),
         }}
       >
         <Grid
@@ -317,7 +317,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             alignItems:"center",
           }}
           item
-          xs={2}
+          xs={12}
           sm={2}
           md={8}
           lg={8}
