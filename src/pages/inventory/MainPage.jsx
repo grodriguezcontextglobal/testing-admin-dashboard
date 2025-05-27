@@ -71,7 +71,6 @@ const MainPage = () => {
   useEffect(() => {
     if (companyHasInventoryQuery.isSuccess) {
       const total = companyHasInventoryQuery?.data?.data?.total;
-      console.log(total);
       setCurrentTab(total > 0 ? 1 : 2);
       setIsLoadingState(true)
       setIsLoadingState(false);
@@ -92,6 +91,7 @@ const MainPage = () => {
         chosen={chosenOption}
         setDataFilterOptions={setDataFilterOptions}
         downloadDataReport={setDownloadDataReport}
+        total={companyHasInventoryQuery?.data?.data?.total ?? 0}
       />
     ),
     2: (
