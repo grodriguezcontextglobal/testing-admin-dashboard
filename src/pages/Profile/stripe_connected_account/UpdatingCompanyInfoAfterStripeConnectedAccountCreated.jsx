@@ -22,7 +22,6 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
     if (companyDataQuery.data) {
       const triggerRedirection = async () => {
         const companyInfo = checkArray(companyDataQuery?.data?.data?.company)
-        console.log(companyInfo)
         dispatch(
           onLogin({
             ...user,
