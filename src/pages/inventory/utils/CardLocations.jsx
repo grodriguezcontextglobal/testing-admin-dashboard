@@ -16,8 +16,8 @@ const CardLocations = ({ props, title, optional, navigate = null }) => {
     <Card
       style={{
         maxWidth: "max-content",
-        width: "100%",
-        minWidth: "351px",
+        // width: "100%",
+        minWidth: "360px",
         borderRadius: "12px",
         border: "1px solid var(--gray-200, #EAECF0)",
         background: "var(--base-white, #FFF)",
