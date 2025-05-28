@@ -5,8 +5,7 @@ import {
   Form,
   Input,
   message,
-  Select,
-  Switch
+  Select
 } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -34,6 +33,7 @@ const DocumentUpload = ({activeTab, refetch}) => {
     formDataToSend.append("company_id", user.companyData.id);
     formDataToSend.append("created_by", user.uid);
     formDataToSend.append("at_", new Date().toISOString());
+    formDataToSend.append("requires_signature", false);
 
     // Append all form fields
     Object.keys(values).forEach((key) => {
@@ -48,9 +48,11 @@ const DocumentUpload = ({activeTab, refetch}) => {
         formDataToSend.append(key, JSON.stringify(values[key] || []));
       } else if (key === "expiration_date") {
         formDataToSend.append(key, values[key]?.toISOString());
-      } else if (key === "requires_signature") {
-        formDataToSend.append(key, String(values[key]));
-      } else {
+      } 
+      // else if (key === "requires_signature") {
+      //   formDataToSend.append(key, String(values[key]));
+      // } 
+      else {
         formDataToSend.append(key, values[key]);
       }
     });
@@ -156,7 +158,7 @@ const DocumentUpload = ({activeTab, refetch}) => {
             </Form.Item>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Form.Item
               label="Requires Signature"
               name="requires_signature"
@@ -165,7 +167,7 @@ const DocumentUpload = ({activeTab, refetch}) => {
             >
               <Switch />
             </Form.Item>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12}>
             <Form.Item>
