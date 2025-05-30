@@ -1,6 +1,6 @@
+import { DeleteOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Grid, MenuItem, Select, Typography } from "@mui/material";
-import { useState } from "react";
-import { useAdminStore } from "../../../hooks/useAdminStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Avatar,
   Card,
@@ -9,8 +9,8 @@ import {
   Skeleton,
   notification,
 } from "antd";
-import { EditOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useAdminStore } from "../../../hooks/useAdminStore";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { Meta } = Card;
@@ -73,10 +73,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
             onClick={handleEditAdminPermission}
             size={50}
             disabled={
-              // adminUserRole === "Approver" || adminUserRole === "Administrator"
               adminUserRole === "Approver" || adminUserRole === "Administrator"
-                ? false
-                : true
             }
             key="edit"
           />,
