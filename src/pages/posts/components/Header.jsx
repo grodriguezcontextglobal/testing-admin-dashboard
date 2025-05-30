@@ -8,7 +8,6 @@ import TrashIcon from "../../../components/icons/trash-01.svg";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
@@ -42,96 +41,108 @@ const Header = () => {
   };
 
   return (
-    <Grid container>
+    <Grid container spacing={2}>
       <Grid
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-start",
           alignItems: "center",
         }}
         item
         xs={12}
-        sm={12}
-        md={12}
-        lg={12}
+        sm={6}
+        md={6}
+        lg={6}
       >
         <h1 style={{ ...titleStyle, textAlign: "left", width: "50%" }}>
           {location.pathname.includes("/posts/post") ? "Post" : "Posts"}
         </h1>
-        <div
+      </Grid>
+      <Grid
+        sx={{
+          justifyContent: {
+            xs: "flex-start",
+            sm: "flex-end",
+            md: "flex-end",
+            lg: "flex-end",
+          },
+          gap: "10px",
+          display: "flex",
+          alignItems: "center",
+          flexDirection:{
+            xs: "column",
+            sm: "row",
+            md: "row",
+            lg: "row",
+          },
+        }}
+        item
+        xs={12}
+        sm={6}
+        md={6}
+        lg={6}
+      >
+        <Button
+          onClick={() => navigate(`/posts`)}
           style={{
-            ...CenteringGrid,
-            justifyContent: "flex-end",
-            gap: "10px",
-            width: "50%",
+            ...BlueButton,
+            display: location.pathname.includes("/posts/post")
+              ? "flex"
+              : "none",
           }}
         >
+          <p style={BlueButtonText}>
+            <img src={ReturnIcon} alt="return" width="20px" height="20px" />{" "}
+            Back
+          </p>
+        </Button>
+        <Button
+          onClick={() =>
+            navigate(`/posts/post-edit/${location.state.id}`, {
+              state: { id: location.state.id },
+            })
+          }
+          style={{
+            ...GrayButton,
+            display: location.pathname.includes("/posts/post")
+              ? "flex"
+              : "none",
+          }}
+        >
+          <p style={GrayButtonText}>
+            <img src={Edit} alt="edit" width="20px" height="20px" />{" "}
+            Edit this article
+          </p>
+        </Button>
+        <Popconfirm
+          title="Are you sure to delete this article?"
+          onConfirm={handleDeleteArticle}
+        >
           <Button
-            onClick={() => navigate(`/posts`)}
-            style={{
-              ...BlueButton,
-              display: location.pathname.includes("/posts/post")
-                ? "flex"
-                : "none",
-            }}
-          >
-            <p style={BlueButtonText}>
-              <img src={ReturnIcon} alt="return" width="20px" height="20px" />
-              &nbsp;Back
-            </p>
-          </Button>
-          <Button
-            onClick={() =>
-              navigate(`/posts/post-edit/${location.state.id}`, {
-                state: { id: location.state.id },
-              })
-            }
             style={{
               ...GrayButton,
               display: location.pathname.includes("/posts/post")
                 ? "flex"
                 : "none",
+              border: DangerButton.border,
             }}
           >
-            <p style={GrayButtonText}>
-              <img src={Edit} alt="edit" width="20px" height="20px" />
-              &nbsp;Edit this article
-            </p>
-          </Button>
-          <Popconfirm
-            title="Are you sure to delete this article?"
-            onConfirm={handleDeleteArticle}
-          >
-            <Button
+            <p
               style={{
-                ...GrayButton,
-                display: location.pathname.includes("/posts/post")
-                  ? "flex"
-                  : "none",
-                border: DangerButton.border,
+                ...GrayButtonText,
+                color: DangerButton.backgroundColor,
               }}
             >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  color: DangerButton.backgroundColor,
-                }}
-              >
-                <img src={TrashIcon} alt="trash" width="20px" height="20px" />
-                &nbsp; Delete this article
-              </p>
-            </Button>
-          </Popconfirm>
-          <Button
-            onClick={() => navigate("/posts/new-post")}
-            style={BlueButton}
-          >
-            <p style={BlueButtonText}>
-              <WhiteCirclePlusIcon />
-              &nbsp;Add new post
+              <img src={TrashIcon} alt="trash" width="20px" height="20px" />{" "}Delete this article
             </p>
           </Button>
-        </div>
+        </Popconfirm>
+        <Button onClick={() => navigate("/posts/new-post")} style={BlueButton}>
+          <p style={BlueButtonText}>
+            <WhiteCirclePlusIcon />
+            &nbsp;Add new post
+          </p>
+        </Button>
       </Grid>
     </Grid>
   );
