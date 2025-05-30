@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Divider } from "antd";
+import { Avatar, Breadcrumb, Button, Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -28,7 +28,7 @@ const HeaderStaffDetail = () => {
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
-        type:'event',
+        type: "event",
         active: true,
       }),
     // enabled: false,
@@ -56,7 +56,7 @@ const HeaderStaffDetail = () => {
         for (let item of data) {
           const staffMembers = [
             ...item.staff.adminUser,
-            ...item.staff.headsetAttendees ?? [],
+            ...(item.staff.headsetAttendees ?? []),
           ];
           if (staffMembers.some((element) => element.email === profile.email)) {
             findingEvent.add({
@@ -69,325 +69,399 @@ const HeaderStaffDetail = () => {
       const sortedResultValue = Array.from(findingEvent);
       return sortedResultValue.sort((a, b) => a.startingDate - b.startingDate);
     };
+
+    const breadcrumbItems = [
+      {
+        title: (
+          <Link to="/staff">
+            <button
+              style={{
+                backgroundColor: "transparent",
+                outline: "none",
+                margin: 0,
+                padding: 0,
+              }}
+              onClick={() => dispatch(onResetStaffProfile())}
+            >
+              {" "}
+              <p
+                style={{
+                  ...TextFontsize18LineHeight28,
+                  textAlign: "left",
+                  color: "var(--blue-dark-600)",
+                }}
+              >
+                All staff
+              </p>
+            </button>
+          </Link>
+        ),
+      },
+      {
+        title: (
+          <p
+            style={{
+              ...TextFontsize18LineHeight28,
+              textAlign: "left",
+              color: "var(--gray-900)",
+            }}
+          >
+            {profile.firstName}, {profile?.lastName}
+          </p>
+        ),
+      },
+    ];
+
+    const styleGrid = {
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: {
+        xs: "center",
+        sm: "center",
+        md: "flex-start",
+        lg: "flex-start",
+      },
+      alignItems: "flex-start",
+    };
+    const renderingOptions = (id) => {
+      switch (id) {
+        case 0:
+          return {
+            ...TextFontsize18LineHeight28,
+            textAlign: "left",
+            textTransform: "capitalize",
+            width: "100%",
+          };
+        case 1:
+          return {
+            ...TextFontSize30LineHeight38,
+            textAlign: "left",
+            textTransform: "capitalize",
+            width: "100%",
+          };
+        case 2:
+          return {
+            ...TextFontsize18LineHeight28,
+            textTransform: "capitalize",
+            color: "var(--gray-900)",
+            textAlign: "left",
+            fontWeight: 400,
+            width: "100%",
+          };
+        default:
+          return null;
+      }
+    };
+
     return (
       <>
         <Grid
           style={{
-            padding: "5px",
             display: "flex",
-            flexDirection: "row",
-            justifyContent: "center",
+            justifyContent: "space-between",
             alignItems: "center",
           }}
           container
         >
-          <Grid
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-          >
-            <Grid item xs={6}>
-              <Typography
-                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-              >
-                Staff
-              </Typography>
-            </Grid>
-            <Grid
-              textAlign={"right"}
-              display={Number(user.role) < 2 ? "flex" : "none"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-              gap={1}
-              item
-              xs={6}
+          <Grid item xs={12} sm={12} md={6} lg={6}>
+            <Typography
+              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
             >
-              {" "}
-              <button style={BlueButton} onClick={() => setModalState(true)}>
-                <WhitePlusIcon />
-                <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                  Add new staff
-                </p>
-              </button>
-            </Grid>
+              Staff
+            </Typography>
           </Grid>
           <Grid
-            style={{
-              paddingTop: "0px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+            sx={{
+              justifyContent: {
+                xs: "flex-start",
+                sm: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
+              },
             }}
-            container
-          >
-            <Grid marginY={0} item xs={8}>
-              <Grid
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Link to="/staff">
-                  <button
-                    style={{
-                      backgroundColor: "transparent",
-                      outline: "none",
-                      margin: 0,
-                      padding: 0,
-                    }}
-                    onClick={() => dispatch(onResetStaffProfile())}
-                  >
-                    {" "}
-                    <p
-                      style={{
-                        ...TextFontsize18LineHeight28,
-                        textAlign: "left",
-                        color: "var(--blue-dark-600)",
-                      }}
-                    >
-                      All staff
-                    </p>
-                  </button>
-                </Link>
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    textAlign: "left",
-                    color: "var(--gray-900)",
-                  }}
-                >
-                  <Icon icon="mingcute:right-line" />
-                  {profile.firstName}, {profile?.lastName}
-                </p>
-              </Grid>
-            </Grid>
-            <Grid textAlign={"right"} item xs={4}></Grid>
-          </Grid>
-          <Divider />
-          <Grid
-            display={"flex"}
-            justifyContent={"left"}
-            textAlign={"left"}
+            display={Number(user.role) < 2 ? "flex" : "none"}
             alignItems={"center"}
-            height={"10rem"}
+            gap={1}
             item
             xs={12}
             sm={12}
-            md={12}
-            lg={12}
+            md={6}
+            lg={6}
+          >
+            {" "}
+            <Button style={BlueButton} onClick={() => setModalState(true)}>
+              <p style={{ ...BlueButtonText, textTransform: "none" }}>
+                <WhitePlusIcon /> Add new staff
+              </p>
+            </Button>
+          </Grid>
+          <Breadcrumb path={breadcrumbItems} />
+          <Divider />
+          <Grid
+            sx={{
+              display: "flex",
+              flexDirection: {
+                xs: "column",
+                sm: "column",
+                md: "row",
+                lg: "row",
+              },
+            }}
+            alignSelf={"flex-start"}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={4}
           >
             <Grid
-              display={"flex"}
-              justifyContent={"space-around"}
-              alignItems={"center"}
-              alignSelf={"flex-start"}
-              container
-            >
-              <Grid item xs={12} sm={12} md={3} lg={3}>
-                <Avatar
-                  src={profile?.adminUserInfo?.imageProfile}
-                  style={{ width: "5rem", height: "5rem" }}
-                >
-                  {!profile.adminUserInfo.imageProfile &&
-                    `${profile?.firstName[0]} ${profile?.lastName[0]}`}
-                </Avatar>
-              </Grid>
-              <Grid item xs={12} sm={12} md={9} lg={9}>
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    textAlign: "left",
-                    color: "var(--gray-900)",
-                    width: "100%",
-                  }}
-                >
-                  Name
-                </p>
-                <p
-                  style={{
-                    ...TextFontSize30LineHeight38,
-                    textAlign: "left",
-                    width: "100%",
-                    paddingTop: "8px",
-                  }}
-                >
-                  {profile?.firstName} {profile?.lastName}
-                </p>
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    textAlign: "left",
-                    color: "var(--gray-900)",
-                    width: "100%",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {dicRole[profile?.role]}
-                </p>
-              </Grid>
-            </Grid>
-            <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"flex-start"}
-              textAlign={"center"}
-              alignSelf={"flex-start"}
-              alignItems={"center"}
+              sx={{
+                ...styleGrid,
+                flexDirection: "row",
+              }}
               item
               xs={12}
+              sm={12}
+              md={3}
+              lg={3}
             >
-              <p
-                style={{
-                  ...TextFontsize18LineHeight28,
-                  textAlign: "left",
-                  color: "var(--gray-900)",
-                  width: "100%",
-                }}
+              {" "}
+              <Avatar
+                src={profile?.adminUserInfo?.imageProfile}
+                style={{ width: "5rem", height: "5rem" }}
               >
-                Contact
-              </p>
-              <p
-                style={{
-                  ...TextFontSize30LineHeight38,
-                  width: "100%",
-                  textAlign: "left",
-                  paddingTop: "8px",
-                }}
-              >
-                {profile.adminUserInfo.phone
-                  ? profile.adminUserInfo.phone
-                  : "+1-000-000-0000"}
-              </p>
-              <p
-                style={{
-                  ...TextFontsize18LineHeight28,
-                  textAlign: "left",
-                  color: "var(--gray-900)",
-                  width: "100%",
-                  textTransform: "none",
-                }}
-              >
-                {profile?.email}
-              </p>
+                {!profile.adminUserInfo.imageProfile &&
+                  `${profile?.firstName[0]} ${profile?.lastName[0]}`}
+              </Avatar>
             </Grid>
-            <Grid
-              container
-              justifyContent="flex-end"
-              alignItems="flex-start"
-              alignSelf={"start"}
+            <Grid sx={styleGrid} item xs={12} sm={12} md={9} lg={9}>
+              {[
+                { title: "name", id: 0 },
+                { title: `${profile?.firstName} ${profile?.lastName}`, id: 1 },
+                { title: dicRole[profile?.role], id: 2 },
+              ].map((item) => (
+                <Typography
+                  key={item.id}
+                  sx={{
+                    ...renderingOptions(item.id),
+                    textAlign: {
+                      xs: "center",
+                      sm: "center",
+                      md: "left",
+                      lg: "left",
+                    },
+                    width: "100%",
+                    margin: item.id === 2 ? "0 auto 20px" : "auto",
+                  }}
+                >
+                  {item.title}
+                </Typography>
+              ))}
+            </Grid>
+          </Grid>
+          <Grid
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: {
+                xs: "center",
+                sm: "center",
+                md: "flex-start",
+                lg: "flex-start",
+              },
+              alignSelf: "flex-start",
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={4}
+          >
+            <Typography
+              sx={{
+                ...TextFontsize18LineHeight28,
+                textAlign: {
+                  xs: "center",
+                  sm: "center",
+                  md: "left",
+                  lg: "left",
+                },
+                color: "var(--gray-900)",
+                width: "100%",
+              }}
             >
+              Contact
+            </Typography>
+            <Typography
+              sx={{
+                ...TextFontSize30LineHeight38,
+                width: "100%",
+                textAlign: {
+                  xs: "center",
+                  sm: "center",
+                  md: "left",
+                  lg: "left",
+                },
+                paddingTop: "8px",
+              }}
+            >
+              {profile.adminUserInfo.phone
+                ? profile.adminUserInfo.phone
+                : "+1-000-000-0000"}
+            </Typography>
+            <Typography
+              sx={{
+                ...TextFontsize18LineHeight28,
+                textAlign: {
+                  xs: "center",
+                  sm: "center",
+                  md: "left",
+                  lg: "left",
+                },
+                color: "var(--gray-900)",
+                width: "100%",
+                textTransform: "none",
+              }}
+            >
+              {profile?.email}
+            </Typography>
+          </Grid>
+          <Grid
+            sx={{
+              ...styleGrid,
+              justifyContent: {
+                xs: "center",
+                sm: "center",
+                md: "flex-end",
+                lg: "flex-end",
+              },
+              alignSelf: "flex-start",
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={3}
+            lg={3}
+          >
+            <Grid container>
               <Grid
-                display={"flex"}
-                justifyContent="flex-end"
-                alignItems="flex-start"
-                flexDirection={"column"}
-                gap={1}
+                sx={{
+                  display: "flex",
+                  justifyContent: {
+                    xs: "center",
+                    sm: "center",
+                    md: "flex-end",
+                    lg: "flex-end",
+                  },
+                  alignItems: "flex-start",
+                  width: "100%",
+                }}
                 item
                 xs={12}
+                sm={12}
+                md={12}
+                lg={12}
               >
-                <div
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  {Number(user.role) < 2 && (
-                    <button
-                      style={{ background: "transparent", cursor: "default" }}
-                    >
-                      <p
-                        style={{
-                          ...BlueButtonText,
-                          fontWeight: 400,
-                          width: "fit-content",
-                          margin: "auto",
-                          display: "flex",
-                          justifyContent: "flex-start",
-                          alignItems: "center",
-                          borderRadius: "12px",
-                          padding: "1px 5px",
-                          backgroundColor: `${
-                            !profile.status
-                              ? "var(--blue-50, #EFF8FF)"
-                              : "var(--success-50, #ECFDF3)"
-                          }`,
-                          color: `${
-                            !profile.status
-                              ? "var(--blue-700, #175CD3)"
-                              : "var(--success-700, #027A48)"
-                          }`,
-                          textTransform: "none",
-                        }}
-                      >
-                        {profile.status ? (
-                          <PointFilled style={{ color: "#12b76a" }} />
-                        ) : (
-                          <PointFilled style={{ color: "#D0D5DD" }} />
-                        )}
-                        {profile.status ? "Active" : "Inactive"}
-                      </p>
-                    </button>
-                  )}
-                </div>
-                <div
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      borderRadius: "16px",
-                      justifyContent: "flex-start",
-                      display: "flex",
-                      padding: "2px 8px",
-                      alignItems: "center",
-                      mixBlendMode: "multiply",
-                      background: "var(--orange-dark-50, #FFF4ED)",
-                      width: "fit-content",
-                      marginBottom: "5px",
-                    }}
+                {Number(user.role) < 2 && (
+                  <button
+                    style={{ background: "transparent", cursor: "default" }}
                   >
                     <p
                       style={{
-                        fontSize: "12px",
-                        fontFamily: "Inter",
-                        fontStyle: "normal",
-                        fontWeight: 500,
-                        lineHeight: "18px",
-                        textAlign: "left",
-                        textTransform: "capitalize",
-                        color: `${
-                          filterActiveEventsPerStaffMember().length > 0
-                            ? "var(--primary-700, #6941C6)"
-                            : "var(--orange-700, #B93815)"
+                        ...BlueButtonText,
+                        fontWeight: 400,
+                        width: "fit-content",
+                        margin: "auto",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        borderRadius: "12px",
+                        padding: "1px 5px",
+                        backgroundColor: `${
+                          !profile.status
+                            ? "var(--blue-50, #EFF8FF)"
+                            : "var(--success-50, #ECFDF3)"
                         }`,
+                        color: `${
+                          !profile.status
+                            ? "var(--blue-700, #175CD3)"
+                            : "var(--success-700, #027A48)"
+                        }`,
+                        textTransform: "none",
                       }}
                     >
-                      <Icon
-                        icon="tabler:point-filled"
-                        rotate={3}
-                        color={
-                          filterActiveEventsPerStaffMember().length > 0
-                            ? "var(--primary-700, #6941C6)"
-                            : "#EF6820"
-                        }
-                      />
-                      {filterActiveEventsPerStaffMember().length > 0
-                        ? filterActiveEventsPerStaffMember().at(-1).eventName
-                        : "No active event"}
-                      {/* */}
+                      {profile.status ? (
+                        <PointFilled style={{ color: "#12b76a" }} />
+                      ) : (
+                        <PointFilled style={{ color: "#D0D5DD" }} />
+                      )}
+                      {profile.status ? "Active" : "Inactive"}
                     </p>
-                  </span>
-                </div>
+                  </button>
+                )}
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: {
+                    xs: "center",
+                    sm: "center",
+                    md: "flex-end",
+                    lg: "flex-end",
+                  },
+                  alignItems: "flex-start",
+                }}
+              >
+                <span
+                  style={{
+                    borderRadius: "16px",
+                    justifyContent: "flex-start",
+                    display: "flex",
+                    padding: "2px 8px",
+                    alignItems: "center",
+                    mixBlendMode: "multiply",
+                    background: "var(--orange-dark-50, #FFF4ED)",
+                    width: "fit-content",
+                    marginBottom: "5px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      fontFamily: "Inter",
+                      fontStyle: "normal",
+                      fontWeight: 500,
+                      lineHeight: "18px",
+                      textAlign: "left",
+                      textTransform: "capitalize",
+                      color: `${
+                        filterActiveEventsPerStaffMember().length > 0
+                          ? "var(--primary-700, #6941C6)"
+                          : "var(--orange-700, #B93815)"
+                      }`,
+                    }}
+                  >
+                    <Icon
+                      icon="tabler:point-filled"
+                      rotate={3}
+                      color={
+                        filterActiveEventsPerStaffMember().length > 0
+                          ? "var(--primary-700, #6941C6)"
+                          : "#EF6820"
+                      }
+                    />
+                    {filterActiveEventsPerStaffMember().length > 0
+                      ? filterActiveEventsPerStaffMember().at(-1).eventName
+                      : "No active event"}
+                    {/* */}
+                  </p>
+                </span>
               </Grid>
             </Grid>
           </Grid>
