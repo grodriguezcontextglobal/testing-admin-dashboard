@@ -195,8 +195,8 @@ const HeaderStaffDetail = () => {
               </p>
             </Button>
           </Grid>
-          <Breadcrumb path={breadcrumbItems} />
-          <Divider />
+          <Breadcrumb style={{margin:"15px 0px 7.5px"}} separator=">" items={breadcrumbItems} />
+          <Divider style={{margin:"0 0 15px"}} />
           <Grid
             sx={{
               display: "flex",
