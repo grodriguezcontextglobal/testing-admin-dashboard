@@ -51,20 +51,29 @@ const MainPage = () => {
           item
           xs={12}
           sm={12}
-          md={12}
-          lg={12}
+          md={3}
+          lg={3}
         >
           <p style={{ ...Title,padding:"16px 24px 16px 0", textTransform: "none", textAlign: "left" }}>
             Staff
           </p>
-          <Grid
+        </Grid>
+        <Grid
             display={Number(user.role) < 2 ? "flex" : "none"}
-            alignItems={"center"}
-            justifyContent={"flex-end"}
             gap={2}
+            sx={{
+              display:"flex",
+              alignItems:"center",
+              justifyContent:{
+                xs: "flex-start",
+                sm: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
+              }
+            }}
             item
-            xs={6}
-            sm={6}
+            xs={12}
+            sm={12}
             md={9}
             lg={9}
           >
@@ -87,7 +96,7 @@ const MainPage = () => {
               </p>
             </button>
           </Grid>
-        </Grid>
+
         <Divider />
         <Grid
           display={"flex"}
