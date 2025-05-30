@@ -65,7 +65,8 @@ const StaffDetail = () => {
         return;
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
 
   const tabOptions = [
@@ -129,20 +130,38 @@ const StaffDetail = () => {
     <>
       <HeaderStaffDetail />
       <Divider />
-      <Grid
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        marginY={3}
-        container
-      >
-        <Grid marginY={0} item xs={12} sm={12} md={12}>
-          <nav style={{ display: "flex", width: "100%", gap: "24px" }}>
-            {tabOptions.map((option, index) => {
-              if (index === 0) {
-                return (
+      <nav style={{ display: "flex", width: "100%", gap: "24px", marginY: 3 }}>
+        <Grid
+          style={{
+            display: "flex",
+            justifyContent: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "space-between",
+              lg: "space-between",
+            },
+            alignSelf: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "center",
+              lg: "center",
+            },
+            gap: "24px",
+          }}
+          container
+        >
+          {tabOptions.map((option, index) => {
+            if (index === 0) {
+              return (
+                <Grid
+                  key={option.label}
+                  marginY={0}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={2}
+                  lg={2}
+                >
                   <NavLink
                     key={option.label}
                     to={`${option.route}`}
@@ -159,6 +178,7 @@ const StaffDetail = () => {
                       alignItems: "center",
                       padding: "10x 16px",
                       gap: "8px",
+                      width: "100%",
                     }}
                   >
                     <p
@@ -173,14 +193,20 @@ const StaffDetail = () => {
                       {dicIcons[option.label]}&nbsp;{option.label}
                     </p>
                   </NavLink>
-                );
-              } else if (index === 1) {
-                return (
-                  <NavLink
-                    key={option.label}
-                    to={`${option.route}`}
-                    style={LightBlueButton}
-                  >
+                </Grid>
+              );
+            } else if (index === 1) {
+              return (
+                <Grid
+                  key={option.label}
+                  marginY={0}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={2}
+                  lg={2}
+                >
+                  <NavLink to={`${option.route}`} style={{ ...LightBlueButton, width: "100%" }}>
                     <p
                       style={{
                         ...LightBlueButtonText,
@@ -191,18 +217,30 @@ const StaffDetail = () => {
                             ? "flex"
                             : "none"
                         }`,
-                        justifyContent: "space-between",
+                        justifyContent: "center",
                         alignItems: "center",
                         padding: "10px 16px",
+                        width: "100%",
                       }}
                     >
                       {dicIcons[option.label]}&nbsp;{option.label}
                     </p>
                   </NavLink>
-                );
-              }
+                </Grid>
+              );
+            }
 
-              return (
+            return (
+              <Grid
+                key={option.label}
+                display={option.disabled ? "none" : "flex"}
+                marginY={0}
+                item
+                xs={12}
+                sm={12}
+                md={2}
+                lg={option.id === 4 ? 3 : 2}
+              >
                 <NavLink
                   key={option.label}
                   to={`${option.route}`}
@@ -218,6 +256,7 @@ const StaffDetail = () => {
                     alignItems: "center",
                     padding: "10x 16px",
                     gap: "8px",
+                    width: "100%",
                   }}
                   onClick={() => option.fn()}
                 >
@@ -233,12 +272,12 @@ const StaffDetail = () => {
                     {dicIcons[option.label]}&nbsp;{option.label}
                   </p>
                 </NavLink>
-              );
-            })}
-          </nav>
-          <Divider />
+              </Grid>
+            );
+          })}
         </Grid>
-      </Grid>
+      </nav>
+      <Divider />
       <Outlet />
     </>
   );
