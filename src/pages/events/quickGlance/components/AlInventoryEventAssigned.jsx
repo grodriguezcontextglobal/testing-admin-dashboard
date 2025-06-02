@@ -5,6 +5,10 @@ import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
+import { useState } from "react";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -15,6 +19,8 @@ const AllInventoryEventForCustomerOnly = ({
   user,
   setEditingServiceInEvent,
 }) => {
+  const [displayingDocumentListContainer, setDisplayingDocumentListContainer] =
+    useState(false);
   return (
     <>
       <Grid
@@ -90,6 +96,19 @@ const AllInventoryEventForCustomerOnly = ({
           }}
         >
           <button
+            onClick={() => setDisplayingDocumentListContainer(true)}
+            style={{
+              ...GrayButton,
+              width: "fit-content",
+              justifyContent: "space-between",
+              alignItems: "center",
+              display: user.role === "4" ? "none" : "flex",
+              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
+            }}
+          >
+            <p style={{ ...GrayButtonText }}>Documents (legal contracts)</p>
+          </button>
+          <button
             onClick={() => setEditingServiceInEvent(true)}
             style={{
               ...BlueButton,
@@ -121,6 +140,12 @@ const AllInventoryEventForCustomerOnly = ({
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
         <DisplayAllItemsSetInventoryEvent />
       </div>
+      {displayingDocumentListContainer && (
+        <DisplayDocumentsContainer
+          openDisplayDocumentsContainer={displayingDocumentListContainer}
+          setOpenDisplayDocumentsContainer={setDisplayingDocumentListContainer}
+        />
+      )}
     </>
   );
 };
