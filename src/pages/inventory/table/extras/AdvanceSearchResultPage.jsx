@@ -1,4 +1,5 @@
 import { Grid } from "@mui/material";
+import { FixedSizeList as List } from "react-window";
 import { Alert, Button, Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,6 +13,8 @@ import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import BarAnimation from "../../charts/BarAnimation";
 import Bars from "../../charts/Bars";
+import { memo, useMemo } from "react";
+import InventoryItemCard from "./ux/InventoryItemCard";
 
 const AdvanceSearchResultPage = () => {
   const { advanceSearch } = useSelector((state) => state.searchResult);
@@ -22,6 +25,20 @@ const AdvanceSearchResultPage = () => {
     dispatch(onAddAdvanceSearch(null));
     return navigate("/inventory");
   };
+
+  const resultList = useMemo(
+    () => advanceSearch?.advanceSearchResult || [],
+    [advanceSearch]
+  );
+  const Row = memo(({ index, style }) => {
+    Row.displayName = "Row";
+    const item = resultList[index];
+    return (
+      <div style={style}>
+        <InventoryItemCard item={item} />
+      </div>
+    );
+  });
 
   return (
     <Grid
@@ -166,6 +183,24 @@ const AdvanceSearchResultPage = () => {
           dataToRender={advanceSearch.plannedInventoryToUseInEvents}
           title="Availability per type reflects the remaining inventory from events occurring during the consulted time period."
         />
+      </Grid>
+      <Divider />
+      <Grid
+        item
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
+        style={{  marginY: "20px" }}
+      >
+        <List
+          height={600}
+          itemCount={resultList.length}
+          itemSize={130} // Adjust height of each row accordingly
+          width="100%"
+        >
+          {Row}
+        </List>
       </Grid>
     </Grid>
   );
