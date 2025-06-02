@@ -212,23 +212,29 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     2: "Devices in use",
     3: "Devices returned",
   };
+
   const getInfoNeededToBeRenderedInTable = () => {
     let result = [];
     let mapTemplate = {};
     for (let data of checkEventsPerCompany()) {
-      mapTemplate = {
-        user: [data.user.name, data.user.lastName],
-        email: data.user.email,
-        status: data.transactions,
-        phone: data.user.phoneNumber,
-        key: data.user.id,
-        entireData: data.user,
-      };
-      result = [...result, mapTemplate];
+        mapTemplate = {
+            user: [data.user.name, data.user.lastName],
+            email: data.user.email,
+            status: data.transactions,
+            phone: data.user.phoneNumber,
+            key: data.user.id,
+            entireData: data.user,
+        };
+        result = [...result, mapTemplate];
     }
-    dispatch(onAddUsersOfEventList(result));
     return result;
-  };
+};
+
+useEffect(() => {
+    const result = getInfoNeededToBeRenderedInTable();
+    dispatch(onAddUsersOfEventList(result));
+}, [response, searchAttendees]);
+
   return (
     <Table
       sticky
