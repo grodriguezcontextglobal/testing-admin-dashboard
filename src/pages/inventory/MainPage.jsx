@@ -50,7 +50,7 @@ const MainPage = () => {
   const { register, watch, setValue } = useForm({
     defaultValues: {
       searchItem: "...",
-    }
+    },
   });
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery"],
@@ -67,12 +67,12 @@ const MainPage = () => {
     setValue("searchItem", "");
     setRenderingData(false);
   }, []);
-  
+
   useEffect(() => {
     if (companyHasInventoryQuery.isSuccess) {
       const total = companyHasInventoryQuery?.data?.data?.total;
       setCurrentTab(total > 0 ? 1 : 2);
-      setIsLoadingState(true)
+      setIsLoadingState(true);
       setIsLoadingState(false);
     }
   }, [companyHasInventoryQuery.isSuccess]);
@@ -119,11 +119,10 @@ const MainPage = () => {
         queryKey: ["ItemsInInventoryCheckingQuery"],
         exact: true,
       }),
-      companyHasInventoryQuery.refetch()
+      companyHasInventoryQuery.refetch(),
     ]);
     setRenderingData(false);
   };
-
 
   return (
     <Suspense
@@ -343,20 +342,42 @@ const MainPage = () => {
               lg
             >
               <Button
-                style={{ ...OutlinedInputStyle, width: "100%" }}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                  color: "var(--gray600, #475467)",
+                  fontWeight: "600",
+                  display:"flex",
+                  justifyContent:"center",
+                  alignItems:"center"
+                }}
                 onClick={() => {
                   setOpenAdvanceSearchModal(true);
                 }}
               >
-                Advance search
+                <p
+                  style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
+                >
+                Advance search</p>
               </Button>
               <Button
-                style={{ ...OutlinedInputStyle, width: "100%" }}
+                style={{
+                  ...OutlinedInputStyle,
+                  width: "100%",
+                  color: "var(--gray600, #475467)",
+                  fontWeight: "600",
+                  display:"flex",
+                  justifyContent:"center",
+                  alignItems:"center"
+                }}
                 onClick={() => {
                   refetchingQueriesFn();
                 }}
               >
-                Reload
+                <p
+                  style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
+                >
+                Reload</p>
               </Button>
             </Grid>
             <Grid
