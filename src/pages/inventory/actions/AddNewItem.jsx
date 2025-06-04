@@ -289,6 +289,10 @@ const AddNewItem = () => {
           "New item was created and stored in database."
         );
         setLoadingStatus(false);
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+        });
+
         return navigate("/inventory");
       }
       return setLoadingStatus(false);
