@@ -5,7 +5,15 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { AutoComplete, Button, Divider, Tooltip, notification } from "antd";
+import {
+  AutoComplete,
+  Breadcrumb,
+  Button,
+  Divider,
+  Tooltip,
+  notification,
+  Popconfirm,
+} from "antd";
 import "../../../styles/global/ant-select.css";
 import "../../../styles/global/reactInput.css";
 import "./style.css";
@@ -48,7 +56,9 @@ const AddNewBulkItems = () => {
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
     useState(false);
-
+  const [displaySublocationFields, setDisplaySublocationFields] =
+    useState(false);
+  const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -263,16 +273,11 @@ const AddNewBulkItems = () => {
         company: user.company,
         location: data.location,
         current_location: data.location,
-        sub_location: JSON.stringify([
-          data.sub_location,
-          data.sub_location_2,
-          data.sub_location_3,
-        ]),
+        sub_location: JSON.stringify(subLocationsSubmitted),
         extra_serial_number: JSON.stringify(moreInfo),
         company_id: user.sqlInfo.company_id,
-        return_date: `${
-          data.ownership === "Rent" ? formatDate(returningDate) : null
-        }`,
+        return_date:
+          data.ownership === "Rent" ? formatDate(returningDate) : null,
         container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
         image_url: img_url,
@@ -299,6 +304,10 @@ const AddNewBulkItems = () => {
           "New group of items were created and stored in database."
         );
         setLoadingStatus(false);
+        await devitrakApi.post("/cache_update/remove-cache", {
+          key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+        });
+
         return navigate("/inventory");
       }
       return setLoadingStatus(false);
@@ -327,7 +336,7 @@ const AddNewBulkItems = () => {
             style={TextFontSize30LineHeight38}
             color={"var(--gray-600, #475467)"}
           >
-            Add a group of devices
+            Add a group of items
           </Typography>
         </InputLabel>
         <InputLabel
@@ -341,7 +350,7 @@ const AddNewBulkItems = () => {
             color={"var(--gray-600, #475467)"}
           >
             Devices serial numbers can be created by inputting a serial number
-            base to define the category of device, and then a range from one
+            base to define the category of items, and then a range from one
             number to another, depending on your inventory.
           </Typography>
         </InputLabel>
@@ -489,12 +498,68 @@ const AddNewBulkItems = () => {
     const result =
       Number(watch("max_serial_number")) - Number(watch("min_serial_number"));
     return setValue("quantity", result + 1);
-  },[watch("max_serial_number"), watch("min_serial_number")]);
+  }, [watch("max_serial_number"), watch("min_serial_number")]);
   qtyDiff();
 
   const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
     itemsInInventoryQuery?.data?.data?.items
   );
+
+  const renderingOptionsForSubLocations = (item) => {
+    const addSublocationButton = () => {
+      return (
+        <Button
+          onClick={() => setDisplaySublocationFields(true)}
+          style={{
+            ...BlueButton,
+            ...CenteringGrid,
+            alignSelf: "stretch",
+            display:
+              item === "Main location" && !displaySublocationFields
+                ? "flex"
+                : "none",
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={BlueButtonText}>Add sub location</p>
+        </Button>
+      );
+    };
+
+    const addEndingSerialNumberSequenceButton = () => {
+      return (
+        <Button
+          onClick={() => setDisplaySublocationFields(true)}
+          style={{
+            ...BlueButton,
+            ...CenteringGrid,
+            alignSelf: "stretch",
+            display:
+              item === "Main location" && !displaySublocationFields
+                ? "flex"
+                : "none",
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={BlueButtonText}>Add sub location</p>
+        </Button>
+      );
+    };
+
+    return {
+      addSubLocation: addSublocationButton(),
+      addEndingSerialNumberSequence: addEndingSerialNumberSequenceButton(),
+    };
+  };
+
+  const addingSubLocation = (props) => {
+    if (String(props).length < 1) return;
+    const result = [...subLocationsSubmitted, props];
+    setValue("sub_location", "");
+    return setSubLocationsSubmitted(result);
+  };
 
   return (
     <Grid
@@ -515,6 +580,7 @@ const AddNewBulkItems = () => {
             options,
             displayContainerSplotLimitField,
             subLocationsOptions,
+            displaySublocationFields,
           }).map((item) => {
             if (item.displayField) {
               if (item.htmlOption === 6) {
@@ -600,33 +666,141 @@ const AddNewBulkItems = () => {
                       control={control}
                       name={item.name}
                       render={({ field: { value, onChange } }) => (
-                        <AutoComplete
-                          aria-required={true}
-                          className="custom-autocomplete" // Add a custom className here
-                          variant="outlined"
+                        <Grid
+                          container
+                          spacing={1}
                           style={{
-                            ...AntSelectorStyle,
-                            border: "solid 0.3 var(--gray600)",
-                            fontFamily: "Inter",
-                            fontSize: "14px",
                             width: "100%",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
-                          value={value}
-                          onChange={(value) => onChange(value)}
-                          options={item.options.map((x) => {
-                            if (item.htmlOption === 0) {
-                              return { value: x };
-                            } else {
-                              return { value: x.value };
+                        >
+                          <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <AutoComplete
+                              aria-required={true}
+                              className="custom-autocomplete" // Add a custom className here
+                              variant="outlined"
+                              style={{
+                                ...AntSelectorStyle,
+                                border: "solid 0.3 var(--gray600)",
+                                fontFamily: "Inter",
+                                fontSize: "14px",
+                                width: "100%",
+                              }}
+                              value={value}
+                              onChange={(value) => onChange(value)}
+                              options={item.options.map((x) => {
+                                if (item.htmlOption === 0) {
+                                  return { value: x };
+                                } else {
+                                  return { value: x.value };
+                                }
+                              })}
+                              placeholder={item.placeholder}
+                              filterOption={(inputValue, option) =>
+                                option.value
+                                  .toUpperCase()
+                                  .indexOf(inputValue.toUpperCase()) !== -1
+                              }
+                              allowClear
+                            />
+                            <Button
+                              style={{
+                                display:
+                                  item.label === "Sub location"
+                                    ? "flex"
+                                    : "none",
+                                margin: "10px 0 0",
+                              }}
+                              onClick={() =>
+                                addingSubLocation(watch("sub_location"))
+                              }
+                            >
+                              Add sub location
+                            </Button>
+                          </Grid>
+                          <Grid
+                            display={
+                              item.label === "Main location" ||
+                              item.label === "Sub location"
+                                ? "flex"
+                                : "none"
                             }
-                          })}
-                          placeholder={item.placeholder}
-                          filterOption={(inputValue, option) =>
-                            option.value
-                              .toUpperCase()
-                              .indexOf(inputValue.toUpperCase()) !== -1
-                          }
-                        />
+                            justifyContent={"flex-start"}
+                            alignItems={"center"}
+                            item
+                            xs={12}
+                            sm={12}
+                            md={12}
+                            lg={12}
+                          >
+                            {
+                              renderingOptionsForSubLocations(item.label)
+                                .addSubLocation
+                            }
+                          </Grid>
+                          <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <Breadcrumb
+                              style={{
+                                display:
+                                  item.label === "Sub location" ||
+                                  displaySublocationFields.length > 0
+                                    ? "flex"
+                                    : "none",
+                                width: "100%",
+                              }}
+                              items={[
+                                {
+                                  title: (
+                                    <p
+                                      style={{
+                                        backgroundColor: "transparent",
+                                        border: "none",
+                                        outline: "none",
+                                        boxShadow: "none",
+                                        margin: "auto",
+                                        padding: 0,
+                                        fontFamily: "Inter",
+                                        width: "fit-content",
+                                      }}
+                                    >
+                                      {watch("location")}
+                                    </p>
+                                  ),
+                                },
+                                ...subLocationsSubmitted.map((item, index) => ({
+                                  title: (
+                                    <Popconfirm
+                                      title="Are you sure you want to delete this sub location?"
+                                      onConfirm={() =>
+                                        setSubLocationsSubmitted(
+                                          subLocationsSubmitted.filter(
+                                            (_, i) => i !== index
+                                          )
+                                        )
+                                      }
+                                    >
+                                      <Button
+                                        style={{
+                                          border: "none",
+                                          outline: "none",
+                                          margin: 0,
+                                          padding: 0,
+                                          backgroundColor: "transparent",
+                                          boxShadow: "none",
+                                          alignItems: "flex-start",
+                                        }}
+                                      >
+                                        {item}
+                                      </Button>
+                                    </Popconfirm>
+                                  ),
+                                })),
+                              ]}
+                            />
+                          </Grid>
+                        </Grid>
                       )}
                     />
                   ) : (
