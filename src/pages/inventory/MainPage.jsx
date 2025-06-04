@@ -170,7 +170,7 @@ const MainPage = () => {
             md={8}
             lg={8}
           >
-            <Link to="/inventory/edit-group">
+            {/*<Link to="/inventory/edit-group">
               <button style={{ ...LightBlueButton, width: "fit-content" }}>
                 <p
                   style={{
@@ -187,7 +187,7 @@ const MainPage = () => {
                   &nbsp;Update a group of device
                 </p>
               </button>
-            </Link>
+            </Link>*/}
             <Link to="/inventory/new-bulk-items">
               <button style={{ ...BlueButton, width: "fit-content" }}>
                 <WhiteCirclePlusIcon
@@ -219,7 +219,7 @@ const MainPage = () => {
           }}
           container
         >
-          <Grid item xs={12} sm={12}>
+          {/* <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/edit-group">
               <button style={{ ...LightBlueButton, width: "100%" }}>
@@ -239,7 +239,7 @@ const MainPage = () => {
                 </p>
               </button>
             </Link>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/new-bulk-items">
@@ -347,9 +347,9 @@ const MainPage = () => {
                   width: "100%",
                   color: "var(--gray600, #475467)",
                   fontWeight: "600",
-                  display:"flex",
-                  justifyContent:"center",
-                  alignItems:"center"
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
                 onClick={() => {
                   setOpenAdvanceSearchModal(true);
@@ -358,7 +358,8 @@ const MainPage = () => {
                 <p
                   style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
                 >
-                Advance search</p>
+                  Advance search
+                </p>
               </Button>
               <Button
                 style={{
@@ -366,9 +367,9 @@ const MainPage = () => {
                   width: "100%",
                   color: "var(--gray600, #475467)",
                   fontWeight: "600",
-                  display:"flex",
-                  justifyContent:"center",
-                  alignItems:"center"
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
                 onClick={() => {
                   refetchingQueriesFn();
@@ -377,7 +378,8 @@ const MainPage = () => {
                 <p
                   style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
                 >
-                Reload</p>
+                  Reload
+                </p>
               </Button>
             </Grid>
             <Grid
