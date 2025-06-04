@@ -1,26 +1,28 @@
+import { orderBy } from "lodash";
+
 export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
-  const result = { 0: [], 1: [], 2: [] };
-  const trackers = { 0: new Set(), 1: new Set(), 2: new Set() };
+  const result = [];
+  const trackers = new Set();
 
   if (Array.isArray(props) && props.length > 0) {
     for (const item of props) {
       const subLocations = item.sub_location;
       if (!Array.isArray(subLocations)) continue;
-
-      subLocations.forEach((sub_location, index) => {
+      subLocations.forEach((sub_location) => {
         if (
           typeof sub_location !== "string" ||
           sub_location.trim() === "" ||
           sub_location === "null"
-        ) return;
+        )
+          return;
 
-        if (!trackers[index].has(sub_location)) {
-          trackers[index].add(sub_location);
-          result[index].push({ value: sub_location });
+        if (!trackers.has(sub_location)) {
+          trackers.add(sub_location);
+          result.push({ value: sub_location });
         }
       });
     }
   }
-
-  return result;
+  const orderedData = orderBy(result, ["value"], ["asc"]);
+  return orderedData;
 };
