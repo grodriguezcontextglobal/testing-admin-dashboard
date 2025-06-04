@@ -5,12 +5,13 @@ export const renderFields = ({
   renderLocationOptions,
   displayContainerSplotLimitField,
   subLocationsOptions,
+  displaySublocationFields,
 }) => {
   const fields = [
     {
       name: "item_group",
-      placeholder: "Type the name of the device",
-      label: "Device name",
+      placeholder: "Type the name of the item",
+      label: "Item name",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -122,42 +123,16 @@ export const renderFields = ({
     },
     {
       name: "sub_location",
-      placeholder: "Select a location",
+      placeholder: "Select or type a sub location",
       label: "Sub location",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: subLocationsOptions[0],
+      options: subLocationsOptions,
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_2",
-      placeholder: "Select a location",
-      label: "Sub location 2",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: subLocationsOptions[1],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_3",
-      placeholder: "Select a location",
-      label: "Sub location 3",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: subLocationsOptions[2],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
+      displayField: displaySublocationFields,
     },
     {
       name: "min_serial_number",
@@ -267,5 +242,8 @@ export const renderFields = ({
     },
   ];
 
+  fields.forEach((_, index) => {
+    fields[index].id = fields[index].name;
+  });
   return fields;
 };
