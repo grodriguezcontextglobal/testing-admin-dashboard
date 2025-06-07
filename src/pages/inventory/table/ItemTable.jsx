@@ -85,10 +85,17 @@ const ItemTable = ({
       ),
     enabled: !!user.sqlInfo.company_id,
   });
-  // console.log(refactoredListInventoryCompany?.data?.data);
+
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
+
+  useEffect(() => {
+    console.log({
+      listItemsQuery: listItemsQuery?.data?.data,
+      itemsInInventoryQuery: itemsInInventoryQuery?.data?.data?.items,
+    });
+  }, [listItemsQuery?.data?.data, listImagePerItemQuery?.data?.data]);
 
   const getDataStructuringFormat = useCallback(
     (props) => {
@@ -313,7 +320,7 @@ const ItemTable = ({
             size={"80px"}
             style={{ borderRadius: "8px", background: "transparent" }}
           >
-            {record.image_url !== undefined ? (
+            {record.image_url ? (
               <img
                 src={record.image_url}
                 alt={`${record.item}-${record.item_group}-${record.serial_number}`}
@@ -573,6 +580,8 @@ const ItemTable = ({
     return itemsInInventoryQuery.refetch();
   };
 
+  useEffect(() => {}, [dataToDisplay()]);
+
   return (
     <Suspense
       fallback={
@@ -704,23 +713,22 @@ const ItemTable = ({
             </Grid>
           </div>
         </Grid>
-        {total === 0 &&
-          (!searchItem || searchItem === "") && (
-            <BannerMsg
-              props={{
-                title: "Add new item",
-                message: `Add new devices to your inventory and assign categories and groups
+        {total === 0 && (!searchItem || searchItem === "") && (
+          <BannerMsg
+            props={{
+              title: "Add new item",
+              message: `Add new devices to your inventory and assign categories and groups
             for easier management. Devices in your inventory can be assigned to
             staff or consumers permanently or temporarily. You can also mark
             devices with different statuses for condition and location. Include
             a device value to track deposits and fees.`,
-                link: "/inventory/new-item",
-                button: BlueButton,
-                paragraphStyle: BlueButtonText,
-                paragraphText: "Add new item",
-              }}
-            />
-          )}
+              link: "/inventory/new-item",
+              button: BlueButton,
+              paragraphStyle: BlueButtonText,
+              paragraphText: "Add new item",
+            }}
+          />
+        )}
       </Grid>
     </Suspense>
   );
