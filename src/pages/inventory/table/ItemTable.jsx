@@ -49,11 +49,20 @@ const ItemTable = ({
   // const [chosen, setChosen] = useState({ category: null, value: null });
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchDateResult, setSearchDateResult] = useState([]);
+
+  const gettingCountBasedOnLocationQuery = useQuery({
+    queryKey: ["gettingCountBasedOnLocationQuery"],
+    queryFn: () =>
+      devitrakApi.get(
+        `/db_item/location-count?company_id=${user.sqlInfo.company_id}`
+      ),
+    enabled: !!user.sqlInfo.company_id,
+  });
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
       devitrakApi.get(
-        `/db_item/check-inventory?company_id=${user.sqlInfo.company_id}`
+        `/db_company/current-inventory/${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
   });
@@ -89,13 +98,6 @@ const ItemTable = ({
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-
-  useEffect(() => {
-    console.log({
-      listItemsQuery: listItemsQuery?.data?.data,
-      itemsInInventoryQuery: itemsInInventoryQuery?.data?.data?.items,
-    });
-  }, [listItemsQuery?.data?.data, listImagePerItemQuery?.data?.data]);
 
   const getDataStructuringFormat = useCallback(
     (props) => {
@@ -580,7 +582,9 @@ const ItemTable = ({
     return itemsInInventoryQuery.refetch();
   };
 
-  useEffect(() => {}, [dataToDisplay()]);
+  useEffect(() => {
+    dataToDisplay();
+  }, []);
 
   return (
     <Suspense
