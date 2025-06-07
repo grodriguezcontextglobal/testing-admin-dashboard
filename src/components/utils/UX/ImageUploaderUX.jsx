@@ -4,11 +4,11 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { UploadIcon } from "../../icons/UploadIcon";
 
-const ImageUploaderUX = ({ setImageUploadedValue }) => {
-  const { register, watch } = useForm({
-    defaultValues:{
+const ImageUploaderUX = ({ setImageUploadedValue, imageUploadedValue }) => {
+  const { register, watch, setValue } = useForm({
+    defaultValues: {
       photo: null,
-    }
+    },
   });
   const styling = {
     textTransform: "none",
@@ -44,64 +44,68 @@ const ImageUploaderUX = ({ setImageUploadedValue }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch("photo") !== null && watch("photo").length > 0]);
 
+  useEffect(() => {
+    setValue("photo", null);
+  }, [imageUploadedValue === null]);
+
   return (
-      <form style={formStyle}>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          padding={0}
-          item
-          xs={12}
+    <form style={formStyle}>
+      <Grid
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        padding={0}
+        item
+        xs={12}
+      >
+        <Avatar
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "6px solid var(--gray-50, #F9FAFB)",
+            background: "6px solid var(--gray-50, #F9FAFB)",
+            borderRadius: "28px",
+          }}
         >
-          <Avatar
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              border: "6px solid var(--gray-50, #F9FAFB)",
-              background: "6px solid var(--gray-50, #F9FAFB)",
-              borderRadius: "28px",
-            }}
-          >
-            {" "}
-            <UploadIcon />
-          </Avatar>
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          item
-          xs={12}
+          {" "}
+          <UploadIcon />
+        </Avatar>
+      </Grid>
+      <Grid
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        item
+        xs={12}
+      >
+        <TextField
+          {...register("photo")}
+          type="file"
+          className="photo_input"
+          accept=".jpeg, .png, .jpg"
+          style={{
+            outline: "none",
+            border: "transparent",
+          }}
+        />
+      </Grid>
+      <Grid
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        marginBottom={2}
+        item
+        xs={12}
+      >
+        <Typography
+          color={"var(--gray-600, #475467)"}
+          style={{ ...styling, fontWeight: 400 }}
         >
-          <TextField
-            {...register("photo")}
-            type="file"
-            className="photo_input"
-            accept=".jpeg, .png, .jpg"
-            style={{
-              outline: "none",
-              border: "transparent",
-            }}
-          />
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          marginBottom={2}
-          item
-          xs={12}
-        >
-          <Typography
-            color={"var(--gray-600, #475467)"}
-            style={{ ...styling, fontWeight: 400 }}
-          >
-            SVG, PNG, JPG or GIF (max. 5MB)
-          </Typography>
-        </Grid>
-      </form>
+          SVG, PNG, JPG or GIF (max. 5MB)
+        </Typography>
+      </Grid>
+    </form>
   );
 };
 
