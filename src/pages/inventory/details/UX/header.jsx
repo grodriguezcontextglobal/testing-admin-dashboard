@@ -1,18 +1,18 @@
 import { Grid, Typography } from "@mui/material";
-import { Breadcrumb, Button, Divider } from "antd";
+import { Breadcrumb, Divider } from "antd";
+import { Link } from "react-router-dom";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
-import { Link, useNavigate } from "react-router-dom";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { useMediaQuery } from "@uidotdev/usehooks";
+// import { BlueButton } from "../../../../styles/global/BlueButton";
+// import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+// import { useMediaQuery } from "@uidotdev/usehooks";
 
 const Header = ({ title, category }) => {
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const navigate = useNavigate();
+  // const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  // const isMediumDevice = useMediaQuery(
+  //   "only screen and (min-width : 769px) and (max-width : 992px)"
+  // );
+  // const navigate = useNavigate();
 
   const options = [
     {
@@ -55,7 +55,7 @@ const Header = ({ title, category }) => {
         >
           <Typography style={TextFontSize30LineHeight38}>{category}</Typography>
         </Grid>
-        <Grid
+        {/* <Grid
           textAlign={"right"}
           display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
           justifyContent={"flex-end"}
@@ -78,7 +78,7 @@ const Header = ({ title, category }) => {
               Update a group of device
             </p>
           </Button>
-        </Grid>
+        </Grid> */}
       </Grid>
       <Grid
         style={{
