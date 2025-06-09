@@ -11,6 +11,7 @@ export const renderFields = ({
   labeling,
   isRented,
   displayPreviewImage,
+  allSerialNumbersOptions,
 }) => {
   const fields = [
     {
@@ -172,7 +173,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("serial_number"),
+      options: allSerialNumbersOptions,
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -186,7 +187,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("serial_number"),
+      options: allSerialNumbersOptions,
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -199,7 +200,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("serial_number"),
+      options: allSerialNumbersOptions,
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
