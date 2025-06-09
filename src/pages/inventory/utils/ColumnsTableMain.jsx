@@ -10,7 +10,7 @@ const columnsTableMain = ({
   dictionary,
   groupingByDeviceType,
   navigate,
-  responsive
+  responsive,
 }) => {
   const columns = [
     {
@@ -21,7 +21,7 @@ const columnsTableMain = ({
         compare: (a, b) =>
           ("" + a.data.item_group).localeCompare(b.data.item_group),
       },
-      responsive:responsive[0],
+      responsive: responsive[0],
       render: (record) => (
         <span style={cellStyle}>
           <Avatar
@@ -58,7 +58,7 @@ const columnsTableMain = ({
       sorter: {
         compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
       },
-      responsive:responsive[1],
+      responsive: responsive[1],
       render: (item_group) => (
         <span style={cellStyle}>
           {" "}
@@ -75,71 +75,71 @@ const columnsTableMain = ({
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
-      responsive:responsive[2],
-      render: (warehouse, record) => {
-        if (record.data.enableAssignFeature === 1) {
-          return (
-            <span
+      responsive: responsive[2],
+      render: (warehouse) => {
+        // if (record.enableAssignFeature === 1) {
+        return (
+          <span
+            style={{
+              ...cellStyle,
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              background: `${
+                warehouse === 0
+                  ? "var(--blue-50, #EFF8FF)"
+                  : "var(--success-50, #ECFDF3)"
+              }`,
+              width: "fit-content",
+            }}
+          >
+            <p
               style={{
-                ...cellStyle,
-                borderRadius: "16px",
-                justifyContent: "center",
-                display: "flex",
-                padding: "2px 8px",
-                alignItems: "center",
-                background: `${
+                color: `${
                   warehouse === 0
-                    ? "var(--blue-50, #EFF8FF)"
-                    : "var(--success-50, #ECFDF3)"
+                    ? "var(--blue-700, #175CD3)"
+                    : "var(--success-700, #027A48)"
                 }`,
-                width: "fit-content",
+                textTransform: "capitalize",
               }}
             >
-              <p
-                style={{
-                  color: `${
-                    warehouse === 0
-                      ? "var(--blue-700, #175CD3)"
-                      : "var(--success-700, #027A48)"
-                  }`,
-                  textTransform: "capitalize",
-                }}
-              >
-                <Icon
-                  icon="tabler:point-filled"
-                  rotate={3}
-                  color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-                />
-                {warehouse === 0 ? "In Use" : "In Stock"}
-              </p>
-            </span>
-          );
-        } else {
-          return (
-            <span
-              style={{
-                ...cellStyle,
-                borderRadius: "16px",
-                justifyContent: "center",
-                display: "flex",
-                padding: "2px 8px",
-                alignItems: "center",
-                background: `#F9F5FF`,
-                width: "fit-content",
-              }}
-            >
-              <p
-                style={{
-                  color: "#6941C6",
-                  textTransform: "capitalize",
-                }}
-              >
-                <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
-                Disabled
-              </p>
-            </span>
-          );
-        }
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
+              />
+              {warehouse === 0 ? "In Use" : "In Stock"}
+            </p>
+          </span>
+        );
+        // } else {
+        //   return (
+        //     <span
+        //       style={{
+        //         ...cellStyle,
+        //         borderRadius: "16px",
+        //         justifyContent: "center",
+        //         display: "flex",
+        //         padding: "2px 8px",
+        //         alignItems: "center",
+        //         background: `#F9F5FF`,
+        //         width: "fit-content",
+        //       }}
+        //     >
+        //       <p
+        //         style={{
+        //           color: "#6941C6",
+        //           textTransform: "capitalize",
+        //         }}
+        //       >
+        //         <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
+        //         Disabled
+        //       </p>
+        //     </span>
+        //   );
+        // }
       },
     },
     {
@@ -149,7 +149,7 @@ const columnsTableMain = ({
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
-      responsive:responsive[3],
+      responsive: responsive[3],
       render: (ownership) => (
         <span
           style={{
@@ -194,7 +194,7 @@ const columnsTableMain = ({
         compare: (a, b) =>
           ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
       },
-      responsive:responsive[4],
+      responsive: responsive[4],
       render: (data) => (
         <span style={cellStyle}>
           {" "}
@@ -212,7 +212,7 @@ const columnsTableMain = ({
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
       },
-      responsive:responsive[5],
+      responsive: responsive[5],
       render: (data) => (
         <span style={cellStyle}>
           {" "}
@@ -227,7 +227,7 @@ const columnsTableMain = ({
       dataIndex: "serial_number",
       key: "serial_number",
       sorter: (a, b) => a.serial_number - b.serial_number,
-      responsive:responsive[6],
+      responsive: responsive[6],
       render: (serial_number) => (
         <span style={cellStyle}>
           {" "}
@@ -241,7 +241,7 @@ const columnsTableMain = ({
       title: "",
       dataIndex: "data",
       key: "data",
-      responsive:responsive[7],
+      responsive: responsive[7],
       render: (record) => (
         <button
           style={{
