@@ -15,18 +15,18 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerLocation"],
+    queryKey: ["currentStateDevicePerCategory", categoryName[0].slice(1)],
     queryFn: () =>
-      devitrakApi.post("/db_item/current-inventory", {
-        company_id: user.sqlInfo.company_id,
-        category_name: decodeURI(categoryName[0].slice(1)),
+      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
+        query: 'select * from item_inv where category_name = ? and company_id = ?',
+        values: [decodeURI(categoryName[0].slice(1)),user.sqlInfo.company_id]
       }),
-    // enabled: false,
     refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerLocation"],
+    queryKey: ["deviceImagePerCategory", categoryName[0].slice(1)],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id, category: decodeURI(categoryName[0].slice(1)), }),
     // enabled: false,
@@ -34,7 +34,7 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
   });
 
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["deviceInInventoryPerCategory"],
+    queryKey: ["deviceInInventoryPerCategory", categoryName[0].slice(1)],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
@@ -43,6 +43,8 @@ const TableDeviceCategory = ({ searchItem, referenceData }) => {
     // enabled: false,
     refetchOnMount: false,
   });
+
+
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data.result;

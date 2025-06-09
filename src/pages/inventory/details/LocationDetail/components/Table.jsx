@@ -17,17 +17,19 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const locationName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const urlQuery = location.state === null
-    ? `/db_company/inventory-based-on-location-and-sublocation`
-    : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
+  const urlQuery =
+    location.state === null
+      ? `/db_company/inventory-based-on-location-and-sublocation`
+      : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
-      devitrakApi.post("/db_item/current-inventory", {
-        company_id: user.sqlInfo.company_id,
-        location: decodeURI(locationName[0].slice(1)),
+      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
+        query: 'select * from item_inv where location = ? and company_id = ?',
+        values: [decodeURI(locationName[0].slice(1)),user.sqlInfo.company_id]
       }),
     refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
@@ -111,15 +113,21 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     return result;
   };
   const totalAvailable = () => {
-    const itemList = groupBy(itemsInInventoryQuery?.data?.data?.items, "warehouse");
-    return itemList[1]?.length;
+    const itemList = groupBy(
+      itemsInInventoryQuery?.data?.data?.items,
+      "warehouse"
+    );
+    return {
+      totalUnits: itemsInInventoryQuery?.data?.data?.items.length ?? 0,
+      totalAvailable: itemList[1]?.length,
+    };
   };
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
       totalDevices: dataStructuringFormat().length,
       totalValue: calculatingValue(),
-      totalAvailable: totalAvailable(),
+      totalAvailable: totalAvailable().totalAvailable,
     });
 
     return () => {

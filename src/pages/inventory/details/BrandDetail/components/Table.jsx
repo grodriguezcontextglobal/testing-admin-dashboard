@@ -19,24 +19,24 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerLocation"],
+    queryKey: ["currentStateDevicePerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
-      devitrakApi.post("/db_item/current-inventory", {
-        company_id: user.sqlInfo.company_id,
-        brand: decodeURI(brandName[0].slice(1)),
+      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
+        query: 'select * from item_inv where brand = ? and company_id = ?',
+        values: [decodeURI(brandName[0].slice(1)),user.sqlInfo.company_id]
       }),
     refetchOnMount: false,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerLocation"],
+    queryKey: ["deviceImagePerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
     refetchOnMount: false,
   });
 
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["deviceInInventoryPerBrand"],
+    queryKey: ["deviceInInventoryPerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
@@ -44,9 +44,13 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       }),
     refetchOnMount: false,
   });
+  
+  console.log({
+    list:listItemsQuery?.data?.data
+  })
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data.result;
+  const renderedListItems = listItemsQuery?.data?.data?.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = groupBy(
@@ -139,250 +143,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     justifyContent: "flex-start",
     alignItems: "center",
   };
-  // const columns = [
-  //   {
-  //     title: "Device category",
-  //     dataIndex: "data",
-  //     key: "data",
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     sorter: {
-  //       compare: (a, b) =>
-  //         ("" + a.data.item_group).localeCompare(b.data.item_group),
-  //     },
-  //     render: (record) => (
-  //       <span style={cellStyle}>
-  //         <Avatar
-  //           size={"80px"}
-  //           style={{ borderRadius: "8px", background: "transparent" }}
-  //         >
-  //           {groupingByDeviceType[record.item_group] ? (
-  //             <img
-  //               src={groupingByDeviceType[record.item_group][0].source}
-  //               alt={`${record.item_group}-${record.serial_number}`}
-  //               style={{ width: "100%", height: "auto" }}
-  //             />
-  //           ) : (
-  //             <Avatar size={"80px"}>
-  //               <GeneralDeviceIcon />
-  //             </Avatar>
-  //           )}
-  //         </Avatar>
-  //         {/*  */}
-  //         &nbsp;{" "}
-  //         <Typography
-  //           style={{ ...Subtitle, cellStyle }}
-  //           textTransform={"capitalize"}
-  //         >
-  //           {record.category_name}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Device name",
-  //     dataIndex: "item_group",
-  //     key: "item_group",
-  //     sorter: {
-  //       compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
-  //     },
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (item_group) => (
-  //       <span style={cellStyle}>
-  //         {" "}
-  //         <Typography style={Subtitle} textTransform={"capitalize"}>
-  //           {item_group}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Status",
-  //     dataIndex: "warehouse",
-  //     key: "warehouse",
-  //     sorter: {
-  //       compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
-  //     },
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (warehouse, record) => {
-  //       if (record.data.enableAssignFeature === 1) {
-  //         return (
-  //           <span
-  //             style={{
-  //               ...cellStyle,
-  //               borderRadius: "16px",
-  //               justifyContent: "center",
-  //               display: "flex",
-  //               padding: "2px 8px",
-  //               alignItems: "center",
-  //               background: `${
-  //                 warehouse === 0
-  //                   ? "var(--blue-50, #EFF8FF)"
-  //                   : "var(--success-50, #ECFDF3)"
-  //               }`,
-  //               width: "fit-content",
-  //             }}
-  //           >
-  //             <p
-  //               style={{
-  //                 color: `${
-  //                   warehouse === 0
-  //                     ? "var(--blue-700, #175CD3)"
-  //                     : "var(--success-700, #027A48)"
-  //                 }`,
-  //                 textTransform: "capitalize",
-  //               }}
-  //             >
-  //               <Icon
-  //                 icon="tabler:point-filled"
-  //                 rotate={3}
-  //                 color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-  //               />
-  //               {warehouse === 0 ? "In Use" : "In Stock"}
-  //             </p>
-  //           </span>
-  //         );
-  //       } else {
-  //         return (
-  //           <span
-  //             style={{
-  //               ...cellStyle,
-  //               borderRadius: "16px",
-  //               justifyContent: "center",
-  //               display: "flex",
-  //               padding: "2px 8px",
-  //               alignItems: "center",
-  //               background: `#F9F5FF`,
-  //               width: "fit-content",
-  //             }}
-  //           >
-  //             <p
-  //               style={{
-  //                 color: "#6941C6",
-  //                 textTransform: "capitalize",
-  //               }}
-  //             >
-  //               <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
-  //               Disabled
-  //             </p>
-  //           </span>
-  //         );
-  //       }
-  //     },
-  //   },
-  //   {
-  //     title: "Ownership",
-  //     dataIndex: "ownership",
-  //     key: "ownership",
-  //     sorter: {
-  //       compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
-  //     },
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (ownership) => (
-  //       <span
-  //         style={{
-  //           ...cellStyle,
-  //           borderRadius: "16px",
-  //           justifyContent: "center",
-  //           display: "flex",
-  //           padding: "2px 8px",
-  //           alignItems: "center",
-  //           background: `${
-  //             ownership === "Permanent"
-  //               ? "var(--blue-50, #EFF8FF)"
-  //               : "var(--success-50, #ECFDF3)"
-  //           }`,
-  //           width: "fit-content",
-  //         }}
-  //       >
-  //         <Typography
-  //           color={`${
-  //             ownership === "Permanent"
-  //               ? "var(--blue-700, #175CD3)"
-  //               : "var(--success-700, #027A48)"
-  //           }`}
-  //           style={Subtitle}
-  //           textTransform={"capitalize"}
-  //         >
-  //           <Icon
-  //             icon="tabler:point-filled"
-  //             rotate={3}
-  //             color={`${ownership === "Permanent" ? "#2E90FA" : "#12B76A"}`}
-  //           />
-  //           {dictionary[ownership]}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Taxable address",
-  //     dataIndex: "data",
-  //     key: "data",
-  //     sorter: {
-  //       compare: (a, b) =>
-  //         ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
-  //     },
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (data) => (
-  //       <span style={cellStyle}>
-  //         {" "}
-  //         <Typography style={Subtitle} textTransform={"capitalize"}>
-  //           {data.main_warehouse}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Location",
-  //     dataIndex: "data",
-  //     key: "data",
-  //     sorter: {
-  //       compare: (a, b) =>
-  //         ("" + a.data.location).localeCompare(b.data.location),
-  //     },
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (data) => (
-  //       <span style={cellStyle}>
-  //         {" "}
-  //         <Typography style={Subtitle} textTransform={"capitalize"}>
-  //           {data.warehouse === 1 ? data.location : data.event_name}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Main Serial Number",
-  //     dataIndex: "serial_number",
-  //     key: "serial_number",
-  //     sorter: (a, b) => a.serial_number - b.serial_number,
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (serial_number) => (
-  //       <span style={cellStyle}>
-  //         {" "}
-  //         <Typography style={Subtitle} textTransform={"capitalize"}>
-  //           {serial_number}
-  //         </Typography>
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "",
-  //     dataIndex: "data",
-  //     key: "data",
-  //     responsive: ["xs", "sm", "md", "lg"],
-  //     render: (record) => (
-  //       <button
-  //         style={{
-  //           ...cellStyle,
-  //           backgroundColor: "transparent",
-  //           border: "none",
-  //         }}
-  //         onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
-  //       >
-  //         <RightNarrowInCircle />
-  //       </button>
-  //     ),
-  //   },
-  // ];
+
   return (
     <Suspense
       fallback={
@@ -479,6 +240,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           dataSource={dataToDisplay()}
           className="table-ant-customized"
         />
+        {
+          dataToDisplay().length> 0 && console.log(dataToDisplay())
+        }
       </Grid>
     </Suspense>
   );

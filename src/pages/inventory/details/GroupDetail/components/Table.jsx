@@ -19,23 +19,25 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerLocation"],
+    queryKey: ["currentStateDevicePerGroupName", decodeURI(groupName[0].slice(1))],
     queryFn: () =>
-      devitrakApi.post("/db_item/current-inventory", {
-        company_id: user.sqlInfo.company_id,
-        item_group: decodeURI(groupName[0].slice(1)),
+      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
+        query: 'select * from item_inv where item_group = ? and company_id = ?',
+        values: [decodeURI(groupName[0].slice(1)),user.sqlInfo.company_id]
       }),
     refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerLocation"],
+    queryKey: ["deviceImagePerGroupName"],
     queryFn: () =>
       devitrakApi.post("/image/images", {
         company: user.companyData.id,
         item_group: decodeURI(groupName[0].slice(1)),
       }),
     refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const itemsInInventoryQuery = useQuery({
@@ -46,10 +48,12 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         item_group: decodeURI(groupName[0].slice(1)),
       }),
     refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
+
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data.result;
+  const renderedListItems = listItemsQuery?.data?.data?.result;
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = groupBy(
@@ -112,14 +116,17 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   };
   const totalAvailable = () => {
     const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
-    return itemList[1]?.length;
+    return {
+      totalUnits: listItemsQuery?.data?.data?.items?.length ?? 0,
+      totalAvailable: itemList[1]?.length,
+    };
   };
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
       totalDevices: dataStructuringFormat().length,
       totalValue: calculatingValue(),
-      totalAvailable: totalAvailable(),
+      totalAvailable: totalAvailable().totalAvailable,
     });
     return () => {
       controller.abort();
