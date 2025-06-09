@@ -1,5 +1,4 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
-import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 
 export const bulkItemInsertAlphanumeric = async ({
@@ -110,7 +109,7 @@ export const bulkItemInsertSequential = async ({
     returnedRentedInfo: JSON.stringify([]),
     container: String(data.container).includes("Yes"),
     containerSpotLimit: data.containerSpotLimit,
-    isItInContainer: JSON.stringify([]),
+    isItInContainer: 0,
     containerId: JSON.stringify([]),
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
@@ -143,29 +142,33 @@ export const bulkItemInsertSequential = async ({
   }
 };
 
-export const storeAndGenerateImageUrl = ({
+export const storeAndGenerateImageUrl = async ({
   data,
   imageUploadedValue,
   user,
 }) => {
-  let base64;
-  let img_url;
-  const fetchingImage = async () => {
-    base64 = await convertToBase64(imageUploadedValue[0]);
-    const templateImageUpload = new ImageUploaderFormat(
-      base64,
-      user.companyData.id,
-      data.category_name,
-      data.item_group,
-      "",
-      "",
-      "",
-      "",
-      ""
-    );
+  try {
+    if (!imageUploadedValue || !imageUploadedValue[0]) {
+      throw new Error("No image file provided");
+    }
+
+    const base64 = await convertToBase64(imageUploadedValue[0]);
+    const template = {
+      imageFile: base64,
+      imageID: `${user.companyData.id}_${data.category_name}_${data.item_group}`,
+      tags: JSON.stringify([
+        user.companyData.id,
+        data.item_group,
+        data.category_name,
+      ]),
+      context: `category_name:${data.category_name}|group_name:${
+        data.item_group
+      }|created_at:${Date.now()}|updated_at:${Date.now()}`,
+    };
+
     const registerImage = await devitrakApi.post(
       "/cloudinary/upload-image",
-      templateImageUpload.item_uploader()
+      template,
     );
 
     await devitrakApi.post(`/image/new_image`, {
@@ -175,9 +178,9 @@ export const storeAndGenerateImageUrl = ({
       company: user.companyData.id,
     });
 
-    img_url = registerImage.data.imageUploaded.secure_url;
-    return img_url;
-  };
-  fetchingImage();
-  return img_url;
+    return registerImage.data.imageUploaded.secure_url;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
 };
