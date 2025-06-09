@@ -240,9 +240,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           dataSource={dataToDisplay()}
           className="table-ant-customized"
         />
-        {
-          dataToDisplay().length> 0 && console.log(dataToDisplay())
-        }
       </Grid>
     </Suspense>
   );
