@@ -12,6 +12,7 @@ import { DangerButtonText } from "../../../../../styles/global/DangerButtonText"
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useQueryClient } from "@tanstack/react-query";
 const ExtraInformation = ({ dataFound, containerInfo }) => {
+  console.log(dataFound);
   const [openModal, setOpenModal] = useState(false);
   const queryClient = useQueryClient();
   const handleContainerItemsRemoval = async () => {
@@ -37,6 +38,10 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
     }
   };
 
+  const containerItems =
+    typeof dataFound[0].container_items === "string"
+      ? JSON.parse(dataFound[0]?.container_items)
+      : dataFound[0]?.container_items;
   return (
     <Grid
       display={dataFound[0]?.container > 0 ? "flex" : "none"}
@@ -72,7 +77,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
             >
               <Typography style={TextFontSize14LineHeight20}>
                 Items in container (serial number) |{" "}
-                {dataFound[0]?.container_items?.length ?? 0}/
+                {containerItems?.length ?? 0}/
                 {dataFound[0]?.containerSpotLimit} cap
               </Typography>
             </Grid>
@@ -116,7 +121,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           </Grid>
           <Grid container>
             <Space size={[8, 16]} wrap style={{ margin: "10px 0" }}>
-              {dataFound[0]?.container_items?.map((item) => (
+              {containerItems?.map((item) => (
                 <Chip
                   key={item.item_id}
                   label={item.serial_number}
