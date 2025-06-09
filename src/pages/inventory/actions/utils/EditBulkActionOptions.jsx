@@ -1,0 +1,218 @@
+import { devitrakApi } from "../../../../api/devitrakApi";
+import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
+import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+
+export const bulkItemUpdateAlphanumeric = async ({
+  data,
+  user,
+  navigate,
+  openNotificationWithIcon,
+  setLoadingStatus,
+  setValue,
+  img_url,
+  moreInfo,
+  formatDate,
+  returningDate,
+  subLocationsSubmitted,
+  scannedSerialNumbers,
+  setScannedSerialNumbers,
+}) => {
+  const template = {
+    category_name: data.category_name,
+    item_group: data.item_group,
+    cost: data.cost,
+    brand: data.brand,
+    descript_item: data.descript_item,
+    ownership: data.ownership,
+    list: scannedSerialNumbers,
+    warehouse: true,
+    main_warehouse: data.tax_location,
+    created_at: formatDate(new Date()),
+    update_at: formatDate(new Date()),
+    company: user.company,
+    location: data.location,
+    current_location: data.location,
+    sub_location: JSON.stringify(subLocationsSubmitted),
+    extra_serial_number: JSON.stringify(moreInfo),
+    company_id: user.sqlInfo.company_id,
+    return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
+    returnedRentedInfo: JSON.stringify([]),
+    container: String(data.container).includes("Yes"),
+    containerSpotLimit: data.containerSpotLimit,
+    display_item: 1,
+    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    image_url: img_url,
+  };
+  const respNewItem = await devitrakApi.post(
+    "/db_company/update-items-based-on-alphanumeric-serial-number",
+    template
+  );
+  if (respNewItem.data.ok) {
+    Object.keys(respNewItem.data.data).map((key) => {
+      setValue(key, "");
+    });
+    setScannedSerialNumbers([]);
+    openNotificationWithIcon(
+      "New group of items were created and stored in database."
+    );
+    setLoadingStatus(false);
+    await devitrakApi.post("/cache_update/remove-cache", {
+      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+    });
+
+    return navigate("/inventory");
+  }
+};
+
+export const bulkItemUpdateSequential = async ({
+  data,
+  user,
+  navigate,
+  openNotificationWithIcon,
+  setLoadingStatus,
+  setValue,
+  img_url,
+  moreInfo,
+  formatDate,
+  returningDate,
+  subLocationsSubmitted,
+}) => {
+  const template = {
+    category_name: data.category_name,
+    item_group: data.item_group,
+    cost: data.cost,
+    brand: data.brand,
+    descript_item: data.descript_item,
+    ownership: data.ownership,
+    min_serial_number: data.min_serial_number,
+    max_serial_number: data.max_serial_number,
+    warehouse: true,
+    main_warehouse: data.tax_location,
+    created_at: formatDate(new Date()),
+    update_at: formatDate(new Date()),
+    company: user.company,
+    location: data.location,
+    current_location: data.location,
+    sub_location: JSON.stringify(subLocationsSubmitted),
+    extra_serial_number: JSON.stringify(moreInfo),
+    company_id: user.sqlInfo.company_id,
+    return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
+    returnedRentedInfo: JSON.stringify([]),
+    container: String(data.container).includes("Yes"),
+    containerSpotLimit: data.containerSpotLimit,
+    display_item: 1,
+    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    image_url: img_url || null,
+  };
+  const respNewItem = await devitrakApi.post(
+    "/db_company/update-items-based-on-serial-number",
+    template
+  );
+  if (respNewItem.data.ok) {
+    Object.keys(respNewItem.data.data).map((key) => {
+      setValue(key, "");
+    });
+    openNotificationWithIcon(
+      "New group of items were created and stored in database."
+    );
+    setLoadingStatus(false);
+    await devitrakApi.post("/cache_update/remove-cache", {
+      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+    });
+
+    return navigate("/inventory");
+  }
+};
+
+export const updateAllItemsBasedOnParameters = async ({
+  data,
+  user,
+  navigate,
+  openNotificationWithIcon,
+  setLoadingStatus,
+  setValue,
+  img_url,
+  moreInfo,
+  formatDate,
+  returningDate,
+  subLocationsSubmitted,
+  originalTemplate,
+}) => {
+  const newTemplate = {
+    category_name: data.category_name,
+    item_group: data.item_group,
+    cost: data.cost,
+    brand: data.brand,
+    descript_item: data.descript_item,
+    ownership: data.ownership,
+    warehouse: true,
+    main_warehouse: data.tax_location,
+    update_at: formatDate(new Date()),
+    location: data.location,
+    current_location: data.location,
+    sub_location: JSON.stringify(subLocationsSubmitted),
+    extra_serial_number: JSON.stringify(moreInfo),
+    company_id: user.sqlInfo.company_id,
+    return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
+    returnedRentedInfo: JSON.stringify([]),
+    container: String(data.container).includes("Yes"),
+    containerSpotLimit: data.containerSpotLimit,
+    display_item: 1,
+    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    image_url: img_url || null,
+    original_template: originalTemplate,
+  };
+  await devitrakApi.post(
+    "/db_company/update-all-items-in-inventory",
+    newTemplate
+  );
+  await devitrakApi.post("/cache_update/remove-cache", {
+    key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+  });
+
+  Object.keys(newTemplate).forEach((key) => {
+    setValue(key, "");
+  });
+  setLoadingStatus(false);
+  openNotificationWithIcon("All items were updated database.");
+  return navigate("/inventory");
+};
+
+export const storeAndGenerateImageUrl = ({
+  data,
+  imageUploadedValue,
+  user,
+}) => {
+  let base64;
+  let img_url;
+  if(!data.category_name || !data.item_group){
+    return alert("Category name and item group are required.");
+  }
+  const fetchingImage = async () => {
+    base64 = await convertToBase64(imageUploadedValue[0]);
+    const templateImageUpload = new ImageUploaderFormat(
+      base64,
+      user.companyData.id,
+      data.category_name,
+      data.item_group,
+      "",
+      "",
+      "",
+      "",
+      ""
+    );
+    const registerImage = await devitrakApi.post(
+      "/cloudinary/upload-image",
+      templateImageUpload.item_uploader()
+    );
+    await devitrakApi.post(`/image/new_image`, {
+      source: registerImage.data.imageUploaded.secure_url,
+      category: data.category_name,
+      item_group: data.item_group,
+      company: user.companyData.id,
+    });
+    return registerImage.data.imageUploaded.secure_url;
+  };
+  img_url = fetchingImage();
+  return img_url;
+};
