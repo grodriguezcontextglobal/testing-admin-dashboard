@@ -362,3 +362,6 @@ export const renderOptional = ({
     />
   );
 };
+
+export const dicColumnsNameProperlyDisplayed =() => {
+}
