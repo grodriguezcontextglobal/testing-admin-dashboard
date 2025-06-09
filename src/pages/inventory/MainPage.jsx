@@ -50,7 +50,7 @@ const MainPage = () => {
   const { register, watch, setValue } = useForm({
     defaultValues: {
       searchItem: "...",
-    },
+    }
   });
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery"],
@@ -67,12 +67,12 @@ const MainPage = () => {
     setValue("searchItem", "");
     setRenderingData(false);
   }, []);
-
+  
   useEffect(() => {
     if (companyHasInventoryQuery.isSuccess) {
       const total = companyHasInventoryQuery?.data?.data?.total;
       setCurrentTab(total > 0 ? 1 : 2);
-      setIsLoadingState(true);
+      setIsLoadingState(true)
       setIsLoadingState(false);
     }
   }, [companyHasInventoryQuery.isSuccess]);
@@ -119,10 +119,11 @@ const MainPage = () => {
         queryKey: ["ItemsInInventoryCheckingQuery"],
         exact: true,
       }),
-      companyHasInventoryQuery.refetch(),
+      companyHasInventoryQuery.refetch()
     ]);
     setRenderingData(false);
   };
+
 
   return (
     <Suspense
@@ -170,7 +171,7 @@ const MainPage = () => {
             md={8}
             lg={8}
           >
-            {/*<Link to="/inventory/edit-group">
+            <Link to="/inventory/edit-group">
               <button style={{ ...LightBlueButton, width: "fit-content" }}>
                 <p
                   style={{
@@ -187,7 +188,7 @@ const MainPage = () => {
                   &nbsp;Update a group of device
                 </p>
               </button>
-            </Link>*/}
+            </Link>
             <Link to="/inventory/new-bulk-items">
               <button style={{ ...BlueButton, width: "fit-content" }}>
                 <WhiteCirclePlusIcon
@@ -219,7 +220,7 @@ const MainPage = () => {
           }}
           container
         >
-          {/* <Grid item xs={12} sm={12}>
+          <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/edit-group">
               <button style={{ ...LightBlueButton, width: "100%" }}>
@@ -239,7 +240,7 @@ const MainPage = () => {
                 </p>
               </button>
             </Link>
-          </Grid> */}
+          </Grid>
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/new-bulk-items">
@@ -342,44 +343,20 @@ const MainPage = () => {
               lg
             >
               <Button
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                  color: "var(--gray600, #475467)",
-                  fontWeight: "600",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+                style={{ ...OutlinedInputStyle, width: "100%" }}
                 onClick={() => {
                   setOpenAdvanceSearchModal(true);
                 }}
               >
-                <p
-                  style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
-                >
-                  Advance search
-                </p>
+                Advance search
               </Button>
               <Button
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                  color: "var(--gray600, #475467)",
-                  fontWeight: "600",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+                style={{ ...OutlinedInputStyle, width: "100%" }}
                 onClick={() => {
                   refetchingQueriesFn();
                 }}
               >
-                <p
-                  style={{ fontWeight: 600, color: "var(--gray600, #475467)" }}
-                >
-                  Reload
-                </p>
+                Reload
               </Button>
             </Grid>
             <Grid
