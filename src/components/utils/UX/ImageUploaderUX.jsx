@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { UploadIcon } from "../../icons/UploadIcon";
 
-const ImageUploaderUX = ({ setImageUploadedValue, imageUploadedValue }) => {
-  const { register, watch, setValue } = useForm({
+const ImageUploaderUX = ({ setImageUploadedValue }) => {
+  const { register, watch } = useForm({
     defaultValues: {
       photo: null,
     },
@@ -42,11 +42,7 @@ const ImageUploaderUX = ({ setImageUploadedValue, imageUploadedValue }) => {
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watch("photo") !== null && watch("photo").length > 0]);
-
-  useEffect(() => {
-    setValue("photo", null);
-  }, [imageUploadedValue === null]);
+  }, [watch("photo")]);
 
   return (
     <form style={formStyle}>
@@ -99,8 +95,7 @@ const ImageUploaderUX = ({ setImageUploadedValue, imageUploadedValue }) => {
         xs={12}
       >
         <Typography
-          color={"var(--gray-600, #475467)"}
-          style={{ ...styling, fontWeight: 400 }}
+          style={{ ...styling,color:"var(--gray600)", fontWeight: 400 }}
         >
           SVG, PNG, JPG or GIF (max. 5MB)
         </Typography>
