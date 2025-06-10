@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { UploadIcon } from "../../icons/UploadIcon";
 
 const ImageUploaderUX = ({ setImageUploadedValue }) => {
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       photo: null,
     },
@@ -95,9 +95,32 @@ const ImageUploaderUX = ({ setImageUploadedValue }) => {
         xs={12}
       >
         <Typography
-          style={{ ...styling,color:"var(--gray600)", fontWeight: 400 }}
+          style={{ ...styling, color: "var(--gray600)", fontWeight: 400 }}
         >
           SVG, PNG, JPG or GIF (max. 5MB)
+        </Typography>
+      </Grid>
+      <Grid
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        marginBottom={2}
+        item
+        xs={12}
+      >
+        <Typography
+          style={{
+            ...styling,
+            color: "var(--danger-action)",
+            textDecoration: "underline",
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            setValue("photo", null);
+            setImageUploadedValue(null);
+          }}
+        >
+          Remove image
         </Typography>
       </Grid>
     </form>
