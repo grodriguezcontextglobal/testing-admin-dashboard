@@ -16,7 +16,11 @@ export const bulkItemUpdateAlphanumeric = async ({
   subLocationsSubmitted,
   scannedSerialNumbers,
   setScannedSerialNumbers,
+  originalTemplate,
 }) => {
+  if (!scannedSerialNumbers || scannedSerialNumbers.length === 0) {
+    return alert("Please scan at least one serial number.");
+  }
   const template = {
     category_name: data.category_name,
     item_group: data.item_group,
@@ -42,13 +46,14 @@ export const bulkItemUpdateAlphanumeric = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
+    originalTemplate: originalTemplate,
   };
   const respNewItem = await devitrakApi.post(
     "/db_company/update-items-based-on-alphanumeric-serial-number",
     template
   );
   if (respNewItem.data.ok) {
-    Object.keys(respNewItem.data.data).map((key) => {
+    Object.keys(template).map((key) => {
       setValue(key, "");
     });
     setScannedSerialNumbers([]);
@@ -76,7 +81,11 @@ export const bulkItemUpdateSequential = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
+  originalTemplate,
 }) => {
+  if (!data.min_serial_number || !data.max_serial_number) {
+    return alert("Min serial number and max serial number are required.");
+  }
   const template = {
     category_name: data.category_name,
     item_group: data.item_group,
@@ -103,13 +112,14 @@ export const bulkItemUpdateSequential = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
+    originalTemplate: originalTemplate,
   };
   const respNewItem = await devitrakApi.post(
     "/db_company/update-items-based-on-serial-number",
     template
   );
   if (respNewItem.data.ok) {
-    Object.keys(respNewItem.data.data).map((key) => {
+    Object.keys(template).map((key) => {
       setValue(key, "");
     });
     openNotificationWithIcon(
@@ -138,6 +148,9 @@ export const updateAllItemsBasedOnParameters = async ({
   subLocationsSubmitted,
   originalTemplate,
 }) => {
+  if (!data.category_name ||!data.item_group) {
+    return alert("Category name and item group are required.");
+  }
   const newTemplate = {
     category_name: data.category_name,
     item_group: data.item_group,
@@ -160,7 +173,7 @@ export const updateAllItemsBasedOnParameters = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
-    original_template: originalTemplate,
+    originalTemplate: originalTemplate,
   };
   await devitrakApi.post(
     "/db_company/update-all-items-in-inventory",
@@ -185,7 +198,7 @@ export const storeAndGenerateImageUrl = ({
 }) => {
   let base64;
   let img_url;
-  if(!data.category_name || !data.item_group){
+  if (!data.category_name || !data.item_group) {
     return alert("Category name and item group are required.");
   }
   const fetchingImage = async () => {
