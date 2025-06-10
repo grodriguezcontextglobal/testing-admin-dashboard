@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
-import { groupBy } from "lodash";
+import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
@@ -41,6 +41,7 @@ const AddNewBulkItems = () => {
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
+  const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
   const [addSerialNumberField, setAddSerialNumberField] = useState(false);
   const [rangeFormat, setRangeFormat] = useState(false);
   const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
@@ -49,6 +50,7 @@ const AddNewBulkItems = () => {
   const [labeling, setLabeling] = useState("Scanning all serial numbers here");
   const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
+  const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
   const { user } = useSelector((state) => state.admin);
@@ -141,48 +143,17 @@ const AddNewBulkItems = () => {
   };
 
   const savingNewItem = async (data) => {
-    const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = groupBy(dataDevices, "item_group");
     validatingInputFields({
       data,
       openNotificationWithIcon,
       returningDate,
     });
-    if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
+    if (scannedSerialNumbers.length === 0 && Number(data.max_serial_number) < Number(data.min_serial_number)) {
       return openNotificationWithIcon(
         "Max serial number must be greater than min serial number."
       );
     }
-    if (groupingByDeviceType[data.item_group]) {
-      const dataRef = groupBy(
-        groupingByDeviceType[data.item_group],
-        "serial_number"
-      );
-      if (dataRef[data.serial_number]?.length > 0) {
-        return openNotificationWithIcon(
-          "Device serial number already exists in company records."
-        );
-      }
-    }
     try {
-      let img_url;
-      setLoadingStatus(true);
-      if (
-        imageUploadedValue?.length > 0 &&
-        imageUploadedValue[0].size > 5242880
-      ) {
-        setLoadingStatus(false);
-        return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
-        );
-      }
-      if (imageUploadedValue?.length > 0) {
-        img_url = storeAndGenerateImageUrl({
-          data,
-          imageUploadedValue,
-          user,
-        });
-      }
       if (scannedSerialNumbers.length > 0) {
         await bulkItemInsertAlphanumeric({
           data,
@@ -191,7 +162,7 @@ const AddNewBulkItems = () => {
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
-          img_url,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
           moreInfo,
           formatDate,
           returningDate,
@@ -208,7 +179,7 @@ const AddNewBulkItems = () => {
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
-          img_url,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
           moreInfo,
           formatDate,
           returningDate,
@@ -233,16 +204,6 @@ const AddNewBulkItems = () => {
     const result = [...moreInfo];
     const removingResult = result.filter((_, i) => i !== index);
     return setMoreInfo(removingResult);
-  };
-
-  const gripingFields = (props) => {
-    if (
-      props === "min_serial_number" ||
-      props === "max_serial_number" ||
-      props === "quantity"
-    )
-      return 6;
-    return 6;
   };
 
   const qtyDiff = useCallback(() => {
@@ -358,6 +319,37 @@ const AddNewBulkItems = () => {
     return setScannedSerialNumbers(result);
   };
 
+  const acceptAndGenerateImage = async () => {
+    try {
+      if (
+        imageUploadedValue?.length > 0 &&
+        imageUploadedValue[0].size > 5242880
+      ) {
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
+      }
+      if (!watch("category_name") || !watch("item_group")) {
+        return alert("Category name and item group are required.");
+      }
+      const data = {
+        category_name: watch("category_name"),
+        item_group: watch("item_group"),
+      };
+
+      const img_url = await storeAndGenerateImageUrl({
+        data,
+        imageUploadedValue,
+        user,
+      });
+
+      setImageUrlGenerated(img_url);
+      return message.success("Image was successfully accepted.");
+    } catch (error) {
+      message.error("Failed to upload image: " + error.message);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     companiesQuery.refetch();
@@ -373,14 +365,34 @@ const AddNewBulkItems = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("item_group")
       );
-      setValue("category_name", `${dataToRetrieve.category_name}`);
-      setValue("cost", `${dataToRetrieve.cost}`);
-      setValue("brand", `${dataToRetrieve.brand}`);
-      setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setValue("location", `${dataToRetrieve.location}`);
-      setValue("tax_location", `${dataToRetrieve.main_warehouse}`);
-      setValue("ownership", `${dataToRetrieve.ownership}`);
-      setValue("container", "");
+      if (Object.entries(dataToRetrieve).length > 0) {
+        Object.entries(dataToRetrieve).forEach(([key, value]) => {
+          if (key === "enableAssignFeature") {
+            setValue(key, "Enabled" );
+          }
+          if (key === "container") {
+            setValue(key, "No - it is not a container");
+          }
+          setValue(key, value);
+          setValue("quantity", 0);
+          const grouping = groupBy(
+            itemsInInventoryQuery?.data?.data?.items,
+            "item_group"
+          );
+          if (grouping[watch("item_group")]) {
+            const dataToRetrieve = orderBy(
+              grouping[watch("item_group")],
+              "serial_number",
+              "asc"
+            );
+            setAllSerialNumbersOptions([
+              ...dataToRetrieve.map((x) => {
+                return x.serial_number;
+              }),
+            ]);
+          }
+        });
+      }
     }
     return () => {
       controller.abort();
@@ -486,6 +498,7 @@ const AddNewBulkItems = () => {
     } else {
       setConvertImageTo64ForPreview(null);
       setDisplayPreviewImage(false);
+      setImageUrlGenerated(null);
     }
   }, [imageUploadedValue]);
 
@@ -503,47 +516,48 @@ const AddNewBulkItems = () => {
       {contextHolder}
       {renderTitle()}
       <BulkItemForm
-        handleSubmit={handleSubmit}
-        watch={watch}
-        control={control}
-        savingNewItem={savingNewItem}
-        OutlinedInputStyle={OutlinedInputStyle}
-        retrieveItemOptions={retrieveItemOptions}
-        renderLocationOptions={renderLocationOptions}
-        options={options}
-        displayContainerSplotLimitField={displayContainerSplotLimitField}
-        subLocationsOptions={subLocationsOptions}
-        displaySublocationFields={displaySublocationFields}
-        addSerialNumberField={addSerialNumberField}
-        rangeFormat={rangeFormat}
-        labeling={labeling}
-        setOpenScanningModal={setOpenScanningModal}
-        setOpenScannedItemView={setOpenScannedItemView}
-        manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
+        acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
-        setAddSerialNumberField={setAddSerialNumberField}
-        subLocationsSubmitted={subLocationsSubmitted}
-        setSubLocationsSubmitted={setSubLocationsSubmitted}
-        register={register}
-        errors={errors}
-        returningDate={returningDate}
-        setReturningDate={setReturningDate}
-        setMoreInfoDisplay={setMoreInfoDisplay}
-        moreInfoDisplay={moreInfoDisplay}
-        keyObject={keyObject}
-        valueObject={valueObject}
-        setKeyObject={setKeyObject}
-        setValueObject={setValueObject}
-        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
-        moreInfo={moreInfo}
-        handleDeleteMoreInfo={handleDeleteMoreInfo}
-        loadingStatus={loadingStatus}
-        setImageUploadedValue={setImageUploadedValue}
-        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
-        gripingFields={gripingFields}
-        isRented={isRented}
+        addSerialNumberField={addSerialNumberField}
+        allSerialNumbersOptions={allSerialNumbersOptions}
+        control={control}
+        displayContainerSplotLimitField={displayContainerSplotLimitField}
         displayPreviewImage={displayPreviewImage}
+        displaySublocationFields={displaySublocationFields}
+        errors={errors}
+        handleDeleteMoreInfo={handleDeleteMoreInfo}
+        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
+        handleSubmit={handleSubmit}
         imageUploadedValue={convertImageTo64ForPreview}
+        isRented={isRented}
+        keyObject={keyObject}
+        labeling={labeling}
+        loadingStatus={loadingStatus}
+        manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
+        moreInfo={moreInfo}
+        moreInfoDisplay={moreInfoDisplay}
+        options={options}
+        OutlinedInputStyle={OutlinedInputStyle}
+        rangeFormat={rangeFormat}
+        register={register}
+        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+        renderLocationOptions={renderLocationOptions}
+        retrieveItemOptions={retrieveItemOptions}
+        returningDate={returningDate}
+        savingNewItem={savingNewItem}
+        setAddSerialNumberField={setAddSerialNumberField}
+        setImageUploadedValue={setImageUploadedValue}
+        setKeyObject={setKeyObject}
+        setMoreInfoDisplay={setMoreInfoDisplay}
+        setOpenScannedItemView={setOpenScannedItemView}
+        setOpenScanningModal={setOpenScanningModal}
+        setReturningDate={setReturningDate}
+        setSubLocationsSubmitted={setSubLocationsSubmitted}
+        setValueObject={setValueObject}
+        subLocationsOptions={subLocationsOptions}
+        subLocationsSubmitted={subLocationsSubmitted}
+        valueObject={valueObject}
+        watch={watch}
       />
       {renderingModals({
         openScanningModal,

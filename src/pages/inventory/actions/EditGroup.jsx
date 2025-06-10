@@ -1,4 +1,4 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
@@ -6,32 +6,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import { formatDate } from "../../../components/utils/dateFormat";
 import "../../../styles/global/ant-select.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/reactInput.css";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import "./style.css";
 import { renderingModals } from "./utils/BulkComponents";
 import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
-import EditBulkForm from "./utils/EditBulkForm";
-import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
-import validatingInputFields from "./utils/validatingInputFields";
-import { formatDate } from "../../../components/utils/dateFormat";
 import {
   bulkItemUpdateAlphanumeric,
   bulkItemUpdateSequential,
   updateAllItemsBasedOnParameters,
 } from "./utils/EditBulkActionOptions";
-import { useNavigate } from "react-router-dom";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { renderTitle } from "./utils/EditBulkComponents";
+import EditBulkForm from "./utils/EditBulkForm";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
+import validatingInputFields from "./utils/validatingInputFields";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -58,6 +55,7 @@ const EditGroup = () => {
     useState(null);
   const [updateAllItems, setUpdateAllItems] = useState(false);
   const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
+  const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [removeImage, setRemoveImage] = useState(null);
   const { user } = useSelector((state) => state.admin);
   const {
@@ -133,8 +131,8 @@ const EditGroup = () => {
   };
 
   const savingNewItem = async (data) => {
-    const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = groupBy(dataDevices, "item_group");
+    // const dataDevices = itemsInInventoryQuery.data.data.items;
+    // const groupingByDeviceType = groupBy(dataDevices, "item_group");
     validatingInputFields({
       data,
       openNotificationWithIcon,
@@ -149,17 +147,6 @@ const EditGroup = () => {
         "Max serial number must be greater than min serial number."
       );
     }
-    if (!updateAllItems && groupingByDeviceType[data.item_group]) {
-      const dataRef = groupBy(
-        groupingByDeviceType[data.item_group],
-        "serial_number"
-      );
-      if (dataRef[data.serial_number]?.length > 0) {
-        return openNotificationWithIcon(
-          "Device serial number already exists in company records."
-        );
-      }
-    }
     try {
       setLoadingStatus(true);
       if (updateAllItems) {
@@ -170,7 +157,7 @@ const EditGroup = () => {
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
-          imageUploadedValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
           moreInfo,
           formatDate,
           returningDate,
@@ -187,13 +174,14 @@ const EditGroup = () => {
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
-          imageUploadedValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
           moreInfo,
           formatDate,
           returningDate,
           subLocationsSubmitted,
           scannedSerialNumbers,
           setScannedSerialNumbers,
+          originalTemplate: refTemplateToUpdate.current,
         });
       } else {
         await bulkItemUpdateSequential({
@@ -203,11 +191,12 @@ const EditGroup = () => {
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
-          imageUploadedValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
           moreInfo,
           formatDate,
           returningDate,
           subLocationsSubmitted,
+          originalTemplate: refTemplateToUpdate.current,
         });
       }
       return setLoadingStatus(false);
@@ -228,16 +217,6 @@ const EditGroup = () => {
     const result = [...moreInfo];
     const removingResult = result.filter((_, i) => i !== index);
     return setMoreInfo(removingResult);
-  };
-
-  const gripingFields = (props) => {
-    if (
-      props === "min_serial_number" ||
-      props === "max_serial_number" ||
-      props === "quantity"
-    )
-      return 6;
-    return 6;
   };
 
   const qtyDiff = useCallback(() => {
@@ -377,7 +356,7 @@ const EditGroup = () => {
         user,
       });
 
-      setImageUploadedValue(img_url);
+      setImageUrlGenerated(img_url);
       return message.success("Image was successfully accepted.");
     } catch (error) {
       message.error("Failed to upload image: " + error.message);
@@ -403,18 +382,10 @@ const EditGroup = () => {
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (key === "enableAssignFeature") {
-            setValue(key, value > 0 ? "Enabled" : "Disabled");
-          }
-          if (key === "warehouse") {
-            setValue(key, value > 0 ? "Yes" : "No");
+            setValue(key, "Enabled");
           }
           if (key === "container") {
-            setValue(
-              key,
-              value > 0
-                ? "Yes - It is a container"
-                : "No - It is not a container"
-            );
+            setValue(key, "No - It is not a container");
           }
           setValue(key, value);
           setValue("quantity", 0);
@@ -441,6 +412,7 @@ const EditGroup = () => {
       controller.abort();
     };
   }, [watch("item_group")]);
+
   useEffect(() => {
     qtyDiff();
   }, [
@@ -531,7 +503,6 @@ const EditGroup = () => {
 
   useEffect(() => {
     if (imageUploadedValue?.length > 0) {
-      console.log("imageUploadedValue", imageUploadedValue);
       const triggerImageInto64 = async () => {
         const base64 = await convertToBase64(imageUploadedValue[0]);
         setConvertImageTo64ForPreview(base64);
@@ -542,6 +513,7 @@ const EditGroup = () => {
     if (!imageUploadedValue) {
       setConvertImageTo64ForPreview(null);
       setDisplayPreviewImage(false);
+      setImageUrlGenerated(null);
     }
   }, [
     watch("image_uploader")?.length,
@@ -566,72 +538,6 @@ const EditGroup = () => {
     }
   }, [updateAllItems]);
 
-  const renderTitle = () => {
-    return (
-      <>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <Typography
-            textAlign={"left"}
-            style={TextFontSize30LineHeight38}
-            color={"var(--gray-600, #475467)"}
-          >
-            Edit a group of devices
-          </Typography>
-        </InputLabel>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <Typography
-            textAlign={"left"}
-            textTransform={"none"}
-            style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
-            color={"var(--gray-600, #475467)"}
-          >
-            Devices serial numbers can be created by inputting a serial number
-            base to define the category of device, and then a range from one
-            number to another, depending on your inventory.
-          </Typography>
-        </InputLabel>
-      </>
-    );
-  };
-
-  const styleUpdateAllItemsButton = () => {
-    if (updateAllItems) {
-      return {
-        button: {
-          ...BlueButton,
-          margin: "10px 0",
-          alignSelf: "stretch",
-          display: "flex",
-          width: "100%",
-          borderRadius: "8px",
-        },
-        p: {
-          ...BlueButtonText,
-          ...CenteringGrid,
-        },
-      };
-    }
-    return {
-      button: {
-        ...GrayButton,
-        margin: "10px 0",
-        alignSelf: "stretch",
-        display: "flex",
-        width: "100%",
-        borderRadius: "8px",
-      },
-      p: {
-        ...GrayButtonText,
-        ...CenteringGrid,
-      },
-    };
-  };
   return (
     <Grid
       display={"flex"}
@@ -642,14 +548,15 @@ const EditGroup = () => {
       {contextHolder}
       {renderTitle()}
       <EditBulkForm
+        acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
         addSerialNumberField={addSerialNumberField}
+        allSerialNumbersOptions={allSerialNumbersOptions}
         control={control}
         displayContainerSplotLimitField={displayContainerSplotLimitField}
         displayPreviewImage={displayPreviewImage}
         displaySublocationFields={displaySublocationFields}
         errors={errors}
-        gripingFields={gripingFields}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
         handleSubmit={handleSubmit}
@@ -665,6 +572,7 @@ const EditGroup = () => {
         OutlinedInputStyle={OutlinedInputStyle}
         rangeFormat={rangeFormat}
         register={register}
+        removeImage={removeImage}
         renderingOptionsForSubLocations={renderingOptionsForSubLocations}
         renderLocationOptions={renderLocationOptions}
         retrieveItemOptions={retrieveItemOptions}
@@ -676,20 +584,17 @@ const EditGroup = () => {
         setMoreInfoDisplay={setMoreInfoDisplay}
         setOpenScannedItemView={setOpenScannedItemView}
         setOpenScanningModal={setOpenScanningModal}
+        setRemoveImage={setRemoveImage}
         setReturningDate={setReturningDate}
         setSubLocationsSubmitted={setSubLocationsSubmitted}
         setUpdateAllItems={setUpdateAllItems}
         setValueObject={setValueObject}
-        styleUpdateAllItemsButton={styleUpdateAllItemsButton}
         subLocationsOptions={subLocationsOptions}
         subLocationsSubmitted={subLocationsSubmitted}
         updateAllItems={updateAllItems}
         valueObject={valueObject}
         watch={watch}
-        removeImage={removeImage}
-        setRemoveImage={setRemoveImage}
-        acceptImage={acceptAndGenerateImage}
-        allSerialNumbersOptions={allSerialNumbersOptions}
+        imageUrlGenerated={imageUrlGenerated}
       />
       {renderingModals({
         openScanningModal,
