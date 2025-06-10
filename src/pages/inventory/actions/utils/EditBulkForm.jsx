@@ -1,3 +1,4 @@
+import { Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
@@ -6,37 +7,39 @@ import {
   Popconfirm,
   Tooltip,
 } from "antd";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
+import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import {
   addingExtraInfo,
+  gripingFields,
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { Grid, InputLabel, Typography } from "@mui/material";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { Controller } from "react-hook-form";
-import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { renderFields } from "./BulkItemsFields";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { CheckIcon } from "../../../../components/icons/CheckIcon";
+import { renderingResultUX, styleUpdateAllItemsButton } from "./EditBulkComponents";
 
 const EditBulkForm = ({
+  acceptImage,
   addingSubLocation,
   addSerialNumberField,
+  allSerialNumbersOptions,
   control,
   displayContainerSplotLimitField,
   displayPreviewImage,
   displaySublocationFields,
   errors,
-  gripingFields,
   handleDeleteMoreInfo,
   handleMoreInfoPerDevice,
   handleSubmit,
@@ -65,24 +68,21 @@ const EditBulkForm = ({
   setOpenScanningModal,
   setReturningDate,
   setSubLocationsSubmitted,
+  setUpdateAllItems,
   setValueObject,
   subLocationsOptions,
   subLocationsSubmitted,
+  updateAllItems,
   valueObject,
   watch,
-  updateAllItems,
-  setUpdateAllItems,
-  styleUpdateAllItemsButton,
-  acceptImage,
-  allSerialNumbersOptions,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
-          OutlinedInputStyle,
           retrieveItemOptions,
+          OutlinedInputStyle,
           renderLocationOptions,
           options,
           displayContainerSplotLimitField,
@@ -91,7 +91,6 @@ const EditBulkForm = ({
           addSerialNumberField,
           rangeFormat,
           labeling,
-          gripingFields,
           loadingStatus,
           setImageUploadedValue,
           renderingOptionsForSubLocations,
@@ -268,159 +267,170 @@ const EditBulkForm = ({
                   <Controller
                     control={control}
                     name={item.name}
-                    render={({ field: { value, onChange } }) => (
-                      <Grid
-                        container
-                        spacing={1}
-                        style={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Grid item xs={12} sm={12} md={12} lg={12}>
-                          <AutoComplete
-                            disabled={
-                              (item.name === "format_range_serial_number" ||
-                                item.name === "feed_serial_number") &&
-                              updateAllItems
-                            }
-                            aria-required={true}
-                            className="custom-autocomplete" // Add a custom className here
-                            variant="outlined"
-                            style={{
-                              ...AntSelectorStyle,
-                              border: "solid 0.3 var(--gray600)",
-                              fontFamily: "Inter",
-                              fontSize: "14px",
-                              width: "100%",
-                            }}
-                            value={value}
-                            onChange={(value) => onChange(value)}
-                            options={item.options?.map((x) => {
-                              if (item.htmlOption === 0) {
-                                return { value: x };
-                              } else {
-                                return { value: x.value };
-                              }
-                            })}
-                            placeholder={item.placeholder}
-                            //   filterOption={(inputValue, option) =>
-                            //     option.value
-                            //       .toUpperCase()
-                            //       .indexOf(inputValue.toUpperCase()) !== -1
-                            //   }
-                            allowClear
-                          />
-                          {item.label === "Serial number range format" && (
-                            <Button
-                              style={styleUpdateAllItemsButton().button}
-                              onClick={() => setUpdateAllItems(!updateAllItems)}
-                            >
-                              <p style={styleUpdateAllItemsButton().p}>
-                                {updateAllItems ? <CheckIcon /> : null}
-                                &nbsp;Update all items
-                              </p>
-                            </Button>
-                          )}
-                          {renderingOptionsButtons({
-                            watch,
-                            setOpenScanningModal,
-                            setOpenScannedItemView,
-                            manuallyAddingSerialNumbers,
-                            addingSubLocation,
-                            setAddSerialNumberField,
-                            label: item.label,
-                            setUpdateAllItems,
-                          })}
-                        </Grid>
+                    render={({ field: { value, onChange } }) => {
+                      return (
                         <Grid
-                          display={
-                            item.label === "Main location" ||
-                            item.label === "Sub location"
-                              ? "flex"
-                              : "none"
-                          }
-                          justifyContent={"flex-start"}
-                          alignItems={"center"}
-                          item
-                          xs={12}
-                          sm={12}
-                          md={12}
-                          lg={12}
+                          container
+                          spacing={1}
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
                         >
-                          {
-                            renderingOptionsForSubLocations(item.label)
-                              .addSubLocation
-                          }
-                          {
-                            renderingOptionsForSubLocations(item.label)
-                              .removeAllSubLocations
-                          }
-                        </Grid>
-                        <Grid item xs={12} sm={12} md={12} lg={12}>
-                          <Breadcrumb
-                            style={{
-                              display:
-                                item.label === "Sub location" ||
-                                displaySublocationFields.length > 0
-                                  ? "flex"
-                                  : "none",
-                              width: "100%",
-                            }}
-                            items={[
-                              {
-                                title: (
-                                  <p
-                                    style={{
-                                      backgroundColor: "transparent",
-                                      border: "none",
-                                      outline: "none",
-                                      boxShadow: "none",
-                                      margin: "auto",
-                                      padding: 0,
-                                      fontFamily: "Inter",
-                                      width: "fit-content",
-                                    }}
-                                  >
-                                    {watch("location")}
-                                  </p>
-                                ),
-                              },
-                              ...subLocationsSubmitted.map((item, index) => ({
-                                title: (
-                                  <Popconfirm
-                                    title="Are you sure you want to delete this sub location?"
-                                    onConfirm={() =>
-                                      setSubLocationsSubmitted(
-                                        subLocationsSubmitted.filter(
-                                          (_, i) => i !== index
-                                        )
-                                      )
-                                    }
-                                  >
-                                    <Button
+                          <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <AutoComplete
+                              disabled={
+                                (item.name === "format_range_serial_number" ||
+                                  item.name === "feed_serial_number") &&
+                                updateAllItems
+                              }
+                              aria-required={true}
+                              className="custom-autocomplete" // Add a custom className here
+                              variant="outlined"
+                              style={{
+                                ...AntSelectorStyle,
+                                border: "solid 0.3 var(--gray600)",
+                                fontFamily: "Inter",
+                                fontSize: "14px",
+                                width: "100%",
+                              }}
+                              value={renderingResultUX({ name: item.name, value })}
+                              onChange={(value) => onChange(value)}
+                              options={item.options?.map((x) => {
+                                if (item.htmlOption === 0) {
+                                  return { value: x };
+                                } else {
+                                  return { value: x.value };
+                                }
+                              })}
+                              placeholder={item.placeholder}
+                              //   filterOption={(inputValue, option) =>
+                              //     option.value
+                              //       .toUpperCase()
+                              //       .indexOf(inputValue.toUpperCase()) !== -1
+                              //   }
+                              allowClear
+                            />
+                            {item.label === "Serial number range format" && (
+                              <Button
+                                style={
+                                  styleUpdateAllItemsButton(updateAllItems)
+                                    .button
+                                }
+                                onClick={() =>
+                                  setUpdateAllItems(!updateAllItems)
+                                }
+                              >
+                                <p
+                                  style={
+                                    styleUpdateAllItemsButton(updateAllItems).p
+                                  }
+                                >
+                                  {updateAllItems ? <CheckIcon /> : null}
+                                  &nbsp;Update all items
+                                </p>
+                              </Button>
+                            )}
+                            {renderingOptionsButtons({
+                              watch,
+                              setOpenScanningModal,
+                              setOpenScannedItemView,
+                              manuallyAddingSerialNumbers,
+                              addingSubLocation,
+                              setAddSerialNumberField,
+                              label: item.label,
+                              setUpdateAllItems,
+                            })}
+                          </Grid>
+                          <Grid
+                            display={
+                              item.label === "Main location" ||
+                              item.label === "Sub location"
+                                ? "flex"
+                                : "none"
+                            }
+                            justifyContent={"flex-start"}
+                            alignItems={"center"}
+                            item
+                            xs={12}
+                            sm={12}
+                            md={12}
+                            lg={12}
+                          >
+                            {
+                              renderingOptionsForSubLocations(item.label)
+                                .addSubLocation
+                            }
+                            {
+                              renderingOptionsForSubLocations(item.label)
+                                .removeAllSubLocations
+                            }
+                          </Grid>
+                          <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <Breadcrumb
+                              style={{
+                                display:
+                                  item.label === "Sub location" ||
+                                  displaySublocationFields.length > 0
+                                    ? "flex"
+                                    : "none",
+                                width: "100%",
+                              }}
+                              items={[
+                                {
+                                  title: (
+                                    <p
                                       style={{
+                                        backgroundColor: "transparent",
                                         border: "none",
                                         outline: "none",
-                                        margin: 0,
-                                        padding: 0,
-                                        backgroundColor: "transparent",
                                         boxShadow: "none",
-                                        alignItems: "flex-start",
+                                        margin: "auto",
+                                        padding: 0,
+                                        fontFamily: "Inter",
+                                        width: "fit-content",
                                       }}
                                     >
-                                      {item}
-                                    </Button>
-                                  </Popconfirm>
-                                ),
-                              })),
-                            ]}
-                          />
+                                      {watch("location")}
+                                    </p>
+                                  ),
+                                },
+                                ...subLocationsSubmitted.map((item, index) => ({
+                                  title: (
+                                    <Popconfirm
+                                      title="Are you sure you want to delete this sub location?"
+                                      onConfirm={() =>
+                                        setSubLocationsSubmitted(
+                                          subLocationsSubmitted.filter(
+                                            (_, i) => i !== index
+                                          )
+                                        )
+                                      }
+                                    >
+                                      <Button
+                                        style={{
+                                          border: "none",
+                                          outline: "none",
+                                          margin: 0,
+                                          padding: 0,
+                                          backgroundColor: "transparent",
+                                          boxShadow: "none",
+                                          alignItems: "flex-start",
+                                        }}
+                                      >
+                                        {item}
+                                      </Button>
+                                    </Popconfirm>
+                                  ),
+                                })),
+                              ]}
+                            />
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    )}
+                      );
+                    }}
                   />
                 ) : (
                   renderOptional({

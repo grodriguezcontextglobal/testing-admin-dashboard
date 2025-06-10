@@ -148,6 +148,7 @@ export const updateAllItemsBasedOnParameters = async ({
   subLocationsSubmitted,
   originalTemplate,
 }) => {
+  console.log(img_url);
   if (!data.category_name ||!data.item_group) {
     return alert("Category name and item group are required.");
   }
@@ -175,6 +176,7 @@ export const updateAllItemsBasedOnParameters = async ({
     image_url: img_url || null,
     originalTemplate: originalTemplate,
   };
+  console.log(newTemplate);
   await devitrakApi.post(
     "/db_company/update-all-items-in-inventory",
     newTemplate

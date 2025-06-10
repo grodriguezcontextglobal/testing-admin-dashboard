@@ -1,15 +1,18 @@
 import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { Button, Divider } from "antd";
-import { Subtitle } from "../../../../styles/global/Subtitle";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import ScanningModal from "./ScanningModal";
-import ScanningMethod from "./ScanningMethod";
 import DatePicker from "react-datepicker";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import ScanningMethod from "./ScanningMethod";
+import ScanningModal from "./ScanningModal";
 
 export const renderTitle = () => {
   return (
@@ -20,7 +23,7 @@ export const renderTitle = () => {
           style={TextFontSize30LineHeight38}
           color={"var(--gray-600, #475467)"}
         >
-          Add a group of items
+          Edit a group of devices
         </Typography>
       </InputLabel>
       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
@@ -31,8 +34,8 @@ export const renderTitle = () => {
           color={"var(--gray-600, #475467)"}
         >
           Devices serial numbers can be created by inputting a serial number
-          base to define the category of items, and then a range from one number
-          to another, depending on your inventory.
+          base to define the category of device, and then a range from one
+          number to another, depending on your inventory.
         </Typography>
       </InputLabel>
     </>
@@ -134,6 +137,39 @@ export const renderingOptionsButtons = ({
       </div>
     );
   }
+};
+
+export const styleUpdateAllItemsButton = (updateAllItems) => {
+  if (updateAllItems) {
+    return {
+      button: {
+        ...BlueButton,
+        margin: "10px 0",
+        alignSelf: "stretch",
+        display: "flex",
+        width: "100%",
+        borderRadius: "8px",
+      },
+      p: {
+        ...BlueButtonText,
+        ...CenteringGrid,
+      },
+    };
+  }
+  return {
+    button: {
+      ...GrayButton,
+      margin: "10px 0",
+      alignSelf: "stretch",
+      display: "flex",
+      width: "100%",
+      borderRadius: "8px",
+    },
+    p: {
+      ...GrayButtonText,
+      ...CenteringGrid,
+    },
+  };
 };
 
 export const addingExtraInfo = ({
@@ -374,4 +410,98 @@ export const renderOptional = ({
       placeholder="Please provide a brief description of the new device to be added."
     />
   );
+};
+
+export const renderingOptionsForSubLocations = ({
+  item,
+  setDisplaySublocationFields,
+  displaySublocationFields,
+  setSubLocationsSubmitted,
+}) => {
+  const addSublocationButton = () => {
+    return (
+      <Button
+        onClick={() => setDisplaySublocationFields(true)}
+        style={{
+          ...BlueButton,
+          ...CenteringGrid,
+          alignSelf: "stretch",
+          display:
+            item === "Main location" && !displaySublocationFields
+              ? "flex"
+              : "none",
+          width: "100%",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={BlueButtonText}>Add sub location</p>
+      </Button>
+    );
+  };
+
+  const addEndingSerialNumberSequenceButton = () => {
+    return (
+      <Button
+        onClick={() => setDisplaySublocationFields(true)}
+        style={{
+          ...BlueButton,
+          ...CenteringGrid,
+          alignSelf: "stretch",
+          display:
+            item === "Main location" && !displaySublocationFields
+              ? "flex"
+              : "none",
+          width: "100%",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={BlueButtonText}>Add sub location</p>
+      </Button>
+    );
+  };
+
+  const removeAllSubLocationsButton = () => {
+    return (
+      <Button
+        onClick={() => {
+          setDisplaySublocationFields(false);
+          setSubLocationsSubmitted([]);
+        }}
+        style={{
+          ...BlueButton,
+          ...CenteringGrid,
+          alignSelf: "stretch",
+          display:
+            item === "Main location" && displaySublocationFields
+              ? "flex"
+              : "none",
+          width: "100%",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={BlueButtonText}>Remove all sub location</p>
+      </Button>
+    );
+  };
+  return {
+    addSubLocation: addSublocationButton(),
+    addEndingSerialNumberSequence: addEndingSerialNumberSequenceButton(),
+    removeAllSubLocations: removeAllSubLocationsButton(),
+  };
+};
+
+export const renderingResultUX = ({ name, value }) => {
+  if (name === "enableAssignFeature") {
+    return value === 0 ? "Disabled" : "Enabled";
+  }
+  if (name === "container") {
+    return value === 0
+      ? "No - It is not a container"
+      : "Yes - It is a container";
+  }
+  if (name === "warehouse") {
+    return value === 0 ? "No" : "Yes";
+  }
+
+  return value;
 };
