@@ -13,8 +13,6 @@ const validatingInputFields = ({
     return openNotificationWithIcon(
       "A container value of item must be provided."
     );
-  if (data.item_group === "")
-    return openNotificationWithIcon("A group of item must be provided.");
   if (data.tax_location === "")
     return openNotificationWithIcon("A taxable location must be provided.");
   if (data.ownership === "")
