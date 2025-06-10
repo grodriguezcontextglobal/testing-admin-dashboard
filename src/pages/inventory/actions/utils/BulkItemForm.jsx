@@ -276,7 +276,7 @@ const BulkItemForm = ({
                             }}
                             value={value}
                             onChange={(value) => onChange(value)}
-                            options={item.options.map((x) => {
+                            options={item?.options?.map((x) => {
                               if (item.htmlOption === 0) {
                                 return { value: x };
                               } else {
