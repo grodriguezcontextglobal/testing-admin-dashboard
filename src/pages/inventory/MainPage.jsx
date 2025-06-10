@@ -185,7 +185,7 @@ const MainPage = () => {
                     width={"20"}
                     height={"18"}
                   />
-                  &nbsp;Update a group of device
+                  &nbsp;Update a group of items
                 </p>
               </button>
             </Link>
@@ -196,7 +196,7 @@ const MainPage = () => {
                 />
                 &nbsp;
                 <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                  Add a group of devices
+                  Add a group of items
                 </p>
               </button>
             </Link>
@@ -206,7 +206,7 @@ const MainPage = () => {
                 {/* <BluePlusIcon /> */}
                 &nbsp;
                 <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                  Add one device
+                  Add one item
                 </p>
               </button>
             </Link>
@@ -236,7 +236,7 @@ const MainPage = () => {
                     width={"21"}
                     height={"18"}
                   />
-                  &nbsp;Update a group of device
+                  &nbsp;Update a group of items
                 </p>
               </button>
             </Link>
@@ -249,7 +249,7 @@ const MainPage = () => {
                   <WhiteCirclePlusIcon
                     style={{ height: "21px", margin: "auto" }}
                   />
-                  &nbsp; Add a group of devices
+                  &nbsp; Add a group of items
                 </p>
               </button>
             </Link>
@@ -261,7 +261,7 @@ const MainPage = () => {
                 <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
                   {/* <BluePlusIcon /> */}
                   <RectangleBluePlusIcon />
-                  &nbsp; Add one device
+                  &nbsp; Add one item
                 </p>
               </button>
             </Link>
