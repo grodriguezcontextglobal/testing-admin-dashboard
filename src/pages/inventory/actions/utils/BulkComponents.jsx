@@ -61,7 +61,10 @@ export const renderingOptionsButtons = ({
       </Button>
     );
   }
-  if (label === "Starting Serial number" && watch("format_range_serial_number") === "Alphanumeric") {
+  if (
+    label === "Starting Serial number" &&
+    watch("format_range_serial_number") === "Alphanumeric"
+  ) {
     return (
       <Button
         style={{
@@ -363,5 +366,30 @@ export const renderOptional = ({
   );
 };
 
-export const dicColumnsNameProperlyDisplayed =() => {
-}
+export const dicColumnsNameProperlyDisplayed = () => {};
+
+export const gripingFields = (props) => {
+  if (
+    props === "min_serial_number" ||
+    props === "max_serial_number" ||
+    props === "quantity"
+  )
+    return 6;
+  return 6;
+};
+
+export const renderingResultUX = ({ name, value }) => {
+  if (name === "enableAssignFeature") {
+    return value === 0 ? "Disabled" : "Enabled";
+  }
+  if (name === "container") {
+    return value === 0
+      ? "No - It is not a container"
+      : "Yes - It is a container";
+  }
+  if (name === "warehouse") {
+    return value === 0 ? "No" : "Yes";
+  }
+
+  return value;
+};

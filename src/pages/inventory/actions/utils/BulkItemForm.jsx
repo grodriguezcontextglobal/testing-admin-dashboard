@@ -1,3 +1,4 @@
+import { Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
@@ -6,36 +7,38 @@ import {
   Popconfirm,
   Tooltip,
 } from "antd";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
+import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import {
   addingExtraInfo,
+  gripingFields,
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
+  renderingResultUX,
   renderOptional,
-  stylingComponents,
+  stylingComponents
 } from "./BulkComponents";
-import { Grid, InputLabel, Typography } from "@mui/material";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { Controller } from "react-hook-form";
-import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { renderFields } from "./BulkItemsFields";
-import { BlueButton } from "../../../../styles/global/BlueButton";
 
 const BulkItemForm = ({
+  acceptImage,
   addingSubLocation,
   addSerialNumberField,
+  allSerialNumbersOptions,
   control,
   displayContainerSplotLimitField,
   displayPreviewImage,
   displaySublocationFields,
   errors,
-  gripingFields,
   handleDeleteMoreInfo,
   handleMoreInfoPerDevice,
   handleSubmit,
@@ -75,8 +78,8 @@ const BulkItemForm = ({
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
-          OutlinedInputStyle,
           retrieveItemOptions,
+          OutlinedInputStyle,
           renderLocationOptions,
           options,
           displayContainerSplotLimitField,
@@ -85,12 +88,12 @@ const BulkItemForm = ({
           addSerialNumberField,
           rangeFormat,
           labeling,
-          gripingFields,
           loadingStatus,
           setImageUploadedValue,
           renderingOptionsForSubLocations,
           isRented,
           displayPreviewImage,
+          allSerialNumbersOptions,
         }).map((item) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
@@ -133,7 +136,6 @@ const BulkItemForm = ({
 
                   <ImageUploaderUX
                     setImageUploadedValue={setImageUploadedValue}
-                    imageUploadedValue={imageUploadedValue}
                   />
                 </Grid>
               );
@@ -141,12 +143,19 @@ const BulkItemForm = ({
               item.htmlOption === 6 &&
               item.name === "image_uploader_preview"
             ) {
+              console.log(watch("image_url"));
               return (
                 <Grid
                   key={item.name}
                   style={{
                     textAlign: "left",
-                    display: displayPreviewImage ? "flex" : "none",
+                    display:
+                      imageUploadedValue ||
+                      String(watch("image_url")).startsWith(
+                        "https://res.cloudinary"
+                      )
+                        ? "flex"
+                        : "none",
                   }}
                   marginY={1}
                   item
@@ -191,21 +200,32 @@ const BulkItemForm = ({
                       }}
                     >
                       <img
-                        src={imageUploadedValue || ""}
+                        src={watch("image_url") || imageUploadedValue || ""}
                         alt="image_preview"
                         style={{
-                          width: "100%",
-                          height: "auto",
                           objectFit: "cover",
                           objectPosition: "center",
+                          aspectRatio: "1/1",
                         }}
+                        width={150}
                       />{" "}
-                      <Button
-                        onClick={() => setImageUploadedValue(null)}
-                        style={BlueButton}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-start",
+                          alignItems: "center",
+                          width: "100%",
+                          marginTop: "1rem",
+                          gap: "1rem",
+                        }}
                       >
-                        <p style={BlueButtonText}>Remove image</p>
-                      </Button>
+                        <Button
+                          onClick={() => acceptImage()}
+                          style={BlueButton}
+                        >
+                          <p style={BlueButtonText}>Accept image</p>
+                        </Button>
+                      </div>
                     </div>
                   </InputLabel>
                 </Grid>
@@ -274,7 +294,7 @@ const BulkItemForm = ({
                               fontSize: "14px",
                               width: "100%",
                             }}
-                            value={value}
+                            value={renderingResultUX({ name: item.name, value })}
                             onChange={(value) => onChange(value)}
                             options={item?.options?.map((x) => {
                               if (item.htmlOption === 0) {

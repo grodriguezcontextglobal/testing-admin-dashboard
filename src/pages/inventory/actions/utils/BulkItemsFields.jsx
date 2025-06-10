@@ -1,17 +1,17 @@
 export const renderFields = ({
-  OutlinedInputStyle,
-  retrieveItemOptions,
-  options,
-  renderLocationOptions,
-  displayContainerSplotLimitField,
-  subLocationsOptions,
-  displaySublocationFields,
   addSerialNumberField,
-  rangeFormat,
-  labeling,
-  isRented,
-  displayPreviewImage,
   allSerialNumbersOptions,
+  displayContainerSplotLimitField,
+  displayPreviewImage,
+  displaySublocationFields,
+  isRented,
+  labeling,
+  options,
+  OutlinedInputStyle,
+  rangeFormat,
+  renderLocationOptions,
+  retrieveItemOptions,
+  subLocationsOptions,
 }) => {
   const fields = [
     {
@@ -179,7 +179,6 @@ export const renderFields = ({
       tooltipMessage: null,
       displayField: rangeFormat,
     },
-
     {
       name: "min_serial_number",
       placeholder: "e.g. 300",
@@ -299,6 +298,19 @@ export const renderFields = ({
       tooltipMessage: "Date when the leased equipment will be returned.",
       displayField: true,
     },
+    {
+      name: "image_url",
+      placeholder: "",
+      label: "Image uploader",
+      htmlElement: "Day",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 6,
+      tooltip: false,
+      tooltipMessage: null,
+      displayField: false,
+    }
   ];
 
   fields.forEach((_, index) => {
