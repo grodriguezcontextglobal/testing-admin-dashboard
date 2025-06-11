@@ -3,17 +3,25 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
 import { groupBy } from "lodash";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
+import {
+  dataStructuringFormat,
+  dataToDisplay,
+} from "../../utils/dataStructuringFormat";
 // import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 
-const TableDeviceLocation = ({ searchItem, referenceData }) => {
+const TableItemBrand = ({
+  searchItem,
+  referenceData,
+  isLoadingComponent,
+}) => {
   const location = useLocation();
   const brandName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
@@ -22,17 +30,17 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryKey: ["currentStateDevicePerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: 'select * from item_inv where brand = ? and company_id = ?',
-        values: [decodeURI(brandName[0].slice(1)),user.sqlInfo.company_id]
+        query: "select * from item_inv where brand = ? and company_id = ?",
+        values: [decodeURI(brandName[0].slice(1)), user.sqlInfo.company_id],
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["deviceImagePerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
 
   const itemsInInventoryQuery = useQuery({
@@ -42,107 +50,55 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
         company_id: user.sqlInfo.company_id,
         brand: decodeURI(brandName[0].slice(1)),
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
-  
-  console.log({
-    list:listItemsQuery?.data?.data
-  })
+
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-  const dataStructuringFormat = () => {
-    const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = groupBy(
-      itemsInInventoryQuery?.data?.data?.items,
-      "serial_number"
-    );
-    if (renderedListItems?.length > 0) {
-      for (let data of renderedListItems) {
-        if (groupingBySerialNumber[data.serial_number]) {
-          resultFormatToDisplay.add({
-            key: `${data.item_id}-${data.event_name}`,
-            ...data,
-            data: {
-              ...data,
-              location:
-                groupingBySerialNumber[data.serial_number].at(-1).location,
-              ...groupingBySerialNumber[data.serial_number].at(-1),
-            },
-            location:
-              groupingBySerialNumber[data.serial_number].at(-1).location,
-          });
-        }
-      }
-      return Array.from(resultFormatToDisplay);
-    }
-    return [];
-  };
+  const [structuredDataRendering, setStructuredDataRendering] = useState([]);
   useEffect(() => {
-    const controller = new AbortController();
-    dataStructuringFormat();
-    listItemsQuery.refetch();
-    listImagePerItemQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [user.company]);
-
-  const dataToDisplay = () => {
-    if (!searchItem || searchItem === "") {
-      // &&(searchParameter === "undefined" || searchParameter === "")
-      if (dataStructuringFormat().length > 0) {
-        return dataStructuringFormat();
-      }
-      return [];
-    } else if (String(searchItem).length > 0) {
-      return dataStructuringFormat()?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searchItem).toLowerCase())
-      );
-    }
-  };
+    setStructuredDataRendering(
+      dataStructuringFormat(
+        renderedListItems,
+        groupingByDeviceType,
+        itemsInInventoryQuery
+      )
+    );
+  }, [
+    renderedListItems?.length > 0,
+    groupingByDeviceType,
+    itemsInInventoryQuery,
+  ]);
 
   const calculatingValue = () => {
     let result = 0;
-    for (let data of dataStructuringFormat()) {
+    for (let data of structuredDataRendering) {
       result += Number(data.cost);
     }
     return result;
   };
+
   const totalAvailable = () => {
     const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
     return itemList[1]?.length;
   };
+
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
-      totalDevices: dataStructuringFormat().length,
+      totalDevices: structuredDataRendering.length,
       totalValue: calculatingValue(),
       totalAvailable: totalAvailable(),
     });
-
     return () => {
       controller.abort();
     };
-  }, [
-    itemsInInventoryQuery.data,
-    dataStructuringFormat().length,
-    location.key,
-  ]);
+  }, [structuredDataRendering.length, location.key]);
 
-  const dictionary = {
-    Permanent: "Owned",
-    Rent: "Leased",
-    Sale: "For sale",
-  };
-  const cellStyle = {
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  };
+  const dataRenderingMemo = useMemo(() => {
+    return dataToDisplay(structuredDataRendering, searchItem);
+  }, [searchItem]);
 
   return (
     <Suspense
@@ -209,40 +165,41 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
               padding: "0 0 0 0",
             }}
           >
-            <DownloadingXlslFile props={dataToDisplay()} />
+            <DownloadingXlslFile props={dataRenderingMemo} />
           </div>
         </Grid>
-        <Table
-          pagination={{
-            position: ["bottomCenter"],
-            pageSizeOptions: [10, 20, 30, 50, 100],
-            total: dataToDisplay().length,
-            defaultPageSize: 10,
-            defaultCurrent: 1,
-          }}
-          style={{ width: "100%" }}
-          columns={columnsTableMain({
-            cellStyle,
-            dictionary,
-            groupingByDeviceType,
-            navigate,
-            responsive: [
-              ["lg"],
-              ["lg"],
-              ["xs", "sm", "md", "lg"],
-              ["md", "lg"],
-              ["md", "lg"],
-              ["md", "lg"],
-              ["xs", "sm", "md", "lg"],
-              ["xs", "sm", "md", "lg"],
-            ],
-          })}
-          dataSource={dataToDisplay()}
-          className="table-ant-customized"
-        />
+        {isLoadingComponent && <Loading />}
+        {!isLoadingComponent && (
+          <Table
+            pagination={{
+              position: ["bottomCenter"],
+              pageSizeOptions: [10, 20, 30, 50, 100],
+              total: dataRenderingMemo.length,
+              defaultPageSize: 10,
+              defaultCurrent: 1,
+            }}
+            style={{ width: "100%" }}
+            columns={columnsTableMain({
+              groupingByDeviceType,
+              navigate,
+              responsive: [
+                ["lg"],
+                ["lg"],
+                ["xs", "sm", "md", "lg"],
+                ["md", "lg"],
+                ["md", "lg"],
+                ["md", "lg"],
+                ["xs", "sm", "md", "lg"],
+                ["xs", "sm", "md", "lg"],
+              ],
+            })}
+            dataSource={dataRenderingMemo}
+            className="table-ant-customized"
+          />
+        )}
       </Grid>
     </Suspense>
   );
 };
 
-export default TableDeviceLocation;
+export default TableItemBrand;

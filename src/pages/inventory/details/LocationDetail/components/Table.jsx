@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
-import { groupBy } from "lodash";
+import { groupBy, uniqueId } from "lodash";
 import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -25,8 +25,8 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: 'select * from item_inv where location = ? and company_id = ?',
-        values: [decodeURI(locationName[0].slice(1)),user.sqlInfo.company_id]
+        query: "select * from item_inv where location = ? and company_id = ?",
+        values: [decodeURI(locationName[0].slice(1)), user.sqlInfo.company_id],
       }),
     refetchOnMount: false,
     enabled: !!user.sqlInfo.company_id,
@@ -61,16 +61,19 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       for (let data of renderedListItems) {
         if (groupingBySerialNumber[data.serial_number]) {
           resultFormatToDisplay.add({
-            key: `${data.item_id}-${data.event_name}`,
+            key: `${data.item_id}-${uniqueId()}`,
             ...data,
             data: {
               ...data,
               location:
-                groupingBySerialNumber[data.serial_number].at(-1).location,
-              ...groupingBySerialNumber[data.serial_number].at(-1),
+                groupingBySerialNumber[data.serial_number]?.at(-1).location,
+              ...groupingBySerialNumber[data.serial_number]?.at(-1),
             },
             location:
-              groupingBySerialNumber[data.serial_number].at(-1).location,
+              groupingBySerialNumber[data.serial_number]?.at(-1).location,
+            image_url:
+              groupingBySerialNumber[data.serial_number]?.at(-1).image_url ??
+              groupingByDeviceType[data.item_group]?.at(-1).image_url,
           });
         }
       }

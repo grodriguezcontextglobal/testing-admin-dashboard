@@ -1,15 +1,13 @@
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Grid } from "@mui/material";
 import { Divider } from "antd";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
-import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
-const TableDeviceCategory = lazy(() => import("./components/Table"));
+import { BodyComponent } from "../utils/dataStructuringFormat";
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -29,6 +27,23 @@ const MainPage = () => {
       setValue("searchDevice", "");
     }
   }, [categoryName]);
+
+  const [isLoadingComponent, setIsLoadingComponent] = useState(true);
+  useEffect(() => {
+    setTimeout(() => {
+      setValue("searchDevice", "...");
+    }, 500);
+    setTimeout(() => {
+      setValue("searchDevice", "..");
+    }, 700);
+    setTimeout(() => {
+      setValue("searchDevice", ".");
+    }, 900);
+    setTimeout(() => {
+      setValue("searchDevice", "");
+      setIsLoadingComponent(false);
+    }, 1100);
+  }, []);
 
   return (
     <Suspense
@@ -54,42 +69,13 @@ const MainPage = () => {
         />
         <CardInfo referenceData={referenceData} />
         <Divider />
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <OutlinedInput
-            {...register("searchDevice")}
-            fullWidth
-            placeholder="Search devices here"
-            style={OutlinedInputStyle}
-            startAdornment={
-              <InputAdornment position="start">
-                <MagnifyIcon />
-              </InputAdornment>
-            }
-          />
-        </Grid>
-        <Grid container>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <TableDeviceCategory
-              searchItem={watch("searchDevice")}
-              referenceData={setReferenceData}
-            />
-          </Grid>
-        </Grid>
+        <BodyComponent
+          watch={watch}
+          register={register}
+          setReferenceData={setReferenceData}
+          isLoadingComponent={isLoadingComponent}
+          trigger={"category"}
+        />
       </Grid>
     </Suspense>
   );
