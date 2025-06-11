@@ -1,6 +1,4 @@
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
+import { Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
@@ -9,18 +7,20 @@ import {
   Popconfirm,
   Tooltip,
 } from "antd";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import { Link } from "react-router-dom";
-import { Grid, InputLabel, Typography } from "@mui/material";
-import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { Controller } from "react-hook-form";
+import { Link } from "react-router-dom";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
-import { gripingFields } from "../../../../actions/utils/BulkComponents";
-import editItemFields from "./EditItemFields";
+import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { addingExtraInfo, renderingMoreInfoSubmitted, renderingOptionsButtons, renderingResultUX, renderOptional, stylingComponents } from "./EditItemComponents";
+import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
+import { gripingFields } from "../../../../actions/utils/BulkComponents";
+import { addingExtraInfo, renderingMoreInfoSubmitted, renderingOptionsButtons, renderOptional, stylingComponents } from "./EditItemComponents";
+import editItemFields from "./EditItemFields";
 
 const EditItemForm = ({
   acceptImage,
@@ -273,10 +273,7 @@ const EditItemForm = ({
                               fontSize: "14px",
                               width: "100%",
                             }}
-                            value={renderingResultUX({
-                              name: item.name,
-                              value,
-                            })}
+                            value={value}
                             onChange={(value) => onChange(value)}
                             options={item?.options?.map((x) => {
                               if (item.htmlOption === 0) {
@@ -286,11 +283,11 @@ const EditItemForm = ({
                               }
                             })}
                             placeholder={item.placeholder}
-                            filterOption={(inputValue, option) =>
-                              option.value
-                                .toUpperCase()
-                                .indexOf(inputValue.toUpperCase()) !== -1
-                            }
+                            // filterOption={(inputValue, option) =>
+                            //   option.value
+                            //     .toUpperCase()
+                            //     .indexOf(inputValue.toUpperCase()) !== -1
+                            // }
                             allowClear
                           />
                           {renderingOptionsButtons({

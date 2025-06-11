@@ -16,7 +16,6 @@ import "../../../../../styles/global/reactInput.css";
 import "../../../actions/style.css";
 import { storeAndGenerateImageUrl } from "../../../actions/utils/EditBulkActionOptions";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../../../actions/utils/SubLocationRenderer";
-import validatingInputFields from "../../../actions/utils/validatingInputFields";
 import costValueInputFormat from "../../../utils/costValueInputFormat";
 import { formatDate } from "../../../utils/dateFormat";
 import { renderTitle } from "./ux/EditItemComponents";
@@ -113,11 +112,15 @@ const EditItemModal = ({
   };
 
   const savingNewItem = async (data) => {
-    validatingInputFields({
-      data,
-      openNotificationWithIcon,
-      returningDate,
-    });
+    if (
+      !data.tax_location ||
+      !data.category_name ||
+      !data.brand ||
+      !data.container ||
+      !data.ownership ||
+      !data.enableAssignFeature
+    )
+      return alert("All fields are required.");
     try {
       setLoadingStatus(true);
       const template = {
@@ -283,10 +286,12 @@ const EditItemModal = ({
     if (dataFound.length > 0) {
       Object.entries(dataFound[0]).forEach(([key, value]) => {
         if (key === "enableAssignFeature") {
-          setValue(key, "Enabled");
+          let valueToSet = value > 0 ? "Enabled" : "Disabled";
+          return setValue(key, `${valueToSet}`);
         }
         if (key === "container") {
-          setValue(key, "No - It is not a container");
+          let valueToSet = value > 0 ? "Yes - It is a container" : "No - It is not a container";
+          return setValue(key, `${valueToSet}`);
         }
         setValue(key, value);
         setValue("quantity", 0);
@@ -371,7 +376,6 @@ const EditItemModal = ({
     removeImage,
   ]);
 
-  console.log(subLocationsSubmitted);
   return (
     <Modal
       key={dataFound[0].item_id}
