@@ -139,6 +139,14 @@ const EditGroup = () => {
       returningDate,
     });
     if (
+      !data.tax_location ||
+      !data.category_name ||
+      !data.brand ||
+      !data.container ||
+      !data.ownership ||
+      !data.enableAssignFeature
+    )
+    if (
       !updateAllItems &&
       scannedSerialNumbers.length === 0 &&
       Number(data.max_serial_number) < Number(data.min_serial_number)
@@ -382,10 +390,15 @@ const EditGroup = () => {
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (key === "enableAssignFeature") {
-            setValue(key, "Enabled");
+            let valueToSet = value > 0 ? "Enabled" : "Disabled";
+            return setValue(key, `${valueToSet}`);
           }
           if (key === "container") {
-            setValue(key, "No - It is not a container");
+            let valueToSet =
+              value > 0
+                ? "Yes - It is a container"
+                : "No - It is not a container";
+            return setValue(key, `${valueToSet}`);
           }
           setValue(key, value);
           setValue("quantity", 0);
