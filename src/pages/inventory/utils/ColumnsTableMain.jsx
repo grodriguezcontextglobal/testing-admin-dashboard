@@ -5,9 +5,8 @@ import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
+import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 const columnsTableMain = ({
-  cellStyle,
-  dictionary,
   groupingByDeviceType,
   navigate,
   responsive,
@@ -28,9 +27,9 @@ const columnsTableMain = ({
             size={"80px"}
             style={{ borderRadius: "8px", background: "transparent" }}
           >
-            {groupingByDeviceType[record.item_group] ? (
+            {record.image_url || groupingByDeviceType[record.item_group] ? (
               <img
-                src={groupingByDeviceType[record.item_group][0].source}
+                src={record.image_url || groupingByDeviceType[record.item_group][0].source}
                 alt={`${record.item_group}-${record.serial_number}`}
                 style={{ width: "100%", height: "auto" }}
               />
@@ -114,32 +113,6 @@ const columnsTableMain = ({
             </p>
           </span>
         );
-        // } else {
-        //   return (
-        //     <span
-        //       style={{
-        //         ...cellStyle,
-        //         borderRadius: "16px",
-        //         justifyContent: "center",
-        //         display: "flex",
-        //         padding: "2px 8px",
-        //         alignItems: "center",
-        //         background: `#F9F5FF`,
-        //         width: "fit-content",
-        //       }}
-        //     >
-        //       <p
-        //         style={{
-        //           color: "#6941C6",
-        //           textTransform: "capitalize",
-        //         }}
-        //       >
-        //         <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
-        //         Disabled
-        //       </p>
-        //     </span>
-        //   );
-        // }
       },
     },
     {
