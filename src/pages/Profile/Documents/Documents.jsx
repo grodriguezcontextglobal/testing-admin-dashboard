@@ -112,7 +112,7 @@ const Documents = () => {
       key: "2",
       label: "Upload Document",
       children: (
-        <DocumentUpload activeTab={setActiveTab} refecth={fetchDocuments} />
+        <DocumentUpload activeTab={setActiveTab} refetch={fetchDocuments} />
       ),
     },
   ];
