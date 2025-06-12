@@ -77,15 +77,6 @@ const EditGroup = () => {
     },
     [api]
   );
-  const companiesQuery = useQuery({
-    queryKey: ["locationOptionsPerCompany"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
-    refetchOnMount: false,
-  });
-
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -108,10 +99,13 @@ const EditGroup = () => {
   };
 
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+    if (itemsInInventoryQuery.data) {
+      const locations = groupBy(
+        itemsInInventoryQuery.data.data.items,
+        "location"
+      );
       const result = new Set();
-      for (let data of locations) {
+      for (let data of Object.keys(locations)) {
         result.add({ value: data });
       }
       return Array.from(result);
@@ -373,7 +367,6 @@ const EditGroup = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
     return () => {
       controller.abort();
