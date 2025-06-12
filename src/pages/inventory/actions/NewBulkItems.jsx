@@ -19,14 +19,11 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
-import {
-  bulkItemInsertAlphanumeric,
-  bulkItemInsertSequential,
-  storeAndGenerateImageUrl,
-} from "./utils/BulkItemActionsOptions";
+import { bulkItemInsertAlphanumeric, bulkItemInsertSequential, storeAndGenerateImageUrl } from "./utils/bulkItemActionsOptions";
 import BulkItemForm from "./utils/BulkItemForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
+import InvalidateQueries from "../../../utils/actions/invalidateQueries";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -168,7 +165,6 @@ const AddNewBulkItems = () => {
           setScannedSerialNumbers,
         });
       } else {
-        console.log(data);
         await bulkItemInsertSequential({
           data,
           user,
@@ -183,6 +179,8 @@ const AddNewBulkItems = () => {
           subLocationsSubmitted,
         });
       }
+      await InvalidateQueries({ name: "listOfItemsInStock" });
+      await InvalidateQueries({ name: "ItemsInInventoryCheckingQuery" });
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);

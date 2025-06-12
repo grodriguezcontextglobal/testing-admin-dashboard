@@ -19,16 +19,17 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import "./style.css";
 import { renderingModals } from "./utils/BulkComponents";
-import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
 import {
   bulkItemUpdateAlphanumeric,
   bulkItemUpdateSequential,
+  storeAndGenerateImageUrl,
   updateAllItemsBasedOnParameters,
 } from "./utils/EditBulkActionOptions";
 import { renderTitle } from "./utils/EditBulkComponents";
 import EditBulkForm from "./utils/EditBulkForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
+import InvalidateQueries from "../../../utils/actions/invalidateQueries";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -140,15 +141,15 @@ const EditGroup = () => {
       !data.ownership ||
       !data.enableAssignFeature
     )
-    if (
-      !updateAllItems &&
-      scannedSerialNumbers.length === 0 &&
-      Number(data.max_serial_number) < Number(data.min_serial_number)
-    ) {
-      return openNotificationWithIcon(
-        "Max serial number must be greater than min serial number."
-      );
-    }
+      if (
+        !updateAllItems &&
+        scannedSerialNumbers.length === 0 &&
+        Number(data.max_serial_number) < Number(data.min_serial_number)
+      ) {
+        return openNotificationWithIcon(
+          "Max serial number must be greater than min serial number."
+        );
+      }
     try {
       setLoadingStatus(true);
       if (updateAllItems) {
@@ -201,6 +202,8 @@ const EditGroup = () => {
           originalTemplate: refTemplateToUpdate.current,
         });
       }
+      await InvalidateQueries({ name: "listOfItemsInStock" });
+      await InvalidateQueries({ name: "ItemsInInventoryCheckingQuery" });
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
