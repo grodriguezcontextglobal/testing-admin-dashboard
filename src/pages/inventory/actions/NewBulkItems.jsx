@@ -89,15 +89,6 @@ const AddNewBulkItems = () => {
     },
     [api]
   );
-  const companiesQuery = useQuery({
-    queryKey: ["locationOptionsPerCompany"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
-    refetchOnMount: false,
-  });
-
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -120,10 +111,13 @@ const AddNewBulkItems = () => {
   };
 
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+    if (itemsInInventoryQuery.data) {
+      const locations = groupBy(
+        itemsInInventoryQuery.data.data.items,
+        "location"
+      );
       const result = new Set();
-      for (let data of locations) {
+      for (let data of Object.keys(locations)) {
         result.add({ value: data });
       }
       return Array.from(result);
@@ -148,7 +142,10 @@ const AddNewBulkItems = () => {
       openNotificationWithIcon,
       returningDate,
     });
-    if (scannedSerialNumbers.length === 0 && Number(data.max_serial_number) < Number(data.min_serial_number)) {
+    if (
+      scannedSerialNumbers.length === 0 &&
+      Number(data.max_serial_number) < Number(data.min_serial_number)
+    ) {
       return openNotificationWithIcon(
         "Max serial number must be greater than min serial number."
       );
@@ -228,7 +225,6 @@ const AddNewBulkItems = () => {
   const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
     itemsInInventoryQuery?.data?.data?.items
   );
-
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
       return (
@@ -352,7 +348,6 @@ const AddNewBulkItems = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    companiesQuery.refetch();
     itemsInInventoryQuery.refetch();
     return () => {
       controller.abort();
@@ -361,17 +356,14 @@ const AddNewBulkItems = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(watch("item_group"))) {
+    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
       const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("item_group")
+        watch("reference_item_group")
       );
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "enableAssignFeature") {
-            setValue(key, "Enabled" );
-          }
-          if (key === "container") {
-            setValue(key, "No - it is not a container");
+          if (key === "enableAssignFeature" || key === "container") {
+            return
           }
           setValue(key, value);
           setValue("quantity", 0);
@@ -379,9 +371,9 @@ const AddNewBulkItems = () => {
             itemsInInventoryQuery?.data?.data?.items,
             "item_group"
           );
-          if (grouping[watch("item_group")]) {
+          if (grouping[watch("reference_item_group")]) {
             const dataToRetrieve = orderBy(
-              grouping[watch("item_group")],
+              grouping[watch("reference_item_group")],
               "serial_number",
               "asc"
             );
@@ -397,7 +389,7 @@ const AddNewBulkItems = () => {
     return () => {
       controller.abort();
     };
-  }, [watch("item_group")]);
+  }, [watch("reference_item_group")]);
 
   useEffect(() => {
     qtyDiff();
@@ -558,6 +550,7 @@ const AddNewBulkItems = () => {
         subLocationsSubmitted={subLocationsSubmitted}
         valueObject={valueObject}
         watch={watch}
+        imageUrlGenerated={imageUrlGenerated}
       />
       {renderingModals({
         openScanningModal,

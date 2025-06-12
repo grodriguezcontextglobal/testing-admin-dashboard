@@ -9,6 +9,7 @@ import {
 } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
@@ -23,7 +24,6 @@ import {
   gripingFields,
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
-  renderingResultUX,
   renderOptional,
   stylingComponents
 } from "./BulkComponents";
@@ -43,6 +43,7 @@ const BulkItemForm = ({
   handleMoreInfoPerDevice,
   handleSubmit,
   imageUploadedValue,
+  imageUrlGenerated,
   isRented,
   keyObject,
   labeling,
@@ -94,7 +95,7 @@ const BulkItemForm = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
-        }).map((item) => {
+        }).map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
               return (
@@ -223,7 +224,7 @@ const BulkItemForm = ({
                           onClick={() => acceptImage()}
                           style={BlueButton}
                         >
-                          <p style={BlueButtonText}>Accept image</p>
+                          <p style={BlueButtonText}>{imageUrlGenerated ? <CheckIcon /> : null}{imageUrlGenerated ? "Url generated" : "Accept image"}</p>
                         </Button>
                       </div>
                     </div>
@@ -294,7 +295,7 @@ const BulkItemForm = ({
                               fontSize: "14px",
                               width: "100%",
                             }}
-                            value={renderingResultUX({ name: item.name, value })}
+                            value={value}
                             onChange={(value) => onChange(value)}
                             options={item?.options?.map((x) => {
                               if (item.htmlOption === 0) {
@@ -304,11 +305,6 @@ const BulkItemForm = ({
                               }
                             })}
                             placeholder={item.placeholder}
-                            // filterOption={(inputValue, option) =>
-                            //   option.value
-                            //     .toUpperCase()
-                            //     .indexOf(inputValue.toUpperCase()) !== -1
-                            // }
                             allowClear
                           />
                           {renderingOptionsButtons({
@@ -320,6 +316,9 @@ const BulkItemForm = ({
                             setAddSerialNumberField,
                             label: item.label,
                           })}
+                          {
+                            index < 2 && <Divider margin="2.5px 0px 2.5px 0px" style={{width:"100%"}} />
+                          }
                         </Grid>
                         <Grid
                           display={

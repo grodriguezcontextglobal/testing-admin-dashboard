@@ -15,6 +15,32 @@ export const renderFields = ({
 }) => {
   const fields = [
     {
+      name: "reference_category_name",
+      placeholder: "e.g. Electronic",
+      label: "Category reference",
+      htmlElement: "",
+      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      required: false,
+      options: retrieveItemOptions("category_name"),
+      htmlOption: 0,
+      tooltip: true,
+      tooltipMessage: "This is the category of the reference item.",
+      displayField: true,
+    },
+{
+      name: "reference_item_group",
+      placeholder: "Type the name of the item for retrieving the reference item.",
+      label: "Item name reference",
+      htmlElement: "",
+      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      required: false,
+      options: retrieveItemOptions("item_group"),
+      htmlOption: 0,
+      tooltip: true,
+      tooltipMessage: "This is the item group of the reference item.",
+      displayField: true,
+    },
+    {
       name: "item_group",
       placeholder: "Type the name of the item",
       label: "Item name",
