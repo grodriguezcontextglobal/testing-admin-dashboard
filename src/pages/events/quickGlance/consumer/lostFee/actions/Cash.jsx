@@ -22,6 +22,7 @@ import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const Cash = () => {
   const navigator = useNavigate();
   const { event } = useSelector((state) => state.event);
@@ -192,9 +193,11 @@ const Cash = () => {
           link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
         });
         messageApi.destroy;
-        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
-        await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
-    
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
+        dispatch(onAddPaymentIntentSelected(""));
+        message.success("Cash transaction successfully!");
         navigator(
           `/events/event-attendees/${customer.uid}/transactions-details`
         );

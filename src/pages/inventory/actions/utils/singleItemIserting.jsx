@@ -1,4 +1,5 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 export const singleItemInserting = async ({
   data,
@@ -60,9 +61,9 @@ export const singleItemInserting = async ({
       "New item was created and stored in database."
     );
     setLoadingStatus(false);
-    await devitrakApi.post("/cache_update/remove-cache", {
-      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-    });
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
     return navigate("/inventory");
   }

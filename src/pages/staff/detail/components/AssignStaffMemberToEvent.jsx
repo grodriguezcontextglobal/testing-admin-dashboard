@@ -19,6 +19,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { useNavigate } from "react-router-dom";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const AssignStaffMemberToEvent = () => {
   const { user } = useSelector((state) => state.admin);
@@ -88,9 +89,7 @@ const AssignStaffMemberToEvent = () => {
             JSON.parse(data.event).eventInfoDetail.eventName
           }`
         );
-        devitrakApi.post("/cache_update/remove-cache", {
-          key: `event_staff_info=${JSON.parse(data.event).id}`,
-        });
+        await clearCacheMemory(`event_staff_info=${JSON.parse(data.event).id}`);
         return navigate(`/staff/${profile.adminUserInfo.id}/main`);
       }
     } else {

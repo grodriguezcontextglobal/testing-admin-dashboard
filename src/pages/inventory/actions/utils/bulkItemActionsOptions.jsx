@@ -1,5 +1,6 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 export const bulkItemInsertAlphanumeric = async ({
   data,
@@ -65,9 +66,9 @@ export const bulkItemInsertAlphanumeric = async ({
       "New group of items were created and stored in database."
     );
     setLoadingStatus(false);
-    await devitrakApi.post("/cache_update/remove-cache", {
-      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-    });
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
     return navigate("/inventory");
   }
@@ -134,9 +135,9 @@ export const bulkItemInsertSequential = async ({
       "New group of items were created and stored in database."
     );
     setLoadingStatus(false);
-    await devitrakApi.post("/cache_update/remove-cache", {
-      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-    });
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
     return navigate("/inventory");
   }
@@ -168,7 +169,7 @@ export const storeAndGenerateImageUrl = async ({
 
     const registerImage = await devitrakApi.post(
       "/cloudinary/upload-image",
-      template,
+      template
     );
 
     await devitrakApi.post(`/image/new_image`, {

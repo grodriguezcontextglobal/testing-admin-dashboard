@@ -23,6 +23,7 @@ import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import dicRole from "../../../components/general/dicRole";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -129,12 +130,8 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           queryKey: ["employeesPerCompanyList"],
           exact: true,
         });
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `_id=${user.companyData.id}`,
-        });
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `company_id=${user.companyData.id}`,
-        });
+        await clearCacheMemory(`_id=${user.companyData.id}`);
+        await clearCacheMemory(`company_id=${user.companyData.id}`);
 
         warning(
           "success",

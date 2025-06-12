@@ -30,6 +30,7 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
@@ -344,9 +345,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
 
         setLoadingStatus(false);
         openNotificationWithIcon("Success", "Staff member added to event.");
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `event_staff_info=${event.id}`,
-        });
+        await clearCacheMemory(`event_staff_info=${event.id}`);
         await closeModal();
       } catch (error) {
         setLoadingStatus(false);

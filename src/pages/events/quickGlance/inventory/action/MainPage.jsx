@@ -24,6 +24,7 @@ import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonTex
 import Choice from "../lostFee/Choice";
 import UpdateStatus from "./components/UpdateStatus";
 import { Replace } from "./Replace";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -124,12 +125,9 @@ const ActionsMainPage = () => {
             },
           })
         );
-        devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-        });
-        devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-        });
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
         await returnConfirmationEmailNotification({
           paymentIntent: respo.data.listOfReceivers.at(-1).paymentIntent,
           device: [

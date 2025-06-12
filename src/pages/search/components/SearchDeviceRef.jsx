@@ -23,6 +23,7 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 import ReleaseDeposit from "./ReleaseDeposit";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 const SearchDeviceRef = ({ searchParams, data }) => {
   const location = useLocation();
   const [foundDeviceData, setFoundDeviceData] = useState(() => data.pool ?? []);
@@ -107,11 +108,11 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           }
         );
         if (eventInfo.data && eventInfoSqlDB.data) {
-          await devitrakApi.post("/cache_update/remove-cache", {
-            key: `eventSelected=${
+          await clearCacheMemory(
+            await clearCacheMemory()`eventSelected=${
               record.event ?? record.eventSelected
-            }&company=${user.companyData.id}`,
-          });
+            }&company=${user.companyData.id}`
+          );
           setReturnLoading(false);
           message.success("Device returned successfully");
           setTimeout(() => {

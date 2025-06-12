@@ -8,6 +8,7 @@ import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const ReturningInBulkMethod = ({
   openReturnDeviceBulkModal,
   setOpenReturnDeviceInBulkModal,
@@ -98,9 +99,9 @@ const ReturningInBulkMethod = ({
       await emailNotification();
       openNotificationWithIcon("Success", "All devices returned!");
       message.success("All devices returned!");
-      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
-      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
-  
+      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
+      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)  
+      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
       setSelectedItems([]);
       return closeModal();
     } catch (error) {

@@ -1,23 +1,21 @@
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "antd";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Title } from "../../../../styles/global/Title";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import StaffTable from "./table/StaffTable";
-import { Button } from "antd";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useQueryClient } from "@tanstack/react-query";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { useSelector } from "react-redux";
 
 const StaffMainPage = () => {
   const { event } = useSelector((state) => state.event);
   const { register, watch } = useForm();
   const queryClient = useQueryClient();
   const refreshing = () => {
-    devitrakApi.post("/cache_update/remove-cache", {
-      key: `event_staff_info=${event.id}`,
-    });
+    clearCacheMemory(`event_staff_info=${event.id}`);
     return queryClient.invalidateQueries("newEndpointQuery");
   };
   return (

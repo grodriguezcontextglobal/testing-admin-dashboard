@@ -12,6 +12,7 @@ import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { onLogin } from "../../../store/slices/adminSlice";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
 const DeleteStaffMember = ({ modalState, setModalState }) => {
   const [selectionType] = useState("checkbox");
@@ -271,12 +272,8 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
             },
           })
         );
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `_id=${user.companyData.id}`,
-        });
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `company_id=${user.companyData.id}`,
-        });
+        await clearCacheMemory(`_id=${user.companyData.id}`);
+        await clearCacheMemory(`company_id=${user.companyData.id}`);
         queryClient.invalidateQueries({
           queryKey: ["listOfAdminUsers"],
           exact: true,

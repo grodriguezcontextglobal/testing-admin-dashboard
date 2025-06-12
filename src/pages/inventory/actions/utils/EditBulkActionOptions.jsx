@@ -1,6 +1,7 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 export const bulkItemUpdateAlphanumeric = async ({
   data,
@@ -61,9 +62,9 @@ export const bulkItemUpdateAlphanumeric = async ({
       "New group of items were created and stored in database."
     );
     setLoadingStatus(false);
-    await devitrakApi.post("/cache_update/remove-cache", {
-      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-    });
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
     return navigate("/inventory");
   }
@@ -126,9 +127,9 @@ export const bulkItemUpdateSequential = async ({
       "New group of items were created and stored in database."
     );
     setLoadingStatus(false);
-    await devitrakApi.post("/cache_update/remove-cache", {
-      key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-    });
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
     return navigate("/inventory");
   }
@@ -181,9 +182,9 @@ export const updateAllItemsBasedOnParameters = async ({
     "/db_company/update-all-items-in-inventory",
     newTemplate
   );
-  await devitrakApi.post("/cache_update/remove-cache", {
-    key: `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-  });
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
   Object.keys(newTemplate).forEach((key) => {
     setValue(key, "");

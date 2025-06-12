@@ -29,6 +29,7 @@ import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const ReplaceDevice = ({ refetching }) => {
   const { user } = useSelector((state) => state.admin);
@@ -224,9 +225,8 @@ export const ReplaceDevice = ({ refetching }) => {
       });
       refetching();
       openNotificationWithIcon("Success", "Device replaced successfully.");
-      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`})
-      await devitrakApi.post('/cache_update/remove-cache', {key:`eventSelected=${event.id}&company=${user.companyData.id}`})
-  
+      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
+      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)  
       closeModal();
     }
   };

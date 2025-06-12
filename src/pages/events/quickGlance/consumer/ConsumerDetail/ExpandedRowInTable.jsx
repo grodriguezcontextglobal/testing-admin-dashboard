@@ -22,6 +22,7 @@ import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPayme
 import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
@@ -171,11 +172,11 @@ const ExpandedRowInTable = ({
         if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
           // const dateString = new Date().toString();
           // const dateRef = dateString.split(" ");
-          await devitrakApi.post("/cache_update/remove-cache", {
-            key: `event_id=${event.id}&company=${
+          await clearCacheMemory(
+           `event_id=${event.id}&company=${
               user.companyData.id
-            }&consumerInfo.id=${customer.id ?? customer.uid}`,
-          });
+            }&consumerInfo.id=${customer.id ?? customer.uid}`
+          );
           const checkInPool =
             deviceInPoolListQuery.data.receiversInventory.at(-1);
           queryClient.invalidateQueries("assignedDeviceListQuery", {
@@ -214,12 +215,12 @@ const ExpandedRowInTable = ({
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
-      devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      });
-      devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-      });
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -301,12 +302,12 @@ const ExpandedRowInTable = ({
           setStatusRecordState(null);
         }
       }
-      devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      });
-      devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-      });
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -673,12 +674,12 @@ const ExpandedRowInTable = ({
         await returnDevicesInTransaction(groupingByStatus[true]);
         await returnDeviceInPool(groupingByStatus[true]);
         await returnConfirmationEmailNotification(groupingByStatus[true]);
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-        });
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-        });
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
         message.success("All items returned successfully");
         handleRecord(rowRecord);
         return setOpenCancelingDepositModal(true);

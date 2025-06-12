@@ -13,6 +13,7 @@ import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { checkArray } from "../../components/utils/checkArray";
 import DeviceAssigned from "../../classes/deviceAssigned";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 
 const Confirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -283,12 +284,8 @@ const Confirmation = () => {
           });
           setLoadingStatus(false);
         }
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-        });
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-        });
+        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
       } catch (error) {
         return setLoadingStatus(false);
       }

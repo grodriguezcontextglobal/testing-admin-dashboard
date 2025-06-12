@@ -27,6 +27,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { checkArray } from "../../../../components/utils/checkArray";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { checkValidJSON } from "../../../../components/utils/checkValidJSON";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -410,18 +411,14 @@ const ModalAddAndUpdateDeviceSetup = ({
           message.warning("Device not found");
         }
       }
-
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      });
-
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-      });
-
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
       closeModal();
     } catch (error) {
-      console.error("Error handling devices in event:", error);
       message.error("Failed to add devices to event. Please try again.");
     } finally {
       setLoading(false);
