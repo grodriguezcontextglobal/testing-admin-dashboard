@@ -23,7 +23,7 @@ export const renderTitle = () => {
           style={TextFontSize30LineHeight38}
           color={"var(--gray-600, #475467)"}
         >
-          Edit a group of devices
+          Edit a group of items
         </Typography>
       </InputLabel>
       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
@@ -33,9 +33,7 @@ export const renderTitle = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Devices serial numbers can be created by inputting a serial number
-          base to define the category of device, and then a range from one
-          number to another, depending on your inventory.
+          Item information may be updated, including the category, brand, cost, tax location, container, container spot limit, and ownership status.
         </Typography>
       </InputLabel>
     </>

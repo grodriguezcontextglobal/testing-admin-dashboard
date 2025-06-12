@@ -28,7 +28,7 @@ import {
   stylingComponents,
 } from "./BulkComponents";
 import { renderFields } from "./BulkItemsFields";
-import { renderingResultUX, styleUpdateAllItemsButton } from "./EditBulkComponents";
+import { styleUpdateAllItemsButton } from "./EditBulkComponents";
 
 const EditBulkForm = ({
   acceptImage,
@@ -43,6 +43,7 @@ const EditBulkForm = ({
   handleDeleteMoreInfo,
   handleMoreInfoPerDevice,
   handleSubmit,
+  imageUrlGenerated,
   imageUploadedValue,
   isRented,
   keyObject,
@@ -219,8 +220,8 @@ const EditBulkForm = ({
                           onClick={() => acceptImage()}
                           style={BlueButton}
                         >
-                          <p style={BlueButtonText}>Accept image</p>
-                        </Button>
+                          <p style={BlueButtonText}>{imageUrlGenerated ? <CheckIcon /> : null}{imageUrlGenerated ? "Url generated" : "Accept image"}</p>
+                          </Button>
                       </div>
                     </div>
                   </InputLabel>
@@ -296,7 +297,7 @@ const EditBulkForm = ({
                                 fontSize: "14px",
                                 width: "100%",
                               }}
-                              value={renderingResultUX({ name: item.name, value })}
+                              value={value}
                               onChange={(value) => onChange(value)}
                               options={item.options?.map((x) => {
                                 if (item.htmlOption === 0) {
