@@ -312,6 +312,13 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
     );
     dispatch(onAddPaymentIntentSelected(record.data.paymentIntent));
     dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection));
+    setLoadingStatus(false);
+    await clearCacheMemory(
+      `eventSelected=${record.event}&company=${user.companyData.id}`
+    );
+    await clearCacheMemory(
+      `eventSelected=${record.event}&company=${user.companyData.id}`
+    );
     return navigate("/device-quick-glance");
   };
 
@@ -472,7 +479,10 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
           setLoadingStatus(false);
           await clearCacheMemory(
             `eventSelected=${record.event}&company=${user.companyData.id}`
-          )
+          );
+          await clearCacheMemory(
+            `eventSelected=${record.event}&company=${user.companyData.id}`
+          );
           if (record.data.paymentIntent.length > 15) {
             await checkIfAllDevicesInTransactionAreReturnedToTriggerReleaseDeposit(
               assignedDeviceListQuery.data.listOfReceivers.at(-1)
@@ -590,7 +600,7 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
       </Grid>
     );
   }, [tryingCounting]);
-  
+
   const trigger = setInterval(() => {
     return null;
   }, 1000);

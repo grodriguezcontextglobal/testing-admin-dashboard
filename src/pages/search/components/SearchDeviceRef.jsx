@@ -175,6 +175,12 @@ const SearchDeviceRef = ({ searchParams, data }) => {
         );
         if (eventInfo.data && eventInfoSqlDB.data) {
           setReturnLoading(false);
+          await clearCacheMemory(
+            `eventSelected=${record.event}&company=${user.companyData.id}`
+          );
+          await clearCacheMemory(
+            `eventSelected=${record.event}&company=${user.companyData.id}`
+          );
           afterActionTakenCollectStoreAndNavigate({
             paymentIntentDetailSelectedProfile,
             eventInfo: eventInfo.data.list,
@@ -228,6 +234,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
       )
     );
     dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection));
+    setLoadingStatus(false);
     return navigate("/device-quick-glance");
   };
 
