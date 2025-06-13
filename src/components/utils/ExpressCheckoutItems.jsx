@@ -8,6 +8,7 @@ import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
@@ -84,12 +85,8 @@ const ExpressCheckoutItems = ({
       openNotificationWithIcon("Success", "All devices returned!");
       refetchingDevicePerTransaction()
       message.success("All devices returned!");
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      });
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-      });
+      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`);
+      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`);
       
       setSelectedItems([]);
       return closeModal();

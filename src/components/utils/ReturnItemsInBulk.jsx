@@ -1,5 +1,6 @@
 import { message } from "antd";
 import { devitrakApi } from "../../api/devitrakApi";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 
 const returningItemsInBulkMethod = ({
   user,
@@ -36,13 +37,8 @@ const returningItemsInBulkMethod = ({
       await returnDevicesInTransaction();
       await returnDeviceInPool();
       message.success("All devices returned!");
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      });
-      await devitrakApi.post("/cache_update/remove-cache", {
-        key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-      });
-
+      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`);
+      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`);
       setSelectedItems([]);
       return null;
     } catch (error) {

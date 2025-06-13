@@ -178,9 +178,7 @@ const ReviewAndSubmitEvent = () => {
     });
     await createEventNoSQLDatabase();
     if (respo.data) {
-      console.log("respo.data",respo.data);
       const newEventId = respo.data.consumer.insertId;
-      console.log("newEventId",newEventId);
       // const newEventInfo = await devitrakApi.post(
       //   "/db_event/consulting-event",
       //   { event_id: respo.data.consumer.insertId }

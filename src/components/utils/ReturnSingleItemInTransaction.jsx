@@ -1,14 +1,15 @@
 import { devitrakApi } from "../../api/devitrakApi";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 
 const handleReturnSingleDevice = async (props) => {
   const {
     user, //user
     serialNumber, //rowRecord.serialNumber
     deviceType, //rowRecord.deviceType
-    deviceData,//receiver information (receiver in transaction) - /receiver/receiver-assigned-list  
-    event,//event information
+    deviceData, //receiver information (receiver in transaction) - /receiver/receiver-assigned-list
+    event, //event information
     customer, //customer information
-    status,//device status to assign (false or Lost)
+    status, //device status to assign (false or Lost)
   } = props;
   try {
     const deviceInPoolListQuery = await devitrakApi.post(
@@ -22,7 +23,7 @@ const handleReturnSingleDevice = async (props) => {
     );
     let returnedItem = {
       ...deviceData.device,
-      status:status,
+      status: status,
     };
     const respUpdate = await devitrakApi.patch(
       `/receiver/receiver-update/${deviceData.id}`,
@@ -33,11 +34,11 @@ const handleReturnSingleDevice = async (props) => {
     );
     if (respUpdate.data) {
       if (deviceInPoolListQuery.data.receiversInventory?.length > 0) {
-        await devitrakApi.post("/cache_update/remove-cache", {
-          key: `event_id=${event.id}&company=${
+        await clearCacheMemory(
+          `event_id=${event.id}&company=${
             user.companyData.id
-          }&consumerInfo.id=${customer.id ?? customer.uid}`,
-        });
+          }&consumerInfo.id=${customer.id ?? customer.uid}`
+        );
         const checkInPool =
           deviceInPoolListQuery.data.receiversInventory.at(-1);
         const deviceInPoolProfile = {
@@ -51,12 +52,12 @@ const handleReturnSingleDevice = async (props) => {
         );
       }
     }
-    devitrakApi.post("/cache_update/remove-cache", {
-      key: `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-    });
-    devitrakApi.post("/cache_update/remove-cache", {
-      key: `eventSelected=${event.id}&company=${user.companyData.id}`,
-    });
+    await clearCacheMemory(
+      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+    );
+    await clearCacheMemory(
+      `eventSelected=${event.id}&company=${user.companyData.id}`
+    );
   } catch (error) {
     return null;
   }
