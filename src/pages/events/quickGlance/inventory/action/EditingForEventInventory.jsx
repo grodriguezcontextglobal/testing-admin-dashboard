@@ -216,14 +216,17 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           startingNumber: inventoryData[0].serial_number,
           company_id: user.sqlInfo.company_id,
           quantity: data.quantity,
+          data: inventoryData.map((item) => item.serial_number),
         });
         if (respoUpdating.data.ok) {
           await devitrakApi.post("/db_item/item-out-warehouse", {
             warehouse: 0,
             company_id: user.sqlInfo.company_id,
             item_group: valueItemSelected.item_group,
+            category_name: inventoryData[0].category_name,
             startingNumber: inventoryData[0].serial_number,
             quantity: data.quantity,
+            data: inventoryData.map((item) => item.serial_number),
           });
         }
         await createDeviceRecordInNoSQLDatabase({
@@ -257,7 +260,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }
     );
     if (selectedDevicesPool.data) {
-      if(selectedDevicesPool.data.receiversInventory.length === 0) {
+      if (selectedDevicesPool.data.receiversInventory.length === 0) {
         return null;
       }
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
@@ -279,17 +282,18 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       const responseItem = await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
-          query: `SELECT item_id FROM item_inv WHERE item_group = ? AND category_name = ? AND serial_number IN (${devicesFetchedPool.map((item) => (`${item.device}`)).join(",")})`,
-          values: [
-            devicesFetchedPool[0].type,
-            props.category,
-          ],
+          query: `SELECT item_id FROM item_inv WHERE item_group = ? AND category_name = ? AND serial_number IN (${devicesFetchedPool
+            .map((item) => `${item.device}`)
+            .join(",")})`,
+          values: [devicesFetchedPool[0].type, props.category],
         }
       );
       await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
-          query: `DELETE FROM item_inv_assigned_event WHERE event_id = ? AND item_id IN (${responseItem.data.result.map((item) => (`${item.item_id}`)).join(",")})`,
+          query: `DELETE FROM item_inv_assigned_event WHERE event_id = ? AND item_id IN (${responseItem.data.result
+            .map((item) => `${item.item_id}`)
+            .join(",")})`,
           values: [event.sql.event_id],
         }
       );
