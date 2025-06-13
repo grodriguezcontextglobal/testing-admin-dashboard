@@ -107,6 +107,9 @@ const ActionsMainPage = () => {
           }
         );
         openNotificationWithIcon("Success", "Device returned.");
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
+        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
         queryClient.invalidateQueries({
           queryKey: ["assignedDeviceListQuery"],
           exact: true,
@@ -125,9 +128,6 @@ const ActionsMainPage = () => {
             },
           })
         );
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
         await returnConfirmationEmailNotification({
           paymentIntent: respo.data.listOfReceivers.at(-1).paymentIntent,
           device: [

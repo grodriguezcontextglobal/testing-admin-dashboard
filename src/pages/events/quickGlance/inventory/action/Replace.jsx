@@ -25,6 +25,7 @@ import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const Replace = () => {
   const [newDeviceInfoFromPool, setNewDeviceInfoFromPool] = useState([]);
@@ -183,6 +184,13 @@ export const Replace = () => {
       await updateNewDeviceInPool(data);
       await updateNewDeviceInTransaction(data);
       await defectedDevice(data);
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
+  
       queryClient.invalidateQueries({
         queryKey: ["assignedDeviceInEvent"],
         exact: true,

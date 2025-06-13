@@ -24,7 +24,9 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
-const SearchDevice = () => {
+import ReleaseDeposit from "./ReleaseDeposit";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+const SearchDevice = ({ countingResults, setCountingResult }) => {
   const location = useLocation();
   const ref = useRef(location.state.search);
   const [tryingCounting, setTryingCounting] = useState(
@@ -36,6 +38,7 @@ const SearchDevice = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
   const [returnLoading, setReturnLoading] = useState(false);
+  const [openReleaseDepositModal, setOpenReleaseDepositModal] = useState(false);
   const searchingQuery = useQuery({
     queryKey: [`${location.state.search}`],
     queryFn: () =>
@@ -181,7 +184,7 @@ const SearchDevice = () => {
 
   const updatingTrigger = setInterval(() => {
     if (tryingCounting < 3) {
-      setLoadingSearchingResult(false)
+      setLoadingSearchingResult(false);
       let count = 1;
       return setTryingCounting(count++);
     }
@@ -368,6 +371,28 @@ const SearchDevice = () => {
     }
   };
 
+  const checkIfAllDevicesInTransactionAreReturnedToTriggerReleaseDeposit =
+    async (props) => {
+      try {
+        const assignedDeviceListQuery = await devitrakApi.post(
+          "/receiver/receiver-assigned-list",
+          {
+            eventSelected: props.eventSelected,
+            paymentIntent: props.paymentIntent,
+            "device.status": true,
+          }
+        );
+        if (assignedDeviceListQuery.data.receiver.length > 0) {
+          return null;
+        } else {
+          dispatch(onAddPaymentIntentDetailSelected(props));
+          return setOpenReleaseDepositModal(true);
+        }
+      } catch (error) {
+        message.error(error.message);
+        return null;
+      }
+    };
   const returningDevice = async (record) => {
     try {
       setLoadingStatus(true);
@@ -445,34 +470,39 @@ const SearchDevice = () => {
             device: respTransaction.data.list[0].device[0].deviceNeeded,
           };
           setLoadingStatus(false);
-          await devitrakApi.post("/cache_update/remove-cache", {
-            key: `eventSelected=${record.event}&company=${user.companyData.id}`,
-          });
-
-          await afterActionTakenCollectStoreAndNavigate({
-            paymentIntentDetailSelectedProfile,
-            eventInfo: record.data.eventInfo,
-            eventInfoSqlDB,
-            record: {
-              ...record,
-              data: {
-                ...record.data,
-                device: {
-                  ...record.data.device,
-                  status: false,
+          await clearCacheMemory(
+            `eventSelected=${record.event}&company=${user.companyData.id}`
+          )
+          if (record.data.paymentIntent.length > 15) {
+            await checkIfAllDevicesInTransactionAreReturnedToTriggerReleaseDeposit(
+              assignedDeviceListQuery.data.listOfReceivers.at(-1)
+            );
+          } else {
+            return await afterActionTakenCollectStoreAndNavigate({
+              paymentIntentDetailSelectedProfile,
+              eventInfo: record.data.eventInfo,
+              eventInfoSqlDB,
+              record: {
+                ...record,
+                data: {
+                  ...record.data,
+                  device: {
+                    ...record.data.device,
+                    status: false,
+                  },
                 },
               },
-            },
-            eventInventoryQuery: {
-              ...freshDeviceDevicePool,
-              data: {
-                ...freshDeviceDevicePool.data,
-                receiversInventory: [
-                  JSON.parse(freshDeviceDevicePool.data.receiverUpdated),
-                ],
+              eventInventoryQuery: {
+                ...freshDeviceDevicePool,
+                data: {
+                  ...freshDeviceDevicePool.data,
+                  receiversInventory: [
+                    JSON.parse(freshDeviceDevicePool.data.receiverUpdated),
+                  ],
+                },
               },
-            },
-          });
+            });
+          }
         }
       }
     } catch (error) {
@@ -560,7 +590,31 @@ const SearchDevice = () => {
       </Grid>
     );
   }, [tryingCounting]);
+  
+  const trigger = setInterval(() => {
+    return null;
+  }, 1000);
 
-  return result;
+  useMemo(() => {
+    const counting = sortAndRenderFoundData()?.length;
+    setCountingResult([
+      ...countingResults,
+      { title: "devices", count: counting },
+    ]);
+    return () => clearInterval(trigger);
+  }, [trigger]);
+
+  return (
+    <>
+      {result}
+      {openReleaseDepositModal && (
+        <ReleaseDeposit
+          openCancelingDepositModal={openReleaseDepositModal}
+          setOpenCancelingDepositModal={setOpenReleaseDepositModal}
+          refetchingTransactionFn={null}
+        />
+      )}
+    </>
+  );
 };
 export default SearchDevice;
