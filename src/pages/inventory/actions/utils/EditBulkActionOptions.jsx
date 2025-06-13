@@ -18,6 +18,7 @@ export const bulkItemUpdateAlphanumeric = async ({
   scannedSerialNumbers,
   setScannedSerialNumbers,
   originalTemplate,
+  alphaNumericUpdateItemMutation,
 }) => {
   if (!scannedSerialNumbers || scannedSerialNumbers.length === 0) {
     return alert("Please scan at least one serial number.");
@@ -49,25 +50,20 @@ export const bulkItemUpdateAlphanumeric = async ({
     image_url: img_url,
     originalTemplate: originalTemplate,
   };
-  const respNewItem = await devitrakApi.post(
-    "/db_company/update-items-based-on-alphanumeric-serial-number",
-    template
+  await alphaNumericUpdateItemMutation.mutate(template);
+  Object.keys(template).map((key) => {
+    setValue(key, "");
+  });
+  setScannedSerialNumbers([]);
+  openNotificationWithIcon(
+    "New group of items were created and stored in database."
   );
-  if (respNewItem.data.ok) {
-    Object.keys(template).map((key) => {
-      setValue(key, "");
-    });
-    setScannedSerialNumbers([]);
-    openNotificationWithIcon(
-      "New group of items were created and stored in database."
-    );
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-    );
+  setLoadingStatus(false);
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
-    return navigate("/inventory");
-  }
+  return navigate("/inventory");
 };
 
 export const bulkItemUpdateSequential = async ({
@@ -83,6 +79,7 @@ export const bulkItemUpdateSequential = async ({
   returningDate,
   subLocationsSubmitted,
   originalTemplate,
+  sequencialNumbericUpdateItemMutation,
 }) => {
   if (!data.min_serial_number || !data.max_serial_number) {
     return alert("Min serial number and max serial number are required.");
@@ -115,24 +112,19 @@ export const bulkItemUpdateSequential = async ({
     image_url: img_url || null,
     originalTemplate: originalTemplate,
   };
-  const respNewItem = await devitrakApi.post(
-    "/db_company/update-items-based-on-serial-number",
-    template
+  await sequencialNumbericUpdateItemMutation.mutate(template);
+  Object.keys(template).map((key) => {
+    setValue(key, "");
+  });
+  openNotificationWithIcon(
+    "New group of items were created and stored in database."
   );
-  if (respNewItem.data.ok) {
-    Object.keys(template).map((key) => {
-      setValue(key, "");
-    });
-    openNotificationWithIcon(
-      "New group of items were created and stored in database."
-    );
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-    );
+  setLoadingStatus(false);
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
-    return navigate("/inventory");
-  }
+  return navigate("/inventory");
 };
 
 export const updateAllItemsBasedOnParameters = async ({
@@ -148,9 +140,9 @@ export const updateAllItemsBasedOnParameters = async ({
   returningDate,
   subLocationsSubmitted,
   originalTemplate,
+  updateAllItemsMutation,
 }) => {
-  console.log(img_url);
-  if (!data.category_name ||!data.item_group) {
+  if (!data.category_name || !data.item_group) {
     return alert("Category name and item group are required.");
   }
   const newTemplate = {
@@ -177,11 +169,7 @@ export const updateAllItemsBasedOnParameters = async ({
     image_url: img_url || null,
     originalTemplate: originalTemplate,
   };
-  console.log(newTemplate);
-  await devitrakApi.post(
-    "/db_company/update-all-items-in-inventory",
-    newTemplate
-  );
+  await updateAllItemsMutation.mutate(newTemplate);
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
   );

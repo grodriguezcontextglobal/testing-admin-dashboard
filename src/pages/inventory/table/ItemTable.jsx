@@ -16,7 +16,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { dictionary } from "../utils/dicSelectedOptions";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { Grid, Typography } from "@mui/material";
-import { groupBy } from "lodash";
+import { groupBy, orderBy } from "lodash";
 import { Icon } from "@iconify/react";
 import { PropTypes } from "prop-types";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
@@ -50,14 +50,14 @@ const ItemTable = ({
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchDateResult, setSearchDateResult] = useState([]);
 
-  const gettingCountBasedOnLocationQuery = useQuery({
-    queryKey: ["gettingCountBasedOnLocationQuery"],
-    queryFn: () =>
-      devitrakApi.get(
-        `/db_item/location-count?company_id=${user.sqlInfo.company_id}`
-      ),
-    enabled: !!user.sqlInfo.company_id,
-  });
+  // const gettingCountBasedOnLocationQuery = useQuery({
+  //   queryKey: ["gettingCountBasedOnLocationQuery"],
+  //   queryFn: () =>
+  //     devitrakApi.get(
+  //       `/db_item/location-count?company_id=${user.sqlInfo.company_id}`
+  //     ),
+  //   enabled: !!user.sqlInfo.company_id,
+  // });
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -128,7 +128,7 @@ const ItemTable = ({
           }
         }
       }
-      return Array.from(resultFormatToDisplay);
+      return orderBy(Array.from(resultFormatToDisplay), ["serial_number"], ["asc"]);
     },
     [renderedListItems, itemsInInventoryQuery]
   );
@@ -710,7 +710,7 @@ const ItemTable = ({
                 }}
                 style={{ width: "100%" }}
                 columns={columns}
-                dataSource={refactoredGetDataStructuringFormat()}
+                dataSource={dataToDisplay()} //refactoredGetDataStructuringFormat()}
                 className="table-ant-customized"
               />
               <Divider />

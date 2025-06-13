@@ -16,6 +16,7 @@ export const bulkItemInsertAlphanumeric = async ({
   subLocationsSubmitted,
   scannedSerialNumbers,
   setScannedSerialNumbers,
+  alphaNumericInsertItemMutation,
 }) => {
   const template = {
     category_name: data.category_name,
@@ -45,33 +46,28 @@ export const bulkItemInsertAlphanumeric = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
   };
-  const respNewItem = await devitrakApi.post(
-    "/db_item/bulk-item-alphanumeric",
-    template
+  await alphaNumericInsertItemMutation.mutate(template);
+  setValue("category_name", "");
+  setValue("item_group", "");
+  setValue("cost", "");
+  setValue("brand", "");
+  setValue("descript_item", "");
+  setValue("ownership", "");
+  setValue("quantity", 0);
+  setValue("location", "");
+  setValue("tax_location", "");
+  setValue("container", "");
+  setValue("containerSpotLimit", "0");
+  setScannedSerialNumbers([]);
+  openNotificationWithIcon(
+    "New group of items were created and stored in database."
   );
-  if (respNewItem.data.ok) {
-    setValue("category_name", "");
-    setValue("item_group", "");
-    setValue("cost", "");
-    setValue("brand", "");
-    setValue("descript_item", "");
-    setValue("ownership", "");
-    setValue("quantity", 0);
-    setValue("location", "");
-    setValue("tax_location", "");
-    setValue("container", "");
-    setValue("containerSpotLimit", "0");
-    setScannedSerialNumbers([]);
-    openNotificationWithIcon(
-      "New group of items were created and stored in database."
-    );
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-    );
+  setLoadingStatus(false);
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
-    return navigate("/inventory");
-  }
+  return navigate("/inventory");
 };
 
 export const bulkItemInsertSequential = async ({
@@ -86,6 +82,7 @@ export const bulkItemInsertSequential = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
+  sequencialNumbericInsertItemMutation,
 }) => {
   const template = {
     category_name: data.category_name,
@@ -116,31 +113,29 @@ export const bulkItemInsertSequential = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
   };
-  const respNewItem = await devitrakApi.post("/db_item/bulk-item", template);
-  if (respNewItem.data.ok) {
-    setValue("category_name", "");
-    setValue("item_group", "");
-    setValue("cost", "");
-    setValue("brand", "");
-    setValue("descript_item", "");
-    setValue("ownership", "");
-    setValue("min_serial_number", "");
-    setValue("max_serial_number", "");
-    setValue("quantity", 0);
-    setValue("location", "");
-    setValue("tax_location", "");
-    setValue("container", "");
-    setValue("containerSpotLimit", "0");
-    openNotificationWithIcon(
-      "New group of items were created and stored in database."
-    );
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-    );
+  await sequencialNumbericInsertItemMutation.mutate(template);
+  setValue("category_name", "");
+  setValue("item_group", "");
+  setValue("cost", "");
+  setValue("brand", "");
+  setValue("descript_item", "");
+  setValue("ownership", "");
+  setValue("min_serial_number", "");
+  setValue("max_serial_number", "");
+  setValue("quantity", 0);
+  setValue("location", "");
+  setValue("tax_location", "");
+  setValue("container", "");
+  setValue("containerSpotLimit", "0");
+  openNotificationWithIcon(
+    "New group of items were created and stored in database."
+  );
+  setLoadingStatus(false);
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
-    return navigate("/inventory");
-  }
+  return navigate("/inventory");
 };
 
 export const storeAndGenerateImageUrl = async ({

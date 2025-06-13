@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
@@ -19,11 +19,14 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
-import { bulkItemInsertAlphanumeric, bulkItemInsertSequential, storeAndGenerateImageUrl } from "./utils/bulkItemActionsOptions";
+import {
+  bulkItemInsertAlphanumeric,
+  bulkItemInsertSequential,
+  storeAndGenerateImageUrl,
+} from "./utils/bulkItemActionsOptions";
 import BulkItemForm from "./utils/BulkItemForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
-import InvalidateQueries from "../../../utils/actions/invalidateQueries";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -94,6 +97,41 @@ const AddNewBulkItems = () => {
       }),
     refetchOnMount: false,
   });
+  const queryClient = useQueryClient();
+  const alphaNumericInsertItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-alphanumeric-serial-number",
+        template
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        key: ["listOfItemsInStock"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        key: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      });
+    },
+  });
+  const sequencialNumbericInsertItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-serial-number",
+        template
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        key: ["listOfItemsInStock"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        key: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      });
+    },
+  });
 
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -163,6 +201,7 @@ const AddNewBulkItems = () => {
           subLocationsSubmitted,
           scannedSerialNumbers,
           setScannedSerialNumbers,
+          alphaNumericInsertItemMutation
         });
       } else {
         await bulkItemInsertSequential({
@@ -177,10 +216,9 @@ const AddNewBulkItems = () => {
           formatDate,
           returningDate,
           subLocationsSubmitted,
+          sequencialNumbericInsertItemMutation
         });
       }
-      await InvalidateQueries({ name: "listOfItemsInStock" });
-      await InvalidateQueries({ name: "ItemsInInventoryCheckingQuery" });
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
@@ -310,6 +348,7 @@ const AddNewBulkItems = () => {
         "Serial number is already scanned or invalid for this transaction."
       );
     const result = [...scannedSerialNumbers, watch("serial_number_list")];
+    setValue("serial_number_list", "");
     return setScannedSerialNumbers(result);
   };
 
@@ -361,7 +400,7 @@ const AddNewBulkItems = () => {
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (key === "enableAssignFeature" || key === "container") {
-            return
+            return;
           }
           setValue(key, value);
           setValue("quantity", 0);

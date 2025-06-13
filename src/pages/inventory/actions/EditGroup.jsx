@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,7 +29,6 @@ import { renderTitle } from "./utils/EditBulkComponents";
 import EditBulkForm from "./utils/EditBulkForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
-import InvalidateQueries from "../../../utils/actions/invalidateQueries";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -69,7 +68,57 @@ const EditGroup = () => {
   } = useForm();
   const navigate = useNavigate();
   const refTemplateToUpdate = useRef(null);
+  const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
+  const alphaNumericUpdateItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-alphanumeric-serial-number",
+        template
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        key: ["listOfItemsInStock"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        key: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      });
+    },
+  });
+  const sequencialNumbericUpdateItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-serial-number",
+        template
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        key: ["listOfItemsInStock"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        key: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      });
+    },
+  });
+  const updateAllItemsMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post("/db_company/update-all-items-in-inventory", template),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        key: ["listOfItemsInStock"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        key: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+      });
+    },
+  });
+
   const openNotificationWithIcon = useCallback(
     (msg) => {
       api.open({
@@ -166,6 +215,7 @@ const EditGroup = () => {
           returningDate,
           subLocationsSubmitted,
           originalTemplate: refTemplateToUpdate.current,
+          updateAllItemsMutation,
         });
         return setLoadingStatus(false);
       }
@@ -185,6 +235,7 @@ const EditGroup = () => {
           scannedSerialNumbers,
           setScannedSerialNumbers,
           originalTemplate: refTemplateToUpdate.current,
+          alphaNumericUpdateItemMutation,
         });
       } else {
         await bulkItemUpdateSequential({
@@ -200,10 +251,9 @@ const EditGroup = () => {
           returningDate,
           subLocationsSubmitted,
           originalTemplate: refTemplateToUpdate.current,
+          sequencialNumbericUpdateItemMutation,
         });
       }
-      await InvalidateQueries({ name: "listOfItemsInStock" });
-      await InvalidateQueries({ name: "ItemsInInventoryCheckingQuery" });
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);

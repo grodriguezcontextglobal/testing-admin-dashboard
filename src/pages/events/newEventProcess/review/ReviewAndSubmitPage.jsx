@@ -3,18 +3,11 @@ import { nanoid } from "@reduxjs/toolkit";
 import { Button, notification } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import { checkArray } from "../../../../components/utils/checkArray";
-import {
-  onAddEventData,
-  onAddQRCodeLink,
-  onSelectCompany,
-  onSelectEvent,
-} from "../../../../store/slices/eventSlice";
-import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import "./blurring.css";
@@ -24,7 +17,7 @@ const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
 const ReviewAndSubmitEvent = () => {
-  const { subscription } = useSelector((state) => state.subscription);
+  // const { subscription } = useSelector((state) => state.subscription);
   const {
     eventInfoDetail,
     staff,
@@ -36,7 +29,7 @@ const ReviewAndSubmitEvent = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [buttonDisable, setButtonDisable] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg) => {
     api.open({
@@ -185,27 +178,29 @@ const ReviewAndSubmitEvent = () => {
     });
     await createEventNoSQLDatabase();
     if (respo.data) {
+      console.log("respo.data",respo.data);
       const newEventId = respo.data.consumer.insertId;
-      const newEventInfo = await devitrakApi.post(
-        "/db_event/consulting-event",
-        { event_id: respo.data.consumer.insertId }
-      );
-      dispatch(onSelectEvent(eventInfoDetail.eventName));
-      dispatch(onSelectCompany(user.company));
-      dispatch(
-        onAddEventData({
-          ...eventInfoDetail,
-          sql: newEventInfo.data.event.at(-1),
-        })
-      );
-      dispatch(onAddSubscription(subscription));
-      dispatch(
-        onAddQRCodeLink(
-          `https://app.devitrak.net/?event=${encodeURI(
-            eventInfoDetail.eventName
-          )}&company=${encodeURI(user.company)}`
-        )
-      );
+      console.log("newEventId",newEventId);
+      // const newEventInfo = await devitrakApi.post(
+      //   "/db_event/consulting-event",
+      //   { event_id: respo.data.consumer.insertId }
+      // );
+      // dispatch(onSelectEvent(eventInfoDetail.eventName));
+      // dispatch(onSelectCompany(user.company));
+      // dispatch(
+      //   onAddEventData({
+      //     ...eventInfoDetail,
+      //     sql: newEventInfo.data.event.at(-1),
+      //   })
+      // );
+      // dispatch(onAddSubscription(subscription));
+      // dispatch(
+      //   onAddQRCodeLink(
+      //     `https://app.devitrak.net/?event=${encodeURI(
+      //       eventInfoDetail.eventName
+      //     )}&company=${encodeURI(user.company)}`
+      //   )
+      // );
       await createStaffInEvent(newEventId);
       // await createDeviceInEvent(newEventId)//function to be trigger in event quick glance
     }
