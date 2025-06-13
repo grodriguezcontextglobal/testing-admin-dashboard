@@ -13,6 +13,7 @@ import { BlueButtonText } from "../../../../../../../../styles/global/BlueButton
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
+import clearCacheMemory from "../../../../../../../../utils/actions/clearCacheMemory";
 const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -129,6 +130,12 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
       { activity: true, status: "Operational" }
+    );
+    await clearCacheMemory(
+      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+    );
+    await clearCacheMemory(
+      `eventSelected=${event.id}&company=${user.companyData.id}`
     );
   };
 

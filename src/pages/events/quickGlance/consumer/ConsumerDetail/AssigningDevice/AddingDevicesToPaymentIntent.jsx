@@ -19,6 +19,7 @@ import {
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
 const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
@@ -77,9 +78,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           firstName: customer.name,
           lastName: customer.lastName,
         },
-        devices: [
-          { ...props.device, paymentIntent: props.paymentIntent },
-        ],
+        devices: [{ ...props.device, paymentIntent: props.paymentIntent }],
         event: props.eventSelected ?? props.event,
         transaction: props.paymentIntent,
         company: user.companyData.id,
@@ -244,6 +243,12 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
         );
         saveAndUpdateDeviceInPool();
         await createEventInTransactionLog();
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
 
         if (resp.data.ok) {
           dispatch(

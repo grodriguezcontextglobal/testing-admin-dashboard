@@ -10,6 +10,7 @@ import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 
 const ServicePaymentConfirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -84,6 +85,13 @@ const ServicePaymentConfirmation = () => {
           "/transaction/save-transaction",
           transactionProfile
         );
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
+    
         if (responseTransaction.data) return (sequency = false);
       }
     }

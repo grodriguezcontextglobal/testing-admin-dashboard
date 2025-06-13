@@ -20,6 +20,7 @@ import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/sli
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const { paymentIntentDetailSelected } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -245,6 +246,12 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
         );
         saveAndUpdateDeviceInPool();
         await createEventInTransactionLog();
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
 
         if (resp.data.ok) {
           dispatch(

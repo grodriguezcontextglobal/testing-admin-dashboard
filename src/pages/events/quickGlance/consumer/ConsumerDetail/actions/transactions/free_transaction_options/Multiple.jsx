@@ -18,6 +18,7 @@ import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
+import clearCacheMemory from "../../../../../../../../utils/actions/clearCacheMemory";
 const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -79,7 +80,9 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
     let check = [];
     for (const [key] of Object.entries(groupByStatus)) {
       if (String(key).toLowerCase() !== "lost") {
-        check = [...check, ...groupByStatus[key]].flat().sort((a, b) => a.device - b.device);
+        check = [...check, ...groupByStatus[key]]
+          .flat()
+          .sort((a, b) => a.device - b.device);
       }
     }
     const max = check?.at(-1)?.device;
@@ -170,7 +173,10 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           (element) => element.device === data.startingNumber
         );
         if (Number(deviceFound) > -1) {
-          const dataToPass = copiedDeviceData.slice(deviceFound, deviceFound + Number(data.quantity));
+          const dataToPass = copiedDeviceData.slice(
+            deviceFound,
+            deviceFound + Number(data.quantity)
+          );
           const createTransactionTemplate = {
             serialNumbers: JSON.stringify(dataToPass),
             deviceType: copiedDeviceData[0].type,
@@ -217,15 +223,20 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
             eventSelected: event.eventInfoDetail.eventName,
             event: event.eventInfoDetail.eventName,
           });
-  
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
 
         await queryClient.refetchQueries({
           queryKey: ["transactionListQuery"],
           exact: true,
         });
-        
+
         await queryClient.refetchQueries({
           queryKey: ["transactionsList"],
           exact: true,

@@ -19,6 +19,7 @@ import { OutlinedInputStyle } from "../../../../../../../../styles/global/Outlin
 import { nanoid } from "@reduxjs/toolkit";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
+import clearCacheMemory from "../../../../../../../../utils/actions/clearCacheMemory";
 
 const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
@@ -191,6 +192,13 @@ const SingleDevice = ({ setCreateTransactionForNoRegularUser }) => {
             "/stripe/save-transaction",
             transactionProfile
           );
+          await clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          );
+          await clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          );
+
           await queryClient.refetchQueries({
             queryKey: ["transactionListQuery"],
             exact: true,
