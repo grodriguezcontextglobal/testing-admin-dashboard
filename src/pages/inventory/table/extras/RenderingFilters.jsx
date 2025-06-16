@@ -1,12 +1,13 @@
 import { Grid } from "@mui/material";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext } from "react";
+import { createContext, useEffect } from "react";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-import CardForTreeView from "../../utils/CardForTreeView";
+// import CardForTreeView from "../../utils/CardForTreeView";
+import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import AdvanceSearchModal from "./AdvanceSearchModal";
@@ -14,6 +15,8 @@ import AdvanceSearchModal from "./AdvanceSearchModal";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
+// import TreeView from "../../utils/TreeView";
+import CardForTreeView from "../../utils/CardForTreeView";
 export const AdvanceSearchContext = createContext();
 function extractDataForRendering(structuredData) {
   const keys = ["category_name", "item_group", "brand", "ownership"];
@@ -54,7 +57,14 @@ const RenderingFilters = ({
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!user.sqlInfo.company_id,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    structuredCompanyInventory.refetch();
+  }, []);
+
   const sortingByParameters = (props) => {
     const totalPerLocation = new Map();
     const parameter = props;
@@ -147,7 +157,7 @@ const RenderingFilters = ({
   const extractedData = extractDataForRendering(
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
-  
+
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -171,7 +181,7 @@ const RenderingFilters = ({
       key: "category_name",
       title: "Category",
       data: extractedData.category_name || [],
-      totalUnits:extractedData.category_name?.length || 0,
+      totalUnits: extractedData.category_name?.length || 0,
       open: true,
       routeTitle: "category_name",
       renderMoreOptions: false,
@@ -189,7 +199,7 @@ const RenderingFilters = ({
       key: "item_group",
       title: "Groups",
       data: extractedData.item_group || [],
-      totalUnits:extractedData.item_group?.length || 0,
+      totalUnits: extractedData.item_group?.length || 0,
       open: true,
       routeTitle: "group",
       renderMoreOptions: false,
@@ -207,7 +217,7 @@ const RenderingFilters = ({
       key: "brand",
       title: "Brands",
       data: extractedData.brand || [],
-      totalUnits:extractedData.brand?.length || 0,
+      totalUnits: extractedData.brand?.length || 0,
       open: true,
       routeTitle: "brand",
       renderMoreOptions: false,
@@ -225,7 +235,7 @@ const RenderingFilters = ({
       key: "ownership",
       title: "Ownership",
       data: extractedData.ownership || [],
-      totalUnits:extractedData.ownership?.length || 0,
+      totalUnits: extractedData.ownership?.length || 0,
       open: true,
       routeTitle: "ownership",
       renderMoreOptions: false,
@@ -383,6 +393,39 @@ const RenderingFilters = ({
               </Grid>
               <Grid
                 display={item.open ? "flex" : "none"}
+                justifyContent={"flex-start"}
+                alignItems={"center"}
+                sx={{
+                  marginX:{
+                    xs: 1,
+                    sm: 0,
+                    md: "auto",
+                    lg: "auto",
+                  },
+                }}
+                item
+                xs={12}
+                sm={12}
+                md={7.5}
+                lg={7.5}
+              >
+                {item.tree && (
+                  <CardForTreeView
+                    id={`${item.key}`}
+                    key={item.key}
+                    data={item.data}
+                  />
+                )}{" "}
+              </Grid>
+
+              <Grid
+                style={{
+                  width: "100vw",
+                  display: item.open ? "flex" : "none",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                display={item.open ? "flex" : "none"}
                 margin={0}
                 padding={0}
                 item
@@ -391,11 +434,20 @@ const RenderingFilters = ({
                 md={12}
                 lg={12}
               >
-                <CardForTreeView
+                {!item.tree && (
+                  //   <TreeView id={`${item.key}`} key={item.key} data={item.data} />
+                  // ) : (
+                  <RenderingMoreThanTreeviewElements
+                    item={item}
+                    dictionary={dictionary}
+                    searchItem={searchItem}
+                  />
+                )}{" "}
+                {/* <CardForTreeView
                   item={item}
                   dictionary={dictionary}
                   searchItem={searchItem}
-                />
+                /> */}
               </Grid>
             </details>
           </Grid>

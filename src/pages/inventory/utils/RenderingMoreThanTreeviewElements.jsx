@@ -1,5 +1,6 @@
-import { Grid } from "@mui/material";
+// import { Grid } from "@mui/material";
 import CardLocations from "./CardLocations";
+import { Space } from "antd";
 
 const RenderingMoreThanTreeviewElements = ({
   item,
@@ -9,33 +10,29 @@ const RenderingMoreThanTreeviewElements = ({
   const elemId = item.key;
   const r = () => item.data; //ensureThreeItems(item.data);
   return (
-    <Grid
-      container
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "flex-start",
-        alignContent: "flex-start",
-        gap: "10px",
-      }}
-    >
+    <Space align="start" size={[8, 16]} wrap style={{ maxWidth: "1200px", minWidth:"320px", width:"100%" }}>
       {r().map((opt) => {
         return (
           <CardLocations
             key={`${elemId}-${opt?.key}`}
             id={`card-${elemId}-`}
-            navigate={`/inventory/${String(
-              item.routeTitle
-            ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
-              searchItem && searchItem
-            }`}
+            navigate={
+              opt?.fake
+                ? null
+                : `/inventory/${String(
+                    item.routeTitle
+                  ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
+                    searchItem && searchItem
+                  }`
+            }
             title={dictionary[opt?.key] ?? opt?.key}
             props={`${opt?.value} total devices`}
             optional={null}
+            style={{ general: { opacity: opt?.fake ? 0 : 1, cursor: null } }}
           />
         );
       })}
-    </Grid>
+    </Space>
   );
 };
 

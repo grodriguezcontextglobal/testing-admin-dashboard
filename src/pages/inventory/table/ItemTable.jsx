@@ -65,6 +65,7 @@ const ItemTable = ({
         `/db_company/current-inventory/${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
+    refetchOnMount: false,
   });
 
   const listImagePerItemQuery = useQuery({
@@ -72,6 +73,7 @@ const ItemTable = ({
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
     enabled: !!user.companyData.id,
+    refetchOnMount: false,
   });
 
   const itemsInInventoryQuery = useQuery({
@@ -81,6 +83,7 @@ const ItemTable = ({
         `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
+    refetchOnMount: false,
   });
 
   const refactoredListInventoryCompany = useQuery({
@@ -93,7 +96,15 @@ const ItemTable = ({
         }
       ),
     enabled: !!user.sqlInfo.company_id,
+    refetchOnMount: false,
   });
+
+  useEffect(() => {
+    listItemsQuery.refetch();
+    listImagePerItemQuery.refetch();
+    itemsInInventoryQuery.refetch();
+    refactoredListInventoryCompany.refetch();
+  }, []);
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
@@ -128,7 +139,11 @@ const ItemTable = ({
           }
         }
       }
-      return orderBy(Array.from(resultFormatToDisplay), ["serial_number"], ["asc"]);
+      return orderBy(
+        Array.from(resultFormatToDisplay),
+        ["serial_number"],
+        ["asc"]
+      );
     },
     [renderedListItems, itemsInInventoryQuery]
   );
@@ -370,46 +385,46 @@ const ItemTable = ({
       },
       render: (warehouse, record) => {
         // if (record.enableAssignFeature === 1) {
-          return (
-            <span
+        return (
+          <span
+            style={{
+              ...cellStyle,
+              borderRadius: "16px",
+              justifyContent: "center",
+              display: "flex",
+              padding: "2px 8px",
+              alignItems: "center",
+              background: `${
+                warehouse === 0
+                  ? "var(--blue-50, #EFF8FF)"
+                  : "var(--success-50, #ECFDF3)"
+              }`,
+              width: "fit-content",
+            }}
+          >
+            <p
               style={{
-                ...cellStyle,
-                borderRadius: "16px",
-                justifyContent: "center",
-                display: "flex",
-                padding: "2px 8px",
-                alignItems: "center",
-                background: `${
+                color: `${
                   warehouse === 0
-                    ? "var(--blue-50, #EFF8FF)"
-                    : "var(--success-50, #ECFDF3)"
+                    ? "var(--blue-700, #175CD3)"
+                    : "var(--success-700, #027A48)"
                 }`,
-                width: "fit-content",
+                textTransform: "capitalize",
+                width: "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              <p
-                style={{
-                  color: `${
-                    warehouse === 0
-                      ? "var(--blue-700, #175CD3)"
-                      : "var(--success-700, #027A48)"
-                  }`,
-                  textTransform: "capitalize",
-                  width: "100%",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                <Icon
-                  icon="tabler:point-filled"
-                  rotate={3}
-                  color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-                />
-                {warehouse === 0 ? "In Use" : "In Stock"}
-              </p>
-            </span>
-          );
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
+              />
+              {warehouse === 0 ? "In Use" : "In Stock"}
+            </p>
+          </span>
+        );
         // } else {
         //   return (
         //     <span

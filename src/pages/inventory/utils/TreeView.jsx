@@ -7,14 +7,14 @@ const TreeView = ({ data }) => {
   return (
     <Grid
       container
-      justifyContent={"flex-start"}
-      alignContent={"flex-start"}
+      justifyContent={"center"}
+      alignContent={"center"}
       gap={1}
     >
       {Object.entries(data).map(([location, details]) => (
         <Grid
           key={location}
-          margin={"auto 0"}
+          margin={"auto"}
           item
           xs={12}
           sm={12}
