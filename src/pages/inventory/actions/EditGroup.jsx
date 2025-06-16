@@ -442,6 +442,12 @@ const EditGroup = () => {
                 : "No - It is not a container";
             return setValue(key, `${valueToSet}`);
           }
+          if(key === "sub_location"){
+            const checkType = typeof value === "string" ? JSON.parse(value) : value;
+            if(checkType.length > 0){
+              return setSubLocationsSubmitted([ ...checkType]);
+            }
+          }
           setValue(key, value);
           setValue("quantity", 0);
           const grouping = groupBy(
