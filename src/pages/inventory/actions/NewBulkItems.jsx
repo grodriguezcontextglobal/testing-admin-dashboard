@@ -19,14 +19,14 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
+import BulkItemForm from "./utils/BulkItemForm";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
+import validatingInputFields from "./utils/validatingInputFields";
 import {
   bulkItemInsertAlphanumeric,
   bulkItemInsertSequential,
   storeAndGenerateImageUrl,
-} from "./utils/bulkItemActionsOptions";
-import BulkItemForm from "./utils/BulkItemForm";
-import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
-import validatingInputFields from "./utils/validatingInputFields";
+} from "./utils/BulkItemActionsOptions";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -100,36 +100,21 @@ const AddNewBulkItems = () => {
   const queryClient = useQueryClient();
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
-      devitrakApi.post(
-        "/db_company/update-items-based-on-alphanumeric-serial-number",
-        template
-      ),
+      devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        key: ["listOfItemsInStock"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        key: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-      });
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
     },
   });
   const sequencialNumbericInsertItemMutation = useMutation({
-    mutationFn: (template) =>
-      devitrakApi.post(
-        "/db_company/update-items-based-on-serial-number",
-        template
-      ),
+    mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        key: ["listOfItemsInStock"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        key: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-      });
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
     },
   });
 
@@ -201,7 +186,7 @@ const AddNewBulkItems = () => {
           subLocationsSubmitted,
           scannedSerialNumbers,
           setScannedSerialNumbers,
-          alphaNumericInsertItemMutation
+          alphaNumericInsertItemMutation,
         });
       } else {
         await bulkItemInsertSequential({
@@ -216,7 +201,7 @@ const AddNewBulkItems = () => {
           formatDate,
           returningDate,
           subLocationsSubmitted,
-          sequencialNumbericInsertItemMutation
+          sequencialNumbericInsertItemMutation,
         });
       }
       return setLoadingStatus(false);

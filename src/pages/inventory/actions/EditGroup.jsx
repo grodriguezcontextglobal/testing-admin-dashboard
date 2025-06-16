@@ -77,14 +77,10 @@ const EditGroup = () => {
         template
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        key: ["listOfItemsInStock"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        key: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-      });
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
     },
   });
   const sequencialNumbericUpdateItemMutation = useMutation({

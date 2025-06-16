@@ -1,3 +1,4 @@
+import { message } from "antd";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
@@ -18,8 +19,10 @@ export const bulkItemInsertAlphanumeric = async ({
   setScannedSerialNumbers,
   alphaNumericInsertItemMutation,
 }) => {
-  const template = {
-    category_name: data.category_name,
+  try {
+    
+    const template = {
+      category_name: data.category_name,
     item_group: data.item_group,
     cost: data.cost,
     brand: data.brand,
@@ -66,8 +69,12 @@ export const bulkItemInsertAlphanumeric = async ({
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
   );
-
+  
   return navigate("/inventory");
+} catch (error) {
+  message.error("Failed to create new item: " + error.message);
+  throw error;
+}
 };
 
 export const bulkItemInsertSequential = async ({
@@ -84,58 +91,63 @@ export const bulkItemInsertSequential = async ({
   subLocationsSubmitted,
   sequencialNumbericInsertItemMutation,
 }) => {
-  const template = {
-    category_name: data.category_name,
-    item_group: data.item_group,
-    cost: data.cost,
-    brand: data.brand,
-    descript_item: data.descript_item,
-    ownership: data.ownership,
-    min_serial_number: data.min_serial_number,
-    max_serial_number: data.max_serial_number,
-    warehouse: true,
-    main_warehouse: data.tax_location,
-    created_at: formatDate(new Date()),
-    update_at: formatDate(new Date()),
-    company: user.company,
-    location: data.location,
-    current_location: data.location,
-    sub_location: JSON.stringify(subLocationsSubmitted),
-    extra_serial_number: JSON.stringify(moreInfo),
-    company_id: user.sqlInfo.company_id,
-    return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
-    returnedRentedInfo: JSON.stringify([]),
-    container: String(data.container).includes("Yes"),
-    containerSpotLimit: data.containerSpotLimit,
-    isItInContainer: 0,
-    containerId: JSON.stringify([]),
-    display_item: 1,
-    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
-    image_url: img_url,
-  };
-  await sequencialNumbericInsertItemMutation.mutate(template);
-  setValue("category_name", "");
-  setValue("item_group", "");
-  setValue("cost", "");
-  setValue("brand", "");
-  setValue("descript_item", "");
-  setValue("ownership", "");
-  setValue("min_serial_number", "");
-  setValue("max_serial_number", "");
-  setValue("quantity", 0);
-  setValue("location", "");
-  setValue("tax_location", "");
-  setValue("container", "");
-  setValue("containerSpotLimit", "0");
-  openNotificationWithIcon(
-    "New group of items were created and stored in database."
-  );
-  setLoadingStatus(false);
-  await clearCacheMemory(
-    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-  );
+  try {
+    const template = {
+      category_name: data.category_name,
+      item_group: data.item_group,
+      cost: data.cost,
+      brand: data.brand,
+      descript_item: data.descript_item,
+      ownership: data.ownership,
+      min_serial_number: data.min_serial_number,
+      max_serial_number: data.max_serial_number,
+      warehouse: true,
+      main_warehouse: data.tax_location,
+      created_at: formatDate(new Date()),
+      update_at: formatDate(new Date()),
+      company: user.company,
+      location: data.location,
+      current_location: data.location,
+      sub_location: JSON.stringify(subLocationsSubmitted),
+      extra_serial_number: JSON.stringify(moreInfo),
+      company_id: user.sqlInfo.company_id,
+      return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
+      returnedRentedInfo: JSON.stringify([]),
+      container: String(data.container).includes("Yes"),
+      containerSpotLimit: data.containerSpotLimit,
+      isItInContainer: 0,
+      containerId: JSON.stringify([]),
+      display_item: 1,
+      enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+      image_url: img_url,
+    };
+    await sequencialNumbericInsertItemMutation.mutate(template);
+    setValue("category_name", "");
+    setValue("item_group", "");
+    setValue("cost", "");
+    setValue("brand", "");
+    setValue("descript_item", "");
+    setValue("ownership", "");
+    setValue("min_serial_number", "");
+    setValue("max_serial_number", "");
+    setValue("quantity", 0);
+    setValue("location", "");
+    setValue("tax_location", "");
+    setValue("container", "");
+    setValue("containerSpotLimit", "0");
+    openNotificationWithIcon(
+      "New group of items were created and stored in database."
+    );
+    setLoadingStatus(false);
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
 
-  return navigate("/inventory");
+    return navigate("/inventory");
+  } catch (error) {
+    message.error("Failed to create new item: " + error.message);
+    throw error;
+  }
 };
 
 export const storeAndGenerateImageUrl = async ({

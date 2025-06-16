@@ -11,7 +11,6 @@ const CardLocations = ({
   title,
   optional,
   navigate = null,
-  style = null,
 }) => {
   const navigateTo = useNavigate();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -23,7 +22,6 @@ const CardLocations = ({
       <Grid item xs={12} sm={12} md={12} lg={12}>
         <Card
           style={{
-            opacity: style ? style.general.opacity : 1,
             width: "100%",
             minWidth: "360px",
             borderRadius: "12px",
@@ -47,7 +45,7 @@ const CardLocations = ({
                   ...TextFontSize30LineHeight38,
                   textWrap: "balance",
                   textAlign: "left",
-                  cursor: style ? style.general.cursor : "pointer",
+                  cursor: "pointer",
                   width: "100%",
                 }}
                 onClick={() => navigateTo(navigate)}

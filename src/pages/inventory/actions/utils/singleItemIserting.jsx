@@ -1,4 +1,3 @@
-import { devitrakApi } from "../../../../api/devitrakApi";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 export const singleItemInserting = async ({
@@ -13,6 +12,7 @@ export const singleItemInserting = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
+  insertingSingleItemMutation
 }) => {
   const template = {
     category_name: data.category_name,
@@ -43,8 +43,9 @@ export const singleItemInserting = async ({
     image_url: img_url,
   };    
   setLoadingStatus(true);
-  const response = await devitrakApi.post("/db_company/insert-new-single-item", template);
-  if (response.data.ok) {
+  await insertingSingleItemMutation(template);
+  // const response = await devitrakApi.post("/db_company/insert-new-single-item", template);
+  // if (response.data.ok) {
     setValue("category_name", "");
     setValue("item_group", "");
     setValue("cost", "");
@@ -66,5 +67,5 @@ export const singleItemInserting = async ({
     );
 
     return navigate("/inventory");
-  }
+  // }
 };

@@ -65,15 +65,17 @@ const ItemTable = ({
         `/db_company/current-inventory/${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
-    refetchOnMount: false,
+    staleTime: 50 * 60 * 1000, // 500 minutes
+    keepPreviousData: true,
   });
 
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
-    enabled: !!user.companyData.id,
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 50 * 60 * 1000, // 500 minutes
+    keepPreviousData: true,
   });
 
   const itemsInInventoryQuery = useQuery({
@@ -83,7 +85,8 @@ const ItemTable = ({
         `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
-    refetchOnMount: false,
+    staleTime: 50 * 60 * 1000, // 500 minutes
+    keepPreviousData: true,
   });
 
   const refactoredListInventoryCompany = useQuery({
@@ -96,15 +99,16 @@ const ItemTable = ({
         }
       ),
     enabled: !!user.sqlInfo.company_id,
-    refetchOnMount: false,
+    staleTime: 50 * 60 * 1000, // 500 minutes
+    keepPreviousData: true,
   });
 
-  useEffect(() => {
+  const refetchingFn = () => {
     listItemsQuery.refetch();
     listImagePerItemQuery.refetch();
     itemsInInventoryQuery.refetch();
     refactoredListInventoryCompany.refetch();
-  }, []);
+  };
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
@@ -297,23 +301,18 @@ const ItemTable = ({
     5: filterOptionsBasedOnProps("status"),
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setDataFilterOptions(filterOptions);
-    downloadDataReport(dataToDisplay());
-    return () => {
-      controller.abort();
-    };
-  }, [
-    chosen,
-    listItemsQuery.data,
-    listImagePerItemQuery.data,
-    itemsInInventoryQuery.data,
-  ]);
+  const memoizedDataToDisplay = useMemo(
+    () => dataToDisplay(),
+    [chosenConditionState, searchDateResult, renderedListItems]
+  );
 
   useEffect(() => {
-    dataToDisplay();
-  }, []);
+    setDataFilterOptions(filterOptions);
+    // Only call once data is ready
+    if (memoizedDataToDisplay?.length > 0) {
+      downloadDataReport(memoizedDataToDisplay);
+    }
+  }, [chosen, memoizedDataToDisplay]);
 
   const cellStyle = {
     display: "flex",
@@ -700,7 +699,7 @@ const ItemTable = ({
                     padding: "0 0 0 0",
                   }}
                 >
-                  <RefreshButton propsFn={refreshFn()} />
+                  <RefreshButton propsFn={refreshFn} />
                 </div>
                 <div
                   style={{
