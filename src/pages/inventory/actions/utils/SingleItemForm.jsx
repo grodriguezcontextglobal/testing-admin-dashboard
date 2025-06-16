@@ -1,17 +1,23 @@
+import { Chip, Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
   Button,
   Divider,
-  Popconfirm,
-  Tooltip,
+  Tooltip
 } from "antd";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
+import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { GrayButton } from "../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { renderFields } from "../utils/SingleItemFields";
 import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
@@ -19,13 +25,6 @@ import {
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { Grid, InputLabel, Typography } from "@mui/material";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { Controller } from "react-hook-form";
-import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
-import { renderFields } from "../utils/SingleItemFields";
-import { BlueButton } from "../../../../styles/global/BlueButton";
 
 const SingleItemForm = ({
   addingSubLocation,
@@ -347,35 +346,30 @@ const SingleItemForm = ({
                               },
                               ...subLocationsSubmitted.map((item, index) => ({
                                 title: (
-                                  <Popconfirm
-                                    title="Are you sure you want to delete this sub location?"
-                                    onConfirm={() =>
+                                  <Chip
+                                    style={{
+                                      border: "none",
+                                      outline: "none",
+                                      margin: 0,
+                                      padding: 0,
+                                      backgroundColor: "transparent",
+                                      boxShadow: "none",
+                                      alignItems: "flex-start",
+                                    }}
+                                    label={item}
+                                    onDelete={() =>
                                       setSubLocationsSubmitted(
                                         subLocationsSubmitted.filter(
                                           (_, i) => i !== index
                                         )
                                       )
                                     }
-                                  >
-                                    <Button
-                                      style={{
-                                        border: "none",
-                                        outline: "none",
-                                        margin: 0,
-                                        padding: 0,
-                                        backgroundColor: "transparent",
-                                        boxShadow: "none",
-                                        alignItems: "flex-start",
-                                      }}
-                                    >
-                                      {item}
-                                    </Button>
-                                  </Popconfirm>
+                                  />
                                 ),
                               })),
                             ]}
                           />
-                        </Grid>
+                      </Grid>
                       </Grid>
                     )}
                   />

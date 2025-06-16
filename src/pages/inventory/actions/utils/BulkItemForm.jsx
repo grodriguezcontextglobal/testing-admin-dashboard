@@ -1,11 +1,10 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
+import { Chip, Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
   Button,
   Divider,
-  Popconfirm,
-  Tooltip,
+  Tooltip
 } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
@@ -25,7 +24,7 @@ import {
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
   renderOptional,
-  stylingComponents
+  stylingComponents,
 } from "./BulkComponents";
 import { renderFields } from "./BulkItemsFields";
 
@@ -224,7 +223,12 @@ const BulkItemForm = ({
                           onClick={() => acceptImage()}
                           style={BlueButton}
                         >
-                          <p style={BlueButtonText}>{imageUrlGenerated ? <CheckIcon /> : null}{imageUrlGenerated ? "Url generated" : "Accept image"}</p>
+                          <p style={BlueButtonText}>
+                            {imageUrlGenerated ? <CheckIcon /> : null}
+                            {imageUrlGenerated
+                              ? "Url generated"
+                              : "Accept image"}
+                          </p>
                         </Button>
                       </div>
                     </div>
@@ -316,9 +320,12 @@ const BulkItemForm = ({
                             setAddSerialNumberField,
                             label: item.label,
                           })}
-                          {
-                            index < 2 && <Divider margin="2.5px 0px 2.5px 0px" style={{width:"100%"}} />
-                          }
+                          {index < 2 && (
+                            <Divider
+                              margin="2.5px 0px 2.5px 0px"
+                              style={{ width: "100%" }}
+                            />
+                          )}
                         </Grid>
                         <Grid
                           display={
@@ -375,30 +382,25 @@ const BulkItemForm = ({
                               },
                               ...subLocationsSubmitted.map((item, index) => ({
                                 title: (
-                                  <Popconfirm
-                                    title="Are you sure you want to delete this sub location?"
-                                    onConfirm={() =>
+                                  <Chip
+                                    style={{
+                                      border: "none",
+                                      outline: "none",
+                                      margin: 0,
+                                      padding: 0,
+                                      backgroundColor: "transparent",
+                                      boxShadow: "none",
+                                      alignItems: "flex-start",
+                                    }}
+                                    label={item}
+                                    onDelete={() =>
                                       setSubLocationsSubmitted(
                                         subLocationsSubmitted.filter(
                                           (_, i) => i !== index
                                         )
                                       )
                                     }
-                                  >
-                                    <Button
-                                      style={{
-                                        border: "none",
-                                        outline: "none",
-                                        margin: 0,
-                                        padding: 0,
-                                        backgroundColor: "transparent",
-                                        boxShadow: "none",
-                                        alignItems: "flex-start",
-                                      }}
-                                    >
-                                      {item}
-                                    </Button>
-                                  </Popconfirm>
+                                  />
                                 ),
                               })),
                             ]}

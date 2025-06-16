@@ -1,11 +1,10 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
+import { Chip, Grid, InputLabel, Typography } from "@mui/material";
 import {
   AutoComplete,
   Breadcrumb,
   Button,
   Divider,
-  Popconfirm,
-  Tooltip,
+  Tooltip
 } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
@@ -400,35 +399,30 @@ const EditBulkForm = ({
                                 },
                                 ...subLocationsSubmitted.map((item, index) => ({
                                   title: (
-                                    <Popconfirm
-                                      title="Are you sure you want to delete this sub location?"
-                                      onConfirm={() =>
+                                    <Chip
+                                      style={{
+                                        border: "none",
+                                        outline: "none",
+                                        margin: 0,
+                                        padding: 0,
+                                        backgroundColor: "transparent",
+                                        boxShadow: "none",
+                                        alignItems: "flex-start",
+                                      }}
+                                      label={item}
+                                      onDelete={() =>
                                         setSubLocationsSubmitted(
                                           subLocationsSubmitted.filter(
                                             (_, i) => i !== index
                                           )
                                         )
                                       }
-                                    >
-                                      <Button
-                                        style={{
-                                          border: "none",
-                                          outline: "none",
-                                          margin: 0,
-                                          padding: 0,
-                                          backgroundColor: "transparent",
-                                          boxShadow: "none",
-                                          alignItems: "flex-start",
-                                        }}
-                                      >
-                                        {item}
-                                      </Button>
-                                    </Popconfirm>
+                                    />
                                   ),
                                 })),
                               ]}
                             />
-                          </Grid>
+                            </Grid>
                         </Grid>
                       );
                     }}
