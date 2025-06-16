@@ -50,29 +50,32 @@ const MainPage = () => {
   const { register, watch, setValue } = useForm({
     defaultValues: {
       searchItem: "...",
-    }
+    },
   });
   const companyHasInventoryQuery = useQuery({
-    queryKey: ["companyHasInventoryQuery"],
+    queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.get(
         `/db_item/check-company-has-inventory?company_id=${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   const queryClient = useQueryClient();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
+
   useEffect(() => {
     setValue("searchItem", "");
     setRenderingData(false);
+    companyHasInventoryQuery.refetch();
   }, []);
-  
+
   useEffect(() => {
     if (companyHasInventoryQuery.isSuccess) {
       const total = companyHasInventoryQuery?.data?.data?.total;
       setCurrentTab(total > 0 ? 1 : 2);
-      setIsLoadingState(true)
+      setIsLoadingState(true);
       setIsLoadingState(false);
     }
   }, [companyHasInventoryQuery.isSuccess]);
@@ -110,20 +113,13 @@ const MainPage = () => {
   };
 
   const refetchingQueriesFn = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-      }),
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-      }),
-      companyHasInventoryQuery.refetch()
-    ]);
-    setRenderingData(false);
+    queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+    queryClient.refetchQueries(["listOfItemsInStock"]);
+    queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+    queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+    queryClient.refetchQueries(["companyHasInventoryQuery", user.sqlInfo.company_id]);
+    return setRenderingData(false);
   };
-
 
   return (
     <Suspense

@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, notification } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
@@ -52,6 +52,7 @@ const AddNewItem = () => {
     control,
     formState: { errors },
   } = useForm();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
@@ -77,8 +78,24 @@ const AddNewItem = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
+    enabled: !!user.sqlInfo.company_id,
     refetchOnMount: false,
   });
+
+  const insertingSingleItemMutation = useMutation({
+    mutationFn: (data) =>
+      devitrakApi.post("/db_item/new_item", data),
+    onSuccess: () => {
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+    },
+  });
+  useEffect(() => {
+    companiesQuery.refetch();
+    itemsInInventoryQuery.refetch();
+  }, []);
 
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -170,6 +187,7 @@ const AddNewItem = () => {
         formatDate,
         returningDate,
         subLocationsSubmitted,
+        insertingSingleItemMutation,
       });
       return setLoadingStatus(false);
     } catch (error) {
@@ -200,7 +218,6 @@ const AddNewItem = () => {
       return 6;
     return 6;
   };
-
 
   const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
     itemsInInventoryQuery?.data?.data?.items
@@ -301,14 +318,21 @@ const AddNewItem = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("item_group")
       );
-      setValue("category_name", `${dataToRetrieve.category_name}`);
-      setValue("cost", `${dataToRetrieve.cost}`);
-      setValue("brand", `${dataToRetrieve.brand}`);
-      setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setValue("location", `${dataToRetrieve.location}`);
-      setValue("tax_location", `${dataToRetrieve.main_warehouse}`);
-      setValue("ownership", `${dataToRetrieve.ownership}`);
-      setValue("container", "");
+      if (Object.entries(dataToRetrieve).length > 0) {
+        Object.entries(dataToRetrieve).forEach(([key, value]) => {
+          if (key === "enableAssignFeature" || key === "container") {
+            return;
+          }
+          if(key === "sub_location"){
+            const checkType = typeof value === "string" ? JSON.parse(value) : value;
+            if(checkType.length > 0){
+              return setSubLocationsSubmitted([ ...checkType ]);
+            }
+          }
+          setValue(key, value);
+          setValue("quantity", 0);
+        });
+      }
     }
     return () => {
       controller.abort();
