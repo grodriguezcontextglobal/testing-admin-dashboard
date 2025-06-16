@@ -397,15 +397,19 @@ const RenderingFilters = ({
                 alignItems={"center"}
                 sx={{
                   marginX:{
-                    xs: 1,
+                    xs: 0,
                     sm: 0,
                     md: "auto",
                     lg: "auto",
                   },
+                  padding:{
+                    xs: "8px 0 0 8px",
+                    sm: "8px 0 0 8px",
+                  }
                 }}
                 item
-                xs={12}
-                sm={12}
+                xs={10}
+                sm={10}
                 md={7.5}
                 lg={7.5}
               >
