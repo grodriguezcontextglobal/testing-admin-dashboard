@@ -9,11 +9,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Checkbox, message, notification, Typography } from "antd";
 import PropTypes from "prop-types";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Turnstile from "react-turnstile";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
@@ -492,7 +491,7 @@ const Login = () => {
                   </button>
                 </Grid>
               </Grid>
-              <div
+              {/* <div
                 style={{
                   width: "100%",
                   display: "flex",
@@ -518,9 +517,9 @@ const Login = () => {
                   }}
                   onVerify={handleVerify}
                 />
-              </div>
+              </div> */}
               <Button
-                disabled={token === null}
+                // disabled={token === null}
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%", background: token === null ? "var(--disabled-blue-button)" : BlueButton.background }}
               >
