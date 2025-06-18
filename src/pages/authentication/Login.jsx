@@ -47,6 +47,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
+    const [isLoading, setIsLoading] = useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -201,6 +202,7 @@ const Login = () => {
 
   const onSubmitLogin = async (data) => {
     try {
+      setIsLoading(true);
       dispatch(onChecking());
       const respo = await devitrakApiAdmin.post("/login", {
         email: data.email,
@@ -247,6 +249,7 @@ const Login = () => {
               },
             });
           } else {
+            setIsLoading(false);
             return openNotificationWithIcon(
               "error",
               "We could not find an active status in any company where you were assigned."
@@ -285,18 +288,18 @@ const Login = () => {
     }
   };
 
-  const [token, setToken] = useState(null);
-  const handleVerify = (responseToken) => {
-    if (responseToken) {
-      return setToken(responseToken);
-    } else {
-      message.error({
-        message: "Verification Failed",
-        description: "Please complete the verification process.",
-      });
-      return setToken(null);
-    }
-  };
+  // const [token, setToken] = useState(null);
+  // const handleVerify = (responseToken) => {
+  //   if (responseToken) {
+  //     return setToken(responseToken);
+  //   } else {
+  //     message.error({
+  //       message: "Verification Failed",
+  //       description: "Please complete the verification process.",
+  //     });
+  //     return setToken(null);
+  //   }
+  // };
 
   return (
     <Suspense
@@ -520,8 +523,11 @@ const Login = () => {
               </div> */}
               <Button
                 // disabled={token === null}
+                loading={isLoading}
                 htmlType="submit"
-                style={{ ...BlueButton, width: "100%", background: token === null ? "var(--disabled-blue-button)" : BlueButton.background }}
+                style={{ ...BlueButton, width: "100%", 
+                  // background: token === null ? "var(--disabled-blue-button)" : BlueButton.background 
+                }}
               >
                 <p style={BlueButtonText}>Sign in</p>
               </Button>
