@@ -17,6 +17,7 @@ import CardForTreeView from "../../utils/CardForTreeView";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Button } from "antd";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 export const AdvanceSearchContext = createContext();
 function extractDataForRendering(structuredData) {
   const keys = ["category_name", "item_group", "brand", "ownership"];
@@ -181,6 +182,7 @@ const RenderingFilters = ({
 
   const handleNameUpdate = async (sectionKey) => {
     try {
+      await clearCacheMemory(`company_id=${user.companyData.id}`);
       if (!sectionName?.trim() || !sectionKey) {
         console.error("Invalid section name or key");
         return;
