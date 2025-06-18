@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const DisplayDocumentsContainer = ({
   setOpenDisplayDocumentsContainer,
@@ -38,6 +39,9 @@ const DisplayDocumentsContainer = ({
           legal_documents_list: response.data.event.legal_documents_list,
         })
       );
+      clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`);
+      clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`);
+
       message.success("Documents updated successfully");
       setSelectedDocuments([]);
       setActiveTab(0);
