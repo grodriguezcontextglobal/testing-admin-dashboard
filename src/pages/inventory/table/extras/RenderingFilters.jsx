@@ -18,6 +18,8 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Button } from "antd";
 import { EditIcon } from "../../../../components/icons/EditIcon";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { useDispatch } from "react-redux";
+import { onLogin } from "../../../../store/slices/adminSlice";
 export const AdvanceSearchContext = createContext();
 function extractDataForRendering(structuredData) {
   const keys = ["category_name", "item_group", "brand", "ownership"];
@@ -61,6 +63,8 @@ const RenderingFilters = ({
     refetchOnWindowFocus: false,
   });
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
   useEffect(() => {
     structuredCompanyInventory.refetch();
   }, []);
@@ -203,9 +207,15 @@ const RenderingFilters = ({
           structure: updatedStructure,
         }
       );
-      console.log(response);
       if (response?.data?.ok) {
         // Force cache invalidation before state updates
+        dispatch(onLogin({
+          ...user,
+          companyData: {
+            ...user.companyData,
+            structure: updatedStructure,
+          },
+        }))
         await Promise.all([
           queryClient.invalidateQueries("structuredCompanyInventory"),
           queryClient.invalidateQueries("listOfItemsInStock"),
