@@ -69,22 +69,14 @@ const EditItemModal = ({
     },
     [api]
   );
-  const companiesQuery = useQuery({
-    queryKey: ["locationOptionsPerCompany"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
-    refetchOnMount: false,
-  });
-
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
   });
 
   const retrieveItemOptions = (props) => {
@@ -100,10 +92,13 @@ const EditItemModal = ({
   };
 
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+    if (itemsInInventoryQuery.data) {
+      const locations = groupBy(
+        itemsInInventoryQuery.data.data.items,
+        "location"
+      );
       const result = new Set();
-      for (let data of locations) {
+      for (let data of Object.keys(locations)) {
         result.add({ value: data });
       }
       return Array.from(result);
@@ -274,15 +269,6 @@ const EditItemModal = ({
 
   useEffect(() => {
     const controller = new AbortController();
-    companiesQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
     if (dataFound.length > 0) {
       Object.entries(dataFound[0]).forEach(([key, value]) => {
         if (key === "enableAssignFeature") {
@@ -290,7 +276,10 @@ const EditItemModal = ({
           return setValue(key, `${valueToSet}`);
         }
         if (key === "container") {
-          let valueToSet = value > 0 ? "Yes - It is a container" : "No - It is not a container";
+          let valueToSet =
+            value > 0
+              ? "Yes - It is a container"
+              : "No - It is not a container";
           return setValue(key, `${valueToSet}`);
         }
         setValue(key, value);
@@ -406,6 +395,7 @@ const EditItemModal = ({
           handleMoreInfoPerDevice={handleMoreInfoPerDevice}
           handleSubmit={handleSubmit}
           imageUploadedValue={convertImageTo64ForPreview}
+          imageUrlGenerated={imageUrlGenerated}
           isRented={isRented}
           keyObject={keyObject}
           loadingStatus={loadingStatus}
@@ -431,7 +421,6 @@ const EditItemModal = ({
           subLocationsSubmitted={subLocationsSubmitted}
           valueObject={valueObject}
           watch={watch}
-          imageUrlGenerated={imageUrlGenerated}
         />
       </Grid>
     </Modal>

@@ -1,14 +1,8 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
-import {
-  AutoComplete,
-  Breadcrumb,
-  Button,
-  Divider,
-  Popconfirm,
-  Tooltip,
-} from "antd";
+import { Chip, Grid, InputLabel, Typography } from "@mui/material";
+import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
@@ -19,7 +13,13 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { gripingFields } from "../../../../actions/utils/BulkComponents";
-import { addingExtraInfo, renderingMoreInfoSubmitted, renderingOptionsButtons, renderOptional, stylingComponents } from "./EditItemComponents";
+import {
+  addingExtraInfo,
+  renderingMoreInfoSubmitted,
+  renderingOptionsButtons,
+  renderOptional,
+  stylingComponents,
+} from "./EditItemComponents";
 import editItemFields from "./EditItemFields";
 
 const EditItemForm = ({
@@ -35,6 +35,7 @@ const EditItemForm = ({
   handleMoreInfoPerDevice,
   handleSubmit,
   imageUploadedValue,
+  imageUrlGenerated,
   isRented,
   keyObject,
   loadingStatus,
@@ -179,7 +180,7 @@ const EditItemForm = ({
                       }}
                     >
                       <img
-                        src={watch("image_url") || imageUploadedValue || ""}
+                        src={imageUploadedValue || ""}
                         alt="image_preview"
                         style={{
                           objectFit: "cover",
@@ -199,10 +200,28 @@ const EditItemForm = ({
                         }}
                       >
                         <Button
+                          disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={BlueButton}
+                          style={{
+                            ...BlueButton,
+                            background: imageUrlGenerated
+                              ? "transparent"
+                              : BlueButton.background,
+                          }}
                         >
-                          <p style={BlueButtonText}>Accept image</p>
+                          <p
+                            style={{
+                              ...BlueButtonText,
+                              color: imageUrlGenerated
+                                ? "var(--gray-600, #475467)"
+                                : BlueButtonText.color,
+                            }}
+                          >
+                            {imageUrlGenerated ? <CheckIcon /> : null}
+                            {imageUrlGenerated
+                              ? "Image accepted"
+                              : "Accept image"}
+                          </p>
                         </Button>
                       </div>
                     </div>
@@ -351,30 +370,26 @@ const EditItemForm = ({
                               },
                               ...subLocationsSubmitted.map((item, index) => ({
                                 title: (
-                                  <Popconfirm
-                                    title="Are you sure you want to delete this sub location?"
-                                    onConfirm={() =>
+                                  <Chip
+                                    style={{
+                                      border: "none",
+                                      outline: "none",
+                                      margin: 0,
+                                      padding: 0,
+                                      backgroundColor: "transparent",
+                                      boxShadow: "none",
+                                      alignItems: "flex-start",
+                                      width: "fit-content",
+                                    }}
+                                    label={item}
+                                    onDelete={() =>
                                       setSubLocationsSubmitted(
                                         subLocationsSubmitted.filter(
                                           (_, i) => i !== index
                                         )
                                       )
                                     }
-                                  >
-                                    <Button
-                                      style={{
-                                        border: "none",
-                                        outline: "none",
-                                        margin: 0,
-                                        padding: 0,
-                                        backgroundColor: "transparent",
-                                        boxShadow: "none",
-                                        alignItems: "flex-start",
-                                      }}
-                                    >
-                                      {item}
-                                    </Button>
-                                  </Popconfirm>
+                                  />
                                 ),
                               })),
                             ]}
