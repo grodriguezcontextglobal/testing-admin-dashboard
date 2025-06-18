@@ -181,33 +181,48 @@ const RenderingFilters = ({
 
   const handleNameUpdate = async (sectionKey) => {
     try {
+      // Validate input and section key
+      if (!sectionName?.trim() || !sectionKey) {
+        console.error("Invalid section name or key");
+        return;
+      }
+
+      // Create a deep copy of the current structure
+      const updatedStructure = JSON.parse(JSON.stringify(companyStructure));
+      updatedStructure[sectionKey] = sectionName.trim();
+
       const response = await devitrakApi.patch(
         `/company/update-company/${user.companyData.id}`,
         {
           ...user.companyData,
-          structure: {
-            ...companyStructure,
-            [sectionKey]: sectionName,
-          },
+          structure: updatedStructure
         }
       );
 
-      if (response.data.ok) {
-        console.log("response", response);
-        setCompanyStructure((prev) => ({
-          ...prev,
-          [sectionKey]: sectionName,
-        }));
-        queryClient.invalidateQueries("structuredCompanyInventory");
-        queryClient.invalidateQueries("listOfItemsInStock");
-        queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
-        queryClient.invalidateQueries("RefactoredListInventoryCompany");
+      if (response?.data?.ok) {
+        // Update local state only after successful API call
+        setCompanyStructure(updatedStructure);
+        
+        // Invalidate all related queries
+        const queriesToInvalidate = [
+          "structuredCompanyInventory",
+          "listOfItemsInStock",
+          "ItemsInInventoryCheckingQuery",
+          "RefactoredListInventoryCompany"
+        ];
+        
+        queriesToInvalidate.forEach(query => {
+          queryClient.invalidateQueries(query);
+        });
+
         setEditingSection(null);
-        // Refetch company data to get updated structure
-        structuredCompanyInventory.refetch();
+        await structuredCompanyInventory.refetch();
+      } else {
+        throw new Error('Update failed: ' + JSON.stringify(response?.data));
       }
     } catch (error) {
       console.error("Failed to update section name:", error);
+      // You might want to add a notification system here to show errors to users
     }
   };
   const optionsToRenderInDetailsHtmlTags = [
