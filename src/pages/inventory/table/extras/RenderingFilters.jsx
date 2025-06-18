@@ -49,7 +49,6 @@ const RenderingFilters = ({
     Rent: "Leased",
     Sale: "For sale",
   };
-
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -158,13 +157,20 @@ const RenderingFilters = ({
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
 
-  const structuredCompanyInventoryNames = user.companyData.structure || {
-    location_1: "Locations|Sub-locations",
-    category_name: "Category",
-    item_group: "Groups",
-    brand: "Brands",
-    ownership: "Ownership",
-  };
+  const [structuredCompanyInventoryNames, setStructuredCompanyInventoryNames] =
+    useState(() => {
+      if (user.companyData.structure) {
+        return user.companyData.structure;
+      }
+
+      return {
+        location_1: "Locations|Sub-locations",
+        category_name: "Category",
+        item_group: "Groups",
+        brand: "Brands",
+        ownership: "Ownership",
+      };
+    });
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
 
@@ -179,7 +185,7 @@ const RenderingFilters = ({
         `/company/update-company/${user.companyData.id}`,
         {
           structure: {
-            ...user.companyData.structure,
+            ...structuredCompanyInventoryNames,
             [sectionKey]: sectionName,
           },
         }
@@ -187,10 +193,10 @@ const RenderingFilters = ({
 
       if (response.data.ok) {
         // Update local state
-        structuredCompanyInventoryNames[sectionKey] = sectionName;
-        setEditingSection(null);
-        // Refetch company data to get updated structure
-        structuredCompanyInventory.refetch();
+        let structured = structuredCompanyInventoryNames;
+        structured[sectionKey] = sectionName;
+        setStructuredCompanyInventoryNames(structured);
+        return setEditingSection(null);
       }
     } catch (error) {
       console.error("Failed to update section name:", error);
@@ -224,6 +230,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("location_1")}
+                disabled={Number(user.role) > 0}
               >
                 <EditIcon />
               </Button>
@@ -272,6 +279,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("category_name")}
+                disabled={Number(user.role) > 0}
               >
                 <EditIcon />
               </Button>
@@ -320,6 +328,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("item_group")}
+                disabled={Number(user.role) > 0}
               >
                 <EditIcon />
               </Button>
@@ -366,6 +375,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("brand")}
+                disabled={Number(user.role) > 0}
               >
                 <EditIcon />
               </Button>
@@ -414,6 +424,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("ownership")}
+                disabled={Number(user.role) > 0}
               >
                 <EditIcon />
               </Button>
