@@ -184,6 +184,7 @@ const RenderingFilters = ({
       const response = await devitrakApi.patch(
         `/company/update-company/${user.companyData.id}`,
         {
+          ...user.companyData,
           structure: {
             ...companyStructure,
             [sectionKey]: sectionName,
@@ -192,7 +193,7 @@ const RenderingFilters = ({
       );
 
       if (response.data.ok) {
-        console.log("response", response.devitrakApi);
+        console.log("response", response);
         setCompanyStructure((prev) => ({
           ...prev,
           [sectionKey]: sectionName,
