@@ -1,11 +1,5 @@
 import { Chip, Grid, InputLabel, Typography } from "@mui/material";
-import {
-  AutoComplete,
-  Breadcrumb,
-  Button,
-  Divider,
-  Tooltip
-} from "antd";
+import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
@@ -220,13 +214,26 @@ const BulkItemForm = ({
                         }}
                       >
                         <Button
+                          disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={BlueButton}
+                          style={{
+                            ...BlueButton,
+                            background: imageUrlGenerated
+                              ? "transparent"
+                              : BlueButton.background,
+                          }}
                         >
-                          <p style={BlueButtonText}>
+                          <p
+                            style={{
+                              ...BlueButtonText,
+                              color: imageUrlGenerated
+                                ? "var(--gray-600, #475467)"
+                                : BlueButtonText.color,
+                            }}
+                          >
                             {imageUrlGenerated ? <CheckIcon /> : null}
                             {imageUrlGenerated
-                              ? "Url generated"
+                              ? "Image accepted"
                               : "Accept image"}
                           </p>
                         </Button>

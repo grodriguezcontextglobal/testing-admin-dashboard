@@ -216,11 +216,29 @@ const EditBulkForm = ({
                         }}
                       >
                         <Button
+                          disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={BlueButton}
+                          style={{
+                            ...BlueButton,
+                            background: imageUrlGenerated
+                              ? "transparent"
+                              : BlueButton.background,
+                          }}
                         >
-                          <p style={BlueButtonText}>{imageUrlGenerated ? <CheckIcon /> : null}{imageUrlGenerated ? "Url generated" : "Accept image"}</p>
-                          </Button>
+                          <p
+                            style={{
+                              ...BlueButtonText,
+                              color: imageUrlGenerated
+                                ? "var(--gray-600, #475467)"
+                                : BlueButtonText.color,
+                            }}
+                          >
+                            {imageUrlGenerated ? <CheckIcon /> : null}
+                            {imageUrlGenerated
+                              ? "Image accepted"
+                              : "Accept image"}
+                          </p>
+                        </Button>
                       </div>
                     </div>
                   </InputLabel>

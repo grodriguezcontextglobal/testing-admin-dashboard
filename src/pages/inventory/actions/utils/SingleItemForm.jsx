@@ -206,13 +206,26 @@ const SingleItemForm = ({
                         }}
                       >
                         <Button
+                          disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={BlueButton}
+                          style={{
+                            ...BlueButton,
+                            background: imageUrlGenerated
+                              ? "transparent"
+                              : BlueButton.background,
+                          }}
                         >
-                          <p style={BlueButtonText}>
+                          <p
+                            style={{
+                              ...BlueButtonText,
+                              color: imageUrlGenerated
+                                ? "var(--gray-600, #475467)"
+                                : BlueButtonText.color,
+                            }}
+                          >
                             {imageUrlGenerated ? <CheckIcon /> : null}
                             {imageUrlGenerated
-                              ? "Url generated"
+                              ? "Image accepted"
                               : "Accept image"}
                           </p>
                         </Button>
