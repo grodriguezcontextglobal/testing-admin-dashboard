@@ -10,7 +10,7 @@ import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPr
 import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import AdvanceSearchModal from "./AdvanceSearchModal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import CardForTreeView from "../../utils/CardForTreeView";
@@ -59,7 +59,7 @@ const RenderingFilters = ({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
-
+  const queryClient = useQueryClient();
   useEffect(() => {
     structuredCompanyInventory.refetch();
   }, []);
@@ -160,7 +160,7 @@ const RenderingFilters = ({
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
 
-  const [companyStructure, setCompanyStructure] =     useState(() => {
+  const [companyStructure, setCompanyStructure] = useState(() => {
     if (user.companyData.structure) {
       return user.companyData.structure;
     }
@@ -192,10 +192,15 @@ const RenderingFilters = ({
       );
 
       if (response.data.ok) {
+        console.log("response", response.devitrakApi);
         setCompanyStructure((prev) => ({
           ...prev,
           [sectionKey]: sectionName,
         }));
+        queryClient.invalidateQueries("structuredCompanyInventory");
+        queryClient.invalidateQueries("listOfItemsInStock");
+        queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
+        queryClient.invalidateQueries("RefactoredListInventoryCompany");
         setEditingSection(null);
         // Refetch company data to get updated structure
         structuredCompanyInventory.refetch();
