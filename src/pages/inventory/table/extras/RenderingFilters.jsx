@@ -158,7 +158,13 @@ const RenderingFilters = ({
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
 
-  const structuredCompanyInventoryNames = user.companyData.structure;
+  const structuredCompanyInventoryNames = user.companyData.structure || {
+    location_1: "Locations|Sub-locations",
+    category_name: "Category",
+    item_group: "Groups",
+    brand: "Brands",
+    ownership: "Ownership",
+  };
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
 
@@ -169,12 +175,15 @@ const RenderingFilters = ({
 
   const handleNameUpdate = async (sectionKey) => {
     try {
-      const response = await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
-        structure: {
-          ...user.companyData.structure,
-          [sectionKey]: sectionName
+      const response = await devitrakApi.patch(
+        `/company/update-company/${user.companyData.id}`,
+        {
+          structure: {
+            ...user.companyData.structure,
+            [sectionKey]: sectionName,
+          },
         }
-      });
+      );
 
       if (response.data.ok) {
         // Update local state
@@ -184,7 +193,7 @@ const RenderingFilters = ({
         structuredCompanyInventory.refetch();
       }
     } catch (error) {
-      console.error('Failed to update section name:', error);
+      console.error("Failed to update section name:", error);
     }
   };
 
@@ -203,9 +212,7 @@ const RenderingFilters = ({
               <Button onClick={() => handleNameUpdate("location_1")}>
                 Save
               </Button>
-              <Button onClick={() => setEditingSection(null)}>
-                Cancel
-              </Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
             <>
@@ -253,9 +260,7 @@ const RenderingFilters = ({
               <Button onClick={() => handleNameUpdate("category_name")}>
                 Save
               </Button>
-              <Button onClick={() => setEditingSection(null)}>
-                Cancel
-              </Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
             <>
@@ -303,9 +308,7 @@ const RenderingFilters = ({
               <Button onClick={() => handleNameUpdate("item_group")}>
                 Save
               </Button>
-              <Button onClick={() => setEditingSection(null)}>
-                Cancel
-              </Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
             <>
@@ -350,12 +353,8 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("brand")}>
-                Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>
-                Cancel
-              </Button>
+              <Button onClick={() => handleNameUpdate("brand")}>Save</Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
             <>
@@ -403,9 +402,7 @@ const RenderingFilters = ({
               <Button onClick={() => handleNameUpdate("ownership")}>
                 Save
               </Button>
-              <Button onClick={() => setEditingSection(null)}>
-                Cancel
-              </Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
             <>
