@@ -1,22 +1,22 @@
-import { Grid } from "@mui/material";
+import { Grid, OutlinedInput } from "@mui/material";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useEffect } from "react";
+import { createContext, useEffect, useState } from "react";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-// import CardForTreeView from "../../utils/CardForTreeView";
-import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
+import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import AdvanceSearchModal from "./AdvanceSearchModal";
-// import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
-import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
-// import TreeView from "../../utils/TreeView";
+import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import CardForTreeView from "../../utils/CardForTreeView";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Button } from "antd";
+import { EditIcon } from "../../../../components/icons/EditIcon";
 export const AdvanceSearchContext = createContext();
 function extractDataForRendering(structuredData) {
   const keys = ["category_name", "item_group", "brand", "ownership"];
@@ -158,10 +158,72 @@ const RenderingFilters = ({
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
 
+  const structuredCompanyInventoryNames = user.companyData.structure;
+  const [editingSection, setEditingSection] = useState(null);
+  const [sectionName, setSectionName] = useState("");
+
+  const handleEditClick = (sectionKey) => {
+    setEditingSection(sectionKey);
+    setSectionName(structuredCompanyInventoryNames[sectionKey]);
+  };
+
+  const handleNameUpdate = async (sectionKey) => {
+    try {
+      const response = await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
+        structure: {
+          ...user.companyData.structure,
+          [sectionKey]: sectionName
+        }
+      });
+
+      if (response.data.ok) {
+        // Update local state
+        structuredCompanyInventoryNames[sectionKey] = sectionName;
+        setEditingSection(null);
+        // Refetch company data to get updated structure
+        structuredCompanyInventory.refetch();
+      }
+    } catch (error) {
+      console.error('Failed to update section name:', error);
+    }
+  };
+
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
-      title: "Locations|Sub-locations",
+      title: (
+        <>
+          {editingSection === "location_1" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("location_1")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <>
+              {structuredCompanyInventoryNames["location_1"]}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("location_1")}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
       data: testing(), //sortingByParameters
       totalUnits: renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
@@ -179,7 +241,39 @@ const RenderingFilters = ({
     },
     {
       key: "category_name",
-      title: "Category",
+      title: (
+        <>
+          {editingSection === "category_name" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("category_name")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <>
+              {structuredCompanyInventoryNames["category_name"]}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("category_name")}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
       data: extractedData.category_name || [],
       totalUnits: extractedData.category_name?.length || 0,
       open: true,
@@ -197,7 +291,39 @@ const RenderingFilters = ({
     },
     {
       key: "item_group",
-      title: "Groups",
+      title: (
+        <>
+          {editingSection === "item_group" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("item_group")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <>
+              {structuredCompanyInventoryNames["item_group"]}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("item_group")}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
       data: extractedData.item_group || [],
       totalUnits: extractedData.item_group?.length || 0,
       open: true,
@@ -215,7 +341,39 @@ const RenderingFilters = ({
     },
     {
       key: "brand",
-      title: "Brands",
+      title: (
+        <>
+          {editingSection === "brand" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("brand")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <>
+              {structuredCompanyInventoryNames["brand"]}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("brand")}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
       data: extractedData.brand || [],
       totalUnits: extractedData.brand?.length || 0,
       open: true,
@@ -233,7 +391,39 @@ const RenderingFilters = ({
     },
     {
       key: "ownership",
-      title: "Ownership",
+      title: (
+        <>
+          {editingSection === "ownership" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("ownership")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <>
+              {structuredCompanyInventoryNames["ownership"]}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("ownership")}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
       data: extractedData.ownership || [],
       totalUnits: extractedData.ownership?.length || 0,
       open: true,
@@ -280,7 +470,7 @@ const RenderingFilters = ({
 
   return (
     <Grid key="rendering-filter-option-container" container>
-      {optionsToRenderInDetailsHtmlTags.map((item, index) => {
+      {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
         return (
           <Grid
             key={`${item.title}_${index}`}
@@ -396,16 +586,16 @@ const RenderingFilters = ({
                 justifyContent={"flex-start"}
                 alignItems={"center"}
                 sx={{
-                  marginX:{
+                  marginX: {
                     xs: 0,
                     sm: 0,
                     md: "auto",
                     lg: "auto",
                   },
-                  padding:{
+                  padding: {
                     xs: "8px 0 0 8px",
                     sm: "8px 0 0 8px",
-                  }
+                  },
                 }}
                 item
                 xs={10}

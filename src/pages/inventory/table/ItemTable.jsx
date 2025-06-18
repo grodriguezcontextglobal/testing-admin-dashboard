@@ -46,18 +46,8 @@ const ItemTable = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
-  // const [chosen, setChosen] = useState({ category: null, value: null });
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchDateResult, setSearchDateResult] = useState([]);
-
-  // const gettingCountBasedOnLocationQuery = useQuery({
-  //   queryKey: ["gettingCountBasedOnLocationQuery"],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/db_item/location-count?company_id=${user.sqlInfo.company_id}`
-  //     ),
-  //   enabled: !!user.sqlInfo.company_id,
-  // });
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
