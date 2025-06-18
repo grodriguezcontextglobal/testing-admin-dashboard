@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, Checkbox, message, notification, Typography } from "antd";
 import PropTypes from "prop-types";
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -47,20 +47,23 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: (
-        <div style={{ display: "flex", alignItems: "center" }}>{msg}</div>
-      ),
-      duration: 0,
-    });
-  };
+  const openNotificationWithIcon = useCallback(
+    (type, msg) => {
+      api.open({
+        message: (
+          <div style={{ display: "flex", alignItems: "center" }}>{msg}</div>
+        ),
+        duration: 3000, // Add duration to auto-close notifications
+      });
+    },
+    [api]
+  );
   const dataPassed = useRef(null);
   const addingEventState = async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
@@ -115,27 +118,33 @@ const Login = () => {
     return navigate("/events/event-quickglance");
   };
 
-  const navigateUserBasedOnRole = async (props) => {
-    if (Number(props.role) === 4) {
-      const response = await devitrakApi.post("/event/event-list", {
-        "staff.headsetAttendees.email": props.email,
-        active: true,
-      });
-      if (response.data.ok) {
-        if (response.data.list.length > 0) {
-          addingEventState(response.data.list[0]);
-          return navigate(`/events`);
-        } else {
-          return openNotificationWithIcon(
+  const navigateUserBasedOnRole = useCallback(
+    async (props) => {
+      if (Number(props.role) === 4) {
+        try {
+          const response = await devitrakApi.post("/event/event-list", {
+            "staff.headsetAttendees.email": props.email,
+            active: true,
+          });
+
+          if (response.data.ok && response.data.list.length > 0) {
+            await addingEventState(response.data.list[0]);
+            return;
+          }
+
+          openNotificationWithIcon(
             "error",
-            "Event is ended. If you need log in into your devitrak account, please contact event administrator."
+            "Event is ended. Please contact event administrator."
           );
+        } catch (error) {
+          openNotificationWithIcon("error", "Failed to fetch event data.");
         }
+      } else {
+        navigate("/");
       }
-    } else {
-      return navigate("/");
-    }
-  };
+    },
+    [navigate, addingEventState, openNotificationWithIcon]
+  );
 
   const loginIntoOneCompanyAccount = async ({ props }) => {
     localStorage.setItem("admin-token", props.respo.token);
@@ -204,71 +213,85 @@ const Login = () => {
     try {
       setIsLoading(true);
       dispatch(onChecking());
-      const respo = await devitrakApiAdmin.post("/login", {
-        email: data.email,
-        password: data.password,
-        rememberMe: rememberMe,
-      });
-      if (respo.data) {
-        const checkCompanyUserSet = await devitrakApi.post(
-          "/company/search-company",
-          { "employees.user": data.email }
+
+      // Parallel API calls for better performance
+      const [loginResponse, companyResponse] = await Promise.all([
+        devitrakApiAdmin.post("/login", {
+          email: data.email,
+          password: data.password,
+          rememberMe,
+        }),
+        devitrakApi.post("/company/search-company", {
+          "employees.user": data.email,
+        }),
+      ]);
+
+      if (!loginResponse.data || !companyResponse.data) {
+        throw new Error("Authentication failed");
+      }
+
+      const activeCompanies = await processCompanyData(
+        data.email,
+        companyResponse.data.company
+      );
+
+      if (activeCompanies.length > 1) {
+        await handleMulitpleCompanyLogin({
+          ...data,
+          companyInfo: activeCompanies,
+          company_data: companyResponse.data.company,
+          respo: loginResponse.data,
+        });
+      } else if (activeCompanies.length === 1) {
+        await loginIntoOneCompanyAccount({
+          props: {
+            email: data.email,
+            password: data.password,
+            company_name: activeCompanies[0].company,
+            role: activeCompanies[0].role,
+            company_data: companyResponse.data.company,
+            respo: loginResponse.data,
+          },
+        });
+      } else {
+        openNotificationWithIcon(
+          "error",
+          "No active company assignments found."
         );
-        if (checkCompanyUserSet.data) {
-          const result = new Set();
-          const userFoundInCompany = checkCompanyUserSet.data.company;
-          for (let item of userFoundInCompany) {
-            const userInfo = item.employees.filter(
-              (element) => element.user === data.email && element.active
-            );
-            if (Array.isArray(userInfo) && userInfo.length > 0) {
-              result.add({
-                company: item.company_name,
-                role: userInfo[0].role,
-              });
-            }
-          }
-          const infoFound = Array.from(result);
-          if (infoFound.length > 1) {
-            const template = {
-              ...data,
-              companyInfo: infoFound,
-              company_data: userFoundInCompany,
-              respo: respo.data,
-            };
-            return await handleMulitpleCompanyLogin(template);
-          } else if (infoFound.length === 1) {
-            return await loginIntoOneCompanyAccount({
-              props: {
-                email: data.email,
-                password: data.password,
-                company_name: infoFound[0].company,
-                role: infoFound[0].role,
-                company_data: userFoundInCompany,
-                respo: respo.data,
-              },
-            });
-          } else {
-            setIsLoading(false);
-            return openNotificationWithIcon(
-              "error",
-              "We could not find an active status in any company where you were assigned."
-            );
-          }
-        }
       }
     } catch (error) {
-      openNotificationWithIcon("error", `${error.response.data.msg}`);
+      openNotificationWithIcon(
+        "error",
+        error.response?.data?.msg || "Login failed"
+      );
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
-      throw error;
+    } finally {
+      setIsLoading(false);
+      setValue("email", "");
+      setValue("password", "");
+      dispatch(clearErrorMessage());
     }
-    setValue("email", "");
-    setValue("password", "");
-    return dispatch(clearErrorMessage());
   };
 
-  const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
+  const processCompanyData = useCallback(async (email, companies) => {
+    const activeCompanies = companies.reduce((acc, item) => {
+      const userInfo = item.employees.find(
+        (element) => element.user === email && element.active
+      );
+      if (userInfo) {
+        acc.push({
+          company: item.company_name,
+          role: userInfo.role,
+        });
+      }
+      return acc;
+    }, []);
+
+    return activeCompanies;
+  }, []);
+
+  const isSmallDevice = useMediaQuery("only screen and (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
   );
@@ -525,8 +548,10 @@ const Login = () => {
                 // disabled={token === null}
                 loading={isLoading}
                 htmlType="submit"
-                style={{ ...BlueButton, width: "100%", 
-                  // background: token === null ? "var(--disabled-blue-button)" : BlueButton.background 
+                style={{
+                  ...BlueButton,
+                  width: "100%",
+                  // background: token === null ? "var(--disabled-blue-button)" : BlueButton.background
                 }}
               >
                 <p style={BlueButtonText}>Sign in</p>
