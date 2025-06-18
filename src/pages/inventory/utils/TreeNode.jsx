@@ -43,7 +43,7 @@ const TreeNode = ({ nodeName, nodeData, path }) => {
     }
   };
   return (
-    <div key={nodeName} className="tree-card" style={{width:"100%"}}>
+    <div key={nodeName} className="tree-card">
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
           sx={{
