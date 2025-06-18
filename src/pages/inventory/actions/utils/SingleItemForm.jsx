@@ -186,7 +186,7 @@ const SingleItemForm = ({
                       }}
                     >
                       <img
-                        src={watch("image_url") || imageUploadedValue || ""}
+                        src={imageUploadedValue || ""}
                         alt="image_preview"
                         style={{
                           objectFit: "cover",
