@@ -1,11 +1,5 @@
 import { Chip, Grid, InputLabel, Typography } from "@mui/material";
-import {
-  AutoComplete,
-  Breadcrumb,
-  Button,
-  Divider,
-  Tooltip
-} from "antd";
+import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
@@ -18,6 +12,8 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { renderFields } from "../utils/SingleItemFields";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
+
 import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
@@ -27,6 +23,7 @@ import {
 } from "./BulkComponents";
 
 const SingleItemForm = ({
+  acceptImage,
   addingSubLocation,
   addSerialNumberField,
   control,
@@ -39,6 +36,7 @@ const SingleItemForm = ({
   handleMoreInfoPerDevice,
   handleSubmit,
   imageUploadedValue,
+  imageUrlGenerated,
   isRented,
   keyObject,
   labeling,
@@ -188,21 +186,37 @@ const SingleItemForm = ({
                       }}
                     >
                       <img
-                        src={imageUploadedValue || ""}
+                        src={watch("image_url") || imageUploadedValue || ""}
                         alt="image_preview"
                         style={{
-                          width: "100%",
-                          height: "auto",
                           objectFit: "cover",
                           objectPosition: "center",
+                          aspectRatio: "1/1",
                         }}
+                        width={150}
                       />{" "}
-                      <Button
-                        onClick={() => setImageUploadedValue(null)}
-                        style={BlueButton}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-start",
+                          alignItems: "center",
+                          width: "100%",
+                          marginTop: "1rem",
+                          gap: "1rem",
+                        }}
                       >
-                        <p style={BlueButtonText}>Remove image</p>
-                      </Button>
+                        <Button
+                          onClick={() => acceptImage()}
+                          style={BlueButton}
+                        >
+                          <p style={BlueButtonText}>
+                            {imageUrlGenerated ? <CheckIcon /> : null}
+                            {imageUrlGenerated
+                              ? "Url generated"
+                              : "Accept image"}
+                          </p>
+                        </Button>
+                      </div>
                     </div>
                   </InputLabel>
                 </Grid>
@@ -369,7 +383,7 @@ const SingleItemForm = ({
                               })),
                             ]}
                           />
-                      </Grid>
+                        </Grid>
                       </Grid>
                     )}
                   />

@@ -1,3 +1,4 @@
+import { devitrakApi } from "../../../../api/devitrakApi";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 export const singleItemInserting = async ({
@@ -12,7 +13,7 @@ export const singleItemInserting = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
-  insertingSingleItemMutation
+  invalidateQueries,
 }) => {
   const template = {
     category_name: data.category_name,
@@ -41,31 +42,30 @@ export const singleItemInserting = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
-  };    
+  };
   setLoadingStatus(true);
-  await insertingSingleItemMutation(template);
+  await devitrakApi.post("/db_item/new_item", template);
+  await invalidateQueries();
   // const response = await devitrakApi.post("/db_company/insert-new-single-item", template);
   // if (response.data.ok) {
-    setValue("category_name", "");
-    setValue("item_group", "");
-    setValue("cost", "");
-    setValue("brand", "");
-    setValue("descript_item", "");
-    setValue("ownership", "");
-    setValue("serial_number", "");
-    setValue("quantity", 0);
-    setValue("location", "");
-    setValue("tax_location", "");
-    setValue("container", "");
-    setValue("containerSpotLimit", "0");
-    openNotificationWithIcon(
-      "New item was created and stored in database."
-    );
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-    );
+  setValue("category_name", "");
+  setValue("item_group", "");
+  setValue("cost", "");
+  setValue("brand", "");
+  setValue("descript_item", "");
+  setValue("ownership", "");
+  setValue("serial_number", "");
+  setValue("quantity", 0);
+  setValue("location", "");
+  setValue("tax_location", "");
+  setValue("container", "");
+  setValue("containerSpotLimit", "0");
+  openNotificationWithIcon("New item was created and stored in database.");
+  setLoadingStatus(false);
+  await clearCacheMemory(
+    `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+  );
 
-    return navigate("/inventory");
+  return navigate("/inventory");
   // }
 };

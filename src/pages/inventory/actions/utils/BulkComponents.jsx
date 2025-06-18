@@ -393,3 +393,30 @@ export const renderingResultUX = ({ name, value }) => {
 
   return value;
 };
+
+export const renderTitleSingleItem = () => {
+  return (
+    <>
+      <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
+        <Typography
+          textAlign={"left"}
+          style={TextFontSize30LineHeight38}
+          color={"var(--gray-600, #475467)"}
+        >
+          Add an item
+        </Typography>
+      </InputLabel>
+      <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
+        <Typography
+          textAlign={"left"}
+          textTransform={"none"}
+          style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
+          color={"var(--gray-600, #475467)"}
+        >
+          Item serial number can be created by inputting a serial number
+          base to define the category of item depending on your inventory.
+        </Typography>
+      </InputLabel>
+    </>
+  );
+};

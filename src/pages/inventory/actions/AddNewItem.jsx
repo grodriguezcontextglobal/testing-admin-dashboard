@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, notification } from "antd";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,12 +19,12 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import "./style.css";
-import { renderTitle } from "./utils/BulkComponents";
+import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
 import SingleItemForm from "./utils/SingleItemForm";
+import { singleItemInserting } from "./utils/singleItemIserting";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
-import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
-import { singleItemInserting } from "./utils/singleItemIserting";
+import { renderTitleSingleItem } from "./utils/BulkComponents";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -39,6 +39,7 @@ const AddNewItem = () => {
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
+  const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
@@ -80,23 +81,14 @@ const AddNewItem = () => {
       }),
     enabled: !!user.sqlInfo.company_id,
     refetchOnMount: false,
+    staleTime: 3 * 60 * 1000,
   });
 
-  const insertingSingleItemMutation = useMutation({
-    mutationFn: (data) =>
-      devitrakApi.post("/db_item/new_item", data),
-    onSuccess: () => {
-      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["listOfItemsInStock"]);
-      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
-    },
-  });
-  useEffect(() => {
-    companiesQuery.refetch();
-    itemsInInventoryQuery.refetch();
-  }, []);
-
+  const invalidateQueries = () => {
+    queryClient.invalidateQueries(["ItemsInInventoryCheckingQuery"]);
+    queryClient.invalidateQueries(["listOfItemsInStock"]);
+    queryClient.invalidateQueries(["RefactoredListInventoryCompany"]);
+  };
   const retrieveItemOptions = (props) => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
@@ -110,10 +102,13 @@ const AddNewItem = () => {
   };
 
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+    if (itemsInInventoryQuery.data) {
+      const locations = groupBy(
+        itemsInInventoryQuery.data.data.items,
+        "location"
+      );
       const result = new Set();
-      for (let data of locations) {
+      for (let data of Object.keys(locations)) {
         result.add({ value: data });
       }
       return Array.from(result);
@@ -157,7 +152,6 @@ const AddNewItem = () => {
       }
     }
     try {
-      let img_url;
       setLoadingStatus(true);
       if (
         imageUploadedValue?.length > 0 &&
@@ -168,13 +162,6 @@ const AddNewItem = () => {
           "Image is bigger than allow. Please resize the image or select a new one."
         );
       }
-      if (imageUploadedValue?.length > 0) {
-        img_url = storeAndGenerateImageUrl({
-          data,
-          imageUploadedValue,
-          user,
-        });
-      }
       await singleItemInserting({
         data,
         user,
@@ -182,15 +169,16 @@ const AddNewItem = () => {
         openNotificationWithIcon,
         setLoadingStatus,
         setValue,
-        img_url,
+        img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
         moreInfo,
         formatDate,
         returningDate,
         subLocationsSubmitted,
-        insertingSingleItemMutation,
+        invalidateQueries,
       });
       return setLoadingStatus(false);
     } catch (error) {
+      console.log(error);
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);
     }
@@ -312,6 +300,37 @@ const AddNewItem = () => {
     };
   }, []);
 
+  const acceptAndGenerateImage = async () => {
+    try {
+      if (
+        imageUploadedValue?.length > 0 &&
+        imageUploadedValue[0].size > 5242880
+      ) {
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
+      }
+      if (!watch("category_name") || !watch("item_group")) {
+        return alert("Category name and item group are required.");
+      }
+      const data = {
+        category_name: watch("category_name"),
+        item_group: watch("item_group"),
+      };
+
+      const img_url = await storeAndGenerateImageUrl({
+        data,
+        imageUploadedValue,
+        user,
+      });
+
+      setImageUrlGenerated(img_url);
+      return message.success("Image was successfully accepted.");
+    } catch (error) {
+      message.error("Failed to upload image: " + error.message);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(watch("item_group"))) {
@@ -323,12 +342,14 @@ const AddNewItem = () => {
           if (key === "enableAssignFeature" || key === "container") {
             return;
           }
-          if(key === "sub_location"){
-            const checkType = typeof value === "string" ? JSON.parse(value) : value;
-            if(checkType.length > 0){
-              return setSubLocationsSubmitted([ ...checkType ]);
+          if (key === "sub_location") {
+            const checkType =
+              typeof value === "string" ? JSON.parse(value) : value;
+            if (checkType.length > 0) {
+              return setSubLocationsSubmitted([...checkType]);
             }
           }
+          if (key === "serial_number") return;
           setValue(key, value);
           setValue("quantity", 0);
         });
@@ -399,42 +420,44 @@ const AddNewItem = () => {
       container
     >
       {contextHolder}
-      {renderTitle()}
+      {renderTitleSingleItem()}
       <SingleItemForm
-        handleSubmit={handleSubmit}
-        watch={watch}
-        control={control}
-        savingNewItem={savingNewItem}
-        OutlinedInputStyle={OutlinedInputStyle}
-        retrieveItemOptions={retrieveItemOptions}
-        renderLocationOptions={renderLocationOptions}
-        options={options}
-        displayContainerSplotLimitField={displayContainerSplotLimitField}
-        subLocationsOptions={subLocationsOptions}
-        displaySublocationFields={displaySublocationFields}
+        acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
-        subLocationsSubmitted={subLocationsSubmitted}
-        setSubLocationsSubmitted={setSubLocationsSubmitted}
-        register={register}
-        errors={errors}
-        returningDate={returningDate}
-        setReturningDate={setReturningDate}
-        setMoreInfoDisplay={setMoreInfoDisplay}
-        moreInfoDisplay={moreInfoDisplay}
-        keyObject={keyObject}
-        valueObject={valueObject}
-        setKeyObject={setKeyObject}
-        setValueObject={setValueObject}
-        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
-        moreInfo={moreInfo}
-        handleDeleteMoreInfo={handleDeleteMoreInfo}
-        loadingStatus={loadingStatus}
-        setImageUploadedValue={setImageUploadedValue}
-        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
-        gripingFields={gripingFields}
-        isRented={isRented}
+        control={control}
+        displayContainerSplotLimitField={displayContainerSplotLimitField}
         displayPreviewImage={displayPreviewImage}
+        displaySublocationFields={displaySublocationFields}
+        errors={errors}
+        gripingFields={gripingFields}
+        handleDeleteMoreInfo={handleDeleteMoreInfo}
+        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
+        handleSubmit={handleSubmit}
         imageUploadedValue={convertImageTo64ForPreview}
+        imageUrlGenerated={imageUrlGenerated}
+        isRented={isRented}
+        keyObject={keyObject}
+        loadingStatus={loadingStatus}
+        moreInfo={moreInfo}
+        moreInfoDisplay={moreInfoDisplay}
+        options={options}
+        OutlinedInputStyle={OutlinedInputStyle}
+        register={register}
+        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+        renderLocationOptions={renderLocationOptions}
+        retrieveItemOptions={retrieveItemOptions}
+        returningDate={returningDate}
+        savingNewItem={savingNewItem}
+        setImageUploadedValue={setImageUploadedValue}
+        setKeyObject={setKeyObject}
+        setMoreInfoDisplay={setMoreInfoDisplay}
+        setReturningDate={setReturningDate}
+        setSubLocationsSubmitted={setSubLocationsSubmitted}
+        setValueObject={setValueObject}
+        subLocationsOptions={subLocationsOptions}
+        subLocationsSubmitted={subLocationsSubmitted}
+        valueObject={valueObject}
+        watch={watch}
       />
     </Grid>
   );
