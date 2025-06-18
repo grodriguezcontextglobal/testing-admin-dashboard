@@ -181,48 +181,56 @@ const RenderingFilters = ({
 
   const handleNameUpdate = async (sectionKey) => {
     try {
-      // Validate input and section key
       if (!sectionName?.trim() || !sectionKey) {
         console.error("Invalid section name or key");
         return;
       }
 
-      // Create a deep copy of the current structure
-      const updatedStructure = JSON.parse(JSON.stringify(companyStructure));
-      updatedStructure[sectionKey] = sectionName.trim();
+      // Create a clean copy of the company data without any proxy objects
+      const cleanCompanyData = JSON.parse(JSON.stringify(user.companyData));
+      const updatedStructure = {
+        ...cleanCompanyData.structure,
+        [sectionKey]: sectionName.trim(),
+      };
 
+      // Update the database first
       const response = await devitrakApi.patch(
         `/company/update-company/${user.companyData.id}`,
         {
-          ...user.companyData,
-          structure: updatedStructure
+          ...cleanCompanyData,
+          structure: updatedStructure,
         }
       );
-
+      console.log(response);
       if (response?.data?.ok) {
-        // Update local state only after successful API call
-        setCompanyStructure(updatedStructure);
-        
-        // Invalidate all related queries
-        const queriesToInvalidate = [
-          "structuredCompanyInventory",
-          "listOfItemsInStock",
-          "ItemsInInventoryCheckingQuery",
-          "RefactoredListInventoryCompany"
-        ];
-        
-        queriesToInvalidate.forEach(query => {
-          queryClient.invalidateQueries(query);
-        });
+        // Force cache invalidation before state updates
+        await Promise.all([
+          queryClient.invalidateQueries("structuredCompanyInventory"),
+          queryClient.invalidateQueries("listOfItemsInStock"),
+          queryClient.invalidateQueries("ItemsInInventoryCheckingQuery"),
+          queryClient.invalidateQueries("RefactoredListInventoryCompany"),
+        ]);
+
+        // Force a refetch of the company inventory data
+        await structuredCompanyInventory.refetch();
+
+        // Update local state only after successful refetch
+        setCompanyStructure((prev) => ({
+          ...prev,
+          [sectionKey]: sectionName.trim(),
+        }));
 
         setEditingSection(null);
-        await structuredCompanyInventory.refetch();
       } else {
-        throw new Error('Update failed: ' + JSON.stringify(response?.data));
+        throw new Error(
+          "Failed to update database: " + JSON.stringify(response?.data)
+        );
       }
     } catch (error) {
       console.error("Failed to update section name:", error);
-      // You might want to add a notification system here to show errors to users
+      // Revert UI state on error
+      setCompanyStructure(user.companyData.structure);
+      setEditingSection(null);
     }
   };
   const optionsToRenderInDetailsHtmlTags = [
