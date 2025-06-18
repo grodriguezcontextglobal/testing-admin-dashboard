@@ -157,26 +157,26 @@ const RenderingFilters = ({
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
 
-  const [structuredCompanyInventoryNames, setStructuredCompanyInventoryNames] =
-    useState(() => {
-      if (user.companyData.structure) {
-        return user.companyData.structure;
-      }
-
-      return {
-        location_1: "Locations|Sub-locations",
-        category_name: "Category",
-        item_group: "Groups",
-        brand: "Brands",
-        ownership: "Ownership",
-      };
-    });
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
 
+  const [companyStructure, setCompanyStructure] =     useState(() => {
+    if (user.companyData.structure) {
+      return user.companyData.structure;
+    }
+
+    return {
+      location_1: "Locations|Sub-locations",
+      category_name: "Category",
+      item_group: "Groups",
+      brand: "Brands",
+      ownership: "Ownership",
+    };
+  });
+
   const handleEditClick = (sectionKey) => {
     setEditingSection(sectionKey);
-    setSectionName(structuredCompanyInventoryNames[sectionKey]);
+    setSectionName(companyStructure[sectionKey]);
   };
 
   const handleNameUpdate = async (sectionKey) => {
@@ -185,24 +185,25 @@ const RenderingFilters = ({
         `/company/update-company/${user.companyData.id}`,
         {
           structure: {
-            ...structuredCompanyInventoryNames,
+            ...companyStructure,
             [sectionKey]: sectionName,
           },
         }
       );
 
       if (response.data.ok) {
-        // Update local state
-        let structured = structuredCompanyInventoryNames;
-        structured[sectionKey] = sectionName;
-        setStructuredCompanyInventoryNames(structured);
-        return setEditingSection(null);
+        setCompanyStructure((prev) => ({
+          ...prev,
+          [sectionKey]: sectionName,
+        }));
+        setEditingSection(null);
+        // Refetch company data to get updated structure
+        structuredCompanyInventory.refetch();
       }
     } catch (error) {
       console.error("Failed to update section name:", error);
     }
   };
-
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -222,7 +223,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {structuredCompanyInventoryNames["location_1"]}&nbsp;{" "}
+              {companyStructure["location_1"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -271,7 +272,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {structuredCompanyInventoryNames["category_name"]}&nbsp;{" "}
+              {companyStructure["category_name"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -320,7 +321,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {structuredCompanyInventoryNames["item_group"]}&nbsp;{" "}
+              {companyStructure["item_group"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -367,7 +368,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {structuredCompanyInventoryNames["brand"]}&nbsp;{" "}
+              {companyStructure["brand"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -416,7 +417,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {structuredCompanyInventoryNames["ownership"]}&nbsp;{" "}
+              {companyStructure["ownership"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
