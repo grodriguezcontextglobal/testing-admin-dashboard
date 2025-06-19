@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 
-const Header = () => {
+const Header = ({ title, description }) => {
   return (
     <Grid
       style={{
@@ -42,7 +42,7 @@ const Header = () => {
             fontSize={"18px"}
             lineHeight={"28px"}
           >
-            Personal info
+            {title}
           </Typography>
           <Typography
             textTransform={"none"}
@@ -56,7 +56,7 @@ const Header = () => {
             fontSize={"14x"}
             lineHeight={"20px"}
           >
-            Update your photo and personal details.
+            {description}
           </Typography>
         </Grid>
       </Grid>

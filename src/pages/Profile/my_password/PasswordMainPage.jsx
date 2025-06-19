@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import Body from "./components/Body";
-import Header from "./components/Header";
+import Header from "../components/Header";
 
 const PasswordMainPage = () => {
   return (
@@ -14,7 +14,7 @@ const PasswordMainPage = () => {
       }}
       container
     >
-      <Header />
+      <Header title={"Change your password"} description={"Update your password."} />
       <Body />
     </Grid>
   );

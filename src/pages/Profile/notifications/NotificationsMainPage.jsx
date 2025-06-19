@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { Divider } from "antd";
-import Header from "./components/Header";
 import Body from "./components/Body";
+import Header from "../components/Header";
 
 const NotificationsMainPage = () => {
   return (
@@ -15,7 +15,7 @@ const NotificationsMainPage = () => {
       }}
       container
     >
-      <Header />
+      <Header title={"Notifications"} description={"Update your notifications preferences."} />
       <Divider />
       <Body />
       <Divider />

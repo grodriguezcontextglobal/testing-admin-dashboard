@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DocumentUpload from "../../../components/documents/DocumentUpload";
 import { Link } from "react-router-dom";
+import Header from "../components/Header";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -119,6 +120,10 @@ const Documents = () => {
 
   return (
     <Grid container spacing={3}>
+      <Header
+        title={"Documents"}
+        description={"Upload and manage documents."}
+      />
       <Grid item xs={12}>
         <Tabs
           activeKey={activeTab}

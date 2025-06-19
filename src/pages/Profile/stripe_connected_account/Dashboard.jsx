@@ -1,17 +1,18 @@
+import { FormLabel, Grid, OutlinedInput } from "@mui/material";
 import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import countryList from "../../../components/json/countries.json";
 import StripeConnectedAccountDashboard from "../../../components/stripe/connected_account/dashboard";
+import { checkArray } from "../../../components/utils/checkArray";
+import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { checkArray } from "../../../components/utils/checkArray";
-import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import countryList from "../../../components/json/countries.json";
-import { useForm } from "react-hook-form";
-import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+import Header from "../components/Header";
 const Dashboard = () => {
   const stripeEnvMode = useRef(
     String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
@@ -97,27 +98,7 @@ const Dashboard = () => {
           onSubmit={handleSubmit(onSubmitRegister)}
           style={{ width: "45vw", margin:"5rem 0 0 0" }}
         >
-          <Typography
-            style={{
-              color: "var(--gray900, #101828)",
-              fontSize: "30px",
-              fontWeight: "600",
-              lineHeight: "38px",
-              marginBottom: "1rem",
-            }}
-          >
-            Register your company stripe account
-          </Typography>
-          <Typography
-            style={{
-              color: "var(--gray-500, #667085)",
-              fontSize: "16px",
-              lineHeight: "24px",
-            }}
-          >
-            To set up a new company stripe account, please complete the steps
-            below.
-          </Typography>
+          <Header title={"Register your company stripe account"} description={"To set up a new company stripe account, please complete the steps below."} />
 
           <Grid textAlign={"left"} marginY={"20px"} item xs={12}>
             <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>

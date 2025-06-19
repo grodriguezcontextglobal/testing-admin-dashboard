@@ -1,12 +1,11 @@
+/* eslint-disable no-unused-vars */
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select } from "antd";
-import { useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import _ from 'lodash'
-import Body from "./Body";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { onAddStaffActivityData } from "../../../../store/slices/staffActivitySlice";
+import Body from "./Body";
 
 const Header = () => {
   const { user } = useSelector((state) => state.admin);
@@ -19,80 +18,13 @@ const Header = () => {
     queryKey: ["activity"],
     queryFn: () => devitrakApi.get("/event-log/activity"),
   });
-  const staffQuery = useQuery({
-    queryKey: ["staff"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
-  });
-
-  const sortData = useCallback(() => {
-    if (activityLogQuery.data) {
-      const groupingCompany = _.groupBy(
-        activityLogQuery?.data?.data?.activity,
-        "company"
-      );
-      if (
-        userSelectionRef.current === "All" &&
-        eventsSelectionRef.current === "All" &&
-        actionsSelectionRef.current === "All"
-      ) {
-        dispatch(onAddStaffActivityData(groupingCompany[user.company]));
-        return groupingCompany[user.company];
-      } else {
-        const filter = new Set();
-        for (let data of groupingCompany[user.company]) {
-          if (data.user === userSelectionRef.current) {
-            filter.add(data);
-          }
-        }
-        dispatch(onAddStaffActivityData(Array.from(filter)));
-        return Array.from(filter);
-      }
-    }
-  }, [
-    activityLogQuery.data,
-    dispatch,
-    user.company,
-    _,
-    userSelectionRef.current,
-    eventsSelectionRef.current,
-    actionsSelectionRef.current,
-  ]);
-  sortData();
-  const eventsFilterOptions = () => {
-    const options = new Set();
-    options.add("All");
-    if (eventsPerAdmin["active"]) {
-      for (let data of eventsPerAdmin["active"]) {
-        options.add(data.eventInfoDetail.eventName);
-      }
-    }
-    if (eventsPerAdmin["completed"]) {
-      for (let data of eventsPerAdmin["completed"]) {
-        options.add(data.eventInfoDetail.eventName);
-      }
-    }
-
-    return Array.from(options);
-  };
-
-  const userFilterOptions = () => {
-    const options = new Set();
-    options.add({ name: "All", email: "All" });
-    if (staffQuery.data) {
-      const groupingCompany = _.groupBy(
-        staffQuery?.data?.data?.adminUsers,
-        "company"
-      );
-      for (let data of groupingCompany[user.company]) {
-        options.add({
-          name: `${data.name} ${data.lastName}`,
-          email: data.email,
-        });
-      }
-    }
-    return Array.from(options);
-  };
-  userFilterOptions();
+  useEffect(() => {
+    const controller = new AbortController();
+    activityLogQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const onChangeUser = (value) => {
     userSelectionRef.current = value;
@@ -217,12 +149,15 @@ const Header = () => {
                 style={{
                   width: "100%",
                 }}
-                options={userFilterOptions().map((option) => {
-                  return {
-                    label: option?.name,
-                    value: option?.email,
-                  };
-                })}
+                options={
+                  []
+                  // userFilterOptions().map((option) => {
+                  // return {
+                  //   label: option?.name,
+                  //   value: option?.email,
+                  // };
+                  // })
+                }
               />
             </Grid>
             <Grid
@@ -256,12 +191,15 @@ const Header = () => {
                 style={{
                   width: "100%",
                 }}
-                options={eventsFilterOptions().map((option) => {
-                  return {
-                    label: option,
-                    value: option,
-                  };
-                })}
+                options={
+                  []
+                  //   eventsFilterOptions().map((option) => {
+                  //   return {
+                  //     label: option,
+                  //     value: option,
+                  //   };
+                  // })
+                }
               />
             </Grid>
             <Grid
@@ -302,7 +240,7 @@ const Header = () => {
         </Grid>
       </Grid>
       <div style={{ display: "none" }}>
-        <Body sortData={sortData()} />
+        <Body sortData={[]} />
       </div>
     </>
   );

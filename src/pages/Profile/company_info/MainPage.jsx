@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
-import Header from "./components/Header";
 import { Divider } from "antd";
 import Body from "./components/Body";
+import Header from "../components/Header";
 
 const CompanyInfo = () => {
   return (
@@ -15,7 +15,10 @@ const CompanyInfo = () => {
       }}
       container
     >
-      <Header />
+      <Header
+        title={"Company info"}
+        description={"Update your company info."}
+      />
       {/* <Divider /> */}
       <Body />
       <Divider />
