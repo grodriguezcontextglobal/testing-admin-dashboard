@@ -120,11 +120,11 @@ const Documents = () => {
 
   return (
     <Grid container spacing={3}>
+      <Grid item xs={12}>
       <Header
         title={"Documents"}
         description={"Upload and manage documents."}
-      />
-      <Grid item xs={12}>
+        />
         <Tabs
           activeKey={activeTab}
           onChange={(key) => {
