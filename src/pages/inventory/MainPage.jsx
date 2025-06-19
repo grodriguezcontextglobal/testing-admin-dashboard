@@ -27,6 +27,8 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 import { Title } from "../../styles/global/Title";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
 import FilterOptionsUX from "./utils/filterOptionsUX";
+import GrayButtonText from "../../styles/global/GrayButtonText";
+import { GrayButton } from "../../styles/global/GrayButton";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -112,12 +114,17 @@ const MainPage = () => {
     ),
   };
 
-  const refetchingQueriesFn = async () => {
+  const refetchingQueriesFn = () => {
+    setIsLoadingState(true);
     queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
     queryClient.refetchQueries(["listOfItemsInStock"]);
     queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
     queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
-    queryClient.refetchQueries(["companyHasInventoryQuery", user.sqlInfo.company_id]);
+    queryClient.refetchQueries([
+      "companyHasInventoryQuery",
+      user.sqlInfo.company_id,
+    ]);
+    setIsLoadingState(false);
     return setRenderingData(false);
   };
 
@@ -339,20 +346,23 @@ const MainPage = () => {
               lg
             >
               <Button
-                style={{ ...OutlinedInputStyle, width: "100%" }}
+                style={{ ...GrayButton, width: "100%" }}
                 onClick={() => {
                   setOpenAdvanceSearchModal(true);
                 }}
               >
-                Advance search
+                <p style={{ ...GrayButtonText, textTransform: "none" }}>
+                  Advance search
+                </p>
               </Button>
               <Button
-                style={{ ...OutlinedInputStyle, width: "100%" }}
-                onClick={() => {
-                  refetchingQueriesFn();
-                }}
+                loading={isLoadingState}
+                style={{ ...GrayButton, width: "100%" }}
+                onClick={refetchingQueriesFn}
               >
-                Reload
+                <p style={{ ...GrayButtonText, textTransform: "none" }}>
+                  Reload
+                </p>
               </Button>
             </Grid>
             <Grid
