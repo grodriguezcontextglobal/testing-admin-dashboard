@@ -12,6 +12,7 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import Header from "../../components/Header";
 
 const BodyForm = ({
   handleUpdatePersonalInfo,
@@ -20,37 +21,59 @@ const BodyForm = ({
   register,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <form
       onSubmit={handleSubmit(handleUpdatePersonalInfo)}
       style={{
         width: "100%",
-        padding: isMobile ? "16px" : "24px",
+        padding: isMobile ? "16px" : 0,
       }}
     >
-      <Grid container spacing={2}>
-        {/* Top Buttons */}
+      <Grid container>
         <Grid
-          item
-          xs={12}
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
-            gap: 2,
-            flexDirection: { xs: 'column', sm: 'row' },
-            '& > button': {
-              width: { xs: '100%', sm: 'auto' }
-            }
+            justifyContent: "space-between",
+            alignItems: "flex-start",
           }}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <Button onClick={() => triggerRoutes()} style={GrayButton}>
-            <Typography style={GrayButtonText}>Cancel</Typography>
-          </Button>
-          <Button type="submit" style={BlueButton}>
-            <Typography style={BlueButtonText}>Save and log out</Typography>
-          </Button>
+          <Grid item xs={12} sm={12} md={6} lg={6}>
+            <Header
+              title={"Change your password"}
+              description={"Update your password."}
+            />
+          </Grid>
+          {/* Top Buttons */}
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 2,
+              flexDirection: { xs: "column", sm: "row" },
+              "& > button": {
+                width: { xs: "100%", sm: "auto" },
+              },
+            }}
+          >
+            <Button onClick={() => triggerRoutes()} style={GrayButton}>
+              <Typography style={GrayButtonText}>Cancel</Typography>
+            </Button>
+            <Button type="submit" style={BlueButton}>
+              <Typography style={BlueButtonText}>Save and log out</Typography>
+            </Button>
+          </Grid>
         </Grid>
 
         <Grid item xs={12}>
@@ -69,7 +92,7 @@ const BodyForm = ({
                   fontWeight: "500",
                   fontFamily: "Inter",
                   lineHeight: "20px",
-                  textAlign: { xs: "left", sm: "left" }
+                  textAlign: { xs: "left", sm: "left" },
                 }}
               >
                 Current password
@@ -101,7 +124,7 @@ const BodyForm = ({
                   fontWeight: "500",
                   fontFamily: "Inter",
                   lineHeight: "20px",
-                  textAlign: { xs: "left", sm: "left" }
+                  textAlign: { xs: "left", sm: "left" },
                 }}
               >
                 New password
@@ -129,7 +152,7 @@ const BodyForm = ({
                   fontWeight: "500",
                   fontFamily: "Inter",
                   lineHeight: "20px",
-                  textAlign: { xs: "left", sm: "left" }
+                  textAlign: { xs: "left", sm: "left" },
                 }}
               >
                 Confirm new password
@@ -160,10 +183,10 @@ const BodyForm = ({
             display: "flex",
             justifyContent: "flex-end",
             gap: 2,
-            flexDirection: { xs: 'column', sm: 'row' },
-            '& > button': {
-              width: { xs: '100%', sm: 'auto' }
-            }
+            flexDirection: { xs: "column", sm: "row" },
+            "& > button": {
+              width: { xs: "100%", sm: "auto" },
+            },
           }}
         >
           <Button onClick={() => triggerRoutes()} style={GrayButton}>

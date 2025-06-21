@@ -15,6 +15,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import Header from "../../components/Header";
 
 const BodyRendering = ({
   checkIfOriginalDataHasChange,
@@ -28,26 +29,34 @@ const BodyRendering = ({
   removeUploadedProfileImage,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <form
       onSubmit={handleSubmit(handleUpdatePersonalInfo)}
       style={{
         width: "100%",
-        padding: isMobile ? "16px" : "24px",
+        padding: isMobile ? "16px" : "24px 0",
       }}
     >
-      <Grid container spacing={2}>
+      <Grid container >
         <Grid
           item
           xs={12}
+          sm={12}
+          md={12}
+          lg={12}
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
-            mb: 2
+            justifyContent: "space-between",
+            mb: 2,
           }}
         >
+          <Grid item xs={12} sm={12} md={8} lg={8}>
+          <Header title={"Personal Info"} description={"Update your photo and personal details."} />
+
+          </Grid>
+          <Grid display={"flex"} justifyContent={"flex-end"} item xs={12} sm={12} md={4} lg={4}>
           <Button
             loading={loading}
             htmlType="submit"
@@ -57,6 +66,8 @@ const BodyRendering = ({
               Save and log out
             </Typography>
           </Button>
+
+          </Grid>
         </Grid>
 
         <Grid item xs={12}>
@@ -146,56 +157,76 @@ const BodyRendering = ({
               </Typography>
             </InputLabel>
           </Grid>
-          <Grid 
-            item 
-            xs={12} 
-            sm={8} 
+          <Grid
+            item
+            xs={12}
+            sm={8}
             md={8}
             sx={{
               display: "flex",
               flexDirection: { xs: "column", sm: "row" },
               alignItems: { xs: "center", sm: "flex-start" },
-              gap: 2
+              gap: 2,
             }}
           >
-            <div>
-              {user?.data?.imageProfile ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "1rem",
-                  }}
-                >
-                  <Avatar
-                    size={{
-                      xs: 64,
-                      sm: 80,
-                      md: 100,
-                      lg: 120,
+            <Grid item xs={12} sm={12} md={5} lg={5}>
+              <>
+                {user?.data?.imageProfile ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "1rem",
+                      width: "100%",
+                      aspectRatio: "1/1",
                     }}
-                    src={<img src={user?.data?.imageProfile} alt="profile" />}
-                  />
-                  <Button style={GrayButton} onClick={removeUploadedProfileImage}>
-                    <p style={GrayButtonText}>Remove</p>
-                  </Button>
-                </div>
-              ) : (
-                <Avatar
-                  size={{
-                    xs: 64,
-                    sm: 80,
-                    md: 100,
-                    lg: 120,
+                  >
+                    <Avatar
+                    size={"large"}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      borderRadius: "50%",
+                    }}
+                      src={
+                        <img
+                          src={user?.data?.imageProfile}
+                          alt="profile"
+                          width={'100%'}
+                          style={{ aspectRatio: "1/1" }}
+                        />
+                      }
+                    />
+                    <Button
+                      style={GrayButton}
+                      onClick={removeUploadedProfileImage}
+                    >
+                      <p style={GrayButtonText}>Remove</p>
+                    </Button>
+                  </div>
+                ) : (
+                  <Avatar
+                  size={"large"}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                    borderRadius: "50%",
                   }}
                 >
-                  {user?.name[0]}
-                  {user?.lastName[0]}
-                </Avatar>
-              )}
-            </div>
-            <ImageUploaderUX setImageUploadedValue={setImageUploadedValue} />
+                    {user?.name[0]}
+                    {user?.lastName[0]}
+                  </Avatar>
+                )}
+              </>
+            </Grid>
+            <Grid item xs={12} sm={12} md={7} lg={7}>
+              <ImageUploaderUX setImageUploadedValue={setImageUploadedValue} />
+            </Grid>
           </Grid>
 
           <Grid item xs={12}>
@@ -275,7 +306,7 @@ const BodyRendering = ({
           sx={{
             display: "flex",
             justifyContent: "flex-end",
-            mt: 2
+            mt: 2,
           }}
         >
           <Button
