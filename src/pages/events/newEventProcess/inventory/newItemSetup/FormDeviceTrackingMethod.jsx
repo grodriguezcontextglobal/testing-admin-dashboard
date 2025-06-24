@@ -1,38 +1,33 @@
-import {
-  Chip,
-  Grid,
-  InputLabel,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { AutoComplete, Divider, notification, Tooltip, Button } from "antd";
-import { groupBy } from "lodash";
+import { Grid } from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, message, notification } from "antd";
+import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import ImageUploaderFormat from "../../../../../classes/imageCloudinaryFormat";
-import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
-import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
-import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import "../../../../../styles/global/ant-select.css";
 import "../../../../../styles/global/reactInput.css";
 import costValueInputFormat from "../../../../inventory/utils/costValueInputFormat";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import BulkRentedItems from "./components/BulkRentedItems";
+import {
+  renderingModals,
+  renderTitle,
+} from "./components/BulkRentedItemsComponents";
 import "./style.css";
+import validatingInputFields from "./components/validatingFields";
+import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
+import { retrieveExistingSubLocationsForCompanyInventory } from "../../../../inventory/actions/utils/SubLocationRenderer";
+import {
+  bulkItemInsertAlphanumeric,
+  bulkItemInsertSequential,
+} from "./components/BulkRentedItemsActions";
 
 const options = [{ value: "Rent" }];
 
@@ -50,7 +45,21 @@ const FormDeviceTrackingMethod = ({
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
     useState(false);
-
+  const [displaySublocationFields, setDisplaySublocationFields] =
+    useState(false);
+  const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
+  const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
+  const [addSerialNumberField, setAddSerialNumberField] = useState(false);
+  const [rangeFormat, setRangeFormat] = useState(false);
+  const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
+  const [openScanningModal, setOpenScanningModal] = useState(false);
+  const [openScannedItemView, setOpenScannedItemView] = useState(false);
+  const [labeling, setLabeling] = useState("Scanning all serial numbers here");
+  const [isRented, setIsRented] = useState(false);
+  const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
+  const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
+  const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
+    useState(null);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -67,7 +76,6 @@ const FormDeviceTrackingMethod = ({
       cost: "",
       brand: "",
       descript_item: "",
-      ownership: "Rent",
       min_serial_number: "",
       max_serial_number: "",
       sub_location: null,
@@ -79,20 +87,14 @@ const FormDeviceTrackingMethod = ({
     },
   });
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      message: msg,
-    });
-  };
-  const companiesQuery = useQuery({
-    queryKey: ["locationOptionsPerCompany"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
-    refetchOnMount: false,
-  });
-
+  const openNotificationWithIcon = useCallback(
+    (msg) => {
+      api.open({
+        message: msg,
+      });
+    },
+    [api]
+  );
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -101,16 +103,26 @@ const FormDeviceTrackingMethod = ({
       }),
     refetchOnMount: false,
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    companiesQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
+  const queryClient = useQueryClient();
+  const alphaNumericInsertItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
+    onSuccess: () => {
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+    },
+  });
+  const sequencialNumbericInsertItemMutation = useMutation({
+    mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
+    onSuccess: () => {
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["listOfItemsInStock"]);
+      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+    },
+  });
   const retrieveItemOptions = (props) => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
@@ -124,10 +136,13 @@ const FormDeviceTrackingMethod = ({
   };
 
   const renderLocationOptions = () => {
-    if (companiesQuery.data) {
-      const locations = companiesQuery.data.data.company?.at(-1).location ?? [];
+    if (itemsInInventoryQuery.data) {
+      const locations = groupBy(
+        itemsInInventoryQuery.data.data.items,
+        "location"
+      );
       const result = new Set();
-      for (let data of locations) {
+      for (let data of Object.keys(locations)) {
         result.add({ value: data });
       }
       return Array.from(result);
@@ -146,161 +161,56 @@ const FormDeviceTrackingMethod = ({
     return result;
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (retrieveItemDataSelected().has(watch("item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("item_group")
-      );
-      setValue("category_name", `${dataToRetrieve.category_name}`);
-      setValue("cost", `${dataToRetrieve.cost}`);
-      setValue("brand", `${dataToRetrieve.brand}`);
-      setValue("descript_item", `${dataToRetrieve.descript_item}`);
-      setValue("location", `${dataToRetrieve.location}`);
-      setValue("tax_location", `${dataToRetrieve.main_warehouse}`);
-      setValue("container", "");
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("item_group")]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (String(watch("container")).includes("Yes")) {
-      setDisplayContainerSplotLimitField(true);
-    } else {
-      setDisplayContainerSplotLimitField(false);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("container")]);
-
   const savingNewItem = async (data) => {
-    const dataDevices = itemsInInventoryQuery.data.data.items;
-    const groupingByDeviceType = groupBy(dataDevices, "item_group");
-    if (data.item_group === "")
-      return openNotificationWithIcon("A group of item must be provided.");
-    if (data.tax_location === "")
-      return openNotificationWithIcon("A taxable location must be provided.");
-    if (data.ownership === "")
-      return openNotificationWithIcon("Ownership status must be provided.");
-    if (String(data.ownership).toLowerCase() === "rent" && !returningDate) {
-      return openNotificationWithIcon(
-        "As ownership was set as 'Rent', returning date must be provided."
-      );
-    }
-    if (Number(qtyDiff()) < 1) {
-      return openNotificationWithIcon("Quantity must be greater than 0.");
-    }
-    if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
+    validatingInputFields({
+      data,
+      openNotificationWithIcon,
+      returningDate,
+    });
+    if (
+      scannedSerialNumbers.length === 0 &&
+      Number(data.max_serial_number) < Number(data.min_serial_number)
+    ) {
       return openNotificationWithIcon(
         "Max serial number must be greater than min serial number."
       );
     }
-    if (groupingByDeviceType[data.item_group]) {
-      const dataRef = groupBy(
-        groupingByDeviceType[data.item_group],
-        "serial_number"
-      );
-      if (dataRef[data.serial_number]?.length > 0) {
-        return openNotificationWithIcon(
-          "Device serial number already exists in company records."
-        );
-      }
-    }
     try {
-      let base64;
-      let img_url = "";
-      setLoadingStatus(true);
-      if (
-        imageUploadedValue?.length > 0 &&
-        imageUploadedValue[0].size > 5242880
-      ) {
-        setLoadingStatus(false);
-        return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
-        );
-      }
-      if (imageUploadedValue?.length > 0) {
-        base64 = await convertToBase64(imageUploadedValue[0]);
-        const templateImageUpload = new ImageUploaderFormat(
-          base64,
-          user.companyData.id,
-          data.category_name,
-          data.item_group,
-          "",
-          "",
-          "",
-          "",
-          ""
-        );
-        const registerImage = await devitrakApi.post(
-          "/cloudinary/upload-image",
-          templateImageUpload.item_uploader()
-        );
-
-        await devitrakApi.post(`/image/new_image`, {
-          source: registerImage.data.imageUploaded.secure_url,
-          category: data.category_name,
-          item_group: data.item_group,
-          company: user.companyData.id,
+      if (scannedSerialNumbers.length > 0) {
+        const response = await bulkItemInsertAlphanumeric({
+          data,
+          user,
+          openNotificationWithIcon,
+          setLoadingStatus,
+          setValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+          moreInfo,
+          formatDate,
+          returningDate,
+          subLocationsSubmitted,
+          scannedSerialNumbers,
+          setScannedSerialNumbers,
+          alphaNumericInsertItemMutation,
         });
-
-        img_url = registerImage.data.imageUploaded.secure_url;
+        const respNewItem = [...selectedItem, response];
+        setSelectedItem(respNewItem);
+      } else {
+        const response = await bulkItemInsertSequential({
+          data,
+          user,
+          openNotificationWithIcon,
+          setLoadingStatus,
+          setValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+          moreInfo,
+          formatDate,
+          returningDate,
+          subLocationsSubmitted,
+          sequencialNumbericInsertItemMutation,
+        });
+        const respNewItem = [...selectedItem, response];
+        setSelectedItem(respNewItem);
       }
-      const template = {
-        category_name: data.category_name,
-        item_group: data.item_group,
-        cost: data.cost,
-        brand: data.brand,
-        descript_item: data.descript_item,
-        ownership: data.ownership,
-        min_serial_number: data.min_serial_number,
-        max_serial_number: data.max_serial_number,
-        warehouse: true,
-        main_warehouse: data.location,
-        created_at: formatDate(new Date()),
-        updated_at: formatDate(new Date()),
-        company: user.company,
-        location: data.location,
-        current_location: data.location,
-        sub_location: JSON.stringify([
-          data.sub_location,
-          data.sub_location_2,
-          data.sub_location_3,
-        ]),
-        extra_serial_number: JSON.stringify(moreInfo),
-        company_id: user.sqlInfo.company_id,
-        return_date: `${
-          data.ownership === "Rent" ? formatDate(returningDate) : null
-        }`,
-        container: String(data.container).includes("Yes"),
-        containerSpotLimit: data.containerSpotLimit,
-        enableAssignFeature: 1,
-        image_url: img_url,
-        quantity: data.quantity,
-        existing: false,
-      };
-      const respNewItem = [...selectedItem, template];
-      setSelectedItem(respNewItem);
-      setValue("category_name", "");
-      setValue("item_group", "");
-      setValue("cost", "");
-      setValue("brand", "");
-      setValue("descript_item", "");
-      setValue("min_serial_number", "");
-      setValue("max_serial_number", "");
-      setValue("quantity", 0);
-      setValue("location", "");
-      setValue("tax_location", "");
-      setValue("container", "");
-      setValue("containerSpotLimit", "0");
-      openNotificationWithIcon(
-        "New group of items were created and stored in database."
-      );
-      setLoadingStatus(false);
       return setDisplayFormToCreateCategory(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
@@ -315,46 +225,228 @@ const FormDeviceTrackingMethod = ({
     return setMoreInfo(result);
   };
 
-  const renderTitle = () => {
-    return (
-      <>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <Typography
-            textAlign={"left"}
-            style={TextFontSize30LineHeight38}
-            color={"var(--gray-600, #475467)"}
-          >
-            Add a group of devices
-          </Typography>
-        </InputLabel>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <Typography
-            textAlign={"left"}
-            textTransform={"none"}
-            style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
-            color={"var(--gray-600, #475467)"}
-          >
-            Devices serial numbers can be created by inputting a serial number
-            base to define the category of device, and then a range from one
-            number to another, depending on your inventory.
-          </Typography>
-        </InputLabel>
-      </>
-    );
+  const handleDeleteMoreInfo = (index) => {
+    const result = [...moreInfo];
+    const removingResult = result.filter((_, i) => i !== index);
+    return setMoreInfo(removingResult);
   };
+
+  const qtyDiff = useCallback(() => {
+    if (watch("format_range_serial_number") === "Alphanumeric")
+      return setValue("quantity", scannedSerialNumbers.length);
+    if (watch("format_range_serial_number") === "Sequential number")
+      return setValue(
+        "quantity",
+        Number(watch("max_serial_number")) -
+          Number(watch("min_serial_number")) +
+          1
+      );
+    return 0; // Alphanumeric
+  }, [
+    watch("max_serial_number"),
+    watch("min_serial_number"),
+    watch("format_range_serial_number"),
+    scannedSerialNumbers.length,
+  ]);
+  qtyDiff();
+
+  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
+    itemsInInventoryQuery?.data?.data?.items
+  );
+  const renderingOptionsForSubLocations = (item) => {
+    const addSublocationButton = () => {
+      return (
+        <Button
+          onClick={() => setDisplaySublocationFields(true)}
+          style={{
+            ...BlueButton,
+            ...CenteringGrid,
+            alignSelf: "stretch",
+            display:
+              item === "Main location" && !displaySublocationFields
+                ? "flex"
+                : "none",
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={BlueButtonText}>Add sub location</p>
+        </Button>
+      );
+    };
+
+    const addEndingSerialNumberSequenceButton = () => {
+      return (
+        <Button
+          onClick={() => setDisplaySublocationFields(true)}
+          style={{
+            ...BlueButton,
+            ...CenteringGrid,
+            alignSelf: "stretch",
+            display:
+              item === "Main location" && !displaySublocationFields
+                ? "flex"
+                : "none",
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={BlueButtonText}>Add sub location</p>
+        </Button>
+      );
+    };
+
+    const removeAllSubLocationsButton = () => {
+      return (
+        <Button
+          onClick={() => {
+            setDisplaySublocationFields(false);
+            setSubLocationsSubmitted([]);
+          }}
+          style={{
+            ...BlueButton,
+            ...CenteringGrid,
+            alignSelf: "stretch",
+            display:
+              item === "Main location" && displaySublocationFields
+                ? "flex"
+                : "none",
+            width: "100%",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={BlueButtonText}>Remove all sub location</p>
+        </Button>
+      );
+    };
+    return {
+      addSubLocation: addSublocationButton(),
+      addEndingSerialNumberSequence: addEndingSerialNumberSequenceButton(),
+      removeAllSubLocations: removeAllSubLocationsButton(),
+    };
+  };
+
+  const addingSubLocation = (props) => {
+    if (String(props).length < 1) return;
+    const result = [...subLocationsSubmitted, props];
+    setValue("sub_location", "");
+    return setSubLocationsSubmitted(result);
+  };
+
+  const manuallyAddingSerialNumbers = () => {
+    if (String(watch("serial_number_list")).length < 1) return;
+    if (scannedSerialNumbers.includes(watch("serial_number_list")))
+      return message.warning(
+        "Serial number is already scanned or invalid for this transaction."
+      );
+    const result = [...scannedSerialNumbers, watch("serial_number_list")];
+    setValue("serial_number_list", "");
+    return setScannedSerialNumbers(result);
+  };
+
+  const acceptAndGenerateImage = async () => {
+    try {
+      if (
+        imageUploadedValue?.length > 0 &&
+        imageUploadedValue[0].size > 5242880
+      ) {
+        return alert(
+          "Image is bigger than allow. Please resize the image or select a new one."
+        );
+      }
+      if (!watch("category_name") || !watch("item_group")) {
+        return alert("Category name and item group are required.");
+      }
+      const data = {
+        category_name: watch("category_name"),
+        item_group: watch("item_group"),
+      };
+
+      const img_url = await storeAndGenerateImageUrl({
+        data,
+        imageUploadedValue,
+        user,
+      });
+
+      setImageUrlGenerated(img_url);
+      return message.success("Image was successfully accepted.");
+    } catch (error) {
+      message.error("Failed to upload image: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    itemsInInventoryQuery.refetch();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
+      const dataToRetrieve = retrieveItemDataSelected().get(
+        watch("reference_item_group")
+      );
+      if (Object.entries(dataToRetrieve).length > 0) {
+        Object.entries(dataToRetrieve).forEach(([key, value]) => {
+          if (key === "enableAssignFeature" || key === "container") {
+            return;
+          }
+          setValue(key, value);
+          setValue("quantity", 0);
+          const grouping = groupBy(
+            itemsInInventoryQuery?.data?.data?.items,
+            "item_group"
+          );
+          if (grouping[watch("reference_item_group")]) {
+            const dataToRetrieve = orderBy(
+              grouping[watch("reference_item_group")],
+              "serial_number",
+              "asc"
+            );
+            setAllSerialNumbersOptions([
+              ...dataToRetrieve.map((x) => {
+                return x.serial_number;
+              }),
+            ]);
+          }
+        });
+      }
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("reference_item_group")]);
+
+  useEffect(() => {
+    qtyDiff();
+  }, [
+    watch("max_serial_number"),
+    watch("min_serial_number"),
+    watch("format_range_serial_number"),
+    scannedSerialNumbers.length,
+    qtyDiff,
+  ]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (String(watch("container")).includes("Yes")) {
+      setDisplayContainerSplotLimitField(true);
+    } else {
+      setDisplayContainerSplotLimitField(false);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [watch("container")]);
 
   useEffect(() => {
     const controller = new AbortController();
     if (!moreInfoDisplay) {
       setMoreInfo([]);
     }
-
     return () => {
       controller.abort();
     };
@@ -368,377 +460,72 @@ const FormDeviceTrackingMethod = ({
     };
   }, [watch("cost")]);
 
-  const styling = {
-    textTransform: "none",
-    textAlign: "left",
-    fontFamily: "Inter",
-    fontSize: "14px",
-    fontStyle: "normal",
-    fontWeight: 500,
-    lineHeight: "20px",
-    color: "var(--gray-700, #344054)",
-  };
-
-  const buttonStyleLoading = {
-    ...BlueButton,
-    ...CenteringGrid,
-    width: "100%",
-    border: `1px solid ${
-      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-    }`,
-    borderRadius: "8px",
-    background: `${
-      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-    }`,
-    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-    padding: "6px 12px",
-    cursor: "pointer",
-  };
-
-  const handleDeleteMoreInfo = (index) => {
-    const result = [...moreInfo];
-    const removingResult = result.filter((_, i) => i !== index);
-    return setMoreInfo(removingResult);
-  };
-
-  const styleDivParent = {
-    width: "100%",
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    textAlign: "left",
-    gap: "10px",
-  };
-
-  const renderFields = [
-    {
-      name: "item_group",
-      placeholder: "Type the name of the device",
-      label: "Device name",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("item_group"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "category_name",
-      placeholder: "e.g. Electronic",
-      label: "Category",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("category_name"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "brand",
-      placeholder: "e.g. Apple",
-      label: "Brand",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("brand"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Replacement cost",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("cost"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
-      label: "Taxable location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage:
-        "Address where tax deduction for equipment will be applied.",
-    },
-    {
-      name: "container",
-      placeholder: "e.g. Permanent",
-      label: "Is it a container?",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [
-        {
-          value: "No - It is not a container",
-        },
-        {
-          value: "Yes - It is a container",
-        },
-      ],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "This item will contain other items inside.",
-      displayField: true,
-    },
-    {
-      name: "containerSpotLimit",
-      placeholder: "e.g. Permanent",
-      label: "Container Spot Limit",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "How many items can be stored inside the container.",
-      displayedButton: false,
-      displayField: displayContainerSplotLimitField,
-    },
-    {
-      name: "location",
-      placeholder: "Select a location",
-      label: "Main location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location",
-      placeholder: "Select a location",
-      label: "Sub location",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_2",
-      placeholder: "Select a location",
-      label: "Sub location 2",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "sub_location_3",
-      placeholder: "Select a location",
-      label: "Sub location 3",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: renderLocationOptions(),
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Where the item is location physically.",
-      displayField: true,
-    },
-    {
-      name: "min_serial_number",
-      placeholder: "e.g. 300",
-      label: "Starting Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "max_serial_number",
-      placeholder: "e.g. 300",
-      label: "Ending Serial number",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: retrieveItemOptions("serial_number"),
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "quantity",
-      placeholder: "e.g. 300",
-      label: "Quantity",
-      htmlElement: "Quantity",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage:
-        "This is the quantity from starting serial number and ending serial number.",
-    },
-    {
-      name: "ownership",
-      placeholder: "e.g. Permanent",
-      label: "Ownership status of item",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-    {
-      name: "",
-      placeholder: "",
-      label: "Returning date",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-    {
-      name: "image_uploader",
-      placeholder: "",
-      label: "Image uploader",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 6,
-      tooltip: false,
-      tooltipMessage: null,
-      displayField: true,
-    },
-    {
-      name: "descript_item",
-      placeholder:
-        "Please provide a brief description of the new device to be added.",
-      label: "Description of the device",
-      htmlElement: "TextArea",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 4,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: true,
-    },
-  ];
-
-  const renderOptional = (props) => {
-    if (props === "Day") {
-      return (
-        <div
-          style={{
-            width: "100%",
-            display: watch("ownership") === "Rent" ? "flex" : "none",
-          }}
-        >
-          <DatePicker
-            id="calender-event"
-            autoComplete="checking"
-            showTimeSelect
-            dateFormat="Pp"
-            minDate={new Date()}
-            selected={returningDate}
-            openToDate={new Date()}
-            startDate={new Date()}
-            onChange={(date) => setReturningDate(date)}
-            style={{
-              ...OutlinedInputStyle,
-              width: "100%",
-              borderRadius: "8px",
-            }}
-          />
-        </div>
-      );
+  useEffect(() => {
+    if (watch("format_range_serial_number") === "Alphanumeric") {
+      setRangeFormat(true);
+      setAddSerialNumberField(false);
     }
-    if (props === "Quantity") {
-      return (
-        <OutlinedInput
-          readOnly
-          // value={qtyDiff()}
-          // {...register("quantity", { setValueAs: qtyDiff() })}
-          {...register("quantity")}
-          fullWidth
-          style={{
-            ...OutlinedInputStyle,
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        />
-      );
+    if (watch("format_range_serial_number") === "Sequential number") {
+      setRangeFormat(false);
+      setAddSerialNumberField(true);
+      setValue("feed_serial_number", "Typing");
     }
+    if (watch("format_range_serial_number") === "") {
+      setRangeFormat(false);
+      setAddSerialNumberField(false);
+      setValue("feed_serial_number", "");
+    }
+  }, [watch("format_range_serial_number")]);
 
-    return (
-      <OutlinedInput
-        required
-        multiline
-        minRows={5}
-        {...register("descript_item", { required: true })}
-        fullWidth
-        aria-invalid={errors.descript_item}
-        style={{
-          borderRadius: "8px",
-          backgroundColor: "#fff",
-          color: "#000",
-          verticalAlign: "center",
-          boxShadow: "1px 1px 2px rgba(16, 24, 40, 0.05)",
-          outline: "none",
-        }}
-        placeholder="Please provide a brief description of the new device to be added."
-      />
-    );
-  };
-
-  const gripingFields = (props) => {
+  useEffect(() => {
     if (
-      renderFields[props].name === "min_serial_number" ||
-      renderFields[props].name === "max_serial_number" ||
-      renderFields[props].name === "quantity"
-    )
-      return 4;
-    return 6;
-  };
+      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("feed_serial_number") === "Typing"
+    ) {
+      setLabeling("Typing all serial numbers here");
+    }
+    if (
+      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("feed_serial_number") === "Scanning"
+    ) {
+      setLabeling("Scanning all serial numbers here");
+    }
+  }, [watch("feed_serial_number")]);
 
-  const qtyDiff = useCallback(() => {
-    if (watch("max_serial_number").length < 1) return 0;
-    const result =
-      Number(watch("max_serial_number")) - Number(watch("min_serial_number"));
-    return setValue("quantity", result + 1);
-  }, [watch("max_serial_number"), watch("min_serial_number")]);
-  qtyDiff();
+  useEffect(() => {
+    setValue("serial_number_list", "");
+    setValue("min_serial_number", "");
+    setValue("max_serial_number", "");
+    setValue("quantity", 0);
+    setScannedSerialNumbers([]);
+  }, [watch("format_range_serial_number"), watch("feed_serial_number")]);
+
+  useEffect(() => {
+    if (watch("ownership") === "Rent") {
+      setIsRented(true);
+    } else {
+      setIsRented(false);
+    }
+  }, [watch("ownership")]);
+
+  useEffect(() => {
+    if (imageUploadedValue?.length > 0) {
+      const triggerImageInto64 = async () => {
+        const base64 = await convertToBase64(imageUploadedValue[0]);
+        setConvertImageTo64ForPreview(base64);
+        setDisplayPreviewImage(true);
+      };
+      triggerImageInto64();
+    } else {
+      setConvertImageTo64ForPreview(null);
+      setDisplayPreviewImage(false);
+      setImageUrlGenerated(null);
+    }
+  }, [imageUploadedValue]);
+
+  useEffect(() => {
+    setValue("serial_number_list", scannedSerialNumbers.join(", "));
+  }, [scannedSerialNumbers.length]);
 
   return (
     <Grid
@@ -749,261 +536,59 @@ const FormDeviceTrackingMethod = ({
     >
       {contextHolder}
       {renderTitle()}
-      <form onSubmit={handleSubmit(savingNewItem)} className="form">
-        <Grid container spacing={1}>
-          {/* style={styleDivParent} */}
-          {renderFields.map((item, index) => {
-            if (item.displayField) {
-              if (item.htmlOption === 6) {
-                return (
-                  <Grid
-                    key={item.name}
-                    style={{
-                      textAlign: "left",
-                    }}
-                    marginY={1}
-                    item
-                    xs={12}
-                    sm={12}
-                    md={
-                      renderFields[index].name === "descript_item"
-                        ? 12
-                        : gripingFields(index)
-                    }
-                    lg={
-                      renderFields[index].name === "descript_item"
-                        ? 12
-                        : gripingFields(index)
-                    }
-                  >
-                    <InputLabel
-                      style={{ marginBottom: "0.2rem", width: "100%" }}
-                    >
-                      <Tooltip
-                        placement="top"
-                        title={item.tooltipMessage}
-                        style={{
-                          width: "100%",
-                        }}
-                      >
-                        <Typography style={styling}>
-                          {item.label} {item.tooltip && <QuestionIcon />}
-                        </Typography>
-                      </Tooltip>
-                    </InputLabel>
-
-                    <ImageUploaderUX
-                      setImageUploadedValue={setImageUploadedValue}
-                    />
-                  </Grid>
-                );
-              }
-              return (
-                <Grid
-                  key={item.name}
-                  style={{
-                    textAlign: "left",
-                  }}
-                  marginY={1}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={renderFields[index].name === "descript_item" ? 12 : 6}
-                  lg={renderFields[index].name === "descript_item" ? 12 : 6}
-                >
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <Tooltip
-                      placement="top"
-                      title={item.tooltipMessage}
-                      style={{
-                        width: "100%",
-                      }}
-                    >
-                      <Typography style={styling}>
-                        {item.label} {item.tooltip && <QuestionIcon />}
-                      </Typography>
-                    </Tooltip>
-                  </InputLabel>
-                  {item.htmlElement.length < 1 ? (
-                    <Controller
-                      control={control}
-                      name={item.name}
-                      render={({ field: { value, onChange } }) => (
-                        <AutoComplete
-                          aria-required={true}
-                          className="custom-autocomplete" // Add a custom className here
-                          variant="outlined"
-                          style={{
-                            ...AntSelectorStyle,
-                            border: "solid 0.3 var(--gray600)",
-                            fontFamily: "Inter",
-                            fontSize: "14px",
-                            width: "100%",
-                          }}
-                          value={value}
-                          onChange={(value) => onChange(value)}
-                          options={item.options.map((x) => {
-                            if (item.htmlOption === 0) {
-                              return { value: x };
-                            } else {
-                              return { value: x.value };
-                            }
-                          })}
-                          placeholder={item.placeholder}
-                          filterOption={(inputValue, option) =>
-                            option.value
-                              .toUpperCase()
-                              .indexOf(inputValue.toUpperCase()) !== -1
-                          }
-                        />
-                      )}
-                    />
-                  ) : (
-                    renderOptional(item.htmlElement)
-                  )}{" "}
-                </Grid>
-              );
-            }
-          })}
-        </Grid>
-        <Divider />
-        <Button
-          type="button"
-          onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-          style={buttonStyleLoading}
-        >
-          <Typography textTransform={"none"} style={BlueButtonText}>
-            <WhiteCirclePlusIcon /> &nbsp; Add more information
-          </Typography>
-        </Button>
-        {moreInfoDisplay && (
-          <div
-            style={{
-              width: "100%",
-              ...CenteringGrid,
-              justifyContent: "space-between",
-              gap: "5px",
-            }}
-          >
-            <OutlinedInput
-              style={{ ...OutlinedInputStyle, width: "100%" }}
-              placeholder="e.g IMEI"
-              name="key"
-              value={keyObject}
-              onChange={(e) => setKeyObject(e.target.value)}
-            />
-            <OutlinedInput
-              style={{ ...OutlinedInputStyle, width: "100%" }}
-              placeholder="e.g YABSDA56AKJ"
-              name="key"
-              value={valueObject}
-              onChange={(e) => setValueObject(e.target.value)}
-            />
-            <Button
-              htmlType="button"
-              onClick={() => handleMoreInfoPerDevice()}
-              style={{ ...BlueButton, ...CenteringGrid }}
-            >
-              <WhiteCirclePlusIcon />
-            </Button>
-          </div>
-        )}
-        <Divider
-          style={{
-            marginBottom: "-15px",
-            display: moreInfoDisplay ? "" : "none",
-          }}
-        />
-        <div
-          style={{
-            width: "100%",
-            display: moreInfoDisplay ? "flex" : "none",
-            justifyContent: "flex-start",
-            alignSelf: "flex-start",
-          }}
-        >
-          <p style={Subtitle}>More information</p>
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: moreInfoDisplay ? "flex" : "none",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          {moreInfo.length > 0 &&
-            moreInfo.map((item, index) => (
-              <Chip
-                style={{
-                  backgroundColor: "var(--basewhite)",
-                  padding: "2.5px 5px",
-                  margin: "0 1px",
-                  border: "solid 0.1px var(--gray900)",
-                  borderRadius: "8px",
-                }}
-                key={`${item.keyObject}-${item.valueObject}`}
-                label={`${item.keyObject}:${item.valueObject}`}
-                onDelete={() => handleDeleteMoreInfo(index)}
-              >
-                {item.keyObject}:{item.valueObject}
-              </Chip>
-            ))}
-        </div>
-        <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-        <div style={styleDivParent}>
-          <div
-            style={{
-              textAlign: "left",
-              width: "50%",
-            }}
-          >
-            <Button
-              onClick={() => setDisplayFormToCreateCategory(false)}
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
-          </div>
-          <div
-            style={{
-              textAlign: "right",
-              width: "50%",
-            }}
-          >
-            <Button
-              disabled={loadingStatus}
-              htmlType="submit"
-              style={buttonStyleLoading}
-            >
-              <p
-                style={{
-                  ...BlueButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                <WhiteCirclePlusIcon />
-                &nbsp; Save new item
-              </p>
-            </Button>
-          </div>
-        </div>
-      </form>
+      <BulkRentedItems
+        acceptImage={acceptAndGenerateImage}
+        addingSubLocation={addingSubLocation}
+        addSerialNumberField={addSerialNumberField}
+        allSerialNumbersOptions={allSerialNumbersOptions}
+        control={control}
+        displayContainerSplotLimitField={displayContainerSplotLimitField}
+        displayPreviewImage={displayPreviewImage}
+        displaySublocationFields={displaySublocationFields}
+        errors={errors}
+        handleDeleteMoreInfo={handleDeleteMoreInfo}
+        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
+        handleSubmit={handleSubmit}
+        imageUploadedValue={convertImageTo64ForPreview}
+        isRented={isRented}
+        keyObject={keyObject}
+        labeling={labeling}
+        loadingStatus={loadingStatus}
+        manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
+        moreInfo={moreInfo}
+        moreInfoDisplay={moreInfoDisplay}
+        options={options}
+        OutlinedInputStyle={OutlinedInputStyle}
+        rangeFormat={rangeFormat}
+        register={register}
+        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+        renderLocationOptions={renderLocationOptions}
+        retrieveItemOptions={retrieveItemOptions}
+        returningDate={returningDate}
+        savingNewItem={savingNewItem}
+        setAddSerialNumberField={setAddSerialNumberField}
+        setImageUploadedValue={setImageUploadedValue}
+        setKeyObject={setKeyObject}
+        setMoreInfoDisplay={setMoreInfoDisplay}
+        setOpenScannedItemView={setOpenScannedItemView}
+        setOpenScanningModal={setOpenScanningModal}
+        setReturningDate={setReturningDate}
+        setSubLocationsSubmitted={setSubLocationsSubmitted}
+        setValueObject={setValueObject}
+        subLocationsOptions={subLocationsOptions}
+        subLocationsSubmitted={subLocationsSubmitted}
+        valueObject={valueObject}
+        watch={watch}
+        imageUrlGenerated={imageUrlGenerated}
+      />
+      {renderingModals({
+        openScanningModal,
+        setOpenScanningModal,
+        openScannedItemView,
+        setOpenScannedItemView,
+        scannedSerialNumbers,
+        setScannedSerialNumbers,
+      })}
     </Grid>
   );
 };
