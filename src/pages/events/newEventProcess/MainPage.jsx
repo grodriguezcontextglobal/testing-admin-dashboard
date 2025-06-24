@@ -1,12 +1,16 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { lazy, Suspense } from "react";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import Loading from "../../../components/animation/Loading";
-// import StepsLine from "../newEventProcess/components/StepsLine";
+
 const StepsLine = lazy(() => import("../newEventProcess/components/StepsLine"));
+
 const MainPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Suspense
       fallback={
@@ -17,93 +21,92 @@ const MainPage = () => {
     >
       <Grid
         container
-        display={"flex"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        key={"settingUp-deviceList-event"}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        key="settingUp-deviceList-event"
+        sx={{
+          px: isMobile ? 2 : 3,
+          py: isMobile ? 2 : 4,
+        }}
       >
         <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          alignSelf={"center"}
-          margin={"5px auto"}
           item
           xs={12}
-          sm={12}
-          md={12}
-          lg={12}
+          display="flex"
+          flexDirection="column"
+          gap={isMobile ? 1 : 2}
+          sx={{
+            mb: isMobile ? 3 : 4,
+          }}
         >
           <Typography
-            width={"100%"}
-            textTransform={"none"}
             style={{
               ...TextFontSize30LineHeight38,
               margin: 0,
               textAlign: "left",
+              fontSize: isMobile ? "24px" : "30px",
+              lineHeight: isMobile ? "32px" : "38px",
             }}
           >
             Create a new event
           </Typography>
 
           <Typography
-            width={"100%"}
-            textTransform={"none"}
-            textAlign={"left"}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            fontStyle={"normal"}
-            fontWeight={400}
-            lineHeight={"30px"}
-            color={"var(--gray-600, #475467)"}
+            sx={{
+              textAlign: "left",
+              fontFamily: "Inter",
+              fontSize: isMobile ? "16px" : "20px",
+              fontWeight: 400,
+              lineHeight: isMobile ? "24px" : "30px",
+              color: "var(--gray-600, #475467)",
+            }}
           >
             Fill out the details below to create a new event.
           </Typography>
         </Grid>
+
         <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignSelf={"flex-start"}
-          margin={"3rem 0"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
+          container
+          spacing={isMobile ? 3 : 2}
+          sx={{
+            mt: isMobile ? 2 : 3,
+            flexDirection: {
+              xs: "column",
+              sm: "column",
+              md: "row",
+              lg: "row",
+            },
+          }}
         >
           <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"flex-start"}
             item
-            xs={4}
-            sm={4}
+            xs={12}
+            sm={12}
             md={4}
             lg={4}
+            sx={{
+              mb: isMobile ? 3 : 4,
+            }}
           >
             <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
+              display="flex"
+              justifyContent={isMobile ? "center" : "flex-start"}
+              alignItems="center"
             >
               <StepsLine props={2} />
             </Grid>
           </Grid>
+
           <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"flex-end"}
             item
-            xs={8}
-            sm={8}
+            xs={12}
+            sm={12}
             md={8}
             lg={8}
+            sx={{
+              mb: isMobile ? 3 : 4,
+            }}
           >
             <Outlet />
           </Grid>
