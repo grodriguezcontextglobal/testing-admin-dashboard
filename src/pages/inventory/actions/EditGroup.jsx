@@ -83,6 +83,7 @@ const EditGroup = () => {
       queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
     },
   });
+  
   const sequencialNumbericUpdateItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post(
@@ -100,6 +101,7 @@ const EditGroup = () => {
       });
     },
   });
+
   const updateAllItemsMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_company/update-all-items-in-inventory", template),
@@ -123,6 +125,7 @@ const EditGroup = () => {
     },
     [api]
   );
+
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>

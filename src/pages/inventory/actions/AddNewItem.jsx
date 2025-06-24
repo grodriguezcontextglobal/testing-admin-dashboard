@@ -333,9 +333,9 @@ const AddNewItem = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(watch("item_group"))) {
+    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
       const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("item_group")
+        watch("reference_item_group")
       );
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
@@ -358,7 +358,7 @@ const AddNewItem = () => {
     return () => {
       controller.abort();
     };
-  }, [watch("item_group")]);
+  }, [watch("reference_item_group")]);
 
   useEffect(() => {
     const controller = new AbortController();

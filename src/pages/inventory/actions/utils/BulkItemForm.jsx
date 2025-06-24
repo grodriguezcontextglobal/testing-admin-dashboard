@@ -137,7 +137,6 @@ const BulkItemForm = ({
               item.htmlOption === 6 &&
               item.name === "image_uploader_preview"
             ) {
-              console.log(watch("image_url"));
               return (
                 <Grid
                   key={item.name}
@@ -254,10 +253,10 @@ const BulkItemForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  item.name === "descript_item" ? 12 : gripingFields(item.name)
+                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
                 }
                 lg={
-                  item.name === "descript_item" ? 12 : gripingFields(item.name)
+                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>

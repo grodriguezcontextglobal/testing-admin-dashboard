@@ -25,7 +25,7 @@ export const renderFields = ({
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "This is the category of the reference item.",
-      displayField: true,
+      displayField: false,
     },
 {
       name: "reference_item_group",

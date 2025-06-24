@@ -246,10 +246,10 @@ const SingleItemForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  item.name === "descript_item" ? 12 : gripingFields(item.name)
+                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
                 }
                 lg={
-                  item.name === "descript_item" ? 12 : gripingFields(item.name)
+                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
