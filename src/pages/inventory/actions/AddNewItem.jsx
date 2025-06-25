@@ -135,6 +135,9 @@ const AddNewItem = () => {
       openNotificationWithIcon,
       returningDate,
     });
+      if (!data.serial_number || data.serial_number === "")
+    return openNotificationWithIcon("A serial number must be provided.");
+
     if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
       return openNotificationWithIcon(
         "Max serial number must be greater than min serial number."
