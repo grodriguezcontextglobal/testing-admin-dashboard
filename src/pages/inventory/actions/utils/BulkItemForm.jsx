@@ -67,6 +67,21 @@ const BulkItemForm = ({
   valueObject,
   watch,
 }) => {
+  const renderingErrorMessage = (error) => {
+    if (error) {
+      return (
+        <Typography
+          variant="body2"
+          color="error"
+          style={{ textAlign: "left", marginTop: "1rem" }}
+        >
+          {error.message}
+        </Typography>
+      );
+    }
+    return null;
+  };
+
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
@@ -253,10 +268,16 @@ const BulkItemForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
                 lg={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -282,6 +303,15 @@ const BulkItemForm = ({
                   <Controller
                     control={control}
                     name={item.name}
+                    rules={
+                      item.required
+                        ? {
+                            required: `${
+                              item.label || "This field"
+                            } is required`,
+                          }
+                        : {}
+                    }
                     render={({ field: { value, onChange } }) => (
                       <Grid
                         container
@@ -300,7 +330,9 @@ const BulkItemForm = ({
                             variant="outlined"
                             style={{
                               ...AntSelectorStyle,
-                              border: "solid 0.3 var(--gray600)",
+                              border: errors[item.name]
+                                ? "1px solid red"
+                                : "solid 0.3 var(--gray600)",
                               fontFamily: "Inter",
                               fontSize: "14px",
                               width: "100%",
@@ -317,6 +349,7 @@ const BulkItemForm = ({
                             placeholder={item.placeholder}
                             allowClear
                           />
+                          {renderingErrorMessage(errors[item.name])}
                           {renderingOptionsButtons({
                             watch,
                             setOpenScanningModal,

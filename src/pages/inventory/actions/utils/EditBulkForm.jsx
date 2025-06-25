@@ -1,11 +1,5 @@
 import { Chip, Grid, InputLabel, Typography } from "@mui/material";
-import {
-  AutoComplete,
-  Breadcrumb,
-  Button,
-  Divider,
-  Tooltip
-} from "antd";
+import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
@@ -76,6 +70,21 @@ const EditBulkForm = ({
   valueObject,
   watch,
 }) => {
+    const renderingErrorMessage = (error) => {
+    if (error) {
+      return (
+        <Typography
+          variant="body2"
+          color="error"
+          style={{ textAlign: "left", marginTop: "1rem" }}
+        >
+          {error.message}
+        </Typography>
+      );
+    }
+    return null;
+  };
+
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
@@ -256,10 +265,16 @@ const EditBulkForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
                 lg={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -285,6 +300,15 @@ const EditBulkForm = ({
                   <Controller
                     control={control}
                     name={item.name}
+                    rules={
+                      item.required
+                        ? {
+                            required: `${
+                              item.label || "This field"
+                            } is required`,
+                          }
+                        : {}
+                    }
                     render={({ field: { value, onChange } }) => {
                       return (
                         <Grid
@@ -304,12 +328,14 @@ const EditBulkForm = ({
                                   item.name === "feed_serial_number") &&
                                 updateAllItems
                               }
-                              aria-required={true}
+                              aria-required={item.required}
                               className="custom-autocomplete" // Add a custom className here
                               variant="outlined"
                               style={{
                                 ...AntSelectorStyle,
-                                border: "solid 0.3 var(--gray600)",
+                              border: errors[item.name]
+                                ? "1px solid red"
+                                : "solid 0.3 var(--gray600)",
                                 fontFamily: "Inter",
                                 fontSize: "14px",
                                 width: "100%",
@@ -331,6 +357,7 @@ const EditBulkForm = ({
                               //   }
                               allowClear
                             />
+                            {renderingErrorMessage(item.label)}
                             {item.label === "Serial number range format" && (
                               <Button
                                 style={
@@ -440,7 +467,7 @@ const EditBulkForm = ({
                                 })),
                               ]}
                             />
-                            </Grid>
+                          </Grid>
                         </Grid>
                       );
                     }}

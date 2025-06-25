@@ -65,6 +65,20 @@ const SingleItemForm = ({
   valueObject,
   watch,
 }) => {
+  const renderingErrorMessage = (error) => {
+    if (error) {
+      return (
+        <Typography
+          variant="body2"
+          color="error"
+          style={{ textAlign: "left", marginTop: "1rem" }}
+        >
+          {error.message}
+        </Typography>
+      );
+    }
+    return null;
+  };
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
@@ -246,10 +260,16 @@ const SingleItemForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
                 lg={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
@@ -275,6 +295,15 @@ const SingleItemForm = ({
                   <Controller
                     control={control}
                     name={item.name}
+                    rules={
+                      item.required
+                        ? {
+                            required: `${
+                              item.label || "This field"
+                            } is required`,
+                          }
+                        : {}
+                    }
                     render={({ field: { value, onChange } }) => (
                       <Grid
                         container
@@ -288,12 +317,14 @@ const SingleItemForm = ({
                       >
                         <Grid item xs={12} sm={12} md={12} lg={12}>
                           <AutoComplete
-                            aria-required={true}
-                            className="custom-autocomplete" // Add a custom className here
+                            aria-required={item.required}
+                            className="custom-autocomplete" // Add a custom
                             variant="outlined"
                             style={{
                               ...AntSelectorStyle,
-                              border: "solid 0.3 var(--gray600)",
+                              border: errors[item.name]
+                                ? "1px solid red"
+                                : "solid 0.3 var(--gray600)",
                               fontFamily: "Inter",
                               fontSize: "14px",
                               width: "100%",
@@ -310,6 +341,7 @@ const SingleItemForm = ({
                             placeholder={item.placeholder}
                             allowClear
                           />
+                          {renderingErrorMessage(errors[item.name])}
                           {renderingOptionsButtons({
                             watch,
                             manuallyAddingSerialNumbers,
@@ -492,7 +524,7 @@ const SingleItemForm = ({
               }}
             >
               <WhiteCirclePlusIcon />
-              &nbsp; Save new item
+              &nbsp; Save and exit
             </p>
           </Button>
         </div>
