@@ -120,7 +120,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
                 onClick={() => handleOpenModal()}
               >
                 <p style={{ ...BlueButtonText }}>
-                  Add range of serial number for this type.
+                  Allocate serial number range for this device type
                 </p>
               </Button>
             </Grid>
