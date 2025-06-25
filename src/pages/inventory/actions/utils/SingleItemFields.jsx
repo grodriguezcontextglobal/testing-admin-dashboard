@@ -183,7 +183,7 @@ export const renderFields = ({
       style: OutlinedInputStyle,
       required: true,
       options: ["Permanent", "Rent", "Sale"],
-      htmlOption: 2,
+      htmlOption: 0,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
       displayField: true,
