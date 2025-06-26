@@ -159,7 +159,7 @@ export const renderFields = ({
       label: "Sub location",
       htmlElement: "",
       style: OutlinedInputStyle,
-      required: true,
+      required: false,
       options: subLocationsOptions,
       htmlOption: 2,
       tooltip: true,
