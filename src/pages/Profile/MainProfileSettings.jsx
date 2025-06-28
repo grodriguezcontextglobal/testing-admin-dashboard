@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { Button, Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
@@ -82,132 +82,137 @@ const MainProfileSettings = () => {
       label: "Documents",
       route: "documents",
       permission: [0, 1], // Allowing access for admin and managers
+    },
+    {
+      label: "Suppliers",
+      route: "providers",
+      permission: [0, 1], // Allowing access for admin and managers
     }
   ];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   return (
     <Grid
-      style={{
-        padding: "5px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
       container
+      spacing={2}
+      sx={{
+        padding: { xs: "16px", sm: "24px", md: "32px" },
+        maxWidth: "1200px",
+        margin: "0 auto"
+      }}
     >
       <Grid
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        marginTop={5}
         container
+        spacing={{ xs: 2, sm: 3 }}
+        sx={{
+          marginTop: { xs: 1, sm: 2, md: 3 },
+          flexDirection: { xs: 'column', sm: 'row' }
+        }}
       >
         <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
           item
           xs={12}
-          sm={12}
-          md={6}
+          sm={6}
+          sx={{
+            display: "flex",
+            justifyContent: { xs: "center", sm: "flex-start" },
+            alignItems: "center"
+          }}
         >
           <Typography
-            textTransform={"none"}
-            style={{
+            variant={isMobile ? "h5" : "h4"}
+            sx={{
               color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
+              fontWeight: 600,
+              fontFamily: "Inter",
+              textAlign: { xs: "center", sm: "left" }
             }}
-            textAlign={"left"}
-            fontWeight={600}
-            fontFamily={"Inter"}
-            fontSize={"30px"}
           >
             Settings
           </Typography>
         </Grid>
         <Grid
-          display={"flex"}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
           item
           xs={12}
-          sm={12}
-          md={6}
+          sm={6}
+          sx={{
+            display: "flex",
+            justifyContent: { xs: "center", sm: "flex-end" },
+            alignItems: "center"
+          }}
         >
           <Button style={DangerButton} onClick={() => logout()}>
             <p style={DangerButtonText}>Log out</p>
           </Button>
         </Grid>
       </Grid>
+
       <Grid
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+        item
+        xs={12}
+        sx={{
+          marginTop: { xs: 2, sm: 3 },
+          overflowX: "auto"
         }}
-        marginTop={1}
-        container
       >
-        <Grid marginY={0} item xs={12} sm={12} md={12}>
-          <nav style={{ display: "flex", gap:"16px" }}>
-            {tabOptions.map((option) => {
-              if (
-                option.permission.some(
-                  (element) => element === Number(user.role)
-                )
-              ) {
-                return (
-                  <NavLink
-                    key={option.label}
-                    to={`${option.route}`}
-                    style={({ isActive }) => {
-                      return {
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: "1px 4px 11px",
-                        gap: "8px",
-                        borderBottom: isActive
-                          ? "1px solid #004EEB"
-                          : "rgba(0, 0, 0, 0.88)",
-                      };
-                    }}
-                  >
-                    <Typography
-                      color={`${
+        <nav
+          style={{
+            display: "flex",
+            gap: isMobile ? "8px" : "16px",
+            minWidth: "min-content",
+            padding: isMobile ? "8px 0" : "0"
+          }}
+        >
+          {tabOptions.map((option) => {
+            if (option.permission.some((element) => element === Number(user.role))) {
+              return (
+                <NavLink
+                  key={option.label}
+                  to={`${option.route}`}
+                  style={({ isActive }) => ({
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: isMobile ? "4px 8px" : "1px 4px 11px",
+                    gap: "8px",
+                    borderBottom: isActive
+                      ? "1px solid #004EEB"
+                      : "rgba(0, 0, 0, 0.88)",
+                    whiteSpace: "nowrap"
+                  })}
+                >
+                  <Typography
+                    sx={{
+                      color: () =>
                         location.pathname === `/profile/${option.route}`
                           ? "#004EEB"
-                          : "#667085"
-                      }`}
-                      fontFamily={"Inter"}
-                      fontSize={"14px"}
-                      fontWeight={600}
-                      lineHeight={"20px"}
-                    >
-                      {option.label}
-                    </Typography>
-                  </NavLink>
-                );
-              }
-            })}
-          </nav>
-        </Grid>
+                          : "#667085",
+                      fontFamily: "Inter",
+                      fontSize: { xs: "12px", sm: "14px" },
+                      fontWeight: 600,
+                      lineHeight: "20px"
+                    }}
+                  >
+                    {option.label}
+                  </Typography>
+                </NavLink>
+              );
+            }
+          })}
+        </nav>
       </Grid>
-      <Divider
-        style={{
-          margin: 0,
+
+      <Divider sx={{ width: "100%", margin: "0" }} />
+
+      <Grid
+        container
+        sx={{
+          marginTop: { xs: 2, sm: 3 },
+          padding: { xs: "16px", sm: "24px" }
         }}
-      />
-      <Grid container>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          item
-          xs={12}
-        >
+      >
+        <Grid item xs={12}>
           <Outlet />
         </Grid>
       </Grid>
