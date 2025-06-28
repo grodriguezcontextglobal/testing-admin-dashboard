@@ -177,7 +177,7 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
     "../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"
   )
 );
-
+const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
 const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
 
@@ -357,6 +357,7 @@ const AuthRoutes = () => {
                 />
                 <Route path="documents" element={<Documents />} />
                 <Route path="documents/view/:id" element={<ViewDocument />} />
+                <Route path="providers" element={<Providers />} />
                 <Route path="/profile/documents/edit/:id" element={<EditDocument />} />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
