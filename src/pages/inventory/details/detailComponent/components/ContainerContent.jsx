@@ -1,343 +1,341 @@
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Divider, message, Modal, Pagination, Space } from "antd";
-import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Button, Divider, message, Modal, Select } from "antd";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { TrashIcon } from "../../../../../components/icons/TashIcon";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
-const ContainerContent = ({ openModal, setOpenModal, containerInfo }) => {
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [loadingState, setLoadingState] = useState(false);
-  const [current, setCurrent] = useState(1);
+const ContainerContent = ({
+  openModal,
+  setOpenModal,
+  containerInfo,
+  containerItemsContent,
+  refetch,
+}) => {
   const { user } = useSelector((state) => state.admin);
   const [itemToContent, setItemToContent] = useState(
     containerInfo?.container_items ?? []
   );
-  const { register, watch, setValue } = useForm();
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    category_name: "",
+    item_group: "",
+    brand: "",
+    ownership: "",
+  });
   const queryClient = useQueryClient();
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["retrievingItemsInInventoryQuery"],
+    queryKey: ["structuredCompanyInventory", filters],
     queryFn: () =>
-      devitrakApi.post(`/db_item/warehouse-items`, {
+      devitrakApi.post(`/db_company/company-inventory-structure`, {
         company_id: user.sqlInfo.company_id,
-        warehouse: true,
-        enableAssignFeature: true,
+        filters: filters,
       }),
+    enabled: !!user.sqlInfo.company_id,
     refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
-  const location = useLocation();
-  const searchParams = String(location.search).split("=")[1];
-  const closeModal = () => {
-    setOpenModal(false);
+
+  const FILTER_CONFIG = [
+    {
+      dataKey: "category_name",
+      placeholder: "Select Category",
+      stateKey: "category_name",
+    },
+    {
+      dataKey: "item_group",
+      placeholder: "Select Item Group",
+      stateKey: "item_group",
+    },
+    { dataKey: "brand", placeholder: "Select Brand", stateKey: "brand" },
+    {
+      dataKey: "ownership",
+      placeholder: "Select Ownership",
+      stateKey: "ownership",
+    },
+  ];
+
+  const renderFilterOptions = () => {
+    const data = itemsInInventoryQuery?.data?.data?.groupedData;
+    if (!data) return null;
+
+    return (
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        {FILTER_CONFIG.map(({ dataKey, placeholder, stateKey }) => {
+          const options = data[dataKey] || {};
+          console.log(filters[stateKey]);
+          return (
+            <Grid item xs={3} key={stateKey}>
+              <Select
+                virtual={true}
+                loading={loading}
+                style={{ width: "100%" }}
+                placeholder={placeholder}
+                value={filters[stateKey] !== "" ? filters[stateKey] : null}
+                onChange={(value) =>
+                  setFilters((prev) => ({ ...prev, [stateKey]: value }))
+                }
+                onClear={() => {
+                  setFilters((prev) => ({ ...prev, [stateKey]: undefined }));
+                }}
+                allowClear
+              >
+                {Object.entries(options).map(([name]) => (
+                  <Select.Option key={name} value={name}>
+                    {`${name}`}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Grid>
+          );
+        })}
+      </Grid>
+    );
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const closeModal = () => {
+    return setOpenModal(false);
+  };
 
-  if (itemsInInventoryQuery.data) {
-    let dataToIterate = itemsInInventoryQuery.data.data.items; //result;
-    const groupingByWarehouse = groupBy(dataToIterate, "warehouse");
-    const groupingByItemGroup = groupBy(groupingByWarehouse[1], "item_group");
-    const renderingOptions = () => {
-      let finalResult = [];
-      if (dataToIterate.length > 0) {
-        for (let [key, value] of Object.entries(groupingByItemGroup)) {
-          finalResult = [
-            ...finalResult,
-            { key: key, value: JSON.stringify(value) },
-          ];
-        }
+  const buildQueryParams = () => {
+    const baseParams = {
+      company_id: user.sqlInfo.company_id,
+      warehouse: 1,
+      enableAssignFeature: 1,
+    };
+
+    // Add non-empty filters to query params
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== "") {
+        baseParams[key] = value;
       }
-      return finalResult;
-    };
+    });
 
-    const renderingItems = () => {
-      let result = [];
-      if (selectedItem?.length > 0) {
-        const value = JSON.parse(selectedItem);
-        const sortedData = groupBy(value, "serial_number");
-        for (let [key, value] of Object.entries(sortedData)) {
-          result = [
-            ...result,
-            {
-              key: key,
-              value: value,
-            },
-          ];
-        }
-      }
-      return result;
-    };
+    return baseParams;
+  };
 
-    const renderingLimitedUnits = () => {
-      const start = (current - 1) * 50;
-      const end = start + 50;
-      return renderingItems().slice(start, end);
-    };
+  const handleSearchItems = async () => {
+    try {
+      setLoading(true);
+      const queryParams = buildQueryParams();
+      const response = await devitrakApi.post(
+        "/db_item/warehouse-items",
+        queryParams
+      );
+      return setSearchResults(response.data.items || []);
+    } catch (error) {
+      message.error("Failed to fetch items");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const renderingUnits = () => {
-      const checking = watch("search");
-      if (
-        checking?.length > 0 &&
-        checking?.length === renderingItems()[0].key.length
-      ) {
-        return renderingItems().filter((item) =>
-          String(item.key).toLowerCase().includes(watch("search").toLowerCase())
+  const renderSearchResults = () => {
+    return (
+      <Select
+        mode="multiple"
+        style={{ width: "100%" }}
+        placeholder="Select items"
+        loading={loading}
+        value={itemToContent.map((item) => item.serial_number)}
+        onChange={handleItemSelection}
+        optionFilterProp="label"
+        optionLabelProp="label"
+        virtual={true}
+        maxTagCount={5}
+        maxTagPlaceholder={(omitted) => `+ ${omitted.length} more selected`}
+        showSearch
+        allowClear
+        options={searchResults.map((item) => ({
+          value: item.serial_number,
+          label: `${item.serial_number} - ${item.item_group}`,
+          // disabled:
+          //   item.display_item === 0 &&
+          //   String(item.container_id) !== String(searchParams),
+          item: item,
+        }))}
+      />
+    );
+  };
+
+  const handleItemSelection = (selectedSerialNumbers) => {
+    const newItemToContent = selectedSerialNumbers.map((serialNumber) => {
+      const selectedItem = searchResults.find(
+        (item) => item.serial_number === serialNumber
+      );
+      return {
+        serial_number: selectedItem.serial_number,
+        ...selectedItem,
+      };
+    });
+
+    if (newItemToContent.length > containerInfo.containerSpotLimit) {
+      message.warning(
+        `This container has a limit of ${containerInfo.containerSpotLimit} items. Please remove some items before adding more.`
+      );
+      // Keep the previous valid selection
+      return;
+    }
+    setItemToContent(newItemToContent);
+  };
+
+  const savingItemsInContainer = async () => {
+    try {
+      if (containerItemsContent.length > 0) {
+        await devitrakApi.delete(
+          `/db_inventory/container/${containerInfo.item_id}`
         );
+        message;
       }
-      return renderingLimitedUnits();
-    };
+      const response = await devitrakApi.post(`/db_inventory/container-items`, {
+        container_item_id: containerInfo.item_id,
+        child_ids: itemToContent.map((item) => item.item_id),
+      });
+      if (response.data) message.success("Case was successfully saved");
+      queryClient.invalidateQueries({
+        queryKey: ["infoItemSql"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["trackingItemActivity"],
+      });
+      refetch();
+      return setOpenModal(false);
+    } catch (error) {
+      return message.error("Something went wrong: " + error.message);
+    }
+  };
 
-    const renderingTitle = () => {
-      let result;
-      if (selectedItem.length > 0) {
-        const value = JSON.parse(selectedItem);
-        result = value[0].item_group;
-      }
-      return result;
-    };
-
-    const handleAddRemoveItem = (props) => {
-      let adding = [];
-      if (itemToContent.some((item) => item.serial_number === props.key)) {
-        adding = [
-          ...itemToContent.filter((item) => item.serial_number !== props.key),
-        ];
-      } else {
-        if (itemToContent.length >= containerInfo?.containerSpotLimit)
-          return alert(
-            `You can't add more items to this case. Case hits the limit. Limit is ${containerInfo?.containerSpotLimit} items.`
-          );
-        adding = [
-          ...itemToContent,
-          { serial_number: props.key, ...props.value[0] },
-        ];
-      }
-      return setItemToContent(adding);
-    };
-
-    const onChange = (page) => {
-      setCurrent(page);
-    };
-
-    const checkingIfItemWasAdded = groupBy(itemToContent, "serial_number");
-    const savingItemsInContainer = async () => {
-      try {
-        setLoadingState(true);
-        const content = itemToContent.map((item) => {
-          return {
-            serial_number: item.serial_number,
-            item_id: item.item_id,
-            item_group: item.item_group,
-            category_name: item.category_name,
-            location: item.location,
-          };
-        });
-        const response = await devitrakApi.post(
-          `/db_company/update-content-in-container`,
-          {
-            item_id: searchParams,
-            container_items: JSON.stringify(content),
-            ref: JSON.stringify(containerInfo?.container_items),
-          }
-        );
-        if (response.data) message.success("Item was successfully updated");
+  const updateExistingContent = async () => {
+    try {
+      setLoading(true);
+      const response = await devitrakApi.put(
+        `/db_inventory/container/${containerInfo.container_item_id}`,
+        {
+          child_ids: itemToContent.map((item) => item.item_id),
+        }
+      );
+      if (response.data) {
+        message.success("Container content updated successfully");
         queryClient.invalidateQueries({
           queryKey: ["infoItemSql"],
         });
         queryClient.invalidateQueries({
           queryKey: ["trackingItemActivity"],
         });
-        setLoadingState(false);
-        return closeModal();
-      } catch (error) {
-        message.error("Something went wrong");
-        return setLoadingState(false);
+        setOpenModal(false);
       }
-    };
+    } catch (error) {
+      message.error("Failed to update container content: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-      <Modal
-        open={openModal}
-        onCancel={closeModal}
-        footer={[]}
-        centered
-        maskClosable={false}
-        title="Add/Update content."
-        width={1000}
+  return (
+    <Modal
+      open={openModal}
+      onCancel={closeModal}
+      footer={[]}
+      centered
+      maskClosable={false}
+      title="Add/Update content."
+      width={1000}
+    >
+      <Grid
+        display={"flex"}
+        justifyContent={"flex-start"}
+        alignItems={"center"}
+        gap={1}
+        container
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          gap={1}
-          container
-        >
-          {renderingOptions()?.map((item) => {
-            return (
-              <Button
-                style={{ ...BlueButton }}
-                key={item.key}
-                onClick={() => {
-                  setSelectedItem(item.value);
-                  setCurrent(1);
-                }}
-              >
-                <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-                  {item.key}
-                </p>
-              </Button>
-            );
-          })}
-        </Grid>
-        <Divider />
+        {renderFilterOptions()}
         <Grid
           display={"flex"}
           justifyContent={"space-between"}
           alignItems={"center"}
-          marginY={2}
-          gap={1}
-          container
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
         >
-          <h2
-            style={{
-              ...Subtitle,
-              fontWeight: 600,
-              textDecoration: "underline",
-            }}
-          >
-            {selectedItem ? renderingTitle() : "No item selected"}
-          </h2>
-          <div style={{ width: "30%" }}>
-            <OutlinedInput
-              {...register("search")}
-              style={OutlinedInputStyle}
-              placeholder="Search here"
-              fullWidth
-              endAdornment={
-                <InputAdornment
-                  style={{
-                    cursor: "pointer",
-                    display:
-                      String(watch("search")).length > 0 ? "flex" : "none",
-                  }}
-                  position="end"
-                >
-                  <Button
-                    style={{
-                      margin: 0,
-                      padding: 0,
-                      width: "fit-content",
-                      height: "fit-content",
-                      border: "none",
-                      background: "transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    onClick={() => setValue("search", "")}
-                  >
-                    <TrashIcon />
-                  </Button>
-                </InputAdornment>
-              }
-            />
-          </div>
-          <Pagination
-            current={current}
-            onChange={onChange}
-            total={renderingItems().length}
-            pageSize={50}
-            style={{ margin: "5px 0" }}
-            showSizeChanger={false}
-            showQuickJumper={false}
-          />
-          <Divider />
-          <Grid
-            style={{ height: selectedItem ? "35vh" : 0 }}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-          >
-            <Space style={{ margin: "5px 0" }} size={[8, 16]} wrap>
-              {renderingUnits()?.map((item) => {
-                return (
-                  <Button
-                    disabled={
-                      item.value[0].display_item === 0 &&
-                      String(item.value[0].container_id) !==
-                        String(searchParams)
-                    }
-                    style={{
-                      ...GrayButton,
-                      background:
-                        checkingIfItemWasAdded[item.key]?.length > 0
-                          ? BlueButton.background
-                          : GrayButton.background,
-                    }}
-                    onClick={() => handleAddRemoveItem(item)}
-                    key={item.key}
-                  >
-                    <p
-                      style={{
-                        ...GrayButtonText,
-                        ...CenteringGrid,
-                        color:
-                          checkingIfItemWasAdded[item.key]?.length > 0
-                            ? BlueButtonText.color
-                            : GrayButtonText.color,
-                      }}
-                    >
-                      {item.key}
-                    </p>
-                  </Button>
-                );
-              })}
-            </Space>
-          </Grid>
-          <Divider />
-          <Grid
-            style={{ display: itemToContent?.length > 0 ? "flex" : "none" }}
-            justifyContent={"flex-start"}
-            alignItems={"center"}
-            gap={1}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-          >
-            <Button style={GrayButton} onClick={() => setItemToContent([])}>
-              <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
-            </Button>
+          <div style={{ display: "flex", gap: "10px" }}>
             <Button
-              loading={loadingState}
+              onClick={handleSearchItems}
               style={BlueButton}
-              onClick={() => savingItemsInContainer()}
+              loading={loading}
             >
-              <p style={{ ...BlueButtonText, ...CenteringGrid }}>Save</p>
+              <p style={{ ...BlueButtonText, ...CenteringGrid }}>
+                Search items
+              </p>
             </Button>
-          </Grid>
+            {searchResults.length > 0 && (
+              <h2
+                style={{
+                  ...Subtitle,
+                  color: "var(--danger-action)",
+                  margin: "0 0 0 10px",
+                  textDecoration: "underline",
+                }}
+              >
+                {searchResults.length} results
+              </h2>
+            )}
+          </div>
+          {itemToContent.length > 0 && (
+            <Button
+              style={BlueButton}
+              onClick={() => {
+                console.log(itemToContent);
+              }}
+            >
+              <p style={BlueButtonText}>
+                Done {itemToContent.length} items selected
+              </p>
+            </Button>
+          )}
         </Grid>
-      </Modal>
-    );
-  }
+        <Grid item xs={12}>
+          {renderSearchResults()}
+        </Grid>
+        <Divider />
+        <Grid
+          style={{ display: itemToContent?.length > 0 ? "flex" : "none" }}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          gap={1}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+        >
+          <Button style={GrayButton} onClick={() => setItemToContent([])}>
+            <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
+          </Button>
+          <Button
+            loading={loading}
+            style={BlueButton}
+            onClick={
+              containerInfo.container_item_id
+                ? updateExistingContent
+                : savingItemsInContainer
+            }
+          >
+            <p style={{ ...BlueButtonText, ...CenteringGrid }}>
+              {containerInfo.container_item_id ? "Update" : "Save"}
+            </p>
+          </Button>{" "}
+        </Grid>
+      </Grid>
+    </Modal>
+  );
 };
 
 export default ContainerContent;

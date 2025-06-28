@@ -1,6 +1,6 @@
 import { Chip, Grid, Typography } from "@mui/material";
 import { Button, Card, message, Popconfirm, Space } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -12,18 +12,13 @@ import { DangerButtonText } from "../../../../../styles/global/DangerButtonText"
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useQueryClient } from "@tanstack/react-query";
 const ExtraInformation = ({ dataFound, containerInfo }) => {
-  console.log(dataFound);
   const [openModal, setOpenModal] = useState(false);
+  const [containerItemsContent, setContainerItemsContent] = useState([]);
   const queryClient = useQueryClient();
   const handleContainerItemsRemoval = async () => {
     try {
-      const response = await devitrakApi.post(
-        `/db_company/update-content-in-container`,
-        {
-          item_id: dataFound.item_id,
-          container_items: JSON.stringify([]),
-          ref: JSON.stringify(containerInfo?.container_items),
-        }
+      const response = await devitrakApi.delete(
+        `/db_inventory/container/${containerInfo.item_id}`
       );
       if (response.data) message.success("Case was successfully emptied");
       queryClient.invalidateQueries({
@@ -32,16 +27,33 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
       queryClient.invalidateQueries({
         queryKey: ["trackingItemActivity"],
       });
+      fetchContainerItems();
       return setOpenModal(false);
     } catch (error) {
       return message.error("Something went wrong: " + error.message);
     }
   };
 
-  const containerItems =
-    typeof dataFound[0].container_items === "string"
-      ? JSON.parse(dataFound[0]?.container_items)
-      : dataFound[0]?.container_items;
+  const fetchContainerItems = async () => {
+    try {
+      const response = await devitrakApi.get(
+        `/db_inventory/container-items/${dataFound[0]?.item_id}`
+      );
+      if (response.data) {
+        return setContainerItemsContent(response.data.container.items);
+      }
+    } catch (error) {
+      if(error.response.status === 404) return setContainerItemsContent([]);
+      return message.error("Something went wrong: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (containerInfo.container > 0) {
+      fetchContainerItems();
+    }
+  }, []);
+
   return (
     <Grid
       display={dataFound[0]?.container > 0 ? "flex" : "none"}
@@ -77,7 +89,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
             >
               <Typography style={TextFontSize14LineHeight20}>
                 Items in container (serial number) |{" "}
-                {containerItems?.length ?? 0}/
+                {containerItemsContent?.length ?? 0}/
                 {dataFound[0]?.containerSpotLimit} cap
               </Typography>
             </Grid>
@@ -121,7 +133,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           </Grid>
           <Grid container>
             <Space size={[8, 16]} wrap style={{ margin: "10px 0" }}>
-              {containerItems?.map((item) => (
+              {containerItemsContent?.map((item) => (
                 <Chip
                   key={item.item_id}
                   label={item.serial_number}
@@ -138,6 +150,8 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
           setOpenModal={setOpenModal}
           data={dataFound}
           containerInfo={containerInfo}
+          containerItemsContent={containerItemsContent}
+          refetch={fetchContainerItems}
         />
       )}
     </Grid>
