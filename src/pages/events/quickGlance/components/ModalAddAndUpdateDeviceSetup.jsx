@@ -37,6 +37,79 @@ const ModalAddAndUpdateDeviceSetup = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const eventInventoryRef = useCallback(
+    async ({ device = null, database = null, checking = null }) => {
+      const eventInventoryRef = await devitrakApi.post("/event/event-list", {
+        _id: event.id,
+      });
+      const updateDeviceInv = [...eventInventoryRef.data.list[0].deviceSetup];
+      const sortingData = sortBy(device, "device", "asc");
+      const foundIndex = updateDeviceInv.findIndex(
+        (element) =>
+          String(element.group).toLowerCase() ===
+          String(sortingData[0].type).toLowerCase()
+      );
+      if (foundIndex > -1) {
+        // Update existing device setup entry
+        const updatedInventoryEvent = {
+          ...updateDeviceInv[foundIndex],
+          startingNumber: sortingData[0].device,
+          endingNumber: sortingData.at(-1).device,
+          quantity: sortingData.length,
+        };
+        updateDeviceInv[foundIndex] = updatedInventoryEvent;
+        const updatingEventInventory = await devitrakApi.patch(
+          `/event/edit-event/${event.id}`,
+          {
+            deviceSetup: updateDeviceInv,
+          }
+        );
+        return dispatch(
+          onAddEventData({
+            ...event,
+            deviceSetup: updatingEventInventory.data.event.deviceSetup,
+          })
+        );
+      } else {
+        const templateUpdateEventInventory = {
+          category: database[0].category_name,
+          group: database[0].item_group,
+          value: database[0].cost,
+          description: database[0].descript_item,
+          company: user.companyData.company_name,
+          quantity: database.length,
+          ownership: database[0].ownership,
+          createdBy: new Date().toISOString(),
+          key: database[0].id,
+          dateCreated: new Date().toISOString(),
+          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${user.companyData.company_name} ${database[0].ownership}`,
+          consumerUses: false,
+          startingNumber: checking.data.receiversInventory[0].device,
+          endingNumber: checking.data.receiversInventory.at(-1).device,
+          existing: true,
+        };
+
+        // Add the new templateUpdateEventInventory to the device setup array
+        const updatedDeviceSetup = [
+          ...eventInventoryRef.data.list[0].deviceSetup,
+          templateUpdateEventInventory,
+        ];
+
+        // Update the event with the new device setup
+        await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+          deviceSetup: updatedDeviceSetup,
+        });
+      }
+      return dispatch(
+        onAddEventData({
+          ...event,
+          deviceSetup: eventInventoryRef.data.list[0].deviceSetup,
+        })
+      );
+    },
+    []
+  );
+
   const { register, handleSubmit, watch, setValue } = useForm();
   const dispatch = useDispatch();
   const closeModal = () => {
@@ -252,271 +325,194 @@ const ModalAddAndUpdateDeviceSetup = ({
       : BlueButton;
   }, [existingDevice.length, quantity]);
 
-  const addingNewItemsToEvent = async ({ sql, device, updateDeviceInv }) => {
-    const template = {
-      category: sql[0].category_name,
-      group: sql[0].item_group,
-      value: sql[0].cost,
-      description: sql[0].descript_item,
-      company: user.companyData.company_name,
-      quantity: device.length,
-      ownership: sql[0].ownership,
-      createdBy: new Date().toISOString(),
-      key: sql[0].id,
-      dateCreated: new Date().toISOString(),
-      resume: `${sql[0].category_name} ${sql[0].item_group} ${sql[0].cost} ${sql[0].descript_item} ${user.companyData.company_name} ${sql[0].ownership}`,
-      consumerUses: false,
-      startingNumber: device[0].device,
-      endingNumber: device[device.length - 1].device,
-      existing: true,
-    };
-
-    // Add the new template to the device setup array
-    const updatedDeviceSetup = [...updateDeviceInv, template];
-
-    // Update the event with the new device setup
-    await devitrakApi.patch(`/event/edit-event/${event.id}`, {
-      deviceSetup: updatedDeviceSetup,
-    });
-
-    // Update Redux store
-    dispatch(
-      onAddEventData({
-        ...event,
-        deviceSetup: updatedDeviceSetup,
-      })
-    );
-  };
-
-  const updateDeviceSetupInEvent = async (props) => {
-    const sortingData = sortBy(props, "device", "asc");
-    const updateDeviceInv = [...event.deviceSetup];
-    const foundIndex = updateDeviceInv.findIndex(
-      (element) =>
-        String(element.group).toLowerCase() ===
-        String(sortingData[0].type).toLowerCase()
-    );
-
-    if (foundIndex > -1) {
-      // Update existing device setup entry
-      const updatedInventoryEvent = {
-        ...updateDeviceInv[foundIndex],
-        startingNumber: sortingData[0].device,
-        endingNumber: sortingData[sortingData.length - 1].device,
-        quantity: sortingData.length,
-      };
-      updateDeviceInv[foundIndex] = updatedInventoryEvent;
-
-      await devitrakApi.patch(`/event/edit-event/${event.id}`, {
-        deviceSetup: updateDeviceInv,
-      });
-
-      dispatch(
-        onAddEventData({
-          ...event,
-          deviceSetup: updateDeviceInv,
-        })
+  const gettingItemsInContainer = async (props) => {
+    try {
+      console.log("gettingItemsInContainer", props);
+      const gettingItemsInContainer = await devitrakApi.get(
+        `/db_inventory/container-items/${props.item_id}`
       );
-    } else {
-      // Add new device setup entry
-      const retrieveItemDataFormat = await devitrakApi.post(
-        `/db_item/consulting-item`,
-        {
-          item_group: sortingData[0].type,
-          company_id: user.sqlInfo.company_id,
-        }
-      );
-
-      if (retrieveItemDataFormat.data?.items) {
-        await addingNewItemsToEvent({
-          sql: retrieveItemDataFormat.data.items,
-          device: sortingData,
-          updateDeviceInv,
-        });
-      }
+      return gettingItemsInContainer;
+    } catch (error) {
+      console.log(props);
+      console.log("gettingItemsInContainer", error);
     }
   };
 
-  const gettingItemsInContainer = async (props) => {
-    const gettingItemsInContainer = await devitrakApi.get(
-      `/db_inventory/container-items/${props.item_id}`
-    );
-    return gettingItemsInContainer;
-  };
-
-  const createDeviceRecordInNoSQLDatabase = async (props) => {
-    let data = null;
-    data = props.deviceInfo;
-    const template = {
-      deviceList: JSON.stringify(data.map((item) => item.serial_number)),
-      status: "Operational",
-      activity: false,
-      comment: "No comment",
-      eventSelected: eventName,
-      provider: user.company,
-      type: data[0].item_group,
-      company: user.companyData.id,
-      event_id: event.id,
-    };
-    await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-
-    // Check if this is a container item first
-    const isContainer = data.some((item) => item.container > 0);
-    if (isContainer) {
-      // If it's a container, only handle container logic
-      await checkIfContainer(data);
-    } else {
-      // Only update inventory event for non-container items
-      await checkInsertedDataAndUpdateInventoryEvent(data);
+  const extractContainersItemsInfo = async (containerSetup) => {
+    try {
+      console.log("extractContainersItemsInfo", containerSetup);
+      const itemsInContainer = await gettingItemsInContainer(containerSetup);
+      console.log("extractContainersItemsInfo", itemsInContainer);
+      if (itemsInContainer.data.container.items.length > 0) {
+        const sortedItems = itemsInContainer.data.container.items.sort((a, b) =>
+          a.serial_number.localeCompare(b.serial_number)
+        );
+        console.log("extractContainersItemsInfo", sortedItems);
+        let database = [...sortedItems];
+        console.log("extractContainersItemsInfo", database);
+        const event_id = event.sql.event_id;
+        await devitrakApi.post("/db_event/event_device", {
+          event_id: event_id,
+          item_group: database[0].item_group,
+          startingNumber: database[0].serial_number,
+          quantity: `${database.length}`,
+          company_id: user.sqlInfo.company_id,
+          category_name: database[0].category_name,
+          data: database.map((item) => item.serial_number),
+        });
+        await devitrakApi.post("/db_item/item-out-warehouse", {
+          warehouse: false,
+          company_id: user.sqlInfo.company_id,
+          item_group: database[0].item_group,
+          startingNumber: database[0].serial_number,
+          quantity: `${database.length}`,
+          category_name: database[0].category_name,
+          data: database.map((item) => item.serial_number),
+        });
+        const template = {
+          deviceList: JSON.stringify(
+            database.map((item) => item.serial_number)
+          ),
+          status: "Operational",
+          activity: false,
+          comment: "No comment",
+          eventSelected: eventName,
+          provider: user.company,
+          type: database[0].item_group,
+          company: user.companyData.id,
+          event_id: event.id,
+        };
+        await devitrakApi.post("/receiver/receivers-pool-bulk", template);
+        const checking = await devitrakApi.post(
+          "/receiver/receiver-pool-list",
+          {
+            type: database[0].item_group,
+            eventSelected: event.eventInfoDetail.eventName,
+            company: user.companyData.id,
+          }
+        );
+        await eventInventoryRef({
+          device: checking,
+          database: database,
+          checking: checking,
+        });
+        return null;
+      }
+    } catch (error) {
+      console.log(containerSetup);
+      console.log("extractContainersItemsInfo", error);
     }
   };
 
   const checkIfContainer = async (props) => {
-    const extractingContainers = props.filter((item) => item.container > 0);
-    if (extractingContainers.length > 0) {
-      for (const container of extractingContainers) {
-        // First, create device setup entry for the container itself
-        const containerSetup = {
-          category: container.category_name,
-          group: container.item_group,
-          value: container.cost || 0,
-          description: container.descript_item,
-          company: user.companyData.company_name,
-          quantity: 1,
-          ownership: container.ownership,
-          createdBy: new Date().toISOString(),
-          key: container.id,
-          dateCreated: new Date().toISOString(),
-          resume: `${container.category_name} ${container.item_group} ${container.cost || 0} ${container.descript_item} ${user.companyData.company_name} ${container.ownership}`,
-          consumerUses: false,
-          startingNumber: container.serial_number,
-          endingNumber: container.serial_number,
-          existing: true
-        };
-
-        // Get and process contained items
-        const itemsInContainer = await gettingItemsInContainer({
-          item_id: container.item_id,
-        });
-
-        const itemsProfile = await devitrakApi.post(
-          "/db_inventory/check-large-data",
-          {
-            item_ids: [
-              ...itemsInContainer.data.container.items.map(
-                (item) => item.item_id
-              ),
-            ],
-          }
-        );
-
-        const containerItems = itemsProfile.data.result;
-        if (containerItems.length > 0) {
-          const sortedItems = containerItems.sort((a, b) =>
-            a.serial_number.localeCompare(b.serial_number)
-          );
-
-          const containedItemsSetup = {
-            category: sortedItems[0].category_name,
-            group: sortedItems[0].item_group,
-            value: sortedItems[0].cost || 0,
-            description: sortedItems[0].descript_item,
-            company: user.companyData.company_name,
-            quantity: sortedItems.length,
-            ownership: sortedItems[0].ownership,
-            createdBy: new Date().toISOString(),
-            key: sortedItems[0].id,
-            dateCreated: new Date().toISOString(),
-            resume: `${sortedItems[0].category_name} ${sortedItems[0].item_group} ${sortedItems[0].cost || 0} ${sortedItems[0].descript_item} ${user.companyData.company_name} ${sortedItems[0].ownership}`,
-            consumerUses: false,
-            startingNumber: sortedItems[0].serial_number,
-            endingNumber: sortedItems[sortedItems.length - 1].serial_number,
-            existing: true
-          };
-
-          const updatedDeviceSetup = [...event.deviceSetup];
-
-          // Update or add container entry
-          const containerIndex = updatedDeviceSetup.findIndex(
-            (setup) => setup.group === container.item_group
-          );
-          if (containerIndex > -1) {
-            updatedDeviceSetup[containerIndex] = containerSetup;
-          } else {
-            updatedDeviceSetup.push(containerSetup);
-          }
-
-          // Update or add contained items entry
-          const containedItemsIndex = updatedDeviceSetup.findIndex(
-            (setup) => setup.group === sortedItems[0].item_group
-          );
-          if (containedItemsIndex > -1) {
-            updatedDeviceSetup[containedItemsIndex] = containedItemsSetup;
-          } else {
-            updatedDeviceSetup.push(containedItemsSetup);
-          }
-
-          // Update both container and contained items in a single update
-          await devitrakApi.patch(`/event/edit-event/${event.id}`, {
-            deviceSetup: updatedDeviceSetup,
-          });
-
-          dispatch(
-            onAddEventData({
-              ...event,
-              deviceSetup: updatedDeviceSetup,
-            })
-          );
+    try {
+      console.log("checkIfContainer", props);
+      const extractingContainers = props.filter((item) => item.container > 0);
+      console.log("checkIfContainer", extractingContainers);
+      if (extractingContainers.length > 0) {
+        for (const container of extractingContainers) {
+          // extract items info from container
+          console.log("checkIfContainer", container);
+          await extractContainersItemsInfo(container);
         }
       }
+      return null;
+    } catch (error) {
+      console.log(props);
+      console.log("checkIfContainer", error);
     }
-    return null;
+  };
+
+  const updateDeviceSetupInEvent = async (props) => {
+    try {
+      await eventInventoryRef({
+        device: props,
+      });
+    } catch (error) {
+      console.log(props);
+      console.log("updateDeviceSetupInEvent", error);
+    }
   };
 
   const checkInsertedDataAndUpdateInventoryEvent = async (props) => {
-    console.log("checkInsertedDataAndUpdateInventoryEvent", props);
     try {
       const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
         type: props[0].item_group,
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
       });
-      console.log("checking", checking);
+      console.log(
+        "checkInsertedDataAndUpdateInventoryEvent",
+        checking.data.receiversInventory
+      );
       if (checking.data.receiversInventory.length > 0) {
         console.log(
-          "checking.data.receiversInventory",
+          "checkInsertedDataAndUpdateInventoryEvent",
           checking.data.receiversInventory
         );
         await updateDeviceSetupInEvent(checking.data.receiversInventory);
       }
     } catch (error) {
+      console.log(props);
+      console.log("checkInsertedDataAndUpdateInventoryEvent", error);
       message.error("Failed to add device. Please try again.");
     }
   };
 
+  const createDeviceRecordInNoSQLDatabase = async (props) => {
+    try {
+      let data = null;
+      data = props.deviceInfo;
+      const template = {
+        deviceList: JSON.stringify(data.map((item) => item.serial_number)),
+        status: "Operational",
+        activity: false,
+        comment: "No comment",
+        eventSelected: eventName,
+        provider: user.company,
+        type: data[0].item_group,
+        company: user.companyData.id,
+        event_id: event.id,
+      };
+      await devitrakApi.post("/receiver/receivers-pool-bulk", template);
+      await checkInsertedDataAndUpdateInventoryEvent(data);
+      await checkIfContainer(data);
+    } catch (error) {
+      console.log(props);
+      console.log("createDeviceRecordInNoSQLDatabase", error);
+    }
+  };
+
   const createDeviceInEvent = async (props) => {
-    console.log("createDeviceInEvent", props.deviceInfo);
-    let database = [...props.deviceInfo];
-    const event_id = event.sql.event_id;
-    await devitrakApi.post("/db_event/event_device", {
-      event_id: event_id,
-      item_group: database[0].item_group,
-      startingNumber: database[0].serial_number,
-      quantity: props.quantity,
-      company_id: user.sqlInfo.company_id,
-      category_name: database[0].category_name,
-      data: props.deviceInfo.map((item) => item.serial_number),
-    });
-    await devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: false,
-      company_id: user.sqlInfo.company_id,
-      item_group: database[0].item_group,
-      startingNumber: database[0].serial_number,
-      quantity: props.quantity,
-      category_name: database[0].category_name,
-      data: props.deviceInfo.map((item) => item.serial_number),
-    });
-    await createDeviceRecordInNoSQLDatabase(props);
+    try {
+      console.log("createDeviceInEvent", props);
+      let database = [...props.deviceInfo];
+      console.log("createDeviceInEvent", database);
+      const event_id = event.sql.event_id;
+      await devitrakApi.post("/db_event/event_device", {
+        event_id: event_id,
+        item_group: database[0].item_group,
+        startingNumber: database[0].serial_number,
+        quantity: props.quantity,
+        company_id: user.sqlInfo.company_id,
+        category_name: database[0].category_name,
+        data: props.deviceInfo.map((item) => item.serial_number),
+      });
+      await devitrakApi.post("/db_item/item-out-warehouse", {
+        warehouse: false,
+        company_id: user.sqlInfo.company_id,
+        item_group: database[0].item_group,
+        startingNumber: database[0].serial_number,
+        quantity: props.quantity,
+        category_name: database[0].category_name,
+        data: props.deviceInfo.map((item) => item.serial_number),
+      });
+      console.log("createDeviceInEvent", props);
+      await createDeviceRecordInNoSQLDatabase(props);
+    } catch (error) {
+      console.log(props);
+      console.log("createDeviceInEvent", error);
+    }
   };
 
   const handleDevicesInEvent = async () => {
