@@ -117,8 +117,8 @@ const ReviewAndSubmitEvent = () => {
           data.endingNumber
         }`,
         consumerUses: data.consumerUses, //change this to false to force company to set device for consumer and others to set device for staff
-        startingNumber: "000000", //data.startingNumber
-        endingNumber: "000000", //data.endingNumber,
+        startingNumber: null, //data.startingNumber
+        endingNumber: null, //data.endingNumber,
         existing: data.existing,
       });
     }
