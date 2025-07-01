@@ -103,16 +103,15 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
                 paddingTop={"8px"}
                 style={{ ...Subtitle, textWrap: "nowrap", width: "100%" }}
               >
-                {props.startingNumber}
-                &nbsp;-&nbsp;
-                {props.endingNumber}
+                {props.startingNumber !== null && `${props.startingNumber} - ` }
+                {props.endingNumber !== null && props.endingNumber}
               </Typography>
               <Button
                 style={{
                   ...BlueButton,
                   display:
-                    props.startingNumber !== "000000" &&
-                    props.endingNumber !== "00000"
+                    props.startingNumber !== null &&
+                    props.endingNumber !== null
                       ? "none"
                       : "flex",
                   width: "100%",
