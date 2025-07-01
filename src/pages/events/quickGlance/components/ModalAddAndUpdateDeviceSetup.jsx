@@ -332,8 +332,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
       return gettingItemsInContainer;
     } catch (error) {
-      console.log("gettingItemsInContainer", error);
+      console.log(props);
       message.error("Failed to get items in container. Please try again.");
+      return null;
     }
   };
 
@@ -411,7 +412,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       return null;
     } catch (error) {
       console.log("checkIfContainer", error);
-      message.error("Failed to get items in container. Please try again.");
+      message.error(
+        "Failed to extract containers items info. Please try again."
+      );
     }
   };
 
@@ -464,7 +467,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       await checkIfContainer(data);
     } catch (error) {
       console.log("createDeviceRecordInNoSQLDatabase", error);
-      message.error("Failed to add device. Please try again.");
+      message.error(
+        "Failed to add device to NoSQL database. Please try again."
+      );
     }
   };
 
@@ -493,10 +498,24 @@ const ModalAddAndUpdateDeviceSetup = ({
       await createDeviceRecordInNoSQLDatabase(props);
     } catch (error) {
       console.log("createDeviceInEvent", error);
-      message.error("Failed to add device. Please try again.");
+      message.error("Failed to add device to event. Please try again.");
     }
   };
 
+  const updateGlobalState = async () => {
+    const latestUpdatedInventoryEvent = await devitrakApi.post(
+      "/event/event-list",
+      {
+        _id: event.id,
+      }
+    );
+    dispatch(
+      onAddEventData({
+        ...event,
+        deviceSetup: latestUpdatedInventoryEvent.data.list[0].deviceSetup,
+      })
+    );
+  };
   const handleDevicesInEvent = async () => {
     if (listOfLocations.length === 0) return;
 
@@ -517,6 +536,7 @@ const ModalAddAndUpdateDeviceSetup = ({
           message.warning("Device not found");
         }
       }
+      await updateGlobalState();
       await clearCacheMemory(
         `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
       );
