@@ -327,29 +327,24 @@ const ModalAddAndUpdateDeviceSetup = ({
 
   const gettingItemsInContainer = async (props) => {
     try {
-      console.log("gettingItemsInContainer", props);
       const gettingItemsInContainer = await devitrakApi.get(
         `/db_inventory/container-items/${props.item_id}`
       );
       return gettingItemsInContainer;
     } catch (error) {
-      console.log(props);
       console.log("gettingItemsInContainer", error);
+      message.error("Failed to get items in container. Please try again.");
     }
   };
 
   const extractContainersItemsInfo = async (containerSetup) => {
     try {
-      console.log("extractContainersItemsInfo", containerSetup);
       const itemsInContainer = await gettingItemsInContainer(containerSetup);
-      console.log("extractContainersItemsInfo", itemsInContainer);
       if (itemsInContainer.data.container.items.length > 0) {
         const sortedItems = itemsInContainer.data.container.items.sort((a, b) =>
           a.serial_number.localeCompare(b.serial_number)
         );
-        console.log("extractContainersItemsInfo", sortedItems);
         let database = [...sortedItems];
-        console.log("extractContainersItemsInfo", database);
         const event_id = event.sql.event_id;
         await devitrakApi.post("/db_event/event_device", {
           event_id: event_id,
@@ -399,27 +394,24 @@ const ModalAddAndUpdateDeviceSetup = ({
         return null;
       }
     } catch (error) {
-      console.log(containerSetup);
       console.log("extractContainersItemsInfo", error);
+      message.error("Failed to get items in container. Please try again.");
     }
   };
 
   const checkIfContainer = async (props) => {
     try {
-      console.log("checkIfContainer", props);
       const extractingContainers = props.filter((item) => item.container > 0);
-      console.log("checkIfContainer", extractingContainers);
       if (extractingContainers.length > 0) {
         for (const container of extractingContainers) {
           // extract items info from container
-          console.log("checkIfContainer", container);
           await extractContainersItemsInfo(container);
         }
       }
       return null;
     } catch (error) {
-      console.log(props);
       console.log("checkIfContainer", error);
+      message.error("Failed to get items in container. Please try again.");
     }
   };
 
@@ -429,8 +421,10 @@ const ModalAddAndUpdateDeviceSetup = ({
         device: props,
       });
     } catch (error) {
-      console.log(props);
       console.log("updateDeviceSetupInEvent", error);
+      message.error(
+        "Failed to update device setup in event. Please try again."
+      );
     }
   };
 
@@ -441,19 +435,10 @@ const ModalAddAndUpdateDeviceSetup = ({
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
       });
-      console.log(
-        "checkInsertedDataAndUpdateInventoryEvent",
-        checking.data.receiversInventory
-      );
       if (checking.data.receiversInventory.length > 0) {
-        console.log(
-          "checkInsertedDataAndUpdateInventoryEvent",
-          checking.data.receiversInventory
-        );
         await updateDeviceSetupInEvent(checking.data.receiversInventory);
       }
     } catch (error) {
-      console.log(props);
       console.log("checkInsertedDataAndUpdateInventoryEvent", error);
       message.error("Failed to add device. Please try again.");
     }
@@ -478,16 +463,14 @@ const ModalAddAndUpdateDeviceSetup = ({
       await checkInsertedDataAndUpdateInventoryEvent(data);
       await checkIfContainer(data);
     } catch (error) {
-      console.log(props);
       console.log("createDeviceRecordInNoSQLDatabase", error);
+      message.error("Failed to add device. Please try again.");
     }
   };
 
   const createDeviceInEvent = async (props) => {
     try {
-      console.log("createDeviceInEvent", props);
       let database = [...props.deviceInfo];
-      console.log("createDeviceInEvent", database);
       const event_id = event.sql.event_id;
       await devitrakApi.post("/db_event/event_device", {
         event_id: event_id,
@@ -507,11 +490,10 @@ const ModalAddAndUpdateDeviceSetup = ({
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
       });
-      console.log("createDeviceInEvent", props);
       await createDeviceRecordInNoSQLDatabase(props);
     } catch (error) {
-      console.log(props);
       console.log("createDeviceInEvent", error);
+      message.error("Failed to add device. Please try again.");
     }
   };
 
