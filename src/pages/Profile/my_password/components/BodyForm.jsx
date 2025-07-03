@@ -70,7 +70,7 @@ const BodyForm = ({
             <Button onClick={() => triggerRoutes()} style={GrayButton}>
               <Typography style={GrayButtonText}>Cancel</Typography>
             </Button>
-            <Button type="submit" style={BlueButton}>
+            <Button htmlType="submit" style={BlueButton}>
               <Typography style={BlueButtonText}>Save and log out</Typography>
             </Button>
           </Grid>
@@ -192,7 +192,7 @@ const BodyForm = ({
           <Button onClick={() => triggerRoutes()} style={GrayButton}>
             <Typography style={GrayButtonText}>Cancel</Typography>
           </Button>
-          <Button type="submit" style={BlueButton}>
+          <Button htmlType="submit" style={BlueButton}>
             <Typography style={BlueButtonText}>Save and log out</Typography>
           </Button>
         </Grid>
