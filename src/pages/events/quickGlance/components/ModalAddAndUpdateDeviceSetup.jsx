@@ -332,7 +332,6 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
       return gettingItemsInContainer;
     } catch (error) {
-      console.log(props);
       message.error("Failed to get items in container. Please try again.");
       return null;
     }
@@ -487,7 +486,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         data: props.deviceInfo.map((item) => item.serial_number),
       });
       await devitrakApi.post("/db_item/item-out-warehouse", {
-        warehouse: false,
+        warehouse: 0,
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,
