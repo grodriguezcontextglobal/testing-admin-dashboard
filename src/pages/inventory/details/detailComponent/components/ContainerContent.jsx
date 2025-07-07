@@ -20,7 +20,7 @@ const ContainerContent = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [itemToContent, setItemToContent] = useState(
-    containerInfo?.container_items ?? []
+    containerItemsContent ?? []
   );
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -149,16 +149,13 @@ const ContainerContent = ({
         optionFilterProp="label"
         optionLabelProp="label"
         virtual={true}
-        maxTagCount={5}
+        maxTagCount={containerItemsContent.length}
         maxTagPlaceholder={(omitted) => `+ ${omitted.length} more selected`}
         showSearch
         allowClear
         options={searchResults.map((item) => ({
           value: item.serial_number,
           label: `${item.serial_number} - ${item.item_group}`,
-          // disabled:
-          //   item.display_item === 0 &&
-          //   String(item.container_id) !== String(searchParams),
           item: item,
         }))}
       />
@@ -166,24 +163,39 @@ const ContainerContent = ({
   };
 
   const handleItemSelection = (selectedSerialNumbers) => {
-    const newItemToContent = selectedSerialNumbers.map((serialNumber) => {
-      const selectedItem = searchResults.find(
-        (item) => item.serial_number === serialNumber
+    // Handle item removal
+    if (selectedSerialNumbers.length < itemToContent.length) {
+      const newItemToContent = itemToContent.filter(item => 
+        selectedSerialNumbers.includes(item.serial_number)
       );
-      return {
-        serial_number: selectedItem.serial_number,
-        ...selectedItem,
-      };
-    });
+      return setItemToContent(newItemToContent);
+    }
 
-    if (newItemToContent.length > containerInfo.containerSpotLimit) {
+    // Handle item addition
+    const newItems = selectedSerialNumbers
+      .filter(serialNumber => !itemToContent.some(item => item.serial_number === serialNumber))
+      .map(serialNumber => {
+        const selectedItem = searchResults.find(
+          item => item.serial_number === serialNumber
+        );
+        return selectedItem ? {
+          serial_number: selectedItem.serial_number,
+          ...selectedItem
+        } : null;
+      })
+      .filter(Boolean);
+
+    const updatedItemToContent = [...itemToContent, ...newItems];
+
+    // Check container limit
+    if (updatedItemToContent.length > containerInfo.containerSpotLimit) {
       message.warning(
         `This container has a limit of ${containerInfo.containerSpotLimit} items. Please remove some items before adding more.`
       );
-      // Keep the previous valid selection
       return;
     }
-    setItemToContent(newItemToContent);
+
+    setItemToContent(updatedItemToContent);
   };
 
   const savingItemsInContainer = async () => {
@@ -192,7 +204,6 @@ const ContainerContent = ({
         await devitrakApi.delete(
           `/db_inventory/container/${containerInfo.item_id}`
         );
-        message;
       }
       const response = await devitrakApi.post(`/db_inventory/container-items`, {
         container_item_id: containerInfo.item_id,
@@ -216,7 +227,7 @@ const ContainerContent = ({
     try {
       setLoading(true);
       const response = await devitrakApi.put(
-        `/db_inventory/container/${containerInfo.container_item_id}`,
+        `/db_inventory/container/${containerInfo.item_id}`,
         {
           child_ids: itemToContent.map((item) => item.item_id),
         }
@@ -229,6 +240,7 @@ const ContainerContent = ({
         queryClient.invalidateQueries({
           queryKey: ["trackingItemActivity"],
         });
+        refetch();
         setOpenModal(false);
       }
     } catch (error) {
@@ -323,13 +335,13 @@ const ContainerContent = ({
             loading={loading}
             style={BlueButton}
             onClick={
-              containerInfo.container_item_id
+              containerItemsContent.length > 0
                 ? updateExistingContent
                 : savingItemsInContainer
             }
           >
             <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-              {containerInfo.container_item_id ? "Update" : "Save"}
+              {containerItemsContent.length > 0 ? "Update" : "Save"}
             </p>
           </Button>{" "}
         </Grid>

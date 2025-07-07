@@ -1,18 +1,19 @@
 import { Chip, Grid, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Card, message, Popconfirm, Space } from "antd";
 import { useEffect, useState } from "react";
+import { devitrakApi } from "../../../../../api/devitrakApi";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
-import ContainerContent from "./ContainerContent";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
-import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useQueryClient } from "@tanstack/react-query";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
+import ContainerContent from "./ContainerContent";
 const ExtraInformation = ({ dataFound, containerInfo }) => {
   const [openModal, setOpenModal] = useState(false);
+  const [trigger, setTrigger] = useState(0);
   const [containerItemsContent, setContainerItemsContent] = useState([]);
   const queryClient = useQueryClient();
   const handleContainerItemsRemoval = async () => {
@@ -40,10 +41,11 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
         `/db_inventory/container-items/${dataFound[0]?.item_id}`
       );
       if (response.data) {
+        setTrigger(trigger + 1);
         return setContainerItemsContent(response.data.container.items);
       }
     } catch (error) {
-      if(error.response.status === 404) return setContainerItemsContent([]);
+      if (error.response.status === 404) return setContainerItemsContent([]);
       return message.error("Something went wrong: " + error.message);
     }
   };
@@ -52,7 +54,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
     if (containerInfo.container > 0) {
       fetchContainerItems();
     }
-  }, []);
+  }, [containerInfo.item_id, trigger < 2]);
 
   return (
     <Grid
