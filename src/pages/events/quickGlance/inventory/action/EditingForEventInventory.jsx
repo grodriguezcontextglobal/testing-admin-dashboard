@@ -235,10 +235,30 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         _id: event.id,
       }
     );
+
+    const checkInv = new Map();
+    for (const [, value] of Object.entries(
+      latestUpdatedInventoryEvent.data.list[0].deviceSetup
+    )) {
+      if (checkInv.has(value.group)) {
+        checkInv.set(value.group, {
+          ...checkInv.get(value.group),
+          quantity:
+            Number(checkInv.get(value.group).quantity) + Number(value.quantity),
+          endingNumber: value.endingNumber,
+        });
+      } else {
+        checkInv.set(value.group, value);
+      }
+    }
+    const finalDeviceUpdated = [...checkInv.values()];
+    await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+      deviceSetup: finalDeviceUpdated,
+    });
     dispatch(
       onAddEventData({
         ...event,
-        deviceSetup: latestUpdatedInventoryEvent.data.list[0].deviceSetup,
+        deviceSetup: finalDeviceUpdated,
       })
     );
   };
@@ -331,7 +351,10 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const extractContainersItemsInfo = async (containerSetup) => {
     try {
       const itemsInContainer = await gettingItemsInContainer(containerSetup);
-      if (itemsInContainer.data.container.items.length > 0) {
+      if (
+        itemsInContainer.data &&
+        itemsInContainer.data.container.items.length > 0
+      ) {
         const sortedItems = itemsInContainer.data.container.items.sort((a, b) =>
           a.serial_number.localeCompare(b.serial_number)
         );
@@ -384,6 +407,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         });
         return null;
       }
+      return message.warning("Container does not have any stored items.");
     } catch (error) {
       console.log("extractContainersItemsInfo", error);
       message.error("Failed to get items in container. Please try again.");
