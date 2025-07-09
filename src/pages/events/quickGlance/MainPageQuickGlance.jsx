@@ -3,7 +3,7 @@ import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Breadcrumb, Divider, Upload, message } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -20,6 +20,9 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 // import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
@@ -36,9 +39,6 @@ import EditingInventory from "./inventory/action/EditingForEventInventory";
 import EditingServiceInEvent from "./inventory/action/components/EditingServiceInEvent";
 import StaffMainPage from "./staff/StaffMainPage";
 import EditingStaff from "./staff/components/EditingStaff";
-import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -76,6 +76,8 @@ const MainPageQuickGlance = () => {
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
     refetchOnMount: false,
+    enabled:!!user.companyData.id,
+    staleTime:10*60*60,
   });
 
   const eventAttendeesParametersQuery = useQuery({
@@ -85,6 +87,8 @@ const MainPageQuickGlance = () => {
         `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
       ),
     refetchOnMount: false,
+    enabled:!!user.companyData.id,
+    staleTime:10*60*60,
   });
 
   const receiversPoolQuery = useQuery({
@@ -94,17 +98,19 @@ const MainPageQuickGlance = () => {
         `/receiver/receiver-pool-list?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`
       ),
     refetchOnMount: false,
+    enabled:!!user.companyData.id,
+    staleTime:10*60*60,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    eventAttendeesQuery.refetch();
-    receiversPoolQuery.refetch();
-    eventAttendeesParametersQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   eventAttendeesQuery.refetch();
+  //   receiversPoolQuery.refetch();
+  //   eventAttendeesParametersQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   if (
     eventAttendeesQuery.isLoading ||
