@@ -108,9 +108,10 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           }
         );
         if (eventInfo.data && eventInfoSqlDB.data) {
-          await clearCacheMemory(`eventSelected=${
-              record.event ?? record.eventSelected
-            }&company=${user.companyData.id}`
+          await clearCacheMemory(
+            `eventSelected=${record.event ?? record.eventSelected}&company=${
+              user.companyData.id
+            }`
           );
           setReturnLoading(false);
           message.success("Device returned successfully");
@@ -140,54 +141,76 @@ const SearchDeviceRef = ({ searchParams, data }) => {
   const handleDeviceSearch = async (record) => {
     try {
       setReturnLoading(true);
-      const transactionFound = checkArray(
-        data.device.deviceTransaction.filter(
-          (item) => item.eventSelected[0] === record.event
-        )
-      );
-      const respTransaction = await devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`
-      );
-      if (respTransaction.data.ok) {
-        let userProfile = {
-          ...respTransaction.data.list[0].consumerInfo,
-          uid:
-            respTransaction.data.list[0].consumerInfo.uid ??
-            respTransaction.data.list[0].consumerInfo.id,
-        };
-        const paymentIntentDetailSelectedProfile = {
-          ...respTransaction.data.list[0],
-          user: userProfile,
-          device: respTransaction.data.list[0].device[0].deviceNeeded,
-        };
-        const eventInfo = await devitrakApi.post("/event/event-list", {
-          company: user.company,
-          "eventInfoDetail.eventName": record.event,
-        });
+      const eventInfo = await devitrakApi.post("/event/event-list", {
+        company: user.company,
+        "eventInfoDetail.eventName": record.event,
+      });
 
-        const eventInfoSqlDB = await devitrakApi.post(
-          "/db_event/events_information",
-          {
-            event_name: record.event,
-            company_assigned_event_id: user.sqlInfo.company_id,
-          }
-        );
-        if (eventInfo.data && eventInfoSqlDB.data) {
-          setReturnLoading(false);
-          await clearCacheMemory(
-            `eventSelected=${record.event}&company=${user.companyData.id}`
-          );
-          await clearCacheMemory(
-            `eventSelected=${record.event}&company=${user.companyData.id}`
-          );
-          afterActionTakenCollectStoreAndNavigate({
-            paymentIntentDetailSelectedProfile,
-            eventInfo: eventInfo.data.list,
-            eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
-            record,
-            eventInventoryQuery: record.data,
-          });
+      const eventInfoSqlDB = await devitrakApi.post(
+        "/db_event/events_information",
+        {
+          event_name: record.event,
+          company_assigned_event_id: user.sqlInfo.company_id,
         }
+      );
+      if (data.device.deviceTransaction.length > 0) {
+        const transactionFound = checkArray(
+          data.device.deviceTransaction.filter(
+            (item) => item.eventSelected[0] === record.event
+          )
+        );
+
+        const respTransaction = await devitrakApi.get(
+          `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`
+        );
+
+        if (respTransaction.data.ok) {
+          let userProfile = {
+            ...respTransaction.data.list[0].consumerInfo,
+            uid:
+              respTransaction.data.list[0].consumerInfo.uid ??
+              respTransaction.data.list[0].consumerInfo.id,
+          };
+          const paymentIntentDetailSelectedProfile = {
+            ...respTransaction.data.list[0],
+            user: userProfile,
+            device: respTransaction.data.list[0].device[0].deviceNeeded,
+          };
+          if (eventInfo.data && eventInfoSqlDB.data) {
+            setReturnLoading(false);
+            await clearCacheMemory(
+              `eventSelected=${record.event}&company=${user.companyData.id}`
+            );
+            await clearCacheMemory(
+              `eventSelected=${record.event}&company=${user.companyData.id}`
+            );
+            afterActionTakenCollectStoreAndNavigate({
+              paymentIntentDetailSelectedProfile,
+              eventInfo: eventInfo.data.list,
+              eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+              record,
+              eventInventoryQuery: record.data,
+            });
+          }
+        }
+      } else {
+        await clearCacheMemory(
+          `eventSelected=${record.event}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${record.event}&company=${user.companyData.id}`
+        );
+        setReturnLoading(false);
+        return afterActionTakenCollectStoreAndNavigate({
+          paymentIntentDetailSelectedProfile: {
+            consumerInfo: null,
+            paymentIntent: null,
+          },
+          eventInfo: eventInfo.data.list,
+          eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+          record,
+          eventInventoryQuery: record.data,
+        });
       }
     } catch (error) {
       message.error(error.message);
@@ -290,7 +313,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           <Grid
             style={{ display: "flex", justifyContent: "flex-end" }}
             container
-            gap={'0.5px'}
+            gap={"0.5px"}
           >
             {data.pool && foundDeviceData.length > 0
               ? foundDeviceData?.map((item) => (
