@@ -48,11 +48,13 @@ const CardDeviceFound = ({
         flexDirection: "column",
         alignItems: "flex-start",
         gap: "20px",
-        height:"100%"
+        width:"100%",
+        aspectRatio: "1/1",
       }}
       styles={{
         body: {
           padding: "5px 20px 20px 20px",
+          width: "100%",
         },
       }}
     >
