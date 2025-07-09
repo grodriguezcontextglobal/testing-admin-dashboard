@@ -5,7 +5,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Modal, Select, Space, Tooltip } from "antd";
 import { sortBy } from "lodash";
 import { PropTypes } from "prop-types";
@@ -37,6 +37,7 @@ const ModalAddAndUpdateDeviceSetup = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const queryClient = useQueryClient();
   const eventInventoryRef = useCallback(
     async ({ device = null, database = null, checking = null }) => {
       const eventInventoryRef = await devitrakApi.post("/event/event-list", {
@@ -109,7 +110,6 @@ const ModalAddAndUpdateDeviceSetup = ({
     },
     []
   );
-
   const { register, handleSubmit, watch, setValue } = useForm();
   const dispatch = useDispatch();
   const closeModal = () => {
@@ -340,7 +340,10 @@ const ModalAddAndUpdateDeviceSetup = ({
   const extractContainersItemsInfo = async (containerSetup) => {
     try {
       const itemsInContainer = await gettingItemsInContainer(containerSetup);
-      if (itemsInContainer.data && itemsInContainer.data.container.items.length > 0) {
+      if (
+        itemsInContainer.data &&
+        itemsInContainer.data.container.items.length > 0
+      ) {
         const sortedItems = itemsInContainer.data.container.items.sort((a, b) =>
           a.serial_number.localeCompare(b.serial_number)
         );
@@ -393,7 +396,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         });
         return null;
       }
-      return message.warning("Container does not have any stored items."); 
+      return message.warning("Container does not have any stored items.");
     } catch (error) {
       console.log("extractContainersItemsInfo", error);
       message.error("Failed to get items in container. Please try again.");
@@ -509,15 +512,16 @@ const ModalAddAndUpdateDeviceSetup = ({
         _id: event.id,
       }
     );
-   
+
     const checkInv = new Map();
-    for (const [ , value] of Object.entries(
+    for (const [, value] of Object.entries(
       latestUpdatedInventoryEvent.data.list[0].deviceSetup
     )) {
       if (checkInv.has(value.group)) {
         checkInv.set(value.group, {
           ...checkInv.get(value.group),
-          quantity: Number(checkInv.get(value.group).quantity) + Number(value.quantity),
+          quantity:
+            Number(checkInv.get(value.group).quantity) + Number(value.quantity),
           endingNumber: value.endingNumber,
         });
       } else {
@@ -563,6 +567,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       await clearCacheMemory(
         `eventSelected=${event.id}&company=${user.companyData.id}`
       );
+      queryClient.invalidateQueries(["listOfreceiverInPool"]);
       closeModal();
     } catch (error) {
       message.error("Failed to add devices to event. Please try again.");
