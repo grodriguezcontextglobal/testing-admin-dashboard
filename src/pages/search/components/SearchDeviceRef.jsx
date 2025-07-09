@@ -108,8 +108,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           }
         );
         if (eventInfo.data && eventInfoSqlDB.data) {
-          await clearCacheMemory(
-            await clearCacheMemory()`eventSelected=${
+          await clearCacheMemory(`eventSelected=${
               record.event ?? record.eventSelected
             }&company=${user.companyData.id}`
           );
@@ -291,11 +290,11 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           <Grid
             style={{ display: "flex", justifyContent: "flex-end" }}
             container
-            gap={1}
+            gap={'0.5px'}
           >
             {data.pool && foundDeviceData.length > 0
               ? foundDeviceData?.map((item) => (
-                  <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
+                  <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
                     <CardDeviceFound
                       key={item.id}
                       props={item}
