@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification, Select, Button } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -116,11 +116,15 @@ const AssignmentFromExistingInventory = () => {
   };
 
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const openNotificationWithIcon = useCallback(
+    (msg) => {
+      api.open({
+        message: msg,
+      });
+    },
+    [api]
+  );
+
   const handleAddingNewItemToInventoryEvent = (data) => {
     setSelectedItem([
       ...selectedItem,
@@ -130,13 +134,14 @@ const AssignmentFromExistingInventory = () => {
     setValue("quantity", 1);
     return null;
   };
+
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: false,
+      warehouse: 0,
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
-      startingNumber: props.startingNumber,
-      quantity: props.quantity,
+      category_name: props.category_name,
+      data: props.data,
     });
   };
 
@@ -178,6 +183,7 @@ const AssignmentFromExistingInventory = () => {
       return null;
     }
   };
+
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const db = props.deviceInfo;
     for (let index = 0; index < db.length; index++) {
@@ -282,6 +288,7 @@ const AssignmentFromExistingInventory = () => {
       },
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       type: "lease",
+      company_id:user.companyData.id
     };
     const newEventInfo = await devitrakApi.post(
       "/event/create-event",
@@ -301,20 +308,12 @@ const AssignmentFromExistingInventory = () => {
 
   const option1 = async (props) => {
     await createEvent(props.template);
-    const indexStart = props.groupingType[
-      valueItemSelected[0]?.item_group
-    ].findIndex((element) => element.serial_number == watch("startingNumber"));
-    const indexEnd = indexStart + Number(watch("quantity"));
-    const data = props.groupingType[valueItemSelected[0]?.item_group]?.slice(
-      indexStart,
-      indexEnd
-    );
-    const deviceInfo = data; //*array of existing devices in sql db
-    if (newEventInfo.insertId) {
+    const deviceInfo = props.selectedData; //*array of existing devices in sql db
+    if (newEventInfo.insertId && deviceInfo.length > 0) {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
-        startingNumber: deviceInfo[0].serial_number,
-        quantity: props.quantity,
+        category_name: deviceInfo[0].category_name,
+        data: [...deviceInfo.map((item) => item.serial_number)],
       });
       await createNewLease({ ...props.template, deviceInfo });
       await createEventNoSQL({
@@ -347,11 +346,24 @@ const AssignmentFromExistingInventory = () => {
     setLoadingStatus(true);
     const groupingType = groupBy(dataFound.current, "item_group");
     if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
-      await option1({
-        groupingType: groupingType,
-        template: template,
-        quantity: watch("quantity"),
-      });
+      const data = groupingType[valueItemSelected[0]?.item_group];
+      if (data.length > 0) {
+        const index = data.findIndex(
+          (item) => item.serial_number === watch("startingNumber")
+        );
+        if (index > -1) {
+          const selectedData = data.slice(
+            index,
+            index + Number(watch("quantity"))
+          );
+          await option1({
+            groupingType: groupingType,
+            template: template,
+            quantity: watch("quantity"),
+            selectedData,
+          });
+        }
+      }
     }
   };
 
