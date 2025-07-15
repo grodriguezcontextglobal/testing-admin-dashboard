@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "../../../../../styles/global/ant-select.css";
-import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
+// import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
+import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
 const Assignment = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const [existingOption, setExistingOption] = useState(true);
@@ -37,7 +38,8 @@ const Assignment = () => {
           {existingOption ? (
             <AssignmentFromExistingInventory />
           ) : (
-            <AssignemntNewDeviceInInventory />
+            // <AssignemntNewDeviceInInventory />
+            <AssignmentNewDeviceToStaffInInventory />
           )}
         </Grid>
       </Modal>
