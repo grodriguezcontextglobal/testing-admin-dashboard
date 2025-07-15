@@ -19,6 +19,7 @@ import {
   stylingComponents,
 } from "../../../../../../../inventory/actions/utils/BulkComponents";
 import { renderFields } from "../utils/Fields";
+import "../../style.css";
 
 const SingleItemForm = ({
   acceptImage,
@@ -481,26 +482,26 @@ const SingleItemForm = ({
             width: "50%",
           }}
         >
-            <Button
+          <Button
             onClick={() => closeModal()}
-              htmlType="reset"
-              disabled={loadingStatus}
+            htmlType="reset"
+            disabled={loadingStatus}
+            style={{
+              ...GrayButton,
+              ...CenteringGrid,
+              width: "100%",
+            }}
+          >
+            <p
               style={{
-                ...GrayButton,
+                ...GrayButtonText,
                 ...CenteringGrid,
-                width: "100%",
+                textTransform: "none",
               }}
             >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
+              Go back
+            </p>
+          </Button>
         </div>
         <div
           style={{
