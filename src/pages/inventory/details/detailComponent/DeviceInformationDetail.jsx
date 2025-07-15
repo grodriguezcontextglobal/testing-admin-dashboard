@@ -5,7 +5,6 @@ import { CardStyle } from "../../../../styles/global/CardStyle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 
 const DeviceInformationDetail = ({ dataFound }) => {
-  console.log(dataFound);
   return (
     <Card
       style={{ ...CardStyle, padding: 0, width: "100%" }}
