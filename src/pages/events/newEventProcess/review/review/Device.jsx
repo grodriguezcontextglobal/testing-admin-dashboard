@@ -1,15 +1,19 @@
 import { Grid, InputLabel } from "@mui/material";
 import { Switch, Table } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import { CheckIcon } from "../../../../../components/icons/CheckIcon";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
   const [dataToRender, setDataToRender] = useState([]);
+  const [container, setContainer] = useState([]);
   const dispatch = useDispatch();
   useEffect(() => {
     const controller = new AbortController();
@@ -36,6 +40,29 @@ const Device = () => {
       consumerUses: !copyData[data].consumerUses,
     };
     dispatch(onAddDeviceSetup(copyData));
+    return setDataToRender(copyData);
+  };
+
+  const updateGlobalStore = useCallback((data) => {
+    return dispatch(onAddDeviceSetup(data));
+  }, []);
+  const updateContainerFeatures = (data) => {
+    let copyData = [...dataToRender];
+    if (container.some((element) => element === data)) {
+      copyData[data] = {
+        ...copyData[data],
+        isItSetAsContainerForEvent: false,
+      };
+      setContainer(container.filter((element) => element !== data));
+    } else {
+      copyData[data] = {
+        ...copyData[data],
+        isItSetAsContainerForEvent: true,
+      };
+      setContainer([...container, data]);
+    }
+    // dispatch(onAddDeviceSetup(copyData));
+    updateGlobalStore(copyData);
     return setDataToRender(copyData);
   };
 
@@ -79,7 +106,14 @@ const Device = () => {
     {
       title: "Action",
       render: (text, record, index) => (
-        <div style={renderingStyle}>
+        <div
+          style={{
+            ...renderingStyle,
+            display: "flex",
+            alignSelf: "flex-start",
+            gap: "8px",
+          }}
+        >
           <button
             style={{
               margin: 0,
@@ -90,12 +124,26 @@ const Device = () => {
             }}
             onClick={() => updateDeviceFeatures(index)}
           >
-            <p style={GrayButtonText}>For consumers use?</p>
+            <p style={GrayButtonText}>For consumers use? | </p>
             <Switch
               checkedChildren="Consumer"
               unCheckedChildren="Internal"
               defaultChecked={record.consumerUses}
             />
+          </button>
+          &nbsp;
+          <button
+            style={GrayButton}
+            onClick={() => updateContainerFeatures(index)}
+          >
+            <p style={{ ...GrayButtonText, textTransform: "none" }}>
+              Is it a container?&nbsp;{" "}
+              {container.some((element) => element === index) ? (
+                <CheckIcon />
+              ) : (
+               <BorderedCloseIcon />
+              )}
+            </p>
           </button>
         </div>
       ),
@@ -109,6 +157,7 @@ const Device = () => {
       initial
     );
   };
+
   return (
     <Grid
       display={"flex"}
