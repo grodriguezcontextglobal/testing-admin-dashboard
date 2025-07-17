@@ -46,7 +46,8 @@ export const bulkItemInsertAlphanumeric = async ({
       image_url: img_url,
       existing: true,
       consumerUses: false,
-      qty: data.quantity,
+      qty: data.quantity ?? data.qty,
+      quantity: data.quantity ?? data.qty,
     };
     await alphaNumericInsertItemMutation.mutate(template);
     setValue("category_name", "");
@@ -119,7 +120,8 @@ export const bulkItemInsertSequential = async ({
       image_url: img_url,
       existing: true,
       consumerUses: false,
-      qty: data.quantity,
+      qty: data.quantity ?? data.qty,
+      quantity: data.quantity ?? data.qty,
     };
     await sequencialNumbericInsertItemMutation.mutate(template);
     setValue("category_name", "");
