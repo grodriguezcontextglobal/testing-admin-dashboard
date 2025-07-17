@@ -3,16 +3,14 @@ import { Breadcrumb, Divider } from "antd";
 import { Link } from "react-router-dom";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-// import { BlueButton } from "../../../../styles/global/BlueButton";
-// import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-// import { useMediaQuery } from "@uidotdev/usehooks";
+import HeaderInventaryComponent from "../../utils/HeaderInventaryComponent";
+import { useSelector } from "react-redux";
+import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
+import { BlueButton } from "../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 
 const Header = ({ title, category }) => {
-  // const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  // const isMediumDevice = useMediaQuery(
-  //   "only screen and (min-width : 769px) and (max-width : 992px)"
-  // );
-  // const navigate = useNavigate();
+  const { user } = useSelector((state) => state.admin);
 
   const options = [
     {
@@ -43,6 +41,18 @@ const Header = ({ title, category }) => {
         }}
         container
       >
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          {" "}
+          <HeaderInventaryComponent
+            user={user}
+            TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+            LightBlueButton={LightBlueButton}
+            LightBlueButtonText={LightBlueButtonText}
+            BlueButton={BlueButton}
+            BlueButtonText={BlueButtonText}
+          />
+        </Grid>
+        <Divider />
         <Grid
           marginY={0}
           display={"flex"}
@@ -55,30 +65,6 @@ const Header = ({ title, category }) => {
         >
           <Typography style={TextFontSize30LineHeight38}>{category}</Typography>
         </Grid>
-        {/* <Grid
-          textAlign={"right"}
-          display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
-          gap={1}
-          item
-          md={6}
-        >
-          <Button
-            onClick={() =>
-              navigate("/inventory/edit-group", {
-                state: {
-                  deviceName: title,
-                },
-              })
-            }
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <p style={{ ...BlueButtonText, textTransform: "none" }}>
-              Update a group of device
-            </p>
-          </Button>
-        </Grid> */}
       </Grid>
       <Grid
         style={{
