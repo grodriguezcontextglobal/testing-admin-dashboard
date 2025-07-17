@@ -29,6 +29,8 @@ import DownloadingXlslFile from "./actions/DownloadXlsx";
 import FilterOptionsUX from "./utils/filterOptionsUX";
 import GrayButtonText from "../../styles/global/GrayButtonText";
 import { GrayButton } from "../../styles/global/GrayButton";
+import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
+import { CloseIcon } from "../../components/icons/CloseIcon";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -37,6 +39,7 @@ const MainPage = () => {
     category: null,
     value: null,
   });
+  const [params, setParams] = useState(null);
   const [dataFilterOptions, setDataFilterOptions] = useState({
     0: [],
     1: [],
@@ -49,7 +52,7 @@ const MainPage = () => {
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchItem: "...",
     },
@@ -86,7 +89,7 @@ const MainPage = () => {
     0: <Spin indicator={<Loading />} fullscreen={true} />,
     1: (
       <ItemTable
-        searchItem={watch("searchItem")}
+        searchItem={params}
         date={null}
         loadingState={setIsLoadingState}
         companyInventoryExisting={companyHasInventoryQuery.data}
@@ -128,6 +131,9 @@ const MainPage = () => {
     return setRenderingData(false);
   };
 
+  const searchItem = (data) => {
+    return setParams(data.searchItem);
+  };
   return (
     <Suspense
       fallback={
@@ -146,75 +152,14 @@ const MainPage = () => {
         }}
         container
       >
-        <Grid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
-            <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
-              Inventory of {user.company}
-            </p>
-          </Grid>
-          <Grid
-            textAlign={"right"}
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            sx={{ display: { xs: "none", sm: "none", md: "flex", lg: "flex" } }}
-            item
-            md={8}
-            lg={8}
-          >
-            <Link to="/inventory/edit-group">
-              <button style={{ ...LightBlueButton, width: "fit-content" }}>
-                <p
-                  style={{
-                    ...LightBlueButtonText,
-                    textTransform: "none",
-                    gap: "2px",
-                  }}
-                >
-                  <EditIcon
-                    stroke={"var(--blue-dark--800)"}
-                    width={"20"}
-                    height={"18"}
-                  />
-                  &nbsp;Update a group of items
-                </p>
-              </button>
-            </Link>
-            <Link to="/inventory/new-bulk-items">
-              <button style={{ ...BlueButton, width: "fit-content" }}>
-                <WhiteCirclePlusIcon
-                  style={{ height: "21px", margin: "auto" }}
-                />
-                &nbsp;
-                <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                  Add a group of items
-                </p>
-              </button>
-            </Link>
-            <Link to="/inventory/new-item">
-              <button style={{ ...LightBlueButton, width: "fit-content" }}>
-                <RectangleBluePlusIcon />
-                {/* <BluePlusIcon /> */}
-                &nbsp;
-                <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                  Add one item
-                </p>
-              </button>
-            </Link>
-          </Grid>
-        </Grid>
+        <HeaderInventaryComponent
+          user={user}
+          TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+          LightBlueButton={LightBlueButton}
+          LightBlueButtonText={LightBlueButtonText}
+          BlueButton={BlueButton}
+          BlueButtonText={BlueButtonText}
+        />
         <Grid
           gap={1}
           sx={{
@@ -322,18 +267,77 @@ const MainPage = () => {
             </Grid>
           </div>
           <Grid justifyContent={"flex-start"} gap={1} container>
-            <Grid item xs={12} sm={12} md={9} lg={9}>
-              <OutlinedInput
-                {...register("searchItem")}
-                style={OutlinedInputStyle}
-                fullWidth
-                placeholder="Search device here"
-                startAdornment={
-                  <InputAdornment position="start">
-                    <MagnifyIcon />
-                  </InputAdornment>
-                }
-              />
+            <Grid item xs={12} sm={12} md={8} lg={8}>
+              <form
+                style={{ width: "100%" }}
+                id="search-form"
+                onSubmit={handleSubmit(searchItem)}
+              >
+                <OutlinedInput
+                  {...register("searchItem")}
+                  style={OutlinedInputStyle}
+                  fullWidth
+                  placeholder="Search device here"
+                  endAdornment={
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        alignSelf: "flex-start",
+                        gap: "5px",
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        style={{
+                          backgroundColor: "transparent",
+                          margin: 0,
+                          padding: 0,
+                          border: "none",
+                          boxShadow: "-moz-initial",
+                          display: watch("searchItem") === "" ? "none" : "flex",
+                        }}
+                      >
+                        <p
+                          style={{
+                            ...GrayButtonText,
+                            ...GrayButton,
+                            width: GrayButton.width,
+                            padding: "0 12px",
+                          }}
+                        >
+                          Search
+                        </p>
+                      </button>
+                      <button
+                        style={{
+                          backgroundColor: "transparent",
+                          margin: 0,
+                          padding: 0,
+                          border: "none",
+                          boxShadow: "-moz-initial",
+                          display: watch("searchItem") === "" ? "none" : "flex",
+                        }}
+                        onClick={() => {
+                          setValue("searchItem", "");
+                          setParams(null);
+                        }}
+                      >
+                        <p
+                          style={{
+                            ...GrayButtonText,
+                            ...GrayButton,
+                            width: GrayButton.width,
+                            padding: "0 12px",
+                          }}
+                        >
+                          X
+                        </p>
+                      </button>
+                    </div>
+                  }
+                />
+              </form>
             </Grid>
             <Grid
               display={"flex"}
