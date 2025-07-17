@@ -1,23 +1,77 @@
 // TreeNode.jsx
-import { useState } from "react";
-import "../style/viewtree.css";
-import { Button } from "antd";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { Grid, Typography } from "@mui/material";
-import { DownNarrow } from "../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import { Button, message } from "antd";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import "../style/viewtree.css";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import { useQueryClient } from "@tanstack/react-query";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
-const TreeNode = ({ nodeName, nodeData, path }) => {
+const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
+  const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(nodeName);
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   if (!nodeData) return null;
 
   const { total, available, children } = nodeData;
 
   const toggleOpen = () => {
     if (children) setIsOpen(!isOpen);
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedName(nodeName);
+  };
+
+  const handleSave = async () => {
+    try {
+    if (editedName === nodeName) {
+      setIsEditing(false);
+      return;
+    }
+    const locationData = {
+      newName: editedName,
+      path: path,
+      currentIndex: path.length - 1,
+      company_id: user.sqlInfo.company_id,
+    };
+
+    const response = await devitrakApi.post(
+      "/db_inventory/update-location-sub-location",
+      locationData
+    );
+    if (response?.data?.ok) {
+      await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
+      queryClient.invalidateQueries("structuredCompanyInventory");
+      queryClient.invalidateQueries("listOfItemsInStock");
+      queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
+      queryClient.invalidateQueries("RefactoredListInventoryCompany");
+      setIsEditing(false);
+      return message.success(
+        `Location/Sub locations updated successfully. Total: ${
+          response.data.affectedRows ?? 0
+        }`
+      );
+    }
+    } catch (error) {
+      console.error("Error updating location:", error);
+      setEditedName(nodeName);
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedName(nodeName);
+    setIsEditing(false);
   };
 
   const style = {
@@ -31,7 +85,7 @@ const TreeNode = ({ nodeName, nodeData, path }) => {
   };
 
   const navigateToLocation = (location) => {
-    if(location.length === 1){
+    if (location.length === 1) {
       return navigate(`/inventory/location?${encodeURI(location[0])}&search=`);
     } else {
       const subLocationPath = encodeURIComponent(location.slice(1).join(","));
@@ -42,6 +96,7 @@ const TreeNode = ({ nodeName, nodeData, path }) => {
       });
     }
   };
+
   return (
     <div key={nodeName} className="tree-card">
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
@@ -68,7 +123,36 @@ const TreeNode = ({ nodeName, nodeData, path }) => {
               className="tree-title"
             >
               {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
-              {nodeName}
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  style={{
+                    fontSize: "inherit",
+                    lineHeight: "inherit",
+                    width: "auto",
+                    minWidth: "100px",
+                  }}
+                  autoFocus
+                />
+              ) : (
+                editedName
+              )}
+              {isEditing ? (
+                <>
+                  <Button htmlType="button" onClick={handleSave}>
+                    Save
+                  </Button>
+                  <Button htmlType="button" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button htmlType="button" onClick={handleEdit}>
+                  Edit
+                </Button>
+              )}
             </Typography>
           </Button>
           <Button
@@ -93,7 +177,8 @@ const TreeNode = ({ nodeName, nodeData, path }) => {
                 key={childName}
                 nodeName={childName}
                 nodeData={childData}
-                path={[...path, childName]} // extend path
+                path={[...path, childName]}
+                onUpdateLocation={onUpdateLocation}
               />
             ))}
         </div>
