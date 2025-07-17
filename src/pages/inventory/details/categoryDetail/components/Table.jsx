@@ -49,18 +49,24 @@ const TableDeviceCategory = ({ searchItem, referenceData, isLoadingComponent }) 
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const [structuredDataRendering, setStructuredDataRendering] = useState([]);
   useEffect(() => {
-    setStructuredDataRendering(
-      dataStructuringFormat(
-        renderedListItems,
-        groupingByDeviceType,
-        itemsInInventoryQuery
-      )
-    );
+    if (renderedListItems && groupingByDeviceType) {
+      setStructuredDataRendering(
+        dataStructuringFormat(
+          renderedListItems,
+          groupingByDeviceType,
+          itemsInInventoryQuery
+        )
+      );
+    }
   }, [
-    renderedListItems?.length > 0,
+    renderedListItems,  // Only depend on the actual data
     groupingByDeviceType,
-    itemsInInventoryQuery,
+    itemsInInventoryQuery?.data  // Only depend on the query data
   ]);
+
+  // const dataRenderingMemo = useMemo(() => {
+  //   return dataToDisplay(structuredDataRendering, searchItem);
+  // }, [structuredDataRendering, searchItem]);  // Remove isLoadingComponent dependency
 
   const calculatingValue = () => {
     let result = 0;
