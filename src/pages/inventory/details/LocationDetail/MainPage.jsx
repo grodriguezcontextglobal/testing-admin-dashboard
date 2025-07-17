@@ -1,27 +1,29 @@
 import {
-  Button,
   Grid,
   InputAdornment,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
-import { useMediaQuery } from "@uidotdev/usehooks";
 import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link, useLocation } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import HeaderInventaryComponent from "../../utils/HeaderInventaryComponent";
 import CardInfo from "../UX/CardInfo";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
 const MainPage = () => {
+  const { user } = useSelector((state) => state.admin);
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
     totalValue: 0,
@@ -34,11 +36,11 @@ const MainPage = () => {
       searchDevice: location.search.split("&")[1]?.split("=")[1],
     },
   });
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const navigate = useNavigate();
+  // const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  // const isMediumDevice = useMediaQuery(
+  //   "only screen and (min-width : 769px) and (max-width : 992px)"
+  // );
+  // const navigate = useNavigate();
 
   useEffect(() => {
     if (watch("searchDevice") === "undefined") {
@@ -134,6 +136,17 @@ const MainPage = () => {
         }}
         container
       >
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          <HeaderInventaryComponent
+            user={user}
+            TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+            LightBlueButton={LightBlueButton}
+            LightBlueButtonText={LightBlueButtonText}
+            BlueButton={BlueButton}
+            BlueButtonText={BlueButtonText}
+          />
+        </Grid>
+        <Divider />
         <Grid
           style={{
             display: "flex",
@@ -156,7 +169,7 @@ const MainPage = () => {
               Local inventory
             </Typography>
           </Grid>
-          <Grid
+          {/* <Grid
             textAlign={"right"}
             display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
             justifyContent={"flex-end"}
@@ -173,7 +186,7 @@ const MainPage = () => {
                 Update a group of device
               </p>
             </Button>
-          </Grid>
+          </Grid> */}
         </Grid>
         <Grid
           style={{
