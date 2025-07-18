@@ -72,10 +72,12 @@ const AdvanceSearchModal = ({
           return navigate("/inventory/advance_search_result");
         }, 2000);
       } else {
+        setIsLoadingState(false);
         return setDisplayMessage(true);
       }
     } catch (error) {
       setIsLoadingState(false);
+      setDisplayMessage(false);
       return null;
     }
   };
@@ -126,6 +128,7 @@ const AdvanceSearchModal = ({
                 label: item.key,
               })),
             ]}
+            allowClear
           />{" "}
         </div>
         <div style={{ margin: "0.5rem 0 0.25rem" }}>
@@ -151,6 +154,7 @@ const AdvanceSearchModal = ({
                 label: item.key,
               })),
             ]}
+            allowClear
           />{" "}
         </div>
         <div style={{ margin: "0.5rem 0 0.25rem" }}>
@@ -176,6 +180,7 @@ const AdvanceSearchModal = ({
                 label: item.key,
               })),
             ]}
+            allowClear
           />{" "}
         </div>
         <div style={{ margin: "0.5rem 0 0.25rem" }}>
@@ -201,6 +206,7 @@ const AdvanceSearchModal = ({
                 label: item.key,
               })),
             ]}
+            allowClear
           />{" "}
         </div>
         <div style={{ margin: "0.5rem 0 0.25rem" }}>
