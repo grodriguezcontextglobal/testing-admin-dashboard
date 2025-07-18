@@ -331,7 +331,7 @@ const MainPage = () => {
                             padding: "0 12px",
                           }}
                         >
-                          X
+                          Clear
                         </p>
                       </button>
                     </div>
