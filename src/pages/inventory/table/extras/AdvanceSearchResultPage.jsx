@@ -158,7 +158,7 @@ const AdvanceSearchResultPage = () => {
         lg={12}
       >
         <Button onClick={() => handleReturnNavigation()} style={BlueButton}>
-          <p style={BlueButtonText}>Return</p>
+          <p style={BlueButtonText}>Go back</p>
         </Button>{" "}
       </Grid>
       <Divider />
