@@ -2,7 +2,7 @@ import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -210,9 +210,9 @@ const AddNewItem = () => {
     return 6;
   };
 
-  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items
-  );
+  const subLocationsOptions = useMemo(() => retrieveExistingSubLocationsForCompanyInventory(
+    itemsInInventoryQuery?.data?.data?.items, watch("location")
+  ), [watch("location")]);
 
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
