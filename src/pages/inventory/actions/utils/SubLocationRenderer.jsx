@@ -1,13 +1,17 @@
 import { orderBy } from "lodash";
 
-export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
+export const retrieveExistingSubLocationsForCompanyInventory = (props, selectedLocation) => {
   const result = [];
   const trackers = new Set();
 
   if (Array.isArray(props) && props.length > 0) {
-    for (const item of props) {
+    // Filter items by selected location first
+    const locationItems = props.filter(item => item.location === selectedLocation);
+
+    for (const item of locationItems) {
       const subLocations = item.sub_location;
       if (!Array.isArray(subLocations)) continue;
+
       subLocations.forEach((sub_location) => {
         if (
           typeof sub_location !== "string" ||
@@ -23,6 +27,7 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props) => {
       });
     }
   }
+
   const orderedData = orderBy(result, ["value"], ["asc"]);
   return orderedData;
 };
