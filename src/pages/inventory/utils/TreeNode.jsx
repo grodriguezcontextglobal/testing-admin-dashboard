@@ -143,13 +143,13 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                 <>
                   <Button htmlType="button" onClick={handleSave}>
                     Save
-                  </Button>
+                  </Button>&nbsp;
                   <Button htmlType="button" onClick={handleCancel}>
                     Cancel
                   </Button>
                 </>
               ) : (
-                <Button htmlType="button" onClick={handleEdit}>
+                <Button htmlType="button" onClick={handleEdit} style={{marginLeft: "5px"}}>
                   Edit
                 </Button>
               )}
