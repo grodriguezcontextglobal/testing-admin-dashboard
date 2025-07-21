@@ -1,19 +1,22 @@
 import { Grid, InputLabel } from "@mui/material";
-import { Switch, Table } from "antd";
+import { Table } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
+import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
+import { GrayButton } from "../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { CheckIcon } from "../../../../../components/icons/CheckIcon";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
   const [dataToRender, setDataToRender] = useState([]);
   const [container, setContainer] = useState([]);
+  const [checkConsumerUses, setCheckConsumerUses] = useState([]);
   const dispatch = useDispatch();
   useEffect(() => {
     const controller = new AbortController();
@@ -33,19 +36,34 @@ const Device = () => {
     };
   }, []);
 
-  const updateDeviceFeatures = (data) => {
-    let copyData = [...dataToRender];
-    copyData[data] = {
-      ...copyData[data],
-      consumerUses: !copyData[data].consumerUses,
-    };
-    dispatch(onAddDeviceSetup(copyData));
-    return setDataToRender(copyData);
-  };
-
   const updateGlobalStore = useCallback((data) => {
     return dispatch(onAddDeviceSetup(data));
   }, []);
+  const updateDeviceFeatures = (data) => {
+    let copyData = [...dataToRender];
+    // copyData[data] = {
+    //   ...copyData[data],
+    //   consumerUses: !copyData[data].consumerUses,
+    // };
+    if (checkConsumerUses.some((element) => element === data)) {
+      copyData[data] = {
+        ...copyData[data],
+        consumerUses: false,
+      };
+      setCheckConsumerUses(
+        checkConsumerUses.filter((element) => element !== data)
+      );
+    } else {
+      copyData[data] = {
+        ...copyData[data],
+        consumerUses: true,
+      };
+      setCheckConsumerUses([...checkConsumerUses, data]);
+    }
+    updateGlobalStore(copyData);
+    return setDataToRender(copyData);
+  };
+
   const updateContainerFeatures = (data) => {
     let copyData = [...dataToRender];
     if (container.some((element) => element === data)) {
@@ -61,7 +79,6 @@ const Device = () => {
       };
       setContainer([...container, data]);
     }
-    // dispatch(onAddDeviceSetup(copyData));
     updateGlobalStore(copyData);
     return setDataToRender(copyData);
   };
@@ -74,6 +91,41 @@ const Device = () => {
     alignSelf: "stretch",
     fontWeight: 400,
   };
+
+  const buttonStyling = ({ index }) => {
+    const reference = checkConsumerUses.some((element) => element === index);
+    let p = {};
+    let button = {};
+    let fill = null;
+    if (reference) {
+      p = { ...BlueButtonText };
+      button = { ...BlueButton };
+      fill = "#fff";
+    } else {
+      p = { ...GrayButtonText };
+      button = { ...GrayButton };
+      fill = "#000";
+    }
+    return { p, button, fill };
+  };
+
+  const buttonContainerStyling = ({ index }) => {
+    const reference = container.some((element) => element === index);
+    let p = {};
+    let button = {};
+    let fill = null;
+    if (reference) {
+      p = { ...BlueButtonText };
+      button = { ...BlueButton };
+      fill = "#fff";
+    } else {
+      p = { ...GrayButtonText };
+      button = { ...GrayButton };
+      fill = "#000";
+    }
+    return { p, button, fill };
+  };
+
   const columns = [
     {
       title: "Quantity",
@@ -115,33 +167,36 @@ const Device = () => {
           }}
         >
           <button
-            style={{
-              margin: 0,
-              padding: 0,
-              backgroundColor: "transparent",
-              border: "none",
-              outline: "none",
-            }}
+            style={buttonStyling({ index }).button}
             onClick={() => updateDeviceFeatures(index)}
           >
-            <p style={GrayButtonText}>For consumers use? | </p>
-            <Switch
-              checkedChildren="Consumer"
-              unCheckedChildren="Internal"
-              defaultChecked={record.consumerUses}
-            />
+            <p style={buttonStyling({ index }).p}>
+              For consumers use?&nbsp;{" "}
+              {checkConsumerUses.some((element) => element === index) ? (
+                <CheckIcon stroke={buttonStyling({ index }).fill} />
+              ) : (
+                <BorderedCloseIcon fill={buttonStyling({ index }).fill} />
+              )}
+            </p>
           </button>
           &nbsp;
           <button
-            style={GrayButton}
+            style={buttonContainerStyling({ index }).button}
             onClick={() => updateContainerFeatures(index)}
           >
-            <p style={{ ...GrayButtonText, textTransform: "none" }}>
+            <p
+              style={{
+                ...buttonContainerStyling({ index }).p,
+                textTransform: "none",
+              }}
+            >
               Is it a container?&nbsp;{" "}
               {container.some((element) => element === index) ? (
-                <CheckIcon />
+                <CheckIcon stroke={buttonContainerStyling({ index }).fill} />
               ) : (
-               <BorderedCloseIcon />
+                <BorderedCloseIcon
+                  fill={buttonContainerStyling({ index }).fill}
+                />
               )}
             </p>
           </button>
