@@ -1,5 +1,5 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -38,6 +38,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [assignAllDevices, setAssignAllDevices] = useState(false);
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const itemQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
@@ -552,6 +553,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       await clearCacheMemory(
         `eventSelected=${event.id}&company=${user.companyData.id}`
       );
+      queryClient.invalidateQueries(["listOfreceiverInPool"]);
       closeModal();
     } catch (error) {
       message.error("Failed to add devices to event. Please try again.");
