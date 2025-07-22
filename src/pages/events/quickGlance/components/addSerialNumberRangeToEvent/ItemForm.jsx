@@ -134,7 +134,7 @@ const ItemForm = ({
             })}
             style={OutlinedInputStyle}
             placeholder="e.g. 150"
-            inputProps={{ min: 0 }}
+            inputProps={{ min: 1 }}
             type="number" // Better input type for quantities
           />
         </div>
