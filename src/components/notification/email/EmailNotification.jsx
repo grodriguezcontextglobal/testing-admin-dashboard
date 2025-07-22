@@ -1,13 +1,11 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Button, Modal, notification, Input } from "antd";
+import { Input, Modal, notification } from "antd";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { BlueButton } from "../../../styles/global/BlueButton";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { useState } from "react";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 const { TextArea } = Input;
 
 const EmailNotification = ({
@@ -160,21 +158,7 @@ const EmailNotification = ({
                 />
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12}>
-                <Button
-                  htmlType="submit"
-                  loading={loadingState}
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{ ...BlueButtonText, ...CenteringGrid }}
-                  >
-                    Send email
-                  </Typography>
-                </Button>
+                <BlueButtonComponent buttonType="submit" title={"Send email"} loadingState={loadingState} styles={{ width: "100%" }} func={null} />
               </Grid>
             </form>
           </Grid>
