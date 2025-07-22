@@ -2,6 +2,7 @@ import { Chip, Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
@@ -12,8 +13,8 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { renderFields } from "../utils/SingleItemFields";
-import { CheckIcon } from "../../../../components/icons/CheckIcon";
 
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
@@ -510,23 +511,15 @@ const SingleItemForm = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={"Save and exit"}
+            loadingState={loadingStatus}
             disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              <WhiteCirclePlusIcon />
-              &nbsp; Save and exit
-            </p>
-          </Button>
+            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+            icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="submit"
+          />
         </div>
       </div>
     </form>

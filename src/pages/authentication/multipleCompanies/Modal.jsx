@@ -8,14 +8,13 @@ import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import dicRole from "../../../components/general/dicRole";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import {
   clearErrorMessage,
   onAddErrorMessage,
   onLogin,
   onLogout,
 } from "../../../store/slices/adminSlice";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -169,9 +168,9 @@ const ModalMultipleCompanies = ({
                 margin: "0 20px 0 0",
               }}
             >
-              {dataPassed.respo.entire.imageProfile.length > 0 ? (
+              {dataPassed?.respo?.entire?.imageProfile?.length > 0 ? (
                 <img
-                  src={dataPassed.respo.entire.imageProfile}
+                  src={dataPassed?.respo?.entire?.imageProfile}
                   alt="profile"
                   style={{
                     verticalAlign: "middle",
@@ -193,8 +192,8 @@ const ModalMultipleCompanies = ({
                 margin: "0px 0px 10px 0px",
               }}
             >
-              Welcome back, {dataPassed.respo.entire.name}{" "}
-              {dataPassed.respo.entire.lastName}!
+              Welcome back, {dataPassed?.respo?.entire?.name}{" "}
+              {dataPassed?.respo?.entire?.lastName}!
             </h1>
           </div>
           <p
@@ -212,7 +211,7 @@ const ModalMultipleCompanies = ({
             style={{
               ...TextFontSize14LineHeight20,
               textWrap: "pretty",
-              margin:0
+              margin: 0,
             }}
           >
             Because you have access to more than one account using Devitrak, you
@@ -224,7 +223,7 @@ const ModalMultipleCompanies = ({
             ...TextFontSize14LineHeight20,
             fontWeight: 500,
             textWrap: "pretty",
-            margin:"10px 0px 5px"
+            margin: "10px 0px 5px",
           }}
         >
           Companies you have access to:
@@ -318,13 +317,12 @@ const ModalMultipleCompanies = ({
           >
             <p style={GrayButtonText}>Cancel</p>
           </Button>
-          <Button
-            loading={isLoading}
-            onClick={() => loginIntoOneCompanyAccount()}
-            style={{ ...BlueButton, width: "100%", margin: "20px 0px" }}
-          >
-            <p style={BlueButtonText}>Enter account</p>
-          </Button>
+          <BlueButtonComponent
+            loadingState={isLoading}
+            title={"Enter account"}
+            func={loginIntoOneCompanyAccount}
+            styles={{ width: "100%", margin: "20px 0px" }}
+          />
         </div>
 
         {isLoading && <Spin indicator={<Loading />} fullscreen />}

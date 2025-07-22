@@ -22,6 +22,7 @@ import {
 } from "./BulkComponents";
 import { renderFields } from "./BulkItemsFields";
 import { styleUpdateAllItemsButton } from "./EditBulkComponents";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 const EditBulkForm = ({
   acceptImage,
@@ -70,7 +71,7 @@ const EditBulkForm = ({
   valueObject,
   watch,
 }) => {
-    const renderingErrorMessage = (error) => {
+  const renderingErrorMessage = (error) => {
     if (error) {
       return (
         <Typography
@@ -333,9 +334,9 @@ const EditBulkForm = ({
                               variant="outlined"
                               style={{
                                 ...AntSelectorStyle,
-                              border: errors[item.name]
-                                ? "1px solid red"
-                                : "solid 0.3 var(--gray600)",
+                                border: errors[item.name]
+                                  ? "1px solid red"
+                                  : "solid 0.3 var(--gray600)",
                                 fontFamily: "Inter",
                                 fontSize: "14px",
                                 width: "100%",
@@ -550,7 +551,17 @@ const EditBulkForm = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={"Update group"}
+            disabled={loadingStatus}
+            loadingState={loadingStatus}
+            // func={handleSubmit}
+            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+            icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="submit"
+          />
+          {/* <Button
             disabled={loadingStatus}
             loading={loadingStatus}
             htmlType="submit"
@@ -565,7 +576,7 @@ const EditBulkForm = ({
             >
               Update
             </p>
-          </Button>
+          </Button> */}
         </div>
       </div>
     </form>

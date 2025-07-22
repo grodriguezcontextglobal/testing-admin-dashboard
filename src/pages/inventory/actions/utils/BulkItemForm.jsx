@@ -6,6 +6,7 @@ import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
@@ -526,23 +527,15 @@ const BulkItemForm = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={"Save new group of items."}
+            loadingState={loadingStatus}
             disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              <WhiteCirclePlusIcon />
-              &nbsp; Save new item
-            </p>
-          </Button>
+            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+            icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="submit"
+          />
         </div>
       </div>
     </form>
