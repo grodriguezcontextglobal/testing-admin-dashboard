@@ -1,15 +1,13 @@
-import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Button, Modal, notification, Input } from "antd";
+import { Grid, OutlinedInput } from "@mui/material";
+import { Input, Modal, notification } from "antd";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { BlueButton } from "../../../styles/global/BlueButton";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { useState } from "react";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 const { TextArea } = Input;
 const SingleEmailNotification = ({
   customizedEmailNotificationModal,
@@ -126,20 +124,7 @@ const SingleEmailNotification = ({
                 />
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12}>
-                <Button
-                  htmlType="submit"
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{ ...BlueButtonText, ...CenteringGrid }}
-                  >
-                    Send email
-                  </Typography>
-                </Button>
+                <BlueButtonComponent buttonType="submit" title={"Send email"} styles={{ width: "100%" }}/>
               </Grid>
             </form>
           </Grid>
