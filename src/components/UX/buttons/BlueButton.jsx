@@ -1,6 +1,7 @@
 import { Button } from "antd";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../styles/global/BlueButton";
+import "./styles.css"
+// import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+// import { BlueButton } from "../../../styles/global/BlueButton";
 
 const BlueButtonComponent = ({
   disabled = false,
@@ -18,9 +19,10 @@ const BlueButtonComponent = ({
       loading={loadingState}
       htmlType={buttonType}
       onClick={func}
-      style={{ ...BlueButton, ...styles }}
+      style={{ ...styles }}
+      className="blueButton"
     >
-      <p style={{ ...BlueButtonText, ...titleStyles }}>
+      <p className="blueButtonText" style={{ ...titleStyles }}>
         {icon && icon} {title}
       </p>
     </Button>

@@ -360,14 +360,13 @@ const EndEventButton = () => {
           >
             <BlueButtonComponent
               title={"End event"}
+              titleStyles={{
+                width: "100%",
+              }}
               func={null}
+              disabled={!event.active}
               styles={{
                 width: "100%",
-                background: `${
-                  event.active
-                    ? "var(--blue-dark-600)"
-                    : "var(--disabled-blue-button)"
-                }`,
               }}
             />
           </Popconfirm>
