@@ -1,7 +1,7 @@
 export const BlueButton = {
     width: "fit-content",
     display: 'flex',
-    alignItems: 'flex-start',
+    // alignItems: 'flex-start',
     alignSelf: 'stretch',
     borderRadius: '8px',
     border: '1px solid var(--blue-dark-600, #155EEF)',
