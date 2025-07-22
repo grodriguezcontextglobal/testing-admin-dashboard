@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import "./styles.css"
 
-const BlueButtonComponent = ({
+const LightBlueButtonComponent = ({
   disabled = false,
   title,
   styles = {},
@@ -18,13 +18,13 @@ const BlueButtonComponent = ({
       htmlType={buttonType}
       onClick={func}
       style={{ ...styles }}
-      className="blueButton"
+      className="lightBlueButton"
     >
-      <p className="blueButtonText" style={{ ...titleStyles }}>
+      <p className="lightBlueButtonText" style={{ ...titleStyles }}>
         {icon && icon} {title}
       </p>
     </Button>
   );
 };
 
-export default BlueButtonComponent;
+export default LightBlueButtonComponent;
