@@ -10,6 +10,7 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 
 const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
   const { event } = useSelector((state) => state.event);
@@ -184,21 +185,11 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
             item
             xs={10}
           >
-            <Button
-              htmlType="button"
-              onClick={handleEmailNotificationSent}
-              style={{
-                ...BlueButton,
-                width: "100%",
-              }}
-            >
-              <Typography
-                textTransform={"none"}
-                style={{ ...BlueButtonText, ...CenteringGrid }}
-              >
-                Send link
-              </Typography>
-            </Button>
+            <BlueButtonComponent
+              styles={{ width: "100%" }}
+              func={handleEmailNotificationSent}
+              title={"Send link"}
+            />
           </Grid>
         </Grid>
       </Modal>
