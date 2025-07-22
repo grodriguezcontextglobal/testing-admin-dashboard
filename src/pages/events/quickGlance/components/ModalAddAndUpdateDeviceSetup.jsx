@@ -28,6 +28,8 @@ import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import ItemForm from "./addSerialNumberRangeToEvent/ItemForm";
+import ContainerForm from "./addSerialNumberRangeToEvent/containerForm";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -116,6 +118,10 @@ const ModalAddAndUpdateDeviceSetup = ({
     return setOpenModalDeviceSetup(false);
   };
   const eventName = event.eventInfoDetail.eventName;
+  const inventorySetupInfo = event.deviceSetup
+    .filter((element) => element.group === deviceTitle)
+    .at(-1);
+
   const [valueItemSelected, setValueItemSelected] = useState([]);
   const [listOfLocations, setListOfLocations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -283,6 +289,14 @@ const ModalAddAndUpdateDeviceSetup = ({
           ...data,
           location: valueItemSelected?.location,
         });
+        if (!deviceInfoResponse)
+          return message.warning(
+            "There is not available items in the location for the quantity set."
+          );
+        if (deviceInfoResponse.length < Number(data.quantity))
+          return message.warning(
+            `There is not enough items in the location for the quantity set. Current quantity available is ${deviceInfoResponse.length}, current quantity set is ${data.quantity}`
+          );
         const result = [
           ...listOfLocations,
           {
@@ -587,173 +601,84 @@ const ModalAddAndUpdateDeviceSetup = ({
       style={{ zIndex: 30 }}
       destroyOnClose={true} // Important for cleanup
     >
-      <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          padding: 0,
-        }}
-        onSubmit={handleSubmit(addingDeviceFromLocations)}
-      >
-        <Typography style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-          Enter serial number range for <strong>{deviceTitle}</strong> to assign
-          to this event.
-        </Typography>
-        <div style={{ margin: "0px auto 1rem", width: "100%" }}>
-          <Select
-            className="custom-autocomplete"
-            showSearch
-            placeholder="Search item to add to inventory."
-            optionFilterProp="children"
-            style={{ ...AntSelectorStyle, width: "100%" }}
-            onChange={onChange}
-            options={selectOptions}
-            loading={itemQuery.isLoading}
-            virtual={true} // Enable virtual scrolling for better performance
-            filterOption={(input, option) => {
-              return option.key.toLowerCase().includes(input.toLowerCase());
-            }}
-            getPopupContainer={(triggerNode) => triggerNode.parentNode}
-          />
-        </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            textAlign: "left",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "left",
-              width: "100%",
-              margin: "0.5rem 0",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-              >
-                <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
-                  Starting from serial number <QuestionIcon />
-                </Tooltip>
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("serial_number")}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 154580"
-              endAdornment={
-                <InputAdornment position="end">
-                  <span>
-                    {checkIfSerialNumberExists() ? (
-                      <CheckIcon />
-                    ) : (
-                      <BorderedCloseIcon />
-                    )}
-                  </span>
-                </InputAdornment>
-              }
-            />
-          </div>
-          <div
-            style={{
-              textAlign: "left",
-              width: "100%",
-              margin: "0.5rem 0",
-            }}
-          >
-            <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-              >
-                Qty of devices from {valueItemSelected[0]?.location}
-              </Typography>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("quantity")}
-              style={OutlinedInputStyle}
-              placeholder="e.g. 150"
-              type="number" // Better input type for quantities
-            />
-          </div>
-        </div>
-        <span style={{ width: "100%", textAlign: "right" }}>
-          <p style={Subtitle}>
-            series starts: {valueItemSelected?.start} - series ends:{" "}
-            {valueItemSelected?.end}
-          </p>
-        </span>
-
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            margin: "0.5rem 0",
-            gap: "5px",
-          }}
-        >
-          <Space size={[8, 16]} wrap>
-            {listOfLocations.map((item, index) => (
-              <Chip
-                key={`${item.startingNumber}-${index}`}
-                label={`${item.location || "Unknown"} - ${item.quantity}`}
-                onDelete={() => removeItem(index)}
-              />
-            ))}
-          </Space>
-        </div>
-        <div
-          style={{
-            textAlign: "left",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
-        >
-          <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{
-                ...Subtitle,
-                color: "transparent",
-                fontWeight: 500,
-                textWrap: "pretty",
-              }}
-            >
-              Qty of devices from {valueItemSelected[0]?.location}
-            </Typography>
-          </InputLabel>
-          <button
-            disabled={blockingButton}
-            type="submit"
-            style={{
-              ...LightBlueButton,
-              ...CenteringGrid,
-              display: blockingButton ? "none" : "flex",
-              width: "100%",
-            }}
-          >
-            <Typography textTransform="none" style={LightBlueButtonText}>
-              <RectangleBluePlusIcon />
-              &nbsp; Add qty from location
-            </Typography>
-          </button>
-        </div>
-      </form>
+      {inventorySetupInfo.isItSetAsContainerForEvent ? (
+        <ContainerForm
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BlueButton={BlueButton}
+          BlueButtonText={BlueButtonText}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CenteringGrid={CenteringGrid}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          deviceTitle={deviceTitle}
+          gettingData={fullDetailForSelectedData}
+          handleDevicesInEvent={handleDevicesInEvent}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          LightBlueButton={LightBlueButton}
+          LightBlueButtonText={LightBlueButtonText}
+          listOfLocations={listOfLocations}
+          onChange={onChange}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          setListOfLocations={setListOfLocations}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+        />
+      ) : (
+        <ItemForm
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BlueButtonText={BlueButtonText}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CenteringGrid={CenteringGrid}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          deviceTitle={deviceTitle}
+          disablingButton={disablingButton}
+          existingDevice={existingDevice}
+          handleDevicesInEvent={handleDevicesInEvent}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          LightBlueButton={LightBlueButton}
+          LightBlueButtonText={LightBlueButtonText}
+          listOfLocations={listOfLocations}
+          loading={loading}
+          onChange={onChange}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          quantity={quantity}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+        />
+      )}
       <Button
         disabled={existingDevice.length === Number(quantity)}
         loading={loading}
@@ -766,7 +691,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         }}
       >
         <Typography textTransform={"none"} style={BlueButtonText}>
-          Add devices to this event.
+          Add&nbsp; <strong>{deviceTitle}</strong> &nbsp;to this event.
         </Typography>
       </Button>
     </Modal>
