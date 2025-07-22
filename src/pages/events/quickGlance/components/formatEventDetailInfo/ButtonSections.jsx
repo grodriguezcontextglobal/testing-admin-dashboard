@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card } from "antd";
+import { Card } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,9 +9,8 @@ import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import FeedbackModal from "../FeedbackModal";
 const EmailNotification = lazy(() =>
@@ -216,54 +215,26 @@ const ButtonSections = () => {
                 md={12}
                 lg={12}
               >
-                <Button
+                <GrayButtonComponent
+                  icon={!item.disableStatus && item.icon}
                   disabled={item.disableStatus}
-                  onClick={() => item.fn()}
-                  style={
-                    item.disableStatus
-                      ? {
-                          ...GrayButton,
-                          width: "100%",
-                          backgroundColor: "var(--disabled-blue-button)",
-                          border: "transparent",
-                        }
-                      : { ...GrayButton, width: "100%" }
-                  }
-                >
-                  {" "}
-                  <p
-                    style={
-                      item.disableStatus
-                        ? {
-                            ...GrayButtonText,
-                            color: "",
-                            textTransform: "none",
-                            textAlign: "left",
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                          }
-                        : {
-                            ...GrayButtonText,
-                            textTransform: "none",
-                            textAlign: "left",
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                          }
-                    }
-                  >
-                    {!item.disableStatus && item.icon}
-                    &nbsp;{item.text}
-                  </p>
-                </Button>
+                  func={() => item.fn()}
+                  title={item.text}
+                  styles={{ width: "100%" }}
+                  titleStyles={{
+                    textTransform: "none",
+                    textAlign: "left",
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                  }}
+                />
               </Grid>
             );
           })}
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <SpreadSheet />
           </Grid>
-          {/* <Grid display={`${(!event.active && user.role !== 'Administrator') && "none"}`} item xs={12} sm={12} md={12} lg={12}> */}
           <Grid
             display={`${
               (!event.active ||
