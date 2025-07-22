@@ -1,16 +1,30 @@
-import { styled } from "@mui/material";
+import { Button } from "antd";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import { BlueButton } from "../../../styles/global/BlueButton";
 
-const BlueButton = styled('button')({
-  display: "flex",
-  padding: "10px 18px",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: "8px",
-  borderRadius: "8px",
-  border: "1px solid var(--blue-dark-600)",
-  background: "var(--blue-dark-600)",
-  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-  cursor: "pointer"
-});
+const BlueButtonComponent = ({
+  disabled = false,
+  title,
+  styles = {},
+  buttonType = "button",
+  func = null,
+  icon = null,
+  loadingState = false,
+  titleStyles = {},
+}) => {
+  return (
+    <Button
+      disabled={disabled}
+      loading={loadingState}
+      htmlType={buttonType}
+      onClick={func}
+      style={{ ...BlueButton, ...styles }}
+    >
+      <p style={{ ...BlueButtonText, ...titleStyles }}>
+        {icon && icon} {title}
+      </p>
+    </Button>
+  );
+};
 
-export default BlueButton;
+export default BlueButtonComponent;
