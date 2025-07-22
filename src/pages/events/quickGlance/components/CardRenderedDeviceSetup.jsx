@@ -1,10 +1,9 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Card, Switch, Tooltip } from "antd";
+import { Card, Switch, Tooltip } from "antd";
 import { lazy, Suspense, useState } from "react";
 import Loading from "../../../../components/animation/Loading";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
@@ -103,25 +102,20 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
                 paddingTop={"8px"}
                 style={{ ...Subtitle, textWrap: "nowrap", width: "100%" }}
               >
-                {props.startingNumber !== null && `${props.startingNumber} - ` }
+                {props.startingNumber !== null && `${props.startingNumber} - `}
                 {props.endingNumber !== null && props.endingNumber}
               </Typography>
-              <Button
-                style={{
-                  ...BlueButton,
+              <BlueButtonComponent
+                title={"Allocate serial number range for this device type"}
+                func={() => handleOpenModal()}
+                styles={{
                   display:
-                    props.startingNumber !== null &&
-                    props.endingNumber !== null
+                    props.startingNumber !== null && props.endingNumber !== null
                       ? "none"
                       : "flex",
                   width: "100%",
                 }}
-                onClick={() => handleOpenModal()}
-              >
-                <p style={{ ...BlueButtonText }}>
-                  Allocate serial number range for this device type
-                </p>
-              </Button>
+              />
             </Grid>
           </Grid>
         </Card>

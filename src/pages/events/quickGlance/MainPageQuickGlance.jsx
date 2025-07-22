@@ -14,13 +14,12 @@ import BannerNotificationTemplate from "../../../components/notification/alerts/
 import { checkArray } from "../../../components/utils/checkArray";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { onAddEventData } from "../../../store/slices/eventSlice";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 // import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
@@ -76,8 +75,8 @@ const MainPageQuickGlance = () => {
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
     refetchOnMount: false,
-    enabled:!!user.companyData.id,
-    staleTime:10*60*60,
+    enabled: !!user.companyData.id,
+    staleTime: 10 * 60 * 60,
   });
 
   const eventAttendeesParametersQuery = useQuery({
@@ -87,8 +86,8 @@ const MainPageQuickGlance = () => {
         `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
       ),
     refetchOnMount: false,
-    enabled:!!user.companyData.id,
-    staleTime:10*60*60,
+    enabled: !!user.companyData.id,
+    staleTime: 10 * 60 * 60,
   });
 
   const receiversPoolQuery = useQuery({
@@ -98,19 +97,9 @@ const MainPageQuickGlance = () => {
         `/receiver/receiver-pool-list?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`
       ),
     refetchOnMount: false,
-    enabled:!!user.companyData.id,
-    staleTime:10*60*60,
+    enabled: !!user.companyData.id,
+    staleTime: 10 * 60 * 60,
   });
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   eventAttendeesQuery.refetch();
-  //   receiversPoolQuery.refetch();
-  //   eventAttendeesParametersQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
 
   if (
     eventAttendeesQuery.isLoading ||
@@ -253,10 +242,7 @@ const MainPageQuickGlance = () => {
           event.id,
           ""
         );
-        // const imageDataFormat = {
-        //   imageFile: imageUrl,
-        //   imageID: event.id,
-        // };
+
         const responseCloudinary = await devitrakApi.post(
           "/cloudinary/upload-image",
           imageDataFormat.event_uploader()
@@ -308,7 +294,7 @@ const MainPageQuickGlance = () => {
       },
       { title: <p style={TextFontsize18LineHeight28}>{choice}</p> },
     ];
-    
+
     return (
       <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container>
         {notificationStatus && event.active && (
@@ -336,36 +322,24 @@ const MainPageQuickGlance = () => {
           {checkStaffRoleToDisplayCashReportInfo() && (
             // /event/new_subscription
             <Link to="/create-event-page/event-detail">
-              <button
-                style={{
-                  ...BlueButton,
-                  width: "100%",
-                  margin: "0rem auto 1rem",
-                }}
-              >
-                <WhitePlusIcon />
-                <p style={BlueButtonText}>
-                  <WhiteCirclePlusIcon />
-                  &nbsp;Add new event
-                </p>
-              </button>
+              <BlueButtonComponent
+                icon={<WhitePlusIcon />}
+                title={"Add new event"}
+                func={null}
+                styles={{ width: "100%", margin: "0rem auto 1rem" }}
+              />
             </Link>
           )}
-          <button
+          <BlueButtonComponent
+            func={() => setCreateUserButton(true)}
             disabled={!event.active}
-            onClick={() => setCreateUserButton(true)}
-            style={{
-              ...BlueButton,
+            styles={{
               border: "1px solid var(--gray-300, #D0D5DD)",
               width: "100%",
             }}
-          >
-            <PlusIcon />
-            &nbsp;
-            <p style={{ ...BlueButtonText, textTransform: "none" }}>
-              Add new consumer
-            </p>
-          </button>
+            title={"Add new consumer"}
+            icon={<PlusIcon />}
+          />
         </Grid>
         <Grid
           style={{
@@ -408,28 +382,10 @@ const MainPageQuickGlance = () => {
             {checkStaffRoleToDisplayCashReportInfo() && (
               // /event/new_subscription
               <Link to="/create-event-page/event-detail">
-                <button style={BlueButton}>
-                  <span style={{ ...CenteringGrid, alignSelf: "stretch" }}>
-                    <WhitePlusIcon />
-                  </span>
-                  {/* &nbsp; */}
-                  <p style={BlueButtonText}>
-                    <WhiteCirclePlusIcon />
-                    &nbsp;Add new event
-                  </p>
-                </button>
+                <BlueButtonComponent icon={<WhitePlusIcon />} title={"Add new event"} func={null} styles={{ alignSelf: "stretch"  }} />
               </Link>
             )}
-            <button
-              onClick={() => setCreateUserButton(true)}
-              style={{
-                ...BlueButton,
-              }}
-            >
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                Add new consumer
-              </p>
-            </button>
+            <BlueButtonComponent func={() => setCreateUserButton(true)} title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} />
           </Grid>
         </Grid>
         <Grid
@@ -456,25 +412,6 @@ const MainPageQuickGlance = () => {
               lg={12}
             >
               <Breadcrumb separator=">" items={breadcrumbItems} />
-              {/* <Link to="/events">
-                <p
-                  style={{
-                    textTransform: "none",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    fontSize: "18px",
-                    fontFamily: "Inter",
-                    lineHeight: "28px",
-                    color: "var(--blue-dark-600, #155EEF)",
-                  }}
-                >
-                  All events
-                </p>
-              </Link> */}
-              {/* <p style={TextFontsize18LineHeight28}>
-                <Icon icon="mingcute:right-line" />
-                {choice}
-              </p> */}
             </Grid>
             <Grid
               style={{
@@ -685,18 +622,16 @@ const MainPageQuickGlance = () => {
               </p>
             </div>
           </p>
-          <button
-            onClick={() => setCreateUserButton(true)}
-            style={{
-              ...BlueButton,
+          <BlueButtonComponent
+            func={() => setCreateUserButton(true)}
+            styles={{
               width: "fit-content",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
-          >
-            <p style={BlueButtonText}>Add new consumer</p>
-          </button>
+            title={"Add new consumer"}
+          />
         </Grid>
         <CustomerInformationSection
           foundAttendeesPerEvent={foundAttendeesPerEvent}
@@ -757,18 +692,16 @@ const MainPageQuickGlance = () => {
               </p>
             </div>
           </p>
-          <button
-            onClick={() => setEditingStaff(true)}
-            style={{
-              ...BlueButton,
+          <BlueButtonComponent
+            func={() => setEditingStaff(true)}
+            styles={{
               width: "fit-content",
               display: user.role === "4" ? "none" : "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
-          >
-            <p style={BlueButtonText}>Update staff</p>
-          </button>
+            title={"Update staff"}
+          />
         </Grid>
         <StaffMainPage />
         {editingInventory && (

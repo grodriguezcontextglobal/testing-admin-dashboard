@@ -1,14 +1,13 @@
 import { Grid } from "@mui/material";
-import { Title } from "../../../../styles/global/Title";
-import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { useState } from "react";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
+import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { Title } from "../../../../styles/global/Title";
+import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
 import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
-import { useState } from "react";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -108,33 +107,28 @@ const AllInventoryEventForCustomerOnly = ({
           >
             <p style={{ ...GrayButtonText }}>Documents (legal contracts)</p>
           </button>
-          <button
-            onClick={() => setEditingServiceInEvent(true)}
-            style={{
-              ...BlueButton,
+          <BlueButtonComponent
+            func={() => setEditingServiceInEvent(true)}
+            styles={{
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
               display: user.role === "4" ? "none" : "flex",
-              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
+              margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
-          >
-            <p style={{ ...BlueButtonText }}>Update services</p>
-          </button>
-
-          <button
-            onClick={() => setEditingInventory(true)}
-            style={{
-              ...BlueButton,
+            title={"Update services"}
+          />
+          <BlueButtonComponent
+            func={() => setEditingInventory(true)}
+            styles={{
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
               display: user.role === "4" ? "none" : "flex",
-              margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
+              margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
-          >
-            <p style={{ ...BlueButtonText }}>Update inventory</p>
-          </button>
+            title={"Update inventory"}
+          />
         </div>
       </Grid>
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>

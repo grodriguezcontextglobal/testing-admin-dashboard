@@ -6,13 +6,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Modal, Select, Space, Tooltip } from "antd";
+import { message, Modal, Select, Space, Tooltip } from "antd";
 import { sortBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { BorderedCloseIcon } from "../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
@@ -679,21 +680,18 @@ const ModalAddAndUpdateDeviceSetup = ({
           valueItemSelected={valueItemSelected}
         />
       )}
-      <Button
+      <BlueButtonComponent
+        title={`Add ${deviceTitle} to this event.`}
+        func={handleDevicesInEvent}
         disabled={existingDevice.length === Number(quantity)}
-        loading={loading}
-        onClick={handleDevicesInEvent}
-        style={{
+        loadingState={loading}
+        styles={{
           ...disablingButton,
           ...CenteringGrid,
           display: blockingButton ? "flex" : "none",
           width: "100%",
         }}
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          Add&nbsp; <strong>{deviceTitle}</strong> &nbsp;to this event.
-        </Typography>
-      </Button>
+      />
     </Modal>
   );
 };

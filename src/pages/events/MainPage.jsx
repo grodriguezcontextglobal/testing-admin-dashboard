@@ -1,4 +1,4 @@
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect } from "react";
@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
   onAddContactInfo,
@@ -16,8 +17,6 @@ import {
   onAddEventStaff,
   onAddListEventPermitPerAdmin,
 } from "../../store/slices/eventSlice";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
@@ -222,8 +221,9 @@ const MainPage = () => {
                   width: "100%",
                 }}
               >
-                <Button
-                  onClick={() =>
+                <BlueButtonComponent
+                  title={"Add new event"}
+                  func={() =>
                     dispatch(
                       dispatch(
                         onAddCompanyAccountStripe(
@@ -233,13 +233,9 @@ const MainPage = () => {
                       )
                     )
                   }
-                  style={{ ...BlueButton, width: "100%" }}
-                >
-                  <Typography style={BlueButtonText}>
-                    <WhiteCirclePlusIcon />
-                    &nbsp;Add new event
-                  </Typography>
-                </Button>
+                  icon={<WhiteCirclePlusIcon />}
+                  styles={{ width: "100%" }}
+                />
               </Link>
             </Grid>
             <Grid
@@ -262,8 +258,9 @@ const MainPage = () => {
               {/* /event/new_subscription */}
               <Link to="/create-event-page/event-detail">
                 {" "}
-                <Button
-                  onClick={() =>
+                <BlueButtonComponent
+                  title={"Add new event"}
+                  func={() =>
                     dispatch(
                       dispatch(
                         onAddCompanyAccountStripe(
@@ -273,16 +270,9 @@ const MainPage = () => {
                       )
                     )
                   }
-                  style={{
-                    ...BlueButton,
-                    display: user.role === "4" && "none",
-                  }}
-                >
-                  <Typography style={BlueButtonText}>
-                    <WhiteCirclePlusIcon />
-                    &nbsp;Add new event
-                  </Typography>
-                </Button>
+                  icon={<WhiteCirclePlusIcon />}
+                  styles={{ width: "100%" }}
+                />
               </Link>
             </Grid>
           </Grid>

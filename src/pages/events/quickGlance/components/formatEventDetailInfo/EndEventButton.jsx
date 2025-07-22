@@ -1,17 +1,16 @@
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Popconfirm, notification } from "antd";
+import { notification, Popconfirm } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { formatDate } from "../../../../../components/utils/dateFormat";
-import { onAddEventData } from "../../../../../store/slices/eventSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import Loading from "../../../../../components/animation/Loading";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
+import { formatDate } from "../../../../../components/utils/dateFormat";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import { onAddEventData } from "../../../../../store/slices/eventSlice";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const ModalToDisplayFunctionInProgress = lazy(() =>
   import("./endEvent/ModalToDisplayFunctionInProgress")
 );
@@ -162,7 +161,7 @@ const EndEventButton = () => {
     const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
       ?.receiversInventory;
 
-    const dataToIterate =checkTypeFetchResponse(listOfDevicesInEvent);
+    const dataToIterate = checkTypeFetchResponse(listOfDevicesInEvent);
     const groupingDevicesFromNoSQL = groupBy(dataToIterate, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
     const eventId = event.sql.event_id;
@@ -318,8 +317,11 @@ const EndEventButton = () => {
     await addingRecordOfActivityInEvent();
     await inactiveEventAfterEndIt();
     await inactiveTransactionDocuments();
+    // await removingAccessFromStaffMemberOnly();
+    // return await releasingPendingDepositTransaction();
     return await removingAccessFromStaffMemberOnly();
   };
+
   return (
     <Suspense
       fallback={
@@ -356,9 +358,10 @@ const EndEventButton = () => {
             }}
             className="popconfirm-event-end"
           >
-            <Button
-              style={{
-                ...BlueButton,
+            <BlueButtonComponent
+              title={"End event"}
+              func={null}
+              styles={{
                 width: "100%",
                 background: `${
                   event.active
@@ -366,11 +369,7 @@ const EndEventButton = () => {
                     : "var(--disabled-blue-button)"
                 }`,
               }}
-            >
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                &nbsp;End event
-              </Typography>
-            </Button>
+            />
           </Popconfirm>
         </Grid>
       </Grid>

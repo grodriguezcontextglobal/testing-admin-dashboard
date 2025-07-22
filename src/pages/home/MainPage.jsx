@@ -18,6 +18,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Title } from "../../styles/global/Title";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -240,11 +241,7 @@ const MainPage = () => {
             }}
             to="/inventory/new-item"
           >
-            <Button style={BlueButton}>
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Add to inventory
-              </Typography>
-            </Button>
+            <BlueButtonComponent title={"Add to inventory"} func={null} />
           </Link>
           <Link
             to="/create-event-page/event-detail"

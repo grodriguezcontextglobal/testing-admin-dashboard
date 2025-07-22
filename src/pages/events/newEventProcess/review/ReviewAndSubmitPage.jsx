@@ -1,6 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
-import { Button, notification } from "antd";
+import { notification, Spin } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useState } from "react";
 import { useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
 import { checkArray } from "../../../../components/utils/checkArray";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import "./blurring.css";
@@ -107,7 +108,7 @@ const ReviewAndSubmitEvent = () => {
         isItSetAsContainerForEvent: data.isItSetAsContainerForEvent,
         quantity: data.quantity,
         ownership: data.ownership,
-        container:false,
+        container: false,
         createdBy: user.email,
         key: nanoid(),
         dateCreated: new Date().toString(),
@@ -181,28 +182,7 @@ const ReviewAndSubmitEvent = () => {
     await createEventNoSQLDatabase();
     if (respo.data) {
       const newEventId = respo.data.consumer.insertId;
-      // const newEventInfo = await devitrakApi.post(
-      //   "/db_event/consulting-event",
-      //   { event_id: respo.data.consumer.insertId }
-      // );
-      // dispatch(onSelectEvent(eventInfoDetail.eventName));
-      // dispatch(onSelectCompany(user.company));
-      // dispatch(
-      //   onAddEventData({
-      //     ...eventInfoDetail,
-      //     sql: newEventInfo.data.event.at(-1),
-      //   })
-      // );
-      // dispatch(onAddSubscription(subscription));
-      // dispatch(
-      //   onAddQRCodeLink(
-      //     `https://app.devitrak.net/?event=${encodeURI(
-      //       eventInfoDetail.eventName
-      //     )}&company=${encodeURI(user.company)}`
-      //   )
-      // );
       await createStaffInEvent(newEventId);
-      // await createDeviceInEvent(newEventId)//function to be trigger in event quick glance
     }
     return;
   };
@@ -315,20 +295,13 @@ const ReviewAndSubmitEvent = () => {
           <Staff />
           <Device />
           <Service />
-          <Button
-            type="primary"
-            icon={() => Loading}
+          <BlueButtonComponent
+            title={"Create and save"}
+            func={processOfCreatingInformationOfNewEvent}
             disabled={buttonDisable}
-            loading={loadingStatus}
-            onClick={() => processOfCreatingInformationOfNewEvent()}
-            style={{
-              display: "flex",
-              padding: "12px 20px",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "8px",
-              alignSelf: "stretch",
-              borderRadius: "8px",
+            loadingState={loadingStatus}
+            styles={{
+              width: "100%",
               border: `${
                 buttonDisable
                   ? "1px solid var(--base-white, #FFF)"
@@ -339,25 +312,9 @@ const ReviewAndSubmitEvent = () => {
                   ? "var(--base-white, #FFF)"
                   : "var(--blue-dark-600, #155EEF)"
               }`,
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
             }}
-          >
-            <Typography
-              textTransform={"none"}
-              fontFamily={"Inter"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"24px"}
-              color={`${
-                buttonDisable
-                  ? "var(--blue-dark-600, #155EEF)"
-                  : "var(--base-white, #FFF)"
-              }`}
-            >
-              Create and save
-            </Typography>
-          </Button>
+          />
+          {loadingStatus && <Spin indicator={<Loading />} fullscreen />}
         </Grid>
         {loadingStatus && (
           <ModalCreatingEventInProgress openEndingEventModal={loadingStatus} />

@@ -11,6 +11,7 @@ import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSiz
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
@@ -41,10 +42,6 @@ const Device = () => {
   }, []);
   const updateDeviceFeatures = (data) => {
     let copyData = [...dataToRender];
-    // copyData[data] = {
-    //   ...copyData[data],
-    //   consumerUses: !copyData[data].consumerUses,
-    // };
     if (checkConsumerUses.some((element) => element === data)) {
       copyData[data] = {
         ...copyData[data],
@@ -166,40 +163,77 @@ const Device = () => {
             gap: "8px",
           }}
         >
-          <button
-            style={buttonStyling({ index }).button}
-            onClick={() => updateDeviceFeatures(index)}
-          >
-            <p style={buttonStyling({ index }).p}>
-              For consumers use?&nbsp;{" "}
-              {checkConsumerUses.some((element) => element === index) ? (
-                <CheckIcon stroke={buttonStyling({ index }).fill} />
+          <BlueButtonComponent
+            title={"For consumers use?"}
+            func={() => updateDeviceFeatures(index)}
+            styles={buttonStyling({ index }).button}
+            titleStyles={buttonStyling({ index }).p}
+            icon={
+              checkConsumerUses.some((element) => element === index) ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    aspectRatio: "1",
+                    width: "fit-content",
+                    height: "auto",
+                  }}
+                >
+                  <CheckIcon stroke={buttonStyling({ index }).fill} />
+                  &nbsp;
+                </div>
               ) : (
-                <BorderedCloseIcon fill={buttonStyling({ index }).fill} />
-              )}
-            </p>
-          </button>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    aspectRatio: "1",
+                    width: "fit-content",
+                    height: "auto",
+                  }}
+                >
+                  <BorderedCloseIcon fill={buttonStyling({ index }).fill} />
+                  &nbsp;
+                </div>
+              )
+            }
+          />
           &nbsp;
-          <button
-            style={buttonContainerStyling({ index }).button}
-            onClick={() => updateContainerFeatures(index)}
-          >
-            <p
-              style={{
-                ...buttonContainerStyling({ index }).p,
-                textTransform: "none",
-              }}
-            >
-              Is it a container?&nbsp;{" "}
-              {container.some((element) => element === index) ? (
-                <CheckIcon stroke={buttonContainerStyling({ index }).fill} />
+          <BlueButtonComponent
+            title={"Is it a container?"}
+            func={() => updateContainerFeatures(index)}
+            styles={buttonContainerStyling({ index }).button}
+            titleStyles={buttonContainerStyling({ index }).p}
+            icon={
+              container.some((element) => element === index) ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    aspectRatio: "1",
+                    width: "fit-content",
+                    height: "auto",
+                  }}
+                >
+                  <CheckIcon stroke={buttonContainerStyling({ index }).fill} />
+                  &nbsp;
+                </div>
               ) : (
-                <BorderedCloseIcon
-                  fill={buttonContainerStyling({ index }).fill}
-                />
-              )}
-            </p>
-          </button>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    aspectRatio: "1",
+                    width: "fit-content",
+                    height: "auto",
+                  }}
+                >
+                  <BorderedCloseIcon fill={buttonContainerStyling({ index }).fill} />
+                  &nbsp;
+                </div>
+              )
+            }
+          />
         </div>
       ),
     },
