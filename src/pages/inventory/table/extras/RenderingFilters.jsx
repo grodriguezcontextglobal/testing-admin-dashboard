@@ -1,25 +1,25 @@
 import { Grid, OutlinedInput } from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
+import { useDispatch } from "react-redux";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import { DownNarrow } from "../../../../components/icons/DownNarrow";
+import { EditIcon } from "../../../../components/icons/EditIcon";
+import { onLogin } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import AdvanceSearchModal from "./AdvanceSearchModal";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import CardForTreeView from "../../utils/CardForTreeView";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { Button } from "antd";
-import { EditIcon } from "../../../../components/icons/EditIcon";
-import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
-import { useDispatch } from "react-redux";
-import { onLogin } from "../../../../store/slices/adminSlice";
 export const AdvanceSearchContext = createContext();
 function extractDataForRendering(structuredData) {
   const keys = ["category_name", "item_group", "brand", "ownership"];
@@ -59,15 +59,15 @@ const RenderingFilters = ({
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!user.sqlInfo.company_id,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    staleTime: 2 * 60 * 1000,
+    // refetchOnMount: false,
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    structuredCompanyInventory.refetch();
-  }, []);
+  // useEffect(() => {
+  //   structuredCompanyInventory.refetch();
+  // }, []);
 
   const sortingByParameters = (props) => {
     const totalPerLocation = new Map();
