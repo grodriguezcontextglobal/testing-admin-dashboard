@@ -1,20 +1,21 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, message } from "antd";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
-import "../style/viewtree.css";
-import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { useQueryClient } from "@tanstack/react-query";
-import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import "../style/viewtree.css";
 
 const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
+  const [messageApi, contextHolder] = message.useMessage();
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -34,7 +35,6 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
     setIsEditing(true);
     setEditedName(nodeName);
   };
-
   const handleSave = async () => {
     try {
       if (editedName === nodeName) {
@@ -42,6 +42,12 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         return;
       }
       setIsLoading(true);
+      messageApi.open({
+        type: "loading",
+        content: "Updating location path...",
+        duration: 0,
+        key: "updateLocationPath",
+      });
       const locationData = {
         newName: editedName,
         path: path,
@@ -61,11 +67,14 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
         setIsEditing(false);
         setIsLoading(false);
-        return message.success(
-          `Location/Sub locations updated successfully. Total: ${
+        messageApi.destroy("updateLocationPath");
+        return messageApi.open({
+          type: "success",
+          content: `Location/Sub locations updated successfully. Total: ${
             response.data.affectedRows ?? 0
-          }`
-        );
+          }`,
+          duration: 2.5,
+        });
       }
     } catch (error) {
       console.error("Error updating location:", error);
@@ -91,20 +100,38 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   };
 
   const navigateToLocation = (location) => {
-    if (location.length === 1) {
-      return navigate(`/inventory/location?${encodeURI(location[0])}&search=`);
+    console.log("location", location);
+    console.log("editedName", editedName);
+    const check = checkUpdatedPath(location);
+    console.log("check", check);
+    if (check) {
+      if (location.length === 1) {
+        return navigate(
+          `/inventory/location?${encodeURI(location[0])}&search=`
+        );
+      } else {
+        const subLocationPath = encodeURIComponent(location.slice(1).join(","));
+        return navigate(
+          `/inventory/location?${encodeURI(location[0])}&search=`,
+          {
+            state: {
+              sub_location: subLocationPath,
+            },
+          }
+        );
+      }
     } else {
-      const subLocationPath = encodeURIComponent(location.slice(1).join(","));
-      return navigate(`/inventory/location?${encodeURI(location[0])}&search=`, {
-        state: {
-          sub_location: subLocationPath,
-        },
-      });
+      return message.warning("Please wait while the path is being updated.");
     }
   };
 
+  const checkUpdatedPath = (path) => {
+    const checking = path.some((item) => item === editedName);
+    return checking;
+  };
   return (
     <div key={nodeName} className="tree-card">
+      {contextHolder}
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
           sx={{
@@ -151,7 +178,9 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                   editedName
                 )}
               </span>
-              <div style={{ display: "flex", gap: "5px", width: "fit-content" }}>
+              <div
+                style={{ display: "flex", gap: "5px", width: "fit-content" }}
+              >
                 {isEditing ? (
                   <>
                     {" "}
@@ -181,6 +210,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
             </Typography>
           </Button>
           <Button
+            // disabled={!checkUpdatedPath(path)}
             htmlType="button"
             style={style}
             onClick={() => navigateToLocation(path)}
