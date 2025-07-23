@@ -11,6 +11,8 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useQueryClient } from "@tanstack/react-query";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 
 const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   const { user } = useSelector((state) => state.admin);
@@ -34,34 +36,34 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
 
   const handleSave = async () => {
     try {
-    if (editedName === nodeName) {
-      setIsEditing(false);
-      return;
-    }
-    const locationData = {
-      newName: editedName,
-      path: path,
-      currentIndex: path.length - 1,
-      company_id: user.sqlInfo.company_id,
-    };
+      if (editedName === nodeName) {
+        setIsEditing(false);
+        return;
+      }
+      const locationData = {
+        newName: editedName,
+        path: path,
+        currentIndex: path.length - 1,
+        company_id: user.sqlInfo.company_id,
+      };
 
-    const response = await devitrakApi.post(
-      "/db_inventory/update-location-sub-location",
-      locationData
-    );
-    if (response?.data?.ok) {
-      await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
-      queryClient.invalidateQueries("structuredCompanyInventory");
-      queryClient.invalidateQueries("listOfItemsInStock");
-      queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
-      queryClient.invalidateQueries("RefactoredListInventoryCompany");
-      setIsEditing(false);
-      return message.success(
-        `Location/Sub locations updated successfully. Total: ${
-          response.data.affectedRows ?? 0
-        }`
+      const response = await devitrakApi.post(
+        "/db_inventory/update-location-sub-location",
+        locationData
       );
-    }
+      if (response?.data?.ok) {
+        await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
+        queryClient.invalidateQueries("structuredCompanyInventory");
+        queryClient.invalidateQueries("listOfItemsInStock");
+        queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
+        queryClient.invalidateQueries("RefactoredListInventoryCompany");
+        setIsEditing(false);
+        return message.success(
+          `Location/Sub locations updated successfully. Total: ${
+            response.data.affectedRows ?? 0
+          }`
+        );
+      }
     } catch (error) {
       console.error("Error updating location:", error);
       setEditedName(nodeName);
@@ -116,6 +118,10 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
           <Button htmlType="button" style={style} onClick={toggleOpen}>
             <Typography
               sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 fontSize: { xs: "24px", md: "30px" },
                 lineHeight: { xs: "32px", md: "38px" },
                 textWrap: "balance",
@@ -123,36 +129,49 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
               className="tree-title"
             >
               {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  style={{
-                    fontSize: "20px",
-                    lineHeight: "24px",
-                    width: "auto",
-                    minWidth: "100px",
-                  }}
-                  autoFocus
-                />
-              ) : (
-                editedName
-              )}
-              {isEditing ? (
-                <>
-                  <Button htmlType="button" onClick={handleSave}>
-                    Save
-                  </Button>&nbsp;
-                  <Button htmlType="button" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button htmlType="button" onClick={handleEdit} style={{marginLeft: "5px"}}>
-                  Edit
-                </Button>
-              )}
+              <span>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    style={{
+                      fontSize: "20px",
+                      lineHeight: "24px",
+                      width: "auto",
+                      minWidth: "100px",
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  editedName
+                )}
+              </span>
+              <div style={{ display: "flex", gap: "5px", width: "fit-content" }}>
+                {isEditing ? (
+                  <>
+                    {" "}
+                    <BlueButtonComponent
+                      buttonType="button"
+                      func={handleSave}
+                      title={"Save"}
+                    />
+                    &nbsp;
+                    <GrayButtonComponent
+                      buttonType="button"
+                      func={handleCancel}
+                      title={"Cancel"}
+                    />
+                  </>
+                ) : (
+                  <BlueButtonComponent
+                    buttonType="button"
+                    func={handleEdit}
+                    styles={{ marginLeft: "5px" }}
+                    title={"Edit"}
+                  />
+                )}
+              </div>
             </Typography>
           </Button>
           <Button
