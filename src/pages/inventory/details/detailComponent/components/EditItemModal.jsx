@@ -174,9 +174,14 @@ const EditItemModal = ({
     return setMoreInfo(removingResult);
   };
 
-  const subLocationsOptions = useMemo(() => retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items, watch("location")
-  ), [watch("location")]);
+  const subLocationsOptions = useMemo(
+    () =>
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items,
+        watch("location")
+      ),
+    [watch("location")]
+  );
 
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
@@ -300,6 +305,14 @@ const EditItemModal = ({
             }),
           ]);
         }
+          if (key === "sub_location") {
+            setValue("sub_location", "");
+            const checkType =
+              typeof value === "string" ? JSON.parse(value) : value;
+            if (checkType.length > 0) {
+              return setSubLocationsSubmitted([...checkType]);
+            }
+          }
       });
     }
     return () => {

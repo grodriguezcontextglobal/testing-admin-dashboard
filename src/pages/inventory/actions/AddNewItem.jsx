@@ -346,6 +346,7 @@ const AddNewItem = () => {
             return;
           }
           if (key === "sub_location") {
+            setValue("sub_location", "");
             const checkType =
               typeof value === "string" ? JSON.parse(value) : value;
             if (checkType.length > 0) {
