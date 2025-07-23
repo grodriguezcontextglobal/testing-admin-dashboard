@@ -129,8 +129,8 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
                   style={{
-                    fontSize: "inherit",
-                    lineHeight: "inherit",
+                    fontSize: "20px",
+                    lineHeight: "24px",
                     width: "auto",
                     minWidth: "100px",
                   }}
