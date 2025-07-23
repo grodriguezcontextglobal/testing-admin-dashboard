@@ -18,6 +18,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState(nodeName);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -40,6 +41,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         setIsEditing(false);
         return;
       }
+      setIsLoading(true);
       const locationData = {
         newName: editedName,
         path: path,
@@ -52,12 +54,13 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         locationData
       );
       if (response?.data?.ok) {
-        await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
         queryClient.invalidateQueries("structuredCompanyInventory");
         queryClient.invalidateQueries("listOfItemsInStock");
         queryClient.invalidateQueries("ItemsInInventoryCheckingQuery");
         queryClient.invalidateQueries("RefactoredListInventoryCompany");
+        await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
         setIsEditing(false);
+        setIsLoading(false);
         return message.success(
           `Location/Sub locations updated successfully. Total: ${
             response.data.affectedRows ?? 0
@@ -66,6 +69,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
       }
     } catch (error) {
       console.error("Error updating location:", error);
+      setIsLoading(false);
       setEditedName(nodeName);
       setIsEditing(false);
     }
@@ -155,12 +159,14 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                       buttonType="button"
                       func={handleSave}
                       title={"Save"}
+                      loadingState={isLoading}
                     />
                     &nbsp;
                     <GrayButtonComponent
                       buttonType="button"
                       func={handleCancel}
                       title={"Cancel"}
+                      disabled={isLoading}
                     />
                   </>
                 ) : (
