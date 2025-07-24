@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid, IconButton, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card, Switch, Tooltip } from "antd";
 import { lazy, Suspense, useState } from "react";
@@ -7,11 +7,14 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import ModalAllItemsBasedOnGroup from "./ModalAllItemsBasedOnGroup";
+import ViewIcon from "../../../../components/icons/ViewIcon";
 const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
-const CardRendered = ({ props, title, onChange, loadingStatus }) => {
+const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
+  const [openModalItemList, setOpenModalItemList] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
@@ -73,20 +76,36 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
               <Typography paddingTop={"8px"} style={TextFontSize30LineHeight38}>
                 {props.quantity}
               </Typography>
-              <Tooltip
-                title={`${
-                  props.consumerUses ? "For consumers." : "For internal use."
-                }`}
-                style={{ width: "100%" }}
-              >
-                <div style={{ margin: "0 0 0 15px" }}>
-                  <Switch
-                    checked={props.consumerUses}
-                    loading={loadingStatus}
-                    onChange={onChange}
-                  />
-                </div>
-              </Tooltip>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <Tooltip
+                  title={`${
+                    props.consumerUses ? "For consumers." : "For internal use."
+                  }`}
+                  style={{ width: "100%" }}
+                >
+                  <div style={{ margin: "0 0 0 15px" }}>
+                    <Switch
+                      checked={props.consumerUses}
+                      loading={loadingStatus}
+                      onChange={onChange}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip
+                  title={"View all serial numbers of this device type"}
+                  style={{ width: "100%" }}
+                >
+                  <div style={{ margin: "0 0 0 15px", display: props.startingNumber !== null && props.endingNumber !== null ? "flex" : "none" }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setOpenModalItemList(true)}
+                      sx={{ mr: 1 }}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                  </div>
+                </Tooltip>
+              </div>
             </Grid>
             <Grid
               display={"flex"}
@@ -119,6 +138,14 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
           setOpenModalDeviceSetup={setOpenModalDeviceSetup}
           deviceTitle={title}
           quantity={props.quantity}
+        />
+      )}
+      {openModalItemList && props.startingNumber !== null && (
+        <ModalAllItemsBasedOnGroup
+          openModalItemList={openModalItemList}
+          setOpenModalItemList={setOpenModalItemList}
+          deviceTitle={title}
+          database={database}
         />
       )}
     </Suspense>
