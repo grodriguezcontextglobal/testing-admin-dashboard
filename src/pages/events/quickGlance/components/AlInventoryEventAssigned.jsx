@@ -3,8 +3,7 @@ import { useState } from "react";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { Title } from "../../../../styles/global/Title";
 import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
 import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
@@ -94,19 +93,20 @@ const AllInventoryEventForCustomerOnly = ({
             margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
           }}
         >
-          <button
-            onClick={() => setDisplayingDocumentListContainer(true)}
-            style={{
-              ...GrayButton,
+          <GrayButtonComponent
+            title={"Documents (legal contracts)"}
+            func={() => setDisplayingDocumentListContainer(true)}
+            styles={{
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
               display: user.role === "4" ? "none" : "flex",
               margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
             }}
-          >
-            <p style={{ ...GrayButtonText }}>Documents (legal contracts)</p>
-          </button>
+            titleStyles={{
+              textTransform: "none",
+            }}
+          />
           <BlueButtonComponent
             func={() => setEditingServiceInEvent(true)}
             styles={{
