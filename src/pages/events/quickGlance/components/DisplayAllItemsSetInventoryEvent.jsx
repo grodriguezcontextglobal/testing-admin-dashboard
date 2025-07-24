@@ -48,6 +48,8 @@ const DisplayAllItemsSetInventoryEvent = (database) => {
                 consumerUses: item.consumerUses,
                 startingNumber: item.startingNumber,
                 endingNumber: item.endingNumber,
+                isItSetAsContainerForEvent: item.isItSetAsContainerForEvent ?? false,
+                item
               }}
               title={item.group}
               onChange={(e) => onChange({ index: index, checked: e })}
