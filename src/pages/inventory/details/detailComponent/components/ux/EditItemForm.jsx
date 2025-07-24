@@ -6,12 +6,13 @@ import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { gripingFields } from "../../../../actions/utils/BulkComponents";
 import {
   addingExtraInfo,
@@ -449,25 +450,19 @@ const EditItemForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-            <Button
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
+          <GrayButtonComponent
+            title={"Go back"}
+            loadingState={loadingStatus}
+            disabled={loadingStatus}
+            styles={{
+              ...GrayButton,
+              ...CenteringGrid,
+              width: "100%",
+            }}
+            icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="reset"
+          />
           </Link>
         </div>
         <div
@@ -476,23 +471,15 @@ const EditItemForm = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={"Update item."}
+            loadingState={loadingStatus}
             disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              <WhiteCirclePlusIcon />
-              &nbsp; Save new item
-            </p>
-          </Button>
+            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+            icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="submit"
+          />
         </div>
       </div>
     </form>
