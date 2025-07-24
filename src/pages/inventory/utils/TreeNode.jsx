@@ -100,10 +100,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   };
 
   const navigateToLocation = (location) => {
-    console.log("location", location);
-    console.log("editedName", editedName);
     const check = checkUpdatedPath(location);
-    console.log("check", check);
     if (check) {
       if (location.length === 1) {
         return navigate(
