@@ -526,6 +526,7 @@ const MainPageQuickGlance = () => {
             setEditingServiceInEvent={setEditingServiceInEvent}
             user={user}
             AlInventoryEventAssigned
+            database={receiversPoolQuery?.data?.data}
           />
           <AllInventoryEventForCustomerOnly
             key={"AllInventoryEventForCustomerOnly"}
@@ -539,6 +540,7 @@ const MainPageQuickGlance = () => {
             setEditingServiceInEvent={setEditingServiceInEvent}
             user={user}
             AlInventoryEventAssigned
+            database={receiversPoolQuery?.data?.data}
           />
 
           <Grid item xs={12}>

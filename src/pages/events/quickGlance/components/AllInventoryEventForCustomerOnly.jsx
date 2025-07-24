@@ -9,6 +9,7 @@ const AlInventoryEventAssigned = ({
   setShowInventoryTypes,
   showInventoryTypes,
   inventoryEventAssignedCount,
+  database,
 }) => {
   return (
     <>
@@ -77,7 +78,7 @@ const AlInventoryEventAssigned = ({
         </button>
       </Grid>
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
-        <DisplayAllItemsSetInventoryEventForCustomers />
+        <DisplayAllItemsSetInventoryEventForCustomers database={database} />
       </div>
     </>
   );

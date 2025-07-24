@@ -16,6 +16,7 @@ const AllInventoryEventForCustomerOnly = ({
   setEditingInventory,
   user,
   setEditingServiceInEvent,
+  database,
 }) => {
   const [displayingDocumentListContainer, setDisplayingDocumentListContainer] =
     useState(false);
@@ -132,7 +133,7 @@ const AllInventoryEventForCustomerOnly = ({
         </div>
       </Grid>
       <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
-        <DisplayAllItemsSetInventoryEvent />
+        <DisplayAllItemsSetInventoryEvent database={database} />
       </div>
       {displayingDocumentListContainer && (
         <DisplayDocumentsContainer
