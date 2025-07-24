@@ -11,12 +11,12 @@ import { Card, Divider, Modal, Popconfirm, Select, Space, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import checkTypeFetchResponse from "../../../../../../components/utils/checkTypeFetchResponse";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
@@ -27,7 +27,6 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
-import checkTypeFetchResponse from "../../../../../../components/utils/checkTypeFetchResponse";
 
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -547,7 +546,22 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             </Grid>
           </Grid>
           <Divider />
-          <button
+          <BlueButtonComponent
+            title={"Save changes"}
+            loadingState={loadingStatus}
+            disabled={loadingStatus}
+            styles={{
+              display: "flex",
+              padding: "12px 20px",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+            func={() => closeModal()}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="button"
+          />
+          {/* <button
             disabled={loadingStatus}
             onClick={() => closeModal()}
             style={{
@@ -567,7 +581,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             >
               Save changes
             </p>
-          </button>
+          </button> */}
           <Divider />
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <Space size={[8, 16]} wrap>
