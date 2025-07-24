@@ -8,7 +8,7 @@ import {
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
 
-const DisplayAllItemsSetInventoryEvent = () => {
+const DisplayAllItemsSetInventoryEvent = (database) => {
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const dispatch = useDispatch();
@@ -52,6 +52,7 @@ const DisplayAllItemsSetInventoryEvent = () => {
               title={item.group}
               onChange={(e) => onChange({ index: index, checked: e })}
               loadingStatus={loadingStatus}
+              database={database}
             />
           );
         }
