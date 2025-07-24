@@ -13,12 +13,12 @@ export function organizeInventoryBySubLocation(data) {
 
     for (const item of value) {
       const subLocArray = item?.data?.sub_location ?? [];
-      const isAvailable = item?.data?.enableAssignFeature === 1;
+      const isAvailable = item?.data?.warehouse === 1;
 
       // Main Location Count
       result[key].total = value.length;
       result[key].available =
-        groupBy(value, "data.enableAssignFeature")[1]?.length ?? 0;
+        groupBy(value, "data.warehouse")[1]?.length ?? 0;
 
       // Walk through sub_key levels
       let pointer = result[key];
