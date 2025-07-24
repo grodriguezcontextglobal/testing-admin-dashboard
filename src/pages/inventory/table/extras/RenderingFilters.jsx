@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "antd";
-import { groupBy } from "lodash";
+// import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -17,28 +17,11 @@ import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
-import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
+// import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import AdvanceSearchModal from "./AdvanceSearchModal";
+import { displayTotalDevicesAndTotalAvailablePerLocation, extractDataForRendering, sortingByParameters } from "../../utils/actions/functions";
 export const AdvanceSearchContext = createContext();
-function extractDataForRendering(structuredData) {
-  const keys = ["category_name", "item_group", "brand", "ownership"];
-  const extractedData = {};
-
-  keys.forEach((key) => {
-    if (structuredData[key]) {
-      extractedData[key] = Object.entries(structuredData[key]).map(
-        ([subKey, values]) => ({
-          key: subKey,
-          value: values.total,
-          totalAvailable: values.totalAvailable,
-        })
-      );
-    }
-  });
-
-  return extractedData;
-}
 
 const RenderingFilters = ({
   user,
@@ -60,108 +43,36 @@ const RenderingFilters = ({
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
-    // refetchOnMount: false,
   });
+
+  const locationsAndSublocationsWithTypes = useQuery({
+    queryKey: ["locationsAndSublocationsWithTypes"],
+    queryFn: () =>
+      devitrakApi.post("/db_company/get-location-item-types-hierarchy", {
+        company_id: user.sqlInfo.company_id,
+      }),
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
+  });
+
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   structuredCompanyInventory.refetch();
-  // }, []);
-
-  const sortingByParameters = (props) => {
-    const totalPerLocation = new Map();
-    const parameter = props;
-    if (dataToDisplay()?.length > 0) {
-      for (let data of dataToDisplay()) {
-        if (totalPerLocation.has(data[parameter])) {
-          totalPerLocation.set(
-            data[parameter],
-            totalPerLocation.get(data[parameter]) + 1
-          );
-        } else {
-          totalPerLocation.set(data[parameter], 1);
-        }
-      }
+  const locationsAndSublocationsData = () => {
+    let result = {};
+    if (locationsAndSublocationsWithTypes?.data?.data?.ok) {
+      result = locationsAndSublocationsWithTypes?.data?.data?.data;
     }
-    const result = new Set();
-    for (let [key, value] of totalPerLocation) {
-      result.add({ key, value });
-    }
-    return Array.from(result);
-  };
-
-  const renderingTotalAvailableDevices = (props) => {
-    const result = groupBy(props, "warehouse");
-    if (result[1]) {
-      const resultAssignable = groupBy(result[1], "data.warehouse");
-      if (resultAssignable[1]) {
-        return resultAssignable[1].length;
-      }
-      return 0;
-    }
-    return 0;
-  };
-
-  const displayTotalDevicesAndTotalAvailablePerLocation = (props) => {
-    const totalPerLocation = new Map();
-    const parameter = props;
-    if (dataToDisplay()?.length > 0) {
-      for (let data of dataToDisplay()) {
-        if (totalPerLocation.has(data[parameter])) {
-          totalPerLocation.set(data[parameter], [
-            ...totalPerLocation.get(data[parameter]),
-            data,
-          ]);
-        } else {
-          totalPerLocation.set(data[parameter], [data]);
-        }
-      }
-    }
-    const result = new Set();
-    for (let [key, value] of totalPerLocation) {
-      const valueParameter = {
-        total: value.length ?? 0,
-        available: renderingTotalAvailableDevices(value),
-      };
-      result.add({ key, valueParameter });
-    }
-    return Array.from(result);
-  };
-
-  const testing = () => {
-    const result = groupBy(dataToDisplay(), "data.location");
-    const template = new Set();
-    if (dataToDisplay()?.length > 0) {
-      for (let [key, value] of Object.entries(result)) {
-        const groupingByAvailableDevices = groupBy(value, "warehouse");
-        template.add({
-          location: key,
-          value,
-          total: value.length,
-          available: groupingByAvailableDevices[1]?.length ?? 0,
-        });
-      }
-    }
-    return organizeInventoryBySubLocation(result);
+    return result;
   };
 
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
 
-  const renderingTotalUnits = (props) => {
-    let result = 0;
-    for (let data of props) {
-      result = result + data.value;
-    }
-    return result;
-  };
-
   const extractedData = extractDataForRendering(
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
-
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
 
@@ -209,13 +120,15 @@ const RenderingFilters = ({
       );
       if (response?.data?.ok) {
         // Force cache invalidation before state updates
-        dispatch(onLogin({
-          ...user,
-          companyData: {
-            ...user.companyData,
-            structure: updatedStructure,
-          },
-        }))
+        dispatch(
+          onLogin({
+            ...user,
+            companyData: {
+              ...user.companyData,
+              structure: updatedStructure,
+            },
+          })
+        );
         await Promise.all([
           queryClient.invalidateQueries("structuredCompanyInventory"),
           queryClient.invalidateQueries("listOfItemsInStock"),
@@ -245,6 +158,7 @@ const RenderingFilters = ({
       setEditingSection(null);
     }
   };
+
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -280,8 +194,8 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: testing(), //sortingByParameters
-      totalUnits: renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
+      data: locationsAndSublocationsData(), //sortingByParameters
+      totalUnits:0, // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
@@ -566,7 +480,6 @@ const RenderingFilters = ({
                     alignItems: "center",
                   }}
                 >
-                  {/* {item.open ? <UpNarrowIcon /> : <DownNarrow />} */}
                   <DownNarrow />
                   &nbsp;
                   {item.title}&nbsp;{" "}
@@ -583,13 +496,9 @@ const RenderingFilters = ({
                   {item.buttonFn &&
                     !compareArraysOfObjects(
                       [],
-                      // selectedRowKeys,
                       renderingCardData.preference.inventory_location
                     ) && (
-                      <button
-                        // onClick={() => updateInventoryLocationPreferences()}
-                        style={BlueButton}
-                      >
+                      <button style={BlueButton}>
                         <p style={BlueButtonText}>
                           Update locations preferences
                         </p>
@@ -679,19 +588,12 @@ const RenderingFilters = ({
                 lg={12}
               >
                 {!item.tree && (
-                  //   <TreeView id={`${item.key}`} key={item.key} data={item.data} />
-                  // ) : (
                   <RenderingMoreThanTreeviewElements
                     item={item}
                     dictionary={dictionary}
                     searchItem={searchItem}
                   />
                 )}{" "}
-                {/* <CardForTreeView
-                  item={item}
-                  dictionary={dictionary}
-                  searchItem={searchItem}
-                /> */}
               </Grid>
             </details>
           </Grid>
@@ -701,10 +603,10 @@ const RenderingFilters = ({
         <AdvanceSearchContext.Provider
           value={{
             location:
-              displayTotalDevicesAndTotalAvailablePerLocation("location"),
-            category: sortingByParameters("category_name"),
-            group: sortingByParameters("item_group"),
-            brand: sortingByParameters("brand"),
+              displayTotalDevicesAndTotalAvailablePerLocation({props:"location", data: dataToDisplay()}),
+            category: sortingByParameters({props:"category_name", data: dataToDisplay()}),
+            group: sortingByParameters({props:"item_group", data: dataToDisplay()}),
+            brand: sortingByParameters({props:"brand", data: dataToDisplay()}),
           }}
         >
           <AdvanceSearchModal
