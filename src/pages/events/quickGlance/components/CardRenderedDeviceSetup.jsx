@@ -13,6 +13,11 @@ const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
 const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
+  console.log(
+    "isItSetAsContainerForEvent",
+    title,
+    props.isItSetAsContainerForEvent
+  );
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const [openModalItemList, setOpenModalItemList] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -30,7 +35,18 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
         </div>
       }
     >
-      <Grid padding={"0 0 10px"} item xs={12}>
+      <Grid
+        padding={"0 0 10px"}
+        item
+        xs={12}
+        display={
+          props.isItSetAsContainerForEvent &&
+          props.startingNumber !== null &&
+          props.endingNumber !== null
+            ? "none"
+            : "flex"
+        }
+      >
         <Card
           style={{
             borderRadius: "12px",
@@ -95,7 +111,16 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
                   title={"View all serial numbers of this device type"}
                   style={{ width: "100%" }}
                 >
-                  <div style={{ margin: "0 0 0 15px", display: props.startingNumber !== null && props.endingNumber !== null ? "flex" : "none" }}>
+                  <div
+                    style={{
+                      margin: "0 0 0 15px",
+                      display:
+                        props.startingNumber !== null &&
+                        props.endingNumber !== null
+                          ? "flex"
+                          : "none",
+                    }}
+                  >
                     <IconButton
                       size="small"
                       onClick={() => setOpenModalItemList(true)}
