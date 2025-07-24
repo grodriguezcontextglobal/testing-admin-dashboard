@@ -5,15 +5,15 @@ import {
   InputLabel,
   OutlinedInput,
 } from "@mui/material";
-import { Button, Divider, Modal, Space, Switch, notification } from "antd";
+import { Divider, Modal, Space, Switch, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
 import { onAddEventData } from "../../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 
@@ -232,19 +232,19 @@ const EditingServiceInEvent = ({
                   md={3}
                   lg={3}
                 >
-                  <Button
-                    loading={loadingStatus}
+                  <LightBlueButtonComponent
+                    title={"Update event."}
+                    loadingState={loadingStatus}
                     disabled={loadingStatus}
-                    htmlType="submit"
-                    style={{
+                    styles={{
                       ...LightBlueButton,
                       ...CenteringGrid,
                       width: "100%",
                       height: "100%",
                     }}
-                  >
-                    <p style={LightBlueButtonText}>Add item</p>
-                  </Button>
+                    titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+                    buttonType="submit"
+                  />
                 </Grid>
               </Grid>
             </form>
