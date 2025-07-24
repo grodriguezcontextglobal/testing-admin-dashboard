@@ -98,13 +98,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus }) => {
               md={12}
               lg={12}
             >
-              <Typography
-                paddingTop={"8px"}
-                style={{ ...Subtitle, textWrap: "nowrap", width: "100%" }}
-              >
-                {props.startingNumber !== null && `${props.startingNumber} - `}
-                {props.endingNumber !== null && props.endingNumber}
-              </Typography>
               <BlueButtonComponent
                 title={"Allocate serial number range for this device type"}
                 func={() => handleOpenModal()}
