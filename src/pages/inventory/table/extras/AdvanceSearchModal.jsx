@@ -20,8 +20,6 @@ const AdvanceSearchModal = ({
   setOpenAdvanceSearchModal,
 }) => {
   const values = useContext(AdvanceSearchContext);
-  const [advanceSearchResultState, setAdvanceSearchResultState] =
-    useState(null);
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [displayMessage, setDisplayMessage] = useState(false);
@@ -33,8 +31,6 @@ const AdvanceSearchModal = ({
       <Typography style={TextFontsize18LineHeight28}>Advance search</Typography>
     );
   };
-  // console.log(displayMessage);
-  // console.log(advanceSearchResultState);
   const closeModal = () => {
     return setOpenAdvanceSearchModal(false);
   };
@@ -58,9 +54,6 @@ const AdvanceSearchModal = ({
         advanceSearchResponseQuery.data.ok &&
         advanceSearchResponseQuery.data.advanceSearchResult.length > 0
       ) {
-        setAdvanceSearchResultState(
-          advanceSearchResponseQuery.data //.advanceSearchResult
-        );
         return setTimeout(() => {
           setDisplayMessage(false);
           setIsLoadingState(false);
