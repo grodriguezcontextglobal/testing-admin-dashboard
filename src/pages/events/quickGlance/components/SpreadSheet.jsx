@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { XLSXIcon } from "../../../../components/icons/XLSXIcon";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
   const [itemsUsers, setItemsUsers] = useState([]);
@@ -444,7 +442,16 @@ const SpreadSheet = () => {
 
   return (
     <div style={{ margin: "0 0 0.5rem" }}>
-      <button
+      <GrayButtonComponent
+      title={"Export record (xlsx format)"}
+      func={generateExcelFile}
+      styles={{ width: "100%" }}
+      titleStyles={{
+        textTransform: "none",
+        textAlign: "left",
+      }}
+      />
+      {/* <button
         onClick={generateExcelFile}
         style={{ ...GrayButton, width: "100%" }}
       >
@@ -459,7 +466,7 @@ const SpreadSheet = () => {
           <XLSXIcon /> Export record (
           <span style={{ textDecoration: "underline" }}>xlsx format</span>)
         </p>
-      </button>
+      </button> */}
       {fileName && (
         <>
           <a href={fileName} download={fileName}>
