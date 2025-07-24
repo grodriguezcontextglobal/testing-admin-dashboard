@@ -1,33 +1,34 @@
 const ItemForm = ({
-  handleSubmit,
-  register,
-  itemQuery,
-  selectOptions,
-  onChange,
-  checkIfSerialNumberExists,
-  valueItemSelected,
-  listOfLocations,
-  removeItem,
-  blockingButton,
   addingDeviceFromLocations,
-  Subtitle,
   AntSelectorStyle,
-  QuestionIcon,
-  CheckIcon,
+  blockingButton,
   BorderedCloseIcon,
-  Tooltip,
+  CenteringGrid,
+  CheckIcon,
+  checkIfSerialNumberExists,
+  Chip,
+  handleSubmit,
+  InputAdornment,
   InputLabel,
-  OutlinedInput,
-  OutlinedInputStyle,
+  itemQuery,
   LightBlueButton,
   LightBlueButtonText,
-  CenteringGrid,
+  listOfLocations,
+  onChange,
+  OutlinedInput,
+  OutlinedInputStyle,
+  QuestionIcon,
   RectangleBluePlusIcon,
-  Typography,
+  register,
+  removeItem,
   Select,
+  selectOptions,
   Space,
-  Chip,
-  InputAdornment,
+  Subtitle,
+  Tooltip,
+  Typography,
+  valueItemSelected,
+  deviceTitle,
 }) => {
   return (
     <form
@@ -87,8 +88,9 @@ const ItemForm = ({
               textAlign={"left"}
               style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
             >
-              <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
-                Starting from serial number <QuestionIcon />
+              <Tooltip title="The items will be added to inventory event from the serial number input and will continue in the order of the available serial numbers in the inventory until the quantity is reached.">
+                Starting sequence of {deviceTitle} from serial number{" "}
+                <QuestionIcon />
               </Tooltip>
             </Typography>
           </InputLabel>
@@ -99,13 +101,15 @@ const ItemForm = ({
             placeholder="e.g. 154580"
             endAdornment={
               <InputAdornment position="end">
-                <span>
-                  {checkIfSerialNumberExists() ? (
-                    <CheckIcon />
-                  ) : (
-                    <BorderedCloseIcon />
-                  )}
-                </span>
+                <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
+                  <span>
+                    {checkIfSerialNumberExists() ? (
+                      <CheckIcon />
+                    ) : (
+                      <BorderedCloseIcon />
+                    )}
+                  </span>
+                </Tooltip>
               </InputAdornment>
             }
           />
@@ -123,7 +127,7 @@ const ItemForm = ({
               textAlign={"left"}
               style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
             >
-              Qty of devices from {valueItemSelected[0]?.location}
+              Qty of from {valueItemSelected[0]?.location}
             </Typography>
           </InputLabel>
           <OutlinedInput
