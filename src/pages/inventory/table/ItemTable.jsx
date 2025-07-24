@@ -93,13 +93,6 @@ const ItemTable = ({
     keepPreviousData: true,
   });
 
-  const refetchingFn = () => {
-    listItemsQuery.refetch();
-    listImagePerItemQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    refactoredListInventoryCompany.refetch();
-  };
-
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
@@ -414,36 +407,6 @@ const ItemTable = ({
             </p>
           </span>
         );
-        // } else {
-        //   return (
-        //     <span
-        //       style={{
-        //         ...cellStyle,
-        //         borderRadius: "16px",
-        //         justifyContent: "center",
-        //         display: "flex",
-        //         padding: "2px 8px",
-        //         alignItems: "center",
-        //         background: `#F9F5FF`,
-        //         width: "fit-content",
-        //       }}
-        //     >
-        //       <p
-        //         style={{
-        //           color: "#6941C6",
-        //           textTransform: "capitalize",
-        //           width: "100%",
-        //           whiteSpace: "nowrap",
-        //           overflow: "hidden",
-        //           textOverflow: "ellipsis",
-        //         }}
-        //       >
-        //         <Icon icon="tabler:point-filled" rotate={3} color={`#6941C6`} />
-        //         Disabled
-        //       </p>
-        //     </span>
-        //   );
-        // }
       },
     },
     {
