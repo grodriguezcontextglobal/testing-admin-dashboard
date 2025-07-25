@@ -7,6 +7,7 @@ import CardRendered from "./CardRendered";
 import { useEffect, useState } from "react";
 import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
+import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
 const FormatToDisplayDetail = () => {
   const [defectedDeviceList, setDefectedDeviceList] = useState(false);
   const { event } = useSelector((state) => state.event);
@@ -73,8 +74,12 @@ const FormatToDisplayDetail = () => {
     };
 
     const foundDevicesOut = () => {
-      const groupingByActivity = groupBy(foundAllDevicesGivenInEvent(), "activity");
-      if(groupingByActivity?.true?.length > 0) return groupingByActivity?.true?.length;
+      const groupingByActivity = groupBy(
+        foundAllDevicesGivenInEvent(),
+        "activity"
+      );
+      if (groupingByActivity?.true?.length > 0)
+        return groupingByActivity?.true?.length;
       return 0;
     };
 
@@ -102,7 +107,12 @@ const FormatToDisplayDetail = () => {
         <Grid item xs={12} sm={12} md={12} lg={4}>
           <CardRendered
             key={"Total devices of event."}
-            props={inventoryEventData?.length ?? 0}
+            props={
+              gettingInventoryTotalCount({
+                inventoryEventData,
+                event,
+              }) ?? 0
+            }
             title={"Total inventory of event."}
           />
         </Grid>
