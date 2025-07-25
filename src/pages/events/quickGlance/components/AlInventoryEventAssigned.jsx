@@ -8,12 +8,14 @@ import { Title } from "../../../../styles/global/Title";
 import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
 import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
 import HighlightedPill from "./ux/HighlightedPill";
+import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
+import { useSelector } from "react-redux";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
   setShowInventoryTypes,
   showInventoryTypes,
-  inventoryEventAssignedCount,
+  // inventoryEventAssignedCount,
   setEditingInventory,
   user,
   setEditingServiceInEvent,
@@ -21,6 +23,13 @@ const AllInventoryEventForCustomerOnly = ({
 }) => {
   const [displayingDocumentListContainer, setDisplayingDocumentListContainer] =
     useState(false);
+  const { event } = useSelector((state) => state.event);
+
+  const inventoryEventData =
+    typeof database.receiversInventory === "object"
+      ? database.receiversInventory
+      : JSON.parse(database.receiversInventory);
+
   return (
     <>
       <Grid
@@ -60,7 +69,12 @@ const AllInventoryEventForCustomerOnly = ({
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
             Inventory assigned to event:&nbsp;
-            <HighlightedPill props={`${inventoryEventAssignedCount()} total`} />
+            <HighlightedPill
+              props={`${gettingInventoryTotalCount({
+                inventoryEventData,
+                event,
+              })} total`}
+            />
           </p>
         </button>
         <div
