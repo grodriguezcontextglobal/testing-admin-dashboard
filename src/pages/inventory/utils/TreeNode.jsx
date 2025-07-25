@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { EditIcon } from "../../../components/icons/EditIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -196,12 +197,18 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                     />
                   </>
                 ) : (
-                  <BlueButtonComponent
-                    buttonType="button"
-                    func={handleEdit}
-                    styles={{ marginLeft: "5px" }}
-                    title={"Edit"}
-                  />
+                    <Button
+                      style={{
+                        borderRadius: "25px",
+                        width: "fit-content",
+                        aspectRatio: "1/1",
+                        marginLeft: "5px",
+                      }}
+                      onClick={handleEdit}
+                      disabled={Number(user.role) > 0}
+                    >
+                      <EditIcon />
+                    </Button>
                 )}
               </div>
             </Typography>
