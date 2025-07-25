@@ -7,6 +7,7 @@ import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { Title } from "../../../../styles/global/Title";
 import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
 import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
+import HighlightedPill from "./ux/HighlightedPill";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -59,30 +60,7 @@ const AllInventoryEventForCustomerOnly = ({
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
             Inventory assigned to event:&nbsp;
-            <div
-              style={{
-                borderRadius: "16px",
-                background: "var(--blue-dark-50, #EFF4FF)",
-                mixBlendMode: "multiply",
-                width: "fit-content",
-                height: "fit-content",
-              }}
-            >
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
-                  padding: "0px 8px",
-                }}
-              >
-                {inventoryEventAssignedCount()} total
-              </p>
-            </div>
+            <HighlightedPill props={`${inventoryEventAssignedCount()} total`} />
           </p>
         </button>
         <div
