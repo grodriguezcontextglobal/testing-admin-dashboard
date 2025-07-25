@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -12,13 +12,15 @@ import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
 import { EditIcon } from "../../components/icons/EditIcon";
-import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import { RectangleBluePlusIcon } from "../../components/icons/RectangleBluePlusIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import "../../styles/global/ant-select.css";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { GrayButton } from "../../styles/global/GrayButton";
+import GrayButtonText from "../../styles/global/GrayButtonText";
 import { LightBlueButton } from "../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -27,10 +29,7 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 import { Title } from "../../styles/global/Title";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
 import FilterOptionsUX from "./utils/filterOptionsUX";
-import GrayButtonText from "../../styles/global/GrayButtonText";
-import { GrayButton } from "../../styles/global/GrayButton";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
-import { CloseIcon } from "../../components/icons/CloseIcon";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -349,25 +348,34 @@ const MainPage = () => {
               md
               lg
             >
-              <Button
-                style={{ ...GrayButton, width: "100%" }}
-                onClick={() => {
-                  setOpenAdvanceSearchModal(true);
-                }}
-              >
-                <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                  Advance search
-                </p>
-              </Button>
-              <Button
-                loading={isLoadingState}
-                style={{ ...GrayButton, width: "100%" }}
-                onClick={refetchingQueriesFn}
-              >
-                <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                  Reload
-                </p>
-              </Button>
+              <GrayButtonComponent
+              title={"Advance search"}
+              func={() => {
+                setOpenAdvanceSearchModal(true);
+              }}
+              styles={{
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+            <GrayButtonComponent
+              title={"Reload"}
+              func={() => {
+                refetchingQueriesFn();
+              }}
+              styles={{
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+              />
             </Grid>
             <Grid
               item
