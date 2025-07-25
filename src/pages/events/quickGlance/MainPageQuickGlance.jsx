@@ -24,7 +24,6 @@ import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIc
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-import { CreateNewConsumer } from "../../consumers/utils/CreateNewUser";
 import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
 import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
@@ -32,12 +31,11 @@ import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
 import InventoryEventValue from "./components/InventoryEventValue";
 import Report from "./components/lostFee/Report";
+import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
-import EditingInventory from "./inventory/action/EditingForEventInventory";
-import EditingServiceInEvent from "./inventory/action/components/EditingServiceInEvent";
 import StaffMainPage from "./staff/StaffMainPage";
-import EditingStaff from "./staff/components/EditingStaff";
+import HighlightedPill from "./components/ux/HighlightedPill";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -382,10 +380,19 @@ const MainPageQuickGlance = () => {
             {checkStaffRoleToDisplayCashReportInfo() && (
               // /event/new_subscription
               <Link to="/create-event-page/event-detail">
-                <BlueButtonComponent icon={<WhitePlusIcon />} title={"Add new event"} func={null} styles={{ alignSelf: "stretch"  }} />
+                <BlueButtonComponent
+                  icon={<WhitePlusIcon />}
+                  title={"Add new event"}
+                  func={null}
+                  styles={{ alignSelf: "stretch" }}
+                />
               </Link>
             )}
-            <BlueButtonComponent func={() => setCreateUserButton(true)} title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} />
+            <BlueButtonComponent
+              func={() => setCreateUserButton(true)}
+              title={"Add new consumer"}
+              icon={<WhiteCirclePlusIcon />}
+            />
           </Grid>
         </Grid>
         <Grid
@@ -599,30 +606,9 @@ const MainPageQuickGlance = () => {
             }}
           >
             Consumers at the event:&nbsp;
-            <div
-              style={{
-                borderRadius: "16px",
-                background: "var(--blue-dark-50, #EFF4FF)",
-                mixBlendMode: "multiply",
-                width: "fit-content",
-                height: "fit-content",
-              }}
-            >
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
-                  padding: "0px 8px",
-                }}
-              >
-                {foundAttendeesPerEvent()?.length} total
-              </p>
-            </div>
+            <HighlightedPill
+              props={`${foundAttendeesPerEvent()?.length} total`}
+            />
           </p>
           <BlueButtonComponent
             func={() => setCreateUserButton(true)}
@@ -665,34 +651,12 @@ const MainPageQuickGlance = () => {
             }}
           >
             Staff at the event:&nbsp;
-            <div
-              style={{
-                borderRadius: "16px",
-                background: "var(--blue-dark-50, #EFF4FF)",
-                mixBlendMode: "multiply",
-                width: "fit-content",
-                height: "fit-content",
-              }}
-            >
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
-                  padding: "0px 8px",
-                }}
-              >
-                {sum(
-                  event?.staff?.adminUser?.length ?? 0,
-                  event?.staff?.headsetAttendees?.length ?? 0
-                )}{" "}
-                total
-              </p>
-            </div>
+            <HighlightedPill
+              props={`${sum(
+                event?.staff?.adminUser?.length ?? 0,
+                event?.staff?.headsetAttendees?.length ?? 0
+              )} total`}
+            />
           </p>
           <BlueButtonComponent
             func={() => setEditingStaff(true)}
@@ -706,26 +670,17 @@ const MainPageQuickGlance = () => {
           />
         </Grid>
         <StaffMainPage />
-        {editingInventory && (
-          <EditingInventory
+        {(editingInventory ||
+          editingServiceInEvent ||
+          editingStaff ||
+          createUserButton) && (
+          <ModalsComponentsEventQuickGlance
             editingInventory={editingInventory}
             setEditingInventory={setEditingInventory}
-          />
-        )}
-        {editingServiceInEvent && (
-          <EditingServiceInEvent
-            editingServicesInEvent={editingServiceInEvent}
-            setEditingServicesInEvent={setEditingServiceInEvent}
-          />
-        )}
-        {editingStaff && (
-          <EditingStaff
+            editingServiceInEvent={editingServiceInEvent}
+            setEditingServiceInEvent={setEditingServiceInEvent}
             editingStaff={editingStaff}
             setEditingStaff={setEditingStaff}
-          />
-        )}
-        {createUserButton && (
-          <CreateNewConsumer
             createUserButton={createUserButton}
             setCreateUserButton={setCreateUserButton}
           />
