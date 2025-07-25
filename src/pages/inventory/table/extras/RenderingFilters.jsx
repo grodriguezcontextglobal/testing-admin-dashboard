@@ -20,7 +20,11 @@ import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPr
 // import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import AdvanceSearchModal from "./AdvanceSearchModal";
-import { displayTotalDevicesAndTotalAvailablePerLocation, extractDataForRendering, sortingByParameters } from "../../utils/actions/functions";
+import {
+  displayTotalDevicesAndTotalAvailablePerLocation,
+  extractDataForRendering,
+  sortingByParameters,
+} from "../../utils/actions/functions";
 export const AdvanceSearchContext = createContext();
 
 const RenderingFilters = ({
@@ -195,12 +199,13 @@ const RenderingFilters = ({
         </>
       ),
       data: locationsAndSublocationsData(), //sortingByParameters
-      totalUnits:0, // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
+      totalUnits: 0, // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
       tree: true,
       identifierRender: 1,
+      show: searchItem && searchItem.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
@@ -250,6 +255,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
+      show: searchItem && searchItem.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
@@ -299,6 +305,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
+      show: searchItem && searchItem.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
@@ -346,6 +353,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
+      show: searchItem && searchItem.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
@@ -395,6 +403,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
+      show: searchItem && searchItem.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
@@ -454,7 +463,7 @@ const RenderingFilters = ({
             <details
               style={{
                 width: "100%",
-                display: "flex",
+                display: item.show ? "flex" : "none",
                 flexDirection: "column",
                 justifyContent: "flex-start",
                 alignItems: "center",
@@ -602,11 +611,22 @@ const RenderingFilters = ({
       {openAdvanceSearchModal && (
         <AdvanceSearchContext.Provider
           value={{
-            location:
-              displayTotalDevicesAndTotalAvailablePerLocation({props:"location", data: dataToDisplay()}),
-            category: sortingByParameters({props:"category_name", data: dataToDisplay()}),
-            group: sortingByParameters({props:"item_group", data: dataToDisplay()}),
-            brand: sortingByParameters({props:"brand", data: dataToDisplay()}),
+            location: displayTotalDevicesAndTotalAvailablePerLocation({
+              props: "location",
+              data: dataToDisplay(),
+            }),
+            category: sortingByParameters({
+              props: "category_name",
+              data: dataToDisplay(),
+            }),
+            group: sortingByParameters({
+              props: "item_group",
+              data: dataToDisplay(),
+            }),
+            brand: sortingByParameters({
+              props: "brand",
+              data: dataToDisplay(),
+            }),
           }}
         >
           <AdvanceSearchModal
