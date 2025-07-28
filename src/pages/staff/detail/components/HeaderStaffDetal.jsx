@@ -363,8 +363,8 @@ const HeaderStaffDetail = () => {
                 lg={12}
               >
                 {Number(user.role) < 2 && (
-                  <button
-                    style={{ background: "transparent", cursor: "default" }}
+                  <div
+                    style={{ background: "transparent", cursor: "default", padding:"12px 0" }}
                   >
                     <p
                       style={{
@@ -397,7 +397,7 @@ const HeaderStaffDetail = () => {
                       )}
                       {profile.status ? "Active" : "Inactive"}
                     </p>
-                  </button>
+                  </div>
                 )}
               </Grid>
               <Grid
