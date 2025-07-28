@@ -1,6 +1,6 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification, Select, Button } from "antd";
+import { Button, Divider, notification, Select } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import Loading from "../../../../../../components/animation/Loading";
+import { checkArray } from "../../../../../../components/utils/checkArray";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
@@ -20,7 +21,7 @@ import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
-import { checkArray } from "../../../../../../components/utils/checkArray";
+import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 const AssignmentFromExistingInventory = () => {
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -30,6 +31,9 @@ const AssignmentFromExistingInventory = () => {
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
   const [valueItemSelected, setValueItemSelected] = useState({});
+  const [addContracts, setAddContracts] = useState(false);
+  const [contractList, setContractList] = useState([]);
+  console.log(contractList);
   const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const newEventInfo = {};
@@ -61,7 +65,6 @@ const AssignmentFromExistingInventory = () => {
       controller.abort();
     };
   }, []);
-
   useEffect(() => {
     const controller = new AbortController();
     return () => {
@@ -69,7 +72,6 @@ const AssignmentFromExistingInventory = () => {
     };
   }, [itemsInInventoryQuery.data, dataFound.current?.length]);
   dataFound.current = itemsInInventoryQuery?.data?.data?.items;
-
   const optionsToRenderInSelector = () => {
     const checkLocation = new Map();
     const dataToIterate = dataFound.current ?? [];
@@ -95,12 +97,10 @@ const AssignmentFromExistingInventory = () => {
     }
     return Array.from(result);
   };
-
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);
     setValueItemSelected(optionRendering);
   };
-
   const substractingRangesSelectedItem = () => {
     const gettingValues = new Set();
     if (valueItemSelected.length > 0) {
@@ -114,7 +114,6 @@ const AssignmentFromExistingInventory = () => {
       };
     }
   };
-
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -124,7 +123,6 @@ const AssignmentFromExistingInventory = () => {
     },
     [api]
   );
-
   const handleAddingNewItemToInventoryEvent = (data) => {
     setSelectedItem([
       ...selectedItem,
@@ -134,7 +132,6 @@ const AssignmentFromExistingInventory = () => {
     setValue("quantity", 1);
     return null;
   };
-
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -144,7 +141,6 @@ const AssignmentFromExistingInventory = () => {
       data: props.data,
     });
   };
-
   const createNewLease = async (props) => {
     const staffMember = staffMemberQuery.data.data.member;
     for (let data of props.deviceInfo) {
@@ -186,6 +182,7 @@ const AssignmentFromExistingInventory = () => {
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const db = props.deviceInfo;
+    let items = [];
     for (let index = 0; index < db.length; index++) {
       await devitrakApi.post("/receiver/receivers-pool", {
         device: db[index].serial_number,
@@ -199,6 +196,23 @@ const AssignmentFromExistingInventory = () => {
         type: db[index].item_group,
         company: user.companyData.id,
       });
+      items.push({
+        serial_number: db[index].serial_number,
+        type: db[index].item_group,
+      });
+    }
+    {
+      addContracts &&
+        (await emailContractToStaffMember({
+          company_name: user.companyData.name,
+          emailAdmin: user.email,
+          staff: {
+            name: profile.name,
+            email: profile.email,
+          },
+          contractList: props.addContracts,
+          items: items,
+        }));
     }
     return null;
   };
@@ -288,7 +302,7 @@ const AssignmentFromExistingInventory = () => {
       },
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       type: "lease",
-      company_id:user.companyData.id
+      company_id: user.companyData.id,
     };
     const newEventInfo = await devitrakApi.post(
       "/event/create-event",
@@ -336,6 +350,19 @@ const AssignmentFromExistingInventory = () => {
     }
   };
 
+  const emailContractToStaffMember = async (props) => {
+    await devitrakApi.post("/nodeMailer/email-contract-to-staff", {
+      company_name: props.company_name,
+      email_admin: props.emailAdmin,
+      staff: {
+        name: props.staff.name,
+        email: props.staff.email,
+      },
+      contract_list: props.contractList,
+      subject: "Device Liability Contract",
+      items: props.items,
+    });
+  };
   const assignDeviceToStaffMember = async () => {
     const template = {
       street: watch("street"),
@@ -512,7 +539,17 @@ const AssignmentFromExistingInventory = () => {
                 />
               </div>
             </div>
-
+            <LegalDocumentModal
+              addContracts={addContracts}
+              setAddContracts={setAddContracts}
+              setValue={setValue}
+              register={register}
+              loadingStatus={loadingStatus}
+              profile={profile}
+              selectedDocuments={contractList}
+              setSelectedDocuments={setContractList}
+            />
+            <Divider />
             <InputLabel
               style={{
                 width: "100%",
