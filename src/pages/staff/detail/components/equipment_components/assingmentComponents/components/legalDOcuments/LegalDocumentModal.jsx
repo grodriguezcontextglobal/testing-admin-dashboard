@@ -26,7 +26,6 @@ const LegalDocumentModal = ({
   setSelectedDocuments,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
 
   // Fetch available documents
@@ -181,14 +180,7 @@ const LegalDocumentModal = ({
                   onChange={setSelectedDocuments}
                   loading={loadingAvailable}
                   options={
-                    availableDocuments?.data?.documents
-                      ?.filter(
-                        (doc) =>
-                          !event.legal_documents_list.some(
-                            (assigned) => assigned._id === doc._id
-                          )
-                      )
-                      .map((doc) => ({
+                    availableDocuments?.data?.documents?.map((doc) => ({
                         label: doc.title,
                         value: doc._id,
                       })) || []
