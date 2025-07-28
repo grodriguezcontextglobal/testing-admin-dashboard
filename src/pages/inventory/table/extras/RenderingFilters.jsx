@@ -33,6 +33,7 @@ const RenderingFilters = ({
   searchItem,
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
+  searchedResult,
 }) => {
   const dictionary = {
     Permanent: "Owned",
@@ -48,7 +49,6 @@ const RenderingFilters = ({
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
   });
-
   const locationsAndSublocationsWithTypes = useQuery({
     queryKey: ["locationsAndSublocationsWithTypes"],
     queryFn: () =>
@@ -58,10 +58,8 @@ const RenderingFilters = ({
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
   });
-
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-
   const locationsAndSublocationsData = () => {
     let result = {};
     if (locationsAndSublocationsWithTypes?.data?.data?.ok) {
@@ -69,17 +67,15 @@ const RenderingFilters = ({
     }
     return result;
   };
-
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
-
   const extractedData = extractDataForRendering(
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
+  const extractedSearchedData = extractDataForRendering(searchedResult || {});
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
-
   const [companyStructure, setCompanyStructure] = useState(() => {
     if (user.companyData.structure) {
       return user.companyData.structure;
@@ -93,12 +89,10 @@ const RenderingFilters = ({
       ownership: "Ownership",
     };
   });
-
   const handleEditClick = (sectionKey) => {
     setEditingSection(sectionKey);
     setSectionName(companyStructure[sectionKey]);
   };
-
   const handleNameUpdate = async (sectionKey) => {
     try {
       await clearCacheMemory(`company_id=${user.companyData.id}`);
@@ -162,7 +156,6 @@ const RenderingFilters = ({
       setEditingSection(null);
     }
   };
-
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -198,14 +191,15 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: locationsAndSublocationsData(), //sortingByParameters
+      data: searchedResult ? searchedResult.main_location : locationsAndSublocationsData(), //sortingByParameters
       totalUnits: 0, // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
       tree: true,
       identifierRender: 1,
-      show: searchItem && searchItem.length > 0 ? false : true,
+      // show: searchItem && searchItem.length > 0 ? false : true,
+      show: true,
       columns: [
         {
           title: "Name",
@@ -248,14 +242,17 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: extractedData.category_name || [],
+      data: searchedResult
+        ? extractedSearchedData.category_name
+        : extractedData.category_name || [],
       totalUnits: extractedData.category_name?.length || 0,
       open: true,
       routeTitle: "category_name",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: searchItem && searchItem.length > 0 ? false : true,
+      // show: searchItem && searchItem.length > 0 ? false : true,
+      show: true,
       columns: [
         {
           title: "Name",
@@ -298,14 +295,17 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: extractedData.item_group || [],
+      data: searchedResult
+        ? extractedSearchedData.item_group
+        : extractedData.item_group || [],
       totalUnits: extractedData.item_group?.length || 0,
       open: true,
       routeTitle: "group",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: searchItem && searchItem.length > 0 ? false : true,
+      // show: searchItem && searchItem.length > 0 ? false : true,
+      show: true,
       columns: [
         {
           title: "Name",
@@ -346,14 +346,17 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: extractedData.brand || [],
+      data: searchedResult
+        ? extractedSearchedData.brand
+        : extractedData.brand || [],
       totalUnits: extractedData.brand?.length || 0,
       open: true,
       routeTitle: "brand",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: searchItem && searchItem.length > 0 ? false : true,
+      // show: searchItem && searchItem.length > 0 ? false : true,
+      show: true,
       columns: [
         {
           title: "Name",
@@ -396,14 +399,17 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: extractedData.ownership || [],
+      data: searchedResult
+        ? extractedSearchedData.ownership
+        : extractedData.ownership || [],
       totalUnits: extractedData.ownership?.length || 0,
       open: true,
       routeTitle: "ownership",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: searchItem && searchItem.length > 0 ? false : true,
+      // show: searchItem && searchItem.length > 0 ? false : true,
+      show: true,
       columns: [
         {
           title: "Name",
@@ -412,8 +418,7 @@ const RenderingFilters = ({
         },
       ],
     },
-  ];
-
+  ];  
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
@@ -429,7 +434,6 @@ const RenderingFilters = ({
       return areObjects ? deepEqual(val1, val2) : val1 === val2;
     });
   };
-
   const compareArraysOfObjects = (arr1, arr2) => {
     if (arr1?.length !== arr2?.length) return false;
 
@@ -440,7 +444,6 @@ const RenderingFilters = ({
       deepEqual(obj1, sortedArr2[index])
     );
   };
-
   return (
     <Grid key="rendering-filter-option-container" container>
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
@@ -639,9 +642,7 @@ const RenderingFilters = ({
     </Grid>
   );
 };
-
 export default RenderingFilters;
-
 RenderingFilters.propType = {
   user: PropTypes.object,
   dataToDisplay: PropTypes.array,
