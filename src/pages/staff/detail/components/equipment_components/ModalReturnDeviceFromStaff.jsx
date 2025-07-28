@@ -10,6 +10,7 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -84,7 +85,6 @@ const ModalReturnDeviceFromStaff = ({
           queryKey: ["ItemsInventoryCheckingQuery"],
           exact: true,
         });
-
         return closingEventAndReturningDevice();
       }
     }
@@ -108,13 +108,16 @@ const ModalReturnDeviceFromStaff = ({
             activity: false,
           }
         );
-
-        if (deviceUpdate.data.ok) {
+        if (deviceUpdate.data) {
+          await clearCacheMemory(
+            `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+          );
           return closeModal();
         }
       }
     } catch (error) {
-      return null    }
+      return null;
+    }
   };
   const closeModal = () => {
     return setOpenReturnDeviceStaffModal(false);
