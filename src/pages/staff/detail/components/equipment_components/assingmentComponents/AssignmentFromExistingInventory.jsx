@@ -351,7 +351,7 @@ const AssignmentFromExistingInventory = () => {
 
   const emailContractToStaffMember = async (props) => {
     await devitrakApi.post("/nodemailer/liability-contract-email-notification", {
-      company_name: user.companyData.name,
+      company_name: user.companyData.company_name,
       email_admin: user.email,
       staff: {
         name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
