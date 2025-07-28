@@ -1,7 +1,7 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message } from "antd";
+import { Button, message, Modal, Table } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import "../style/viewtree.css";
+import ViewIcon from "../../../components/icons/ViewIcon";
 
 const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -22,11 +23,12 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState(nodeName);
+  const [openDetails, setOpenDetails] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   if (!nodeData) return null;
 
-  const { total, available, children } = nodeData;
+  const { total, available, children, types } = nodeData;
 
   const toggleOpen = () => {
     if (children) setIsOpen(!isOpen);
@@ -127,6 +129,61 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
     const checking = path.some((item) => item === editedName);
     return checking;
   };
+
+  // Modal component for displaying types
+  const TypesModal = () => {
+    const closeModal = () => {
+      setOpenDetails(false);
+    };
+
+    // Prepare data for the table
+    const tableData = types ? types.map((type, index) => ({
+      key: index,
+      type: type,
+      index: index + 1
+    })) : [];
+
+    const columns = [
+      {
+        title: "#",
+        dataIndex: "index",
+        key: "index",
+        width: 60,
+      },
+      {
+        title: "Item Type",
+        dataIndex: "type",
+        key: "type",
+      },
+    ];
+
+    return (
+      <Modal
+        open={openDetails}
+        onCancel={closeModal}
+        footer={null}
+        width={600}
+        maskClosable={false}
+        title={`Item Types in ${nodeName} (${types?.length || 0} types)`}
+        style={{ zIndex: 30 }}
+      >
+        <Table
+          columns={columns}
+          dataSource={tableData}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => 
+              `${range[0]}-${range[1]} of ${total} items`,
+          }}
+          scroll={{ y: 400 }}
+          size="small"
+        />
+      </Modal>
+    );
+  };
+
   return (
     <div key={nodeName} className="tree-card">
       {contextHolder}
@@ -210,11 +267,11 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                       <EditIcon />
                     </Button>
                 )}
+                <GrayButtonComponent icon={<ViewIcon />} func={() => setOpenDetails(true)} />
               </div>
             </Typography>
           </Button>
           <Button
-            // disabled={!checkUpdatedPath(path)}
             htmlType="button"
             style={style}
             onClick={() => navigateToLocation(path)}
@@ -242,6 +299,9 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
             ))}
         </div>
       )}
+      
+      {/* Render the Types Modal */}
+      <TypesModal />
     </div>
   );
 };
