@@ -43,6 +43,7 @@ const ItemTable = ({
   chosen,
   downloadDataReport,
   total,
+  searchedResult,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -569,6 +570,7 @@ const ItemTable = ({
             user={user}
             openAdvanceSearchModal={openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+            searchedResult={searchedResult}
           />
         </Grid>
         <Grid
