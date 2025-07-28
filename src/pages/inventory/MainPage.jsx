@@ -325,7 +325,7 @@ const MainPage = () => {
                           padding: 0,
                           border: "none",
                           boxShadow: "-moz-initial",
-                          display: watch("searchItem") === "" ? "none" : "flex",
+                          display: watch("searchItem") === "" && !params ? "none" : "flex",
                         }}
                         onClick={() => {
                           setValue("searchItem", "");
