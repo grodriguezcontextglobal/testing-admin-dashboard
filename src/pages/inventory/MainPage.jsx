@@ -38,6 +38,8 @@ const MainPage = () => {
     category: null,
     value: null,
   });
+  const [searchedResult, setSearchedResult] = useState(null);
+  console.log(searchedResult);
   const [params, setParams] = useState(null);
   const [dataFilterOptions, setDataFilterOptions] = useState({
     0: [],
@@ -99,6 +101,7 @@ const MainPage = () => {
         setDataFilterOptions={setDataFilterOptions}
         downloadDataReport={setDownloadDataReport}
         total={companyHasInventoryQuery?.data?.data?.total ?? 0}
+        searchedResult={searchedResult}
       />
     ),
     2: (
@@ -130,8 +133,15 @@ const MainPage = () => {
     return setRenderingData(false);
   };
 
-  const searchItem = (data) => {
-    return setParams(data.searchItem);
+  const searchItem = async (data) => {
+    const result = await devitrakApi.post("/db_company/get-grouped-inventory-by-search-parameter", {
+      searchParameter: data.searchItem,
+      company_id: user.sqlInfo.company_id,
+    });
+    if (result?.data?.ok) {
+      setSearchedResult(result.data.data);
+      return setParams(data.searchItem);
+    }
   };
   return (
     <Suspense
@@ -320,6 +330,7 @@ const MainPage = () => {
                         onClick={() => {
                           setValue("searchItem", "");
                           setParams(null);
+                          setSearchedResult(null);
                         }}
                       >
                         <p
