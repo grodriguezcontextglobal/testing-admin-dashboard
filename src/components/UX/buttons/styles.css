@@ -3,8 +3,8 @@
   display: flex;
   align-self: stretch;
   border-radius: 8px;
-  border: 1px solid var(--blue-dark-600, #155eef);
-  background: var(--blue-dark-600, #155eef);
+  border: 1px solid var(--bluedark600, #155eef);
+  background: var(--bluedark600, #155eef);
   /* Shadow/xs */
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   transition: all 0.3s ease;
@@ -12,7 +12,7 @@
 
 .blueButton:hover {
   background: var(--basewhite, #FFF);
-  color: var(--blue-dark-600, #155eef);
+  color: var(--bluedark600, #155eef);
 }
 
 .blueButtonText {
@@ -30,7 +30,7 @@
 }
 
 .blueButton:hover .blueButtonText {
-  color: var(--blue-dark-600, #155eef);
+  color: var(--bluedark600, #155eef);
 }
 
 .centeringGrid {
@@ -84,15 +84,17 @@
   align-items: flex-start;
   align-self: stretch;
   border-radius: 8px;
-  border: 1px solid var(--gray-300, #D0D5DD);
-  background: var(--base-white, #FFF);
+  border: 1px solid var(--gray300, #D0D5DD);
+  background: var(--basewhite, #FFF);
   /* Shadow/xs */
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   transition: all 0.3s ease;
 }
 
 .grayButton:hover {
-  background: var(--gray-300, #D0D5DD);
+  background: #344054;
+  /* //var(--gray-300, #D0D5DD); */
+  color:var(--basewhite, #FFF);
 }
 
 /* GrayButtonText */
@@ -116,8 +118,8 @@
   align-items: flex-start;
   align-self: stretch;
   border-radius: 8px;
-  border: 1px solid var(--Blue-dark-50, #EFF4FF);
-  background: var(--Blue-dark-100, #D1E0FF);
+  border: 1px solid var(--blue-dark--50, #EFF4FF);
+  background: var(--blue-dark--100, #D1E0FF);
   /* Shadow/xs */
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   transition: all 0.3s ease;
