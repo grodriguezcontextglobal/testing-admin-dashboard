@@ -33,7 +33,6 @@ const AssignmentFromExistingInventory = () => {
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-  console.log(contractList);
   const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const newEventInfo = {};
@@ -204,13 +203,13 @@ const AssignmentFromExistingInventory = () => {
     {
       addContracts &&
         (await emailContractToStaffMember({
-          company_name: user.companyData.name,
+          company_name: user.companyData.company_name,
           emailAdmin: user.email,
           staff: {
             name: profile.name,
             email: profile.email,
           },
-          contractList: props.addContracts,
+          contractList: contractList,
           items: items,
         }));
     }
@@ -352,11 +351,11 @@ const AssignmentFromExistingInventory = () => {
 
   const emailContractToStaffMember = async (props) => {
     await devitrakApi.post("/nodemailer/liability-contract-email-notification", {
-      company_name: props.company_name,
-      email_admin: props.emailAdmin,
+      company_name: user.companyData.name,
+      email_admin: user.email,
       staff: {
-        name: props.staff.name,
-        email: props.staff.email,
+        name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
+        email: profile.email,
       },
       contract_list: props.contractList,
       subject: "Device Liability Contract",
