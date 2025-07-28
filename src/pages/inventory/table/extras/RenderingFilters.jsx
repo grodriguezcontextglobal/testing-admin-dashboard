@@ -156,6 +156,30 @@ const RenderingFilters = ({
       setEditingSection(null);
     }
   };
+
+  const totalUnitsAllLocations = () => {
+    let result = 0;
+    let data = null;
+    if (!searchItem && locationsAndSublocationsWithTypes?.data?.data?.ok) {
+      result = 0;
+      data = locationsAndSublocationsWithTypes?.data?.data?.data;
+      if (data) {
+        for (let [, value] of Object.entries(data)) {
+          result += value.total;
+        }
+      }
+    } else if (searchItem && searchedResult?.main_location) {
+      data = searchedResult;
+      result = 0;
+      if (data.main_location) {
+        for (let [, value] of Object.entries(data.main_location)) {
+          result += value.total;
+        }
+      }
+    }
+    return result;
+  };
+
   const optionsToRenderInDetailsHtmlTags = [
     {
       key: "location_1",
@@ -191,8 +215,10 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult ? searchedResult.main_location : locationsAndSublocationsData(), //sortingByParameters
-      totalUnits: 0, // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
+      data: searchedResult
+        ? searchedResult.main_location
+        : locationsAndSublocationsData(), //sortingByParameters
+      totalUnits: totalUnitsAllLocations(), // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
@@ -418,7 +444,7 @@ const RenderingFilters = ({
         },
       ],
     },
-  ];  
+  ];
   const deepEqual = (obj1, obj2) => {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
