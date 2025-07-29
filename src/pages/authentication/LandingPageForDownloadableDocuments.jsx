@@ -17,6 +17,7 @@ const LandingPageForDownloadableDocuments = () => {
   const documentUrl = new URLSearchParams(window.location.search).get(
     "contract_url"
   );
+  const [token, setToken] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
@@ -44,6 +45,13 @@ const LandingPageForDownloadableDocuments = () => {
     queryFn: () => devitrakApi.get("/staff/admin-users"),
   });
 
+  useEffect(() => {
+    const token = localStorage.getItem("admin-token");
+    if (token) {
+      setToken(token);
+    }
+  }, []);
+
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
   if (adminStaffQuery.data) {
     const submitNewPassword = async (data) => {
@@ -70,7 +78,7 @@ const LandingPageForDownloadableDocuments = () => {
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container
         >
-          <Grid item xs={12} sm={12} md={6} lg={6}>
+          <Grid item xs={12} sm={12} md={token ? 12 : 6} lg={token ? 12 : 6}>
             <Grid
               container
               display={"flex"}
