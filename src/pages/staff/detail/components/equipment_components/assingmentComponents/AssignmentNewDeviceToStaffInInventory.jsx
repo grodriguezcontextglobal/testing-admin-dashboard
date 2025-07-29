@@ -4,6 +4,7 @@ import { groupBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../../components/utils/convertToBase64";
 import { formatDate } from "../../../../../../components/utils/dateFormat";
@@ -15,14 +16,14 @@ import { storeAndGenerateImageUrl } from "../../../../../inventory/actions/utils
 import { retrieveExistingSubLocationsForCompanyInventory } from "../../../../../inventory/actions/utils/SubLocationRenderer";
 import validatingInputFields from "../../../../../inventory/actions/utils/validatingInputFields";
 import costValueInputFormat from "../../../../../inventory/utils/costValueInputFormat";
+import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 import SingleItemForm from "./components/newDevice/SingleForm";
-import { singleItemInserting } from "./components/newDevice/actions/SingleItemInserting";
-import { createNewLease } from "./components/newDevice/actions/CreateNewLease";
 import {
   addDeviceToEvent,
   createEvent,
 } from "./components/newDevice/actions/AddDeviceToEvent";
-import { useNavigate } from "react-router-dom";
+import { createNewLease } from "./components/newDevice/actions/CreateNewLease";
+import { singleItemInserting } from "./components/newDevice/actions/SingleItemInserting";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 
 const AssignmentNewDeviceToStaffInInventory = () => {
@@ -43,6 +44,9 @@ const AssignmentNewDeviceToStaffInInventory = () => {
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
+  const [addContracts, setAddContracts] = useState(false);
+  const [contractList, setContractList] = useState([]);
+
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
   const navigate = useNavigate();
@@ -170,7 +174,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         subLocationsSubmitted,
         invalidateQueries,
       });
-      console.log("newInsertedItem", newInsertedItem);
       await createNewLease({
         address: {
           street: data.address_street,
@@ -191,15 +194,36 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         profile,
         user,
       });
-      console.log("newEventInfo", newEventInfo);
       await addDeviceToEvent({
         eventId: newEventInfo.insertId,
         itemId: newInsertedItem.insertId,
       });
+      {
+        addContracts &&
+          (await devitrakApi.post(
+            "/nodemailer/liability-contract-email-notification",
+            {
+              company_name: user.companyData.company_name,
+              email_admin: user.email,
+              staff: {
+                name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
+                email: profile.email,
+              },
+              contract_list: contractList,
+              items: [
+                {
+                  serial_number: data.serial_number,
+                  type: data.item_group,
+                },
+              ],
+              subject: "Device Liability Contract",
+            }
+          ));
+      }
+
       setLoadingStatus(false);
       return closeModal();
     } catch (error) {
-      console.log(error);
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);
     }
@@ -436,47 +460,72 @@ const AssignmentNewDeviceToStaffInInventory = () => {
   }, [imageUploadedValue]);
 
   return (
-    <div style={{ display: "flex", justifyContent: "flex-start" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+      }}
+    >
       {contextHolder}
-      <SingleItemForm
-        acceptImage={acceptAndGenerateImage}
-        addingSubLocation={addingSubLocation}
-        control={control}
-        closeModal={closeModal}
-        displayContainerSplotLimitField={displayContainerSplotLimitField}
-        displayPreviewImage={displayPreviewImage}
-        displaySublocationFields={displaySublocationFields}
-        errors={errors}
-        gripingFields={gripingFields}
-        handleDeleteMoreInfo={handleDeleteMoreInfo}
-        handleMoreInfoPerDevice={handleMoreInfoPerDevice}
-        handleSubmit={handleSubmit}
-        imageUploadedValue={convertImageTo64ForPreview}
-        imageUrlGenerated={imageUrlGenerated}
-        isRented={isRented}
-        keyObject={keyObject}
-        loadingStatus={loadingStatus}
-        moreInfo={moreInfo}
-        moreInfoDisplay={moreInfoDisplay}
-        options={options}
-        OutlinedInputStyle={OutlinedInputStyle}
-        register={register}
-        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
-        renderLocationOptions={renderLocationOptions}
-        retrieveItemOptions={retrieveItemOptions}
-        returningDate={returningDate}
-        savingNewItem={savingNewItem}
-        setImageUploadedValue={setImageUploadedValue}
-        setKeyObject={setKeyObject}
-        setMoreInfoDisplay={setMoreInfoDisplay}
-        setReturningDate={setReturningDate}
-        setSubLocationsSubmitted={setSubLocationsSubmitted}
-        setValueObject={setValueObject}
-        subLocationsOptions={subLocationsOptions}
-        subLocationsSubmitted={subLocationsSubmitted}
-        valueObject={valueObject}
-        watch={watch}
-      />
+      <div
+        style={{
+          marginBottom: "1rem",
+          width: "100%",
+        }}
+      >
+        <LegalDocumentModal
+          addContracts={addContracts}
+          setAddContracts={setAddContracts}
+          setValue={setValue}
+          register={register}
+          loadingStatus={loadingStatus}
+          profile={profile}
+          selectedDocuments={contractList}
+          setSelectedDocuments={setContractList}
+        />
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-start" }}>
+        <SingleItemForm
+          acceptImage={acceptAndGenerateImage}
+          addingSubLocation={addingSubLocation}
+          control={control}
+          closeModal={closeModal}
+          displayContainerSplotLimitField={displayContainerSplotLimitField}
+          displayPreviewImage={displayPreviewImage}
+          displaySublocationFields={displaySublocationFields}
+          errors={errors}
+          gripingFields={gripingFields}
+          handleDeleteMoreInfo={handleDeleteMoreInfo}
+          handleMoreInfoPerDevice={handleMoreInfoPerDevice}
+          handleSubmit={handleSubmit}
+          imageUploadedValue={convertImageTo64ForPreview}
+          imageUrlGenerated={imageUrlGenerated}
+          isRented={isRented}
+          keyObject={keyObject}
+          loadingStatus={loadingStatus}
+          moreInfo={moreInfo}
+          moreInfoDisplay={moreInfoDisplay}
+          options={options}
+          OutlinedInputStyle={OutlinedInputStyle}
+          register={register}
+          renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+          renderLocationOptions={renderLocationOptions}
+          retrieveItemOptions={retrieveItemOptions}
+          returningDate={returningDate}
+          savingNewItem={savingNewItem}
+          setImageUploadedValue={setImageUploadedValue}
+          setKeyObject={setKeyObject}
+          setMoreInfoDisplay={setMoreInfoDisplay}
+          setReturningDate={setReturningDate}
+          setSubLocationsSubmitted={setSubLocationsSubmitted}
+          setValueObject={setValueObject}
+          subLocationsOptions={subLocationsOptions}
+          subLocationsSubmitted={subLocationsSubmitted}
+          valueObject={valueObject}
+          watch={watch}
+        />
+      </div>
     </div>
   );
 };
