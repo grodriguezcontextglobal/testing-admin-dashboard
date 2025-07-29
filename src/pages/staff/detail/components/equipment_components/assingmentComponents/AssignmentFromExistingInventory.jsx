@@ -360,6 +360,7 @@ const AssignmentFromExistingInventory = () => {
       contract_list: props.contractList,
       subject: "Device Liability Contract",
       items: props.items,
+      company_id: user.companyData.id
     });
   };
   const assignDeviceToStaffMember = async () => {
