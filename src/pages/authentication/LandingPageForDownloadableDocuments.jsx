@@ -1,37 +1,27 @@
 import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
 import { Footer } from "antd/es/layout/layout";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
+import { message } from "antd";
 
 const LandingPageForDownloadableDocuments = () => {
-  const location = useLocation();
-  const [loadingStatus, setLoadingStatus] = useState(false);
-  const {
-    register,
-    handleSubmit,
-  } = useForm();
-  const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
-  const [url, setUrl] = useState(null);
-  console.log(url);
-  const openNotificationWithIcon = useCallback(
-    (type, message, description) => {
-      api.open({
-        message: message,
-        description: description,
-      });
-    },
-    [api]
+  const company_id = new URLSearchParams(window.location.search).get(
+    "company_id"
   );
+  const documentUrl = new URLSearchParams(window.location.search).get(
+    "contract_url"
+  );
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
+  const [url, setUrl] = useState(null);
   const downloadDocument = async (x) => {
-    console.log(x);
     try {
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
@@ -39,7 +29,6 @@ const LandingPageForDownloadableDocuments = () => {
           documentUrl: x,
         }
       );
-      console.log("downloadDocument", response.data);
       return setUrl(response.data.downloadUrl);
     } catch (error) {
       throw new Error(error);
@@ -47,7 +36,7 @@ const LandingPageForDownloadableDocuments = () => {
   };
 
   useEffect(() => {
-    downloadDocument(location.search.split("?")[1]);
+    downloadDocument(documentUrl);
   }, []);
 
   const adminStaffQuery = useQuery({
@@ -58,21 +47,25 @@ const LandingPageForDownloadableDocuments = () => {
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
   if (adminStaffQuery.data) {
     const submitNewPassword = async (data) => {
-      console.log(data);
       setLoadingStatus(true);
-      setLoadingStatus(true);
-      openNotificationWithIcon(
-        "success",
-        "Password updated.",
-        "Please log in with your new password. You will be redirected to login page in a moment."
-      );
-      setTimeout(() => {
-        navigate("/login");
-      }, 5000);
+      const response = await devitrakApi.post("/company/signatures", {
+        signature: data.fullName,
+        date: data.date,
+        company_id: company_id,
+        contract_url: documentUrl,
+      });
+      if (response.data.ok) {
+        return setTimeout(() => {
+          setLoadingStatus(false);
+          const token = localStorage.getItem("admin-token");
+          message.success("Signature collected successfully");
+          if (token) return navigate("/");
+          return navigate("/login");
+        }, 1500);
+      }
     };
     return (
       <>
-        {contextHolder}
         <Grid
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container
