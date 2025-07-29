@@ -11,6 +11,7 @@ import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { useState } from "react";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -21,22 +22,29 @@ const ModalReturnDeviceFromStaff = ({
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit, watch } = useForm();
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
   const handleReturnDevice = async (data) => {
-    const respoUpdateDeviceInStock = await devitrakApi.post(
-      "/db_event/returning-item",
-      {
-        warehouse: 1,
-        status: data.reason,
-        update_at: formatDate(new Date()),
-        serial_number: deviceInfo.item_id_info.serial_number,
-        category_name: deviceInfo.item_id_info.category_name,
-        item_group: deviceInfo.item_id_info.item_group,
-        company_id: user.sqlInfo.company_id,
+    try {
+      setIsLoading(true);
+      const respoUpdateDeviceInStock = await devitrakApi.post(
+        "/db_event/returning-item",
+        {
+          warehouse: 1,
+          status: data.reason,
+          update_at: formatDate(new Date()),
+          serial_number: deviceInfo.item_id_info.serial_number,
+          category_name: deviceInfo.item_id_info.category_name,
+          item_group: deviceInfo.item_id_info.item_group,
+          company_id: user.sqlInfo.company_id,
       }
     );
     if (respoUpdateDeviceInStock.data) {
       await updateLeaseInfo();
     }
+  } catch (error) {
+    setIsLoading(false);
+    throw new Error(error);
+  }
   };
 
   const updateLeaseInfo = async () => {
@@ -170,6 +178,7 @@ const ModalReturnDeviceFromStaff = ({
                 disabled={watch("reason") === ""}
                 htmlType="submit"
                 style={{ ...BlueButton, width: "100%" }}
+                loading={isLoading}
               >
                 <Typography
                   textTransform={"none"}
