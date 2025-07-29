@@ -204,6 +204,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
             "/nodemailer/liability-contract-email-notification",
             {
               company_name: user.companyData.company_name,
+              company_id: user.companyData.id,
               email_admin: user.email,
               staff: {
                 name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
