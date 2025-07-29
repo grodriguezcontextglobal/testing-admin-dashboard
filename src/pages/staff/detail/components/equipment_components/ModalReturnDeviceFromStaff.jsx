@@ -36,15 +36,15 @@ const ModalReturnDeviceFromStaff = ({
           category_name: deviceInfo.item_id_info.category_name,
           item_group: deviceInfo.item_id_info.item_group,
           company_id: user.sqlInfo.company_id,
+        }
+      );
+      if (respoUpdateDeviceInStock.data) {
+        await updateLeaseInfo();
       }
-    );
-    if (respoUpdateDeviceInStock.data) {
-      await updateLeaseInfo();
+    } catch (error) {
+      setIsLoading(false);
+      throw new Error(error);
     }
-  } catch (error) {
-    setIsLoading(false);
-    throw new Error(error);
-  }
   };
 
   const updateLeaseInfo = async () => {
@@ -117,9 +117,6 @@ const ModalReturnDeviceFromStaff = ({
           }
         );
         if (deviceUpdate.data) {
-          await clearCacheMemory(
-            `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-          );
           return closeModal();
         }
       }
@@ -127,7 +124,10 @@ const ModalReturnDeviceFromStaff = ({
       return null;
     }
   };
-  const closeModal = () => {
+  const closeModal = async () => {
+    await clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
     return setOpenReturnDeviceStaffModal(false);
   };
   return (
