@@ -345,7 +345,7 @@ const AssignmentFromExistingInventory = () => {
       ]);
       openNotificationWithIcon("Equipment assigned to staff member.");
       setLoadingStatus(false);
-      navigate(`/staff/${profile.adminUserInfo._id}/main`);
+      navigate(`/staff/${profile.adminUserInfo.id}/main`);
     }
   };
 
