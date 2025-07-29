@@ -8,6 +8,7 @@ import Login from "../../pages/authentication/Login";
 import RegisterCompany from "../../pages/authentication/RegisterCompany";
 import RegisterStripeConnectedAccount from "../../pages/authentication/RegisterStripeConnectedAccount";
 import Register from "../../pages/authentication/Registration";
+import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 
 const NoAuthRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const NoAuthRoutes = () => {
           element={<RegisterStripeConnectedAccount />}
         />
         <Route path="/invitation" element={<InvitationLanding />} />
+        <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>

@@ -13,6 +13,7 @@ import DisplayArticle from "../../pages/posts/components/DisplayArticle";
 import HeaderComponent from "../../components/general/HeaderComponent";
 import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
 import EditDocument from "../../pages/Profile/Documents/EditDocument";
+import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -397,6 +398,7 @@ const AuthRoutes = () => {
                   <UpdatingCompanyInfoAfterStripeConnectedAccountCreated />
                 }
               />
+              <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>
