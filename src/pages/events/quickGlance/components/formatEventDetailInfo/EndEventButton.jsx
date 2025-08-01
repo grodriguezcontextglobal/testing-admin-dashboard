@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { notification, Popconfirm } from "antd";
+import { Button, notification, Popconfirm } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,8 +8,9 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { formatDate } from "../../../../../components/utils/dateFormat";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const ModalToDisplayFunctionInProgress = lazy(() =>
   import("./endEvent/ModalToDisplayFunctionInProgress")
@@ -350,7 +351,7 @@ const EndEventButton = () => {
           lg={12}
         >
           <Popconfirm
-            disabled={!event.active}
+            // disabled={!event.active}
             title="Are you sure? This action can not be reversed."
             onConfirm={() => updatingItemInDB()}
             overlayInnerStyle={{
@@ -358,17 +359,9 @@ const EndEventButton = () => {
             }}
             className="popconfirm-event-end"
           >
-            <BlueButtonComponent
-              title={"End event"}
-              titleStyles={{
-                width: "100%",
-              }}
-              func={null}
-              disabled={!event.active}
-              styles={{
-                width: "100%",
-              }}
-            />
+            <Button style={{...BlueButton, width:"100%"}}>
+              <p style={{ ...BlueButtonText, width:"100%"}}>End event</p>
+            </Button>
           </Popconfirm>
         </Grid>
       </Grid>
