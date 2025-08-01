@@ -19,6 +19,7 @@ export const bulkItemUpdateAlphanumeric = async ({
   setScannedSerialNumbers,
   originalTemplate,
   alphaNumericUpdateItemMutation,
+  dicSuppliers,
 }) => {
   if (!scannedSerialNumbers || scannedSerialNumbers.length === 0) {
     return alert("Please scan at least one serial number.");
@@ -49,6 +50,7 @@ export const bulkItemUpdateAlphanumeric = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
     originalTemplate: originalTemplate,
+    supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
   };
   await alphaNumericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
@@ -80,6 +82,7 @@ export const bulkItemUpdateSequential = async ({
   subLocationsSubmitted,
   originalTemplate,
   sequencialNumbericUpdateItemMutation,
+  dicSuppliers,
 }) => {
   if (!data.min_serial_number || !data.max_serial_number) {
     return alert("Min serial number and max serial number are required.");
@@ -111,6 +114,7 @@ export const bulkItemUpdateSequential = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
+    supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
   };
   await sequencialNumbericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {

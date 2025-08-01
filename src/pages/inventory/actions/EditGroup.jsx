@@ -29,6 +29,9 @@ import { renderTitle } from "./utils/EditBulkComponents";
 import EditBulkForm from "./utils/EditBulkForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import validatingInputFields from "./utils/validatingInputFields";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import NewSupplier from "./utils/suppliers/NewSupplier";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -57,6 +60,34 @@ const EditGroup = () => {
   const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [removeImage, setRemoveImage] = useState(null);
+  const [supplierModal, setSupplierModal] = useState(false);
+  const [dicSuppliers, setDicSuppliers] = useState({});
+  const [supplierList, setSupplierList] = useState([
+    {
+      value: (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <BlueButtonComponent
+            title={"Add supplier"}
+            styles={{ with: "100%" }}
+            icon={<WhiteCirclePlusIcon />}
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+            }}
+            func={() => setSupplierModal(true)}
+          />
+        </div>
+      ),
+    },
+  ]);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -83,7 +114,7 @@ const EditGroup = () => {
       queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
     },
   });
-  
+
   const sequencialNumbericUpdateItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post(
@@ -115,6 +146,19 @@ const EditGroup = () => {
         exact: true,
       });
     },
+  });
+
+  const providersList = useQuery({
+    queryKey: ["providersCompanyQuery", user?.companyData?.id],
+    queryFn: () =>
+      devitrakApi.get("/company/provider-companies", {
+        params: {
+          creator: user?.companyData?.id,
+        },
+      }),
+    enabled: !!user?.companyData?.id,
+    refetchOnMount: false,
+    staleTime: 60 * 1000 * 5, // 5 minutes
   });
 
   const openNotificationWithIcon = useCallback(
@@ -215,6 +259,7 @@ const EditGroup = () => {
           subLocationsSubmitted,
           originalTemplate: refTemplateToUpdate.current,
           updateAllItemsMutation,
+          dicSuppliers,
         });
         return setLoadingStatus(false);
       }
@@ -235,6 +280,7 @@ const EditGroup = () => {
           setScannedSerialNumbers,
           originalTemplate: refTemplateToUpdate.current,
           alphaNumericUpdateItemMutation,
+          dicSuppliers,
         });
       } else {
         await bulkItemUpdateSequential({
@@ -292,9 +338,14 @@ const EditGroup = () => {
   ]);
   qtyDiff();
 
-  const subLocationsOptions = useMemo(() => retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items, watch("location")
-  ), [watch("location")]);
+  const subLocationsOptions = useMemo(
+    () =>
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items,
+        watch("location")
+      ),
+    [watch("location")]
+  );
 
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
@@ -416,6 +467,41 @@ const EditGroup = () => {
       message.error("Failed to upload image: " + error.message);
     }
   };
+
+  const refetchingAfterNewSupplier = () => {
+    queryClient.invalidateQueries([
+      "providersCompanyQuery",
+      user?.companyData?.id,
+    ]);
+    return providersList.refetch();
+  };
+
+  useEffect(() => {
+    const suppliersOptionsRendering = () => {
+      let result = [];
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          result.push({ value: item.companyName });
+        });
+      }
+      return setSupplierList([...supplierList, ...result]);
+    };
+    const diccionarySuppliers = () => {
+      const dic = new Map();
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          if (!dic.has(item.companyName)) {
+            let c = {};
+            c[item.companyName] = item.id;
+            dic.set(item.companyName, item.id);
+          }
+        });
+      }
+      return setDicSuppliers(Array.from(dic));
+    };
+    suppliersOptionsRendering();
+    diccionarySuppliers();
+  }, [providersList.data, providersList.isRefetching]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -661,6 +747,7 @@ const EditGroup = () => {
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
+        suppliersOptions={supplierList}
       />
       {renderingModals({
         openScanningModal,
@@ -670,6 +757,16 @@ const EditGroup = () => {
         scannedSerialNumbers,
         setScannedSerialNumbers,
       })}
+      {supplierModal && (
+        <NewSupplier
+          providersList={providersList}
+          queryClient={queryClient}
+          setSupplierModal={setSupplierModal}
+          supplierModal={supplierModal}
+          user={user}
+          refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+        />
+      )}
     </Grid>
   );
 };

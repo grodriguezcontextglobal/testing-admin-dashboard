@@ -70,6 +70,7 @@ const EditBulkForm = ({
   updateAllItems,
   valueObject,
   watch,
+  suppliersOptions,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -107,6 +108,7 @@ const EditBulkForm = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
+          suppliersOptions,
         }).map((item) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
@@ -142,7 +144,7 @@ const EditBulkForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
@@ -189,7 +191,8 @@ const EditBulkForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong>{" "}
+                        {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                     <div
@@ -293,7 +296,8 @@ const EditBulkForm = ({
                         }).styling
                       }
                     >
-                      {item.label} {item.tooltip && <QuestionIcon />}
+                      {item.label} <strong>*</strong>{" "}
+                      {item.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>
                 </InputLabel>
