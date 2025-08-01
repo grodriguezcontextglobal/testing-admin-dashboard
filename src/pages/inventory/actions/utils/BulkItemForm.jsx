@@ -65,6 +65,7 @@ const BulkItemForm = ({
   setValueObject,
   subLocationsOptions,
   subLocationsSubmitted,
+  suppliersOptions,
   valueObject,
   watch,
 }) => {
@@ -94,6 +95,7 @@ const BulkItemForm = ({
           options,
           displayContainerSplotLimitField,
           subLocationsOptions,
+          suppliersOptions,
           displaySublocationFields,
           addSerialNumberField,
           rangeFormat,
@@ -139,7 +141,7 @@ const BulkItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
@@ -192,7 +194,7 @@ const BulkItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                     <div
@@ -296,7 +298,7 @@ const BulkItemForm = ({
                         }).styling
                       }
                     >
-                      {item.label} {item.tooltip && <QuestionIcon />}
+                      {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>
                 </InputLabel>

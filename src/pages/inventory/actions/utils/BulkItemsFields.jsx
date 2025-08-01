@@ -12,6 +12,7 @@ export const renderFields = ({
   renderLocationOptions,
   retrieveItemOptions,
   subLocationsOptions,
+  suppliersOptions,
 }) => {
   const fields = [
     {
@@ -269,6 +270,19 @@ export const renderFields = ({
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",
+      displayField: isRented,
+    },
+    {
+      name: "supplier",
+      placeholder: "Select a supplier",
+      label: "Supplier",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: suppliersOptions,
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Supplier where rented equipment will be returned.",
       displayField: isRented,
     },
     {
