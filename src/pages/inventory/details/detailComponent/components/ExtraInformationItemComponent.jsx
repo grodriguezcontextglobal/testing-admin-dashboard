@@ -7,7 +7,7 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
   const sortAndMergeData = () => {
     const result = new Set();
     for (let [key, value] of Object.entries(dataFound[0])) {
-      if (key === "sub_location") {
+      if (key === "sub_location" && dataFound[0].warehouse === 1) {
         const subLocations = checkValidJSON(value);
         subLocations?.length > 0 &&
           subLocations.map((item, index) => {
@@ -44,7 +44,7 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
           margin: ".5rem 0",
         }}
       >
-        Extra information
+       Additional information
       </h1>
       <Grid
         display={"flex"}
