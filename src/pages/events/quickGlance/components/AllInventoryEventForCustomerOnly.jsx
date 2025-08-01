@@ -51,7 +51,7 @@ const AlInventoryEventAssigned = ({
           >
             {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
             Inventory assigned to event for consumer uses:&nbsp;
-            <HighlightedPill props={`${inventoryEventAssignedCount()} total`} />
+            <HighlightedPill props={`${inventoryEventAssignedCount() ?? 0} total`} />
           </p>
         </button>
       </Grid>

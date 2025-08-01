@@ -39,7 +39,7 @@ const ContainerForm = ({
       try {
         const valueData =
           typeof option.value === "string"
-            ? JSON.parse(option.value)
+            ? JSON?.parse(option.value)
             : option.valueData;
 
         const location = valueData.location || option.key;

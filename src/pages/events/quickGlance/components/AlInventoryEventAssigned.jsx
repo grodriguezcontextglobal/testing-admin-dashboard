@@ -24,11 +24,9 @@ const AllInventoryEventForCustomerOnly = ({
   const [displayingDocumentListContainer, setDisplayingDocumentListContainer] =
     useState(false);
   const { event } = useSelector((state) => state.event);
-
   const inventoryEventData =
-    typeof database.receiversInventory === "object"
-      ? database.receiversInventory
-      : JSON.parse(database.receiversInventory);
+    typeof database?.receiversInventory === "string"
+      ? JSON.parse(database.receiversInventory) : database.receiversInventory;
 
   return (
     <>

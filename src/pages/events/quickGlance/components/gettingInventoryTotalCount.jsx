@@ -9,7 +9,7 @@ const gettingInventoryTotalCount = ({
       );
       const gettingContainersData = {};
       const checkIf = (type) => {
-        const result = checkContainersInEvent.some(
+        const result = checkContainersInEvent?.some(
           (item) => item.group === type
         );
         if (result) {
@@ -19,15 +19,15 @@ const gettingInventoryTotalCount = ({
         }
         return result;
       };
-      const chec = inventoryEventData.some((item) => checkIf(item.type));
-      if (!chec) return inventoryEventData.length;
+      const chec = inventoryEventData?.some((item) => checkIf(item.type));
+      if (!chec) return inventoryEventData?.length;
       let result = 0;
       Object.values(gettingContainersData).forEach((item) => {
         if (item) {
           result = result + Number(item);
         }
       });
-      return inventoryEventData.length - result;
+      return inventoryEventData?.length - result;
     };
     return totalCountItemsInventoryEvent();
 }
