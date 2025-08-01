@@ -8,6 +8,7 @@ export const renderFields = ({
   subLocationsOptions,
   isRented,
   displayContainerSplotLimitField,
+  suppliersOptions,
 }) => {
   const fields = [
     {
@@ -15,7 +16,11 @@ export const renderFields = ({
       placeholder: "e.g. Electronic",
       label: "Category reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("category_name"),
       htmlOption: 0,
@@ -23,12 +28,17 @@ export const renderFields = ({
       tooltipMessage: "This is the category of the reference item.",
       displayField: false,
     },
-{
+    {
       name: "reference_item_group",
-      placeholder: "Type the name of the item for retrieving the reference item.",
+      placeholder:
+        "Type the name of the item for retrieving the reference item.",
       label: "Item name reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("item_group"),
       htmlOption: 0,
@@ -36,7 +46,7 @@ export const renderFields = ({
       tooltipMessage: "This is the item group of the reference item.",
       displayField: true,
     },
-{
+    {
       name: "item_group",
       placeholder: "Type the name of the item",
       label: "Item name",
@@ -202,6 +212,20 @@ export const renderFields = ({
       displayField: isRented,
     },
     {
+      name: "supplier",
+      placeholder: "Select a supplier",
+      label: "Supplier",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: suppliersOptions,
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Supplier where rented equipment will be returned.",
+      displayField: isRented,
+    },
+
+    {
       name: "enableAssignFeature",
       placeholder: "",
       label: "Is it assignable to staff/events?",
@@ -238,7 +262,7 @@ export const renderFields = ({
       htmlOption: 6,
       tooltip: false,
       tooltipMessage: null,
-      displayField: displayPreviewImage
+      displayField: displayPreviewImage,
     },
     {
       name: "descript_item",

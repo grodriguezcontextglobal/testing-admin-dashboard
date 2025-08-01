@@ -65,6 +65,7 @@ const SingleItemForm = ({
   subLocationsSubmitted,
   valueObject,
   watch,
+  suppliersOptions,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -101,6 +102,7 @@ const SingleItemForm = ({
           renderingOptionsForSubLocations,
           isRented,
           displayPreviewImage,
+          suppliersOptions,
         }).map((item) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
