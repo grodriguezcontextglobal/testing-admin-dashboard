@@ -19,12 +19,15 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import "./style.css";
+import { renderTitleSingleItem } from "./utils/BulkComponents";
 import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
 import SingleItemForm from "./utils/SingleItemForm";
 import { singleItemInserting } from "./utils/singleItemIserting";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
+import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
-import { renderTitleSingleItem } from "./utils/BulkComponents";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -44,6 +47,34 @@ const AddNewItem = () => {
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
+  const [supplierModal, setSupplierModal] = useState(false);
+  const [dicSuppliers, setDicSuppliers] = useState({});
+  const [supplierList, setSupplierList] = useState([
+    {
+      value: (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <BlueButtonComponent
+            title={"Add supplier"}
+            styles={{ with: "100%" }}
+            icon={<WhiteCirclePlusIcon />}
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+            }}
+            func={() => setSupplierModal(true)}
+          />
+        </div>
+      ),
+    },
+  ]);
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -82,6 +113,19 @@ const AddNewItem = () => {
     enabled: !!user.sqlInfo.company_id,
     refetchOnMount: false,
     staleTime: 3 * 60 * 1000,
+  });
+
+  const providersList = useQuery({
+    queryKey: ["providersCompanyQuery", user?.companyData?.id],
+    queryFn: () =>
+      devitrakApi.get("/company/provider-companies", {
+        params: {
+          creator: user?.companyData?.id,
+        },
+      }),
+    enabled: !!user?.companyData?.id,
+    refetchOnMount: false,
+    staleTime: 60 * 1000 * 5, // 5 minutes
   });
 
   const invalidateQueries = () => {
@@ -135,8 +179,8 @@ const AddNewItem = () => {
       openNotificationWithIcon,
       returningDate,
     });
-      if (!data.serial_number || data.serial_number === "")
-    return openNotificationWithIcon("A serial number must be provided.");
+    if (!data.serial_number || data.serial_number === "")
+      return openNotificationWithIcon("A serial number must be provided.");
 
     if (Number(data.max_serial_number) < Number(data.min_serial_number)) {
       return openNotificationWithIcon(
@@ -178,6 +222,7 @@ const AddNewItem = () => {
         returningDate,
         subLocationsSubmitted,
         invalidateQueries,
+        dicSuppliers,
       });
       return setLoadingStatus(false);
     } catch (error) {
@@ -210,9 +255,14 @@ const AddNewItem = () => {
     return 6;
   };
 
-  const subLocationsOptions = useMemo(() => retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items, watch("location")
-  ), [watch("location")]);
+  const subLocationsOptions = useMemo(
+    () =>
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items,
+        watch("location")
+      ),
+    [watch("location")]
+  );
 
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
@@ -334,6 +384,14 @@ const AddNewItem = () => {
     }
   };
 
+  const refetchingAfterNewSupplier = () => {
+    queryClient.invalidateQueries([
+      "providersCompanyQuery",
+      user?.companyData?.id,
+    ]);
+    return providersList.refetch();
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
@@ -416,6 +474,33 @@ const AddNewItem = () => {
     }
   }, [imageUploadedValue]);
 
+  useEffect(() => {
+    const suppliersOptionsRendering = () => {
+      let result = [];
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          result.push({ value: item.companyName });
+        });
+      }
+      return setSupplierList([...supplierList, ...result]);
+    };
+    const diccionarySuppliers = () => {
+      const dic = new Map();
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          if (!dic.has(item.companyName)) {
+            let c = {};
+            c[item.companyName] = item.id;
+            dic.set(item.companyName, item.id);
+          }
+        });
+      }
+      return setDicSuppliers(Array.from(dic));
+    };
+    suppliersOptionsRendering();
+    diccionarySuppliers();
+  }, [providersList.data, providersList.isRefetching]);
+
   return (
     <Grid
       display={"flex"}
@@ -462,7 +547,18 @@ const AddNewItem = () => {
         subLocationsSubmitted={subLocationsSubmitted}
         valueObject={valueObject}
         watch={watch}
+        suppliersOptions={supplierList}
       />
+      {supplierModal && (
+        <NewSupplier
+          providersList={providersList}
+          queryClient={queryClient}
+          setSupplierModal={setSupplierModal}
+          supplierModal={supplierModal}
+          user={user}
+          refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+        />
+      )}
     </Grid>
   );
 };
