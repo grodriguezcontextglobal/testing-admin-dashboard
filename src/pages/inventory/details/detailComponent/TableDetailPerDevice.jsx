@@ -165,7 +165,14 @@ const TableDetailPerDevice = ({ dataFound }) => {
         compare: (a, b) => ("" + a.event_name).localeCompare(b.event_name),
       },
       responsive: ["xs", "sm", "md", "lg"],
-      render: (event_name) => {
+      render: (event_name, record) => {
+        const renderingEventName = () => {
+          if(record.warehouse === 1) {
+            return `Warehouse ${record.location}`;
+          } else {
+            return event_name;
+          }
+        };
         return (
           <button
             onClick={() => navigateFn(event_name)}
@@ -186,7 +193,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
                 color: "var(--blue-dark-600)",
               }}
             >
-              {event_name ?? "Warehouse"}
+              {renderingEventName()}
             </p>
           </button>
         );
@@ -201,23 +208,30 @@ const TableDetailPerDevice = ({ dataFound }) => {
           ("" + a.state_address).localeCompare(b.state_address),
       },
       responsive: ["xs", "sm", "md", "lg"],
-      render: (record) => (
-        <span
-          style={{
-            backgroundColor: "transparent",
-            outline: "none",
-            margin: "auto",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <p style={{}}>
-            {record.warehouse === 1 ? record.location : record.event_name}
-          </p>
-        </span>
-      ),
+      render: (record) => {
+        console.log(record);
+        const renderingLocation = () => {
+          if (record.warehouse === 1) {
+            return record.location;
+          }
+          return `${record.street_address}, ${record.city_address}, ${record.state_address}, ${record.zip_address}`;
+        };
+        return (
+          <span
+            style={{
+              backgroundColor: "transparent",
+              outline: "none",
+              margin: "auto",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <p style={{}}>{renderingLocation()}</p>
+          </span>
+        );
+      },
     },
     {
       title: "Ownership",
@@ -263,7 +277,6 @@ const TableDetailPerDevice = ({ dataFound }) => {
       ),
     },
   ];
-
   return (
     <Table
       sticky
