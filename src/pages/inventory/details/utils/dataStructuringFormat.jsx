@@ -1,4 +1,4 @@
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Grid, IconButton, InputAdornment, OutlinedInput } from "@mui/material";
 import { groupBy, uniqueId } from "lodash";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -6,6 +6,7 @@ import TableDeviceCategory from "../categoryDetail/components/Table";
 import TableItemBrand from "../BrandDetail/components/Table";
 import TableItemGroup from "../GroupDetail/components/Table";
 import TableItemOwnership from "../OwnershipDetail/components/Table";
+import BlueButtonComponent from "../../../../components/UX/buttons/bluebutton";
 
 export const dataStructuringFormat = (
   renderedListItems,
@@ -70,8 +71,11 @@ export const cellStyle = {
 };
 
 export const BodyComponent = ({
-  watch,
   register,
+  handleSubmitForm,
+  handleSubmit,
+  searchedValueItem,
+  setSearchedValueItem,
   setReferenceData,
   isLoadingComponent,
   trigger,
@@ -88,17 +92,41 @@ export const BodyComponent = ({
         md={12}
         lg={12}
       >
-        <OutlinedInput
-          {...register("searchDevice")}
-          fullWidth
-          placeholder="Search devices here"
-          style={OutlinedInputStyle}
-          startAdornment={
-            <InputAdornment position="start">
-              <MagnifyIcon />
-            </InputAdornment>
-          }
-        />
+        <form
+          style={{ width: "100%", display: "flex", gap: "10px" }}
+          onSubmit={handleSubmit(handleSubmitForm)}
+        >
+          <OutlinedInput
+            {...register("searchDevice")}
+            fullWidth
+            placeholder="Search devices here"
+            style={OutlinedInputStyle}
+            startAdornment={
+              <InputAdornment position="start">
+                <MagnifyIcon />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  style={{
+                    color: "var(--danger-action)",
+                    display:
+                      searchedValueItem && searchedValueItem?.length > 0
+                        ? "flex"
+                        : "none",
+                  }}
+                  onClick={() => {
+                    setSearchedValueItem(null);
+                  }}
+                >
+                  x{/* <CloseIcon /> */}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+          <BlueButtonComponent title={"Search"} buttonType="submit" />
+        </form>
       </Grid>
       <Grid container>
         <Grid
@@ -110,28 +138,28 @@ export const BodyComponent = ({
         >
           {trigger === "category" && (
             <TableDeviceCategory
-              searchItem={watch("searchDevice")}
+              searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
             />
           )}
           {trigger === "brand" && (
             <TableItemBrand
-              searchItem={watch("searchDevice")}
+              searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
             />
           )}
           {trigger === "group" && (
             <TableItemGroup
-              searchItem={watch("searchDevice")}
+              searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
             />
           )}
           {trigger === "ownership" && (
             <TableItemOwnership
-              searchItem={watch("searchDevice")}
+              searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
             />
