@@ -1,4 +1,4 @@
-export const CloseIcon = () => {
+export const CloseIcon = ({ fill = "currentColor" }) => {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -7,7 +7,7 @@ export const CloseIcon = () => {
         viewBox="0 0 512 512"
       >
         <path
-          fill="none"
+          fill={fill}
           stroke="currentColor"
           d="M368 368 144 144m224 0L144 368"
         />
