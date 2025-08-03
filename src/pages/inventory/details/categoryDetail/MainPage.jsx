@@ -16,7 +16,7 @@ const MainPage = () => {
   });
   const location = useLocation();
   const categoryName = location.search.split("&")[0];
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchDevice: location.search.split("&")[1].split("=")[1],
     },
@@ -45,6 +45,11 @@ const MainPage = () => {
     }, 1100);
   }, []);
 
+  const [searchedValueItem, setSearchedValueItem] = useState(null);
+  const handleSubmitForm = (data) => {
+    return setSearchedValueItem(data.searchDevice);
+  };
+
   return (
     <Suspense
       fallback={
@@ -70,9 +75,11 @@ const MainPage = () => {
         <CardInfo referenceData={referenceData} />
         <Divider />
         <BodyComponent
-          watch={watch}
           register={register}
-          setReferenceData={setReferenceData}
+          handleSubmitForm={handleSubmitForm}
+          handleSubmit={handleSubmit}
+          searchedValueItem={searchedValueItem}
+          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"category"}
         />

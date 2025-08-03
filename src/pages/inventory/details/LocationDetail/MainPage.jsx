@@ -1,14 +1,10 @@
-import {
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography
-} from "@mui/material";
+import { Grid, IconButton, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
+import BlueButtonComponent from "../../../../components/UX/buttons/bluebutton";
 import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -31,16 +27,11 @@ const MainPage = () => {
   });
   const location = useLocation();
   const locationName = location.search.split("&")[0];
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchDevice: location.search.split("&")[1]?.split("=")[1],
     },
   });
-  // const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  // const isMediumDevice = useMediaQuery(
-  //   "only screen and (min-width : 769px) and (max-width : 992px)"
-  // );
-  // const navigate = useNavigate();
 
   useEffect(() => {
     if (watch("searchDevice") === "undefined") {
@@ -117,6 +108,10 @@ const MainPage = () => {
       title: navigateToSublocation(item, index),
     })),
   ];
+  const [searchedValueItem, setSearchedValueItem] = useState(null);
+  const handleSubmitForm = (data) => {
+    return setSearchedValueItem(data.searchDevice);
+  };
 
   return (
     <Suspense
@@ -169,24 +164,6 @@ const MainPage = () => {
               Local inventory
             </Typography>
           </Grid>
-          {/* <Grid
-            textAlign={"right"}
-            display={`${isSmallDevice || isMediumDevice ? "none" : "flex"}`}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            item
-            md={6}
-          >
-            <Button
-              onClick={() => navigate("/inventory/edit-group")}
-              style={{ ...BlueButton, width: "fit-content" }}
-            >
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                Update a group of device
-              </p>
-            </Button>
-          </Grid> */}
         </Grid>
         <Grid
           style={{
@@ -242,17 +219,39 @@ const MainPage = () => {
           md={12}
           lg={12}
         >
-          <OutlinedInput
-            {...register("searchDevice")}
-            fullWidth
-            placeholder="Search devices here"
-            style={OutlinedInputStyle}
-            startAdornment={
-              <InputAdornment position="start">
-                <MagnifyIcon />
-              </InputAdornment>
-            }
-          />
+          <form style={{ width: "100%", display: "flex", gap: "10px" }} onSubmit={handleSubmit(handleSubmitForm)}>
+            <OutlinedInput
+              {...register("searchDevice")}
+              fullWidth
+              placeholder="Search devices here"
+              style={OutlinedInputStyle}
+              startAdornment={
+                <InputAdornment position="start">
+                  <MagnifyIcon />
+                </InputAdornment>
+              }
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    style={{
+                      backgroundColor: "var(--danger-action)",
+                      display:
+                        searchedValueItem && searchedValueItem?.length > 0
+                          ? "flex"
+                          : "none",
+                          aspectRatio:2/1,
+                    }}
+                    onClick={() => {
+                      setSearchedValueItem(null);
+                    }}
+                  >
+                    <p style={{ color: "#fff", fontSize: "1rem", fontWeight: 600, aspectRatio:1 }}>x</p>
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+            <BlueButtonComponent title={"Search"} buttonType="submit" />
+          </form>
         </Grid>
         <Grid container>
           <Grid
@@ -263,7 +262,7 @@ const MainPage = () => {
             xs={12}
           >
             <TableDeviceLocation
-              searchItem={watch("searchDevice")}
+              searchItem={searchedValueItem}
               referenceData={setReferenceData}
             />
           </Grid>

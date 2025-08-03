@@ -17,7 +17,7 @@ const MainPageGrouping = () => {
   });
   const location = useLocation();
   const groupName = location.search.split("&");
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchDevice: decodeURI(groupName[1].split("=")[1]),
     },
@@ -46,6 +46,11 @@ const MainPageGrouping = () => {
     }, 1100);
   }, []);
 
+  const [searchedValueItem, setSearchedValueItem] = useState(null);
+  const handleSubmitForm = (data) => {
+    return setSearchedValueItem(data.searchDevice);
+  };
+
   return (
     <Suspense
       fallback={
@@ -68,9 +73,11 @@ const MainPageGrouping = () => {
         <CardInfo referenceData={referenceData} />
         <Divider />
         <BodyComponent
-          watch={watch}
           register={register}
-          setReferenceData={setReferenceData}
+          handleSubmitForm={handleSubmitForm}
+          handleSubmit={handleSubmit}
+          searchedValueItem={searchedValueItem}
+          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"group"}
         />

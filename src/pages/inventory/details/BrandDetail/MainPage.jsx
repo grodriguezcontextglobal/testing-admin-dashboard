@@ -16,7 +16,7 @@ const MainPageBrand = () => {
   });
   const location = useLocation();
   const brandName = location.search.split("&");
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchDevice: decodeURI(brandName[1].split("=")[1]),
     },
@@ -27,6 +27,7 @@ const MainPageBrand = () => {
     }
   }, [brandName]);
 
+  const [searchedValueItem, setSearchedValueItem] = useState(null)
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
     for (let i = 3; i > 0; i--) {
@@ -40,6 +41,10 @@ const MainPageBrand = () => {
       }, 800);
     }
   }, []);
+
+  const handleSubmitForm = (data) => {
+    return setSearchedValueItem(data.searchDevice)
+  };
   return (
     <Suspense
       fallback={
@@ -62,9 +67,11 @@ const MainPageBrand = () => {
         <CardInfo referenceData={referenceData} />
         <Divider />
         <BodyComponent
-          watch={watch}
           register={register}
-          setReferenceData={setReferenceData}
+          handleSubmitForm={handleSubmitForm}
+          handleSubmit={handleSubmit}
+          searchedValueItem={searchedValueItem}
+          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"brand"}
         />
