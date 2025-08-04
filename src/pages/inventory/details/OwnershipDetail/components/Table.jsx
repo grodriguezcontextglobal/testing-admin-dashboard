@@ -3,7 +3,7 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
 import { groupBy } from "lodash";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -15,6 +15,7 @@ import {
 } from "../../utils/dataStructuringFormat";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
+
 const TableItemOwnership = ({
   searchItem,
   referenceData,
@@ -24,6 +25,7 @@ const TableItemOwnership = ({
   const ownership = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  
   const listItemsQuery = useQuery({
     queryKey: [
       "currentStateDevicePerGroupName",
@@ -53,52 +55,62 @@ const TableItemOwnership = ({
       }),
     enabled: !!user.sqlInfo.company_id,
   });
+
+  // Memoize expensive calculations
   const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = groupBy(imageSource, "item_group");
+  const groupingByDeviceType = useMemo(() => {
+    return groupBy(imageSource, "item_group");
+  }, [imageSource]);
+
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const [structuredDataRendering, setStructuredDataRendering] = useState([]);
-  useEffect(() => {
-    setStructuredDataRendering(
-      dataStructuringFormat(
-        renderedListItems,
-        groupingByDeviceType,
-        itemsInInventoryQuery
-      )
-    );
-  }, [
-    renderedListItems?.length > 0,
-    groupingByDeviceType,
-    itemsInInventoryQuery,
-  ]);
 
-  const calculatingValue = () => {
+  // Fix: Memoize the structured data to prevent unnecessary re-calculations
+  const memoizedStructuredData = useMemo(() => {
+    return dataStructuringFormat(
+      renderedListItems,
+      groupingByDeviceType,
+      itemsInInventoryQuery
+    );
+  }, [renderedListItems, groupingByDeviceType, itemsInInventoryQuery?.data]);
+
+  // Fix: Update state only when memoized data actually changes
+  useEffect(() => {
+    setStructuredDataRendering(memoizedStructuredData);
+  }, [memoizedStructuredData]);
+
+  // Memoize expensive calculations
+  const calculatingValue = useMemo(() => {
     let result = 0;
     for (let data of structuredDataRendering) {
       result += Number(data.cost);
     }
     return result;
-  };
+  }, [structuredDataRendering]);
 
-  const totalAvailable = () => {
+  const totalAvailable = useMemo(() => {
     const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
     return itemList[1]?.length;
-  };
+  }, [listItemsQuery?.data?.data.result]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    referenceData({
+  // Fix: Use useCallback to prevent referenceData from changing on every render
+  const memoizedReferenceData = useCallback(() => {
+    return {
       totalDevices: structuredDataRendering.length,
-      totalValue: calculatingValue(),
-      totalAvailable: totalAvailable(),
-    });
-    return () => {
-      controller.abort();
+      totalValue: calculatingValue,
+      totalAvailable: totalAvailable,
     };
-  }, [structuredDataRendering.length, location.key]);
+  }, [structuredDataRendering.length, calculatingValue, totalAvailable]);
+
+  // Fix: Only call referenceData when the actual values change
+  useEffect(() => {
+    const data = memoizedReferenceData();
+    referenceData(data);
+  }, [memoizedReferenceData, referenceData]);
 
   const dataRenderingMemo = useMemo(() => {
     return dataToDisplay(structuredDataRendering, searchItem);
-  }, [isLoadingComponent, searchItem]);
+  }, [structuredDataRendering, searchItem]);
 
   return (
     <Suspense
