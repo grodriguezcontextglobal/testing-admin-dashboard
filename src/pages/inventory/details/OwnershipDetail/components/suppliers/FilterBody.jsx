@@ -4,8 +4,13 @@ import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import useSuppliersCompanyFetch from "./hook/useSuppliersCompanyFetch";
 import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
+import { useState } from "react";
+import ReturnRentedItemModal from "./ReturnRentedItemModal";
 
 const FilterBody = ({ setSearchedValueItem, setValue }) => {
+  const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
+    useState(false);
+  const [selectedSupplierId, setSelectedSupplierId] = useState(null);
   const handleChange = (value) => {
     searchingFunction(value);
   };
@@ -19,8 +24,8 @@ const FilterBody = ({ setSearchedValueItem, setValue }) => {
 
   const searchingFunction = (props) => {
     setSearchedValueItem(props);
+    setSelectedSupplierId(props);
     return setValue("searchDevice", props);
-
   };
   return (
     <div
@@ -43,11 +48,23 @@ const FilterBody = ({ setSearchedValueItem, setValue }) => {
         allowClear
         placeholder="Select a supplier to display related data"
       />
-      {/* <BlueButtonComponent
-        title={"Display data"}
-        func={searchingFunction}
-      /> */}
-      <BlueButtonComponent title={"Delete data"} />
+      <BlueButtonComponent
+        title={"Return item to Renter"}
+        func={() => setReturnRentedItemsToRenter(true)}
+      />
+      {returnRentedItemsToRenter && (
+        <ReturnRentedItemModal
+          open={returnRentedItemsToRenter}
+          handleClose={() => setReturnRentedItemsToRenter(false)}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "5px 5px 5px 0px",
+          }}
+          supplier_id={selectedSupplierId}
+        />
+      )}
     </div>
   );
 };
