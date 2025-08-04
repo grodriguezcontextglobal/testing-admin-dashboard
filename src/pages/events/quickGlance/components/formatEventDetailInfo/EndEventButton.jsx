@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, notification, Popconfirm } from "antd";
+import { notification } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,9 +8,8 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { formatDate } from "../../../../../components/utils/dateFormat";
+import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const ModalToDisplayFunctionInProgress = lazy(() =>
   import("./endEvent/ModalToDisplayFunctionInProgress")
@@ -350,7 +349,13 @@ const EndEventButton = () => {
           md={12}
           lg={12}
         >
-          <Popconfirm
+          <BlueButtonConfirmationComponent 
+          title={"End event"}
+          func={updatingItemInDB}
+          confirmationTitle="Are you sure? This action can not be reversed."
+          styles={{ width:"100%"}}
+          />
+          {/* <Popconfirm
             // disabled={!event.active}
             title="Are you sure? This action can not be reversed."
             onConfirm={() => updatingItemInDB()}
@@ -362,7 +367,7 @@ const EndEventButton = () => {
             <Button style={{...BlueButton, width:"100%"}}>
               <p style={{ ...BlueButtonText, width:"100%"}}>End event</p>
             </Button>
-          </Popconfirm>
+          </Popconfirm> */}
         </Grid>
       </Grid>
       {openEndingEventModal && (
