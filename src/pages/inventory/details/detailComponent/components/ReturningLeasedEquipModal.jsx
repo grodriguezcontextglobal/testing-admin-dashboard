@@ -79,7 +79,7 @@ const ReturningLeasedEquipModal = ({
   //   }
   // };
 
-  const handleReturningLeasedEquip = async (data) => {
+  const handleReturningLeasedEquip = async () => {
     setLoadingStatus(true);
     try {
       const response = await devitrakApi.post(
