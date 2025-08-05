@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
+import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 
 const { Search } = Input;
 
@@ -241,12 +242,14 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
     const batchProcessor = async (batch) => {
       const payload = batch.map((item_id) => item_id);
-
-      console.log("batchProcessor", {
-        query:
-          "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
-        values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
-      });
+      return await devitrakApi.post(
+        "/db_company/inventory-based-on-submitted-parameters",
+        {
+          query:
+            "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
+          values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
+        }
+      );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
@@ -258,10 +261,13 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       const placeholders = batch.map(() => "?").join(",");
       const deleteQuery = `DELETE FROM item_inv WHERE item_id IN (${placeholders}) AND company_id = ?`;
       const deleteValues = [...batch, user.sqlInfo.company_id];
-      console.log("batchProcessor", {
-        query: deleteQuery,
-        values: deleteValues,
-      });
+      return await devitrakApi.post(
+        "/db_company/inventory-based-on-submitted-parameters",
+        {
+          query: deleteQuery,
+          values: deleteValues,
+        }
+      );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
@@ -348,6 +354,10 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
       // Step 3: Email notification to staff
       await emailNotification({ items: allItemIds });
+
+      // Step 4: Clear cache memory
+      await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
+
       message.success({
         content: `Successfully processed ${allItemIds.length} items`,
         key: "processing",
@@ -392,6 +402,9 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
       // Step 3: Email notification to staff
       await emailNotification({ items: selectedItems });
+
+      // Step 4: Clear cache memory
+      await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
       message.success({
         content: `Successfully processed ${itemIds.length} selected items`,
@@ -443,6 +456,12 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       dataIndex: "serial_number",
       key: "serial_number",
       sorter: (a, b) => a.serial_number.localeCompare(b.serial_number),
+    },
+    {
+      title: "Group",
+      dataIndex: "item_group",
+      key: "item_group",
+      sorter: (a, b) => a.item_group.localeCompare(b.item_group),
     },
   ];
 
