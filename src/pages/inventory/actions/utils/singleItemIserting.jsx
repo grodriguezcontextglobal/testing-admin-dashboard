@@ -67,6 +67,7 @@ export const singleItemInserting = async ({
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
   );
+  await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
   return navigate("/inventory");
   // }

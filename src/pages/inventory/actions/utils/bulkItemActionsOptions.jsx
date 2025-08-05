@@ -70,7 +70,7 @@ export const bulkItemInsertAlphanumeric = async ({
     await clearCacheMemory(
       `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
     );
-
+    await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
     return navigate("/inventory");
   } catch (error) {
     message.error("Failed to create new item: " + error.message);
@@ -145,6 +145,7 @@ export const bulkItemInsertSequential = async ({
     await clearCacheMemory(
       `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
     );
+    await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
     return navigate("/inventory");
   } catch (error) {
