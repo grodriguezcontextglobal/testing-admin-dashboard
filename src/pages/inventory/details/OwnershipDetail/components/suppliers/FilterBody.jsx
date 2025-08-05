@@ -1,11 +1,11 @@
 import { Select } from "antd";
-import BlueButtonComponent from "../../../../../../components/UX/buttons/bluebutton";
 import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import useSuppliersCompanyFetch from "./hook/useSuppliersCompanyFetch";
 import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
 import { useState } from "react";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 
 const FilterBody = ({ setSearchedValueItem, setValue }) => {
   const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
