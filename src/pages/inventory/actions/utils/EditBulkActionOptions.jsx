@@ -50,7 +50,7 @@ export const bulkItemUpdateAlphanumeric = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
     originalTemplate: originalTemplate,
-    supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
+    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
   };
   await alphaNumericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
@@ -64,6 +64,7 @@ export const bulkItemUpdateAlphanumeric = async ({
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
   );
+  await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
   return navigate("/inventory");
 };
@@ -114,7 +115,7 @@ export const bulkItemUpdateSequential = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
-    supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
+    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
   };
   await sequencialNumbericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
@@ -127,7 +128,7 @@ export const bulkItemUpdateSequential = async ({
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
   );
-
+  await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
   return navigate("/inventory");
 };
 
@@ -145,6 +146,7 @@ export const updateAllItemsBasedOnParameters = async ({
   subLocationsSubmitted,
   originalTemplate,
   updateAllItemsMutation,
+  dicSuppliers,
 }) => {
   if (!data.category_name || !data.item_group) {
     return alert("Category name and item group are required.");
@@ -172,6 +174,7 @@ export const updateAllItemsBasedOnParameters = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
+    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
   };
   await updateAllItemsMutation.mutate(newTemplate);
   await clearCacheMemory(
