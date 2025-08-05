@@ -14,6 +14,8 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+// Add this import at the top of the file
+import { utils, write } from "xlsx";
 
 const { Search } = Input;
 
@@ -242,14 +244,19 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
     const batchProcessor = async (batch) => {
       const payload = batch.map((item_id) => item_id);
-      return await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        {
-          query:
-            "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
-          values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
-        }
-      );
+      console.log("batchProcessor", {
+        query:
+          "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
+        values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
+      });
+      //       return await devitrakApi.post(
+      //         "/db_company/inventory-based-on-submitted-parameters",
+      //         {
+      //           query:`UPDATE item_inv SET warehouse = ?, enableAssignFeature = ?, returnedRentedInfo = ?, return_date = ?WHERE item_id IN (?);`
+      // ,
+      //           values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
+      //         }
+      //       );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
@@ -261,45 +268,134 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       const placeholders = batch.map(() => "?").join(",");
       const deleteQuery = `DELETE FROM item_inv WHERE item_id IN (${placeholders}) AND company_id = ?`;
       const deleteValues = [...batch, user.sqlInfo.company_id];
-      return await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        {
-          query: deleteQuery,
-          values: deleteValues,
-        }
-      );
+      console.log("batchProcessor", {
+        query: deleteQuery,
+        values: deleteValues,
+      });
+      // return await devitrakApi.post(
+      //   "/db_company/inventory-based-on-submitted-parameters",
+      //   {
+      //     query: deleteQuery,
+      //     values: deleteValues,
+      //   }
+      // );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
   };
 
+  // Step 3: Email notification to staff with XLSX attachment
   const emailNotification = async ({ items }) => {
-    const supplierInfo = await devitrakApi.post(
-      `/company/provider-company/${supplier_id}`,
-      {
-        creator: user?.companyData?.id,
-        provider_id: supplier_id,
+    try {
+      const supplierInfo = await devitrakApi.post(
+        `/company/provider-company/${supplier_id}`,
+        {
+          creator: user?.companyData?.id,
+          provider_id: supplier_id,
+        }
+      );
+
+      // Get the items data for XLSX generation
+      const itemsData = Array.from(items).map(
+        (item) => renterItemList.filter((ele) => ele.item_id === item)[0]
+      );
+
+      // Generate XLSX file
+      const generateXLSXFile = () => {
+        const headers = [
+          "Item ID",
+          "Serial Number",
+          "Item Group",
+          "Brand",
+          "Category",
+          "Cost",
+          "Condition",
+          "Location",
+          "Return Date",
+          "Description",
+        ];
+
+        // Convert data to worksheet format
+        const wsData = [
+          headers,
+          ...itemsData.map((item) => [
+            item?.item_id || "",
+            item?.serial_number || "",
+            item?.item_group || "",
+            item?.brand || "",
+            item?.category_name || "",
+            item?.cost || "",
+            item?.status || "",
+            item?.location || "",
+            item?.return_date || "",
+            item?.descript_item || "",
+          ]),
+        ];
+
+        // Create workbook and worksheet
+        const wb = utils.book_new();
+        const ws = utils.aoa_to_sheet(wsData);
+
+        // Set column widths
+        ws["!cols"] = headers.map(() => ({ width: 20 }));
+
+        // Add worksheet to workbook
+        utils.book_append_sheet(wb, ws, "Returned Items");
+
+        // Generate file as array buffer, then convert to base64
+        const fileArrayBuffer = write(wb, { type: "array", bookType: "xlsx" });
+        
+        // Convert array buffer to base64
+        const uint8Array = new Uint8Array(fileArrayBuffer);
+        let binaryString = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          binaryString += String.fromCharCode(uint8Array[i]);
+        }
+        const base64File = btoa(binaryString);
+
+        return {
+          filename: `returned_items_${
+            new Date().toISOString().split("T")[0]
+          }.xlsx`,
+          content: base64File,
+          contentType:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        };
+      };
+
+      const xlsxAttachment = generateXLSXFile();
+
+      const response = await devitrakApi.post(
+        "/nodemailer/returned-items-to-renter-notification",
+        {
+          subject: "Returned items to renter",
+          staffEmails: [
+            ...user.companyData.employees
+              .filter((element) => Number(element.role) < 2)
+              .map((ele) => ele.user),
+          ],
+          // Remove items from email body since we're attaching XLSX
+          supplierInfo: supplierInfo.data.providerCompanies,
+          // Add XLSX attachment
+          attachments: [
+            {
+              filename: xlsxAttachment.filename,
+              content: xlsxAttachment.content,
+              contentType: xlsxAttachment.contentType,
+              encoding: "base64",
+            },
+          ],
+        }
+      );
+
+      if (response.data) {
+        return message.success(
+          "Items returned and notification sent with XLSX attachment."
+        );
       }
-    );
-    const response = await devitrakApi.post(
-      "/nodemailer/returned-items-to-renter-notification",
-      {
-        subject: "Returned items to renter",
-        staffEmails: [
-          ...user.companyData.employees
-            .filter((element) => Number(element.role) < 2)
-            .map((ele) => ele.user),
-        ],
-        items: [
-          ...Array.from(items).map(
-            (item) => renterItemList.filter((ele) => ele.item_id === item)[0]
-          ),
-        ],
-        supplierInfo: supplierInfo.data.providerCompanies,
-      }
-    );
-    if (response.data) {
-      return message.success("Item is returned to the company.");
+    } catch (error) {
+      console.error("Error in email notification:", error);
+      message.error("Failed to send email notification.");
     }
   };
   const handleReturnAllItems = async () => {
@@ -336,7 +432,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       }
 
       const allItemIds = allItemsResult.data.result.map((item) => item.item_id);
-
+      console.log("allItemIds", allItemIds);
       message.loading({
         content: `Processing ${allItemIds.length} items...`,
         key: "processing",
