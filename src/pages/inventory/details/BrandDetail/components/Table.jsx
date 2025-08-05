@@ -98,7 +98,7 @@ const TableItemBrand = ({
 
   const dataRenderingMemo = useMemo(() => {
     return dataToDisplay(structuredDataRendering, searchItem);
-  }, [searchItem]);
+  }, [isLoadingComponent, searchItem]);
 
   return (
     <Suspense
