@@ -297,6 +297,7 @@ const EditGroup = () => {
           subLocationsSubmitted,
           originalTemplate: refTemplateToUpdate.current,
           sequencialNumbericUpdateItemMutation,
+          dicSuppliers
         });
       }
       return setLoadingStatus(false);
