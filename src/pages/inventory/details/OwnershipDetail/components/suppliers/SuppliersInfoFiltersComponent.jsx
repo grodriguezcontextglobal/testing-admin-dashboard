@@ -20,7 +20,7 @@ const useSuppliersFetch = () => {
         if (getSuppliersQuery.data) {
           const suppliers = [];
           getSuppliersQuery.data.result.forEach((supplier) => {
-            suppliers.push(supplier.supplier_info,
+            return suppliers.push(supplier.supplier_info,
             );
           });
           setSuppliers(suppliers);
