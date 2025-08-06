@@ -35,9 +35,16 @@ const StepsLine = () => {
       current: "create-event-page/staff-detail",
     },
     {
+      title: "Documents",
+      description: "Documents to be used at the event. (e.g. Privacy Policy, Terms of Use)",
+
+      previous: '/create-event-page/staff-detail',
+      current: "create-event-page/document-detail",
+    },
+    {
       title: "Devices details",
       description: "The devices you will track at the event",
-      previous: '/create-event-page/staff-detail',
+      previous: '/create-event-page/document-detail',
       current: "create-event-page/device-detail",
     },
     {
@@ -55,12 +62,14 @@ const StepsLine = () => {
   }));
   const progression = () => {
     const ref = {
-      "/create-event-page/event-detail": 25,
-      "/create-event-page/staff-detail": 50,
-      "/create-event-page/device-detail": 75,
-      "/create-event-page/event-edit-detail": 25,
-      "/create-event-page/staff-edit-detail": 50,
-      "/create-event-page/device-edit-detail": 75,
+      "/create-event-page/event-detail": 20,
+      "/create-event-page/staff-detail": 40,
+      "/create-event-page/document-detail": 60,
+      "/create-event-page/device-detail": 80,
+      "/create-event-page/event-edit-detail": 20,
+      "/create-event-page/staff-edit-detail": 40,
+      "/create-event-page/document-edit-detail": 60,
+      "/create-event-page/device-edit-detail": 80,
       "/create-event-page/review-submit": 100
     }
     return ref[pathCheck.pathname]
@@ -69,8 +78,9 @@ const StepsLine = () => {
     const ref = {
       "/create-event-page/event-detail": 0,
       "/create-event-page/staff-detail": 1,
-      "/create-event-page/device-detail": 2,
-      "/create-event-page/review-submit": 3
+      "/create-event-page/document-detail": 2,
+      "/create-event-page/device-detail": 3,
+      "/create-event-page/review-submit": 4
     }
     setCurrent(ref[pathCheck.pathname])
     return ref[pathCheck.pathname]
@@ -78,7 +88,7 @@ const StepsLine = () => {
 
   const onChange = (value) => {
     setCurrent(value);
-    if (value === 3) {
+    if (value === 4) {
       if (eventInfoDetail.eventName && staff.adminUser.length > 0 ) return navigate(`/${step[value].current}`)
       return error();
     }
