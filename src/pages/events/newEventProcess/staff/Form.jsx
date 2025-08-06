@@ -117,7 +117,7 @@ const Form = () => {
         headsetAttendees: headsetAttendeesStaff,
       };
       dispatch(onAddEventStaff(format));
-      return navigate("/create-event-page/device-detail");
+      return navigate("/create-event-page/document-detail");
     } else {
       if (newMemberProfile.role === "Administrator") {
         const format = {
@@ -126,7 +126,7 @@ const Form = () => {
         };
         setAdminStaff([...adminStaff, newMemberProfile]);
         dispatch(onAddEventStaff(format));
-        return navigate("/create-event-page/device-detail");
+        return navigate("/create-event-page/document-detail");
       } else {
         const format = {
           adminUser: adminStaff,
@@ -134,7 +134,7 @@ const Form = () => {
         };
         setHeadsetAttendeesStaff([...headsetAttendeesStaff, newMemberProfile]);
         dispatch(onAddEventStaff(format));
-        return navigate("/create-event-page/device-detail");
+        return navigate("/create-event-page/document-detail");
       }
     }
   };
