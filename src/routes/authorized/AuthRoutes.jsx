@@ -34,6 +34,9 @@ const ReviewAndSubmitEvent = lazy(() =>
 const FormStaffDetail = lazy(() =>
   import("../../pages/events/newEventProcess/staff/Form")
 );
+const FormDocumentDetail = lazy(() =>
+  import("../../pages/events/newEventProcess/documents/Form")
+);
 const TransactionsDetails = lazy(() =>
   import(
     "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails"
@@ -241,6 +244,7 @@ const AuthRoutes = () => {
               >
                 <Route path="event-detail" element={<FormEventDetail />} />
                 <Route path="staff-detail" element={<FormStaffDetail />} />
+                <Route path="document-detail" element={<FormDocumentDetail />} />
                 <Route path="device-detail" element={<FormDeviceDetail />} />
                 <Route
                   path="review-submit"
