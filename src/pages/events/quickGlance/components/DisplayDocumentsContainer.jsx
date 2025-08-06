@@ -7,6 +7,8 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 
 const DisplayDocumentsContainer = ({
   setOpenDisplayDocumentsContainer,
@@ -39,8 +41,12 @@ const DisplayDocumentsContainer = ({
           legal_documents_list: response.data.event.legal_documents_list,
         })
       );
-      clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`);
-      clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`);
+      clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
 
       message.success("Documents updated successfully");
       setSelectedDocuments([]);
@@ -120,25 +126,16 @@ const DisplayDocumentsContainer = ({
       key: "actions",
       render: (_, record) => (
         <div style={{ display: "flex", gap: "10px" }}>
-          <Button
-            onClick={() => downloadDocument(record.id)}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color: "#1890ff",
-              textDecoration: "none",
-            }}
-          >
-            View
-          </Button>
-
-          <Button
-            danger
-            onClick={() => handleRemoveDocument(record.id)}
-            loading={updateEventDocumentsMutation.isLoading}
-          >
-            Remove
-          </Button>
+          <BlueButtonComponent
+            title={`View`}
+            func={() => downloadDocument(record.id)}
+            loadingState={false}
+          />
+          <DangerButtonComponent
+            title={`Remove`}
+            func={() => handleRemoveDocument(record.id)}
+            loadingState={updateEventDocumentsMutation.isLoading}
+          />
         </div>
       ),
     },
