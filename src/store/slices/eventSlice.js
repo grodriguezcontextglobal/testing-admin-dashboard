@@ -17,6 +17,7 @@ const eventSlice = createSlice({
         merchant: false,
         dateBegin: new Date().toUTCString(),
         dateEnd: new Date().toUTCString(),
+        legal_documents_list: [],
       },
       staff: {
         adminUser: [],
@@ -33,6 +34,7 @@ const eventSlice = createSlice({
       merchant: false,
       dateBegin: new Date().toUTCString(),
       dateEnd: new Date().toUTCString(),
+      legal_documents_list: [],
     },
     staff: {
       adminUser: [],
