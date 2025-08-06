@@ -1,8 +1,12 @@
 import { Grid, InputLabel } from "@mui/material";
+import { Table } from "antd";
 import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 
 const Event = () => {
   const { eventInfoDetail, contactInfo } = useSelector((state) => state.event);
+  const { user } = useSelector((state) => state.admin);
   const options = {
     weekday: "short",
     year: "numeric",
@@ -37,6 +41,53 @@ const Event = () => {
     lineHeight: "24px",
     color: "var(--gray-600, #475467)",
   };
+
+  const downloadDocument = async (id) => {
+    try {
+      const { data } = await devitrakApi.get(
+        `/document/download/${id}/${user.uid}`
+      );
+      window.open(data.downloadUrl, "_blank");
+      if (!data?.ok || !data?.downloadUrl) {
+        throw new Error("Invalid or missing download URL");
+      }
+      return null;
+    } catch (error) {
+      throw new Error(error);
+    }
+  };
+
+  const columns = [
+    {
+      dataIndex: "title",
+      key: "title",
+      title: "Document name",
+    },
+    {
+      dataIndex: "action",
+      key: "action",
+      title: "Action",
+      render: (_, record) => (
+        console.log(record),
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <BlueButtonComponent
+          title={`Document`}
+          func={() => downloadDocument(record.id)}
+          loadingState={false}
+          />{" "}
+        </div>
+      ),
+    },
+  ];
+  let data = eventInfoDetail.legal_documents_list;
+
   return (
     <Grid
       display={"flex"}
@@ -112,6 +163,22 @@ const Event = () => {
             {eventInfoDetail.merchant ? "Yes" : "No"}
           </h4>
         </InputLabel>
+        <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+          <h1 style={styleTitle}>Documents</h1>
+        </InputLabel>
+
+        <Table
+          style={{
+            width: "100%",
+            border: "none",
+            backgroundColor: "transparent",
+          }}
+          columns={columns}
+          pagination={false}
+          bordered={false}
+          showHeader={false}
+          dataSource={data}
+        />
       </Grid>
     </Grid>
   );
