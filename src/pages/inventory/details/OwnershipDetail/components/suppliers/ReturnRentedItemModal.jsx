@@ -249,14 +249,16 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
           "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
         values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
       });
-      //       return await devitrakApi.post(
-      //         "/db_company/inventory-based-on-submitted-parameters",
-      //         {
-      //           query:`UPDATE item_inv SET warehouse = ?, enableAssignFeature = ?, returnedRentedInfo = ?, return_date = ?WHERE item_id IN (?);`
-      // ,
-      //           values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
-      //         }
-      //       );
+      return await devitrakApi.post(
+        "/db_inventory/update-large-data",
+        {
+          item_ids: [...payload],
+          warehouse: 1,
+          enableAssignFeature: 0,
+          returnedRentedInfo: JSON.stringify(moreInfo),
+          return_date: returnDate,
+        }
+      );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
@@ -268,17 +270,13 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       const placeholders = batch.map(() => "?").join(",");
       const deleteQuery = `DELETE FROM item_inv WHERE item_id IN (${placeholders}) AND company_id = ?`;
       const deleteValues = [...batch, user.sqlInfo.company_id];
-      console.log("batchProcessor", {
-        query: deleteQuery,
-        values: deleteValues,
-      });
-      // return await devitrakApi.post(
-      //   "/db_company/inventory-based-on-submitted-parameters",
-      //   {
-      //     query: deleteQuery,
-      //     values: deleteValues,
-      //   }
-      // );
+      return await devitrakApi.post(
+        "/db_company/inventory-based-on-submitted-parameters",
+        {
+          query: deleteQuery,
+          values: deleteValues,
+        }
+      );
     };
 
     return await processBatchedItems(itemIds, batchProcessor);
@@ -344,10 +342,10 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
         // Generate file as array buffer, then convert to base64
         const fileArrayBuffer = write(wb, { type: "array", bookType: "xlsx" });
-        
+
         // Convert array buffer to base64
         const uint8Array = new Uint8Array(fileArrayBuffer);
-        let binaryString = '';
+        let binaryString = "";
         for (let i = 0; i < uint8Array.length; i++) {
           binaryString += String.fromCharCode(uint8Array[i]);
         }
