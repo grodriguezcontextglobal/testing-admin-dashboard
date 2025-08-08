@@ -1,7 +1,12 @@
-import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import {
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, notification, Select } from "antd";
-import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,10 +14,11 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import Loading from "../../../../../../components/animation/Loading";
+import { BorderedCloseIcon } from "../../../../../../components/icons/BorderedCloseIcon";
+import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { checkArray } from "../../../../../../components/utils/checkArray";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
@@ -23,7 +29,7 @@ import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/Text
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 const AssignmentFromExistingInventory = () => {
-  const { register, watch, handleSubmit, setValue } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       quantity: 1,
     },
@@ -31,21 +37,25 @@ const AssignmentFromExistingInventory = () => {
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
   const [valueItemSelected, setValueItemSelected] = useState({});
+  const [checkingSerialNumberInputted, setCheckingSerialNumberInputted] =
+    useState(false);
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-  const [selectedItem, setSelectedItem] = useState([]);
+  // const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const newEventInfo = {};
   let dataFound = useRef([]);
   const navigate = useNavigate();
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["ItemsInventoryCheckingQuery"],
+    queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
+      devitrakApi.post("/db_event/retrieve-item-group-location-quantity", {
         company_id: user.sqlInfo.company_id,
-        warehouse: true,
+        warehouse: 1,
+        enableAssignFeature: 1,
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 5 * 60 * 100, // 5 minutes
   });
   const staffMemberQuery = useQuery({
     queryKey: ["staffMemberInfo"],
@@ -58,61 +68,77 @@ const AssignmentFromExistingInventory = () => {
   const queryClient = useQueryClient();
   useEffect(() => {
     const controller = new AbortController();
-    itemsInInventoryQuery.refetch();
     staffMemberQuery.refetch();
     return () => {
       controller.abort();
     };
   }, []);
-  useEffect(() => {
-    const controller = new AbortController();
-    return () => {
-      controller.abort();
-    };
-  }, [itemsInInventoryQuery.data, dataFound.current?.length]);
-  dataFound.current = itemsInInventoryQuery?.data?.data?.items;
+
+  dataFound.current = itemsInInventoryQuery?.data?.data;
   const optionsToRenderInSelector = () => {
-    const checkLocation = new Map();
-    const dataToIterate = dataFound.current ?? [];
-    const groupingByCategories = groupBy(dataToIterate, "category_name");
-    for (let [key, value] of Object.entries(groupingByCategories)) {
-      groupingByCategories[key] = groupBy(value, "item_group");
-      for (let [key2, value2] of Object.entries(groupingByCategories[key])) {
-        const groupingByLocaiton = groupBy(value2, "location");
-        for (let [key3, value3] of Object.entries(groupingByLocaiton)) {
-          checkLocation.set(`${key}-${key2}-${key3}`, {
-            category_name: key,
-            item_group: key2,
-            location: key3,
-            total: value3.length,
-            data: JSON.stringify(value3),
+    const result = [];
+    const groupedInventory = dataFound.current?.groupedInventory ?? {};
+
+    // Iterate through categories (Category1, Category2, etc.)
+    for (const [categoryName, categoryData] of Object.entries(
+      groupedInventory
+    )) {
+      // Iterate through items within each category (Item1, Item2, etc.)
+      for (const [itemGroup, itemData] of Object.entries(categoryData)) {
+        // Iterate through locations within each item
+        for (const [location, quantity] of Object.entries(itemData)) {
+          result.push({
+            category_name: categoryName,
+            item_group: itemGroup,
+            location: location,
+            total: quantity,
+            data: JSON.stringify({
+              category_name: categoryName,
+              item_group: itemGroup,
+              location: location,
+              quantity: quantity,
+            }),
           });
         }
       }
     }
-    const result = new Set();
-    for (let [, value] of checkLocation) {
-      result.add(value);
-    }
-    return Array.from(result);
+
+    return result;
   };
-  const onChange = (value) => {
+  const onChange = async (value) => {
     const optionRendering = JSON.parse(value);
-    setValueItemSelected(optionRendering);
-  };
-  const substractingRangesSelectedItem = () => {
-    const gettingValues = new Set();
-    if (valueItemSelected.length > 0) {
-      for (let data of valueItemSelected) {
-        gettingValues.add(String(data.serial_number));
+    // MIN(serial_number) as min_serial_number,
+    // MAX(serial_number) as max_serial_number,
+    // COUNT(*) as total_count
+
+    const fetchSelectedItem = await devitrakApi.post(
+      "/db_event/inventory-based-on-submitted-parameters",
+      {
+        query: `SELECT 
+        serial_number
+        FROM item_inv 
+        WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ?
+        ORDER BY serial_number ASC`,
+        values: [
+          optionRendering.item_group,
+          optionRendering.category_name,
+          user.sqlInfo.company_id,
+          optionRendering.location,
+        ],
       }
-      const toArray = Array.from(gettingValues);
-      return {
-        min: toArray[0],
-        max: toArray.at(-1),
-      };
+    );
+    if (fetchSelectedItem.data) {
+      console.log(fetchSelectedItem.data.result);
+      return setValueItemSelected({
+        ...optionRendering,
+        min_serial_number: fetchSelectedItem.data.result[0].serial_number,
+        max_serial_number: fetchSelectedItem.data.result.at(-1).serial_number,
+        data: JSON.stringify(fetchSelectedItem.data.result),
+        quantity: 0,
+      });
     }
   };
+
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -122,15 +148,16 @@ const AssignmentFromExistingInventory = () => {
     },
     [api]
   );
-  const handleAddingNewItemToInventoryEvent = (data) => {
-    setSelectedItem([
-      ...selectedItem,
-      { ...data, item_group: valueItemSelected[0].item_group },
-    ]);
-    setValue("startingNumber", "");
-    setValue("quantity", 1);
-    return null;
-  };
+  // const handleAddingNewItemToInventoryEvent = (data) => {
+  //   // console.log(data);
+  //   setSelectedItem([
+  //     ...selectedItem,
+  //     { ...data, item_group: valueItemSelected[0].item_group },
+  //   ]);
+  //   setValue("startingNumber", "");
+  //   setValue("quantity", 1);
+  //   return null;
+  // };
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -350,19 +377,23 @@ const AssignmentFromExistingInventory = () => {
   };
 
   const emailContractToStaffMember = async (props) => {
-    await devitrakApi.post("/nodemailer/liability-contract-email-notification", {
-      company_name: user.companyData.company_name,
-      email_admin: user.email,
-      staff: {
-        name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
-        email: profile.email,
-      },
-      contract_list: props.contractList,
-      subject: "Device Liability Contract",
-      items: props.items,
-      company_id: user.companyData.id
-    });
+    await devitrakApi.post(
+      "/nodemailer/liability-contract-email-notification",
+      {
+        company_name: user.companyData.company_name,
+        email_admin: user.email,
+        staff: {
+          name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
+          email: profile.email,
+        },
+        contract_list: props.contractList,
+        subject: "Device Liability Contract",
+        items: props.items,
+        company_id: user.companyData.id,
+      }
+    );
   };
+
   const assignDeviceToStaffMember = async () => {
     const template = {
       street: watch("street"),
@@ -370,10 +401,9 @@ const AssignmentFromExistingInventory = () => {
       state: watch("state"),
       zip: watch("zip"),
     };
-    setLoadingStatus(true);
-    const groupingType = groupBy(dataFound.current, "item_group");
-    if (selectedItem.length === 0 && watch("startingNumber")?.length > 0) {
-      const data = groupingType[valueItemSelected[0]?.item_group];
+    // setLoadingStatus(true);
+    if (watch("startingNumber")?.length > 0) {
+      const data = JSON.parse(valueItemSelected.data);
       if (data.length > 0) {
         const index = data.findIndex(
           (item) => item.serial_number === watch("startingNumber")
@@ -383,11 +413,27 @@ const AssignmentFromExistingInventory = () => {
             index,
             index + Number(watch("quantity"))
           );
+          const gettingAllInfo = await devitrakApi.post(
+            "/db_event/inventory-based-on-submitted-parameters",
+            {
+              query: `SELECT * FROM item_inv 
+              WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? And serial_number in (${selectedData
+                .map((item) => `'${item.serial_number}'`)
+                .join(",")})
+              `,
+              values: [
+                valueItemSelected.item_group,
+                valueItemSelected.category_name,
+                user.sqlInfo.company_id,
+                valueItemSelected.location,
+              ],
+            }
+          );
           await option1({
-            groupingType: groupingType,
+            groupingType: valueItemSelected.item_group,
             template: template,
             quantity: watch("quantity"),
-            selectedData,
+            selectedData: gettingAllInfo.data.result,
           });
         }
       }
@@ -430,6 +476,18 @@ const AssignmentFromExistingInventory = () => {
       </>
     );
   };
+
+  useEffect(() => {
+    const checkingSerialNumberInputted = async () => {
+      const data = JSON.parse(valueItemSelected.data);
+      if (watch("startingNumber").length === data[0].serial_number.length) {
+        setCheckingSerialNumberInputted(
+          data.some((item) => item.serial_number === watch("startingNumber"))
+        );
+      }
+    };
+    checkingSerialNumberInputted();
+  }, [watch("startingNumber")]);
 
   return (
     <>
@@ -568,8 +626,7 @@ const AssignmentFromExistingInventory = () => {
                 Device
               </p>
             </InputLabel>
-            <form
-              onSubmit={handleSubmit(handleAddingNewItemToInventoryEvent)}
+            <div
               style={{
                 width: "100%",
               }}
@@ -711,14 +768,21 @@ const AssignmentFromExistingInventory = () => {
                       ...OutlinedInputStyle,
                       width: "100%",
                     }}
-                    placeholder={`Selected category serial numbers start: ${
-                      substractingRangesSelectedItem()?.min
-                    } end: ${substractingRangesSelectedItem()?.max}`}
+                    placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}
                     fullWidth
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {checkingSerialNumberInputted ? (
+                          <CheckIcon />
+                        ) : (
+                          <BorderedCloseIcon />
+                        )}
+                      </InputAdornment>
+                    }
                   />
                 </Grid>
               </Grid>
-            </form>
+            </div>
           </Grid>
           <Grid
             style={{
@@ -745,13 +809,11 @@ const AssignmentFromExistingInventory = () => {
                 Go back
               </p>
             </Button>
-            <Button
-              Loading={loadingStatus}
-              onClick={() => assignDeviceToStaffMember()}
-              style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-            >
-              <p style={BlueButtonText}>Assign equipment</p>
-            </Button>
+            <BlueButtonComponent
+              title={"Assign equipment"}
+              func={assignDeviceToStaffMember}
+              styles={{ ...CenteringGrid, width: "100%" }}
+            />
           </Grid>
         </Grid>
       )}
