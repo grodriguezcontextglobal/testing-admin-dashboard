@@ -157,7 +157,7 @@ const ItemTable = ({
             ownership: data.ownership,
             main_warehouse: data.main_warehouse,
             warehouse: data.warehouse,
-            location: data.usage.length > 0 ? data.usage : data.location,
+            location: data.usage && data.usage.length > 0 ? data.usage : data.location,
             image_url: data.image_url || imageSource,
             serial_number: data.serial_number,
             enableAssignFeature: data.enableAssignFeature,
