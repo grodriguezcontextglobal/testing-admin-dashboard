@@ -1,4 +1,4 @@
-export const CloseIcon = ({ fill = "currentColor" }) => {
+export const CloseIcon = ({ fill = "currentColor", stroke = "currentColor" }) => {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -8,7 +8,7 @@ export const CloseIcon = ({ fill = "currentColor" }) => {
       >
         <path
           fill={fill}
-          stroke="currentColor"
+          stroke={stroke}
           d="M368 368 144 144m224 0L144 368"
         />
       </svg>
