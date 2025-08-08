@@ -2,8 +2,7 @@ import {
   Box,
   InputLabel,
   OutlinedInput,
-  Switch,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message, Select, Table, Tabs, Tooltip } from "antd";
@@ -11,7 +10,13 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
+import { BorderedCloseIcon } from "../../../../../../../../components/icons/BorderedCloseIcon";
+import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../../../components/icons/QuestionIcon";
+import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
+import { GrayButton } from "../../../../../../../../styles/global/GrayButton";
+import GrayButtonText from "../../../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../../../styles/global/Subtitle";
 
@@ -115,13 +120,65 @@ const LegalDocumentModal = ({
     },
   ];
 
+  const buttonContainerStyling = () => {
+    let p = {};
+    let button = {};
+    let fill = null;
+    if (addContracts) {
+      p = { ...BlueButtonText };
+      button = { ...BlueButton };
+      fill = "#fff";
+    } else {
+      p = { ...GrayButtonText };
+      button = { ...GrayButton };
+      fill = "#000";
+    }
+    return { p, button, fill };
+  };
+
+  const renderingIcon = () => {
+    addContracts ? (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          aspectRatio: "1",
+          width: "fit-content",
+          height: "auto",
+        }}
+      >
+        <CheckIcon stroke={buttonContainerStyling().fill} />
+        &nbsp;
+      </div>
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          aspectRatio: "1",
+          width: "fit-content",
+          height: "auto",
+        }}
+      >
+        <BorderedCloseIcon fill={buttonContainerStyling().fill} />
+        &nbsp;
+      </div>
+    );
+  };
+
   return (
-    <>
+    <div style={{ width: "100%" }} id="legal-document-modal">
       <Divider />
       <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
         <p style={Subtitle}>
-          Do you want to email a device liability contract to staff?{" "}
-          <Switch onChange={() => setAddContracts(!addContracts)} />
+          Do you want to email a device contract to staff?{" "}
+          <BlueButtonComponent
+            title={"Add legal document"}
+            func={() => setAddContracts(!addContracts)}
+            styles={buttonContainerStyling().button}
+            titleStyles={buttonContainerStyling().p}
+            icon={renderingIcon()}
+          />
         </p>
       </InputLabel>
       {addContracts && (
@@ -167,7 +224,7 @@ const LegalDocumentModal = ({
               />
             ) : (
               <Box>
-                <Tooltip title="All documents must be uploaded to the company's document library before they can be emaile to staff member.">
+                <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
                   <Typography variant="subtitle1" sx={{ mb: 2 }}>
                     Select documents to email to staff member <QuestionIcon />
                   </Typography>
@@ -181,9 +238,9 @@ const LegalDocumentModal = ({
                   loading={loadingAvailable}
                   options={
                     availableDocuments?.data?.documents?.map((doc) => ({
-                        label: doc.title,
-                        value: doc._id,
-                      })) || []
+                      label: doc.title,
+                      value: doc._id,
+                    })) || []
                   }
                 />
                 <BlueButtonComponent
@@ -195,7 +252,7 @@ const LegalDocumentModal = ({
           </Box>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
