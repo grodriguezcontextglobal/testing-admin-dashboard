@@ -11,6 +11,7 @@ import Loading from "../../components/animation/Loading";
 import dicRole from "../../components/general/dicRole";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import "../../styles/global/ant-table.css";
 const MainAdminSettingPage = ({
   searchAdmin,
@@ -35,7 +36,7 @@ const MainAdminSettingPage = ({
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
-        type:'event',
+        type: "event",
         active: true,
       }),
     refetchOnMount: false,
@@ -342,7 +343,7 @@ const MainAdminSettingPage = ({
                   // disabled={editingKey !== ""}
                   onClick={() => handleDetailStaff(record)}
                 >
-                  <Icon icon="bxs:user-detail" width={30} />
+                  <RightNarrowInCircle />
                 </Typography.Link>
               )}
             </>
