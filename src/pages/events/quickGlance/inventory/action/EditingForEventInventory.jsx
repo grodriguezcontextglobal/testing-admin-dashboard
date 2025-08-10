@@ -236,7 +236,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         _id: event.id,
       }
     );
-
     const checkInv = new Map();
     for (const [, value] of Object.entries(
       latestUpdatedInventoryEvent.data.list[0].deviceSetup
@@ -315,24 +314,22 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           endingNumber: checking.data.receiversInventory.at(-1).device,
           existing: true,
         };
-
         // Add the new templateUpdateEventInventory to the device setup array
         const updatedDeviceSetup = [
           ...eventInventoryRef.data.list[0].deviceSetup,
           templateUpdateEventInventory,
         ];
-
         // Update the event with the new device setup
         await devitrakApi.patch(`/event/edit-event/${event.id}`, {
           deviceSetup: updatedDeviceSetup,
         });
+        return dispatch(
+          onAddEventData({
+            ...event,
+            deviceSetup: eventInventoryRef.data.list[0].deviceSetup,
+          })
+        );
       }
-      return dispatch(
-        onAddEventData({
-          ...event,
-          deviceSetup: eventInventoryRef.data.list[0].deviceSetup,
-        })
-      );
     },
     []
   );
@@ -435,7 +432,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const updateDeviceSetupInEvent = async (props) => {
     try {
       await eventInventoryRef({
-        device: props,
+        device: props.pool,
+        database: props.database,
+        checking: props.checking,
       });
     } catch (error) {
       return message.error(
@@ -452,7 +451,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company: user.companyData.id,
       });
       if (checking.data.receiversInventory.length > 0) {
-        await updateDeviceSetupInEvent(checking.data.receiversInventory);
+        await updateDeviceSetupInEvent({pool: checking.data.receiversInventory, database: props, checking:checking});
       }
     } catch (error) {
       return message.error("Failed to add device. Please try again.");
@@ -554,6 +553,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         `eventSelected=${event.id}&company=${user.companyData.id}`
       );
       queryClient.invalidateQueries(["listOfreceiverInPool"]);
+      setLoadingStatus(false);
       closeModal();
     } catch (error) {
       message.error("Failed to add devices to event. Please try again.");
@@ -779,7 +779,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                         <p>
                           Qty: {item.quantity} | Serial number range:{" "}
                           <strong>
-                            {item.startingNumber} - {item.endingNumber}
+                            {item.startingNumber ?? ""} -{" "}
+                            {item.endingNumber ?? ""}
                           </strong>
                         </p>
                       </Grid>
