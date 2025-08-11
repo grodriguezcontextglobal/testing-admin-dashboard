@@ -167,11 +167,12 @@ const LegalDocumentModal = ({
   };
 
   return (
-    <div style={{ width: "100%" }} id="legal-document-modal">
+    <div key={profile._id} style={{ width: "100%" }} id="legal-document-modal">
       <Divider />
-      <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+      <InputLabel style={{ marginBottom: "0.2rem", width: "100%", display: "flex", justifyContent: "space-between" }}>
         <p style={Subtitle}>
           Do you want to email a device contract to staff?{" "}
+        </p>
           <BlueButtonComponent
             title={"Add legal document"}
             func={() => setAddContracts(!addContracts)}
@@ -179,7 +180,6 @@ const LegalDocumentModal = ({
             titleStyles={buttonContainerStyling().p}
             icon={renderingIcon()}
           />
-        </p>
       </InputLabel>
       {addContracts && (
         <div
