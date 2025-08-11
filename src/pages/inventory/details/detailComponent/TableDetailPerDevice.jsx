@@ -158,7 +158,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
 
   const columns = [
     {
-      title: "Event",
+      title: "Event/Assigned to",
       dataIndex: "event_name",
       align: "left",
       sorter: {
@@ -167,20 +167,25 @@ const TableDetailPerDevice = ({ dataFound }) => {
       responsive: ["xs", "sm", "md", "lg"],
       render: (event_name, record) => {
         const renderingEventName = () => {
-          if(record.warehouse === 1) {
-            return `Warehouse ${record.location}`;
+          if (record.warehouse === 1) {
+            return `Warehouse (${record.location})`;
           } else {
             return event_name;
           }
         };
         return (
           <button
-            onClick={() => navigateFn(event_name)}
+            onClick={() =>
+              record.warehouse === 1
+                ? navigate(
+                    `/inventory/location?${record.location}&search=`
+                  )
+                : navigateFn(event_name)
+            }
             style={{
               backgroundColor: "transparent",
               outline: "none",
               margin: "auto",
-              cursor: "pointer",
               display: "flex",
               justifyContent: "flex-start",
               alignItems: "center",
