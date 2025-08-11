@@ -42,9 +42,10 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
           width: "100%",
           textAlign: "left",
           margin: ".5rem 0",
+          display: sortAndMergeData().length > 0 ? "block" : "none",
         }}
       >
-       Additional information
+        Additional information
       </h1>
       <Grid
         display={"flex"}
@@ -53,15 +54,17 @@ const ExtraInformationItemComponent = ({ dataFound }) => {
         spacing={2}
       >
         {sortAndMergeData().map((item) => {
-          return (
-            <Grid key={item.value} item xs={12} sm={12} md={4} lg={4}>
-              <CardRendered
-                props={item.value}
-                title={item.name}
-                optional={null}
-              />
-            </Grid>
-          );
+          if (item.value !== null) {
+            return (
+              <Grid key={item.value} item xs={12} sm={12} md={4} lg={4}>
+                <CardRendered
+                  props={item.value}
+                  title={item.name}
+                  optional={null}
+                />
+              </Grid>
+            );
+          }
         })}
       </Grid>
     </>
