@@ -89,7 +89,7 @@ const TotalReturnedDevice = ({ dataFound }) => {
               color={"var(--gray-900, #101828)"}
               style={TextFontSize30LineHeight38}
             >
-              {dataFound[0].itemInfo[0].status ?? "Operational"}
+              {(dataFound && dataFound[0]?.itemInfo[0]?.status) ?? "Operational"}
             </Typography>
           </Grid>
         </Grid>
