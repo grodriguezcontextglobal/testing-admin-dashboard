@@ -387,9 +387,10 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       );
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "enableAssignFeature" || key === "container") {
+          if (key === "container") {
             return;
           }
+          if (key === "enableAssignFeature") return setValue(key, "Enabled");
           if (key === "sub_location") {
             const checkType =
               typeof value === "string" ? JSON.parse(value) : value;
