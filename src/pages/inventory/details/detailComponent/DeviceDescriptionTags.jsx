@@ -23,8 +23,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     return () => {
       controller.abort();
     };
-  }, []);
-
+  }, [dataFound]);
   const dic = {
     Permanent: {
       label: "Owned",
@@ -39,7 +38,6 @@ const DeviceDescriptionTags = ({ dataFound }) => {
       color: "#ef6820",
     },
   };
-
   const styling = {
     borderRadius: "16px",
     justifyContent: "center",
@@ -50,7 +48,6 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     width: "fit-content",
     marginBottom: "5px",
   };
-
   const textStyling = {
     ...TextFontSize14LineHeight20,
     fontSize: "12px",
@@ -69,7 +66,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
       }
     >
       <Card
-        id="card-contact-person"
+        id={`card-contact-person_${dataPropsCopy?.item_id}`}
         style={{ ...CardStyle, width: "100%", padding: 0 }}
         styles={{
           body: {
