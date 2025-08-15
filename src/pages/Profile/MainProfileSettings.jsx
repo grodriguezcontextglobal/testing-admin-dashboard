@@ -87,11 +87,16 @@ const MainProfileSettings = () => {
       label: "Suppliers",
       route: "providers",
       permission: [0, 1], // Allowing access for admin and managers
-    }
+    },
+    {
+      label: "Platform policies",
+      route: "platform_policies",
+      permission: [0, 1, 2, 3, 4],
+    },
   ];
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Grid
       container
@@ -99,7 +104,7 @@ const MainProfileSettings = () => {
       sx={{
         padding: { xs: "16px", sm: "24px", md: "32px" },
         maxWidth: "1200px",
-        margin: "0 auto"
+        margin: "0 auto",
       }}
     >
       <Grid
@@ -107,7 +112,7 @@ const MainProfileSettings = () => {
         spacing={{ xs: 2, sm: 3 }}
         sx={{
           marginTop: { xs: 1, sm: 2, md: 3 },
-          flexDirection: { xs: 'column', sm: 'row' }
+          flexDirection: { xs: "column", sm: "row" },
         }}
       >
         <Grid
@@ -117,7 +122,7 @@ const MainProfileSettings = () => {
           sx={{
             display: "flex",
             justifyContent: { xs: "center", sm: "flex-start" },
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
           <Typography
@@ -126,7 +131,7 @@ const MainProfileSettings = () => {
               color: "var(--gray-900, #101828)",
               fontWeight: 600,
               fontFamily: "Inter",
-              textAlign: { xs: "center", sm: "left" }
+              textAlign: { xs: "center", sm: "left" },
             }}
           >
             Settings
@@ -139,7 +144,7 @@ const MainProfileSettings = () => {
           sx={{
             display: "flex",
             justifyContent: { xs: "center", sm: "flex-end" },
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
           <Button style={DangerButton} onClick={() => logout()}>
@@ -153,7 +158,7 @@ const MainProfileSettings = () => {
         xs={12}
         sx={{
           marginTop: { xs: 2, sm: 3 },
-          overflowX: "auto"
+          overflowX: "auto",
         }}
       >
         <nav
@@ -161,11 +166,13 @@ const MainProfileSettings = () => {
             display: "flex",
             gap: isMobile ? "8px" : "16px",
             minWidth: "min-content",
-            padding: isMobile ? "8px 0" : "0"
+            padding: isMobile ? "8px 0" : "0",
           }}
         >
           {tabOptions.map((option) => {
-            if (option.permission.some((element) => element === Number(user.role))) {
+            if (
+              option.permission.some((element) => element === Number(user.role))
+            ) {
               return (
                 <NavLink
                   key={option.label}
@@ -179,7 +186,7 @@ const MainProfileSettings = () => {
                     borderBottom: isActive
                       ? "1px solid #004EEB"
                       : "rgba(0, 0, 0, 0.88)",
-                    whiteSpace: "nowrap"
+                    whiteSpace: "nowrap",
                   })}
                 >
                   <Typography
@@ -191,7 +198,7 @@ const MainProfileSettings = () => {
                       fontFamily: "Inter",
                       fontSize: { xs: "12px", sm: "14px" },
                       fontWeight: 600,
-                      lineHeight: "20px"
+                      lineHeight: "20px",
                     }}
                   >
                     {option.label}
@@ -209,7 +216,7 @@ const MainProfileSettings = () => {
         container
         sx={{
           marginTop: { xs: 2, sm: 3 },
-          padding: { xs: "16px", sm: "24px" }
+          padding: { xs: "16px", sm: "24px" },
         }}
       >
         <Grid item xs={12}>
