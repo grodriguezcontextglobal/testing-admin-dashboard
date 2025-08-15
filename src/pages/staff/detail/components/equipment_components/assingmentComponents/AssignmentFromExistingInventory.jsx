@@ -128,7 +128,6 @@ const AssignmentFromExistingInventory = () => {
       }
     );
     if (fetchSelectedItem.data) {
-      console.log(fetchSelectedItem.data.result);
       return setValueItemSelected({
         ...optionRendering,
         min_serial_number: fetchSelectedItem.data.result[0].serial_number,
@@ -148,16 +147,7 @@ const AssignmentFromExistingInventory = () => {
     },
     [api]
   );
-  // const handleAddingNewItemToInventoryEvent = (data) => {
-  //   // console.log(data);
-  //   setSelectedItem([
-  //     ...selectedItem,
-  //     { ...data, item_group: valueItemSelected[0].item_group },
-  //   ]);
-  //   setValue("startingNumber", "");
-  //   setValue("quantity", 1);
-  //   return null;
-  // };
+
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -479,7 +469,7 @@ const AssignmentFromExistingInventory = () => {
 
   useEffect(() => {
     const checkingSerialNumberInputted = async () => {
-      const data = JSON.parse(valueItemSelected.data);
+      const data = JSON.parse(valueItemSelected?.data);
       if (watch("startingNumber").length === data[0].serial_number.length) {
         setCheckingSerialNumberInputted(
           data.some((item) => item.serial_number === watch("startingNumber"))
@@ -763,7 +753,10 @@ const AssignmentFromExistingInventory = () => {
                   <OutlinedInput
                     disabled={loadingStatus}
                     required
-                    {...register("startingNumber")}
+                    {...register("startingNumber", {
+                      required: true,
+                      message: "Starting serial number is required",
+                    })}
                     style={{
                       ...OutlinedInputStyle,
                       width: "100%",
@@ -810,6 +803,10 @@ const AssignmentFromExistingInventory = () => {
               </p>
             </Button>
             <BlueButtonComponent
+              disabled={
+                watch("startingNumber")?.length === 0 ||
+                !watch("startingNumber")
+              }
               title={"Assign equipment"}
               func={assignDeviceToStaffMember}
               styles={{ ...CenteringGrid, width: "100%" }}
