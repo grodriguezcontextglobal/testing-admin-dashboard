@@ -1,12 +1,7 @@
-import {
-  Box,
-  InputLabel,
-  OutlinedInput,
-  Typography
-} from "@mui/material";
+import { Box, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message, Select, Table, Tabs, Tooltip } from "antd";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
@@ -32,13 +27,74 @@ const LegalDocumentModal = ({
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useSelector((state) => state.admin);
+  const [foldersExisting, setFoldersExisting] = useState(false);
+  // Fetch folders first
+  const { data: fetchedFolders, isLoading: loadingFolders } = useQuery({
+    queryKey: ["folders", user.companyData.id],
+    queryFn: () =>
+      devitrakApi.post(`/document/folders`, {
+        company_id: user.companyData.id,
+      }),
+    enabled: !!user.companyData.id,
+    staleTime: 3 * 60 * 1000,
+  });
 
-  // Fetch available documents
+  // Fetch available documents (fallback)
   const { data: availableDocuments, isLoading: loadingAvailable } = useQuery({
-    queryKey: ["available-documents"],
+    queryKey: ["available-documents", user.companyData.id],
     queryFn: () =>
       devitrakApi.get(`/document/?company_id=${user.companyData.id}`),
+    enabled: !loadingFolders, // Only fetch if folders query is complete
   });
+
+  // Determine which documents to use based on folder availability
+  const documentsToUse = useMemo(() => {
+    if (loadingFolders || loadingAvailable) {
+      return { documents: [], loading: true, source: "loading" };
+    }
+
+    // Check if there are folders with trigger_action = "Equipment Staff Assignment"
+    const equipmentStaffAssignmentFolders =
+      fetchedFolders?.data?.folders?.filter(
+        (folder) => folder.trigger_action === "equipment_assignment"
+      ) || [];
+
+    // If folders exist and have documents, use folder documents
+    if (equipmentStaffAssignmentFolders.length > 0) {
+      const folderDocuments = [];
+      equipmentStaffAssignmentFolders.forEach((folder) => {
+        if (folder.documents && folder.documents.length > 0) {
+          folder.documents.forEach((doc) => {
+            if (doc.active) {
+              // Only include active documents
+              folderDocuments.push({
+                _id: doc.document_id,
+                title: doc.document_name,
+                document_url: doc.document_url || "", // Add fallback for URL
+              });
+            }
+          });
+        }
+      });
+
+      if (folderDocuments.length > 0) {
+        setFoldersExisting(true);
+        console.log(folderDocuments);
+        return {
+          documents: folderDocuments,
+          loading: false,
+          source: "folders",
+        };
+      }
+    }
+
+    // Fallback to all available documents
+    return {
+      documents: availableDocuments?.data?.documents || [],
+      loading: false,
+      source: "all_documents",
+    };
+  }, [fetchedFolders, availableDocuments, loadingFolders, loadingAvailable]);
 
   const handleAssignDocuments = () => {
     if (selectedDocuments.length === 0) {
@@ -48,7 +104,7 @@ const LegalDocumentModal = ({
 
     // Get full document objects for selected IDs
     const newDocuments = selectedDocuments.map((_id) => {
-      const doc = availableDocuments.data.documents.find((d) => d._id === _id);
+      const doc = documentsToUse.documents.find((d) => d._id === _id);
       return {
         id: doc._id,
         title: doc.title,
@@ -137,7 +193,7 @@ const LegalDocumentModal = ({
   };
 
   const renderingIcon = () => {
-    addContracts ? (
+    return addContracts ? (
       <div
         style={{
           display: "flex",
@@ -165,23 +221,33 @@ const LegalDocumentModal = ({
       </div>
     );
   };
-
   return (
     <div key={profile._id} style={{ width: "100%" }} id="legal-document-modal">
-      <Divider />
-      <InputLabel style={{ marginBottom: "0.2rem", width: "100%", display: "flex", justifyContent: "space-between" }}>
-        <p style={Subtitle}>
-          Do you want to email a device contract to staff?{" "}
-        </p>
-          <BlueButtonComponent
-            title={"Add legal document"}
-            func={() => setAddContracts(!addContracts)}
-            styles={buttonContainerStyling().button}
-            titleStyles={buttonContainerStyling().p}
-            icon={renderingIcon()}
-          />
-      </InputLabel>
-      {addContracts && (
+      {!foldersExisting && (
+        <>
+          <Divider />
+          <InputLabel
+            style={{
+              marginBottom: "0.2rem",
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <p style={Subtitle}>
+              Do you want to email a device contract to staff?{" "}
+            </p>
+            <BlueButtonComponent
+              title={"Add legal document"}
+              func={() => setAddContracts(!addContracts)}
+              styles={buttonContainerStyling().button}
+              titleStyles={buttonContainerStyling().p}
+              icon={renderingIcon()}
+            />
+          </InputLabel>
+        </>
+      )}
+      {addContracts && !foldersExisting && (
         <div
           style={{
             width: "100%",
@@ -227,6 +293,18 @@ const LegalDocumentModal = ({
                 <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
                   <Typography variant="subtitle1" sx={{ mb: 2 }}>
                     Select documents to email to staff member <QuestionIcon />
+                    {documentsToUse.source === "folders" && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          color: "text.secondary",
+                          mt: 0.5,
+                        }}
+                      >
+                        (Documents from Equipment Staff Assignment folders)
+                      </Typography>
+                    )}
                   </Typography>
                 </Tooltip>
                 <Select
@@ -235,9 +313,9 @@ const LegalDocumentModal = ({
                   placeholder="Select documents to assign"
                   value={selectedDocuments}
                   onChange={setSelectedDocuments}
-                  loading={loadingAvailable}
+                  loading={documentsToUse.loading}
                   options={
-                    availableDocuments?.data?.documents?.map((doc) => ({
+                    documentsToUse.documents?.map((doc) => ({
                       label: doc.title,
                       value: doc._id,
                     })) || []
