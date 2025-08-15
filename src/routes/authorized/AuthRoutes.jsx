@@ -14,6 +14,7 @@ import HeaderComponent from "../../components/general/HeaderComponent";
 import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
 import EditDocument from "../../pages/Profile/Documents/EditDocument";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
+import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPolicies";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -364,6 +365,7 @@ const AuthRoutes = () => {
                 <Route path="documents/view/:id" element={<ViewDocument />} />
                 <Route path="providers" element={<Providers />} />
                 <Route path="/profile/documents/edit/:id" element={<EditDocument />} />
+                <Route path="platform_policies" element={<PlatformPolicies />} />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route
