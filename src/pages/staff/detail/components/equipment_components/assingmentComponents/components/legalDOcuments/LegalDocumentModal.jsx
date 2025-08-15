@@ -1,7 +1,7 @@
 import { Box, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message, Select, Table, Tabs, Tooltip } from "antd";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
@@ -28,6 +28,8 @@ const LegalDocumentModal = ({
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useSelector((state) => state.admin);
   const [foldersExisting, setFoldersExisting] = useState(false);
+  const [autoAssignedFromFolder, setAutoAssignedFromFolder] = useState(false);
+
   // Fetch folders first
   const { data: fetchedFolders, isLoading: loadingFolders } = useQuery({
     queryKey: ["folders", user.companyData.id],
@@ -36,7 +38,7 @@ const LegalDocumentModal = ({
         company_id: user.companyData.id,
       }),
     enabled: !!user.companyData.id,
-    staleTime: 3 * 60 * 1000,
+    // staleTime: 3 * 60 * 1000,
   });
 
   // Fetch available documents (fallback)
@@ -53,33 +55,32 @@ const LegalDocumentModal = ({
       return { documents: [], loading: true, source: "loading" };
     }
 
-    // Check if there are folders with trigger_action = "Equipment Staff Assignment"
-    const equipmentStaffAssignmentFolders =
+    // Check if there are folders with trigger_action = "equipemnt_staff"
+    const equipmentStaffFolders =
       fetchedFolders?.data?.folders?.filter(
-        (folder) => folder.trigger_action === "equipment_assignment"
+        (folder) => folder.folder_trigger_action === "equipment_assignment"
       ) || [];
-
+    console.log(equipmentStaffFolders);
     // If folders exist and have documents, use folder documents
-    if (equipmentStaffAssignmentFolders.length > 0) {
+    if (equipmentStaffFolders.length > 0) {
       const folderDocuments = [];
-      equipmentStaffAssignmentFolders.forEach((folder) => {
+      equipmentStaffFolders.forEach((folder) => {
         if (folder.documents && folder.documents.length > 0) {
           folder.documents.forEach((doc) => {
-            if (doc.active) {
+            // if (doc.active) {
               // Only include active documents
               folderDocuments.push({
                 _id: doc.document_id,
-                title: doc.document_name,
+                title: doc.document_title,
                 document_url: doc.document_url || "", // Add fallback for URL
               });
-            }
+            // }
           });
         }
       });
 
+      console.log(folderDocuments);
       if (folderDocuments.length > 0) {
-        setFoldersExisting(true);
-        console.log(folderDocuments);
         return {
           documents: folderDocuments,
           loading: false,
@@ -95,6 +96,37 @@ const LegalDocumentModal = ({
       source: "all_documents",
     };
   }, [fetchedFolders, availableDocuments, loadingFolders, loadingAvailable]);
+
+  // Auto-assign documents from folder when they become available
+  useEffect(() => {
+    if (
+      documentsToUse.source === "folders" &&
+      documentsToUse.documents.length > 0 &&
+      !autoAssignedFromFolder &&
+      selectedDocuments.length === 0
+    ) {
+      // Auto-assign all documents from the folder
+      const autoAssignedDocs = documentsToUse.documents.map((doc) => ({
+        id: doc._id,
+        title: doc.title,
+        view_url: doc.document_url,
+      }));
+      setFoldersExisting(true);
+      setSelectedDocuments(autoAssignedDocs);
+      setAddContracts(true); // Automatically enable contracts
+      setAutoAssignedFromFolder(true);
+
+      message.success(
+        `Auto-assigned ${autoAssignedDocs.length} document(s) from equipment staff folder`
+      );
+    }
+  }, [
+    documentsToUse,
+    autoAssignedFromFolder,
+    selectedDocuments.length,
+    setSelectedDocuments,
+    setAddContracts,
+  ]);
 
   const handleAssignDocuments = () => {
     if (selectedDocuments.length === 0) {
@@ -165,16 +197,24 @@ const LegalDocumentModal = ({
     },
   ];
 
-  const items = [
-    {
-      label: "Assigned Documents",
-      key: "0",
-    },
-    {
-      label: "Assign Documents",
-      key: "1",
-    },
-  ];
+  // Only show tabs if folders don't exist (for manual document selection)
+  const items = !foldersExisting
+    ? [
+        {
+          label: "Assigned Documents",
+          key: "0",
+        },
+        {
+          label: "Assign Documents",
+          key: "1",
+        },
+      ]
+    : [
+        {
+          label: "Assigned Documents",
+          key: "0",
+        },
+      ];
 
   const buttonContainerStyling = () => {
     let p = {};
@@ -221,8 +261,19 @@ const LegalDocumentModal = ({
       </div>
     );
   };
+
   return (
     <div key={profile._id} style={{ width: "100%" }} id="legal-document-modal">
+      {/* Show folder status indicator */}
+      {documentsToUse.source === "folders" && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: "#e3f2fd", borderRadius: 1 }}>
+          <Typography variant="body2" color="primary">
+            📁 Using documents from Equipment Staff folder
+            {autoAssignedFromFolder && " (Auto-assigned)"}
+          </Typography>
+        </Box>
+      )}
+
       {!foldersExisting && (
         <>
           <Divider />
@@ -247,7 +298,8 @@ const LegalDocumentModal = ({
           </InputLabel>
         </>
       )}
-      {addContracts && !foldersExisting && (
+
+      {(addContracts || foldersExisting) && (
         <div
           style={{
             width: "100%",
@@ -283,49 +335,66 @@ const LegalDocumentModal = ({
 
             {activeTab === 0 ? (
               // Assigned Documents Tab
-              <Table
-                columns={assignedColumns}
-                dataSource={selectedDocuments}
-                rowKey="id"
-              />
+              <>
+                <Table
+                  columns={assignedColumns}
+                  dataSource={selectedDocuments}
+                  rowKey="id"
+                />
+                {documentsToUse.source === "folders" &&
+                  selectedDocuments.length === 0 && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 2 }}
+                    >
+                      Documents will be auto-assigned from Equipment Staff
+                      folder when available.
+                    </Typography>
+                  )}
+              </>
             ) : (
-              <Box>
-                <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
-                  <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                    Select documents to email to staff member <QuestionIcon />
-                    {documentsToUse.source === "folders" && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          display: "block",
-                          color: "text.secondary",
-                          mt: 0.5,
-                        }}
-                      >
-                        (Documents from Equipment Staff Assignment folders)
-                      </Typography>
-                    )}
-                  </Typography>
-                </Tooltip>
-                <Select
-                  mode="multiple"
-                  style={{ width: "100%", marginBottom: "1rem" }}
-                  placeholder="Select documents to assign"
-                  value={selectedDocuments}
-                  onChange={setSelectedDocuments}
-                  loading={documentsToUse.loading}
-                  options={
-                    documentsToUse.documents?.map((doc) => ({
-                      label: doc.title,
-                      value: doc._id,
-                    })) || []
-                  }
-                />
-                <BlueButtonComponent
-                  title={"Assign Selected Documents"}
-                  func={handleAssignDocuments}
-                />
-              </Box>
+              // Only show document selection if no folders exist
+              !foldersExisting && (
+                <Box>
+                  <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
+                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                      Select documents to email to staff member <QuestionIcon />
+                    </Typography>
+                  </Tooltip>
+                  <Select
+                    mode="multiple"
+                    style={{ width: "100%", marginBottom: "1rem" }}
+                    placeholder="Select documents to assign"
+                    value={selectedDocuments.map((doc) => doc.id || doc._id)}
+                    onChange={(values) => {
+                      // Convert selected IDs back to document objects
+                      const newSelectedDocs = values.map((_id) => {
+                        const doc = documentsToUse.documents.find(
+                          (d) => d._id === _id
+                        );
+                        return {
+                          id: doc._id,
+                          title: doc.title,
+                          view_url: doc.document_url,
+                        };
+                      });
+                      setSelectedDocuments(newSelectedDocs);
+                    }}
+                    loading={documentsToUse.loading}
+                    options={
+                      documentsToUse.documents?.map((doc) => ({
+                        label: doc.title,
+                        value: doc._id,
+                      })) || []
+                    }
+                  />
+                  <BlueButtonComponent
+                    title={"Assign Selected Documents"}
+                    func={handleAssignDocuments}
+                  />
+                </Box>
+              )
             )}
           </Box>
         </div>
