@@ -55,7 +55,7 @@ const AssignmentFromExistingInventory = () => {
         enableAssignFeature: 1,
       }),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 5 * 60 * 100, // 5 minutes
+    staleTime: 1 * 60 * 100, // 1 minutes
   });
   const staffMemberQuery = useQuery({
     queryKey: ["staffMemberInfo"],
@@ -107,23 +107,20 @@ const AssignmentFromExistingInventory = () => {
   };
   const onChange = async (value) => {
     const optionRendering = JSON.parse(value);
-    // MIN(serial_number) as min_serial_number,
-    // MAX(serial_number) as max_serial_number,
-    // COUNT(*) as total_count
-
     const fetchSelectedItem = await devitrakApi.post(
       "/db_event/inventory-based-on-submitted-parameters",
       {
         query: `SELECT 
         serial_number
         FROM item_inv 
-        WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ?
+        WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? And warehouse = ?
         ORDER BY serial_number ASC`,
         values: [
           optionRendering.item_group,
           optionRendering.category_name,
           user.sqlInfo.company_id,
           optionRendering.location,
+          1,
         ],
       }
     );
