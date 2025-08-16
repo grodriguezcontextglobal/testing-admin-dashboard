@@ -388,7 +388,7 @@ const AssignmentFromExistingInventory = () => {
       state: watch("state"),
       zip: watch("zip"),
     };
-    // setLoadingStatus(true);
+    setLoadingStatus(true);
     if (watch("startingNumber")?.length > 0) {
       const data = JSON.parse(valueItemSelected.data);
       if (data.length > 0) {
@@ -802,8 +802,9 @@ const AssignmentFromExistingInventory = () => {
             <BlueButtonComponent
               disabled={
                 watch("startingNumber")?.length === 0 ||
-                !watch("startingNumber")
+                !watch("startingNumber") || loadingStatus
               }
+              loadingState={loadingStatus}
               title={"Assign equipment"}
               func={assignDeviceToStaffMember}
               styles={{ ...CenteringGrid, width: "100%" }}
