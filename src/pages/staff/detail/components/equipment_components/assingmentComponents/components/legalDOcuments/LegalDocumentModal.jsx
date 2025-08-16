@@ -60,7 +60,6 @@ const LegalDocumentModal = ({
       fetchedFolders?.data?.folders?.filter(
         (folder) => folder.folder_trigger_action === "equipment_assignment"
       ) || [];
-    console.log(equipmentStaffFolders);
     // If folders exist and have documents, use folder documents
     if (equipmentStaffFolders.length > 0) {
       const folderDocuments = [];
@@ -79,7 +78,6 @@ const LegalDocumentModal = ({
         }
       });
 
-      console.log(folderDocuments);
       if (folderDocuments.length > 0) {
         return {
           documents: folderDocuments,
