@@ -17,8 +17,17 @@ const LandingPageForDownloadableDocuments = () => {
   const documentUrl = new URLSearchParams(window.location.search).get(
     "contract_url"
   );
+  const staff_member_id = new URLSearchParams(window.location.search).get(
+    "staff_member_id"
+  );
+  const date_reference = new URLSearchParams(window.location.search).get(
+    "date_reference"
+  );
   const [token, setToken] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
+    useState(false);
+  const [contractInfo, setContractInfo] = useState(null);
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
   const [url, setUrl] = useState(null);
@@ -40,6 +49,34 @@ const LandingPageForDownloadableDocuments = () => {
     downloadDocument(documentUrl);
   }, []);
 
+  useEffect(() => {
+    const checkIfDocumentIsSignedAlready = async () => {
+      try {
+        const response = await devitrakApi.post(
+          "/document/verification/staff_member/check_signed_document",
+          {
+            company_id,
+            contract_url: documentUrl,
+            staff_member_id,
+            date_reference,
+          }
+        );
+        if (response.data.ok) {
+          setCheckIfDocumentIsSignedAlready(response.data.document.signature);
+          return setContractInfo({
+            contract_info: response.data.contract_info,
+            document_info: response.data.document,
+          });
+        }
+        return null;
+      } catch (error) {
+        message.error("Failed to check if document is signed already");
+        throw new Error(error);
+      }
+    };
+    checkIfDocumentIsSignedAlready();
+  }, []);
+
   const adminStaffQuery = useQuery({
     queryKey: ["staffMember"],
     queryFn: () => devitrakApi.get("/staff/admin-users"),
@@ -54,6 +91,17 @@ const LandingPageForDownloadableDocuments = () => {
 
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
   if (adminStaffQuery.data) {
+    const addSignatureToDocument = async () => {
+      return await devitrakApi.patch(
+        "/document/verification/staff_member/signing_document",
+        {
+          verification_id:
+            contractInfo.contract_info._id ?? contractInfo.contract_info.id,
+          contract_url: documentUrl,
+        }
+      );
+    };
+
     const submitNewPassword = async (data) => {
       setLoadingStatus(true);
       const response = await devitrakApi.post("/company/signatures", {
@@ -63,6 +111,7 @@ const LandingPageForDownloadableDocuments = () => {
         contract_url: documentUrl,
       });
       if (response.data.ok) {
+        await addSignatureToDocument();
         return setTimeout(() => {
           setLoadingStatus(false);
           const token = localStorage.getItem("admin-token");
@@ -190,6 +239,7 @@ const LandingPageForDownloadableDocuments = () => {
                     }}
                   >
                     <BlueButtonComponent
+                      disabled={checkIfDocumentIsSignedAlready}
                       buttonType="submit"
                       title={"Submit"}
                       loadingState={loadingStatus}
