@@ -8,7 +8,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, notification, Select } from "antd";
 import { PropTypes } from "prop-types";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -45,6 +45,8 @@ const AssignmentFromExistingInventory = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const newEventInfo = {};
   let dataFound = useRef([]);
+  const stampTime = useMemo(() => new Date().toISOString(), []);
+  console.log(stampTime);
   const navigate = useNavigate();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
@@ -372,11 +374,23 @@ const AssignmentFromExistingInventory = () => {
         staff: {
           name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
           email: profile.email,
+          staff_member_id: profile.adminUserInfo.id,
         },
         contract_list: props.contractList,
         subject: "Device Liability Contract",
         items: props.items,
         company_id: user.companyData.id,
+        date_reference: stampTime,
+      }
+    );
+    return await devitrakApi.post(
+      "/document/verification/staff_member/signed_document",
+      {
+        staff_member_id: profile.adminUserInfo.id,
+        contract_list: props.contractList,
+        company_id: user.companyData.id,
+        assigner_staff_member_id: user.id ?? user.uid,
+        date: stampTime,
       }
     );
   };
@@ -802,7 +816,8 @@ const AssignmentFromExistingInventory = () => {
             <BlueButtonComponent
               disabled={
                 watch("startingNumber")?.length === 0 ||
-                !watch("startingNumber") || loadingStatus
+                !watch("startingNumber") ||
+                loadingStatus
               }
               loadingState={loadingStatus}
               title={"Assign equipment"}
