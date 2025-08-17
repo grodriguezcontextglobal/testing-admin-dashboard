@@ -115,6 +115,8 @@ const Documents = () => {
         message.success("Folder updated successfully");
       } else {
         await devitrakApi.post("/document/new_folder", folderData);
+        queryClient.invalidateQueries(["folders", user.companyData.id]);
+
         message.success("Folder created successfully");
       }
 
