@@ -123,6 +123,45 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     return result;
   };
 
+  const emailNotification = async (props) => {
+    const stampTime = new Date().toISOString();
+    try {
+      await devitrakApi.post(
+        "/nodemailer/liability-contract-email-notification",
+        {
+          company_name: user.companyData.company_name,
+          company_id: user.companyData.id,
+          email_admin: user.email,
+          staff: {
+            name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
+            email: profile.email,
+          },
+          contract_list: contractList,
+          items: [
+            {
+              serial_number: props.serial_number,
+              type: props.item_group,
+            },
+          ],
+          subject: "Device Liability Contract",
+          date_reference: stampTime,
+        }
+      );
+      await devitrakApi.post(
+        "/document/verification/staff_member/signed_document",
+        {
+          staff_member_id: profile.adminUserInfo.id,
+          contract_list: contractList,
+          company_id: user.companyData.id,
+          assigner_staff_member_id: user.id ?? user.uid,
+          date: stampTime,
+        }
+      );
+    } catch (error) {
+      return openNotificationWithIcon(`${error.message}`);
+    }
+  };
+
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
@@ -198,30 +237,11 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         eventId: newEventInfo.insertId,
         itemId: newInsertedItem.insertId,
       });
-      {
-        addContracts &&
-          (await devitrakApi.post(
-            "/nodemailer/liability-contract-email-notification",
-            {
-              company_name: user.companyData.company_name,
-              company_id: user.companyData.id,
-              email_admin: user.email,
-              staff: {
-                name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
-                email: profile.email,
-              },
-              contract_list: contractList,
-              items: [
-                {
-                  serial_number: data.serial_number,
-                  type: data.item_group,
-                },
-              ],
-              subject: "Device Liability Contract",
-            }
-          ));
-      }
-
+      await emailNotification({
+        serial_number: data.serial_number,
+        item_group: data.item_group,
+        contractList,
+      });
       setLoadingStatus(false);
       return closeModal();
     } catch (error) {
