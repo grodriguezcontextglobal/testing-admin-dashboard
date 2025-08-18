@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { Divider, Modal, Switch } from "antd";
+import { Divider, Modal } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import "../../../../../styles/global/ant-select.css";
 // import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
 import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
+import CustomizedSwitch from "./assingmentComponents/components/CustomizedSwitch";
 const Assignment = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const [existingOption, setExistingOption] = useState(true);
@@ -15,34 +16,37 @@ const Assignment = () => {
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
-  
+
   return (
-      <Modal open={true} onCancel={() => closeModal()} width={1000} footer={[]} style={{ zIndex: 30 }}>
-        <Grid
-          container
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          marginY={2}
-          key={"settingUp-deviceList-event"}
-        >
-          <Divider>
-            <Switch
-              value={existingOption}
-              onChange={() => setExistingOption(!existingOption)}
-              defaultChecked
-              checkedChildren="From Existing Inventory"
-              unCheckedChildren="New Device in Inventory"
-            />
-          </Divider>
-          {existingOption ? (
-            <AssignmentFromExistingInventory />
-          ) : (
-            // <AssignemntNewDeviceInInventory />
-            <AssignmentNewDeviceToStaffInInventory />
-          )}
-        </Grid>
-      </Modal>
+    <Modal
+      open={true}
+      onCancel={() => closeModal()}
+      width={1000}
+      footer={[]}
+      style={{ zIndex: 30 }}
+    >
+      <Grid
+        container
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        marginY={2}
+        key={"settingUp-deviceList-event"}
+      >
+        <Divider>
+          <CustomizedSwitch
+            state={existingOption}
+            handler={setExistingOption}
+          />
+        </Divider>
+        {existingOption ? (
+          <AssignmentFromExistingInventory />
+        ) : (
+          // <AssignemntNewDeviceInInventory />
+          <AssignmentNewDeviceToStaffInInventory />
+        )}
+      </Grid>
+    </Modal>
   );
 };
 
