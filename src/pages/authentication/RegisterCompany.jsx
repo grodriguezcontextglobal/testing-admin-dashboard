@@ -26,7 +26,11 @@ import { devitrakApi } from "../../api/devitrakApi";
 import FooterComponent from "../../components/general/FooterComponent";
 import { CompanyIcon } from "../../components/icons/CompanyIcon";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
-import { onAddErrorMessage, onLogin, onLogout } from "../../store/slices/adminSlice";
+import {
+  onAddErrorMessage,
+  onLogin,
+  onLogout,
+} from "../../store/slices/adminSlice";
 import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -42,6 +46,9 @@ import insertingStripeAccountInSqlDb from "./actions/insertingStripeAccountInSql
 import insertingUserMemberInSqlBd from "./actions/insertingUserMemberInSqlBd";
 import userRegistrationProcess from "./actions/userRegistrationProcess";
 import InfrmationCard from "./components/InfrmationCard";
+import DevitrakTermsAndConditions, {
+  agreedAgreement,
+} from "./actions/DevitrakTermsAndConditions";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
@@ -68,6 +75,7 @@ const RegisterCompany = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
+  const [triggerModal, setTriggerModal] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -171,7 +179,15 @@ const RegisterCompany = () => {
     return setLocationList(result);
   };
   const ref = useRef({});
-
+  const agreementTermsAndConditions = async () => {
+    const closingModal = () => null;
+    return agreedAgreement({
+      staffMember: `${user.name} ${user.lastName}`,
+      company_id: ref.current.companyData.id,
+      setOpen: closingModal,
+      setIsLoading: loadingStatus,
+    });
+  };
   const onSubmitRegister = async (data) => {
     let base64 = "";
     if (locationList.length < 1) {
@@ -217,16 +233,18 @@ const RegisterCompany = () => {
           await insertingStripeAccountInSqlDb(ref);
           await consultingUserMemberInSqlDb({ ref, user });
           await consultingCompanyInSqDb(ref);
+          await agreementTermsAndConditions();
           queryClient.clear();
           setLoadingStatus(false);
-          api.destroy()
-          dispatch(onLogin({
-            ...ref.current.userRegistration,
-            companyData:{...ref.current.companyData},
-            sqlMemberInfo:{...ref.current.sqlMemberInfo},
-            sqlInfo: {...ref.current.sqlInfo},
-
-          }))
+          api.destroy();
+          dispatch(
+            onLogin({
+              ...ref.current.userRegistration,
+              companyData: { ...ref.current.companyData },
+              sqlMemberInfo: { ...ref.current.sqlMemberInfo },
+              sqlInfo: { ...ref.current.sqlInfo },
+            })
+          );
           openNotificationWithIcon(
             "success",
             "Account created.",
@@ -257,16 +275,18 @@ const RegisterCompany = () => {
           await insertingUserMemberInSqlBd({ props: { ...data }, user, ref });
           await consultingUserMemberInSqlDb({ ref, user });
           await consultingCompanyInSqDb(ref);
-          dispatch(onLogin({
-            ...ref.current.userRegistration,
-            companyData:{...ref.current.companyData},
-            sqlMemberInfo:{...ref.current.sqlMemberInfo},
-            sqlInfo: {...ref.current.sqlInfo},
-
-          }))
+          await agreementTermsAndConditions();
+          dispatch(
+            onLogin({
+              ...ref.current.userRegistration,
+              companyData: { ...ref.current.companyData },
+              sqlMemberInfo: { ...ref.current.sqlMemberInfo },
+              sqlInfo: { ...ref.current.sqlInfo },
+            })
+          );
           queryClient.clear();
           setLoadingStatus(false);
-          api.destroy()
+          api.destroy();
           openNotificationWithIcon(
             "success",
             "Account created.",
@@ -289,10 +309,18 @@ const RegisterCompany = () => {
       }
     }
   };
-
   return (
     <>
       {contextHolder}
+        <DevitrakTermsAndConditions
+          open={triggerModal}
+          setOpen={() => setTriggerModal(false)}
+          navigate={() => navigate("/register")}
+          staffMember={`${user.name} ${user.lastName}`}
+          action={() => {
+            setTriggerModal(false);
+          }}
+        />
       <Grid
         style={{
           backgroundColor: "var(--basewhite)",
@@ -630,7 +658,8 @@ const RegisterCompany = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Your company locations <span style={{ fontWeight: 800 }}>*</span>
+                    Your company locations{" "}
+                    <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <div
                     style={{
