@@ -96,7 +96,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           question: "company name",
           answer: user.company,
           role: data.role,
-          company: user.company,
+          company: user.companyData.id,
         };
         await devitrakApi.patch(
           `/company/update-company/${companiesQuery.data.data.company[0].id}`,
