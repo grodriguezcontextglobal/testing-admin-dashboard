@@ -54,8 +54,9 @@ const NewPost = () => {
   const eventsCompanyList = useQuery({
     queryKey: ["eventsCompanyList"],
     queryFn: () =>
-      devitrakApi.post(`/event/event-list`, {
-        company_id: user.companyData.id,
+      devitrakApi.get(`/event/event-list-per-company?company=${user.companyData.company_name}&type=event`, {
+        // company_id: user.companyData.id,
+        // type:"event",
       }),
     refetchOnMount: false,
   });
