@@ -3,7 +3,7 @@ import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Button, message } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,19 +16,17 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
 import "./style/authStyle.css";
+import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
 
 const InvitationLanding = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [first, setFirst] = useState(true);
   const firstName = new URLSearchParams(window.location.search).get("first");
   const lastName = new URLSearchParams(window.location.search).get("last");
   const email = new URLSearchParams(window.location.search).get("email");
   const company = new URLSearchParams(window.location.search).get("company");
   const role = new URLSearchParams(window.location.search).get("role");
-  const {
-    register,
-    setValue,
-    handleSubmit,
-  } = useForm({
+  const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
       firstName,
       lastName,
@@ -60,11 +58,24 @@ const InvitationLanding = () => {
     queryKey: ["companyListQuery"],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
-        company_name: company,
+        _id: company,
       }),
     refetchOnMount: false,
   });
   const [messageApi, contextHolder] = message.useMessage();
+  
+  // Move useMemo outside the conditional block to fix hooks order
+  const shouldShowDrawer = useMemo(() => {
+    if (!allStaffSavedQuery.data || !companiesQuery.data) {
+      return false;
+    }
+    
+    const userExistsInOtherCompany = allStaffSavedQuery.data.data.adminUsers && 
+      allStaffSavedQuery.data.data.adminUsers.length > 0;
+    
+    return first && !userExistsInOtherCompany;
+  }, [first, allStaffSavedQuery.data, companiesQuery.data]);
+  
   const warning = (type, content) => {
     messageApi.open({
       type: type,
@@ -84,8 +95,8 @@ const InvitationLanding = () => {
       controller.abort();
     };
   }, [company]);
-
   const newUser = useRef(null);
+
   if (allStaffSavedQuery.data && companiesQuery.data) {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
     const createNewStaffSQL = async () => {
@@ -101,7 +112,6 @@ const InvitationLanding = () => {
         return createNewStaffSQL();
       }
     };
-
     const checkIfUserExistsInOtherCompany = () => {
       if (
         allStaffSavedQuery.data.data.adminUsers &&
@@ -124,11 +134,10 @@ const InvitationLanding = () => {
       }
       return null;
     };
-    // Example function to display a masked password on the screen
+    
     const displayMaskedPassword = (password) => {
       return "*".repeat(password.length); // Mask the password with asterisks
     };
-
     const updateExistingUser = async () => {
       const resp = await devitrakApi.patch(
         `/staff/edit-admin/${newUser.current.id}`,
@@ -137,7 +146,7 @@ const InvitationLanding = () => {
           companiesAssigned: [
             ...newUser.current.companiesAssigned,
             {
-              company: company,
+              company: hostCompanyInfo.company_name,
               active: true,
               super_user: false,
               role: role,
@@ -169,12 +178,12 @@ const InvitationLanding = () => {
         email: email,
         password: props.password,
         question: "What is the name of the company",
-        answer: company,
+        answer: hostCompanyInfo.company_name,
         role: role,
-        company: company,
+        company: hostCompanyInfo.company_name,
         companiesAssigned: [
           {
-            company: company,
+            company: hostCompanyInfo.company_name,
             active: true,
             super_user: false,
             role: role,
@@ -226,9 +235,21 @@ const InvitationLanding = () => {
         setLoadingStatus(false);
       }
     };
+    const closingModal = () => {
+      return setFirst(false);
+    };
     return (
       <>
         {contextHolder}
+        {shouldShowDrawer && (
+          <DevitrakTermsAndConditions
+            open={shouldShowDrawer}
+            setOpen={() => closingModal()}
+            navigate={navigate}
+            company_id={company}
+            staffMember={`${firstName} ${lastName}`}
+          />
+        )}
         <Grid
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container
@@ -389,7 +410,7 @@ const InvitationLanding = () => {
                       <OutlinedInput
                         disabled
                         type="text"
-                        value={company}
+                        value={hostCompanyInfo.company_name}
                         style={{
                           ...OutlinedInputStyle,
                         }}
@@ -556,6 +577,21 @@ const InvitationLanding = () => {
       </>
     );
   }
+  
+  // Return loading state when data is not available
+  return (
+    <>
+      {contextHolder}
+      <Grid
+        style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
+        container
+      >
+        <Grid item xs={12} display="flex" justifyContent="center" alignItems="center">
+          <Typography>Loading...</Typography>
+        </Grid>
+      </Grid>
+    </>
+  );
 };
 
 export default InvitationLanding;
