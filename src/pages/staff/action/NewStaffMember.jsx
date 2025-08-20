@@ -15,13 +15,12 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
+import dicRole from "../../../components/general/dicRole";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import dicRole from "../../../components/general/dicRole";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
@@ -314,16 +313,14 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
               md={12}
               lg={12}
             >
-              <Button
+              <GrayButtonComponent
+                title={"Cancel"}
+                func={closeModal}
+                buttonType="reset"
+                styles={{ width: "100%" }}
                 disabled={loadingStatus}
-                onClick={closeModal}
-                style={{ ...GrayButton, width: "100%" }}
-                htmlType="reset"
-              >
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Cancel
-                </Typography>
-              </Button>
+              />
+
               <Button
                 disabled={loadingStatus}
                 style={{ ...BlueButton, width: "100%" }}

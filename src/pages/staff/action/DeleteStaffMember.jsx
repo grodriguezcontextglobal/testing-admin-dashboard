@@ -8,10 +8,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import dicRole from "../../../components/general/dicRole";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { onLogin } from "../../../store/slices/adminSlice";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
 const DeleteStaffMember = ({ modalState, setModalState }) => {
@@ -395,12 +394,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
             }}
           />
         </Grid>
-        <button
-          onClick={() => handleDeleteStaffMember()}
-          style={{ ...DangerButton, width: "100%", margin: "20px 0" }}
-        >
-          <p style={DangerButtonText}>Delete staff members</p>
-        </button>
+        <DangerButtonComponent title={"Delete staff members"} func={() => handleDeleteStaffMember()} />
       </Modal>
     );
   }
