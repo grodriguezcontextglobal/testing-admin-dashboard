@@ -1,6 +1,8 @@
 import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { message } from "antd";
 import { Footer } from "antd/es/layout/layout";
+import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +10,6 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
-import { message } from "antd";
 
 const LandingPageForDownloadableDocuments = () => {
   const company_id = new URLSearchParams(window.location.search).get(
@@ -79,9 +80,11 @@ const LandingPageForDownloadableDocuments = () => {
 
   const adminStaffQuery = useQuery({
     queryKey: ["staffMember"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
+    queryFn: () =>
+      devitrakApi.post("/staff/admin-users", {
+        _id: staff_member_id,
+      }),
   });
-
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
     if (token) {
@@ -102,23 +105,43 @@ const LandingPageForDownloadableDocuments = () => {
       );
     };
 
+    const staffMemberAuthentication = async (props) => {
+      try {
+        const staffMemberInfo = adminStaffQuery.data.data.adminUsers[0];
+        const isValid = compareSync(
+          props.current_password,
+          staffMemberInfo.password
+        );
+        return isValid;
+      } catch (error) {
+        message.error("Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation.");
+        return false;
+      }
+    };
     const submitNewPassword = async (data) => {
       setLoadingStatus(true);
-      const response = await devitrakApi.post("/company/signatures", {
-        signature: data.fullName,
-        date: data.date,
-        company_id: company_id,
-        contract_url: documentUrl,
-      });
-      if (response.data.ok) {
-        await addSignatureToDocument();
-        return setTimeout(() => {
-          setLoadingStatus(false);
-          const token = localStorage.getItem("admin-token");
-          message.success("Signature collected successfully");
-          if (token) return navigate("/");
-          return navigate("/login");
-        }, 1500);
+      const isAuthenticated = await staffMemberAuthentication(data);
+      if (!isAuthenticated) {
+        setLoadingStatus(false);
+        message.error("Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation.");
+        return false;
+      } else {
+        const response = await devitrakApi.post("/company/signatures", {
+          signature: data.fullName,
+          date: data.date,
+          company_id: company_id,
+          contract_url: documentUrl,
+        });
+        if (response.data.ok) {
+          await addSignatureToDocument();
+          return setTimeout(() => {
+            setLoadingStatus(false);
+            const token = localStorage.getItem("admin-token");
+            message.success("Signature collected successfully");
+            if (token) return navigate("/");
+            return navigate("/login");
+          }, 1500);
+        }
       }
     };
     return (
@@ -202,6 +225,25 @@ const LandingPageForDownloadableDocuments = () => {
                       fullWidth
                     />
                   </Grid>
+                  <Grid
+                    marginY={"20px"}
+                    marginX={0}
+                    textAlign={"left"}
+                    item
+                    xs={12}
+                  >
+                    <FormLabel style={{ marginBottom: "0.5rem" }}>
+                      Staff member authentication
+                    </FormLabel>
+                    <OutlinedInput
+                      {...register("current_password")}
+                      style={OutlinedInputStyle}
+                      placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                      type="password"
+                      fullWidth
+                    />
+                  </Grid>
+
                   <Grid
                     marginY={"20px"}
                     marginX={0}
