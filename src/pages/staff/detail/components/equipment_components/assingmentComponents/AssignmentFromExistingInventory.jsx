@@ -817,7 +817,8 @@ const AssignmentFromExistingInventory = () => {
               disabled={
                 watch("startingNumber")?.length === 0 ||
                 !watch("startingNumber") ||
-                loadingStatus
+                loadingStatus ||
+                !checkingSerialNumberInputted
               }
               loadingState={loadingStatus}
               title={"Assign equipment"}
