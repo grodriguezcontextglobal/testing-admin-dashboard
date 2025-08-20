@@ -3,13 +3,11 @@ import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import Loading from "../../components/animation/Loading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import { DangerButton } from "../../styles/global/DangerButton";
-import { DangerButtonText } from "../../styles/global/DangerButtonText";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
@@ -54,48 +52,50 @@ const MainPage = () => {
           md={3}
           lg={3}
         >
-          <p style={{ ...Title,padding:"16px 24px 16px 0", textTransform: "none", textAlign: "left" }}>
+          <p
+            style={{
+              ...Title,
+              padding: "16px 24px 16px 0",
+              textTransform: "none",
+              textAlign: "left",
+            }}
+          >
             Staff
           </p>
         </Grid>
         <Grid
-            display={Number(user.role) < 2 ? "flex" : "none"}
-            gap={2}
-            sx={{
-              display:"flex",
-              alignItems:"center",
-              justifyContent:{
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "flex-end",
-                lg: "flex-end",
-              }
+          display={Number(user.role) < 2 ? "flex" : "none"}
+          gap={2}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "flex-end",
+              lg: "flex-end",
+            },
+          }}
+          item
+          xs={12}
+          sm={12}
+          md={9}
+          lg={9}
+        >
+          <BlueButtonComponent
+            title={"Add new staff"}
+            func={() => setModalState(true)}
+            icon={<WhiteCirclePlusIcon />}
+          />
+          <DangerButtonComponent
+            style={{
+              display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+              width: "fit-content",
             }}
-            item
-            xs={12}
-            sm={12}
-            md={9}
-            lg={9}
-          >
-            <button style={BlueButton} onClick={() => setModalState(true)}>
-              {/* <WhitePlusIcon /> */}
-              <WhiteCirclePlusIcon />
-              <p style={{ ...BlueButtonText, textTransform: "none",width:"fit-content" }}>
-                Add new staff
-              </p>
-            </button>
-            <button
-              style={{
-                ...DangerButton,
-                display: `${Number(user.role) > 1 ? "none" : "flex"}`,width:"fit-content"
-              }}
-              onClick={() => setDeleteModalState(true)}
-            >
-              <p style={{ ...DangerButtonText, textTransform: "none" }}>
-                Delete staff members
-              </p>
-            </button>
-          </Grid>
+            func={() => setDeleteModalState(true)}
+            title={"Delete staff members"}
+          />
+        </Grid>
 
         <Divider />
         <Grid
@@ -148,7 +148,11 @@ const MainPage = () => {
         </Grid>
       </Grid>
       {modalState && (
-        <NewStaffMember modalState={modalState} setModalState={setModalState} deletingStaffMembers={deleteModalState}/>
+        <NewStaffMember
+          modalState={modalState}
+          setModalState={setModalState}
+          deletingStaffMembers={deleteModalState}
+        />
       )}
       {deleteModalState && (
         <DeleteStaffMember
