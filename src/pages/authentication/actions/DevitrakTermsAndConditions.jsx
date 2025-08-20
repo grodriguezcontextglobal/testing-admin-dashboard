@@ -13,6 +13,29 @@ import { useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useLocation } from "react-router-dom";
 // import { devitrakApi } from "../../../api/devitrakApi";
+const policyDocuments = [
+  {
+    id: 1,
+    title: "Privacy Policy",
+    description: "Our privacy policy and data handling practices",
+    fileName: "document_1.pdf",
+    url: document1,
+  },
+  {
+    id: 2,
+    title: "Terms of Service",
+    description: "Terms and conditions for using our platform",
+    fileName: "document_2.pdf",
+    url: document2,
+  },
+  {
+    id: 3,
+    title: "User Agreement",
+    description: "User agreement and platform guidelines",
+    fileName: "document_3.pdf",
+    url: document3,
+  },
+];
 
 const DevitrakTermsAndConditions = ({
   open,
@@ -25,29 +48,6 @@ const DevitrakTermsAndConditions = ({
   const location = useLocation();
   const [name, setName] = useState(staffMember);
   const [isLoading, setIsLoading] = useState(false);
-  const policyDocuments = [
-    {
-      id: 1,
-      title: "Privacy Policy",
-      description: "Our privacy policy and data handling practices",
-      fileName: "document_1.pdf",
-      url: document1,
-    },
-    {
-      id: 2,
-      title: "Terms of Service",
-      description: "Terms and conditions for using our platform",
-      fileName: "document_2.pdf",
-      url: document2,
-    },
-    {
-      id: 3,
-      title: "User Agreement",
-      description: "User agreement and platform guidelines",
-      fileName: "document_3.pdf",
-      url: document3,
-    },
-  ];
   const columns = [
     {
       title: "Document Name",
@@ -114,7 +114,11 @@ const DevitrakTermsAndConditions = ({
           />
           <DangerButtonComponent
             title={"No agreed"}
-            func={() => navigate("/login", { replace: true })}
+            func={() =>
+              location.pathname.includes("/invitation")
+                ? navigate("/login", { replace: true })
+                : navigate()
+            }
           />
           <BlueButtonComponent
             title={"Agree"}
@@ -148,7 +152,6 @@ export default DevitrakTermsAndConditions;
 export const agreedAgreement = async ({
   staffMember,
   company_id,
-  policyDocuments,
   setOpen,
   setIsLoading,
 }) => {
