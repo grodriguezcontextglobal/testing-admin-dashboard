@@ -50,7 +50,9 @@ export const bulkItemUpdateAlphanumeric = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
     originalTemplate: originalTemplate,
-    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
+    supplier_info: data.supplier
+      ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+      : null,
   };
   await alphaNumericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
@@ -115,7 +117,9 @@ export const bulkItemUpdateSequential = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
-    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
+    supplier_info: data.supplier
+      ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+      : null,
   };
   await sequencialNumbericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
@@ -174,7 +178,9 @@ export const updateAllItemsBasedOnParameters = async ({
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
-    supplier_info: dicSuppliers?.find(([key]) => key === data.supplier)[1],
+    supplier_info: data.supplier
+      ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+      : null,
   };
   await updateAllItemsMutation.mutate(newTemplate);
   await clearCacheMemory(

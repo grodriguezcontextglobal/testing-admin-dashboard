@@ -48,7 +48,7 @@ export const bulkItemInsertAlphanumeric = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
       image_url: img_url,
-      supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
+      supplier_info: data.supplier ? dicSuppliers.find(([key]) => key === data.supplier)[1] : null,
     };
     await alphaNumericInsertItemMutation.mutate(template);
     setValue("category_name", "");
@@ -94,6 +94,8 @@ export const bulkItemInsertSequential = async ({
   dicSuppliers,
 }) => {
   try {
+    console.log(data)
+    console.log(dicSuppliers)
     const template = {
       category_name: data.category_name,
       item_group: data.item_group,
@@ -122,7 +124,7 @@ export const bulkItemInsertSequential = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
       image_url: img_url,
-      supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
+      supplier_info: data.supplier ? dicSuppliers.find(([key]) => key === data.supplier)[1] : null,
     };
     await sequencialNumbericInsertItemMutation.mutate(template);
     setValue("category_name", "");

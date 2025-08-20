@@ -43,13 +43,13 @@ export const singleItemInserting = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
-    supplier_info: dicSuppliers.find(([key]) => key === data.supplier)[1],
+    supplier_info: data.supplier
+      ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+      : null,
   };
   setLoadingStatus(true);
   await devitrakApi.post("/db_item/new_item", template);
   await invalidateQueries();
-  // const response = await devitrakApi.post("/db_company/insert-new-single-item", template);
-  // if (response.data.ok) {
   setValue("category_name", "");
   setValue("item_group", "");
   setValue("cost", "");
