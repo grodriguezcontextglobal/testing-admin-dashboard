@@ -3,6 +3,7 @@ import {
   FormControlLabel,
   FormLabel,
   Grid,
+  InputAdornment,
   OutlinedInput,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,8 @@ import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "./style/authStyle.css";
+import VisibleIcon from "../../components/icons/VisibleIcon";
+import HidenIcon from "../../components/icons/HidenIcon";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -49,6 +52,7 @@ const Login = () => {
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -442,8 +446,27 @@ const Login = () => {
                     marginTop: "6px",
                   }}
                   placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   fullWidth
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <button
+                        type="button"
+                        style={{
+                          padding: 0,
+                          backgroundColor: "transparent",
+                          outline: "none",
+                          margin: 0,
+                          width: "fit-content",
+                          aspectRatio: "1",
+                          borderRadius: "50%",
+                        }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <VisibleIcon fill={"var(--blue-dark-600)"} /> : <HidenIcon stroke={"var(--blue-dark-600)"}/>}
+                      </button>
+                    </InputAdornment>
+                  }
                 />
               </Grid>
               <Grid

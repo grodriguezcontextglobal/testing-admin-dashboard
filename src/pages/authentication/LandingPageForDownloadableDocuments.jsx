@@ -1,4 +1,10 @@
-import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
+import {
+  FormLabel,
+  Grid,
+  InputAdornment,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { message, Tooltip } from "antd";
 import { Footer } from "antd/es/layout/layout";
@@ -11,6 +17,8 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
 import { InformationIcon } from "../../components/icons/InformationIcon";
+import VisibleIcon from "../../components/icons/VisibleIcon";
+import HidenIcon from "../../components/icons/HidenIcon";
 
 const LandingPageForDownloadableDocuments = () => {
   const company_id = new URLSearchParams(window.location.search).get(
@@ -30,6 +38,7 @@ const LandingPageForDownloadableDocuments = () => {
   const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
     useState(false);
   const [contractInfo, setContractInfo] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
   const [url, setUrl] = useState(null);
@@ -249,6 +258,29 @@ const LandingPageForDownloadableDocuments = () => {
                         type="password"
                         fullWidth
                         required
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <button
+                              type="button"
+                              style={{
+                                padding: 0,
+                                backgroundColor: "transparent",
+                                outline: "none",
+                                margin: 0,
+                                width: "fit-content",
+                                aspectRatio: "1",
+                                borderRadius: "50%",
+                              }}
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <VisibleIcon fill={"var(--blue-dark-600)"} />
+                              ) : (
+                                <HidenIcon stroke={"var(--blue-dark-600)"} />
+                              )}
+                            </button>
+                          </InputAdornment>
+                        }
                       />
                     </Tooltip>
                   </Grid>
