@@ -1,6 +1,6 @@
 import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message } from "antd";
+import { message, Tooltip } from "antd";
 import { Footer } from "antd/es/layout/layout";
 import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
+import { InformationIcon } from "../../components/icons/InformationIcon";
 
 const LandingPageForDownloadableDocuments = () => {
   const company_id = new URLSearchParams(window.location.search).get(
@@ -114,7 +115,9 @@ const LandingPageForDownloadableDocuments = () => {
         );
         return isValid;
       } catch (error) {
-        message.error("Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation.");
+        message.error(
+          "Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation."
+        );
         return false;
       }
     };
@@ -123,7 +126,9 @@ const LandingPageForDownloadableDocuments = () => {
       const isAuthenticated = await staffMemberAuthentication(data);
       if (!isAuthenticated) {
         setLoadingStatus(false);
-        message.error("Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation.");
+        message.error(
+          "Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation."
+        );
         return false;
       } else {
         const response = await devitrakApi.post("/company/signatures", {
@@ -223,6 +228,7 @@ const LandingPageForDownloadableDocuments = () => {
                       placeholder="e.g. John Doe"
                       type="text"
                       fullWidth
+                      required
                     />
                   </Grid>
                   <Grid
@@ -232,16 +238,19 @@ const LandingPageForDownloadableDocuments = () => {
                     item
                     xs={12}
                   >
-                    <FormLabel style={{ marginBottom: "0.5rem" }}>
-                      Staff member authentication
-                    </FormLabel>
-                    <OutlinedInput
-                      {...register("current_password")}
-                      style={OutlinedInputStyle}
-                      placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                      type="password"
-                      fullWidth
-                    />
+                    <Tooltip title="Staff member login password is required for authentication and proceed to checking and signing the document">
+                      <FormLabel style={{ marginBottom: "0.5rem" }}>
+                        Staff member authentication <InformationIcon />
+                      </FormLabel>
+                      <OutlinedInput
+                        {...register("current_password")}
+                        style={OutlinedInputStyle}
+                        placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                        type="password"
+                        fullWidth
+                        required
+                      />
+                    </Tooltip>
                   </Grid>
 
                   <Grid
