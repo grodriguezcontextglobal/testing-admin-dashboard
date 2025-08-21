@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -273,8 +273,13 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     return 6;
   };
 
-  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items
+  const subLocationsOptions = useMemo(
+    () =>
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items,
+        watch("location")
+      ),
+    [watch("location")]
   );
 
   const renderingOptionsForSubLocations = (item) => {
