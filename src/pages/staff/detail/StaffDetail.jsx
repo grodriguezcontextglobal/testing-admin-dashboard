@@ -1,4 +1,5 @@
 import { Grid } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
@@ -8,15 +9,11 @@ import { RectanglePlusIcon } from "../../../components/icons/RectanglePlusIcon";
 import { UpdateIcon } from "../../../components/icons/UpdateIcon";
 import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
 import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
-import { useQueryClient } from "@tanstack/react-query";
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
@@ -77,6 +74,19 @@ const StaffDetail = () => {
       disabled: false,
       id: 0,
       fn: () => null,
+      html: (
+        <BlueButtonComponent
+          title={"Assign devices"}
+          func={() => null}
+          icon={<RectanglePlusIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
     {
       label: "Assign user to event",
@@ -85,6 +95,19 @@ const StaffDetail = () => {
       disabled: false,
       id: 1,
       fn: () => null,
+      html: (
+        <LightBlueButtonComponent
+          title={"Assign user to event"}
+          func={() => null}
+          icon={<WhiteCalendarIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
     {
       label: "Update contact info",
@@ -93,6 +116,19 @@ const StaffDetail = () => {
       disabled: user.email !== profile.email,
       id: 2,
       fn: () => null,
+      html: (
+        <GrayButtonComponent
+          title={"Update contact info"}
+          func={() => null}
+          icon={<UpdateIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
     {
       label: "Change role",
@@ -101,6 +137,19 @@ const StaffDetail = () => {
       disabled: false,
       id: 3,
       fn: () => null,
+      html: (
+        <GrayButtonComponent
+          title={"Change role"}
+          func={() => null}
+          icon={<ChangeRoleStaffIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
     {
       label: "Send password reset email",
@@ -109,6 +158,19 @@ const StaffDetail = () => {
       disabled: false,
       id: 4,
       fn: () => null,
+      html: (
+        <GrayButtonComponent
+          title={"Send password reset email"}
+          func={() => null}
+          icon={<UpdatePasswordIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
     {
       label: `${profile.active ? "Remove" : "Grant"} access`,
@@ -117,15 +179,21 @@ const StaffDetail = () => {
       disabled: false,
       id: 5,
       fn: () => activeOrDesactiveStaffMemberInCompany(),
+      html: (
+        <GrayButtonComponent
+          title={`${profile.active ? "Remove" : "Grant"} access`}
+          func={() => null}
+          icon={<UpdatePasswordIcon />}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
     },
   ];
-  const dicIcons = {
-    "Assign devices": <RectanglePlusIcon />,
-    "Assign to event": <WhiteCalendarIcon />,
-    "Update contact info": <UpdateIcon />,
-    "Change role": <ChangeRoleStaffIcon />,
-    "Send password reset email": <UpdatePasswordIcon />,
-  };
   return (
     <>
       <HeaderStaffDetail />
@@ -150,129 +218,27 @@ const StaffDetail = () => {
           }}
           container
         >
-          {tabOptions.map((option, index) => {
-            if (index === 0) {
-              return (
-                <Grid
-                  key={option.label}
-                  marginY={0}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={2}
-                  lg={2}
-                >
-                  <NavLink
-                    key={option.label}
-                    to={`${option.route}`}
-                    style={{
-                      ...BlueButton,
-                      display: `${
-                        option.permission.some(
-                          (element) => element === Number(user.role)
-                        )
-                          ? "flex"
-                          : "none"
-                      }`,
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10x 16px",
-                      gap: "8px",
-                      width: "100%",
-                    }}
-                  >
-                    <p
-                      style={{
-                        ...BlueButtonText,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "10px 16px",
-                      }}
-                    >
-                      {dicIcons[option.label]}&nbsp;{option.label}
-                    </p>
-                  </NavLink>
-                </Grid>
-              );
-            } else if (index === 1) {
-              return (
-                <Grid
-                  key={option.label}
-                  marginY={0}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={2}
-                  lg={2}
-                >
-                  <NavLink to={`${option.route}`} style={{ ...LightBlueButton, width: "100%" }}>
-                    <p
-                      style={{
-                        ...LightBlueButtonText,
-                        display: `${
-                          option.permission.some(
-                            (element) => element === Number(user.role)
-                          )
-                            ? "flex"
-                            : "none"
-                        }`,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: "10px 16px",
-                        width: "100%",
-                      }}
-                    >
-                      {dicIcons[option.label]}&nbsp;{option.label}
-                    </p>
-                  </NavLink>
-                </Grid>
-              );
-            }
-
+          {tabOptions.map((option) => {
             return (
-              <Grid
+              <NavLink
                 key={option.label}
-                display={option.disabled ? "none" : "flex"}
-                marginY={0}
-                item
-                xs={12}
-                sm={12}
-                md={2}
-                lg={option.id === 4 ? 3 : 2}
+                to={`${option.route}`}
+                style={{
+                  display: `${
+                    option.permission.some(
+                      (element) => element === Number(user.role)
+                    )
+                      ? "flex"
+                      : "none"
+                  }`,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10x 16px",
+                  gap: "8px",
+                }}
               >
-                <NavLink
-                  key={option.label}
-                  to={`${option.route}`}
-                  style={{
-                    ...GrayButton,
-                    display: `${
-                      (option.id === 2 && user.email !== profile.user) ||
-                      (option.id === 5 && user.email === profile.user)
-                        ? "none"
-                        : "flex"
-                    }`,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "10x 16px",
-                    gap: "8px",
-                    width: "100%",
-                  }}
-                  onClick={() => option.fn()}
-                >
-                  <p
-                    style={{
-                      ...GrayButtonText,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10px 16px",
-                    }}
-                  >
-                    {dicIcons[option.label]}&nbsp;{option.label}
-                  </p>
-                </NavLink>
-              </Grid>
+                {option.html}
+              </NavLink>
             );
           })}
         </Grid>
