@@ -3,7 +3,6 @@ import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import { lazy, Suspense, useEffect, useState } from "react";
-// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -14,15 +13,15 @@ import Loading from "../../components/animation/Loading";
 import { EditIcon } from "../../components/icons/EditIcon";
 import { RectangleBluePlusIcon } from "../../components/icons/RectangleBluePlusIcon";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../components/UX/buttons/LigthBlueButton";
 import "../../styles/global/ant-select.css";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { GrayButton } from "../../styles/global/GrayButton";
 import GrayButtonText from "../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
@@ -39,7 +38,6 @@ const MainPage = () => {
     value: null,
   });
   const [searchedResult, setSearchedResult] = useState(null);
-  console.log(searchedResult);
   const [params, setParams] = useState(null);
   const [dataFilterOptions, setDataFilterOptions] = useState({
     0: [],
@@ -134,10 +132,13 @@ const MainPage = () => {
   };
 
   const searchItem = async (data) => {
-    const result = await devitrakApi.post("/db_company/get-grouped-inventory-by-search-parameter", {
-      searchParameter: data.searchItem,
-      company_id: user.sqlInfo.company_id,
-    });
+    const result = await devitrakApi.post(
+      "/db_company/get-grouped-inventory-by-search-parameter",
+      {
+        searchParameter: data.searchItem,
+        company_id: user.sqlInfo.company_id,
+      }
+    );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
       return setParams(data.searchItem);
@@ -164,10 +165,6 @@ const MainPage = () => {
         <HeaderInventaryComponent
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
-          LightBlueButton={LightBlueButton}
-          LightBlueButtonText={LightBlueButtonText}
-          BlueButton={BlueButton}
-          BlueButtonText={BlueButtonText}
         />
         <Grid
           gap={1}
@@ -180,47 +177,61 @@ const MainPage = () => {
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/edit-group">
-              <button style={{ ...LightBlueButton, width: "100%" }}>
-                <p
-                  style={{
-                    ...LightBlueButtonText,
-                    textTransform: "none",
-                    gap: "2px",
-                  }}
-                >
+              <LightBlueButtonComponent
+                title={"Update a group of items"}
+                func={() => null}
+                icon={
                   <EditIcon
                     stroke={"var(--blue-dark--800)"}
                     width={"21"}
                     height={"18"}
                   />
-                  &nbsp;Update a group of items
-                </p>
-              </button>
+                }
+                buttonType="button"
+                titleStyles={{
+                  textTransform: "none",
+                  with: "100%",
+                  gap: "2px",
+                }}
+              />
             </Link>
           </Grid>
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/new-bulk-items">
-              <button style={{ ...BlueButton, width: "100%" }}>
-                <p style={{ ...BlueButtonText, textTransform: "none" }}>
+              <BlueButtonComponent
+                title={"Add a group of items"}
+                func={() => null}
+                icon={
                   <WhiteCirclePlusIcon
                     style={{ height: "21px", margin: "auto" }}
                   />
-                  &nbsp; Add a group of items
-                </p>
-              </button>
+                }
+                buttonType="button"
+                titleStyles={{
+                  textTransform: "none",
+                  with: "100%",
+                  gap: "2px",
+                }}
+              />
             </Link>
           </Grid>
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/new-item">
-              <button style={{ ...LightBlueButton, width: "100%" }}>
-                <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-                  {/* <BluePlusIcon /> */}
-                  <RectangleBluePlusIcon />
-                  &nbsp; Add one item
-                </p>
-              </button>
+            <LightBlueButtonComponent
+              title={"Add one item"}
+              func={() => null}
+              icon={
+                <RectangleBluePlusIcon />
+              }
+              buttonType="button"
+              titleStyles={{
+                textTransform: "none",
+                with: "100%",
+                gap: "2px",
+              }}
+            />
             </Link>
           </Grid>
         </Grid>
@@ -325,7 +336,10 @@ const MainPage = () => {
                           padding: 0,
                           border: "none",
                           boxShadow: "-moz-initial",
-                          display: watch("searchItem") === "" && !params ? "none" : "flex",
+                          display:
+                            watch("searchItem") === "" && !params
+                              ? "none"
+                              : "flex",
                         }}
                         onClick={() => {
                           setValue("searchItem", "");
@@ -360,32 +374,32 @@ const MainPage = () => {
               lg
             >
               <GrayButtonComponent
-              title={"Advance search"}
-              func={() => {
-                setOpenAdvanceSearchModal(true);
-              }}
-              styles={{
-                width: "100%",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-              titleStyles={{
-                textTransform: "none",
-              }}
-            />
-            <GrayButtonComponent
-              title={"Reload"}
-              func={() => {
-                refetchingQueriesFn();
-              }}
-              styles={{
-                width: "100%",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-              titleStyles={{
-                textTransform: "none",
-              }}
+                title={"Advance search"}
+                func={() => {
+                  setOpenAdvanceSearchModal(true);
+                }}
+                styles={{
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                titleStyles={{
+                  textTransform: "none",
+                }}
+              />
+              <GrayButtonComponent
+                title={"Reload"}
+                func={() => {
+                  refetchingQueriesFn();
+                }}
+                styles={{
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                titleStyles={{
+                  textTransform: "none",
+                }}
               />
             </Grid>
             <Grid
