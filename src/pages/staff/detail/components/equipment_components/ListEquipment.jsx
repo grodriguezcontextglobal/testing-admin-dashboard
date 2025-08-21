@@ -18,6 +18,7 @@ import "../../../../../styles/global/ant-select.css";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
 import { useLocation } from "react-router-dom";
 import { checkArray } from "../../../../../components/utils/checkArray";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 const ListEquipment = () => {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -171,6 +172,18 @@ const ListEquipment = () => {
               gap: "20px",
             }}
           >
+            <BlueButtonComponent
+              title={"Mark as returned"}
+              func={() => null}
+              buttonType="button"
+              titleStyles={{
+                textTransform: "none",
+                with: "100%",
+                gap: "2px",
+              }}
+              disabled={record.active === 0}
+              
+            />
             <Button
               onClick={() => {
                 setDeviceInfo({
