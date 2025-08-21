@@ -121,7 +121,12 @@ const ModalReturnDeviceFromStaff = ({
         }
       }
     } catch (error) {
-      return null;
+      setIsLoading(false);
+      console.log(error);
+      return closeModal();
+    } finally {
+      setIsLoading(false);
+      closeModal();
     }
   };
   const closeModal = async () => {
