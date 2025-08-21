@@ -3,14 +3,12 @@ import { Link } from "react-router-dom";
 import { EditIcon } from "../../../components/icons/EditIcon";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 
 const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
-  LightBlueButton,
-  LightBlueButtonText,
-  BlueButton,
-  BlueButtonText,
 }) => {
   return (
     <Grid
@@ -42,41 +40,56 @@ const HeaderInventaryComponent = ({
         lg={8}
       >
         <Link to="/inventory/edit-group">
-          <button style={{ ...LightBlueButton, width: "fit-content" }}>
-            <p
-              style={{
-                ...LightBlueButtonText,
-                textTransform: "none",
-                gap: "2px",
-              }}
-            >
+          <LightBlueButtonComponent
+            title={"Update a group of items"}
+            styles={{ with: "100%" }}
+            icon={
               <EditIcon
                 stroke={"var(--blue-dark--800)"}
                 width={"20"}
                 height={"18"}
               />
-              &nbsp;Update a group of items
-            </p>
-          </button>
+            }
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+              gap: "2px",
+            }}
+            func={() => null}
+          />
         </Link>
         <Link to="/inventory/new-bulk-items">
-          <button style={{ ...BlueButton, width: "fit-content" }}>
-            <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-            &nbsp;
-            <p style={{ ...BlueButtonText, textTransform: "none" }}>
-              Add a group of items
-            </p>
-          </button>
+          <BlueButtonComponent
+            title={"Add a group of items"}
+            styles={{ with: "100%" }}
+            icon={
+              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+            }
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+              gap: "2px",
+            }}
+            func={() => null}
+          />
         </Link>
         <Link to="/inventory/new-item">
-          <button style={{ ...LightBlueButton, width: "fit-content" }}>
+        <LightBlueButtonComponent
+          title={"Add one item"}
+          styles={{ with: "100%" }}
+          icon={
             <RectangleBluePlusIcon />
-            {/* <BluePlusIcon /> */}
-            &nbsp;
-            <p style={{ ...LightBlueButtonText, textTransform: "none" }}>
-              Add one item
-            </p>
-          </button>
+          }
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+          func={() => null}
+          />
         </Link>
       </Grid>
     </Grid>
