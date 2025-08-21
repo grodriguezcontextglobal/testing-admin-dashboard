@@ -41,12 +41,10 @@ const AssignmentFromExistingInventory = () => {
     useState(false);
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-  // const [selectedItem, setSelectedItem] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const newEventInfo = {};
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
-  console.log(stampTime);
   const navigate = useNavigate();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
@@ -127,6 +125,16 @@ const AssignmentFromExistingInventory = () => {
       }
     );
     if (fetchSelectedItem.data) {
+      if(fetchSelectedItem.data.result.length === 1){
+        setValue("startingNumber", fetchSelectedItem.data.result[0].serial_number);
+        return setValueItemSelected({
+          ...optionRendering,
+          min_serial_number: fetchSelectedItem.data.result[0].serial_number,
+          max_serial_number: fetchSelectedItem.data.result.at(-1).serial_number,
+          data: JSON.stringify(fetchSelectedItem.data.result),
+          quantity: 0,
+        });
+      }
       return setValueItemSelected({
         ...optionRendering,
         min_serial_number: fetchSelectedItem.data.result[0].serial_number,
@@ -136,7 +144,6 @@ const AssignmentFromExistingInventory = () => {
       });
     }
   };
-
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -146,7 +153,6 @@ const AssignmentFromExistingInventory = () => {
     },
     [api]
   );
-
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -194,7 +200,6 @@ const AssignmentFromExistingInventory = () => {
       return null;
     }
   };
-
   const createDeviceRecordInNoSQLDatabase = async (props) => {
     const db = props.deviceInfo;
     let items = [];
@@ -231,7 +236,6 @@ const AssignmentFromExistingInventory = () => {
     }
     return null;
   };
-
   const addDeviceToEvent = async (props) => {
     for (let data of props) {
       for (let item of data.selectedList) {
@@ -254,7 +258,6 @@ const AssignmentFromExistingInventory = () => {
       exact: true,
     });
   };
-
   const createEventNoSQL = async (props) => {
     const eventName = `${profile.firstName} ${profile.lastName} / ${
       profile.email
@@ -334,7 +337,6 @@ const AssignmentFromExistingInventory = () => {
       });
     }
   };
-
   const option1 = async (props) => {
     await createEvent(props.template);
     const deviceInfo = props.selectedData; //*array of existing devices in sql db
@@ -364,7 +366,6 @@ const AssignmentFromExistingInventory = () => {
       navigate(`/staff/${profile.adminUserInfo.id}/main`);
     }
   };
-
   const emailContractToStaffMember = async (props) => {
     await devitrakApi.post(
       "/nodemailer/liability-contract-email-notification",
@@ -394,7 +395,6 @@ const AssignmentFromExistingInventory = () => {
       }
     );
   };
-
   const assignDeviceToStaffMember = async () => {
     const template = {
       street: watch("street"),
@@ -440,7 +440,6 @@ const AssignmentFromExistingInventory = () => {
       }
     }
   };
-
   const renderTitle = () => {
     return (
       <>
@@ -477,7 +476,6 @@ const AssignmentFromExistingInventory = () => {
       </>
     );
   };
-
   useEffect(() => {
     const checkingSerialNumberInputted = async () => {
       const data = JSON.parse(valueItemSelected?.data);
@@ -488,8 +486,7 @@ const AssignmentFromExistingInventory = () => {
       }
     };
     checkingSerialNumberInputted();
-  }, [watch("startingNumber")]);
-
+  }, [watch("startingNumber")?.length > 0, valueItemSelected]);
   return (
     <>
       {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
@@ -762,7 +759,7 @@ const AssignmentFromExistingInventory = () => {
                     <p style={Subtitle}>Starting serial number</p>
                   </InputLabel>
                   <OutlinedInput
-                    disabled={loadingStatus}
+                    disabled={loadingStatus || valueItemSelected.max_serial_number === valueItemSelected.min_serial_number}
                     required
                     {...register("startingNumber", {
                       required: true,
