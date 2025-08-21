@@ -270,7 +270,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const renderOtherWidth = () => {
     if (isMediumDevice) return "99.5vw";
     if (isLargeDevice) return "99.5vw";
-    return "1228px";
+    return "1400px";
   };
 
   return (
