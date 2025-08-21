@@ -7,11 +7,11 @@ const ParentRenderingChildrenPage = () => {
       id="parent-container"
       display={"flex"}
       justifyContent={"center"}
-      sx={{
-        width: "100%",
-        maxWidth: "100%",
-        minWidth: "100%"
-      }}
+      // sx={{
+      //   width: "100%",
+      //   maxWidth: "100%",
+      //   minWidth: "100%"
+      // }}
       container
     >
       <Grid
@@ -24,12 +24,12 @@ const ParentRenderingChildrenPage = () => {
             md: "calc(100dvh - 80px)",
             lg: "calc(100dvh - 80px)",
           },
-          width: "100%",
+          // width: "100%",
           padding: { 
             xs: "0 10px", 
             sm: "0 15px", 
-            md: "0 20px", 
-            lg: "0 20px" 
+            md: "0", 
+            lg: "0" 
           },
           margin: "1rem 0 1rem",
         }}
