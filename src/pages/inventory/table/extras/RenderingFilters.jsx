@@ -217,8 +217,8 @@ const RenderingFilters = ({
       ),
       data: searchedResult
         ? searchedResult.main_location
-        : locationsAndSublocationsData(), //sortingByParameters
-      totalUnits: totalUnitsAllLocations(), // renderingTotalUnits(sortingByParameters("location")), //extractingTotalAndAvailableDevices()
+        : locationsAndSublocationsData(),
+      totalUnits: totalUnitsAllLocations(),
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
@@ -579,26 +579,20 @@ const RenderingFilters = ({
                 </Grid>
               </Grid>
               <Grid
-                display={item.open ? "flex" : "none"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                sx={{
-                  marginX: {
-                    xs: 0,
-                    sm: 0,
-                    md: "auto",
-                    lg: "auto",
-                  },
-                  padding: {
-                    xs: "8px 0 0 8px",
-                    sm: "8px 0 0 8px",
-                  },
+                style={{
+                  width: "100vw",
+                  display: item.open ? "flex" : "none",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
+                display={item.open ? "flex" : "none"}
+                margin={0}
+                padding={0}
                 item
-                xs={10}
-                sm={10}
-                md={7.5}
-                lg={7.5}
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
               >
                 {item.tree && (
                   <CardForTreeView
