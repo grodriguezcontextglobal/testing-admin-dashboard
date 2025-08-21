@@ -1,24 +1,18 @@
-import { Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Table } from "antd";
+import { Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import "../../../../../styles/global/ant-select.css";
-import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
-import { useLocation } from "react-router-dom";
 import { checkArray } from "../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import "../../../../../styles/global/ant-select.css";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
 const ListEquipment = () => {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -174,7 +168,15 @@ const ListEquipment = () => {
           >
             <BlueButtonComponent
               title={"Mark as returned"}
-              func={() => null}
+              func={() => {
+                setDeviceInfo({
+                  ...record,
+                  ...dataSpecificItemInAssignedDevicePerStaffMember(
+                    record.device_id
+                  ),
+                });
+                setOpenReturnDeviceStaffModal(true);
+              }}
               buttonType="button"
               titleStyles={{
                 textTransform: "none",
@@ -182,9 +184,9 @@ const ListEquipment = () => {
                 gap: "2px",
               }}
               disabled={record.active === 0}
-              
             />
-            <Button
+            <GrayButtonComponent title={"Mark as lost"} func={() => null} disabled={true} />
+            {/* <Button
               onClick={() => {
                 setDeviceInfo({
                   ...record,
@@ -206,8 +208,8 @@ const ListEquipment = () => {
               >
                 Mark as returned
               </Typography>
-            </Button>
-            <Button disabled style={GrayButton}>
+            </Button> */}
+            {/* <Button disabled style={GrayButton}>
               <Typography
                 style={
                   record.active === 0
@@ -217,7 +219,7 @@ const ListEquipment = () => {
               >
                 Mark as lost
               </Typography>
-            </Button>
+            </Button> */}
           </div>
         ),
       },
