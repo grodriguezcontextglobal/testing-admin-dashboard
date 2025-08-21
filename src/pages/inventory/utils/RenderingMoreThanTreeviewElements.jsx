@@ -10,7 +10,7 @@ const RenderingMoreThanTreeviewElements = ({
   const elemId = item.key;
   const r = () => item.data; //ensureThreeItems(item.data);
   return (
-    <Space align="start" size={[8, 16]} wrap style={{ maxWidth: "1200px", minWidth:"320px", width:"100%" }}>
+    <Space align="start" size={[8, 16]} wrap style={{ maxWidth: "1400px", minWidth:"320px", width:"100%" }}>
       {r().map((opt) => {
         return (
           <CardLocations
