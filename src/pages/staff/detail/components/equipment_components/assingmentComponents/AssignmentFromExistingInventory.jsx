@@ -29,7 +29,7 @@ import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/Text
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 const AssignmentFromExistingInventory = () => {
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
       quantity: 1,
     },
@@ -125,8 +125,11 @@ const AssignmentFromExistingInventory = () => {
       }
     );
     if (fetchSelectedItem.data) {
-      if(fetchSelectedItem.data.result.length === 1){
-        setValue("startingNumber", fetchSelectedItem.data.result[0].serial_number);
+      if (fetchSelectedItem.data.result.length === 1) {
+        setValue(
+          "startingNumber",
+          fetchSelectedItem.data.result[0].serial_number
+        );
         return setValueItemSelected({
           ...optionRendering,
           min_serial_number: fetchSelectedItem.data.result[0].serial_number,
@@ -135,6 +138,10 @@ const AssignmentFromExistingInventory = () => {
           quantity: 0,
         });
       }
+      setValue(
+        "startingNumber",
+        fetchSelectedItem.data.result[0].serial_number
+      );
       return setValueItemSelected({
         ...optionRendering,
         min_serial_number: fetchSelectedItem.data.result[0].serial_number,
@@ -395,49 +402,57 @@ const AssignmentFromExistingInventory = () => {
       }
     );
   };
-  const assignDeviceToStaffMember = async () => {
-    const template = {
-      street: watch("street"),
-      city: watch("city"),
-      state: watch("state"),
-      zip: watch("zip"),
-    };
-    setLoadingStatus(true);
-    if (watch("startingNumber")?.length > 0) {
-      const data = JSON.parse(valueItemSelected.data);
-      if (data.length > 0) {
-        const index = data.findIndex(
-          (item) => item.serial_number === watch("startingNumber")
-        );
-        if (index > -1) {
-          const selectedData = data.slice(
-            index,
-            index + Number(watch("quantity"))
+  const assignDeviceToStaffMember = async (data) => {
+    try {
+      const template = {
+        street: data.street,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+      };
+      setLoadingStatus(true);
+      if (data.startingNumber?.length > 0) {
+        const data_serial_numbers = JSON.parse(valueItemSelected.data);
+        if (data_serial_numbers.length > 0) {
+          const index = data_serial_numbers.findIndex(
+            (item) => item.serial_number === data.startingNumber
           );
-          const gettingAllInfo = await devitrakApi.post(
-            "/db_event/inventory-based-on-submitted-parameters",
-            {
-              query: `SELECT * FROM item_inv 
-              WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? And serial_number in (${selectedData
+          if (index > -1) {
+            const selectedData = data_serial_numbers.slice(
+              index,
+              index + Number(data.quantity)
+            );
+            const gettingAllInfo = await devitrakApi.post(
+              "/db_event/inventory-based-on-submitted-parameters",
+              {
+                query: `SELECT * FROM item_inv 
+              WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? AND warehouse = ? And serial_number in (${selectedData
                 .map((item) => `'${item.serial_number}'`)
                 .join(",")})
               `,
-              values: [
-                valueItemSelected.item_group,
-                valueItemSelected.category_name,
-                user.sqlInfo.company_id,
-                valueItemSelected.location,
-              ],
-            }
-          );
-          await option1({
-            groupingType: valueItemSelected.item_group,
-            template: template,
-            quantity: watch("quantity"),
-            selectedData: gettingAllInfo.data.result,
-          });
+                values: [
+                  valueItemSelected.item_group,
+                  valueItemSelected.category_name,
+                  user.sqlInfo.company_id,
+                  valueItemSelected.location,
+                  1,
+                ],
+              }
+            );
+            await option1({
+              groupingType: valueItemSelected.item_group,
+              template: template,
+              quantity: data.quantity,
+              selectedData: gettingAllInfo.data.result,
+            });
+          }
         }
       }
+    } catch (error) {
+      openNotificationWithIcon(`${error.message}`);
+      setLoadingStatus(false);
+    } finally {
+      setLoadingStatus(false);
     }
   };
   const renderTitle = () => {
@@ -486,7 +501,7 @@ const AssignmentFromExistingInventory = () => {
       }
     };
     checkingSerialNumberInputted();
-  }, [watch("startingNumber")?.length > 0, valueItemSelected]);
+  }, [watch("startingNumber"), valueItemSelected]);
   return (
     <>
       {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
@@ -504,325 +519,353 @@ const AssignmentFromExistingInventory = () => {
         >
           {contextHolder}
           {renderTitle()}
-          <Grid
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              background: "var(--gray-100, #F2F4F7)",
-              padding: "24px",
-              width: "100%",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+          <form
+            style={{ width: "100%" }}
+            onSubmit={handleSubmit(assignDeviceToStaffMember)}
           >
-            <InputLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-              <p style={Subtitle}>Location where device is going to be used.</p>
-            </InputLabel>
-            <div
+            <Grid
               style={{
-                ...CenteringGrid,
-                justifyContent: "space-between",
-                margin: "0 0 20px 0",
-                gap: "1rem",
-              }}
-            >
-              <div style={{ width: "50%" }}>
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <p style={Subtitle}>Street</p>
-                </InputLabel>
-                <OutlinedInput
-                  {...register("street")}
-                  disabled={loadingStatus}
-                  style={{
-                    ...OutlinedInputStyle,
-                    width: "100%",
-                  }}
-                  fullWidth
-                />
-              </div>
-              <div style={{ width: "50%" }}>
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <p style={Subtitle}>City</p>
-                </InputLabel>
-                <OutlinedInput
-                  disabled={loadingStatus}
-                  {...register("city")}
-                  style={{
-                    ...OutlinedInputStyle,
-                    width: "100%",
-                  }}
-                  fullWidth
-                />
-              </div>
-            </div>
-            <div
-              style={{
-                ...CenteringGrid,
-                justifyContent: "space-between",
-                margin: "0 0 20px 0",
-                gap: "1rem",
-              }}
-            >
-              <div style={{ width: "50%" }}>
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <p style={Subtitle}>State</p>
-                </InputLabel>
-                <OutlinedInput
-                  {...register("state")}
-                  disabled={loadingStatus}
-                  style={{
-                    ...OutlinedInputStyle,
-                    width: "100%",
-                  }}
-                  fullWidth
-                />
-              </div>
-              <div style={{ width: "50%" }}>
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <p style={Subtitle}>Zip</p>
-                </InputLabel>
-                <OutlinedInput
-                  disabled={loadingStatus}
-                  {...register("zip")}
-                  style={{
-                    ...OutlinedInputStyle,
-                    width: "100%",
-                  }}
-                  fullWidth
-                />
-              </div>
-            </div>
-            <LegalDocumentModal
-              addContracts={addContracts}
-              setAddContracts={setAddContracts}
-              setValue={setValue}
-              register={register}
-              loadingStatus={loadingStatus}
-              profile={profile}
-              selectedDocuments={contractList}
-              setSelectedDocuments={setContractList}
-            />
-            <Divider />
-            <InputLabel
-              style={{
+                borderRadius: "8px",
+                border: "1px solid var(--gray-300, #D0D5DD)",
+                background: "var(--gray-100, #F2F4F7)",
+                padding: "24px",
                 width: "100%",
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
               }}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <p
+              <InputLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
+                <p style={Subtitle}>
+                  Location where device is going to be used.
+                </p>
+              </InputLabel>
+              <div
                 style={{
-                  ...TextFontSize20LineHeight30,
-                  fontWeight: 600,
-                  textTransform: "none",
+                  ...CenteringGrid,
+                  justifyContent: "space-between",
+                  margin: "0 0 20px 0",
+                  gap: "1rem",
                 }}
               >
-                Device
-              </p>
-            </InputLabel>
-            <div
-              style={{
-                width: "100%",
-              }}
-            >
-              <Grid
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                marginY={2}
-                gap={2}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-              >
-                <Grid
-                  style={{ alignSelf: "baseline" }}
-                  item
-                  xs={6}
-                  sm={6}
-                  md={11}
-                  lg={11}
-                >
-                  <InputLabel
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                    }}
-                  >
-                    <p
-                      style={{
-                        ...TextFontSize20LineHeight30,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        color: "#000",
-                        textTransform: "none",
-                      }}
-                    >
-                      Select from existing category
-                    </p>
-                  </InputLabel>
-                  <Select
-                    className="custom-autocomplete"
-                    showSearch
-                    placeholder="Search item to add to inventory."
-                    optionFilterProp="children"
-                    style={{ ...AntSelectorStyle, width: "100%" }}
-                    onChange={onChange}
-                    options={optionsToRenderInSelector().map((item) => {
-                      return {
-                        label: (
-                          <Typography
-                            textTransform={"capitalize"}
-                            style={{
-                              ...Subtitle,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              width: "100%",
-                            }}
-                          >
-                            <span style={{ width: "50%" }}>
-                              <span style={{ fontWeight: 700 }}>
-                                {item.category_name}
-                              </span>{" "}
-                              {item.item_group}
-                            </span>
-                            <span style={{ textAlign: "left", width: "30%" }}>
-                              Location:{" "}
-                              <span style={{ fontWeight: 700 }}>
-                                {item.location}
-                              </span>
-                            </span>
-                            <span style={{ textAlign: "right", width: "20%" }}>
-                              Total available: {item.total}
-                            </span>
-                          </Typography>
-                        ),
-                        value: item.data,
-                      };
-                    })}
-                  />
-                </Grid>
-                <Grid
-                  item
-                  xs={6}
-                  sm={6}
-                  md={1}
-                  lg={1}
-                  style={{ alignSelf: "baseline" }}
-                >
+                <div style={{ width: "50%" }}>
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Quantity</p>
+                    <p style={Subtitle}>Street</p>
                   </InputLabel>
                   <OutlinedInput
+                    {...register("street")}
                     disabled={loadingStatus}
-                    required
-                    {...register("quantity")}
                     style={{
                       ...OutlinedInputStyle,
                       width: "100%",
                     }}
-                    placeholder="e.g. 0"
+                    fullWidth
+                    required
+                  />
+                </div>
+                <div style={{ width: "50%" }}>
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <p style={Subtitle}>City</p>
+                  </InputLabel>
+                  <OutlinedInput
+                    disabled={loadingStatus}
+                    {...register("city")}
+                    style={{
+                      ...OutlinedInputStyle,
+                      width: "100%",
+                    }}
+                    required
                     fullWidth
                   />
-                </Grid>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                marginY={2}
-                gap={2}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
+                </div>
+              </div>
+              <div
+                style={{
+                  ...CenteringGrid,
+                  justifyContent: "space-between",
+                  margin: "0 0 20px 0",
+                  gap: "1rem",
+                }}
+              >
+                <div style={{ width: "50%" }}>
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <p style={Subtitle}>State</p>
+                  </InputLabel>
+                  <OutlinedInput
+                    {...register("state")}
+                    disabled={loadingStatus}
+                    style={{
+                      ...OutlinedInputStyle,
+                      width: "100%",
+                    }}
+                    required
+                    fullWidth
+                  />
+                </div>
+                <div style={{ width: "50%" }}>
+                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                    <p style={Subtitle}>Zip</p>
+                  </InputLabel>
+                  <OutlinedInput
+                    disabled={loadingStatus}
+                    {...register("zip")}
+                    style={{
+                      ...OutlinedInputStyle,
+                      width: "100%",
+                    }}
+                    required
+                    fullWidth
+                  />
+                </div>
+              </div>
+              <LegalDocumentModal
+                addContracts={addContracts}
+                setAddContracts={setAddContracts}
+                setValue={setValue}
+                register={register}
+                loadingStatus={loadingStatus}
+                profile={profile}
+                selectedDocuments={contractList}
+                setSelectedDocuments={setContractList}
+              />
+              <Divider />
+              <InputLabel
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    ...TextFontSize20LineHeight30,
+                    fontWeight: 600,
+                    textTransform: "none",
+                  }}
+                >
+                  Device
+                </p>
+              </InputLabel>
+              <div
+                style={{
+                  width: "100%",
+                }}
               >
                 <Grid
+                  display={"flex"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  marginY={2}
+                  gap={2}
                   item
                   xs={12}
                   sm={12}
                   md={12}
                   lg={12}
-                  style={{ alignSelf: "baseline" }}
                 >
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Starting serial number</p>
-                  </InputLabel>
-                  <OutlinedInput
-                    disabled={loadingStatus || valueItemSelected.max_serial_number === valueItemSelected.min_serial_number}
-                    required
-                    {...register("startingNumber", {
-                      required: true,
-                      message: "Starting serial number is required",
-                    })}
-                    style={{
-                      ...OutlinedInputStyle,
-                      width: "100%",
-                    }}
-                    placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}
-                    fullWidth
-                    endAdornment={
-                      <InputAdornment position="end">
-                        {checkingSerialNumberInputted ? (
-                          <CheckIcon />
-                        ) : (
-                          <BorderedCloseIcon />
-                        )}
-                      </InputAdornment>
-                    }
-                  />
+                  <Grid
+                    style={{ alignSelf: "baseline" }}
+                    item
+                    xs={6}
+                    sm={6}
+                    md={11}
+                    lg={11}
+                  >
+                    <InputLabel
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                      }}
+                    >
+                      <p
+                        style={{
+                          ...TextFontSize20LineHeight30,
+                          fontWeight: 600,
+                          fontSize: "14px",
+                          color: "#000",
+                          textTransform: "none",
+                        }}
+                      >
+                        Select from existing category
+                      </p>
+                    </InputLabel>
+                    <Select
+                      className="custom-autocomplete"
+                      showSearch
+                      placeholder="Search item to add to inventory."
+                      optionFilterProp="children"
+                      style={{ ...AntSelectorStyle, width: "100%" }}
+                      onChange={onChange}
+                      options={optionsToRenderInSelector().map((item) => {
+                        return {
+                          label: (
+                            <Typography
+                              textTransform={"capitalize"}
+                              style={{
+                                ...Subtitle,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                width: "100%",
+                              }}
+                            >
+                              <span style={{ width: "50%" }}>
+                                <span style={{ fontWeight: 700 }}>
+                                  {item.category_name}
+                                </span>{" "}
+                                {item.item_group}
+                              </span>
+                              <span style={{ textAlign: "left", width: "30%" }}>
+                                Location:{" "}
+                                <span style={{ fontWeight: 700 }}>
+                                  {item.location}
+                                </span>
+                              </span>
+                              <span
+                                style={{ textAlign: "right", width: "20%" }}
+                              >
+                                Total available: {item.total}
+                              </span>
+                            </Typography>
+                          ),
+                          value: item.data,
+                        };
+                      })}
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    xs={6}
+                    sm={6}
+                    md={1}
+                    lg={1}
+                    style={{ alignSelf: "baseline" }}
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <p style={Subtitle}>Quantity</p>
+                    </InputLabel>
+                    <OutlinedInput
+                      disabled={loadingStatus}
+                      required
+                      {...register("quantity")}
+                      style={{
+                        ...OutlinedInputStyle,
+                        width: "100%",
+                      }}
+                      placeholder="e.g. 0"
+                      fullWidth
+                    />
+                  </Grid>
                 </Grid>
-              </Grid>
-            </div>
-          </Grid>
-          <Grid
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-            marginY={"0.5rem"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <Button
-              onClick={() =>
-                navigate(`/staff/${profile.adminUserInfo.id}/main`)
-              }
-              style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
+                <Grid
+                  display={"flex"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  marginY={2}
+                  gap={2}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                >
+                  <Grid
+                    item
+                    xs={12}
+                    sm={12}
+                    md={12}
+                    lg={12}
+                    style={{ alignSelf: "baseline" }}
+                  >
+                    <InputLabel
+                      style={{ marginBottom: "0.2rem", width: "100%" }}
+                    >
+                      <p style={Subtitle}>
+                        Starting serial number | Current range{" "}
+                        <strong>
+                          (starting: {valueItemSelected.min_serial_number ?? 0}{" "}
+                          ending: {valueItemSelected.max_serial_number ?? 0})
+                        </strong>
+                      </p>
+                    </InputLabel>
+                    <OutlinedInput
+                      disabled={
+                        loadingStatus ||
+                        valueItemSelected.max_serial_number ===
+                          valueItemSelected.min_serial_number
+                      }
+                      required
+                      {...register("startingNumber", {
+                        required: true,
+                        message: "Starting serial number is required",
+                      })}
+                      style={{
+                        ...OutlinedInputStyle,
+                        width: "100%",
+                      }}
+                      placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}
+                      fullWidth
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {checkingSerialNumberInputted ? (
+                            <CheckIcon />
+                          ) : (
+                            <BorderedCloseIcon />
+                          )}
+                        </InputAdornment>
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              </div>
+            </Grid>
+            <Grid
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+              marginY={"0.5rem"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                Go back
-              </p>
-            </Button>
-            <BlueButtonComponent
-              disabled={
-                watch("startingNumber")?.length === 0 ||
-                !watch("startingNumber") ||
-                loadingStatus ||
-                !checkingSerialNumberInputted
-              }
-              loadingState={loadingStatus}
-              title={"Assign equipment"}
-              func={assignDeviceToStaffMember}
-              styles={{ ...CenteringGrid, width: "100%" }}
-            />
-          </Grid>
+              <Button
+                onClick={() =>
+                  navigate(`/staff/${profile.adminUserInfo.id}/main`)
+                }
+                style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
+              >
+                <p style={{ ...GrayButtonText, textTransform: "none" }}>
+                  Go back
+                </p>
+              </Button>
+              <BlueButtonComponent
+                disabled={
+                  watch("startingNumber")?.length === 0 ||
+                  !watch("startingNumber") ||
+                  loadingStatus ||
+                  !checkingSerialNumberInputted
+                }
+                buttonType="submit"
+                loadingState={loadingStatus}
+                title={"Assign equipment"}
+                func={() => null}
+                styles={{ ...CenteringGrid, width: "100%" }}
+              />
+            </Grid>
+          </form>
         </Grid>
       )}
     </>
