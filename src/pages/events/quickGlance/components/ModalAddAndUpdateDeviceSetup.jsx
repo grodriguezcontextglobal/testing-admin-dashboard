@@ -347,7 +347,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       );
       return gettingItemsInContainer;
     } catch (error) {
-      message.error("Failed to get items in container. Please try again.");
+      // message.error("Failed to get items in container. Please try again.");
       return null;
     }
   };
@@ -414,7 +414,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       return message.warning("Container does not have any stored items.");
     } catch (error) {
       console.log("extractContainersItemsInfo", error);
-      message.error("Failed to get items in container. Please try again.");
+      // message.error("Failed to get items in container. Please try again.");
     }
   };
 
@@ -430,9 +430,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       return null;
     } catch (error) {
       console.log("checkIfContainer", error);
-      message.error(
-        "Failed to extract containers items info. Please try again."
-      );
+      // message.error(
+      //   "Failed to extract containers items info. Please try again."
+      // );
     }
   };
 
