@@ -13,6 +13,7 @@ export const singleItemInserting = async ({
   returningDate,
   subLocationsSubmitted,
   invalidateQueries,
+  dicSuppliers,
 }) => {
   const template = {
     category_name: data.category_name,
@@ -41,6 +42,9 @@ export const singleItemInserting = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
     image_url: img_url,
+    supplier_info: data.supplier
+      ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+      : null,
   };
   setLoadingStatus(true);
   const newItem = await devitrakApi.post("/db_item/new_item", template);

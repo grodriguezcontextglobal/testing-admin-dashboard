@@ -24,6 +24,9 @@ import {
 } from "./components/newDevice/actions/AddDeviceToEvent";
 import { createNewLease } from "./components/newDevice/actions/CreateNewLease";
 import { singleItemInserting } from "./components/newDevice/actions/SingleItemInserting";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
+import NewSupplier from "../../../../../inventory/actions/utils/suppliers/NewSupplier";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 
 const AssignmentNewDeviceToStaffInInventory = () => {
@@ -46,7 +49,35 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     useState(null);
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-
+  const [dicSuppliers, setDicSuppliers] = useState({});
+  const [supplierModal, setSupplierModal] = useState(false);
+  const [supplierList, setSupplierList] = useState([
+    {
+      value: (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <BlueButtonComponent
+            // disabled={true}
+            title={"Add supplier"}
+            styles={{ with: "100%" }}
+            icon={<WhiteCirclePlusIcon />}
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+            }}
+            func={() => setSupplierModal(true)}
+          />
+        </div>
+      ),
+    },
+  ]);
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
   const navigate = useNavigate();
@@ -68,7 +99,18 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     },
     [api]
   );
-
+  const providersList = useQuery({
+    queryKey: ["providersCompanyQuery", user?.companyData?.id],
+    queryFn: () =>
+      devitrakApi.get("/company/provider-companies", {
+        params: {
+          creator: user?.companyData?.id,
+        },
+      }),
+    enabled: !!user?.companyData?.id,
+    refetchOnMount: false,
+    staleTime: 60 * 1000 * 5, // 5 minutes
+  });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -79,7 +121,13 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     refetchOnMount: false,
     staleTime: 3 * 60 * 1000,
   });
-
+  const refetchingAfterNewSupplier = () => {
+    queryClient.invalidateQueries([
+      "providersCompanyQuery",
+      user?.companyData?.id,
+    ]);
+    return providersList.refetch();
+  };
   const invalidateQueries = () => {
     queryClient.invalidateQueries(["ItemsInInventoryCheckingQuery"]);
     queryClient.invalidateQueries(["listOfItemsInStock"]);
@@ -96,7 +144,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     }
     return Array.from(result);
   };
-
   const renderLocationOptions = () => {
     if (itemsInInventoryQuery.data) {
       const locations = groupBy(
@@ -111,7 +158,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     }
     return [];
   };
-
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -122,7 +168,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     }
     return result;
   };
-
   const emailNotification = async (props) => {
     const stampTime = new Date().toISOString();
     try {
@@ -161,7 +206,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       return openNotificationWithIcon(`${error.message}`);
     }
   };
-
   const savingNewItem = async (data) => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
@@ -212,6 +256,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         returningDate,
         subLocationsSubmitted,
         invalidateQueries,
+        dicSuppliers,
       });
       await createNewLease({
         address: {
@@ -249,20 +294,17 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       setLoadingStatus(false);
     }
   };
-
   const handleMoreInfoPerDevice = () => {
     const result = [...moreInfo, { keyObject, valueObject }];
     setKeyObject("");
     setValueObject("");
     return setMoreInfo(result);
   };
-
   const handleDeleteMoreInfo = (index) => {
     const result = [...moreInfo];
     const removingResult = result.filter((_, i) => i !== index);
     return setMoreInfo(removingResult);
   };
-
   const gripingFields = (props) => {
     if (
       props === "min_serial_number" ||
@@ -272,7 +314,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       return 6;
     return 6;
   };
-
   const subLocationsOptions = useMemo(
     () =>
       retrieveExistingSubLocationsForCompanyInventory(
@@ -281,7 +322,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       ),
     [watch("location")]
   );
-
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
       return (
@@ -354,14 +394,12 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       removeAllSubLocations: removeAllSubLocationsButton(),
     };
   };
-
   const addingSubLocation = (props) => {
     if (String(props).length < 1) return;
     const result = [...subLocationsSubmitted, props];
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
-
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
@@ -372,7 +410,32 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       controller.abort();
     };
   }, []);
-
+  useEffect(() => {
+    const suppliersOptionsRendering = () => {
+      let result = [];
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          result.push({ value: item.companyName });
+        });
+      }
+      return setSupplierList([...supplierList, ...result]);
+    };
+    const diccionarySuppliers = () => {
+      const dic = new Map();
+      if (providersList?.data?.data?.providerCompanies?.length > 0) {
+        providersList?.data?.data?.providerCompanies?.map((item) => {
+          if (!dic.has(item.companyName)) {
+            let c = {};
+            c[item.companyName] = item.id;
+            dic.set(item.companyName, item.id);
+          }
+        });
+      }
+      return setDicSuppliers(Array.from(dic));
+    };
+    suppliersOptionsRendering();
+    diccionarySuppliers();
+  }, [providersList.data, providersList.isRefetching]);
   const acceptAndGenerateImage = async () => {
     try {
       if (
@@ -403,7 +466,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       message.error("Failed to upload image: " + error.message);
     }
   };
-
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
@@ -455,7 +517,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       controller.abort();
     };
   }, [moreInfoDisplay]);
-
   useEffect(() => {
     const controller = new AbortController();
     costValueInputFormat({ props: watch("cost"), setValue });
@@ -463,7 +524,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       controller.abort();
     };
   }, [watch("cost")]);
-
   useEffect(() => {
     if (watch("ownership") === "Rent") {
       setIsRented(true);
@@ -471,7 +531,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       setIsRented(false);
     }
   }, [watch("ownership")]);
-
   useEffect(() => {
     if (imageUploadedValue?.length > 0) {
       const triggerImageInto64 = async () => {
@@ -485,7 +544,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
       setDisplayPreviewImage(false);
     }
   }, [imageUploadedValue]);
-
   return (
     <div
       style={{
@@ -549,10 +607,21 @@ const AssignmentNewDeviceToStaffInInventory = () => {
           setValueObject={setValueObject}
           subLocationsOptions={subLocationsOptions}
           subLocationsSubmitted={subLocationsSubmitted}
+          suppliersOptions={supplierList}
           valueObject={valueObject}
           watch={watch}
         />
       </div>
+      {supplierModal && (
+        <NewSupplier
+          providersList={providersList}
+          queryClient={queryClient}
+          setSupplierModal={setSupplierModal}
+          supplierModal={supplierModal}
+          user={user}
+          refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+        />
+      )}
     </div>
   );
 };
