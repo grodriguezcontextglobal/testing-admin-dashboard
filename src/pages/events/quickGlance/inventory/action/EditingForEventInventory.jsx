@@ -336,12 +336,13 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
 
   const gettingItemsInContainer = async (props) => {
     try {
+      console.log(props.item_id);
       const gettingItemsInContainer = await devitrakApi.get(
         `/db_inventory/container-items/${props.item_id}`
       );
       return gettingItemsInContainer;
     } catch (error) {
-      message.error("Failed to get items in container. Please try again.");
+      // message.error("Failed to get items in container. Please try again.");
       return null;
     }
   };
@@ -408,7 +409,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       return message.warning("Container does not have any stored items.");
     } catch (error) {
       console.log("extractContainersItemsInfo", error);
-      message.error("Failed to get items in container. Please try again.");
+      // message.error("Failed to get items in container. Please try again.");
     }
   };
 
