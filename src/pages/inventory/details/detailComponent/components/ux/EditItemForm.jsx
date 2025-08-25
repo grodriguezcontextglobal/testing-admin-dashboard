@@ -60,6 +60,7 @@ const EditItemForm = ({
   subLocationsSubmitted,
   valueObject,
   watch,
+  suppliersOptions,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
@@ -76,6 +77,7 @@ const EditItemForm = ({
           renderLocationOptions,
           retrieveItemOptions,
           subLocationsOptions,
+          suppliersOptions,
         }).map((item) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
@@ -450,19 +452,19 @@ const EditItemForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-          <GrayButtonComponent
-            title={"Go back"}
-            loadingState={loadingStatus}
-            disabled={loadingStatus}
-            styles={{
-              ...GrayButton,
-              ...CenteringGrid,
-              width: "100%",
-            }}
-            icon={<WhiteCirclePlusIcon />}
-            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
-            buttonType="reset"
-          />
+            <GrayButtonComponent
+              title={"Go back"}
+              loadingState={loadingStatus}
+              disabled={loadingStatus}
+              styles={{
+                ...GrayButton,
+                ...CenteringGrid,
+                width: "100%",
+              }}
+              icon={<WhiteCirclePlusIcon />}
+              titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+              buttonType="reset"
+            />
           </Link>
         </div>
         <div
