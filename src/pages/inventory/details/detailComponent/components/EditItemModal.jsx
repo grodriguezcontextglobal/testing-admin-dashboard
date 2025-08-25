@@ -16,8 +16,10 @@ import "../../../../../styles/global/reactInput.css";
 import "../../../actions/style.css";
 import { storeAndGenerateImageUrl } from "../../../actions/utils/EditBulkActionOptions";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../../../actions/utils/SubLocationRenderer";
+import NewSupplier from "../../../actions/utils/suppliers/NewSupplier";
 import costValueInputFormat from "../../../utils/costValueInputFormat";
 import { formatDate } from "../../../utils/dateFormat";
+import useSuppliers from "../../../utils/hooks/useSuppliers";
 import { renderTitle } from "./ux/EditItemComponents";
 import EditItemForm from "./ux/EditItemForm";
 
@@ -49,6 +51,15 @@ const EditItemModal = ({
   const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const {
+    dicSuppliers,
+    refetchingAfterNewSupplier,
+    setSupplierModal,
+    supplierList,
+    supplierModal,
+    providersList,
+    queryClient,
+  } = useSuppliers();
+  const {
     register,
     handleSubmit,
     setValue,
@@ -59,7 +70,6 @@ const EditItemModal = ({
   const closeModal = () => {
     return setOpenEditItemModal(false);
   };
-
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -141,6 +151,9 @@ const EditItemModal = ({
         containerSpotLimit: data.containerSpotLimit,
         image_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
         status: data.status ? data.status : "Operational",
+        supplier_info: data.supplier
+          ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+          : null,
       };
       const respNewItem = await devitrakApi.post(
         "/db_item/edit-item",
@@ -182,7 +195,6 @@ const EditItemModal = ({
       ),
     [watch("location")]
   );
-
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
       return (
@@ -305,14 +317,14 @@ const EditItemModal = ({
             }),
           ]);
         }
-          if (key === "sub_location") {
-            setValue("sub_location", "");
-            const checkType =
-              typeof value === "string" ? JSON.parse(value) : value;
-            if (checkType.length > 0) {
-              return setSubLocationsSubmitted([...checkType]);
-            }
+        if (key === "sub_location") {
+          setValue("sub_location", "");
+          const checkType =
+            typeof value === "string" ? JSON.parse(value) : value;
+          if (checkType.length > 0) {
+            return setSubLocationsSubmitted([...checkType]);
           }
+        }
       });
     }
     return () => {
@@ -377,7 +389,6 @@ const EditItemModal = ({
     imageUploadedValue?.length,
     removeImage,
   ]);
-
   return (
     <Modal
       key={dataFound[0].item_id}
@@ -434,7 +445,18 @@ const EditItemModal = ({
           subLocationsSubmitted={subLocationsSubmitted}
           valueObject={valueObject}
           watch={watch}
+          suppliersOptions={supplierList}
         />
+        {supplierModal && (
+          <NewSupplier
+            providersList={providersList}
+            queryClient={queryClient}
+            setSupplierModal={setSupplierModal}
+            supplierModal={supplierModal}
+            user={user}
+            refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+          />
+        )}
       </Grid>
     </Modal>
   );

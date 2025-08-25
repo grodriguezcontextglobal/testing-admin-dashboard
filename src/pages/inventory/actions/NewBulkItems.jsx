@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -8,10 +8,8 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { formatDate } from "../../../components/utils/dateFormat";
-import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import "../../../styles/global/ant-select.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -19,6 +17,7 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
+import useSuppliers from "../utils/hooks/useSuppliers";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
 import {
@@ -32,6 +31,15 @@ import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
+    const {
+    supplierList,
+    supplierModal,
+    providersList,
+    setSupplierModal,
+    refetchingAfterNewSupplier,
+    queryClient,
+    dicSuppliers,
+  } = useSuppliers();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -56,36 +64,7 @@ const AddNewBulkItems = () => {
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
-  const [supplierModal, setSupplierModal] = useState(false);
-  const [dicSuppliers, setDicSuppliers] = useState({});
-  const [supplierList, setSupplierList] = useState([
-    {
-      value: (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <BlueButtonComponent
-            // disabled={true}
-            title={"Add supplier"}
-            styles={{ with: "100%" }}
-            icon={<WhiteCirclePlusIcon />}
-            buttonType="button"
-            titleStyles={{
-              textTransform: "none",
-              with: "100%",
-            }}
-            func={() => setSupplierModal(true)}
-          />
-        </div>
-      ),
-    },
-  ]);
-  const { user } = useSelector((state) => state.admin);
+ const { user } = useSelector((state) => state.admin);
   const {
     register,
     handleSubmit,
@@ -129,20 +108,6 @@ const AddNewBulkItems = () => {
       }),
     refetchOnMount: false,
   });
-
-  const providersList = useQuery({
-    queryKey: ["providersCompanyQuery", user?.companyData?.id],
-    queryFn: () =>
-      devitrakApi.get("/company/provider-companies", {
-        params: {
-          creator: user?.companyData?.id,
-        },
-      }),
-    enabled: !!user?.companyData?.id,
-    refetchOnMount: false,
-    staleTime: 60 * 1000 * 5, // 5 minutes
-  });
-  const queryClient = useQueryClient();
 
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
@@ -420,38 +385,6 @@ const AddNewBulkItems = () => {
       message.error("Failed to upload image: " + error.message);
     }
   };
-
-  const refetchingAfterNewSupplier = () => {
-    queryClient.invalidateQueries(["providersCompanyQuery", user?.companyData?.id]);
-    return providersList.refetch();
-  };
-  useEffect(() => {
-    const suppliersOptionsRendering = () => {
-      let result = [];
-      if (providersList?.data?.data?.providerCompanies?.length > 0) {
-        providersList?.data?.data?.providerCompanies?.map((item) => {
-          result.push({ value: item.companyName });
-        });
-      }
-      return setSupplierList([...supplierList, ...result]);
-    };
-    const diccionarySuppliers = () => {
-      const dic = new Map();
-      if (providersList?.data?.data?.providerCompanies?.length > 0) {
-        providersList?.data?.data?.providerCompanies?.map((item) => {
-          if (!dic.has(item.companyName)) {
-            let c = {};
-            c[item.companyName] = item.id;
-            dic.set(item.companyName, item.id);
-          }
-        });
-      }
-      return setDicSuppliers(Array.from(dic));
-    };
-    suppliersOptionsRendering();
-    diccionarySuppliers();
-  }, [providersList.data, providersList.isRefetching]);
-
   useEffect(() => {
     const controller = new AbortController();
     itemsInInventoryQuery.refetch();
