@@ -74,7 +74,7 @@ const CustomerInformationSection = () => {
               {...register("searchCustomer")}
               style={OutlinedInputStyle}
               fullWidth
-              placeholder="Search device here"
+              placeholder="Search customer here..."
               startAdornment={
                 <InputAdornment position="start">
                   <MagnifyIcon />
