@@ -180,6 +180,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
           staff: {
             name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`,
             email: profile.email,
+            staff_member_id: profile.adminUserInfo.id,
           },
           contract_list: contractList,
           items: [
