@@ -23,6 +23,7 @@ const AdvanceSearchModal = ({
   const { user } = useSelector((state) => state.admin);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [displayMessage, setDisplayMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const { register, handleSubmit, setValue } = useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -40,6 +41,7 @@ const AdvanceSearchModal = ({
       return message.error("Please select a date");
     }
     try {
+      setErrorMessage(null);
       setIsLoadingState(true);
       const date_start = `${new Date(data.date[0].$d).getFullYear()}-${
         new Date(data.date[0].$d).getMonth() + 1
@@ -70,7 +72,16 @@ const AdvanceSearchModal = ({
       }
     } catch (error) {
       setIsLoadingState(false);
-      setDisplayMessage(false);
+      if (error.response.data.msg) {
+        setErrorMessage(
+          error.response.data.msg ===
+            "Cannot read properties of undefined (reading 'length')"
+            ? "There is not available inventory for the period selected."
+            : error.response.data.msg
+        );
+        return setDisplayMessage(true);
+      }
+      setDisplayMessage(true);
       return null;
     }
   };
@@ -230,8 +241,7 @@ const AdvanceSearchModal = ({
       </form>
       <div
         style={{
-          display:
-            displayMessage ? "flex" : "none",
+          display: displayMessage ? "flex" : "none",
           backgroundColor: "var(--danger-action)",
           margin: "0.5rem 0",
           borderRadius: "12px",
@@ -239,7 +249,9 @@ const AdvanceSearchModal = ({
         }}
       >
         <p style={{ ...Subtitle, ...CenteringGrid, color: "var(--basewhite)" }}>
-          There is not result based on parameters passed.
+          {errorMessage
+            ? errorMessage
+            : "There is not result based on parameters passed."}
         </p>
       </div>
     </Modal>
