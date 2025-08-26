@@ -6,7 +6,7 @@ import TableDeviceCategory from "../categoryDetail/components/Table";
 import TableItemBrand from "../BrandDetail/components/Table";
 import TableItemGroup from "../GroupDetail/components/Table";
 import TableItemOwnership from "../OwnershipDetail/components/Table";
-import BlueButtonComponent from "../../../../components/UX/buttons/bluebutton";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 export const dataStructuringFormat = (
   renderedListItems,
