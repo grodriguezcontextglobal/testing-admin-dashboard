@@ -34,6 +34,7 @@ const RenderingFilters = ({
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
   searchedResult,
+  chosen,
 }) => {
   const dictionary = {
     Permanent: "Owned",
@@ -156,11 +157,11 @@ const RenderingFilters = ({
       setEditingSection(null);
     }
   };
-
+  // Update total calculation to reflect current filtered state
   const totalUnitsAllLocations = () => {
     let result = 0;
     let data = null;
-    if (!searchItem && locationsAndSublocationsWithTypes?.data?.data?.ok) {
+    if (!searchItem && !chosen.value && locationsAndSublocationsWithTypes?.data?.data?.ok) {
       result = 0;
       data = locationsAndSublocationsWithTypes?.data?.data?.data;
       if (data) {
@@ -168,7 +169,7 @@ const RenderingFilters = ({
           result += value.total;
         }
       }
-    } else if (searchItem && searchedResult?.main_location) {
+    } else if ((searchItem || chosen.value) && searchedResult?.main_location) {
       data = searchedResult;
       result = 0;
       if (data.main_location) {
@@ -176,6 +177,9 @@ const RenderingFilters = ({
           result += value.total;
         }
       }
+    } else if ((searchItem || chosen.value) && dataToDisplay) {
+      // Fallback to filtered data count
+      result = dataToDisplay()?.length || 0;
     }
     return result;
   };
@@ -566,7 +570,7 @@ const RenderingFilters = ({
                             route={`/inventory/${String(
                               item.routeTitle
                             ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                              searchItem && searchItem
+                              (searchItem && searchItem) || (chosen.value && chosen.value)
                             }`}
                             style={{
                               width: "fit-content",
