@@ -147,16 +147,21 @@ const Main = () => {
     const isValidContactInfo =
       newProvider.contactInfo.email && newProvider.contactInfo.phone;
 
+    const cleanedServices = newProvider.services
+      .map((service) => service.trim())
+      .filter((service) => service.length > 0);
+
     if (
       newProvider.companyName &&
       newProvider.industry &&
-      newProvider.services.length > 0 &&
+      cleanedServices.length > 0 &&
       isValidAddress &&
       isValidContactInfo
     ) {
       try {
         const providerData = {
           ...newProvider,
+          services: cleanedServices,
           creator: user.companyData.id, // Replace with actual company ID from your auth context
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
