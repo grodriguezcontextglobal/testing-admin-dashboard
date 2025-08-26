@@ -2,7 +2,7 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -84,6 +84,23 @@ const MainPage = () => {
     }
   }, [companyHasInventoryQuery.isSuccess]);
 
+  // Update the callback to receive filtered data count
+  const handleFilteredDataUpdate = useCallback((filteredData) => {
+    setDownloadDataReport(filteredData);
+    setFilteredDataCount(filteredData?.length || 0);
+  }, []);
+
+  // Calculate the total to display based on current state
+  const getTotalToDisplay = () => {
+    if (params || chosenOption.value !== null) {
+      return filteredDataCount;
+    }
+    return companyHasInventoryQuery?.data?.data?.total ?? 0;
+  };
+
+  // Add state to track filtered data count
+  const [filteredDataCount, setFilteredDataCount] = useState(0);
+
   const renderingOption = {
     0: <Spin indicator={<Loading />} fullscreen={true} />,
     1: (
@@ -97,9 +114,10 @@ const MainPage = () => {
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         chosen={chosenOption}
         setDataFilterOptions={setDataFilterOptions}
-        downloadDataReport={setDownloadDataReport}
-        total={companyHasInventoryQuery?.data?.data?.total ?? 0}
+        downloadDataReport={handleFilteredDataUpdate}
+        total={getTotalToDisplay()}
         searchedResult={searchedResult}
+        companyHasInventoryQuery={companyHasInventoryQuery}
       />
     ),
     2: (
@@ -144,6 +162,7 @@ const MainPage = () => {
       return setParams(data.searchItem);
     }
   };
+
   return (
     <Suspense
       fallback={
@@ -219,19 +238,17 @@ const MainPage = () => {
           <Grid item xs={12} sm={12}>
             {" "}
             <Link style={{ width: "100%" }} to="/inventory/new-item">
-            <LightBlueButtonComponent
-              title={"Add one item"}
-              func={() => null}
-              icon={
-                <RectangleBluePlusIcon />
-              }
-              buttonType="button"
-              titleStyles={{
-                textTransform: "none",
-                with: "100%",
-                gap: "2px",
-              }}
-            />
+              <LightBlueButtonComponent
+                title={"Add one item"}
+                func={() => null}
+                icon={<RectangleBluePlusIcon />}
+                buttonType="button"
+                titleStyles={{
+                  textTransform: "none",
+                  with: "100%",
+                  gap: "2px",
+                }}
+              />
             </Link>
           </Grid>
         </Grid>
