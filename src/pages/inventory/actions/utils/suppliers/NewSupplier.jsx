@@ -82,21 +82,27 @@ const NewSupplier = ({
       newProvider.address.city &&
       newProvider.address.state &&
       newProvider.address.postalCode;
-
+  
     const isValidContactInfo =
       newProvider.contactInfo.email && newProvider.contactInfo.phone;
-
+  
+    // Clean services array by removing empty strings and trimming whitespace
+    const cleanedServices = newProvider.services
+      .map(service => service.trim())
+      .filter(service => service.length > 0);
+  
     if (
       newProvider.companyName &&
       newProvider.industry &&
-      newProvider.services.length > 0 &&
+      cleanedServices.length > 0 && // Use cleaned services for validation
       isValidAddress &&
       isValidContactInfo
     ) {
       try {
         const providerData = {
           ...newProvider,
-          creator: user.companyData.id, // Replace with actual company ID from your auth context
+          services: cleanedServices, // Use cleaned services in payload
+          creator: user.companyData.id,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
