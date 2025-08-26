@@ -44,6 +44,7 @@ const ItemTable = ({
   downloadDataReport,
   total,
   searchedResult,
+  companyHasInventoryQuery,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -157,7 +158,8 @@ const ItemTable = ({
             ownership: data.ownership,
             main_warehouse: data.main_warehouse,
             warehouse: data.warehouse,
-            location: data.usage && data.usage.length > 0 ? data.usage : data.location,
+            location:
+              data.usage && data.usage.length > 0 ? data.usage : data.location,
             image_url: data.image_url || imageSource,
             serial_number: data.serial_number,
             enableAssignFeature: data.enableAssignFeature,
@@ -554,6 +556,25 @@ const ItemTable = ({
     dataToDisplay();
   }, []);
 
+  // Add function to get display title based on current filter state
+  const getDisplayTitle = () => {
+    if (searchItem && searchItem !== "") {
+      return `Search results for "${searchItem}"`;
+    }
+    if (chosen.value !== null) {
+      const categoryNames = {
+        0: "brand",
+        1: "item_group",
+        2: "serial_number",
+        3: "location",
+        4: "ownership",
+        5: "status",
+      };
+      return `Filtered by ${categoryNames[chosen.category]}: "${chosen.value}"`;
+    }
+    return "All devices";
+  };
+
   return (
     <Suspense
       fallback={
@@ -571,6 +592,7 @@ const ItemTable = ({
             openAdvanceSearchModal={openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
             searchedResult={searchedResult}
+            chosen={chosen}
           />
         </Grid>
         <Grid
@@ -618,7 +640,7 @@ const ItemTable = ({
                     textWrap: "balance",
                   }}
                 >
-                  All devices{" "}
+                  {getDisplayTitle()}{" "}
                   <span
                     style={{
                       ...Subtitle,
@@ -627,6 +649,14 @@ const ItemTable = ({
                     }}
                   >
                     | Total <strong>{total}</strong> units
+                    {(searchItem || chosen.value !== null) && (
+                      <span style={{ color: "var(--blue-600)" }}>
+                        {" "}
+                        (filtered from{" "}
+                        {companyHasInventoryQuery?.data?.data?.total ?? 0}{" "}
+                        total)
+                      </span>
+                    )}
                   </span>{" "}
                   &nbsp;{" "}
                 </p>
