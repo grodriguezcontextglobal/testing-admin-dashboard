@@ -14,21 +14,39 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
-// Add this import at the top of the file
 import { utils, write } from "xlsx";
+import { Progress } from "antd";
 
 const { Search } = Input;
 
 const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
   const [activeTab, setActiveTab] = useState("1");
   const [renterItemList, setRenterItemList] = useState([]);
-  const [selectedItems, setSelectedItems] = useState(new Set()); // Use Set for O(1) lookups
+  const [selectedItems, setSelectedItems] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50); // Configurable page size
+  const [pageSize, setPageSize] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
+  const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
   const { user } = useSelector((state) => state.admin);
+
+  // Request size validation helper
+  const checkRequestSize = (data) => {
+    const jsonString = JSON.stringify(data);
+    const sizeInBytes = new Blob([jsonString]).size;
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+
+    console.log(`Request size: ${sizeInMB.toFixed(2)} MB`);
+
+    // Warn if approaching 10MB limit (most servers have 10-50MB limits)
+    if (sizeInMB > 8) {
+      console.warn(`Large request detected: ${sizeInMB.toFixed(2)} MB`);
+      return { isLarge: true, size: sizeInMB };
+    }
+
+    return { isLarge: false, size: sizeInMB };
+  };
 
   // Fetch items with pagination and search
   const fetchItemsForRenter = useCallback(
@@ -205,26 +223,65 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
     [fetchItemsForRenter, searchText, pageSize]
   );
 
-  // Helper function to process items in batches
+  // Improved batch processing with dynamic sizing and progress tracking
   const processBatchedItems = async (
     itemIds,
     batchProcessor,
-    batchSize = 500
+    initialBatchSize = 200, // Reduced from 500
+    stepName = "Processing items"
   ) => {
     const results = [];
+    let currentBatchSize = initialBatchSize;
 
-    for (let i = 0; i < itemIds.length; i += batchSize) {
-      const batch = itemIds.slice(i, i + batchSize);
+    setProgress({ current: 0, total: itemIds.length, step: stepName });
+
+    for (let i = 0; i < itemIds.length; i += currentBatchSize) {
+      const batch = itemIds.slice(i, i + currentBatchSize);
+
       try {
+        // Check batch size before processing
+        const sizeCheck = checkRequestSize({ batch });
+
+        // If batch is too large, reduce size and retry
+        if (sizeCheck.isLarge && currentBatchSize > 50) {
+          currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.7));
+          console.log(
+            `Reducing batch size to ${currentBatchSize} due to large payload`
+          );
+          i -= currentBatchSize; // Retry with smaller batch
+          continue;
+        }
+
         const result = await batchProcessor(batch);
         results.push(result);
 
-        // Add small delay between batches to prevent overwhelming the server
-        if (i + batchSize < itemIds.length) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
+        // Update progress
+        setProgress({
+          current: Math.min(i + currentBatchSize, itemIds.length),
+          total: itemIds.length,
+          step: stepName,
+        });
+
+        // Add delay between batches
+        if (i + currentBatchSize < itemIds.length) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
         }
       } catch (error) {
-        console.error(`Error processing batch ${i / batchSize + 1}:`, error);
+        console.error(
+          `Error processing batch ${Math.floor(i / currentBatchSize) + 1}:`,
+          error
+        );
+
+        // If error is due to payload size, reduce batch size and retry
+        if (error.response?.status === 413 && currentBatchSize > 50) {
+          currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.5));
+          console.log(
+            `HTTP 413 error: Reducing batch size to ${currentBatchSize}`
+          );
+          i -= currentBatchSize; // Retry with smaller batch
+          continue;
+        }
+
         throw error;
       }
     }
@@ -232,7 +289,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
     return results;
   };
 
-  // Step 1: Return items to renter
+  // Step 1: Return items to renter with improved error handling
   const returnItemsToRenter = async (itemIds) => {
     const returnDate = new Date().toISOString();
     const moreInfo = {
@@ -243,48 +300,80 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
     };
 
     const batchProcessor = async (batch) => {
-      const payload = batch.map((item_id) => item_id);
-      console.log("batchProcessor", {
-        query:
-          "UPDATE item_inv SET warehouse =? enableAssignFeature = ? returnedRentedInfo = ? return_date = ? WHERE item_id in (?)",
-        values: [1, 0, JSON.stringify(moreInfo), returnDate, [...payload]],
-      });
-      return await devitrakApi.post(
-        "/db_inventory/update-large-data",
-        {
-          item_ids: [...payload],
-          warehouse: 1,
-          enableAssignFeature: 0,
-          returnedRentedInfo: JSON.stringify(moreInfo),
-          return_date: returnDate,
-        }
-      );
+      const payload = {
+        item_ids: batch,
+        warehouse: 1,
+        enableAssignFeature: 0,
+        returnedRentedInfo: JSON.stringify(moreInfo),
+        return_date: returnDate,
+      };
+
+      // Validate payload size
+      const sizeCheck = checkRequestSize(payload);
+      if (sizeCheck.isLarge) {
+        console.warn(
+          `Large payload for returnItemsToRenter: ${sizeCheck.size.toFixed(
+            2
+          )} MB`
+        );
+      }
+
+      return await devitrakApi.post("/db_inventory/update-large-data", payload);
     };
 
-    return await processBatchedItems(itemIds, batchProcessor);
+    return await processBatchedItems(
+      itemIds,
+      batchProcessor,
+      200,
+      "Returning items to renter"
+    );
   };
 
-  // Step 2: Delete items from records
+  // Step 2: Delete items from records with improved batching
   const deleteItemsFromRecords = async (itemIds) => {
     const batchProcessor = async (batch) => {
       const placeholders = batch.map(() => "?").join(",");
       const deleteQuery = `DELETE FROM item_inv WHERE item_id IN (${placeholders}) AND company_id = ?`;
       const deleteValues = [...batch, user.sqlInfo.company_id];
+
+      const payload = {
+        query: deleteQuery,
+        values: deleteValues,
+      };
+
+      // Validate payload size
+      const sizeCheck = checkRequestSize(payload);
+      if (sizeCheck.isLarge) {
+        console.warn(
+          `Large payload for deleteItemsFromRecords: ${sizeCheck.size.toFixed(
+            2
+          )} MB`
+        );
+      }
+
       return await devitrakApi.post(
         "/db_company/inventory-based-on-submitted-parameters",
-        {
-          query: deleteQuery,
-          values: deleteValues,
-        }
+        payload
       );
     };
 
-    return await processBatchedItems(itemIds, batchProcessor);
+    return await processBatchedItems(
+      itemIds,
+      batchProcessor,
+      300,
+      "Deleting item records"
+    );
   };
 
-  // Step 3: Email notification to staff with XLSX attachment
+  // Step 3: Improved email notification with batched XLSX generation
   const emailNotification = async ({ items }) => {
     try {
+      setProgress({
+        current: 0,
+        total: 1,
+        step: "Preparing email notification",
+      });
+
       const supplierInfo = await devitrakApi.post(
         `/company/provider-company/${supplier_id}`,
         {
@@ -293,63 +382,87 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
         }
       );
 
-      // Get the items data for XLSX generation
-      const itemsData = Array.from(items).map(
-        (item) => renterItemList.filter((ele) => ele.item_id === item)[0]
-      );
+      // Get items data in batches to avoid memory issues
+      const itemsArray = Array.from(items);
+      const itemsData = [];
 
-      // Generate XLSX file
-      const generateXLSXFile = () => {
+      // Process items data in smaller chunks to avoid memory issues
+      const ITEMS_BATCH_SIZE = 1000;
+      for (let i = 0; i < itemsArray.length; i += ITEMS_BATCH_SIZE) {
+        const batch = itemsArray.slice(i, i + ITEMS_BATCH_SIZE);
+        const batchData = batch.map(
+          (item) =>
+            renterItemList.find((ele) => ele.item_id === item) || {
+              item_id: item,
+              serial_number: "N/A",
+              item_group: "N/A",
+            }
+        );
+        itemsData.push(...batchData);
+      }
+
+      // Generate XLSX file with size optimization
+      const generateOptimizedXLSXFile = () => {
         const headers = [
           "Item ID",
           "Serial Number",
           "Item Group",
-          "Brand",
-          "Category",
-          "Cost",
-          "Condition",
-          "Location",
           "Return Date",
-          "Description",
         ];
 
-        // Convert data to worksheet format
+        // Limit data to essential fields to reduce file size
         const wsData = [
           headers,
           ...itemsData.map((item) => [
             item?.item_id || "",
             item?.serial_number || "",
             item?.item_group || "",
-            item?.brand || "",
-            item?.category_name || "",
-            item?.cost || "",
-            item?.status || "",
-            item?.location || "",
-            item?.return_date || "",
-            item?.descript_item || "",
+            new Date().toISOString().split("T")[0],
           ]),
         ];
 
-        // Create workbook and worksheet
         const wb = utils.book_new();
         const ws = utils.aoa_to_sheet(wsData);
 
-        // Set column widths
-        ws["!cols"] = headers.map(() => ({ width: 20 }));
+        // Optimize column widths
+        ws["!cols"] = [
+          { width: 15 },
+          { width: 20 },
+          { width: 20 },
+          { width: 15 },
+        ];
 
-        // Add worksheet to workbook
         utils.book_append_sheet(wb, ws, "Returned Items");
 
-        // Generate file as array buffer, then convert to base64
-        const fileArrayBuffer = write(wb, { type: "array", bookType: "xlsx" });
+        // Generate with compression
+        const fileArrayBuffer = write(wb, {
+          type: "array",
+          bookType: "xlsx",
+          compression: true,
+        });
 
-        // Convert array buffer to base64
         const uint8Array = new Uint8Array(fileArrayBuffer);
         let binaryString = "";
-        for (let i = 0; i < uint8Array.length; i++) {
-          binaryString += String.fromCharCode(uint8Array[i]);
+
+        // Process in chunks to avoid memory issues with large files
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize);
+          for (let j = 0; j < chunk.length; j++) {
+            binaryString += String.fromCharCode(chunk[j]);
+          }
         }
+
         const base64File = btoa(binaryString);
+
+        // Check file size
+        const fileSizeMB = (base64File.length * 0.75) / (1024 * 1024); // Approximate size
+        console.log(`XLSX file size: ${fileSizeMB.toFixed(2)} MB`);
+
+        if (fileSizeMB > 25) {
+          // Most email services limit to 25MB
+          console.warn(`Large XLSX file: ${fileSizeMB.toFixed(2)} MB`);
+        }
 
         return {
           filename: `returned_items_${
@@ -358,23 +471,47 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
           content: base64File,
           contentType:
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          size: fileSizeMB,
         };
       };
 
-      const xlsxAttachment = generateXLSXFile();
+      const xlsxAttachment = generateOptimizedXLSXFile();
 
-      const response = await devitrakApi.post(
-        "/nodemailer/returned-items-to-renter-notification",
-        {
+      // If file is too large, send summary email instead
+      if (xlsxAttachment.size > 20) {
+        const summaryPayload = {
+          subject: "Returned items to renter - Summary",
+          staffEmails: [
+            ...user.companyData.employees
+              .filter((element) => Number(element.role) < 2)
+              .map((ele) => ele.user),
+          ],
+          supplierInfo: supplierInfo.data.providerCompanies,
+          itemCount: itemsArray.length,
+          returnDate: new Date().toISOString().split("T")[0],
+          message: `Due to the large number of items (${itemsArray.length}), detailed information has been omitted. Please check the system for complete details.`,
+        };
+
+        const response = await devitrakApi.post(
+          "/nodemailer/returned-items-summary-notification",
+          summaryPayload
+        );
+
+        if (response.data) {
+          return message.success(
+            "Items returned and summary notification sent (file too large for attachment)."
+          );
+        }
+      } else {
+        // Send with attachment if file size is acceptable
+        const emailPayload = {
           subject: "Returned items to renter",
           staffEmails: [
             ...user.companyData.employees
               .filter((element) => Number(element.role) < 2)
               .map((ele) => ele.user),
           ],
-          // Remove items from email body since we're attaching XLSX
           supplierInfo: supplierInfo.data.providerCompanies,
-          // Add XLSX attachment
           attachments: [
             {
               filename: xlsxAttachment.filename,
@@ -383,19 +520,60 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
               encoding: "base64",
             },
           ],
-        }
-      );
+        };
 
-      if (response.data) {
-        return message.success(
-          "Items returned and notification sent with XLSX attachment."
+        // Check email payload size
+        const emailSizeCheck = checkRequestSize(emailPayload);
+        if (emailSizeCheck.isLarge) {
+          console.warn(
+            `Large email payload: ${emailSizeCheck.size.toFixed(2)} MB`
+          );
+        }
+
+        const response = await devitrakApi.post(
+          "/nodemailer/returned-items-to-renter-notification",
+          emailPayload
         );
+
+        if (response.data) {
+          return message.success(
+            "Items returned and notification sent with XLSX attachment."
+          );
+        }
       }
     } catch (error) {
       console.error("Error in email notification:", error);
-      message.error("Failed to send email notification.");
+      if (error.response?.status === 413) {
+        message.error(
+          "Email attachment too large. Summary notification sent instead."
+        );
+        // Fallback to summary email without attachment
+        try {
+          await devitrakApi.post(
+            "/nodemailer/returned-items-summary-notification",
+            {
+              subject:
+                "Returned items to renter - Summary (Attachment too large)",
+              staffEmails: [
+                ...user.companyData.employees
+                  .filter((element) => Number(element.role) < 2)
+                  .map((ele) => ele.user),
+              ],
+              itemCount: Array.from(items).length,
+              returnDate: new Date().toISOString().split("T")[0],
+            }
+          );
+          message.success("Summary notification sent successfully.");
+        } catch (summaryError) {
+          console.error("Failed to send summary notification:", summaryError);
+          message.error("Failed to send any notification.");
+        }
+      } else {
+        message.error("Failed to send email notification.");
+      }
     }
   };
+
   const handleReturnAllItems = async () => {
     setLoading(true);
     try {
@@ -412,10 +590,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
           "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ?";
         getAllValues = ["Rent", user.sqlInfo.company_id];
       }
-      console.log("getAllQuery", {
-        query: getAllQuery,
-        values: getAllValues,
-      });
+
       const allItemsResult = await devitrakApi.post(
         "/db_company/inventory-based-on-submitted-parameters",
         {
@@ -430,7 +605,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       }
 
       const allItemIds = allItemsResult.data.result.map((item) => item.item_id);
-      console.log("allItemIds", allItemIds);
+
       message.loading({
         content: `Processing ${allItemIds.length} items...`,
         key: "processing",
@@ -438,6 +613,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
       // Step 1: Return items to renter
       await returnItemsToRenter(allItemIds);
+
       message.loading({
         content: "Items returned to renter, now deleting records...",
         key: "processing",
@@ -447,6 +623,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       await deleteItemsFromRecords(allItemIds);
 
       // Step 3: Email notification to staff
+      setProgress({ current: 0, total: 1, step: "Sending email notification" });
       await emailNotification({ items: allItemIds });
 
       // Step 4: Clear cache memory
@@ -460,10 +637,12 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       setRenterItemList([]);
       setTotalItems(0);
       setSelectedItems(new Set());
+      setProgress({ current: 0, total: 0, step: "" });
       handleClose();
     } catch (error) {
       message.error({ content: "Failed to process items", key: "processing" });
       console.error("Error processing items:", error);
+      setProgress({ current: 0, total: 0, step: "" });
     } finally {
       setLoading(false);
     }
@@ -486,6 +665,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
       // Step 1: Return items to renter
       await returnItemsToRenter(itemIds);
+
       message.loading({
         content: "Items returned to renter, now deleting records...",
         key: "processing",
@@ -507,6 +687,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
 
       // Refresh current page
       setSelectedItems(new Set());
+      setProgress({ current: 0, total: 0, step: "" });
       fetchItemsForRenter(currentPage, searchText);
     } catch (error) {
       message.error({
@@ -514,6 +695,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
         key: "processing",
       });
       console.error("Error processing selected items:", error);
+      setProgress({ current: 0, total: 0, step: "" });
     } finally {
       setLoading(false);
     }
@@ -760,6 +942,22 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
           </Grid>
         </Grid>
       </Box>
+      {/* Add this in the Modal content, before the Tabs component: */}
+      {progress.total > 0 && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+          <Typography variant="body2" gutterBottom>
+            {progress.step}
+          </Typography>
+          <Progress
+            percent={Math.round((progress.current / progress.total) * 100)}
+            status="active"
+            showInfo
+            format={(percent) =>
+              `${progress.current}/${progress.total} (${percent}%)`
+            }
+          />
+        </Box>
+      )}
     </Modal>
   );
 };
