@@ -1,11 +1,11 @@
-import { Modal } from "antd";
+import { Modal, Progress } from "antd";
 import Returning from "../../../../../../components/animation/ReturningAnimation";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { DevitrakLogo } from "../../../../../../components/icons/DevitrakLogo";
 import { DevitrakName } from "../../../../../../components/icons/DevitrakName";
 
-const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
+const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress = 0, currentStep = "" }) => {
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
 
@@ -59,6 +59,7 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
             justifyContent: "flex-start",
             alignItems: "center",
             margin: "0 0 1rem",
+            padding: "1rem",
           }}
         >
           <Returning />
@@ -66,10 +67,23 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal }) => {
             <h4 style={{ ...TextFontSize20LineHeight30, width: "100%" }}>
               Closing event...
             </h4>
-            <p style={{ ...Subtitle, width: "100%" }}>
+            <p style={{ ...Subtitle, width: "100%", marginBottom: "1rem" }}>
               This event is being closed. Please wait until all items are
               returned and event is closed.
             </p>
+            {currentStep && (
+              <p style={{ ...Subtitle, width: "100%", marginBottom: "0.5rem", fontWeight: "bold" }}>
+                {currentStep}
+              </p>
+            )}
+            <Progress 
+              percent={progress} 
+              status={progress === 100 ? "success" : "active"}
+              strokeColor={{
+                '0%': '#108ee9',
+                '100%': '#87d068',
+              }}
+            />
           </div>
         </div>
         <div
