@@ -4,7 +4,6 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
-import BlueButtonComponent from "../../../../components/UX/buttons/bluebutton";
 import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -17,6 +16,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import HeaderInventaryComponent from "../../utils/HeaderInventaryComponent";
 import CardInfo from "../UX/CardInfo";
+import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -250,7 +250,7 @@ const MainPage = () => {
                 </InputAdornment>
               }
             />
-            <BlueButtonComponent title={"Search"} buttonType="submit" />
+            <BlueButtonConfirmationComponent title={"Search"} buttonType="submit" />
           </form>
         </Grid>
         <Grid container>
