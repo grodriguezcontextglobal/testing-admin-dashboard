@@ -686,8 +686,6 @@ const ModalAddAndUpdateDeviceSetup = ({
         disabled={existingDevice.length === Number(quantity)}
         loadingState={loading}
         styles={{
-          ...disablingButton,
-          ...CenteringGrid,
           display: blockingButton ? "flex" : "none",
           width: "100%",
         }}
