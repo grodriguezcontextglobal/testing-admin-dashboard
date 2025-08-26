@@ -31,19 +31,20 @@ const MainPageGrouping = () => {
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
-    setTimeout(() => {
-      setValue("searchDevice", "...");
-    }, 500);
-    setTimeout(() => {
-      setValue("searchDevice", "..");
-    }, 700);
-    setTimeout(() => {
-      setValue("searchDevice", ".");
-    }, 900);
-    setTimeout(() => {
-      setValue("searchDevice", "");
-      setIsLoadingComponent(false);
-    }, 1100);
+      // setTimeout(() => {
+      //   setValue("searchDevice", "...");
+      // }, 500);
+      // setTimeout(() => {
+      //   setValue("searchDevice", "..");
+      // }, 700);
+      // setTimeout(() => {
+      //   setValue("searchDevice", ".");
+      // }, 900);
+      setTimeout(() => {
+        // setValue("searchDevice", "");
+        setIsLoadingComponent(false);
+      }, 1100);
+    
   }, []);
 
   const [searchedValueItem, setSearchedValueItem] = useState(null);
@@ -77,7 +78,8 @@ const MainPageGrouping = () => {
           handleSubmitForm={handleSubmitForm}
           handleSubmit={handleSubmit}
           searchedValueItem={searchedValueItem}
-          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
+          setSearchedValueItem={setSearchedValueItem}
+          setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"group"}
         />
