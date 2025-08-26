@@ -12,6 +12,7 @@ export const renderFields = ({
   renderLocationOptions,
   retrieveItemOptions,
   subLocationsOptions,
+  suppliersOptions,
 }) => {
   const fields = [
     {
@@ -19,7 +20,11 @@ export const renderFields = ({
       placeholder: "e.g. Electronic",
       label: "Category reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("category_name"),
       htmlOption: 0,
@@ -27,12 +32,17 @@ export const renderFields = ({
       tooltipMessage: "This is the category of the reference item.",
       displayField: false,
     },
-{
+    {
       name: "reference_item_group",
-      placeholder: "Type the name of the item for retrieving the reference item.",
+      placeholder:
+        "Type the name of the item for retrieving the reference item.",
       label: "Item name reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("item_group"),
       htmlOption: 0,
@@ -189,7 +199,8 @@ export const renderFields = ({
       options: ["Typing", "Scanning"],
       htmlOption: 0,
       tooltip: true,
-      tooltipMessage: "Typing option: typing one by one if format is alphanumeric, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
+      tooltipMessage:
+        "Typing option: typing one by one if format is alphanumeric, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
       displayField: true,
     },
     {
@@ -272,6 +283,19 @@ export const renderFields = ({
       displayField: isRented,
     },
     {
+      name: "supplier",
+      placeholder: "Select a supplier",
+      label: "Supplier",
+      htmlElement: "",
+      style: OutlinedInputStyle,
+      required: true,
+      options: suppliersOptions,
+      htmlOption: 2,
+      tooltip: true,
+      tooltipMessage: "Supplier where rented equipment will be returned.",
+      displayField: isRented,
+    },
+    {
       name: "enableAssignFeature",
       placeholder: "",
       label: "Is it assignable to staff/events?",
@@ -308,7 +332,7 @@ export const renderFields = ({
       htmlOption: 6,
       tooltip: false,
       tooltipMessage: null,
-      displayField: displayPreviewImage
+      displayField: displayPreviewImage,
     },
     {
       name: "descript_item",
@@ -336,7 +360,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: false,
-    }
+    },
   ];
 
   fields.forEach((_, index) => {

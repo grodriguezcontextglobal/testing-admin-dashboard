@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useState } from "react";
@@ -13,21 +13,23 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../styles/global/ant-select.css";
 import "../../../../../styles/global/reactInput.css";
+import { retrieveExistingSubLocationsForCompanyInventory } from "../../../../inventory/actions/utils/SubLocationRenderer";
+import NewSupplier from "../../../../inventory/actions/utils/suppliers/NewSupplier";
 import costValueInputFormat from "../../../../inventory/utils/costValueInputFormat";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
+import useSuppliers from "../../../../inventory/utils/hooks/useSuppliers";
 import BulkRentedItems from "./components/BulkRentedItems";
-import {
-  renderingModals,
-  renderTitle,
-} from "./components/BulkRentedItemsComponents";
-import "./style.css";
-import validatingInputFields from "./components/validatingFields";
-import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
-import { retrieveExistingSubLocationsForCompanyInventory } from "../../../../inventory/actions/utils/SubLocationRenderer";
 import {
   bulkItemInsertAlphanumeric,
   bulkItemInsertSequential,
 } from "./components/BulkRentedItemsActions";
+import {
+  renderingModals,
+  renderTitle,
+} from "./components/BulkRentedItemsComponents";
+import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
+import validatingInputFields from "./components/validatingFields";
+import "./style.css";
 
 const options = [{ value: "Rent" }];
 
@@ -36,6 +38,15 @@ const FormDeviceTrackingMethod = ({
   setSelectedItem,
   setDisplayFormToCreateCategory,
 }) => {
+  const {
+    supplierList,
+    supplierModal,
+    providersList,
+    setSupplierModal,
+    refetchingAfterNewSupplier,
+    queryClient,
+    dicSuppliers,
+  } = useSuppliers();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -103,7 +114,6 @@ const FormDeviceTrackingMethod = ({
       }),
     refetchOnMount: false,
   });
-  const queryClient = useQueryClient();
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
@@ -191,6 +201,7 @@ const FormDeviceTrackingMethod = ({
           scannedSerialNumbers,
           setScannedSerialNumbers,
           alphaNumericInsertItemMutation,
+          dicSuppliers,
         });
         const respNewItem = [...selectedItem, response];
         setSelectedItem(respNewItem);
@@ -207,6 +218,7 @@ const FormDeviceTrackingMethod = ({
           returningDate,
           subLocationsSubmitted,
           sequencialNumbericInsertItemMutation,
+          dicSuppliers,
         });
         const respNewItem = [...selectedItem, response];
         setSelectedItem(respNewItem);
@@ -580,6 +592,7 @@ const FormDeviceTrackingMethod = ({
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
+        suppliersOptions={supplierList}
       />
       {renderingModals({
         openScanningModal,
@@ -589,6 +602,16 @@ const FormDeviceTrackingMethod = ({
         scannedSerialNumbers,
         setScannedSerialNumbers,
       })}
+      {supplierModal && (
+        <NewSupplier
+          providersList={providersList}
+          queryClient={queryClient}
+          setSupplierModal={setSupplierModal}
+          supplierModal={supplierModal}
+          user={user}
+          refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+        />
+      )}
     </Grid>
   );
 };

@@ -288,7 +288,7 @@ const FormFields = ({
           width: "100%",
           border: `${errors.conferenceRoom && "solid 1px #eb0000"}`,
         }}
-        placeholder="Suite number or conference room"
+        placeholder="Venue name or Conference Building name"
         fullWidth
       />
       <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>

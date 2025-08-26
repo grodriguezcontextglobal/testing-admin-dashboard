@@ -275,8 +275,8 @@ const Form = () => {
       }
     >
       <MainBody
-      AddingEventCreated={AddingEventCreated}
-      FormDeviceTrackingMethod={FormDeviceTrackingMethod}
+        AddingEventCreated={AddingEventCreated}
+        FormDeviceTrackingMethod={FormDeviceTrackingMethod}
         assignAllDevices={assignAllDevices}
         displayFormToCreateCategory={displayFormToCreateCategory}
         eventInfoDetail={eventInfoDetail}

@@ -3,7 +3,14 @@ import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { renderFields } from "./BulkRentedItemFields";
-import { addingExtraInfo, gripingFields, renderingMoreInfoSubmitted, renderingOptionsButtons, renderOptional, stylingComponents } from "./BulkRentedItemsComponents";
+import {
+  addingExtraInfo,
+  gripingFields,
+  renderingMoreInfoSubmitted,
+  renderingOptionsButtons,
+  renderOptional,
+  stylingComponents,
+} from "./BulkRentedItemsComponents";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
@@ -59,6 +66,7 @@ const BulkRentedItems = ({
   subLocationsSubmitted,
   valueObject,
   watch,
+  suppliersOptions,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
@@ -81,6 +89,7 @@ const BulkRentedItems = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
+          suppliersOptions,
         }).map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
@@ -246,10 +255,16 @@ const BulkRentedItems = ({
                 xs={12}
                 sm={12}
                 md={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
                 lg={
-                  (item.name === "descript_item" || item.name === "reference_item_group") ? 12 : gripingFields(item.name)
+                  item.name === "descript_item" ||
+                  item.name === "reference_item_group"
+                    ? 12
+                    : gripingFields(item.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>

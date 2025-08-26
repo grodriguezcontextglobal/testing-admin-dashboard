@@ -15,6 +15,7 @@ export const bulkItemInsertAlphanumeric = async ({
   scannedSerialNumbers,
   setScannedSerialNumbers,
   alphaNumericInsertItemMutation,
+  dicSuppliers,
 }) => {
   try {
     const template = {
@@ -48,6 +49,9 @@ export const bulkItemInsertAlphanumeric = async ({
       consumerUses: false,
       qty: data.quantity ?? data.qty,
       quantity: data.quantity ?? data.qty,
+      supplier_info: data.supplier
+        ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+        : null,
     };
     await alphaNumericInsertItemMutation.mutate(template);
     setValue("category_name", "");
@@ -88,6 +92,7 @@ export const bulkItemInsertSequential = async ({
   returningDate,
   subLocationsSubmitted,
   sequencialNumbericInsertItemMutation,
+  dicSuppliers,
 }) => {
   try {
     const template = {
@@ -122,6 +127,9 @@ export const bulkItemInsertSequential = async ({
       consumerUses: false,
       qty: data.quantity ?? data.qty,
       quantity: data.quantity ?? data.qty,
+      supplier_info: data.supplier
+        ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+        : null,
     };
     await sequencialNumbericInsertItemMutation.mutate(template);
     setValue("category_name", "");
