@@ -42,7 +42,7 @@ const MainPageQuickGlance = () => {
   const { user } = useSelector((state) => state.admin);
   const [createUserButton, setCreateUserButton] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showInventoryTypes, setShowInventoryTypes] = useState(false);
+  const [showInventoryTypes, setShowInventoryTypes] = useState(true);
   const [
     showInventoryTypesForCustomersOnly,
     setShowInventoryTypesForCustomersOnly,
@@ -523,33 +523,6 @@ const MainPageQuickGlance = () => {
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <FormatEventDetailInfo />
           </Grid>
-          <AlInventoryEventAssigned
-            key={"AlInventoryEventAssigned"}
-            displayElementsBasedOnRole={displayElementsBasedOnRole}
-            setShowInventoryTypes={setShowInventoryTypes}
-            showInventoryTypes={showInventoryTypes}
-            inventoryEventAssignedCount={inventoryEventAssignedCount}
-            setEditingInventory={setEditingInventory}
-            setEditingServiceInEvent={setEditingServiceInEvent}
-            user={user}
-            AlInventoryEventAssigned
-            database={receiversPoolQuery?.data?.data}
-          />
-          <AllInventoryEventForCustomerOnly
-            key={"AllInventoryEventForCustomerOnly"}
-            displayElementsBasedOnRole={displayElementsBasedOnRole}
-            setShowInventoryTypes={setShowInventoryTypesForCustomersOnly}
-            showInventoryTypes={showInventoryTypesForCustomersOnly}
-            inventoryEventAssignedCount={
-              inventoryEventAssignedForCustomersCount
-            }
-            setEditingInventory={setEditingInventory}
-            setEditingServiceInEvent={setEditingServiceInEvent}
-            user={user}
-            AlInventoryEventAssigned
-            database={receiversPoolQuery?.data?.data}
-          />
-
           <Grid item xs={12}>
             <FormatToDisplayDetail />
           </Grid>
@@ -575,6 +548,38 @@ const MainPageQuickGlance = () => {
             lg={6}
           >
             <Report />
+          </Grid>
+          <Divider />
+
+          <Grid item xs={12}>
+            <AlInventoryEventAssigned
+              key={"AlInventoryEventAssigned"}
+              displayElementsBasedOnRole={displayElementsBasedOnRole}
+              setShowInventoryTypes={setShowInventoryTypes}
+              showInventoryTypes={showInventoryTypes}
+              inventoryEventAssignedCount={inventoryEventAssignedCount}
+              setEditingInventory={setEditingInventory}
+              setEditingServiceInEvent={setEditingServiceInEvent}
+              user={user}
+              AlInventoryEventAssigned
+              database={receiversPoolQuery?.data?.data}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <AllInventoryEventForCustomerOnly
+              key={"AllInventoryEventForCustomerOnly"}
+              displayElementsBasedOnRole={displayElementsBasedOnRole}
+              setShowInventoryTypes={setShowInventoryTypesForCustomersOnly}
+              showInventoryTypes={showInventoryTypesForCustomersOnly}
+              inventoryEventAssignedCount={
+                inventoryEventAssignedForCustomersCount
+              }
+              setEditingInventory={setEditingInventory}
+              setEditingServiceInEvent={setEditingServiceInEvent}
+              user={user}
+              AlInventoryEventAssigned
+              database={receiversPoolQuery?.data?.data}
+            />
           </Grid>
           <Divider />
           <DevicesInformationSection
