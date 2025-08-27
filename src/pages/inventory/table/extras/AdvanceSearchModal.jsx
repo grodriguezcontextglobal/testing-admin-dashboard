@@ -141,7 +141,7 @@ const AdvanceSearchModal = ({
             <Typography
               style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
             >
-              Group
+              Device name
             </Typography>
           </InputLabel>
           <Select
