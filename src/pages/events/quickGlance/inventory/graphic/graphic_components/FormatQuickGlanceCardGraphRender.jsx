@@ -9,7 +9,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 
 const legend = ['Checked out',
   'Not-Functional Report',
-  'On hands',
+  'On hand',
   'Lost']
 const COLORS = ["#00359E", "#155EEF", "#84ADFF", "#fb6b6b"];
 

@@ -110,7 +110,7 @@ const Graphic = () => {
       name: "Not-Functional Report",
       value: defectedDeviceList,
     },
-    { name: "On hands", value: foundDevicesInWarehouse() }, //numberDisplayDynamically()
+    { name: "On hand", value: foundDevicesInWarehouse() }, //numberDisplayDynamically()
     { name: "Lost", value: lostDeviceList },
   ];
 

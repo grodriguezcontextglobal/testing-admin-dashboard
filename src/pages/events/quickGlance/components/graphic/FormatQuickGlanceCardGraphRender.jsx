@@ -111,7 +111,7 @@ const FormatQuickGlanceCardGraphRender = ({
             alignItems={"center"}
             container
           >
-            <Grid
+            {/* <Grid
               display={"flex"}
               justifyContent={"center"}
               alignItems={"center"}
@@ -120,7 +120,7 @@ const FormatQuickGlanceCardGraphRender = ({
               sm={12}
               md={12}
               lg={12}
-            >
+            > */}
               <ChartsRenderer
                 dataToRender={dataToRender}
                 title="Inventory"
@@ -132,7 +132,7 @@ const FormatQuickGlanceCardGraphRender = ({
                 colors={["#00359E", "#f5b700", "#528BFF", "#b42318"]}
               />
             </Grid>
-          </Grid>
+          {/* </Grid> */}
         </Card>
       </Grid>
     </Suspense>
