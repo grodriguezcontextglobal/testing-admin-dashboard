@@ -68,7 +68,7 @@ const GraphicInventoryEventActivity = () => {
         name: "Not-Functional Report",
         value: sortData().defected,
       },
-      { name: "On hands", value: sortData().onHand }, //numberDisplayDynamically()
+      { name: "On hand", value: sortData().onHand }, //numberDisplayDynamically()
       { name: "Lost", value: sortData().lost },
     ];
     const dataToMap = [dataToExport];

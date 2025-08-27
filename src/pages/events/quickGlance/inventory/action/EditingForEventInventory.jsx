@@ -60,10 +60,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const eventName = event.eventInfoDetail.eventName;
   const selectOptions = useMemo(() => {
     const result = [];
-
     if (itemQuery.data) {
       const groupedInventory = itemQuery.data.data.groupedInventory;
-
       for (const [categoryName, itemGroups] of Object.entries(
         groupedInventory
       )) {
@@ -336,7 +334,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
 
   const gettingItemsInContainer = async (props) => {
     try {
-      console.log(props.item_id);
       const gettingItemsInContainer = await devitrakApi.get(
         `/db_inventory/container-items/${props.item_id}`
       );
@@ -452,7 +449,11 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company: user.companyData.id,
       });
       if (checking.data.receiversInventory.length > 0) {
-        await updateDeviceSetupInEvent({pool: checking.data.receiversInventory, database: props, checking:checking});
+        await updateDeviceSetupInEvent({
+          pool: checking.data.receiversInventory,
+          database: props,
+          checking: checking,
+        });
       }
     } catch (error) {
       return message.error("Failed to add device. Please try again.");
@@ -492,7 +493,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         event_id: event_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,
-        quantity: props.quantity,
+        quantity: assignAllDevices ? String(valueItemSelected.qty) : props.quantity,
         company_id: user.sqlInfo.company_id,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
@@ -502,7 +503,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,
-        quantity: props.quantity,
+        quantity: assignAllDevices ? String(valueItemSelected.qty) : props.quantity,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
       });
@@ -535,7 +536,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           item_group: valueItemSelected.item_group,
           enableAssignFeature: 1,
           serial_number: c.data.items[valueItemSelected.location].start,
-          quantity: Number(data.quantity),
+          quantity: assignAllDevices
+            ? Number(valueItemSelected.qty)
+            : Number(data.quantity),
           category_name: valueItemSelected.category_name,
         }
       );
