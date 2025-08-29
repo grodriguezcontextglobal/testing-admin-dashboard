@@ -5,7 +5,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/Text
 import { DevitrakLogo } from "../../../../../../components/icons/DevitrakLogo";
 import { DevitrakName } from "../../../../../../components/icons/DevitrakName";
 
-const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress = 0, currentStep = "" }) => {
+const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress }) => {
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
 
@@ -71,14 +71,14 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress = 0, 
               This event is being closed. Please wait until all items are
               returned and event is closed.
             </p>
-            {currentStep && (
+            {progress.current !== 100 && (
               <p style={{ ...Subtitle, width: "100%", marginBottom: "0.5rem", fontWeight: "bold" }}>
-                {currentStep}
+                {progress.step} in progress...{progress.current}/{progress.total}
               </p>
             )}
             <Progress 
-              percent={progress} 
-              status={progress === 100 ? "success" : "active"}
+              percent={progress.current} 
+              status={progress.current === 100 ? "success" : "active"}
               strokeColor={{
                 '0%': '#108ee9',
                 '100%': '#87d068',
