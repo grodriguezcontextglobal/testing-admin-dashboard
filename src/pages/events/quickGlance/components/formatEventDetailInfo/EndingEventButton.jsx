@@ -32,10 +32,16 @@ const EndingEventButton = () => {
     const maxSize = 10 * 1024 * 1024; // 10MB limit
     
     if (size > maxSize) {
-      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds limit`);
+      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 10MB limit`);
     }
     
     return size;
+  };
+
+  const calculateOptimalBatchSize = (sampleItem, maxSizeBytes = 10 * 1024 * 1024) => {
+    const sampleSize = new Blob([JSON.stringify(sampleItem)]).size;
+    const estimatedBatchSize = Math.floor(maxSizeBytes * 0.8 / sampleSize); // Use 80% of limit for safety
+    return Math.max(1, Math.min(estimatedBatchSize, 100)); // Min 1, max 100 items per batch
   };
 
   const makeRequestWithRetry = async (apiCall, maxRetries = 3) => {
@@ -56,19 +62,44 @@ const EndingEventButton = () => {
     }
   };
 
-  const processBatch = async (items, batchSize = 50, processingFunction) => {
+  const processBatch = async (items, initialBatchSize = 50, processingFunction) => {
+    if (items.length === 0) return [];
+    
+    let batchSize = initialBatchSize;
     const results = [];
+    
+    // Calculate optimal batch size based on first item
+    if (items.length > 0) {
+      batchSize = calculateOptimalBatchSize(items[0]);
+    }
+    
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      try {
-        checkRequestSize(batch);
-        const batchResult = await processingFunction(batch);
-        results.push(...(Array.isArray(batchResult) ? batchResult : [batchResult]));
-        // Add small delay to prevent overwhelming the server
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error(`Error processing batch ${i / batchSize + 1}:`, error);
-        throw error;
+      let currentBatchSize = batch.length;
+      
+      while (currentBatchSize > 0) {
+        const currentBatch = batch.slice(0, currentBatchSize);
+        
+        try {
+          checkRequestSize(currentBatch);
+          const batchResult = await makeRequestWithRetry(() => processingFunction(currentBatch));
+          results.push(...(Array.isArray(batchResult) ? batchResult : [batchResult]));
+          
+          // Add small delay to prevent overwhelming the server
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          break; // Success, move to next batch
+          
+        } catch (error) {
+          if (error.message.includes('exceeds 10MB limit') && currentBatchSize > 1) {
+            // Reduce batch size and try again
+            currentBatchSize = Math.floor(currentBatchSize / 2);
+            console.warn(`Reducing batch size to ${currentBatchSize} due to size limit`);
+            continue;
+          }
+          
+          console.error(`Error processing batch ${Math.floor(i / batchSize) + 1}:`, error);
+          throw error;
+        }
       }
     }
     return results;
@@ -96,10 +127,32 @@ const EndingEventButton = () => {
       }
     }
     
-    checkRequestSize({ employees: employeesCompany });
-    await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
-      employees: employeesCompany,
-    });
+    const requestData = { employees: employeesCompany };
+    
+    try {
+      checkRequestSize(requestData);
+      await makeRequestWithRetry(() => 
+        devitrakApi.patch(`/company/update-company/${user.companyData.id}`, requestData)
+      );
+    } catch (error) {
+      if (error.message.includes('exceeds 10MB limit')) {
+        // Process employees in batches if the payload is too large
+        const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
+        
+        for (let i = 0; i < employeesCompany.length; i += batchSize) {
+          const batch = employeesCompany.slice(i, i + batchSize);
+          await makeRequestWithRetry(() => 
+            devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
+              employees: batch,
+              batchUpdate: true,
+              batchIndex: Math.floor(i / batchSize)
+            })
+          );
+        }
+      } else {
+        throw error;
+      }
+    }
   };
 
   const inactiveTransactionDocuments = async () => {
@@ -164,12 +217,16 @@ const EndingEventButton = () => {
     const [status, items] = statusGroup;
     const updateTime = formatDate(new Date());
     
-    return await devitrakApi.post("/db_event/update-status-item-based-on-event", {
+    const requestData = {
       status: { [status]: items },
       company_id: user.sqlInfo.company_id,
       event_id: event.sql.event_id,
       update_at: updateTime,
-    });
+    };
+    
+    return await makeRequestWithRetry(() => 
+      devitrakApi.post("/db_event/update-status-item-based-on-event", requestData)
+    );
   };
 
   const updateStatusItemsBeforeReturningItemsToInventory = async () => {
@@ -190,7 +247,12 @@ const EndingEventButton = () => {
       
       // Process each status group with batch processing
       const statusGroups = Object.entries(groupingByStatus);
-      await processBatch(statusGroups, 5, processStatusUpdateBatch);
+      
+      // Calculate optimal batch size for status groups
+      const optimalBatchSize = statusGroups.length > 0 ? 
+        calculateOptimalBatchSize(statusGroups[0]) : 5;
+      
+      await processBatch(statusGroups, optimalBatchSize, processStatusUpdateBatch);
       
     } catch (error) {
       console.error("Error in updating status items:", error);
@@ -202,14 +264,30 @@ const EndingEventButton = () => {
     const updateTime = formatDate(new Date());
     const results = [];
     
-    for (let data of batch) {
-      const result = await devitrakApi.post("/db_event/returning-item", {
-        ...data.itemInfo,
-        status: data.status,
-        update_at: updateTime,
-        company_id: user.sqlInfo.company_id,
-      });
-      results.push(result);
+    // Process items in smaller sub-batches to avoid individual request size limits
+    const subBatchSize = calculateOptimalBatchSize(batch[0] || {});
+    
+    for (let i = 0; i < batch.length; i += subBatchSize) {
+      const subBatch = batch.slice(i, i + subBatchSize);
+      
+      for (let data of subBatch) {
+        const requestData = {
+          ...data.itemInfo,
+          status: data.status,
+          update_at: updateTime,
+          company_id: user.sqlInfo.company_id,
+        };
+        
+        const result = await makeRequestWithRetry(() => 
+          devitrakApi.post("/db_event/returning-item", requestData)
+        );
+        results.push(result);
+      }
+      
+      // Small delay between sub-batches
+      if (i + subBatchSize < batch.length) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
     }
     
     return results;
@@ -240,8 +318,12 @@ const EndingEventButton = () => {
           status: data.status
         }));
         
+        // Calculate optimal batch size
+        const optimalBatchSize = itemsToProcess.length > 0 ? 
+          calculateOptimalBatchSize(itemsToProcess[0]) : 25;
+        
         // Process in batches to avoid large requests
-        await processBatch(itemsToProcess, 25, processInventoryReturnBatch);
+        await processBatch(itemsToProcess, optimalBatchSize, processInventoryReturnBatch);
       }
     } catch (error) {
       console.error("Error in returning items to inventory:", error);
@@ -264,20 +346,36 @@ const EndingEventButton = () => {
     const groupingInventoryByGroupName = groupBy(event.deviceSetup, "group");
     const results = [];
     
-    for (let data of batch) {
-      const result = await devitrakApi.post("/db_record/inserting-record", {
-        email: data.user,
-        serial_number: data.device.serialNumber,
-        status: renderingByConditionTypeof(data.device.status),
-        activity: data.device.status,
-        payment_id: data.paymentIntent,
-        event: event.eventInfoDetail.eventName,
-        item_group: data.device.deviceType,
-        category_name:
-          groupingInventoryByGroupName[data.device.deviceType].at(-1)
-            .category,
-      });
-      results.push(result);
+    // Process records in smaller sub-batches
+    const subBatchSize = calculateOptimalBatchSize(batch[0] || {});
+    
+    for (let i = 0; i < batch.length; i += subBatchSize) {
+      const subBatch = batch.slice(i, i + subBatchSize);
+      
+      for (let data of subBatch) {
+        const requestData = {
+          email: data.user,
+          serial_number: data.device.serialNumber,
+          status: renderingByConditionTypeof(data.device.status),
+          activity: data.device.status,
+          payment_id: data.paymentIntent,
+          event: event.eventInfoDetail.eventName,
+          item_group: data.device.deviceType,
+          category_name:
+            groupingInventoryByGroupName[data.device.deviceType].at(-1)
+              .category,
+        };
+        
+        const result = await makeRequestWithRetry(() => 
+          devitrakApi.post("/db_record/inserting-record", requestData)
+        );
+        results.push(result);
+      }
+      
+      // Small delay between sub-batches
+      if (i + subBatchSize < batch.length) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
     }
     
     return results;
@@ -296,8 +394,12 @@ const EndingEventButton = () => {
       if (retrieveAssignedDevices.data.ok) {
         const dataToStoreAsRecord = retrieveAssignedDevices.data.listOfReceivers;
         
+        // Calculate optimal batch size
+        const optimalBatchSize = dataToStoreAsRecord.length > 0 ? 
+          calculateOptimalBatchSize(dataToStoreAsRecord[0]) : 30;
+        
         // Process records in batches to avoid large requests
-        await processBatch(dataToStoreAsRecord, 30, processRecordBatch);
+        await processBatch(dataToStoreAsRecord, optimalBatchSize, processRecordBatch);
       }
     } catch (error) {
       console.error("Error in adding record of activity:", error);
@@ -377,6 +479,7 @@ const EndingEventButton = () => {
             onConfirm={() => updatingItemInDB()}
             overlayInnerStyle={{
               display: openEndingEventModal ? "none" : "flex",
+              zIndex: openEndingEventModal ? 100 : 10,
             }}
             className="popconfirm-event-end"
           >
