@@ -78,7 +78,7 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress }) =>
             )}
             <Progress 
               percent={progress.current} 
-              status={progress.current === 100 ? "success" : "active"}
+              status={progress.current === progress.total ? "success" : "active"}
               strokeColor={{
                 '0%': '#108ee9',
                 '100%': '#87d068',
