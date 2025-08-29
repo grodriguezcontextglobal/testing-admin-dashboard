@@ -11,20 +11,112 @@ import { formatDate } from "../../../../../components/utils/dateFormat";
 import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+
 const ModalToDisplayFunctionInProgress = lazy(() =>
   import("./endEvent/ModalToDisplayFunctionInProgress")
 );
+
 const EndEventButton = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [openEndingEventModal, setOpenEndingEventModal] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
   const dispatch = useDispatch();
   const staffRemoveAccessRef = useRef([]);
+
+  // Batch processing utilities
+  const checkRequestSize = (data) => {
+    const size = new Blob([JSON.stringify(data)]).size;
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    
+    if (size > maxSize) {
+      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 10MB limit`);
+    }
+    
+    return size;
+  };
+
+  const calculateOptimalBatchSize = (sampleItem, maxSizeBytes = 10 * 1024 * 1024) => {
+    if (!sampleItem) return 50; // Default batch size
+    
+    const sampleSize = new Blob([JSON.stringify(sampleItem)]).size;
+    const estimatedBatchSize = Math.floor(maxSizeBytes * 0.8 / sampleSize); // Use 80% of limit for safety
+    return Math.max(1, Math.min(estimatedBatchSize, 100)); // Min 1, max 100 items per batch
+  };
+
+  const makeRequestWithRetry = async (apiCall, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await apiCall();
+      } catch (error) {
+        if (error.response?.status === 413) {
+          if (attempt === maxRetries) {
+            throw new Error("Request too large after retries. Please contact support.");
+          }
+          // Wait before retry with exponential backoff
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        throw error; // Re-throw non-413 errors immediately
+      }
+    }
+  };
+
+  const processBatch = async (items, initialBatchSize = 50, processingFunction, progressCallback) => {
+    if (!items || items.length === 0) return [];
+    
+    let batchSize = initialBatchSize;
+    const results = [];
+    
+    // Calculate optimal batch size based on first item
+    if (items.length > 0) {
+      batchSize = calculateOptimalBatchSize(items[0]);
+    }
+    
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      let currentBatchSize = batch.length;
+      
+      while (currentBatchSize > 0) {
+        const currentBatch = batch.slice(0, currentBatchSize);
+        
+        try {
+          checkRequestSize(currentBatch);
+          const batchResult = await makeRequestWithRetry(() => processingFunction(currentBatch));
+          results.push(...(Array.isArray(batchResult) ? batchResult : [batchResult]));
+          
+          // Update progress if callback provided
+          if (progressCallback) {
+            progressCallback(i + currentBatchSize, items.length);
+          }
+          
+          // Add small delay to prevent overwhelming the server
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          break; // Success, move to next batch
+          
+        } catch (error) {
+          if (error.message.includes('exceeds 10MB limit') && currentBatchSize > 1) {
+            // Reduce batch size and try again
+            currentBatchSize = Math.floor(currentBatchSize / 2);
+            console.warn(`Reducing batch size to ${currentBatchSize} due to size limit`);
+            continue;
+          }
+          
+          console.error(`Error processing batch ${Math.floor(i / batchSize) + 1}:`, error);
+          throw error;
+        }
+      }
+    }
+    return results;
+  };
+
+  // Query definitions with pagination support
   const listOfInventoryQuery = useQuery({
     queryKey: ["listOfInventory"],
     queryFn: () => devitrakApi.get("/inventory/list-inventories"),
     refetchOnMount: false,
   });
+
   const listOfItemsInInventoryQuery = useQuery({
     queryKey: ["listOfItemsInInventory"],
     queryFn: () =>
@@ -34,6 +126,7 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
+
   const itemsInPoolQuery = useQuery({
     queryKey: ["listOfItemsInInventoryPOST"],
     queryFn: () =>
@@ -43,6 +136,7 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
+
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
@@ -51,6 +145,7 @@ const EndEventButton = () => {
       ),
     refetchOnMount: false,
   });
+
   const transactionsRecordQuery = useQuery({
     queryKey: ["transactionList"],
     queryFn: () =>
@@ -60,6 +155,7 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
+
   const sqlDBCompanyStockQuery = useQuery({
     queryKey: ["allDevicesOutOfCompanyStock"],
     queryFn: () =>
@@ -69,6 +165,7 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
+
   const sqlDBInventoryEventQuery = useQuery({
     queryKey: ["allInventoryOfSpecificEvent"],
     queryFn: () =>
@@ -78,6 +175,7 @@ const EndEventButton = () => {
       }),
     refetchOnMount: false,
   });
+
   let trigger = false;
 
   useEffect(() => {
@@ -100,12 +198,14 @@ const EndEventButton = () => {
       message: msg,
     });
   };
+
   const removingAccessFromStaffMemberOnly = async () => {
     const checkCompanyUserSet = user.companyData.employees;
     let employeesCompany = [...checkCompanyUserSet];
     const adminStaff = event.staff.adminUser ?? [];
     const headsetStaff = event.staff.headsetAttendees ?? [];
     const employeesEvent = [...adminStaff, ...headsetStaff];
+    
     for (let data of employeesEvent) {
       const checkRole = employeesCompany.findIndex(
         (element) => element.user === data.email
@@ -124,28 +224,52 @@ const EndEventButton = () => {
         };
       }
     }
-    await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
-      employees: employeesCompany,
-    });
+    
+    const requestData = { employees: employeesCompany };
+    
+    try {
+      checkRequestSize(requestData);
+      await makeRequestWithRetry(() => 
+        devitrakApi.patch(`/company/update-company/${user.companyData.id}`, requestData)
+      );
+    } catch (error) {
+      if (error.message.includes('exceeds 10MB limit')) {
+        // Process employees in batches if the payload is too large
+        const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
+        
+        for (let i = 0; i < employeesCompany.length; i += batchSize) {
+          const batch = employeesCompany.slice(i, i + batchSize);
+          await makeRequestWithRetry(() => 
+            devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
+              employees: batch,
+              batchUpdate: true,
+              batchIndex: Math.floor(i / batchSize)
+            })
+          );
+        }
+      } else {
+        throw error;
+      }
+    }
+    
     setOpenEndingEventModal(false);
     return window.location.reload();
   };
 
-  const groupingByCompany = groupBy(
-    listOfInventoryQuery?.data?.data?.listOfItems,
-    "company"
-  );
+  // const groupingByCompany = groupBy(
+  //   listOfInventoryQuery?.data?.data?.listOfItems,
+  //   "company"
+  // );
 
-  const findInventoryStored = () => {
-    if (groupingByCompany[user.company]) {
-      const groupingByEvent = groupBy(groupingByCompany[user.company], "event");
-      if (groupingByEvent[event.eventInfoDetail.eventName]) {
-        return groupingByEvent[event.eventInfoDetail.eventName];
-      }
-    }
-    return [];
-  };
-  findInventoryStored();
+  // const findInventoryStored = () => {
+  //   if (groupingByCompany[user.company]) {
+  //     const groupingByEvent = groupBy(groupingByCompany[user.company], "event");
+  //     if (groupingByEvent[event.eventInfoDetail.eventName]) {
+  //       return groupingByEvent[event.eventInfoDetail.eventName];
+  //     }
+  //   }
+  //   return [];
+  // };
 
   const findItemsInPoolEvent = () => {
     const listOfItemsInPoolQuery =
@@ -155,12 +279,11 @@ const EndEventButton = () => {
     }
     return [];
   };
-  findItemsInPoolEvent();
 
   const sqlDeviceFinalStatusAtEventFinished = async () => {
-    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
-      ?.receiversInventory;
-
+    setProgress(prev => ({ ...prev, step: "Processing device status updates..." }));
+    
+    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data?.receiversInventory;
     const dataToIterate = checkTypeFetchResponse(listOfDevicesInEvent);
     const groupingDevicesFromNoSQL = groupBy(dataToIterate, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
@@ -168,18 +291,58 @@ const EndEventButton = () => {
     const companyId = user.sqlInfo.company_id;
     const update_at = formatDate(new Date());
 
-    await devitrakApi.post("/db_event/device-final-status-refactored", {
-      groupingDevicesFromNoSQL: JSON.stringify(groupingDevicesFromNoSQL),
-      allInventoryOfEvent: JSON.stringify(allInventoryOfEvent),
-      eventId: eventId,
-      update_at: update_at,
-    });
-    await devitrakApi.post("/db_event/returning-item-refactored", {
-      groupingDevicesFromNoSQL: JSON.stringify(groupingDevicesFromNoSQL),
-      allInventoryOfEvent: JSON.stringify(allInventoryOfEvent),
-      companyId: companyId,
-      update_at: update_at,
-    });
+    // Process device status updates in batches
+    const deviceEntries = Object.entries(groupingDevicesFromNoSQL);
+    const inventoryEntries = Array.isArray(allInventoryOfEvent) ? allInventoryOfEvent : [];
+    
+    // Split large datasets into manageable chunks
+    const processDeviceStatusBatch = async (batch) => {
+      const batchGrouping = {};
+      batch.forEach(([key, value]) => {
+        batchGrouping[key] = value;
+      });
+      
+      return await makeRequestWithRetry(() => 
+        devitrakApi.post("/db_event/device-final-status-refactored", {
+          groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
+          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 100)), // Limit inventory batch
+          eventId: eventId,
+          update_at: update_at,
+        })
+      );
+    };
+
+    const processReturningItemBatch = async (batch) => {
+      const batchGrouping = {};
+      batch.forEach(([key, value]) => {
+        batchGrouping[key] = value;
+      });
+      
+      return await makeRequestWithRetry(() => 
+        devitrakApi.post("/db_event/returning-item-refactored", {
+          groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
+          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 100)), // Limit inventory batch
+          companyId: companyId,
+          update_at: update_at,
+        })
+      );
+    };
+
+    // Process device status updates
+    await processBatch(
+      deviceEntries, 
+      calculateOptimalBatchSize(deviceEntries[0]), 
+      processDeviceStatusBatch,
+      (current, total) => setProgress(prev => ({ ...prev, current, total }))
+    );
+
+    // Process returning items
+    await processBatch(
+      deviceEntries, 
+      calculateOptimalBatchSize(deviceEntries[0]), 
+      processReturningItemBatch,
+      (current, total) => setProgress(prev => ({ ...prev, current, total }))
+    );
   };
 
   const groupingItemsByCompany = groupBy(
@@ -197,7 +360,6 @@ const EndEventButton = () => {
     }
     return [];
   };
-  itemsPerCompany();
 
   const checkItemsInUseToUpdateInventory = () => {
     const result = {};
@@ -212,7 +374,6 @@ const EndEventButton = () => {
     }
     return Object.entries(result);
   };
-  checkItemsInUseToUpdateInventory();
 
   const returningItemsInInventoryAfterEndingEvent = () => {
     const totalResult = new Set();
@@ -239,18 +400,29 @@ const EndEventButton = () => {
 
   const inactiveEventAfterEndIt = async () => {
     try {
+      setProgress(prev => ({ ...prev, step: "Deactivating event..." }));
+      
       const removingTemporalStaff = [...staffRemoveAccessRef.current];
       const allStaffEvent = [...event.staff.headsetAttendees];
       const result = new Set();
+      
       for (const data of allStaffEvent) {
         if (!removingTemporalStaff.includes(data.email)) {
           result.add(data);
         }
       }
-      const resp = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
+      
+      const requestData = {
         active: false,
         "staff.headsetAttendees": Array.from(result),
-      });
+      };
+      
+      checkRequestSize(requestData);
+      
+      const resp = await makeRequestWithRetry(() => 
+        devitrakApi.patch(`/event/edit-event/${event.id}`, requestData)
+      );
+      
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
         return openNotificationWithIcon(
@@ -265,61 +437,139 @@ const EndEventButton = () => {
 
   const addingRecordOfActivityInEvent = async () => {
     try {
+      setProgress(prev => ({ ...prev, step: "Adding activity records..." }));
+      
       const groupingInventoryByGroupName = groupBy(event.deviceSetup, "group");
-      const dataToStoreAsRecord =
-        transactionsRecordQuery?.data?.data?.listOfReceivers;
-      const event = event.eventInfoDetail.eventName;
-      await devitrakApi.post("/db_record/inserting-record-refactored", {
+      const dataToStoreAsRecord = transactionsRecordQuery?.data?.data?.listOfReceivers;
+      const eventName = event.eventInfoDetail.eventName;
+      
+      // Check if the combined data exceeds size limit
+      const requestData = {
         groupingInventoryByGroupName,
         dataToStoreAsRecord,
-        event,
-      });
+        event: eventName,
+      };
+      
+      try {
+        checkRequestSize(requestData);
+        await makeRequestWithRetry(() => 
+          devitrakApi.post("/db_record/inserting-record-refactored", requestData)
+        );
+      } catch (error) {
+        if (error.message.includes('exceeds 10MB limit')) {
+          // Process records in batches
+          const processRecordBatch = async (batch) => {
+            return await makeRequestWithRetry(() => 
+              devitrakApi.post("/db_record/inserting-record-refactored", {
+                groupingInventoryByGroupName,
+                dataToStoreAsRecord: batch,
+                event: eventName,
+              })
+            );
+          };
+          
+          await processBatch(
+            dataToStoreAsRecord || [], 
+            calculateOptimalBatchSize(dataToStoreAsRecord?.[0]), 
+            processRecordBatch,
+            (current, total) => setProgress(prev => ({ ...prev, current, total }))
+          );
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
+      console.error("Error in adding record of activity:", error);
       return null;
     }
   };
 
   const inactiveTransactionDocuments = async () => {
-    const updatingTransactionDocuments = await devitrakApi.post(
-      "/transaction/update-multiple-documents",
-      {
-        find: {
-          eventSelected: event.eventInfoDetail.eventName,
-          company: user.companyData.id,
-        },
-        update: {
-          active: false,
-        },
-      }
+    setProgress(prev => ({ ...prev, step: "Updating transaction documents..." }));
+    
+    const requestData = {
+      find: {
+        eventSelected: event.eventInfoDetail.eventName,
+        company: user.companyData.id,
+      },
+      update: {
+        active: false,
+      },
+    };
+    
+    checkRequestSize(requestData);
+    
+    const updatingTransactionDocuments = await makeRequestWithRetry(() => 
+      devitrakApi.post("/transaction/update-multiple-documents", requestData)
     );
+    
     if (updatingTransactionDocuments.data.ok) {
       return updatingTransactionDocuments.data.list;
     }
   };
 
-  const updatingItemInDB = async () => {
-    setOpenEndingEventModal(true);
-    if (returningItemsInInventoryAfterEndingEvent()?.length > 0) {
-      for (let data of returningItemsInInventoryAfterEndingEvent()) {
+  const updateInventoryItemsBatch = async (items) => {
+    const processItemBatch = async (batch) => {
+      const results = [];
+      for (let data of batch) {
         if (itemsPerCompany()[data.group]) {
           const newQty = `${
             Number(itemsPerCompany()[data.group].at(-1).quantity) +
             Number(data.quantity)
           }`;
-          await devitrakApi.patch(
-            `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
-            { quantity: newQty }
+          
+          const result = await makeRequestWithRetry(() => 
+            devitrakApi.patch(
+              `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
+              { quantity: newQty }
+            )
           );
+          results.push(result);
         }
       }
+      return results;
+    };
+    
+    await processBatch(
+      items, 
+      calculateOptimalBatchSize(items[0]), 
+      processItemBatch,
+      (current, total) => setProgress(prev => ({ ...prev, current, total }))
+    );
+  };
+
+  const updatingItemInDB = async () => {
+    setOpenEndingEventModal(true);
+    setProgress({ current: 0, total: 0, step: "Starting event closure..." });
+
+    try {
+      // Update inventory items in batches
+      const itemsToUpdate = returningItemsInInventoryAfterEndingEvent();
+      if (itemsToUpdate?.length > 0) {
+        setProgress(prev => ({ ...prev, step: "Updating inventory quantities..." }));
+        await updateInventoryItemsBatch(itemsToUpdate);
+      }
+
+      // Process SQL device status updates
+      await sqlDeviceFinalStatusAtEventFinished();
+
+      // Add activity records
+      await addingRecordOfActivityInEvent();
+
+      // Deactivate event
+      await inactiveEventAfterEndIt();
+
+      // Update transaction documents
+      await inactiveTransactionDocuments();
+
+      // Remove staff access
+      setProgress(prev => ({ ...prev, step: "Removing staff access..." }));
+      return await removingAccessFromStaffMemberOnly();
+      
+    } catch (error) {
+      openNotificationWithIcon("error", `Event closure failed: ${error.message}`);
+      setOpenEndingEventModal(false);
     }
-    await sqlDeviceFinalStatusAtEventFinished();
-    await addingRecordOfActivityInEvent();
-    await inactiveEventAfterEndIt();
-    await inactiveTransactionDocuments();
-    // await removingAccessFromStaffMemberOnly();
-    // return await releasingPendingDepositTransaction();
-    return await removingAccessFromStaffMemberOnly();
   };
 
   return (
@@ -350,29 +600,17 @@ const EndEventButton = () => {
           lg={12}
         >
           <BlueButtonConfirmationComponent 
-          title={"End event"}
-          func={updatingItemInDB}
-          confirmationTitle="Are you sure? This action can not be reversed."
-          styles={{ width:"100%"}}
+            title={"End event"}
+            func={updatingItemInDB}
+            confirmationTitle="Are you sure? This action can not be reversed."
+            styles={{ width:"100%"}}
           />
-          {/* <Popconfirm
-            // disabled={!event.active}
-            title="Are you sure? This action can not be reversed."
-            onConfirm={() => updatingItemInDB()}
-            overlayInnerStyle={{
-              display: openEndingEventModal ? "none" : "flex",
-            }}
-            className="popconfirm-event-end"
-          >
-            <Button style={{...BlueButton, width:"100%"}}>
-              <p style={{ ...BlueButtonText, width:"100%"}}>End event</p>
-            </Button>
-          </Popconfirm> */}
         </Grid>
       </Grid>
       {openEndingEventModal && (
         <ModalToDisplayFunctionInProgress
           openEndingEventModal={openEndingEventModal}
+          progress={progress}
         />
       )}
     </Suspense>
