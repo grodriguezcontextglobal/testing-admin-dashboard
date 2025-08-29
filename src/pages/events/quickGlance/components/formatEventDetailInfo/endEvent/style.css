@@ -1,0 +1,7 @@
+.modal-event-end_ant_design {
+  z-index: 1000;
+  top: 5dvh;
+  background-color: var(--basewhite);
+  border-radius: 8px;
+  padding: 24px;
+}

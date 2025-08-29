@@ -4,8 +4,11 @@ import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
 import { DevitrakLogo } from "../../../../../../components/icons/DevitrakLogo";
 import { DevitrakName } from "../../../../../../components/icons/DevitrakName";
-
-const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress }) => {
+import "./style.css";
+const ModalToDisplayFunctionInProgress = ({
+  openEndingEventModal,
+  progress,
+}) => {
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
 
@@ -18,13 +21,9 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress }) =>
       width={innerWidth - 200}
       centered
       maskClosable={false}
+      className="modal-event-end_ant_design"
       style={{
-        top: "5dvh",
-        backgroundColor: "var(--basewhite)",
-        borderRadius: "8px",
-        padding: "24px",
         height: innerHeight - 450,
-        zIndex: 1000,
       }}
     >
       <div
@@ -72,16 +71,26 @@ const ModalToDisplayFunctionInProgress = ({ openEndingEventModal, progress }) =>
               returned and event is closed.
             </p>
             {progress.current !== 100 && (
-              <p style={{ ...Subtitle, width: "100%", marginBottom: "0.5rem", fontWeight: "bold" }}>
-                {progress.step} in progress...{progress.current}/{progress.total}
+              <p
+                style={{
+                  ...Subtitle,
+                  width: "100%",
+                  marginBottom: "0.5rem",
+                  fontWeight: "bold",
+                }}
+              >
+                {progress.step} in progress...{progress.current}/
+                {progress.total}
               </p>
             )}
-            <Progress 
-              percent={progress.current} 
-              status={progress.current === progress.total ? "success" : "active"}
+            <Progress
+              percent={progress.current}
+              status={
+                progress.current === progress.total ? "success" : "active"
+              }
               strokeColor={{
-                '0%': '#108ee9',
-                '100%': '#87d068',
+                "0%": "#108ee9",
+                "100%": "#87d068",
               }}
             />
           </div>
