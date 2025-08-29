@@ -24,24 +24,24 @@ const EndEventButton = () => {
   const dispatch = useDispatch();
   const staffRemoveAccessRef = useRef([]);
 
-  // Batch processing utilities
+  // Batch processing utilities - Updated to 30MB limit
   const checkRequestSize = (data) => {
     const size = new Blob([JSON.stringify(data)]).size;
-    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    const maxSize = 30 * 1024 * 1024; // 30MB limit (increased from 10MB)
     
     if (size > maxSize) {
-      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 10MB limit`);
+      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 30MB limit`);
     }
     
     return size;
   };
 
-  const calculateOptimalBatchSize = (sampleItem, maxSizeBytes = 10 * 1024 * 1024) => {
-    if (!sampleItem) return 50; // Default batch size
+  const calculateOptimalBatchSize = (sampleItem, maxSizeBytes = 30 * 1024 * 1024) => {
+    if (!sampleItem) return 150; // Increased default batch size from 50 to 150
     
     const sampleSize = new Blob([JSON.stringify(sampleItem)]).size;
     const estimatedBatchSize = Math.floor(maxSizeBytes * 0.8 / sampleSize); // Use 80% of limit for safety
-    return Math.max(1, Math.min(estimatedBatchSize, 100)); // Min 1, max 100 items per batch
+    return Math.max(1, Math.min(estimatedBatchSize, 300)); // Increased max from 100 to 300 items per batch
   };
 
   const makeRequestWithRetry = async (apiCall, maxRetries = 3) => {
@@ -62,10 +62,10 @@ const EndEventButton = () => {
     }
   };
 
-  const processBatch = async (items, initialBatchSize = 50, processingFunction, progressCallback) => {
+  const processBatch = async (items, initialBatchSize = 150, processingFunction, progressCallback) => {
     if (!items || items.length === 0) return [];
     
-    let batchSize = initialBatchSize;
+    let batchSize = initialBatchSize; // Increased from 50 to 150
     const results = [];
     
     // Calculate optimal batch size based on first item
@@ -95,7 +95,7 @@ const EndEventButton = () => {
           break; // Success, move to next batch
           
         } catch (error) {
-          if (error.message.includes('exceeds 10MB limit') && currentBatchSize > 1) {
+          if (error.message.includes('exceeds 30MB limit') && currentBatchSize > 1) {
             // Reduce batch size and try again
             currentBatchSize = Math.floor(currentBatchSize / 2);
             console.warn(`Reducing batch size to ${currentBatchSize} due to size limit`);
@@ -233,7 +233,7 @@ const EndEventButton = () => {
         devitrakApi.patch(`/company/update-company/${user.companyData.id}`, requestData)
       );
     } catch (error) {
-      if (error.message.includes('exceeds 10MB limit')) {
+      if (error.message.includes('exceeds 30MB limit')) {
         // Process employees in batches if the payload is too large
         const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
         
@@ -295,7 +295,7 @@ const EndEventButton = () => {
     const deviceEntries = Object.entries(groupingDevicesFromNoSQL);
     const inventoryEntries = Array.isArray(allInventoryOfEvent) ? allInventoryOfEvent : [];
     
-    // Split large datasets into manageable chunks
+    // Split large datasets into manageable chunks - increased inventory batch size
     const processDeviceStatusBatch = async (batch) => {
       const batchGrouping = {};
       batch.forEach(([key, value]) => {
@@ -305,7 +305,7 @@ const EndEventButton = () => {
       return await makeRequestWithRetry(() => 
         devitrakApi.post("/db_event/device-final-status-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
-          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 100)), // Limit inventory batch
+          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 300)), // Increased from 100 to 300
           eventId: eventId,
           update_at: update_at,
         })
@@ -321,7 +321,7 @@ const EndEventButton = () => {
       return await makeRequestWithRetry(() => 
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
-          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 100)), // Limit inventory batch
+          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 300)), // Increased from 100 to 300
           companyId: companyId,
           update_at: update_at,
         })
@@ -456,7 +456,7 @@ const EndEventButton = () => {
           devitrakApi.post("/db_record/inserting-record-refactored", requestData)
         );
       } catch (error) {
-        if (error.message.includes('exceeds 10MB limit')) {
+        if (error.message.includes('exceeds 30MB limit')) {
           // Process records in batches
           const processRecordBatch = async (batch) => {
             return await makeRequestWithRetry(() => 
