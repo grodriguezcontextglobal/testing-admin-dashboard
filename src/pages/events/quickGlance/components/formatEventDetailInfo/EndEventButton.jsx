@@ -253,7 +253,8 @@ const EndEventButton = () => {
     }
     
     setOpenEndingEventModal(false);
-    return window.location.reload();
+    // return window.location.reload();
+    return alert("Event is closed. Inventory is updated!");
   };
 
   // const groupingByCompany = groupBy(
