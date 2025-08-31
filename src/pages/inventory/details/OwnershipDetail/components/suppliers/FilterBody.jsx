@@ -7,7 +7,7 @@ import { useState } from "react";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 
-const FilterBody = ({ setSearchedValueItem, setValue }) => {
+const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
   const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
     useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState(null);
@@ -63,6 +63,7 @@ const FilterBody = ({ setSearchedValueItem, setValue }) => {
             padding: "5px 5px 5px 0px",
           }}
           supplier_id={selectedSupplierId}
+          data={resultedData}
         />
       )}
     </div>
