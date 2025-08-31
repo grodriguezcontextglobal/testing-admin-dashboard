@@ -1,19 +1,17 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { Button, Select } from "antd";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
+import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import { PlusIcon } from "../../../../../components/icons/PlusIcon";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
+import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import Services from "../extra/Services";
-import SelectedItemsRendered from "./SelectedItemsRendered";
-import NoMerchantService from "./NoMerchantService";
 import MerchantService from "./MerchantService";
-import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import NoMerchantService from "./NoMerchantService";
+import SelectedItemsRendered from "./SelectedItemsRendered";
 
 const MainBody = ({
   AddingEventCreated,
@@ -219,21 +217,13 @@ const MainBody = ({
         range of serial numbers starting with a serial number base, to register
         the new devices in your inventory.
       </Typography>
-      <Button
-        // disabled
-        onClick={() =>
-          setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-        }
-        style={{
-          ...LightBlueButton,
-          width: "fit-content",
-          margin: "1rem auto",
-        }}
-      >
-        <Typography textTransform="none" style={{ ...LightBlueButtonText,  ...CenteringGrid }}>
-          <PlusIcon /> Create a new category or group
-        </Typography>
-      </Button>
+      <LightBlueButtonComponent
+      title={"Add new category or group"}
+      buttonType="button"
+      func={() => setDisplayFormToCreateCategory(!displayFormToCreateCategory)}
+      styles={{width:"100%", margin: "1rem auto"}}
+      icon={<RectangleBluePlusIcon />}
+      />
       {displayFormToCreateCategory && (
         <FormDeviceTrackingMethod
           // existingData={optionsToRenderInSelector()}
