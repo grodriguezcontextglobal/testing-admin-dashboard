@@ -19,9 +19,9 @@ const BlueButtonConfirmationComponent = ({
         loading={loadingState}
         htmlType={buttonType}
         style={{ ...styles }}
-        className="blueButton"
+        className="customized__blueButton"
       >
-        <p className="blueButtonText" style={{ ...titleStyles }}>
+        <p className="customized__blueButtonText" style={{ ...titleStyles }}>
           {icon && icon} {title}
         </p>
       </Button>

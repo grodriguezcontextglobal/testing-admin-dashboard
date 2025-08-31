@@ -18,9 +18,9 @@ const GrayButtonComponent = ({
       htmlType={buttonType}
       onClick={func}
       style={{ ...styles }}
-      className="grayButton"
+      className="customized__grayButton"
     >
-      <p className="grayButtonText" style={{ ...titleStyles }}>
+      <p className="customized__grayButtonText" style={{ ...titleStyles }}>
         {icon && icon} {title}
       </p>
     </Button>

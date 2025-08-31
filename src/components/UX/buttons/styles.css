@@ -1,4 +1,5 @@
-.blueButton {
+
+.customized__blueButton {
   width: fit-content;
   display: flex;
   align-self: stretch;
@@ -10,12 +11,13 @@
   transition: all 0.3s ease;
 }
 
-.blueButton:hover {
+/* .customized__blueButton:hover {
   background: var(--basewhite, #FFF);
   color: var(--bluedark600, #155eef);
-}
+  border: 1px solid var(--bluedark600, #155eef);
+} */
 
-.blueButtonText {
+.customized__blueButtonText {
   text-transform: none;
   color: var(--basewhite, #FFF);
   font-size: 14px;
@@ -29,9 +31,9 @@
   transition: all 0.3s ease;
 }
 
-.blueButton:hover .blueButtonText {
+/* .customized__blueButton:hover .blueButtonText {
   color: var(--bluedark600, #155eef);
-}
+} */
 
 .centeringGrid {
   display: flex;
@@ -42,8 +44,8 @@
 
 /* Converted styles from global folder */
 
-/* DangerButton */
-.dangerButton {
+/*DangerButton */
+.customized__dangerButton {
   width: fit-content;
   display: flex;
   justify-content: center;
@@ -57,13 +59,14 @@
   transition: all 0.3s ease;
 }
 
-.dangerButton:hover {
+/* .customized__dangerButton:hover {
   background-color: var(--basewhite, #FFF);
-  color: var(--danger-action);
-}
+  color: var(--danger-action,#b42318);
+  border: 1px solid var(--danger-action, #b42318);
+} */
 
 /* DangerButtonText */
-.dangerButtonText {
+.customized__dangerButtonText {
   font-family: Inter;
   font-size: 14px;
   font-style: normal;
@@ -73,12 +76,12 @@
   transition: all 0.3s ease;
 }
 
-.dangerButton:hover .dangerButtonText {
-  color: var(--danger-action);
+.customized__dangerButton:hover .dangerButtonText {
+  color: var(--danger-action, #b42318);
 }
 
 /* GrayButton */
-.grayButton {
+.customized__grayButton {
   width: fit-content;
   display: flex;
   align-items: flex-start;
@@ -91,14 +94,14 @@
   transition: all 0.3s ease;
 }
 
-.grayButton:hover {
+.customized__grayButton:hover {
   background: #344054;
-  /* //var(--gray-300, #D0D5DD); */
-  color:var(--basewhite, #FFF);
+  color:#344054;
+  border: 1px solid var(--gray300, #D0D5DD);
 }
 
 /* GrayButtonText */
-.grayButtonText {
+.customized__grayButtonText {
   color: #344054;
   font-size: 14px;
   font-weight: 600;
@@ -111,8 +114,12 @@
   transition: all 0.3s ease;
 }
 
+.customized__grayButton:hover .grayButtonText {
+  color: var(--basewhite, #FFF);
+}
+
 /* LightBlueButton */
-.lightBlueButton {
+.customized__lightBlueButton {
   width: fit-content;
   display: flex;
   align-items: flex-start;
@@ -125,13 +132,13 @@
   transition: all 0.3s ease;
 }
 
-.lightBlueButton:hover {
+.customized__lightBlueButton:hover {
   background: var(--basewhite, #FFF);
   border: 1px solid var(--Blue-dark-100, #D1E0FF);
 }
 
 /* LightBlueButtonText */
-.lightBlueButtonText {
+.customized__lightBlueButtonText {
   color: var(--Blue-dark-800, #0040C1);
   font-size: 14px;
   font-weight: 600;
@@ -144,6 +151,9 @@
   transition: all 0.3s ease;
 }
 
+.customized__lightBlueButton:hover .lightBlueButtonText {
+  color: var(--Blue-dark-800, #0040C1);
+}
 /* TextFontSize14LineHeight20 */
 .textFontSize14LineHeight20 {
   text-transform: none;

@@ -18,9 +18,9 @@ const LightBlueButtonComponent = ({
       htmlType={buttonType}
       onClick={func}
       style={{ ...styles }}
-      className="lightBlueButton"
+      className="customized__lightBlueButton"
     >
-      <p className="lightBlueButtonText" style={{ ...titleStyles }}>
+      <p className="customized__lightBlueButtonText" style={{ ...titleStyles }}>
         {icon && icon} {title}
       </p>
     </Button>

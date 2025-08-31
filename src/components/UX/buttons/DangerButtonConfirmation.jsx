@@ -19,9 +19,9 @@ const DangerButtonConfirmationComponent = ({
         loading={loadingState}
         htmlType={buttonType}
         style={{ ...styles }}
-        className="dangerButton"
+        className="customized__dangerButton"
       >
-        <p className="dangerButtonText" style={{ ...titleStyles }}>
+        <p className="customized__dangerButtonText" style={{ ...titleStyles }}>
           {icon && icon} {title}
         </p>
       </Button>
