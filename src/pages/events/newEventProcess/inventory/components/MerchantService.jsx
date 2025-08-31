@@ -1,7 +1,3 @@
-import { Button, Checkbox } from "antd";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import {
   Grid,
   InputAdornment,
@@ -9,10 +5,12 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Checkbox } from "antd";
 import { useForm } from "react-hook-form";
+import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const MerchantService = ({
   assignAllDevices,
@@ -78,13 +76,14 @@ const MerchantService = ({
           </InputLabel>
           <OutlinedInput
             disabled={assignAllDevices}
-            {...register("quantity")}
+            {...register("quantity", { required: true})}
             style={{
               ...OutlinedInputStyle,
               width: "100%",
             }}
             placeholder="Enter quantity needed."
             fullWidth
+            required={true}
           />
         </Grid>
         <Grid
@@ -105,7 +104,7 @@ const MerchantService = ({
             </Typography>
           </InputLabel>
           <OutlinedInput
-            {...register("deposit")}
+            {...register("deposit", { required: true})}
             style={{
               ...OutlinedInputStyle,
               width: "100%",
@@ -113,6 +112,7 @@ const MerchantService = ({
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
             placeholder="Enter deposit needed for this item."
             fullWidth
+            required
           />
         </Grid>
       </Grid>
@@ -129,19 +129,13 @@ const MerchantService = ({
         md={12}
         lg={12}
       >
-        <Button
-          htmlType="submit"
-          style={{
-            ...LightBlueButton,
-            ...CenteringGrid,
-            width: "100%",
-          }}
-        >
-          <Typography textTransform="none" style={LightBlueButtonText}>
-            <RectangleBluePlusIcon />
-            &nbsp; Add item
-          </Typography>
-        </Button>
+        <LightBlueButtonComponent
+        buttonType="button"
+        func={() => handleSubmit(handleAddingNewItemToDeviceSetupEvent)()}
+        title={"Add item"}
+        styles={{width:"fit-content"}}
+        icon={<RectangleBluePlusIcon />}
+        />
       </Grid>
     </form>
   );
