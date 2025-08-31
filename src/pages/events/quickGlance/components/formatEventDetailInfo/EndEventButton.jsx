@@ -257,21 +257,6 @@ const EndEventButton = () => {
     return alert("Event is closed. Inventory is updated!");
   };
 
-  // const groupingByCompany = groupBy(
-  //   listOfInventoryQuery?.data?.data?.listOfItems,
-  //   "company"
-  // );
-
-  // const findInventoryStored = () => {
-  //   if (groupingByCompany[user.company]) {
-  //     const groupingByEvent = groupBy(groupingByCompany[user.company], "event");
-  //     if (groupingByEvent[event.eventInfoDetail.eventName]) {
-  //       return groupingByEvent[event.eventInfoDetail.eventName];
-  //     }
-  //   }
-  //   return [];
-  // };
-
   const findItemsInPoolEvent = () => {
     const listOfItemsInPoolQuery =
       itemsInPoolQuery?.data?.data?.receiversInventory;
@@ -291,59 +276,117 @@ const EndEventButton = () => {
     const eventId = event.sql.event_id;
     const companyId = user.sqlInfo.company_id;
     const update_at = formatDate(new Date());
-
+  
     // Process device status updates in batches
     const deviceEntries = Object.entries(groupingDevicesFromNoSQL);
     const inventoryEntries = Array.isArray(allInventoryOfEvent) ? allInventoryOfEvent : [];
     
-    // Split large datasets into manageable chunks - increased inventory batch size
-    const processDeviceStatusBatch = async (batch) => {
+    // Calculate optimal batch sizes for both device and inventory data
+    const deviceBatchSize = calculateOptimalBatchSize(deviceEntries[0]);
+    const inventoryBatchSize = calculateOptimalBatchSize(inventoryEntries[0]);
+    
+    // Process device status updates with dynamic inventory batching
+    const processDeviceStatusBatch = async (deviceBatch, inventoryBatchStart = 0) => {
       const batchGrouping = {};
-      batch.forEach(([key, value]) => {
+      deviceBatch.forEach(([key, value]) => {
         batchGrouping[key] = value;
       });
       
-      return await makeRequestWithRetry(() => 
+      // Get the appropriate inventory slice for this batch
+      const inventorySlice = inventoryEntries.slice(inventoryBatchStart, inventoryBatchStart + inventoryBatchSize);
+      
+      return await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/device-final-status-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
-          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 300)), // Increased from 100 to 300
+          allInventoryOfEvent: JSON.stringify(inventorySlice),
           eventId: eventId,
           update_at: update_at,
         })
       );
     };
-
-    const processReturningItemBatch = async (batch) => {
+  
+    const processReturningItemBatch = async (deviceBatch, inventoryBatchStart = 0) => {
       const batchGrouping = {};
-      batch.forEach(([key, value]) => {
+      deviceBatch.forEach(([key, value]) => {
         batchGrouping[key] = value;
       });
       
-      return await makeRequestWithRetry(() => 
+      // Get the appropriate inventory slice for this batch
+      const inventorySlice = inventoryEntries.slice(inventoryBatchStart, inventoryBatchStart + inventoryBatchSize);
+      
+      return await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
-          allInventoryOfEvent: JSON.stringify(inventoryEntries.slice(0, 300)), // Increased from 100 to 300
+          allInventoryOfEvent: JSON.stringify(inventorySlice),
           companyId: companyId,
           update_at: update_at,
         })
       );
     };
-
-    // Process device status updates
-    await processBatch(
-      deviceEntries, 
-      calculateOptimalBatchSize(deviceEntries[0]), 
-      processDeviceStatusBatch,
-      (current, total) => setProgress(prev => ({ ...prev, current, total }))
-    );
-
-    // Process returning items
-    await processBatch(
-      deviceEntries, 
-      calculateOptimalBatchSize(deviceEntries[0]), 
-      processReturningItemBatch,
-      (current, total) => setProgress(prev => ({ ...prev, current, total }))
-    );
+  
+    // Process device status updates with coordinated inventory batching
+    let inventoryProcessed = 0;
+    const totalInventoryItems = inventoryEntries.length;
+    for (let i = 0; i < deviceEntries.length; i += deviceBatchSize) {
+      const deviceBatch = deviceEntries.slice(i, i + deviceBatchSize);
+      
+      // Calculate which inventory batch to use for this device batch
+      const inventoryBatchStart = inventoryProcessed % totalInventoryItems;
+      
+      try {
+        // Process device status batch
+        await processDeviceStatusBatch(deviceBatch, inventoryBatchStart);
+        
+        // Update progress
+        setProgress(prev => ({ 
+          ...prev, 
+          current: i + deviceBatch.length, 
+          total: deviceEntries.length 
+        }));
+        
+        // Move to next inventory batch
+        inventoryProcessed += inventoryBatchSize;
+        
+        // Add delay between batches
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        
+      } catch (error) {
+        console.error(`Error processing device status batch ${Math.floor(i / deviceBatchSize) + 1}:`, error);
+        throw error;
+      }
+    }
+  
+    // Reset inventory processing counter for returning items
+    inventoryProcessed = 0;
+    // Process returning items with coordinated inventory batching
+    for (let i = 0; i < deviceEntries.length; i += deviceBatchSize) {
+      const deviceBatch = deviceEntries.slice(i, i + deviceBatchSize);
+      
+      // Calculate which inventory batch to use for this device batch
+      const inventoryBatchStart = inventoryProcessed % totalInventoryItems;
+      
+      try {
+        // Process returning item batch
+        await processReturningItemBatch(deviceBatch, inventoryBatchStart);
+        
+        // Update progress
+        setProgress(prev => ({ 
+          ...prev, 
+          current: i + deviceBatch.length, 
+          total: deviceEntries.length 
+        }));
+        
+        // Move to next inventory batch
+        inventoryProcessed += inventoryBatchSize;
+        
+        // Add delay between batches
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        
+      } catch (error) {
+        console.error(`Error processing returning item batch ${Math.floor(i / deviceBatchSize) + 1}:`, error);
+        throw error;
+      }
+    }
   };
 
   const groupingItemsByCompany = groupBy(
