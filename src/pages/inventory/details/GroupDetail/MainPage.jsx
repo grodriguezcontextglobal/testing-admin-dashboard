@@ -8,6 +8,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
 import { BodyComponent } from "../utils/dataStructuringFormat";
+import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 
 const MainPageGrouping = () => {
   const [referenceData, setReferenceData] = useState({
@@ -15,6 +16,7 @@ const MainPageGrouping = () => {
     totalValue: 0,
     totalAvailable: 0,
   });
+  const [resultedData, setResultedData] = useState(null);
   const location = useLocation();
   const groupName = location.search.split("&");
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -31,20 +33,9 @@ const MainPageGrouping = () => {
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
-      // setTimeout(() => {
-      //   setValue("searchDevice", "...");
-      // }, 500);
-      // setTimeout(() => {
-      //   setValue("searchDevice", "..");
-      // }, 700);
-      // setTimeout(() => {
-      //   setValue("searchDevice", ".");
-      // }, 900);
-      setTimeout(() => {
-        // setValue("searchDevice", "");
-        setIsLoadingComponent(false);
-      }, 1100);
-    
+    setTimeout(() => {
+      setIsLoadingComponent(false);
+    }, 1100);
   }, []);
 
   const [searchedValueItem, setSearchedValueItem] = useState(null);
@@ -73,6 +64,13 @@ const MainPageGrouping = () => {
         <Header title={decodeURI(groupName[0].slice(1))} category={"Group"} />
         <CardInfo referenceData={referenceData} />
         <Divider />
+        <FilterBody
+          setSearchedValueItem={setSearchedValueItem}
+          setValue={setValue}
+          register={register}
+          resultedData={resultedData}
+        />
+        <Divider />
         <BodyComponent
           register={register}
           handleSubmitForm={handleSubmitForm}
@@ -82,6 +80,7 @@ const MainPageGrouping = () => {
           setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"group"}
+          setResultedData={setResultedData}
         />
       </Grid>
     </Suspense>

@@ -8,12 +8,14 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
 import { BodyComponent } from "../utils/dataStructuringFormat";
+import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
     totalValue: 0,
     totalAvailable: 0,
   });
+  const [resultedData, setResultedData] = useState(null);
   const location = useLocation();
   const categoryName = location.search.split("&")[0];
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -74,14 +76,23 @@ const MainPage = () => {
         />
         <CardInfo referenceData={referenceData} />
         <Divider />
+        <FilterBody
+          setSearchedValueItem={setSearchedValueItem}
+          setValue={setValue}
+          register={register}
+          resultedData={resultedData}
+        />
+        <Divider />
         <BodyComponent
           register={register}
           handleSubmitForm={handleSubmitForm}
           handleSubmit={handleSubmit}
           searchedValueItem={searchedValueItem}
-          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
+          setSearchedValueItem={setSearchedValueItem}
+          setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"category"}
+          setResultedData={setResultedData}
         />
       </Grid>
     </Suspense>

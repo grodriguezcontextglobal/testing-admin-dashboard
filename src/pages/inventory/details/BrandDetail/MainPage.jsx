@@ -8,12 +8,14 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
 import { BodyComponent } from "../utils/dataStructuringFormat";
+import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 const MainPageBrand = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
     totalValue: 0,
     totalAvailable: 0,
   });
+  const [resultedData, setResultedData] = useState(null);
   const location = useLocation();
   const brandName = location.search.split("&");
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -27,7 +29,7 @@ const MainPageBrand = () => {
     }
   }, [brandName]);
 
-  const [searchedValueItem, setSearchedValueItem] = useState(null)
+  const [searchedValueItem, setSearchedValueItem] = useState(null);
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
     for (let i = 3; i > 0; i--) {
@@ -43,7 +45,7 @@ const MainPageBrand = () => {
   }, []);
 
   const handleSubmitForm = (data) => {
-    return setSearchedValueItem(data.searchDevice)
+    return setSearchedValueItem(data.searchDevice);
   };
   return (
     <Suspense
@@ -66,14 +68,23 @@ const MainPageBrand = () => {
         <Header title={decodeURI(brandName[0].slice(1))} category={"Brands"} />
         <CardInfo referenceData={referenceData} />
         <Divider />
+        <FilterBody
+          setSearchedValueItem={setSearchedValueItem}
+          setValue={setValue}
+          register={register}
+          resultedData={resultedData}
+        />
+        <Divider />
         <BodyComponent
           register={register}
           handleSubmitForm={handleSubmitForm}
           handleSubmit={handleSubmit}
           searchedValueItem={searchedValueItem}
-          setSearchedValueItem={setSearchedValueItem}setReferenceData={setReferenceData}
+          setSearchedValueItem={setSearchedValueItem}
+          setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"brand"}
+          setResultedData={setResultedData}
         />
       </Grid>
     </Suspense>
