@@ -184,8 +184,6 @@ const ItemTable = ({
     getDataStructuringFormat(renderedListItems);
     loadingState(false); // ✅ State update happens inside useEffect, not render
     refactoredGetDataStructuringFormat();
-    console.log("dataToDisplay", dataToDisplay());
-    console.log("refactoredGetDataStructuringFormat", refactoredGetDataStructuringFormat());
   }, [getDataStructuringFormat, loadingState]);
 
   const filterOptionsBasedOnProps = (props) => {
