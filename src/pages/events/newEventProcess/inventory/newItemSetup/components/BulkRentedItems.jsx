@@ -1,7 +1,16 @@
 import { Chip, Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
+import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
+import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
+import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import { BlueButton } from "../../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { renderFields } from "./BulkRentedItemFields";
 import {
   addingExtraInfo,
@@ -11,16 +20,6 @@ import {
   renderOptional,
   stylingComponents,
 } from "./BulkRentedItemsComponents";
-import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
-import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
-import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
-import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 
 const BulkRentedItems = ({
   acceptImage,
@@ -67,6 +66,7 @@ const BulkRentedItems = ({
   valueObject,
   watch,
   suppliersOptions,
+  setDisplayFormToCreateCategory,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
@@ -439,19 +439,13 @@ const BulkRentedItems = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+      <BlueButtonComponent
+      title={"Add more information"}
+      loadingState={loadingStatus}
+      buttonType="button"
+      func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+      styles={{width:"100%"}}
+      />
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -473,27 +467,15 @@ const BulkRentedItems = ({
             width: "50%",
           }}
         >
-          <Link to="/inventory" style={{ width: "100%" }}>
-            <Button
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
-          </Link>
+          <GrayButtonComponent
+            title={"Go back"}
+            func={() => setDisplayFormToCreateCategory(false)}
+            styles={{
+              width: "100%",
+            }}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="reset"
+          />
         </div>
         <div
           style={{
@@ -501,23 +483,13 @@ const BulkRentedItems = ({
             width: "50%",
           }}
         >
-          <Button
-            disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              <WhiteCirclePlusIcon />
-              &nbsp; Save new item
-            </p>
-          </Button>
+          <BlueButtonComponent
+            title={"Save new item"}
+            loadingState={loadingStatus}
+            buttonType="submit"
+            icon={<WhiteCirclePlusIcon />}
+            styles={{width:"100%"}} //stylingComponents({ loadingStatus }).buttonStyleLoading}
+          />
         </div>
       </div>
     </form>
