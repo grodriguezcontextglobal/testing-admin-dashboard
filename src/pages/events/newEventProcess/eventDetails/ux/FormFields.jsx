@@ -1,15 +1,16 @@
-import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { Button, Space, Tag, Tooltip } from "antd";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { InputLabelStyle } from "../../style/InputLabelStyle";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { Button, Space, Tag, Tooltip } from "antd";
 import DatePicker from "react-datepicker";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import PhoneInput from "react-phone-number-input";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import { InputLabelStyle } from "../../style/InputLabelStyle";
 
 const FormFields = ({
   addingPhoneNumber,
@@ -93,7 +94,10 @@ const FormFields = ({
             <PhoneInput
               className="container-phone input-phone"
               id="phone_input_check"
-              style={{ boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px" }}
+              style={{
+                boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
+                width: "100%",
+              }}
               countrySelectProps={{ unicodeFlags: true }}
               defaultCountry="US"
               placeholder="(555) 000-0000"
@@ -110,26 +114,14 @@ const FormFields = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={isMobile ? "Add" : "Add phone number"}
+            buttonType="button"
+            func={() => addingPhoneNumber()}
             disabled={contactPhoneNumber === ""}
-            onClick={() => addingPhoneNumber()}
-            style={{
-              ...CenteringGrid,
-              ...BlueButton,
-              height: "2.5rem",
-              padding: "2.5px 12px",
-              border: "0.3px solid var(--gray300)",
-              margin: "0.1rem auto 1.5rem",
-              width: "100%",
-            }}
-          >
-            {/* <Icon icon="material-symbols:add" width={15} />&nbsp; */}
-            <Typography
-              style={{ ...BlueButtonText, ...CenteringGrid, fontWeight: 600 }}
-            >
-              {isMobile ? "Add" : "Add phone number"}{" "}
-            </Typography>
-          </Button>
+            styles={{ width: "fit-content" }}
+            icon={<WhiteCirclePlusIcon />}
+          />
         </div>
       </div>
       <Space
@@ -506,20 +498,15 @@ const FormFields = ({
         </div>
       </div>
       <Grid item xs={12} sm={12} md={12} lg={12}>
-        <Button
-          htmlType="submit"
-          style={{
-            ...BlueButton,
-            width: "100%",
-            margin: "0.1rem 0 1.5rem",
-          }}
-        >
-          <Typography textTransform={"none"} style={BlueButtonText}>
-            {String(eventInfoDetail.eventName).length === 0
+        <BlueButtonComponent
+          title={
+            String(eventInfoDetail.eventName).length === 0
               ? "Next step"
-              : "Save changes"}
-          </Typography>
-        </Button>
+              : "Save changes"
+          }
+          buttonType="submit"
+          styles={{ width: "100%" }}
+        />
       </Grid>
     </form>
   );
