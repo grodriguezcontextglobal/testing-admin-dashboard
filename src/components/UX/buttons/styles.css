@@ -76,9 +76,9 @@
   transition: all 0.3s ease;
 }
 
-.customized__dangerButton:hover .dangerButtonText {
+/* .customized__dangerButton:hover .dangerButtonText {
   color: var(--danger-action, #b42318);
-}
+} */
 
 /* GrayButton */
 .customized__grayButton {
@@ -94,11 +94,11 @@
   transition: all 0.3s ease;
 }
 
-.customized__grayButton:hover {
+/* .customized__grayButton:hover {
   background: #344054;
   color:#344054;
   border: 1px solid var(--gray300, #D0D5DD);
-}
+} */
 
 /* GrayButtonText */
 .customized__grayButtonText {
@@ -114,9 +114,9 @@
   transition: all 0.3s ease;
 }
 
-.customized__grayButton:hover .grayButtonText {
+/* .customized__grayButton:hover .grayButtonText {
   color: var(--basewhite, #FFF);
-}
+} */
 
 /* LightBlueButton */
 .customized__lightBlueButton {
@@ -132,10 +132,10 @@
   transition: all 0.3s ease;
 }
 
-.customized__lightBlueButton:hover {
+/* .customized__lightBlueButton:hover {
   background: var(--basewhite, #FFF);
   border: 1px solid var(--Blue-dark-100, #D1E0FF);
-}
+} */
 
 /* LightBlueButtonText */
 .customized__lightBlueButtonText {
@@ -151,9 +151,9 @@
   transition: all 0.3s ease;
 }
 
-.customized__lightBlueButton:hover .lightBlueButtonText {
+/* .customized__lightBlueButton:hover .lightBlueButtonText {
   color: var(--Blue-dark-800, #0040C1);
-}
+} */
 /* TextFontSize14LineHeight20 */
 .textFontSize14LineHeight20 {
   text-transform: none;
