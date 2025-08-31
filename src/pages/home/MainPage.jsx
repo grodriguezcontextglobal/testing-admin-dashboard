@@ -1,4 +1,4 @@
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { Divider } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -16,9 +16,10 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Title } from "../../styles/global/Title";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -147,7 +148,7 @@ const MainPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          width: "100%"
+          width: "100%",
         }}
         container
       >
@@ -249,11 +250,7 @@ const MainPage = () => {
               width: "fit-content",
             }}
           >
-            <Button style={{ ...GrayButton, alignItems: "center" }}>
-              <Typography textTransform={"none"} style={{ ...GrayButtonText }}>
-                Create new event
-              </Typography>
-            </Button>
+            <GrayButtonComponent title={"Create new event"} func={null} />
           </Link>
         </Grid>
         <Grid
