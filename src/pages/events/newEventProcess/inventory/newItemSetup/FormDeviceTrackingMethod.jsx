@@ -593,6 +593,7 @@ const FormDeviceTrackingMethod = ({
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
         suppliersOptions={supplierList}
+        setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
       />
       {renderingModals({
         openScanningModal,
