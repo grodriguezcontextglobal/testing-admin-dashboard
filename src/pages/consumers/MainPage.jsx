@@ -33,6 +33,7 @@ const MainPage = () => {
       devitrakApi.get(
         `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
       ),
+      enabled: !!user.companyData.id,
   });
 
   useEffect(() => {
@@ -241,28 +242,3 @@ const MainPage = () => {
 };
 
 export default MainPage;
-
-
-          {/* <Button
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              height: "fit-content",
-              margin: "15px 10px",
-            }}
-            onClick={() => allConsumersBasedOnEventsPerCompany.refetch()}
-          >
-            <p
-              style={{
-                ...GrayButtonText,
-                textTransform: "none",
-                fontWeight: 500,
-                fontSize: "12px",
-                color: "var(--blue-dark-700, #004EEB)",
-                padding: "0px 8px",
-              }}
-            >
-              <Icon icon="jam:refresh" />
-              &nbsp;Refresh
-            </p>
-          </Button> */}
