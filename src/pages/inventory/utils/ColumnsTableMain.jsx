@@ -6,11 +6,7 @@ import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCirc
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
-const columnsTableMain = ({
-  groupingByDeviceType,
-  navigate,
-  responsive,
-}) => {
+const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
   const columns = [
     {
       title: "Device category",
@@ -29,7 +25,10 @@ const columnsTableMain = ({
           >
             {record.image_url || groupingByDeviceType[record.item_group] ? (
               <img
-                src={record.image_url || groupingByDeviceType[record.item_group][0].source}
+                src={
+                  record.image_url ||
+                  groupingByDeviceType[record.item_group][0].source
+                }
                 alt={`${record.item_group}-${record.serial_number}`}
                 style={{ width: "100%", height: "auto" }}
               />
@@ -71,6 +70,18 @@ const columnsTableMain = ({
       title: "Status",
       dataIndex: "warehouse",
       key: "warehouse",
+      showSorterTooltip: { target: "full-header" },
+      filters: [
+        {
+          text: "In Stock",
+          value: 1,
+        },
+        {
+          text: "In Use",
+          value: 0,
+        },
+      ],
+      onFilter: (value, record) => record.warehouse === value,
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
@@ -119,6 +130,22 @@ const columnsTableMain = ({
       title: "Ownership",
       dataIndex: "ownership",
       key: "ownership",
+      showSorterTooltip: { target: "full-header" },
+      filters: [
+        {
+          text: "Leased",
+          value: "Rent",
+        },
+        {
+          text: "Owned",
+          value: "Permanent",
+        },
+        {
+          text: "Sale",
+          value: "Sale",
+        },
+      ],
+      onFilter: (value, record) => record.ownership === value,
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
