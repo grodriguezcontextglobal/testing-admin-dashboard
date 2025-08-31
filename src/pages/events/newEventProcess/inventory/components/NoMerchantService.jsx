@@ -1,12 +1,10 @@
-import { Button, Checkbox } from "antd";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Checkbox } from "antd";
 import { useForm } from "react-hook-form";
+import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const NoMerchantService = ({
   assignAllDevices,
@@ -72,13 +70,14 @@ const NoMerchantService = ({
           </InputLabel>
           <OutlinedInput
             disabled={assignAllDevices}
-            {...register("quantity")}
+            {...register("quantity", { required: true})}
             style={{
               ...OutlinedInputStyle,
               width: "100%",
             }}
             placeholder="Enter quantity needed."
             fullWidth
+            required={true}
           />
         </Grid>
         <Grid
@@ -103,19 +102,14 @@ const NoMerchantService = ({
               Quantity
             </Typography>
           </InputLabel>
-          <Button
-            htmlType="submit"
-            style={{
-              ...LightBlueButton,
-              ...CenteringGrid,
-              width: "100%",
-            }}
-          >
-            <Typography textTransform="none" style={LightBlueButtonText}>
-              <RectangleBluePlusIcon />
-              &nbsp; Add item
-            </Typography>
-          </Button>
+          <LightBlueButtonComponent
+            title={"Add item"}
+            loadingState={false}
+            buttonType="button"
+            func={() => handleSubmit(handleAddingNewItemToDeviceSetupEvent)()}
+            styles={{ width: "fit-content" }}
+            icon={<RectangleBluePlusIcon />}
+          />
         </Grid>
       </Grid>
     </form>
