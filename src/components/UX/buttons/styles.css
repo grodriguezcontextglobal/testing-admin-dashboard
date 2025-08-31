@@ -1,159 +1,177 @@
 
-.customized__blueButton {
-  width: fit-content;
-  display: flex;
-  align-self: stretch;
-  border-radius: 8px;
-  border: 1px solid var(--bluedark600, #155eef);
-  background: var(--bluedark600, #155eef);
-  /* Shadow/xs */
-  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  transition: all 0.3s ease;
+/* Override Ant Design button styles with higher specificity */
+.customized__blueButton.ant-btn,
+.customized__blueButton.ant-btn-variant-outlined,
+.customized__blueButton.ant-btn-variant-dashed {
+  width: 100%;
+  display: flex !important;
+  align-self: stretch !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--bluedark600, #155eef) !important;
+  background: var(--bluedark600, #155eef) !important;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
+  transition: all 0.3s ease !important;
+  color: var(--basewhite, #FFF) !important;
 }
 
-/* .customized__blueButton:hover {
-  background: var(--basewhite, #FFF);
-  color: var(--bluedark600, #155eef);
-  border: 1px solid var(--bluedark600, #155eef);
-} */
-
-.customized__blueButtonText {
-  text-transform: none;
-  color: var(--basewhite, #FFF);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: Inter;
-  line-height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: auto;
-  transition: all 0.3s ease;
+/* Blue button hover - swap background and text colors */
+.customized__blueButton.ant-btn:hover,
+.customized__blueButton.ant-btn-variant-outlined:hover,
+.customized__blueButton.ant-btn-variant-dashed:hover,
+.customized__blueButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
+  border: 1px solid var(--bluedark600, #155eef) !important;
+  background: var(--basewhite, #FFF) !important;
+  color: var(--bluedark600, #155eef) !important;
 }
 
-/* .customized__blueButton:hover .blueButtonText {
-  color: var(--bluedark600, #155eef);
-} */
-
-.centeringGrid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: auto;
+.customized__blueButton.ant-btn .customized__blueButtonText,
+.customized__blueButton .ant-btn-content {
+  text-transform: none !important;
+  color: var(--basewhite, #FFF) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: Inter !important;
+  line-height: 20px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: auto !important;
+  transition: all 0.3s ease !important;
 }
 
-/* Converted styles from global folder */
-
-/*DangerButton */
-.customized__dangerButton {
-  width: fit-content;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  background-color: var(--danger-action);
-  border: 1px solid var(--danger-action);
-  outline: none;
-  transition: all 0.3s ease;
+/* Blue button text hover - swap color */
+.customized__blueButton.ant-btn:hover .customized__blueButtonText,
+.customized__blueButton.ant-btn:hover .ant-btn-content {
+  color: var(--bluedark600, #155eef) !important;
 }
 
-/* .customized__dangerButton:hover {
-  background-color: var(--basewhite, #FFF);
-  color: var(--danger-action,#b42318);
-  border: 1px solid var(--danger-action, #b42318);
-} */
-
-/* DangerButtonText */
-.customized__dangerButtonText {
-  font-family: Inter;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--basewhite);
-  transition: all 0.3s ease;
+/* Override for other custom button styles */
+.customized__dangerButton.ant-btn,
+.customized__dangerButton.ant-btn-variant-outlined,
+.customized__dangerButton.ant-btn-variant-dashed {
+  width: 100%;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  background-color: var(--danger-action) !important;
+  border: 1px solid var(--danger-action) !important;
+  outline: none !important;
+  transition: all 0.3s ease !important;
 }
 
-/* .customized__dangerButton:hover .dangerButtonText {
-  color: var(--danger-action, #b42318);
-} */
-
-/* GrayButton */
-.customized__grayButton {
-  width: fit-content;
-  display: flex;
-  align-items: flex-start;
-  align-self: stretch;
-  border-radius: 8px;
-  border: 1px solid var(--gray300, #D0D5DD);
-  background: var(--basewhite, #FFF);
-  /* Shadow/xs */
-  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  transition: all 0.3s ease;
+/* Danger button hover - swap background and text colors */
+.customized__dangerButton.ant-btn:hover,
+.customized__dangerButton.ant-btn-variant-outlined:hover,
+.customized__dangerButton.ant-btn-variant-dashed:hover,
+.customized__dangerButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
+  background-color: var(--basewhite, #FFF) !important;
+  border: 1px solid var(--danger-action) !important;
+  color: var(--danger-action) !important;
 }
 
-/* .customized__grayButton:hover {
-  background: #344054;
-  color:#344054;
-  border: 1px solid var(--gray300, #D0D5DD);
-} */
-
-/* GrayButtonText */
-.customized__grayButtonText {
-  color: #344054;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: Inter;
-  line-height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: auto;
-  transition: all 0.3s ease;
+.customized__grayButton.ant-btn,
+.customized__grayButton.ant-btn-variant-outlined,
+.customized__grayButton.ant-btn-variant-dashed {
+  width: 100%;
+  display: flex !important;
+  align-items: flex-start !important;
+  align-self: stretch !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--gray300, #D0D5DD) !important;
+  background: var(--basewhite, #FFF) !important;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
+  transition: all 0.3s ease !important;
 }
 
-/* .customized__grayButton:hover .grayButtonText {
-  color: var(--basewhite, #FFF);
-} */
-
-/* LightBlueButton */
-.customized__lightBlueButton {
-  width: fit-content;
-  display: flex;
-  align-items: flex-start;
-  align-self: stretch;
-  border-radius: 8px;
-  border: 1px solid var(--blue-dark--50, #EFF4FF);
-  background: var(--blue-dark--100, #D1E0FF);
-  /* Shadow/xs */
-  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  transition: all 0.3s ease;
+/* Gray button hover - swap background and text colors */
+.customized__grayButton.ant-btn:hover,
+.customized__grayButton.ant-btn-variant-outlined:hover,
+.customized__grayButton.ant-btn-variant-dashed:hover,
+.customized__grayButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
+  background: var(--gray300, #D0D5DD) !important;
+  border: 1px solid var(--gray300, #D0D5DD) !important;
+  color: var(--basewhite, #FFF) !important;
 }
 
-/* .customized__lightBlueButton:hover {
-  background: var(--basewhite, #FFF);
-  border: 1px solid var(--Blue-dark-100, #D1E0FF);
-} */
-
-/* LightBlueButtonText */
-.customized__lightBlueButtonText {
-  color: var(--Blue-dark-800, #0040C1);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: Inter;
-  line-height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: auto;
-  transition: all 0.3s ease;
+.customized__lightBlueButton.ant-btn,
+.customized__lightBlueButton.ant-btn-variant-outlined,
+.customized__lightBlueButton.ant-btn-variant-dashed {
+  width: 100%;
+  display: flex !important;
+  align-items: flex-start !important;
+  align-self: stretch !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--blue-dark--50, #EFF4FF) !important;
+  background: var(--blue-dark--100, #D1E0FF) !important;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
+  transition: all 0.3s ease !important;
 }
 
-/* .customized__lightBlueButton:hover .lightBlueButtonText {
-  color: var(--Blue-dark-800, #0040C1);
-} */
+/* Light blue button hover - swap background and text colors */
+.customized__lightBlueButton.ant-btn:hover,
+.customized__lightBlueButton.ant-btn-variant-outlined:hover,
+.customized__lightBlueButton.ant-btn-variant-dashed:hover,
+.customized__lightBlueButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
+  background: var(--Blue-dark-800, #0040C1) !important;
+  border: 1px solid var(--Blue-dark-800, #0040C1) !important;
+  color: var(--basewhite, #FFF) !important;
+}
+
+/* Ensure text styles are preserved */
+.customized__dangerButton .customized__dangerButtonText {
+  font-family: Inter !important;
+  font-size: 14px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  color: var(--basewhite) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Danger button text hover */
+.customized__dangerButton.ant-btn:hover .customized__dangerButtonText {
+  color: var(--danger-action) !important;
+}
+
+.customized__grayButton .customized__grayButtonText {
+  color: #344054 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: Inter !important;
+  line-height: 20px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: auto !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Gray button text hover */
+.customized__grayButton.ant-btn:hover .customized__grayButtonText {
+  color: var(--basewhite, #FFF) !important;
+}
+
+.customized__lightBlueButton .customized__lightBlueButtonText {
+  color: var(--Blue-dark-800, #0040C1) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: Inter !important;
+  line-height: 20px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: auto !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Light blue button text hover */
+.customized__lightBlueButton.ant-btn:hover .customized__lightBlueButtonText {
+  color: var(--basewhite, #FFF) !important;
+}
+
 /* TextFontSize14LineHeight20 */
 .textFontSize14LineHeight20 {
   text-transform: none;
