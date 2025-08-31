@@ -1,15 +1,15 @@
 import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
-import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
+import DatePicker from "react-datepicker";
+import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
+import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
-import ScanningModal from "../../../../../inventory/actions/utils/ScanningModal";
+import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
+import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import ScanningMethod from "../../../../../inventory/actions/utils/ScanningMethod";
-import DatePicker from "react-datepicker";
+import ScanningModal from "../../../../../inventory/actions/utils/ScanningModal";
 
 export const renderTitle = () => {
   return (
@@ -157,9 +157,9 @@ export const addingExtraInfo = ({
         onChange={(e) => setValueObject(e.target.value)}
       />
       <Button
+        style={{ ...BlueButton, width: "fit-content" }}
         htmlType="button"
         onClick={() => handleMoreInfoPerDevice()}
-        style={{ ...BlueButton, ...CenteringGrid }}
       >
         <WhiteCirclePlusIcon />
       </Button>
@@ -413,8 +413,8 @@ export const renderTitleSingleItem = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Item serial number can be created by inputting a serial number
-          base to define the category of item depending on your inventory.
+          Item serial number can be created by inputting a serial number base to
+          define the category of item depending on your inventory.
         </Typography>
       </InputLabel>
     </>
