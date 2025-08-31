@@ -99,6 +99,10 @@ const MainPage = () => {
           </Grid>
 
           <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            gap={"10px"}
             item
             xs={12}
             sm={12}
