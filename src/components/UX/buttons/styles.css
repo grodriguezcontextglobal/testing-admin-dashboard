@@ -3,7 +3,7 @@
 .customized__blueButton.ant-btn,
 .customized__blueButton.ant-btn-variant-outlined,
 .customized__blueButton.ant-btn-variant-dashed {
-  width: 100%;
+  /* width: 100%; */
   display: flex !important;
   align-self: stretch !important;
   border-radius: 8px !important;
@@ -49,7 +49,7 @@
 .customized__dangerButton.ant-btn,
 .customized__dangerButton.ant-btn-variant-outlined,
 .customized__dangerButton.ant-btn-variant-dashed {
-  width: 100%;
+  /* width: 100%; */
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -75,7 +75,7 @@
 .customized__grayButton.ant-btn,
 .customized__grayButton.ant-btn-variant-outlined,
 .customized__grayButton.ant-btn-variant-dashed {
-  width: 100%;
+  /* width: 100%; */
   display: flex !important;
   align-items: flex-start !important;
   align-self: stretch !important;
@@ -99,7 +99,7 @@
 .customized__lightBlueButton.ant-btn,
 .customized__lightBlueButton.ant-btn-variant-outlined,
 .customized__lightBlueButton.ant-btn-variant-dashed {
-  width: 100%;
+  /* width: 100%; */
   display: flex !important;
   align-items: flex-start !important;
   align-self: stretch !important;
