@@ -21,6 +21,7 @@ const TableItemGroup = ({
   searchItem,
   referenceData,
   isLoadingComponent,
+  setResultedData,
 }) => {
   const location = useLocation();
   const groupName = location.search.split("&");
@@ -103,6 +104,7 @@ const TableItemGroup = ({
   }, [structuredDataRendering.length, location.key]);
 
   const dataRenderingMemo = useMemo(() => {
+    setResultedData(dataToDisplay(structuredDataRendering, searchItem));
     return dataToDisplay(structuredDataRendering, searchItem);
   }, [isLoadingComponent, searchItem]);
 
