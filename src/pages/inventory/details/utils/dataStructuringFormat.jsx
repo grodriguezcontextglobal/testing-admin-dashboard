@@ -79,6 +79,7 @@ export const BodyComponent = ({
   setReferenceData,
   isLoadingComponent,
   trigger,
+  setResultedData,
 }) => {
   return (
     <>
@@ -141,6 +142,7 @@ export const BodyComponent = ({
               searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
+              setResultedData={setResultedData}
             />
           )}
           {trigger === "brand" && (
@@ -148,6 +150,7 @@ export const BodyComponent = ({
               searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
+              setResultedData={setResultedData}
             />
           )}
           {trigger === "group" && (
@@ -155,6 +158,7 @@ export const BodyComponent = ({
               searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
+              setResultedData={setResultedData}
             />
           )}
           {trigger === "ownership" && (
@@ -162,6 +166,7 @@ export const BodyComponent = ({
               searchItem={searchedValueItem}
               referenceData={setReferenceData}
               isLoadingComponent={isLoadingComponent}
+              setResultedData={setResultedData}
             />
           )}
         </Grid>
