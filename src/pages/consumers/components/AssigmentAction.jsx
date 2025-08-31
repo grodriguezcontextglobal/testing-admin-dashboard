@@ -1,13 +1,13 @@
+import { Typography } from "@mui/material";
+import { Button, Dropdown } from "antd";
 import { useState } from "react";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";
-import { Dropdown } from "antd";
-import { Typography } from "@mui/material";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import ModalAssignDeviceInEvent from "../action/ModalAssignDeviceInEvent";
+import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";
 
 const AssigmentAction = ({ refetching }) => {
   const [assignDevice, setAssignDevice] = useState(false);
@@ -51,22 +51,12 @@ const AssigmentAction = ({ refetching }) => {
         }}
         trigger={["click"]}
       >
-        <button
-          // onClick={() => setAssignDevice(true)}
-          style={{
-            ...BlueButton,
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            margin: "0 0 12.5px 0",
-          }}
-        >
-          <p style={{ ...BlueButtonText, textAlign: "center" }}>
-            <WhiteCirclePlusIcon />
-            &nbsp; Create new transaction
+        <Button htmlType="button" style={{ ...BlueButton, width: "100%", margin: "0 0 12.5px 0" }}>
+          <p style={BlueButtonText}>
+            <WhiteCirclePlusIcon />&nbsp;
+            Create new transaction
           </p>
-        </button>
+        </Button>
       </Dropdown>
       {assignDevice && (
         <ModalAssignDeviceToConsumer

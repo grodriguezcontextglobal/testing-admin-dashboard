@@ -1,12 +1,9 @@
 import { Card } from "antd";
 import { useState } from "react";
-import { AlarmIcon } from "../../../components/icons/AlarmIcon";
 import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 import { CardStyle } from "../../../styles/global/CardStyle";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import EditConsumerInfoModal from "./EditCOnsumerInfoModal";
 
 const CardActionsButton = () => {
@@ -23,23 +20,11 @@ const CardActionsButton = () => {
         }}
       >
         <div style={{ width: "100%", alignSelf: "stretch" }}>
-          <button
-            onClick={() => setNotificationActivation(true)}
-            style={{
-              ...GrayButton,
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              margin: "0",
-            }}
-          >
-            <AlarmIcon />
-            &nbsp;
-            <p style={{ ...GrayButtonText, textAlign: "center" }}>
-              Send notification to consumer
-            </p>
-          </button>
+          <GrayButtonComponent
+            title={"Send notification to customer"}
+            styles={{ width: "100%" }}
+            func={() => setNotificationActivation(true)}
+          />
         </div>
         <div
           style={{
@@ -51,19 +36,11 @@ const CardActionsButton = () => {
             margin: "1.5dvh 0",
           }}
         >
-          <button
-            onClick={() => setOpenEditConsumerModal(true)}
-            style={{
-              ...LightBlueButton,
-              width: "fit-content",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              margin: "0",
-            }}
-          >
-            <p style={{ ...LightBlueButtonText, textAlign: "center" }}>Edit</p>
-          </button>
+          <LightBlueButtonComponent
+            title={"Edit"}
+            styles={{ width: "100%" }}
+            func={() => setOpenEditConsumerModal(true)}
+          />
         </div>
       </Card>
       {notificationActivation && (

@@ -1,11 +1,10 @@
 // import StripeTransactionHistoryByUser from '../Attendees/tables/StripeTransactionHistoryByUser';
 import { Icon } from "@iconify/react";
 import {
-  Button,
   Grid,
   InputAdornment,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
@@ -14,8 +13,6 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
@@ -28,6 +25,7 @@ import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
 import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
@@ -227,7 +225,8 @@ const DetailPerConsumer = () => {
               md={4}
               lg={4}
             >
-              <Button
+              <BlueButtonComponent title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} func={() => setCreateUserButton(true)} />
+              {/* <Button
               onClick={() => setCreateUserButton(true)}
                 style={{
                   ...BlueButton,
@@ -244,7 +243,7 @@ const DetailPerConsumer = () => {
                   <WhiteCirclePlusIcon />
                   &nbsp;Add new consumer
                 </Typography>
-              </Button>
+              </Button> */}
             </Grid>
           </Grid>
           <Grid

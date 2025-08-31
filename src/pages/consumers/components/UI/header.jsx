@@ -1,13 +1,11 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
@@ -69,21 +67,7 @@ const CustomerHeader = () => {
           </Typography>
           {/* /event/new_subscription */}
           <Link to="/create-event-page/event-detail">
-            <Button
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
-              }}
-            >
-              <Typography
-                textTransform={"none"}
-                style={{
-                  ...BlueButtonText,
-                }}
-              >
-                <WhiteCirclePlusIcon />&nbsp;Add new event
-              </Typography>
-            </Button>
+          <BlueButtonComponent title={"Add new event"} icon={<WhiteCirclePlusIcon />} />
           </Link>
         </Grid>
       </Grid>

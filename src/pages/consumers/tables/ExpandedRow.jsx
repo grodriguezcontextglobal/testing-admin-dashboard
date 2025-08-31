@@ -1,6 +1,6 @@
 import { Chip } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Space, Spin, Table, message } from "antd";
+import { Badge, Space, Spin, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,6 +10,7 @@ import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 import { checkArray } from "../../../components/utils/checkArray";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import handleReturnSingleDevice from "../../../components/utils/ReturnSingleItemInTransaction";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import {
   onAddEventData,
   onAddEventInfoDetail,
@@ -32,8 +33,6 @@ import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
 import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 import FooterExpandedRow from "./FooterExpandedRow";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -465,16 +464,13 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
 
       <div
         style={{
-          // width: "100%",
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
           padding: "0 2rem 0 0",
         }}
       >
-        <Button onClick={refetchingQueries} style={BlueButton}>
-          <p style={BlueButtonText}>Reload</p>
-        </Button>
+        <BlueButtonComponent title={"Reload"} func={refetchingQueries} />
       </div>
       {rowRecord.device > 0 && (
         <Table

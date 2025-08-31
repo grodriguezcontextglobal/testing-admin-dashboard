@@ -12,20 +12,26 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import { useQuery } from "@tanstack/react-query";
+import { devitrakApi } from "../../../api/devitrakApi";
 
-export default function TablesConsumers({
-  searching,
-  data,
-  getCounting,
-  // getActiveAndInactiveCount,
-}) {
+export default function TablesConsumers({ searching, data, getCounting }) {
   const { user } = useSelector((state) => state.admin);
-  // const { eventsPerAdmin } = useSelector((state) => state.event);
   const dataRef = useRef(null);
   const [responseData, setResponseData] = useState(data);
   const [isLoading, setIsLoading] = useState(true);
   const [dataSortedAndFilterToRender, setDataSortedAndFilterToRender] =
     useState([]);
+  const eventInfoCompanyQuery = useQuery({
+    queryKey: ["AllEventsRelatedToCompanyInfo", user.companyData.id],
+    queryFn: () => {
+      return devitrakApi.post(`/event/event-list`, {
+        company_id: user.companyData.id,
+        type: "event",
+      });
+    },
+    enabled: !!user.companyData.id,
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
@@ -49,6 +55,15 @@ export default function TablesConsumers({
     setResponseData(dataRef.current);
   }, [getCounting]);
 
+    useEffect(() => {
+      if (eventInfoCompanyQuery.data) {
+        console.log("Company events:", eventInfoCompanyQuery.data.data);
+      }
+      if (eventInfoCompanyQuery.error) {
+        console.error("Error fetching company events:", eventInfoCompanyQuery.error);
+      }
+    }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
+  
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
       const check = responseData?.filter((item) =>
@@ -100,11 +115,11 @@ export default function TablesConsumers({
 
   const filterData = (data) => {
     if (!searching || searching.length < 1) return data;
-    
+
     return data.filter((item) => {
       const searchLower = searching.toLowerCase();
       const fullDetailItem = JSON.stringify(item);
-      
+
       return fullDetailItem.toLowerCase().includes(searchLower);
     });
   };
@@ -240,7 +255,6 @@ export default function TablesConsumers({
               rotate={3}
               color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`} //!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
             />
-            {/* {!currentConsumerActive ? "Inactive" : "Active"} */}
             {currentConsumerActive === 0 ? "Inactive" : "Active"}
           </p>
         </span>
@@ -270,7 +284,6 @@ export default function TablesConsumers({
       width: "7%",
       render: (currentActivity) => (
         <p style={{ ...renderingStyle, width: "fit-content" }}>
-          {/* {currentActivity?.length} */}
           {currentActivity}
         </p>
       ),

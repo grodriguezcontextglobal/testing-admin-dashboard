@@ -1,4 +1,5 @@
 import { Chip } from "@mui/material";
+import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, Badge, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
@@ -6,7 +7,12 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import {
   onAddEventData,
   onSelectCompany,
@@ -14,21 +20,11 @@ import {
 } from "../../../store/slices/eventSlice";
 import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
-// import UpDoubleArrow from "../../../components/icons/UpDoubleArrow";
-// import DownDoubleArrowIcon from "../../../components/icons/DownDoubleArrowIcon";
-import { DownNarrow } from "../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
-import RefreshButton from "../../../components/utils/UX/RefreshButton";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { useQueryClient } from '@tanstack/react-query';
 
 const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
@@ -303,63 +299,21 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               gap: "5px",
             }}
           >
-            <button
-              style={{
-                ...DangerButton,
-                // background: "transparent",
-                outline: "none",
-                display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-                    ? "none"
-                    : "flex"
-                }`,
-              }}
-            >
-              <p
-                style={{
-                  ...DangerButtonText,
-                  display: `${
-                    checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1]?.length < 13
-                      ? "none"
-                      : "flex"
-                  }`,
-                  border: "transparent",
-                  outline: "none",
-                }}
-              >
-                Capture
-              </p>
-            </button>
-
-            <button
-              style={{
-                ...BlueButton,
-                // background: "transparent",
-                outline: "none",
-                display: `${
-                  checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-                    ? "none"
-                    : "flex"
-                }`,
-              }}
-            >
-              <p
-                style={{
-                  ...BlueButtonText,
-                  display: `${
-                    checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1]?.length < 13
-                      ? "none"
-                      : "flex"
-                  }`,
-                  border: "transparent",
-                  outline: "none",
-                }}
-              >
-                Release
-              </p>
-            </button>
+            <DangerButtonComponent
+              disabled={
+                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
+              }
+              title={"Capture"}
+              func={() => null}
+            />
+            <BlueButtonComponent
+              disabled={
+                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
+              }
+              title={"Release"}
+              func={() => null}
+            />
+            
             <button
               style={{ background: "transparent", outline: "none" }}
               onClick={() => moreDetailFn(record)}
