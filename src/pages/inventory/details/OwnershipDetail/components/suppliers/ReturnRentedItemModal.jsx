@@ -19,7 +19,7 @@ import { Progress } from "antd";
 
 const { Search } = Input;
 
-const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
+const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) => {
   const [activeTab, setActiveTab] = useState("1");
   const [renterItemList, setRenterItemList] = useState([]);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -29,6 +29,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
   const [pageSize, setPageSize] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
   const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
+  const [isUsingProvidedData, setIsUsingProvidedData] = useState(false);
   const { user } = useSelector((state) => state.admin);
 
   // Request size validation helper
@@ -36,9 +37,6 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
     const jsonString = JSON.stringify(data);
     const sizeInBytes = new Blob([jsonString]).size;
     const sizeInMB = sizeInBytes / (1024 * 1024);
-
-    console.log(`Request size: ${sizeInMB.toFixed(2)} MB`);
-
     // Warn if approaching 10MB limit (most servers have 10-50MB limits)
     if (sizeInMB > 8) {
       console.warn(`Large request detected: ${sizeInMB.toFixed(2)} MB`);
@@ -48,9 +46,49 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
     return { isLarge: false, size: sizeInMB };
   };
 
-  // Fetch items with pagination and search
+  // Filtered data when using provided data prop
+  const filteredProvidedData = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
+    
+    if (!searchText) return data;
+    
+    const searchLower = searchText.toLowerCase();
+    return data.filter(item => 
+      String(item.item_id).toLowerCase().includes(searchLower) ||
+      (item.serial_number && item.serial_number.toLowerCase().includes(searchLower)) ||
+      (item.item_group && item.item_group.toLowerCase().includes(searchLower))
+    );
+  }, [data, searchText]);
+
+  // Paginated data for provided data
+  const paginatedProvidedData = useMemo(() => {
+    if (!isUsingProvidedData) return [];
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredProvidedData.slice(startIndex, endIndex);
+  }, [filteredProvidedData, currentPage, pageSize, isUsingProvidedData]);
+
+  // Initialize data based on prop availability
+  const initializeData = useCallback(() => {
+    if (data && Array.isArray(data) && data.length > 0) {
+      // Use provided data
+      setIsUsingProvidedData(true);
+      setRenterItemList(data);
+      setTotalItems(data.length);
+      setLoading(false);
+    } else {
+      // Fetch data as before
+      setIsUsingProvidedData(false);
+      fetchItemsForRenter(1, "");
+    }
+  }, [data]);
+
+  // Fetch items with pagination and search (existing function)
   const fetchItemsForRenter = useCallback(
     async (page = 1, search = "") => {
+      if (isUsingProvidedData) return; // Don't fetch if using provided data
+      
       setLoading(true);
       try {
         let query = "";
@@ -189,7 +227,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
         setLoading(false);
       }
     },
-    [supplier_id, pageSize, user.sqlInfo.company_id]
+    [supplier_id, pageSize, user.sqlInfo.company_id, isUsingProvidedData]
   );
 
   useEffect(() => {
@@ -197,19 +235,33 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       setCurrentPage(1);
       setSelectedItems(new Set());
       setSearchText("");
-      fetchItemsForRenter(1, "");
+      initializeData();
     }
-  }, [open, fetchItemsForRenter]);
+  }, [open, initializeData]);
 
-  // Debounced search
+  // Handle search for provided data
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    if (isUsingProvidedData) {
+      // For provided data, just update pagination
       setCurrentPage(1);
-      fetchItemsForRenter(1, searchText);
-    }, 300);
+      setTotalItems(filteredProvidedData.length);
+    } else {
+      // For fetched data, use debounced search
+      const timeoutId = setTimeout(() => {
+        setCurrentPage(1);
+        fetchItemsForRenter(1, searchText);
+      }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchText, fetchItemsForRenter]);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchText, isUsingProvidedData, filteredProvidedData.length, fetchItemsForRenter]);
+
+  // Update displayed data when using provided data
+  useEffect(() => {
+    if (isUsingProvidedData) {
+      setRenterItemList(paginatedProvidedData);
+    }
+  }, [paginatedProvidedData, isUsingProvidedData]);
 
   // Handle page change
   const handlePageChange = useCallback(
@@ -218,9 +270,12 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
       if (size !== pageSize) {
         setPageSize(size);
       }
-      fetchItemsForRenter(page, searchText);
+      
+      if (!isUsingProvidedData) {
+        fetchItemsForRenter(page, searchText);
+      }
     },
-    [fetchItemsForRenter, searchText, pageSize]
+    [fetchItemsForRenter, searchText, pageSize, isUsingProvidedData]
   );
 
   // Improved batch processing with dynamic sizing and progress tracking
@@ -577,34 +632,46 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id }) => {
   const handleReturnAllItems = async () => {
     setLoading(true);
     try {
-      // Get all item IDs for the current filter
-      let getAllQuery = "";
-      let getAllValues = [];
-
-      if (supplier_id) {
-        getAllQuery =
-          "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ? AND supplier_info = ?";
-        getAllValues = ["Rent", user.sqlInfo.company_id, supplier_id];
+      let allItemIds;
+      
+      if (isUsingProvidedData) {
+        // Use all items from provided data
+        allItemIds = data.map(item => item.item_id);
       } else {
-        getAllQuery =
-          "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ?";
-        getAllValues = ["Rent", user.sqlInfo.company_id];
+        // Get all item IDs for the current filter (existing logic)
+        let getAllQuery = "";
+        let getAllValues = [];
+
+        if (supplier_id) {
+          getAllQuery =
+            "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ? AND supplier_info = ?";
+          getAllValues = ["Rent", user.sqlInfo.company_id, supplier_id];
+        } else {
+          getAllQuery =
+            "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ?";
+          getAllValues = ["Rent", user.sqlInfo.company_id];
+        }
+
+        const allItemsResult = await devitrakApi.post(
+          "/db_company/inventory-based-on-submitted-parameters",
+          {
+            query: getAllQuery,
+            values: getAllValues,
+          }
+        );
+
+        if (!allItemsResult.data?.result?.length) {
+          message.warning("No items found to return");
+          return;
+        }
+
+        allItemIds = allItemsResult.data.result.map((item) => item.item_id);
       }
 
-      const allItemsResult = await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        {
-          query: getAllQuery,
-          values: getAllValues,
-        }
-      );
-
-      if (!allItemsResult.data?.result?.length) {
+      if (!allItemIds || allItemIds.length === 0) {
         message.warning("No items found to return");
         return;
       }
-
-      const allItemIds = allItemsResult.data.result.map((item) => item.item_id);
 
       message.loading({
         content: `Processing ${allItemIds.length} items...`,
