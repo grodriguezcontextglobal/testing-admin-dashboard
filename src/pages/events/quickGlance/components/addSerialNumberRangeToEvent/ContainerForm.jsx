@@ -2,22 +2,19 @@ import { Chip } from "@mui/material";
 import { message, Select, Space } from "antd";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 const ContainerForm = ({
   AntSelectorStyle,
   blockingButton,
-  CenteringGrid,
   deviceTitle,
   setListOfLocations,
   gettingData,
   handleSubmit,
   itemQuery,
-  LightBlueButton,
-  LightBlueButtonText,
   onChange,
   RectangleBluePlusIcon,
   selectOptions,
   Subtitle,
-  Typography,
 }) => {
   const [loading, setLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -190,95 +187,90 @@ const ContainerForm = ({
   };
 
   return (
-      <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-          padding: 0,
-        }}
-        onSubmit={handleSubmit(addingDataToAssignToEventInventory)}
-      >
-        <div style={{ margin: "0px auto 1rem", width: "100%" }}>
-          <label style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-            Select location from where items will be added to inventory.
-          </label>
-          <Select
-            className="custom-autocomplete"
-            showSearch
-            placeholder="Search item to add to inventory."
-            optionFilterProp="children"
-            style={{ ...AntSelectorStyle, width: "100%" }}
-            onChange={handleLocationChange}
-            options={renderLocationBasedOptions(selectOptions)}
-            loading={itemQuery.isLoading}
-            virtual={true}
-            filterOption={(input, option) => {
-              return option.key.toLowerCase().includes(input.toLowerCase());
-            }}
-            getPopupContainer={(triggerNode) => triggerNode.parentNode}
-          />
-        </div>
-        <div>{renderSearchResults()}</div>
-        <div
-          style={{
-            margin: "0px auto 1rem",
-            width: "100%",
-            display: finalSelection.length > 0 ? "flex" : "none",
+    <form
+      style={{
+        width: "100%",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        textAlign: "left",
+        padding: 0,
+      }}
+      onSubmit={handleSubmit(addingDataToAssignToEventInventory)}
+    >
+      <div style={{ margin: "0px auto 1rem", width: "100%" }}>
+        <label style={{ ...Subtitle, margin: "0px auto 1rem" }}>
+          Select location from where items will be added to inventory.
+        </label>
+        <Select
+          className="custom-autocomplete"
+          showSearch
+          placeholder="Search item to add to inventory."
+          optionFilterProp="children"
+          style={{ ...AntSelectorStyle, width: "100%" }}
+          onChange={handleLocationChange}
+          options={renderLocationBasedOptions(selectOptions)}
+          loading={itemQuery.isLoading}
+          virtual={true}
+          filterOption={(input, option) => {
+            return option.key.toLowerCase().includes(input.toLowerCase());
           }}
-        >
-          {
-            <Space
-              style={{ margin: "1rem auto", width: "100%" }}
-              size={[8, 16]}
-              wrap
-            >
-              {finalSelection.length > 0 &&
-                finalSelection.map((item, index) => (
-                  <Chip
-                    key={`${item.location}-${index}`}
-                    label={`${item.location || "Unknown"} - ${
-                      item.serialNumberList.length
-                    }`}
-                    onDelete={() => removeItem(index)}
-                  />
-                ))}
-            </Space>
-          }
-        </div>
-        <div
-          style={{
-            textAlign: "left",
+          getPopupContainer={(triggerNode) => triggerNode.parentNode}
+        />
+      </div>
+      <div>{renderSearchResults()}</div>
+      <div
+        style={{
+          margin: "0px auto 1rem",
+          width: "100%",
+          display: finalSelection.length > 0 ? "flex" : "none",
+        }}
+      >
+        {
+          <Space
+            style={{ margin: "1rem auto", width: "100%" }}
+            size={[8, 16]}
+            wrap
+          >
+            {finalSelection.length > 0 &&
+              finalSelection.map((item, index) => (
+                <Chip
+                  key={`${item.location}-${index}`}
+                  label={`${item.location || "Unknown"} - ${
+                    item.serialNumberList.length
+                  }`}
+                  onDelete={() => removeItem(index)}
+                />
+              ))}
+          </Space>
+        }
+      </div>
+      <div
+        style={{
+          textAlign: "left",
+          width: "100%",
+          margin: "0.5rem 0",
+        }}
+      >
+        <LightBlueButtonComponent
+          title={`Add qty: ${itemToContent.length} from ${selectedLocation} location.`}
+          func={addingDataToAssignToEventInventory}
+          disabled={blockingButton}
+          buttonType="submit"
+          icon={<RectangleBluePlusIcon />}
+          styles={{
+            display:
+              eventInvInfo.quantity ===
+              finalSelection
+                .map((item) => item.serialNumberList.length)
+                .reduce((a, b) => a + b, 0)
+                ? "none"
+                : "flex",
             width: "100%",
             margin: "0.5rem 0",
           }}
-        >
-          <button
-            disabled={blockingButton}
-            type="submit"
-            style={{
-              ...LightBlueButton,
-              ...CenteringGrid,
-              display:
-                eventInvInfo.quantity ===
-                finalSelection
-                  .map((item) => item.serialNumberList.length)
-                  .reduce((a, b) => a + b, 0)
-                  ? "none"
-                  : "flex",
-              width: "100%",
-            }}
-          >
-            <Typography textTransform="none" style={LightBlueButtonText}>
-              <RectangleBluePlusIcon />
-              &nbsp; Add qty: {itemToContent.length} from &nbsp;
-              {selectedLocation}
-              &nbsp; location
-            </Typography>
-          </button>
-        </div>
-      </form>
+        />
+      </div>
+    </form>
   );
 };
 

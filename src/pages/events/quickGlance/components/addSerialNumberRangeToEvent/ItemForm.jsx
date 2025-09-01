@@ -1,9 +1,10 @@
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+
 const ItemForm = ({
   addingDeviceFromLocations,
   AntSelectorStyle,
   blockingButton,
   BorderedCloseIcon,
-  CenteringGrid,
   CheckIcon,
   checkIfSerialNumberExists,
   Chip,
@@ -11,8 +12,6 @@ const ItemForm = ({
   InputAdornment,
   InputLabel,
   itemQuery,
-  LightBlueButton,
-  LightBlueButtonText,
   listOfLocations,
   onChange,
   OutlinedInput,
@@ -30,6 +29,7 @@ const ItemForm = ({
   valueItemSelected,
   deviceTitle,
 }) => {
+  console.log(valueItemSelected);
   return (
     <form
       style={{
@@ -96,7 +96,8 @@ const ItemForm = ({
           </InputLabel>
           <OutlinedInput
             required
-            {...register("serial_number")}
+            disabled={blockingButton}
+            {...register("serial_number", { required: true })}
             style={OutlinedInputStyle}
             placeholder="e.g. 154580"
             endAdornment={
@@ -132,10 +133,7 @@ const ItemForm = ({
           </InputLabel>
           <OutlinedInput
             required
-            {...register("quantity", {
-              required: true,
-              requiredMessage: "Quantity is required",
-            })}
+            {...register("quantity", { required: true })}
             style={OutlinedInputStyle}
             placeholder="e.g. 150"
             inputProps={{ min: 1 }}
@@ -191,21 +189,18 @@ const ItemForm = ({
             Qty of devices from {valueItemSelected[0]?.location}
           </Typography>
         </InputLabel>
-        <button
-          disabled={blockingButton}
-          type="submit"
-          style={{
-            ...LightBlueButton,
-            ...CenteringGrid,
+        <LightBlueButtonComponent
+          title={`Add ${deviceTitle} from this location.`}
+          func={addingDeviceFromLocations}
+          disabled={blockingButton || valueItemSelected.length === 0}
+          buttonType="submit"
+          icon={<RectangleBluePlusIcon />}
+          styles={{
             display: blockingButton ? "none" : "flex",
             width: "100%",
+            margin: "0.5rem 0",
           }}
-        >
-          <Typography textTransform="none" style={LightBlueButtonText}>
-            <RectangleBluePlusIcon />
-            &nbsp; Add qty from location
-          </Typography>
-        </button>
+        />
       </div>
     </form>
   );
