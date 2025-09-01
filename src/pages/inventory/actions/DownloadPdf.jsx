@@ -12,6 +12,8 @@ import {
 import { Button, message } from "antd";
 import { saveAs } from "file-saver";
 import { useState } from "react";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
+import { BlueButton } from "../../../styles/global/BlueButton";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -80,13 +82,10 @@ const FileGenerator = ({ data }) => (
             "Group Name",
             "Ownership",
             "Cost of Replacement (USD)",
-            "Condition",
             "Current Location",
             "Tax Location",
             "Assignable",
             "Rented Equipment Return Date",
-            "Extra Info",
-            "Description",
           ].map((header, index) => (
             <View key={index} style={styles.tableColHeader}>
               <Text style={styles.tableCellHeader}>{header}</Text>
@@ -125,9 +124,9 @@ const FileGenerator = ({ data }) => (
             <View style={styles.tableCol}>
               <Text style={styles.tableCell}>{item.data.cost}</Text>
             </View>
-            <View style={styles.tableCol}>
+            {/* <View style={styles.tableCol}>
               <Text style={styles.tableCell}>{item.data.status}</Text>
-            </View>
+            </View> */}
             <View style={styles.tableCol}>
               <Text style={styles.tableCell}>
                 {item.data.warehouse === 1
@@ -150,7 +149,7 @@ const FileGenerator = ({ data }) => (
                 {item.data.ownership === "Rent" ? item.data.return_date : ""}
               </Text>
             </View>
-            <View style={styles.tableCol}>
+            {/* <View style={styles.tableCol}>
               <Text style={styles.tableCell}>
                 {item.data.extra_serial_number.length > 0
                   ? item.data.extra_serial_number
@@ -160,10 +159,10 @@ const FileGenerator = ({ data }) => (
                       .join(", ")
                   : "N/A"}
               </Text>
-            </View>
-            <View style={styles.tableCol}>
+            </View> */}
+            {/* <View style={styles.tableCol}>
               <Text style={styles.tableCell}>{item.data.descript_item}</Text>
-            </View>
+            </View> */}
           </View>
         ))}
       </View>
@@ -205,18 +204,13 @@ const DownloadPdf = ({ data }) => {
           borderTop: "transparent",
           borderRight: "transparent",
           borderBottom: "transparent",
-          borderRadius: "8px 8px 0 0",
         }}
       >
         <Typography
-          textTransform={"none"}
-          textAlign={"left"}
-          fontWeight={500}
-          fontSize={"12px"}
-          fontFamily={"Inter"}
-          lineHeight={"28px"}
-          color={"var(--blue-dark--700, #004EEB)"}
-          padding={"0px"}
+          style={{
+            ...TextFontSize14LineHeight20,
+            color: BlueButton.background,
+          }}
         >
           {({ blob, url, loading, error }) => loading && "Loading document..."}
           Export record&nbsp;(
