@@ -22,7 +22,7 @@ import { PropTypes } from "prop-types";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import Loading from "../../../components/animation/Loading";
@@ -58,7 +58,7 @@ const ItemTable = ({
         `/db_company/current-inventory/${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 50 * 60 * 1000, // 500 minutes
+    staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
   });
 
@@ -78,7 +78,7 @@ const ItemTable = ({
         `/db_item/check-item?company_id=${user.sqlInfo.company_id}`
       ),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 50 * 60 * 1000, // 500 minutes
+    staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
   });
 
@@ -92,14 +92,14 @@ const ItemTable = ({
         }
       ),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 50 * 60 * 1000, // 500 minutes
+    staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
   });
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-
+  const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
       const resultFormatToDisplay = new Set();
@@ -310,7 +310,12 @@ const ItemTable = ({
   const refreshFn = () => {
     listImagePerItemQuery.refetch();
     listItemsQuery.refetch();
-    return itemsInInventoryQuery.refetch();
+    itemsInInventoryQuery.refetch();
+    queryClient.invalidateQueries({ queryKey: ["itemInInventory"] });
+    queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"] });
+    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
+    queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"] });
+    return refactoredGetDataStructuringFormat();
   };
 
   useEffect(() => {
@@ -470,7 +475,7 @@ const ItemTable = ({
                 }}
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
-                dataSource={refactoredGetDataStructuringFormat()}//dataToDisplay()}
+                dataSource={refactoredGetDataStructuringFormat()} //dataToDisplay()}
                 className="table-ant-customized"
               />
               <Divider />
