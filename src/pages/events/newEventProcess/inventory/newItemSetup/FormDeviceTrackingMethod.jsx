@@ -89,9 +89,7 @@ const FormDeviceTrackingMethod = ({
       descript_item: "",
       min_serial_number: "",
       max_serial_number: "",
-      sub_location: null,
-      sub_location_2: null,
-      sub_location_3: null,
+      sub_location: "",
       quantity: 0,
       container: "",
       containerSpotLimit: "0",
@@ -428,6 +426,14 @@ const FormDeviceTrackingMethod = ({
                 return x.serial_number;
               }),
             ]);
+          }
+          if (key === "sub_location") {
+            setValue("sub_location", "");
+            const checkType =
+              typeof value === "string" ? JSON.parse(value) : value;
+            if (checkType.length > 0) {
+              return setSubLocationsSubmitted([...checkType]);
+            }
           }
         });
       }
