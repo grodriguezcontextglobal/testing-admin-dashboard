@@ -2,7 +2,7 @@ import { Grid } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -262,8 +262,13 @@ const FormDeviceTrackingMethod = ({
   ]);
   qtyDiff();
 
-  const subLocationsOptions = retrieveExistingSubLocationsForCompanyInventory(
-    itemsInInventoryQuery?.data?.data?.items
+  const subLocationsOptions = useMemo(
+    () =>
+      retrieveExistingSubLocationsForCompanyInventory(
+        itemsInInventoryQuery?.data?.data?.items,
+        watch("location")
+      ),
+    [watch("location")]
   );
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
