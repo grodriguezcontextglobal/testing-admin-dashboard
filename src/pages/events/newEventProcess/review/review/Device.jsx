@@ -1,17 +1,16 @@
 import { Grid, InputLabel } from "@mui/material";
-import { Table } from "antd";
+import { Button, Table } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
+import { BlueButton } from "../../../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
@@ -163,13 +162,12 @@ const Device = () => {
             gap: "8px",
           }}
         >
-          <BlueButtonComponent
-            title={"For consumers use?"}
-            func={() => updateDeviceFeatures(index)}
-            styles={buttonStyling({ index }).button}
-            titleStyles={buttonStyling({ index }).p}
-            icon={
-              checkConsumerUses.some((element) => element === index) ? (
+          <Button
+            style={buttonStyling({ index }).button}
+            onClick={() => updateDeviceFeatures(index)}
+          >
+            <p style={buttonStyling({ index }).p}>
+              {checkConsumerUses.some((element) => element === index) ? (
                 <div
                   style={{
                     display: "flex",
@@ -195,17 +193,17 @@ const Device = () => {
                   <BorderedCloseIcon fill={buttonStyling({ index }).fill} />
                   &nbsp;
                 </div>
-              )
-            }
-          />
+              )}
+              &nbsp;For consumers use?
+            </p>
+          </Button>
           &nbsp;
-          <BlueButtonComponent
-            title={"Is it a container?"}
-            func={() => updateContainerFeatures(index)}
-            styles={buttonContainerStyling({ index }).button}
-            titleStyles={buttonContainerStyling({ index }).p}
-            icon={
-              container.some((element) => element === index) ? (
+          <Button
+            style={buttonContainerStyling({ index }).button}
+            onClick={() => updateContainerFeatures(index)}
+          >
+            <p style={buttonContainerStyling({ index }).p}>
+              {container.some((element) => element === index) ? (
                 <div
                   style={{
                     display: "flex",
@@ -228,12 +226,14 @@ const Device = () => {
                     height: "auto",
                   }}
                 >
-                  <BorderedCloseIcon fill={buttonContainerStyling({ index }).fill} />
-                  &nbsp;
+                  <BorderedCloseIcon
+                    fill={buttonContainerStyling({ index }).fill}
+                  />
                 </div>
-              )
-            }
-          />
+              )}
+              &nbsp;Is it a container?
+            </p>
+          </Button>
         </div>
       ),
     },
