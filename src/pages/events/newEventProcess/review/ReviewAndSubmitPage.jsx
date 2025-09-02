@@ -105,7 +105,7 @@ const ReviewAndSubmitEvent = () => {
         value: data.cost,
         description: data.descript_item,
         company: data.company,
-        isItSetAsContainerForEvent: data.isItSetAsContainerForEvent,
+        isItSetAsContainerForEvent: data.isItSetAsContainerForEvent ? data.isItSetAsContainerForEvent : false,
         quantity: data.quantity,
         ownership: data.ownership,
         container: false,
