@@ -37,7 +37,9 @@ const ModalAddAndUpdateDeviceSetup = ({
   setOpenModalDeviceSetup,
   deviceTitle,
   quantity,
+  category_name,
 }) => {
+  const [blockingButton, setBlockingButton] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const queryClient = useQueryClient();
@@ -248,12 +250,12 @@ const ModalAddAndUpdateDeviceSetup = ({
   const fullDetailForSelectedData = async (props) => {
     try {
       if (
-        (!props.location,
-        !props.serial_number,
-        !Number(props.quantity),
-        !props.category_name)
+        !props.location ||
+        !props.serial_number ||
+        !props.quantity ||
+        !category_name
       )
-        return null;
+        return;
       const response = await devitrakApi.post(
         "/db_event/retrieve-item-location-quantity-full-details",
         {
@@ -264,16 +266,14 @@ const ModalAddAndUpdateDeviceSetup = ({
           enableAssignFeature: 1,
           serial_number: props.serial_number,
           quantity: Number(props.quantity),
-          category_name: props.category_name,
+          category_name: category_name,
         }
       );
       if (response.data) {
         return response.data.data;
       }
     } catch (error) {
-      alert("fullDetailForSelectedData");
-      console.log(error);
-      return null; // return message.error(JSON.stringify(error));
+      return message.error(JSON.stringify(error));
     }
   };
 
@@ -293,13 +293,15 @@ const ModalAddAndUpdateDeviceSetup = ({
         );
         return;
       }
-
       try {
         const deviceInfoResponse = await fullDetailForSelectedData({
           ...data,
           location: valueItemSelected?.location,
+          category_name: valueItemSelected?.category,
         });
-        if (!deviceInfoResponse)
+
+        console.log("deviceInfoResponse", deviceInfoResponse);
+        if (deviceInfoResponse.length === 0)
           return message.warning(
             "There is not available items in the location for the quantity set."
           );
@@ -322,26 +324,15 @@ const ModalAddAndUpdateDeviceSetup = ({
         setListOfLocations(result);
       } catch (error) {
         console.error("Error adding device from location:", error);
-        message.error("Failed to add device. Please try again.");
       }
     },
     [existingDevice, quantity, valueItemSelected, listOfLocations, setValue]
+    // REMOVED listOfLocations from dependencies to prevent stale closure
   );
 
   const removeItem = useCallback((index) => {
     setListOfLocations((prev) => prev.filter((_, i) => i !== index));
   }, []);
-
-  const blockingButton = useMemo(() => {
-    if (listOfLocations.length === 0) return false;
-
-    const totalQuantity = listOfLocations.reduce(
-      (accu, { quantity }) => accu + Number(quantity),
-      0
-    );
-
-    return totalQuantity === Number(quantity);
-  }, [listOfLocations, quantity]);
 
   const disablingButton = useMemo(() => {
     return existingDevice.length === Number(quantity)
@@ -600,6 +591,18 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
   };
 
+  useEffect(() => {
+    const trigger = () => {
+      if (listOfLocations.length === 0) return setBlockingButton(false);
+      let total = 0;
+      listOfLocations.forEach((item) => {
+        total += Number(item.quantity);
+      });
+      return setBlockingButton(total === Number(quantity));
+    };
+    trigger();
+  }, [quantity, listOfLocations, addingDeviceFromLocations]);
+
   return (
     <Modal
       open={openModalDeviceSetup}
@@ -612,106 +615,94 @@ const ModalAddAndUpdateDeviceSetup = ({
       destroyOnClose={true} // Important for cleanup
     >
       {inventorySetupInfo.isItSetAsContainerForEvent ? (
-        <>
-          <ContainerForm
-            addingDeviceFromLocations={addingDeviceFromLocations}
-            AntSelectorStyle={AntSelectorStyle}
-            blockingButton={blockingButton}
-            BlueButton={BlueButton}
-            BlueButtonText={BlueButtonText}
-            BorderedCloseIcon={BorderedCloseIcon}
-            CenteringGrid={CenteringGrid}
-            CheckIcon={CheckIcon}
-            checkIfSerialNumberExists={checkIfSerialNumberExists}
-            Chip={Chip}
-            deviceTitle={deviceTitle}
-            gettingData={fullDetailForSelectedData}
-            handleDevicesInEvent={handleDevicesInEvent}
-            handleSubmit={handleSubmit}
-            InputAdornment={InputAdornment}
-            InputLabel={InputLabel}
-            itemQuery={itemQuery}
-            LightBlueButton={LightBlueButton}
-            LightBlueButtonText={LightBlueButtonText}
-            listOfLocations={listOfLocations}
-            onChange={onChange}
-            OutlinedInput={OutlinedInput}
-            OutlinedInputStyle={OutlinedInputStyle}
-            QuestionIcon={QuestionIcon}
-            RectangleBluePlusIcon={RectangleBluePlusIcon}
-            register={register}
-            removeItem={removeItem}
-            Select={Select}
-            selectOptions={selectOptions}
-            setListOfLocations={setListOfLocations}
-            Space={Space}
-            Subtitle={Subtitle}
-            Tooltip={Tooltip}
-            Typography={Typography}
-            valueItemSelected={valueItemSelected}
-          />
-          <BlueButtonComponent
-            title={`Add ${deviceTitle} to this event.`}
-            func={handleDevicesInEvent}
-            buttonType="button"
-            loadingState={loading}
-            styles={{
-              display: blockingButton ? "flex" : "none",
-              width: "100%",
-            }}
-          />
-        </>
+        <ContainerForm
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BlueButton={BlueButton}
+          BlueButtonText={BlueButtonText}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CenteringGrid={CenteringGrid}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          deviceTitle={deviceTitle}
+          gettingData={fullDetailForSelectedData}
+          handleDevicesInEvent={handleDevicesInEvent}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          LightBlueButton={LightBlueButton}
+          LightBlueButtonText={LightBlueButtonText}
+          listOfLocations={listOfLocations}
+          onChange={onChange}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+        />
       ) : (
-        <>
-          <ItemForm
-            addingDeviceFromLocations={addingDeviceFromLocations}
-            AntSelectorStyle={AntSelectorStyle}
-            blockingButton={blockingButton}
-            BlueButtonText={BlueButtonText}
-            BorderedCloseIcon={BorderedCloseIcon}
-            CenteringGrid={CenteringGrid}
-            CheckIcon={CheckIcon}
-            checkIfSerialNumberExists={checkIfSerialNumberExists}
-            Chip={Chip}
-            deviceTitle={deviceTitle}
-            disablingButton={disablingButton}
-            existingDevice={existingDevice}
-            handleDevicesInEvent={handleDevicesInEvent}
-            handleSubmit={handleSubmit}
-            InputAdornment={InputAdornment}
-            InputLabel={InputLabel}
-            itemQuery={itemQuery}
-            LightBlueButton={LightBlueButton}
-            LightBlueButtonText={LightBlueButtonText}
-            listOfLocations={listOfLocations}
-            loading={loading}
-            onChange={onChange}
-            OutlinedInput={OutlinedInput}
-            OutlinedInputStyle={OutlinedInputStyle}
-            quantity={quantity}
-            QuestionIcon={QuestionIcon}
-            RectangleBluePlusIcon={RectangleBluePlusIcon}
-            register={register}
-            removeItem={removeItem}
-            Select={Select}
-            selectOptions={selectOptions}
-            Space={Space}
-            Subtitle={Subtitle}
-            Tooltip={Tooltip}
-            Typography={Typography}
-            valueItemSelected={valueItemSelected}
-          />
-          <BlueButtonComponent
-            title={`Add ${deviceTitle} to this event.`}
-            func={handleDevicesInEvent}
-            buttonType="button"
-            loadingState={loading}
-            styles={{
-              display: blockingButton ? "flex" : "none",
-              width: "100%",
-            }}
-          />
-        </>
+        <ItemForm
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BlueButtonText={BlueButtonText}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CenteringGrid={CenteringGrid}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          deviceTitle={deviceTitle}
+          disablingButton={disablingButton}
+          existingDevice={existingDevice}
+          handleDevicesInEvent={handleDevicesInEvent}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          LightBlueButton={LightBlueButton}
+          LightBlueButtonText={LightBlueButtonText}
+          listOfLocations={listOfLocations}
+          loading={loading}
+          onChange={onChange}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          quantity={quantity}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+        />
+      )}
+      {console.log(blockingButton)}
+      {blockingButton && (
+        <BlueButtonComponent
+          title={`Add ${deviceTitle} to this event.`}
+          func={handleDevicesInEvent}
+          disabled={existingDevice.length === Number(quantity)}
+          loadingState={loading}
+          styles={{
+            display: blockingButton ? "flex" : "none",
+            width: "100%",
+          }}
+        />
       )}
     </Modal>
   );
