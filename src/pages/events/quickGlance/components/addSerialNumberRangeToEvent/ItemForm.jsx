@@ -159,7 +159,6 @@ const ItemForm = ({
       >
         <Space size={[8, 16]} wrap>
           {listOfLocations.map((item, index) => (
-            console.log(item),
             <Chip
               key={`${item.startingNumber}-${index}`}
               label={`${item.location || "Unknown"} - ${item.quantity}`}
