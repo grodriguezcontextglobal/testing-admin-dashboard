@@ -70,7 +70,7 @@ const PastEventsTable = ({ events }) => {
         result.add({ key: data.id, ...data });
       }
     }
-    return Array.from(result);
+    return Array.from(result).toReversed();
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -90,7 +90,15 @@ const PastEventsTable = ({ events }) => {
           ),
       },
       render: (eventInfoDetail) => (
-        <span style={{ fontFamily: "Inter", width:"100%", display:"flex", justifyContent:"flex-start", alignItems:"flex-start" }}>
+        <span
+          style={{
+            fontFamily: "Inter",
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "flex-start",
+          }}
+        >
           <Avatar
             style={{
               display: isSmallDevice || isMediumDevice ? "none" : "flex",
