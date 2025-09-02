@@ -13,6 +13,9 @@ const ModalAddAndUpdateDeviceSetup = lazy(() =>
   import("./ModalAddAndUpdateDeviceSetup")
 );
 const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
+  console.log("props", props);
+  console.log("title", title);
+  console.log("database", database);
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const [openModalItemList, setOpenModalItemList] = useState(false);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -137,17 +140,20 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
               md={12}
               lg={12}
             >
-              <BlueButtonComponent
-                title={"Allocate serial number range for this device type"}
-                func={() => handleOpenModal()}
-                styles={{
-                  display:
-                    props.startingNumber !== null && props.endingNumber !== null
-                      ? "none"
-                      : "flex",
-                  width: "100%",
-                }}
-              />
+              {props.startingNumber === null && props.endingNumber === null && (
+                <BlueButtonComponent
+                  title={"Allocate serial number range for this device type"}
+                  func={() => handleOpenModal()}
+                  styles={{
+                    display:
+                      props.startingNumber !== null &&
+                      props.endingNumber !== null
+                        ? "none"
+                        : "flex",
+                    width: "100%",
+                  }}
+                />
+              )}
             </Grid>
           </Grid>
         </Card>
@@ -158,6 +164,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
           setOpenModalDeviceSetup={setOpenModalDeviceSetup}
           deviceTitle={title}
           quantity={props.quantity}
+          category_name={props.item.category}
         />
       )}
       {openModalItemList && props.startingNumber !== null && (
