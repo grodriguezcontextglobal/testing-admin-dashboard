@@ -129,6 +129,8 @@ const Form = () => {
     ) {
       return alert("Quantity is not available");
     }
+    if (!assignAllDevices && (data.quantity === 0 || !data.quantity))
+      return alert("Quantity is required.");
     if (checkIfNewAddedItemAlreadyWasAdded()) {
       return updateQuantity(data.quantity);
     } else {
@@ -139,7 +141,7 @@ const Form = () => {
           ...valueItemSelected,
           cost: eventInfoDetail.merchant ? data.deposit : 0, //valueItemSelected[0].cost,
           quantity: assignAllDevices
-            ? valueItemSelected.qty
+            ? valueItemSelected.qty ?? valueItemSelected.quantity
             : Number(data.quantity),
           existing: true,
           consumerUses: false,
@@ -154,7 +156,8 @@ const Form = () => {
       return;
     }
   };
-
+  console.log(valueItemSelected);
+  console.log(selectedItem);
   const handleNextStepEventSetup = () => {
     dispatch(onAddDeviceSetup(selectedItem));
     return navigate("/create-event-page/review-submit");

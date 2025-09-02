@@ -70,14 +70,13 @@ const NoMerchantService = ({
           </InputLabel>
           <OutlinedInput
             disabled={assignAllDevices}
-            {...register("quantity", { required: true})}
+            {...register("quantity")}
             style={{
               ...OutlinedInputStyle,
               width: "100%",
             }}
             placeholder="Enter quantity needed."
             fullWidth
-            required={true}
           />
         </Grid>
         <Grid
