@@ -63,14 +63,22 @@ const PastEventsTable = ({ events }) => {
 
   const sortData = () => {
     const result = new Set();
+    const resultActive = new Set();
+    const activeEvents = events.filter((element) => element.active);
     const currentDate = new Date();
+    for (let data of activeEvents) {
+      resultActive.add({ key: data.id, ...data });
+    }
     for (let data of events) {
       const ending = new Date(data.eventInfoDetail.dateEnd);
       if (!data.active || currentDate > ending) {
         result.add({ key: data.id, ...data });
       }
     }
-    return Array.from(result).toReversed();
+    const x = Array.from(result);
+    const y = Array.from(resultActive);
+    const final = Array.from(y).concat(Array.from(x));
+    return final;
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
