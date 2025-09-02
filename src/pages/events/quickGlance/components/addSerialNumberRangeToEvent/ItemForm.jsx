@@ -29,7 +29,6 @@ const ItemForm = ({
   valueItemSelected,
   deviceTitle,
 }) => {
-  console.log(valueItemSelected);
   return (
     <form
       style={{
@@ -160,6 +159,7 @@ const ItemForm = ({
       >
         <Space size={[8, 16]} wrap>
           {listOfLocations.map((item, index) => (
+            console.log(item),
             <Chip
               key={`${item.startingNumber}-${index}`}
               label={`${item.location || "Unknown"} - ${item.quantity}`}
@@ -189,7 +189,7 @@ const ItemForm = ({
             Qty of devices from {valueItemSelected[0]?.location}
           </Typography>
         </InputLabel>
-        <LightBlueButtonComponent
+        {!blockingButton && <LightBlueButtonComponent
           title={`Add ${deviceTitle} from this location.`}
           func={addingDeviceFromLocations}
           disabled={blockingButton || valueItemSelected.length === 0}
@@ -200,7 +200,7 @@ const ItemForm = ({
             width: "100%",
             margin: "0.5rem 0",
           }}
-        />
+        />}
       </div>
     </form>
   );
