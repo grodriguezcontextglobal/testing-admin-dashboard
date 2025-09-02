@@ -300,7 +300,6 @@ const ModalAddAndUpdateDeviceSetup = ({
           category_name: valueItemSelected?.category,
         });
 
-        console.log("deviceInfoResponse", deviceInfoResponse);
         if (deviceInfoResponse.length === 0)
           return message.warning(
             "There is not available items in the location for the quantity set."
@@ -691,7 +690,6 @@ const ModalAddAndUpdateDeviceSetup = ({
           valueItemSelected={valueItemSelected}
         />
       )}
-      {console.log(blockingButton)}
       {blockingButton && (
         <BlueButtonComponent
           title={`Add ${deviceTitle} to this event.`}
