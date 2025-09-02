@@ -12,6 +12,7 @@ const ModalToDisplayFunctionInProgress = ({
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
 
+  const porcentage = Number(progress.current*100 / progress.total).toFixed(2);
   return (
     <Modal
       open={openEndingEventModal}
@@ -84,7 +85,7 @@ const ModalToDisplayFunctionInProgress = ({
               </p>
             )}
             <Progress
-              percent={progress.current}
+              percent={porcentage}
               status={
                 progress.current === progress.total ? "success" : "active"
               }
