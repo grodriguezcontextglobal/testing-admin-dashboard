@@ -230,6 +230,7 @@ const MainBody = ({
           selectedItem={selectedItem}
           setSelectedItem={setSelectedItem}
           setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
+          eventInfoDetail={eventInfoDetail}
         />
       )}
       <Grid
