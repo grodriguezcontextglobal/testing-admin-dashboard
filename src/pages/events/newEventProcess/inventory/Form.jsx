@@ -156,8 +156,6 @@ const Form = () => {
       return;
     }
   };
-  console.log(valueItemSelected);
-  console.log(selectedItem);
   const handleNextStepEventSetup = () => {
     dispatch(onAddDeviceSetup(selectedItem));
     return navigate("/create-event-page/review-submit");

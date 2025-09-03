@@ -45,7 +45,7 @@ const MerchantService = ({
             <Checkbox
               style={{ width: "100%", textAlign: "left" }}
               onChange={(e) => setAssignAllDevices(e.target.checked)}
-              value={assignAllDevices}
+              checked={assignAllDevices}
             >
               <p style={Subtitle}>Assign all</p>
             </Checkbox>

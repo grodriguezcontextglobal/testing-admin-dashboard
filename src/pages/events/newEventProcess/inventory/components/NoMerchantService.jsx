@@ -38,8 +38,11 @@ const NoMerchantService = ({
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
             <Checkbox
               style={{ width: "100%", textAlign: "left" }}
-              onChange={(e) => setAssignAllDevices(e.target.checked)}
-              value={assignAllDevices}
+              onChange={(e) => {
+                console.log(e);
+                setAssignAllDevices(e.target.checked);
+              }}
+              checked={assignAllDevices}
             >
               <p style={Subtitle}>Assign all</p>
             </Checkbox>
