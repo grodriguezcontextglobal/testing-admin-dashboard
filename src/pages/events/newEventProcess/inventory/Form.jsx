@@ -147,10 +147,12 @@ const Form = () => {
           consumerUses: false,
           company: user.company,
           ownership: data.ownership ? data.ownership : "Rent",
+          isItSetAsContainerForEvent: false,
         },
       ];
       setSelectedItem(resulting);
       dispatch(onAddDeviceSetup(resulting));
+      setValueItemSelected(null);
       setValue("quantity", "");
       setAssignAllDevices(false);
       return;
@@ -267,6 +269,13 @@ const Form = () => {
     return result;
   }, [itemQuery.data]);
 
+
+  useEffect(() => {
+    if(deviceSetup.length > 0 ) {
+      setSelectedItem(deviceSetup)
+    }
+  }, [deviceSetup, selectedItem])
+  
   return (
     <Suspense
       fallback={
