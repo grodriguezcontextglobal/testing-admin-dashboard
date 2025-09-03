@@ -28,19 +28,24 @@ const EndEventButton = () => {
   const checkRequestSize = (data) => {
     const size = new Blob([JSON.stringify(data)]).size;
     const maxSize = 30 * 1024 * 1024; // 30MB limit (increased from 10MB)
-    
+
     if (size > maxSize) {
-      throw new Error(`Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 30MB limit`);
+      throw new Error(
+        `Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 30MB limit`
+      );
     }
-    
+
     return size;
   };
 
-  const calculateOptimalBatchSize = (sampleItem, maxSizeBytes = 30 * 1024 * 1024) => {
+  const calculateOptimalBatchSize = (
+    sampleItem,
+    maxSizeBytes = 30 * 1024 * 1024
+  ) => {
     if (!sampleItem) return 150; // Increased default batch size from 50 to 150
-    
+
     const sampleSize = new Blob([JSON.stringify(sampleItem)]).size;
-    const estimatedBatchSize = Math.floor(maxSizeBytes * 0.8 / sampleSize); // Use 80% of limit for safety
+    const estimatedBatchSize = Math.floor((maxSizeBytes * 0.8) / sampleSize); // Use 80% of limit for safety
     return Math.max(1, Math.min(estimatedBatchSize, 300)); // Increased max from 100 to 300 items per batch
   };
 
@@ -51,7 +56,9 @@ const EndEventButton = () => {
       } catch (error) {
         if (error.response?.status === 413) {
           if (attempt === maxRetries) {
-            throw new Error("Request too large after retries. Please contact support.");
+            throw new Error(
+              "Request too large after retries. Please contact support."
+            );
           }
           // Wait before retry with exponential backoff
           await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
@@ -62,47 +69,63 @@ const EndEventButton = () => {
     }
   };
 
-  const processBatch = async (items, initialBatchSize = 150, processingFunction, progressCallback) => {
+  const processBatch = async (
+    items,
+    initialBatchSize = 150,
+    processingFunction,
+    progressCallback
+  ) => {
     if (!items || items.length === 0) return [];
-    
+
     let batchSize = initialBatchSize; // Increased from 50 to 150
     const results = [];
-    
+
     // Calculate optimal batch size based on first item
     if (items.length > 0) {
       batchSize = calculateOptimalBatchSize(items[0]);
     }
-    
+
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
       let currentBatchSize = batch.length;
-      
+
       while (currentBatchSize > 0) {
         const currentBatch = batch.slice(0, currentBatchSize);
-        
+
         try {
           checkRequestSize(currentBatch);
-          const batchResult = await makeRequestWithRetry(() => processingFunction(currentBatch));
-          results.push(...(Array.isArray(batchResult) ? batchResult : [batchResult]));
-          
+          const batchResult = await makeRequestWithRetry(() =>
+            processingFunction(currentBatch)
+          );
+          results.push(
+            ...(Array.isArray(batchResult) ? batchResult : [batchResult])
+          );
+
           // Update progress if callback provided
           if (progressCallback) {
             progressCallback(i + currentBatchSize, items.length);
           }
-          
+
           // Add small delay to prevent overwhelming the server
           await new Promise((resolve) => setTimeout(resolve, 100));
           break; // Success, move to next batch
-          
         } catch (error) {
-          if (error.message.includes('exceeds 30MB limit') && currentBatchSize > 1) {
+          if (
+            error.message.includes("exceeds 30MB limit") &&
+            currentBatchSize > 1
+          ) {
             // Reduce batch size and try again
             currentBatchSize = Math.floor(currentBatchSize / 2);
-            console.warn(`Reducing batch size to ${currentBatchSize} due to size limit`);
+            console.warn(
+              `Reducing batch size to ${currentBatchSize} due to size limit`
+            );
             continue;
           }
-          
-          console.error(`Error processing batch ${Math.floor(i / batchSize) + 1}:`, error);
+
+          console.error(
+            `Error processing batch ${Math.floor(i / batchSize) + 1}:`,
+            error
+          );
           throw error;
         }
       }
@@ -205,7 +228,7 @@ const EndEventButton = () => {
     const adminStaff = event.staff.adminUser ?? [];
     const headsetStaff = event.staff.headsetAttendees ?? [];
     const employeesEvent = [...adminStaff, ...headsetStaff];
-    
+
     for (let data of employeesEvent) {
       const checkRole = employeesCompany.findIndex(
         (element) => element.user === data.email
@@ -224,34 +247,40 @@ const EndEventButton = () => {
         };
       }
     }
-    
+
     const requestData = { employees: employeesCompany };
-    
+
     try {
       checkRequestSize(requestData);
-      await makeRequestWithRetry(() => 
-        devitrakApi.patch(`/company/update-company/${user.companyData.id}`, requestData)
+      await makeRequestWithRetry(() =>
+        devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          requestData
+        )
       );
     } catch (error) {
-      if (error.message.includes('exceeds 30MB limit')) {
+      if (error.message.includes("exceeds 30MB limit")) {
         // Process employees in batches if the payload is too large
         const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
-        
+
         for (let i = 0; i < employeesCompany.length; i += batchSize) {
           const batch = employeesCompany.slice(i, i + batchSize);
-          await makeRequestWithRetry(() => 
-            devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
-              employees: batch,
-              batchUpdate: true,
-              batchIndex: Math.floor(i / batchSize)
-            })
+          await makeRequestWithRetry(() =>
+            devitrakApi.patch(
+              `/company/update-company/${user.companyData.id}`,
+              {
+                employees: batch,
+                batchUpdate: true,
+                batchIndex: Math.floor(i / batchSize),
+              }
+            )
           );
         }
       } else {
         throw error;
       }
     }
-    
+
     setOpenEndingEventModal(false);
     // return window.location.reload();
     return alert("Event is closed. Inventory is updated!");
@@ -267,34 +296,46 @@ const EndEventButton = () => {
   };
 
   const sqlDeviceFinalStatusAtEventFinished = async () => {
-    setProgress(prev => ({ ...prev, step: "Processing device status updates..." }));
-    
-    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data?.receiversInventory;
+    setProgress((prev) => ({
+      ...prev,
+      step: "Processing device status updates...",
+    }));
+
+    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
+      ?.receiversInventory;
     const dataToIterate = checkTypeFetchResponse(listOfDevicesInEvent);
     const groupingDevicesFromNoSQL = groupBy(dataToIterate, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
     const eventId = event.sql.event_id;
     const companyId = user.sqlInfo.company_id;
     const update_at = formatDate(new Date());
-  
+
     // Process device status updates in batches
     const deviceEntries = Object.entries(groupingDevicesFromNoSQL);
-    const inventoryEntries = Array.isArray(allInventoryOfEvent) ? allInventoryOfEvent : [];
-    
+    const inventoryEntries = Array.isArray(allInventoryOfEvent)
+      ? allInventoryOfEvent
+      : [];
+
     // Calculate optimal batch sizes for both device and inventory data
     const deviceBatchSize = calculateOptimalBatchSize(deviceEntries[0]);
     const inventoryBatchSize = calculateOptimalBatchSize(inventoryEntries[0]);
-    
+
     // Process device status updates with dynamic inventory batching
-    const processDeviceStatusBatch = async (deviceBatch, inventoryBatchStart = 0) => {
+    const processDeviceStatusBatch = async (
+      deviceBatch,
+      inventoryBatchStart = 0
+    ) => {
       const batchGrouping = {};
       deviceBatch.forEach(([key, value]) => {
         batchGrouping[key] = value;
       });
-      
+
       // Get the appropriate inventory slice for this batch
-      const inventorySlice = inventoryEntries.slice(inventoryBatchStart, inventoryBatchStart + inventoryBatchSize);
-      
+      const inventorySlice = inventoryEntries.slice(
+        inventoryBatchStart,
+        inventoryBatchStart + inventoryBatchSize
+      );
+
       return await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/device-final-status-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
@@ -304,16 +345,22 @@ const EndEventButton = () => {
         })
       );
     };
-  
-    const processReturningItemBatch = async (deviceBatch, inventoryBatchStart = 0) => {
+
+    const processReturningItemBatch = async (
+      deviceBatch,
+      inventoryBatchStart = 0
+    ) => {
       const batchGrouping = {};
       deviceBatch.forEach(([key, value]) => {
         batchGrouping[key] = value;
       });
-      
+
       // Get the appropriate inventory slice for this batch
-      const inventorySlice = inventoryEntries.slice(inventoryBatchStart, inventoryBatchStart + inventoryBatchSize);
-      
+      const inventorySlice = inventoryEntries.slice(
+        inventoryBatchStart,
+        inventoryBatchStart + inventoryBatchSize
+      );
+
       return await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
@@ -323,67 +370,76 @@ const EndEventButton = () => {
         })
       );
     };
-  
+
     // Process device status updates with coordinated inventory batching
     let inventoryProcessed = 0;
     const totalInventoryItems = inventoryEntries.length;
     for (let i = 0; i < deviceEntries.length; i += deviceBatchSize) {
       const deviceBatch = deviceEntries.slice(i, i + deviceBatchSize);
-      
+
       // Calculate which inventory batch to use for this device batch
       const inventoryBatchStart = inventoryProcessed % totalInventoryItems;
-      
+
       try {
         // Process device status batch
         await processDeviceStatusBatch(deviceBatch, inventoryBatchStart);
-        
+
         // Update progress
-        setProgress(prev => ({ 
-          ...prev, 
-          current: i + deviceBatch.length, 
-          total: deviceEntries.length 
+        setProgress((prev) => ({
+          ...prev,
+          current: i + deviceBatch.length,
+          total: deviceEntries.length,
         }));
-        
+
         // Move to next inventory batch
         inventoryProcessed += inventoryBatchSize;
-        
+
         // Add delay between batches
         await new Promise((resolve) => setTimeout(resolve, 100));
-        
       } catch (error) {
-        console.error(`Error processing device status batch ${Math.floor(i / deviceBatchSize) + 1}:`, error);
+        console.error(
+          `Error processing device status batch ${
+            Math.floor(i / deviceBatchSize) + 1
+          }:`,
+          error
+        );
         throw error;
       }
     }
-  
+
     // Reset inventory processing counter for returning items
     inventoryProcessed = 0;
     // Process returning items with coordinated inventory batching
     for (let i = 0; i < deviceEntries.length; i += deviceBatchSize) {
       const deviceBatch = deviceEntries.slice(i, i + deviceBatchSize);
-      
+
       // Calculate which inventory batch to use for this device batch
       const inventoryBatchStart = inventoryProcessed % totalInventoryItems;
-      
+
       try {
         // Process returning item batch
         await processReturningItemBatch(deviceBatch, inventoryBatchStart);
-        
+
         // Update progress
-        setProgress(prev => ({ 
-          ...prev, 
-          current: i + deviceBatch.length, 
-          total: deviceEntries.length 
+        setProgress((prev) => ({
+          ...prev,
+          step: "Processing returning items...",
+          current: i + deviceBatch.length,
+          total: deviceEntries.length,
         }));
-        
+
         // Move to next inventory batch
         inventoryProcessed += inventoryBatchSize;
-        
+
         // Add delay between batches
         await new Promise((resolve) => setTimeout(resolve, 100));
-        
       } catch (error) {
-        console.error(`Error processing returning item batch ${Math.floor(i / deviceBatchSize) + 1}:`, error);
+        console.error(
+          `Error processing returning item batch ${
+            Math.floor(i / deviceBatchSize) + 1
+          }:`,
+          error
+        );
         throw error;
       }
     }
@@ -444,29 +500,29 @@ const EndEventButton = () => {
 
   const inactiveEventAfterEndIt = async () => {
     try {
-      setProgress(prev => ({ ...prev, step: "Deactivating event..." }));
-      
+      setProgress((prev) => ({ ...prev, step: "Deactivating event..." }));
+
       const removingTemporalStaff = [...staffRemoveAccessRef.current];
       const allStaffEvent = [...event.staff.headsetAttendees];
       const result = new Set();
-      
+
       for (const data of allStaffEvent) {
         if (!removingTemporalStaff.includes(data.email)) {
           result.add(data);
         }
       }
-      
+
       const requestData = {
         active: false,
         "staff.headsetAttendees": Array.from(result),
       };
-      
+
       checkRequestSize(requestData);
-      
-      const resp = await makeRequestWithRetry(() => 
+
+      const resp = await makeRequestWithRetry(() =>
         devitrakApi.patch(`/event/edit-event/${event.id}`, requestData)
       );
-      
+
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
         return openNotificationWithIcon(
@@ -481,29 +537,33 @@ const EndEventButton = () => {
 
   const addingRecordOfActivityInEvent = async () => {
     try {
-      setProgress(prev => ({ ...prev, step: "Adding activity records..." }));
-      
+      setProgress((prev) => ({ ...prev, step: "Adding activity records..." }));
+
       const groupingInventoryByGroupName = groupBy(event.deviceSetup, "group");
-      const dataToStoreAsRecord = transactionsRecordQuery?.data?.data?.listOfReceivers;
+      const dataToStoreAsRecord =
+        transactionsRecordQuery?.data?.data?.listOfReceivers;
       const eventName = event.eventInfoDetail.eventName;
-      
+
       // Check if the combined data exceeds size limit
       const requestData = {
         groupingInventoryByGroupName,
         dataToStoreAsRecord,
         event: eventName,
       };
-      
+
       try {
         checkRequestSize(requestData);
-        await makeRequestWithRetry(() => 
-          devitrakApi.post("/db_record/inserting-record-refactored", requestData)
+        await makeRequestWithRetry(() =>
+          devitrakApi.post(
+            "/db_record/inserting-record-refactored",
+            requestData
+          )
         );
       } catch (error) {
-        if (error.message.includes('exceeds 30MB limit')) {
+        if (error.message.includes("exceeds 30MB limit")) {
           // Process records in batches
           const processRecordBatch = async (batch) => {
-            return await makeRequestWithRetry(() => 
+            return await makeRequestWithRetry(() =>
               devitrakApi.post("/db_record/inserting-record-refactored", {
                 groupingInventoryByGroupName,
                 dataToStoreAsRecord: batch,
@@ -511,12 +571,13 @@ const EndEventButton = () => {
               })
             );
           };
-          
+
           await processBatch(
-            dataToStoreAsRecord || [], 
-            calculateOptimalBatchSize(dataToStoreAsRecord?.[0]), 
+            dataToStoreAsRecord || [],
+            calculateOptimalBatchSize(dataToStoreAsRecord?.[0]),
             processRecordBatch,
-            (current, total) => setProgress(prev => ({ ...prev, current, total }))
+            (current, total) =>
+              setProgress((prev) => ({ ...prev, current, total }))
           );
         } else {
           throw error;
@@ -529,8 +590,11 @@ const EndEventButton = () => {
   };
 
   const inactiveTransactionDocuments = async () => {
-    setProgress(prev => ({ ...prev, step: "Updating transaction documents..." }));
-    
+    setProgress((prev) => ({
+      ...prev,
+      step: "Updating transaction documents...",
+    }));
+
     const requestData = {
       find: {
         eventSelected: event.eventInfoDetail.eventName,
@@ -540,13 +604,13 @@ const EndEventButton = () => {
         active: false,
       },
     };
-    
+
     checkRequestSize(requestData);
-    
-    const updatingTransactionDocuments = await makeRequestWithRetry(() => 
+
+    const updatingTransactionDocuments = await makeRequestWithRetry(() =>
       devitrakApi.post("/transaction/update-multiple-documents", requestData)
     );
-    
+
     if (updatingTransactionDocuments.data.ok) {
       return updatingTransactionDocuments.data.list;
     }
@@ -561,8 +625,8 @@ const EndEventButton = () => {
             Number(itemsPerCompany()[data.group].at(-1).quantity) +
             Number(data.quantity)
           }`;
-          
-          const result = await makeRequestWithRetry(() => 
+
+          const result = await makeRequestWithRetry(() =>
             devitrakApi.patch(
               `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
               { quantity: newQty }
@@ -573,12 +637,12 @@ const EndEventButton = () => {
       }
       return results;
     };
-    
+
     await processBatch(
-      items, 
-      calculateOptimalBatchSize(items[0]), 
+      items,
+      calculateOptimalBatchSize(items[0]),
       processItemBatch,
-      (current, total) => setProgress(prev => ({ ...prev, current, total }))
+      (current, total) => setProgress((prev) => ({ ...prev, current, total }))
     );
   };
 
@@ -590,7 +654,10 @@ const EndEventButton = () => {
       // Update inventory items in batches
       const itemsToUpdate = returningItemsInInventoryAfterEndingEvent();
       if (itemsToUpdate?.length > 0) {
-        setProgress(prev => ({ ...prev, step: "Updating inventory quantities..." }));
+        setProgress((prev) => ({
+          ...prev,
+          step: "Updating inventory quantities...",
+        }));
         await updateInventoryItemsBatch(itemsToUpdate);
       }
 
@@ -607,11 +674,13 @@ const EndEventButton = () => {
       await inactiveTransactionDocuments();
 
       // Remove staff access
-      setProgress(prev => ({ ...prev, step: "Removing staff access..." }));
+      setProgress((prev) => ({ ...prev, step: "Removing staff access..." }));
       return await removingAccessFromStaffMemberOnly();
-      
     } catch (error) {
-      openNotificationWithIcon("error", `Event closure failed: ${error.message}`);
+      openNotificationWithIcon(
+        "error",
+        `Event closure failed: ${error.message}`
+      );
       setOpenEndingEventModal(false);
     }
   };
@@ -632,24 +701,26 @@ const EndEventButton = () => {
         alignItems={"center"}
         container
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"left"}
-          alignItems={"center"}
-          textAlign={"left"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <BlueButtonConfirmationComponent 
-            title={"End event"}
-            func={updatingItemInDB}
-            confirmationTitle="Are you sure? This action can not be reversed."
-            styles={{ width:"100%"}}
-          />
-        </Grid>
+        {!openEndingEventModal && (
+          <Grid
+            display={"flex"}
+            justifyContent={"left"}
+            alignItems={"center"}
+            textAlign={"left"}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <BlueButtonConfirmationComponent
+              title={"End event"}
+              func={updatingItemInDB}
+              confirmationTitle="Are you sure? This action can not be reversed."
+              styles={{ width: "100%" }}
+            />
+          </Grid>
+        )}
       </Grid>
       {openEndingEventModal && (
         <ModalToDisplayFunctionInProgress
