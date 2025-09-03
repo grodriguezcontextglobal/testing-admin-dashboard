@@ -64,8 +64,8 @@ const PastEventsTable = ({ events }) => {
   const sortData = () => {
     const result = new Set();
     const resultActive = new Set();
-    const activeEvents = events.filter((element) => element.active);
     const currentDate = new Date();
+    const activeEvents = events.filter((element) => element.active && currentDate > element.eventInfoDetail.dateEnd);
     for (let data of activeEvents) {
       resultActive.add({ key: data.id, ...data });
     }
