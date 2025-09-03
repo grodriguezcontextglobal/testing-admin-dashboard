@@ -102,7 +102,7 @@ const ItemTable = ({
   const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
-      const resultFormatToDisplay = new Set();
+      const resultFormatToDisplay = new Map();
       const groupingBySerialNumber = groupBy(
         itemsInInventoryQuery?.data?.data?.items,
         "serial_number"
@@ -110,27 +110,30 @@ const ItemTable = ({
       if (props?.length > 0) {
         for (let data of props) {
           if (groupingBySerialNumber[data.serial_number]) {
-            resultFormatToDisplay.add({
-              key: `${data.item_id}-${data.event_name}`,
-              ...data,
-              brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
-              data: {
+            if (!resultFormatToDisplay.has(data.item_id)) {
+              const valu = {
+                key: `${data.item_id}`,
                 ...data,
+                brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
+                data: {
+                  ...data,
+                  location:
+                    groupingBySerialNumber[data.serial_number].at(-1).location,
+                  ...groupingBySerialNumber[data.serial_number].at(-1),
+                },
                 location:
                   groupingBySerialNumber[data.serial_number].at(-1).location,
-                ...groupingBySerialNumber[data.serial_number].at(-1),
-              },
-              location:
-                groupingBySerialNumber[data.serial_number].at(-1).location,
-              image_url:
-                groupingBySerialNumber[data.serial_number].at(-1).image_url ??
-                null,
-            });
+                image_url:
+                  groupingBySerialNumber[data.serial_number].at(-1).image_url ??
+                  null,
+              }
+              resultFormatToDisplay.set(data.item_id, valu);
+            }
           }
         }
       }
       return orderBy(
-        Array.from(resultFormatToDisplay),
+        Array.from(resultFormatToDisplay.values()),
         ["serial_number"],
         ["asc"]
       );
@@ -312,13 +315,18 @@ const ItemTable = ({
     listItemsQuery.refetch();
     itemsInInventoryQuery.refetch();
     queryClient.invalidateQueries({ queryKey: ["itemInInventory"] });
-    queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"] });
+    queryClient.invalidateQueries({
+      queryKey: ["RefactoredListInventoryCompany"],
+    });
     queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
-    queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"] });
+    queryClient.invalidateQueries({
+      queryKey: ["ItemsInInventoryCheckingQuery"],
+    });
     return refactoredGetDataStructuringFormat();
   };
 
   useEffect(() => {
+    console.log("useEffect", dataToDisplay());
     dataToDisplay();
   }, []);
 
