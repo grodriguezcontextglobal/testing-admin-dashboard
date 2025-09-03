@@ -4,7 +4,7 @@ import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -20,8 +20,8 @@ import { formatDate } from "../../../../inventory/utils/dateFormat";
 import useSuppliers from "../../../../inventory/utils/hooks/useSuppliers";
 import BulkRentedItems from "./components/BulkRentedItems";
 import {
-  bulkItemInsertAlphanumeric,
-  bulkItemInsertSequential,
+  bulkItemInsertAlphanumericWithEventCheck,
+  bulkItemInsertSequentialWithEventCheck,
 } from "./components/BulkRentedItemsActions";
 import {
   renderingModals,
@@ -30,6 +30,7 @@ import {
 import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
 import validatingInputFields from "./components/validatingFields";
 import "./style.css";
+import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 
 const options = [{ value: "Rent" }];
 
@@ -37,6 +38,7 @@ const FormDeviceTrackingMethod = ({
   selectedItem,
   setSelectedItem,
   setDisplayFormToCreateCategory,
+  eventInfoDetail,
 }) => {
   const {
     supplierList,
@@ -93,8 +95,10 @@ const FormDeviceTrackingMethod = ({
       quantity: 0,
       container: "",
       containerSpotLimit: "0",
+      enabledAssignFeature: 1,
     },
   });
+  const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -185,7 +189,7 @@ const FormDeviceTrackingMethod = ({
     }
     try {
       if (scannedSerialNumbers.length > 0) {
-        const response = await bulkItemInsertAlphanumeric({
+        const response = await bulkItemInsertAlphanumericWithEventCheck({
           data,
           user,
           openNotificationWithIcon,
@@ -200,11 +204,16 @@ const FormDeviceTrackingMethod = ({
           setScannedSerialNumbers,
           alphaNumericInsertItemMutation,
           dicSuppliers,
+          selectedItems: selectedItem,
+          setSelectedItem,
+          dispatch,
+          onAddDeviceSetup: onAddDeviceSetup,
+          eventInfoDetail,
         });
         const respNewItem = [...selectedItem, response];
         setSelectedItem(respNewItem);
       } else {
-        const response = await bulkItemInsertSequential({
+        const response = await bulkItemInsertSequentialWithEventCheck({
           data,
           user,
           openNotificationWithIcon,
@@ -217,6 +226,11 @@ const FormDeviceTrackingMethod = ({
           subLocationsSubmitted,
           sequencialNumbericInsertItemMutation,
           dicSuppliers,
+          selectedItems: selectedItem,
+          setSelectedItem,
+          dispatch,
+          onAddDeviceSetup: onAddDeviceSetup,
+          eventInfoDetail,
         });
         const respNewItem = [...selectedItem, response];
         setSelectedItem(respNewItem);
@@ -434,6 +448,13 @@ const FormDeviceTrackingMethod = ({
             if (checkType.length > 0) {
               return setSubLocationsSubmitted([...checkType]);
             }
+          }
+          if (key === "ownership") {
+            setValue("ownership", "Rent");
+            setIsRented(true);
+          }
+          if(key === "enableAssignFeature") {
+            setValue("enableAssignFeature", 1);
           }
         });
       }
