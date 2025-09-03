@@ -476,25 +476,42 @@ const EndEventButton = () => {
   };
 
   const returningItemsInInventoryAfterEndingEvent = () => {
+    // Validate required data is available
+    const itemsInPool = findItemsInPoolEvent();
+    const deviceSetup = event.deviceSetup;
+    
+    if (!itemsInPool || !deviceSetup || deviceSetup.length === 0) {
+      console.warn("Missing required data for inventory calculation");
+      return [];
+    }
+    
     const totalResult = new Set();
-    for (let device of event.deviceSetup) {
-      if (checkItemsInUseToUpdateInventory()?.length > 0) {
-        for (let data of checkItemsInUseToUpdateInventory()) {
-          if (device.group === data[0]) {
-            const quantityResult = Number(device.quantity) - data[1];
+    const itemsInUse = checkItemsInUseToUpdateInventory();
+    
+    for (let device of deviceSetup) {
+      let deviceAdded = false;
+      
+      if (itemsInUse?.length > 0) {
+        for (let [itemType, usedCount] of itemsInUse) {
+          if (device.group === itemType) {
+            const quantityResult = Math.max(0, Number(device.quantity) - usedCount);
             const profile = {
               ...device,
               quantity: quantityResult,
             };
             totalResult.add(profile);
-          } else {
-            totalResult.add(device);
+            deviceAdded = true;
+            break;
           }
         }
-      } else {
+      }
+      
+      // If device wasn't processed above, add it as-is
+      if (!deviceAdded) {
         totalResult.add(device);
       }
     }
+    
     return Array.from(totalResult);
   };
 
@@ -651,37 +668,92 @@ const EndEventButton = () => {
     setProgress({ current: 0, total: 0, step: "Starting event closure..." });
 
     try {
-      // Update inventory items in batches
+      // Step 1: Ensure all required queries are loaded
+      setProgress((prev) => ({
+        ...prev,
+        step: "Loading required data..."
+      }));
+      
+      // Wait for critical queries to complete
+      await Promise.all([
+        listOfItemsInInventoryQuery.refetch(),
+        itemsInPoolQuery.refetch(),
+        eventInventoryQuery.refetch(),
+        sqlDBInventoryEventQuery.refetch()
+      ]);
+  
+      // Validate that required data is available
+      if (!listOfItemsInInventoryQuery.data?.data?.listOfItems) {
+        throw new Error("Inventory data not available. Please try again.");
+      }
+  
+      if (!itemsInPoolQuery.data?.data?.receiversInventory) {
+        throw new Error("Event inventory data not available. Please try again.");
+      }
+  
+      // Step 2: Update inventory items in batches
       const itemsToUpdate = returningItemsInInventoryAfterEndingEvent();
       if (itemsToUpdate?.length > 0) {
         setProgress((prev) => ({
           ...prev,
           step: "Updating inventory quantities...",
+          total: itemsToUpdate.length
         }));
         await updateInventoryItemsBatch(itemsToUpdate);
+      } else {
+        console.warn("No items to update in inventory");
       }
-
-      // Process SQL device status updates
+  
+      // Step 3: Process SQL device status updates
+      setProgress((prev) => ({
+        ...prev,
+        step: "Processing device status updates..."
+      }));
       await sqlDeviceFinalStatusAtEventFinished();
-
-      // Add activity records
+  
+      // Step 4: Add activity records
+      setProgress((prev) => ({
+        ...prev,
+        step: "Recording event activity..."
+      }));
       await addingRecordOfActivityInEvent();
-
-      // Deactivate event
+  
+      // Step 5: Deactivate event
+      setProgress((prev) => ({
+        ...prev,
+        step: "Deactivating event..."
+      }));
       await inactiveEventAfterEndIt();
-
-      // Update transaction documents
+  
+      // Step 6: Update transaction documents
+      setProgress((prev) => ({
+        ...prev,
+        step: "Updating transaction documents..."
+      }));
       await inactiveTransactionDocuments();
-
-      // Remove staff access
-      setProgress((prev) => ({ ...prev, step: "Removing staff access..." }));
-      return await removingAccessFromStaffMemberOnly();
+  
+      // Step 7: Remove staff access
+      setProgress((prev) => ({
+        ...prev,
+        step: "Removing staff access..."
+      }));
+      await removingAccessFromStaffMemberOnly();
+  
+      // Success
+      setProgress((prev) => ({
+        ...prev,
+        step: "Event closure completed successfully!",
+        current: prev.total,
+      }));
+  
     } catch (error) {
+      console.error("Event closure error:", error);
       openNotificationWithIcon(
         "error",
         `Event closure failed: ${error.message}`
       );
       setOpenEndingEventModal(false);
+      throw error; // Re-throw to allow caller to handle
     }
   };
 
