@@ -3,15 +3,13 @@ import {
   InputLabel,
   OutlinedInput,
   Typography,
-  useTheme,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import { Button, Divider } from "antd";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { Divider } from "antd";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import Header from "../../components/Header";
 
 const BodyForm = ({
@@ -67,12 +65,20 @@ const BodyForm = ({
               },
             }}
           >
-            <Button onClick={() => triggerRoutes()} style={GrayButton}>
-              <Typography style={GrayButtonText}>Cancel</Typography>
-            </Button>
-            <Button htmlType="submit" style={BlueButton}>
-              <Typography style={BlueButtonText}>Save and log out</Typography>
-            </Button>
+            <GrayButtonComponent
+              title={"Cancel"}
+              onClick={() => triggerRoutes()}
+              style={{
+                width: "fit-content",
+              }}
+            />
+            <BlueButtonComponent
+              buttonType="submit"
+              title={"Save and log out"}
+              style={{
+                width: "fit-content",
+              }}
+            />
           </Grid>
         </Grid>
 
@@ -189,12 +195,20 @@ const BodyForm = ({
             },
           }}
         >
-          <Button onClick={() => triggerRoutes()} style={GrayButton}>
-            <Typography style={GrayButtonText}>Cancel</Typography>
-          </Button>
-          <Button htmlType="submit" style={BlueButton}>
-            <Typography style={BlueButtonText}>Save and log out</Typography>
-          </Button>
+          <GrayButtonComponent
+            title={"Cancel"}
+            func={() => triggerRoutes()}
+            style={{
+              width: "fit-content",
+            }}
+          />
+          <BlueButtonComponent
+            buttonType="submit"
+            title={"Save and log out"}
+            style={{
+              width: "fit-content",
+            }}
+          />
         </Grid>
       </Grid>
     </form>

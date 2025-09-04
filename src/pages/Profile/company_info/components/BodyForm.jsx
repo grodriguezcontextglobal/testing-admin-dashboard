@@ -1,24 +1,29 @@
-import { Grid, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { Avatar, Button, Divider, Space } from "antd";
-import { Subtitle } from "../../../../styles/global/Subtitle";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import {
+  Grid,
+  InputLabel,
+  OutlinedInput,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { Avatar, Divider, Space } from "antd";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 import Header from "../../components/Header";
 
 const BodyForm = ({
-    handleUpdatePersonalInfo,
-    handleSubmit,
-    isMobile,
-    loading,
-    features,
-    user,
-    checkIfOriginalDataHasChange,
-    removingCompanyLogo,
-    register,
-    CardSearchStaffFound,
+  handleUpdatePersonalInfo,
+  handleSubmit,
+  isMobile,
+  loading,
+  features,
+  user,
+  checkIfOriginalDataHasChange,
+  removingCompanyLogo,
+  register,
+  CardSearchStaffFound,
 }) => {
   return (
     <form
@@ -54,15 +59,14 @@ const BodyForm = ({
           md={6}
           lg={6}
         >
-          <Button
-            htmlType="submit"
-            loading={loading}
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Save and log out
-            </Typography>
-          </Button>
+          <BlueButtonComponent
+            buttonType="submit"
+            loadingState={loading}
+            title={"Save and log out"}
+            style={{
+              width: "fit-content",
+            }}
+          />
         </Grid>
       </Grid>
       <Divider />
@@ -432,15 +436,14 @@ const BodyForm = ({
           md={12}
           lg={12}
         >
-          <Button
-            htmlType="submit"
-            loading={loading}
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Save and log out
-            </Typography>
-          </Button>
+          <BlueButtonComponent
+            buttonType="submit"
+            loadingState={loading}
+            title={"Save and log out"}
+            style={{
+              width: "fit-content",
+            }}
+          />
         </Grid>
       </Grid>
     </form>

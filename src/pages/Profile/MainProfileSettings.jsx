@@ -1,11 +1,11 @@
-import { Grid, Typography, useTheme, useMediaQuery } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { DangerButton } from "../../styles/global/DangerButton";
-import { DangerButtonText } from "../../styles/global/DangerButtonText";
 import { devitrakApi } from "../../api/devitrakApi";
+import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { persistor } from "../../store/Store";
+import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
 import { onResetCustomer } from "../../store/slices/customerSlice";
 import {
@@ -13,11 +13,10 @@ import {
   onResetDevicesHandle,
 } from "../../store/slices/devicesHandleSlice";
 import { onResetEventInfo } from "../../store/slices/eventSlice";
-import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetHelpers } from "../../store/slices/helperSlice";
+import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
-import { onLogout } from "../../store/slices/adminSlice";
 
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
@@ -147,9 +146,10 @@ const MainProfileSettings = () => {
             alignItems: "center",
           }}
         >
-          <Button style={DangerButton} onClick={() => logout()}>
-            <p style={DangerButtonText}>Log out</p>
-          </Button>
+          <DangerButtonComponent
+          title={"Log out"}
+          func={() => logout()}
+          />
         </Grid>
       </Grid>
 

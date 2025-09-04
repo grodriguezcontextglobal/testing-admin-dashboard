@@ -4,17 +4,16 @@ import {
   InputLabel,
   OutlinedInput,
   Typography,
-  useTheme,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { Avatar, Button, Divider, Space } from "antd";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../styles/global/Subtitle";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 import Header from "../../components/Header";
 
 const BodyRendering = ({
@@ -39,7 +38,7 @@ const BodyRendering = ({
         padding: isMobile ? "16px" : "24px 0",
       }}
     >
-      <Grid container >
+      <Grid container>
         <Grid
           item
           xs={12}
@@ -53,20 +52,28 @@ const BodyRendering = ({
           }}
         >
           <Grid item xs={12} sm={12} md={8} lg={8}>
-          <Header title={"Personal Info"} description={"Update your photo and personal details."} />
-
+            <Header
+              title={"Personal Info"}
+              description={"Update your photo and personal details."}
+            />
           </Grid>
-          <Grid display={"flex"} justifyContent={"flex-end"} item xs={12} sm={12} md={4} lg={4}>
-          <Button
-            loading={loading}
-            htmlType="submit"
-            style={{ ...BlueButton, width: "fit-content" }}
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-end"}
+            item
+            xs={12}
+            sm={12}
+            md={4}
+            lg={4}
           >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Save and log out
-            </Typography>
-          </Button>
-
+            <BlueButtonComponent
+              buttonType="submit"
+              loadingState={loading}
+              title={"Save and log out"}
+              style={{
+                width: "fit-content",
+              }}
+            />
           </Grid>
         </Grid>
 
@@ -183,19 +190,19 @@ const BodyRendering = ({
                     }}
                   >
                     <Avatar
-                    size={"large"}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      objectPosition: "center",
-                      borderRadius: "50%",
-                    }}
+                      size={"large"}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        borderRadius: "50%",
+                      }}
                       src={
                         <img
                           src={user?.data?.imageProfile}
                           alt="profile"
-                          width={'100%'}
+                          width={"100%"}
                           style={{ aspectRatio: "1/1" }}
                         />
                       }
@@ -209,15 +216,15 @@ const BodyRendering = ({
                   </div>
                 ) : (
                   <Avatar
-                  size={"large"}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "center",
-                    borderRadius: "50%",
-                  }}
-                >
+                    size={"large"}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      borderRadius: "50%",
+                    }}
+                  >
                     {user?.name[0]}
                     {user?.lastName[0]}
                   </Avatar>
@@ -309,15 +316,14 @@ const BodyRendering = ({
             mt: 2,
           }}
         >
-          <Button
-            loading={loading}
-            htmlType="submit"
-            style={{ ...BlueButton, width: "fit-content" }}
-          >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Save and log out
-            </Typography>
-          </Button>
+          <BlueButtonComponent
+            buttonType="submit"
+            loadingState={loading}
+            title={"Save and log out"}
+            style={{
+              width: "fit-content",
+            }}
+          />
         </Grid>
       </Grid>
     </form>
