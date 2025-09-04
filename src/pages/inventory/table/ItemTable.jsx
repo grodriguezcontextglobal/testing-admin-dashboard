@@ -326,7 +326,6 @@ const ItemTable = ({
   };
 
   useEffect(() => {
-    console.log("useEffect", dataToDisplay());
     dataToDisplay();
   }, []);
 
@@ -483,7 +482,7 @@ const ItemTable = ({
                 }}
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
-                dataSource={refactoredGetDataStructuringFormat()} //dataToDisplay()}
+                dataSource={memoizedDataToDisplay} //refactoredGetDataStructuringFormat()} //dataToDisplay()}
                 className="table-ant-customized"
               />
               <Divider />
