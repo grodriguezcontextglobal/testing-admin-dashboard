@@ -33,16 +33,6 @@ const MainPage = () => {
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
     setTimeout(() => {
-      setValue("searchDevice", "...");
-    }, 500);
-    setTimeout(() => {
-      setValue("searchDevice", "..");
-    }, 700);
-    setTimeout(() => {
-      setValue("searchDevice", ".");
-    }, 900);
-    setTimeout(() => {
-      setValue("searchDevice", "");
       setIsLoadingComponent(false);
     }, 1100);
   }, []);

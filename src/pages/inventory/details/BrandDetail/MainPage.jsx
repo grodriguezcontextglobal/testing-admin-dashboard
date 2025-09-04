@@ -32,16 +32,9 @@ const MainPageBrand = () => {
   const [searchedValueItem, setSearchedValueItem] = useState(null);
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
-    for (let i = 3; i > 0; i--) {
-      let j = ".".repeat(i);
-      setTimeout(() => {
-        setValue("searchDevice", j);
-      }, 200 * i);
-      setTimeout(() => {
-        setValue("searchDevice", "");
-        setIsLoadingComponent(false);
-      }, 800);
-    }
+    setTimeout(() => {
+      setIsLoadingComponent(false);
+    }, 800);
   }, []);
 
   const handleSubmitForm = (data) => {
