@@ -73,6 +73,13 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     },
   };
   const response = attendeesAndTransactionsEventQuery?.data?.data?.data;
+  const dicStatus = {
+    0: "No devices",
+    1: "Devices pending",
+    2: "Devices in use",
+    3: "Devices returned",
+  };
+
   const columns = [
     {
       title: "Consumer",
@@ -100,7 +107,10 @@ export const CustomerDatabase = ({ searchAttendees }) => {
               fontWeight: "500",
             }}
           >
-            <Typography textTransform={"capitalize"} style={{ width: "100%", textWrap: "balance" }}>
+            <Typography
+              textTransform={"capitalize"}
+              style={{ width: "100%", textWrap: "balance" }}
+            >
               {user[0]}&nbsp;
               {user[1]}
             </Typography>
@@ -113,10 +123,31 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       dataIndex: "status",
       width: "15%",
       responsive: ["md", "lg"],
+      showSorterTooltip: { target: "full-header" },
+      filters: [
+        ...Object.entries(dicStatus).map(([statusValue, statusText]) => {
+          return {
+            text: statusText,
+            value: parseInt(statusValue), // Use actual status values (0, 1, 2, 3)
+          };
+        }),
+      ],
+      onFilter: (value, record) => {
+        // Return boolean to actually filter the data
+        // The record.status contains the transaction data, and record.status.status contains the actual status number
+        const userStatus = record.status;
+        return userStatus === value;
+      },
       sorter: {
-        compare: (a, b) => ("" + a.status).localeCompare(b.status),
+        compare: (a, b) => {
+          const statusA = a.status?.status || 0;
+          const statusB = b.status?.status || 0;
+          return statusA - statusB;
+        },
       },
       render: (status) => {
+        // Use status.status to get the actual status number for rendering
+        const statusValue = status || 0;
         return (
           <span
             style={{
@@ -125,12 +156,12 @@ export const CustomerDatabase = ({ searchAttendees }) => {
               display: "flex",
               padding: "2px 8px",
               alignItems: "center",
-              background: `${styleDic[status]?.backgroundColor}`,
+              background: `${styleDic[statusValue]?.backgroundColor}`,
               width: "fit-content",
             }}
           >
             <Typography
-              color={`${styleDic[status]?.color}`}
+              color={`${styleDic[statusValue]?.color}`}
               textTransform={"capitalize"}
               style={{
                 ...Subtitle,
@@ -138,15 +169,15 @@ export const CustomerDatabase = ({ searchAttendees }) => {
                 display: "flex",
                 justifyContent: "flex-start",
                 alignItems: "center",
-                color: `${styleDic[status]?.color}`,
+                color: `${styleDic[statusValue]?.color}`,
               }}
             >
               <Icon
                 icon="tabler:point-filled"
                 rotate={3}
-                color={`${styleDic[status]?.color}`}
+                color={`${styleDic[statusValue]?.color}`}
               />
-              {dicStatus[status]}
+              {dicStatus[statusValue]}
             </Typography>
           </span>
         );
@@ -178,7 +209,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       key: "action",
       align: "right",
       width: "5%",
-      responsive:["lg"],
+      responsive: ["lg"],
       render: () => (
         <Icon
           icon="fluent:arrow-circle-right-20-regular"
@@ -206,34 +237,27 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     return [];
   };
 
-  const dicStatus = {
-    0: "No devices",
-    1: "Devices pending",
-    2: "Devices in use",
-    3: "Devices returned",
-  };
-
   const getInfoNeededToBeRenderedInTable = () => {
     let result = [];
     let mapTemplate = {};
     for (let data of checkEventsPerCompany()) {
-        mapTemplate = {
-            user: [data.user.name, data.user.lastName],
-            email: data.user.email,
-            status: data.transactions,
-            phone: data.user.phoneNumber,
-            key: data.user.id,
-            entireData: data.user,
-        };
-        result = [...result, mapTemplate];
+      mapTemplate = {
+        user: [data.user.name, data.user.lastName],
+        email: data.user.email,
+        status: data.transactions,
+        phone: data.user.phoneNumber,
+        key: data.user.id,
+        entireData: data.user,
+      };
+      result = [...result, mapTemplate];
     }
     return result;
-};
+  };
 
-useEffect(() => {
+  useEffect(() => {
     const result = getInfoNeededToBeRenderedInTable();
     dispatch(onAddUsersOfEventList(result));
-}, [response, searchAttendees]);
+  }, [response, searchAttendees]);
 
   return (
     <Table
