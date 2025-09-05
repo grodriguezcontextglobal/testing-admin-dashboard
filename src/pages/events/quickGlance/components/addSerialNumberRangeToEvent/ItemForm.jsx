@@ -28,6 +28,7 @@ const ItemForm = ({
   Typography,
   valueItemSelected,
   deviceTitle,
+  watch,
 }) => {
   return (
     <form
@@ -127,7 +128,7 @@ const ItemForm = ({
               textAlign={"left"}
               style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
             >
-              Qty of from {valueItemSelected[0]?.location}
+              Qty of from {valueItemSelected?.location}
             </Typography>
           </InputLabel>
           <OutlinedInput
@@ -185,21 +186,27 @@ const ItemForm = ({
               textWrap: "pretty",
             }}
           >
-            Qty of devices from {valueItemSelected[0]?.location}
+            Qty of devices from {valueItemSelected?.location}
           </Typography>
         </InputLabel>
-        {!blockingButton && <LightBlueButtonComponent
-          title={`Add ${deviceTitle} from this location.`}
-          func={addingDeviceFromLocations}
-          disabled={blockingButton || valueItemSelected.length === 0}
-          buttonType="submit"
-          icon={<RectangleBluePlusIcon />}
-          styles={{
-            display: blockingButton ? "none" : "flex",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
-        />}
+        {!blockingButton && (
+          <LightBlueButtonComponent
+            title={` Add qty: ${
+              watch("quantity") && watch("quantity")
+            } of ${deviceTitle} from this location: ${
+              valueItemSelected?.location
+            }.`}
+            func={addingDeviceFromLocations}
+            disabled={blockingButton || valueItemSelected.length === 0}
+            buttonType="submit"
+            icon={<RectangleBluePlusIcon />}
+            styles={{
+              display: blockingButton ? "none" : "flex",
+              width: "100%",
+              margin: "0.5rem 0",
+            }}
+          />
+        )}
       </div>
     </form>
   );

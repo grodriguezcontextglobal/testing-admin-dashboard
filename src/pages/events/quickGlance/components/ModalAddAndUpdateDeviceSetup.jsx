@@ -688,6 +688,7 @@ const ModalAddAndUpdateDeviceSetup = ({
           Tooltip={Tooltip}
           Typography={Typography}
           valueItemSelected={valueItemSelected}
+          watch={watch}
         />
       )}
       {blockingButton && (
