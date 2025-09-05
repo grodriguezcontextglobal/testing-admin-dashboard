@@ -24,14 +24,14 @@ const EndEventButton = () => {
   const dispatch = useDispatch();
   const staffRemoveAccessRef = useRef([]);
 
-  // Batch processing utilities - Updated to 30MB limit
+  // Batch processing utilities - Updated to 90MB limit
   const checkRequestSize = (data) => {
     const size = new Blob([JSON.stringify(data)]).size;
-    const maxSize = 30 * 1024 * 1024; // 30MB limit (increased from 10MB)
+    const maxSize = 90 * 1024 * 1024; // 90MB limit (increased from 40MB)
 
     if (size > maxSize) {
       throw new Error(
-        `Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 30MB limit`
+        `Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 90MB limit`
       );
     }
 
@@ -40,13 +40,13 @@ const EndEventButton = () => {
 
   const calculateOptimalBatchSize = (
     sampleItem,
-    maxSizeBytes = 30 * 1024 * 1024
+    maxSizeBytes = 90 * 1024 * 1024 // Updated to 90MB
   ) => {
-    if (!sampleItem) return 150; // Increased default batch size from 50 to 150
+    if (!sampleItem) return 450; // Increased default batch size from 200 to 450
 
     const sampleSize = new Blob([JSON.stringify(sampleItem)]).size;
     const estimatedBatchSize = Math.floor((maxSizeBytes * 0.8) / sampleSize); // Use 80% of limit for safety
-    return Math.max(1, Math.min(estimatedBatchSize, 300)); // Increased max from 100 to 300 items per batch
+    return Math.max(1, Math.min(estimatedBatchSize, 900)); // Increased max from 400 to 900 items per batch
   };
 
   const makeRequestWithRetry = async (apiCall, maxRetries = 3) => {
@@ -71,7 +71,7 @@ const EndEventButton = () => {
 
   const processBatch = async (
     items,
-    initialBatchSize = 150,
+    initialBatchSize = 450, // Increased from 200 to 450
     processingFunction,
     progressCallback
   ) => {
@@ -111,7 +111,7 @@ const EndEventButton = () => {
           break; // Success, move to next batch
         } catch (error) {
           if (
-            error.message.includes("exceeds 30MB limit") &&
+            error.message.includes("exceeds 90MB limit") && // Updated error message
             currentBatchSize > 1
           ) {
             // Reduce batch size and try again
@@ -259,7 +259,7 @@ const EndEventButton = () => {
         )
       );
     } catch (error) {
-      if (error.message.includes("exceeds 30MB limit")) {
+      if (error.message.includes("exceeds 40MB limit")) { // Updated error message
         // Process employees in batches if the payload is too large
         const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
 
@@ -560,7 +560,7 @@ const EndEventButton = () => {
           )
         );
       } catch (error) {
-        if (error.message.includes("exceeds 30MB limit")) {
+        if (error.message.includes("exceeds 90MB limit")) { // Updated error message
           // Process records in batches
           const processRecordBatch = async (batch) => {
             return await makeRequestWithRetry(() =>
