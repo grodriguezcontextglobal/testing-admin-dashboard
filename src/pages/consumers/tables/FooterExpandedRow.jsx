@@ -1,4 +1,5 @@
-import { Button, message, Popconfirm, Spin, Table } from "antd";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { message, Spin, Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,12 +7,16 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import Lost from "../../../components/icons/credit-card-x.svg";
 import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
+import PaymentIcon from "../../../components/icons/paymentIcon";
 import ScanIcon from "../../../components/icons/scan.svg";
 import Report from "../../../components/icons/table.svg";
+import WithdrawIcon from "../../../components/icons/WithdrawIcon";
 import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
 import { checkArray } from "../../../components/utils/checkArray";
 import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
 import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import GrayButtonConfirmationComponent from "../../../components/UX/buttons/GrayButtonConfirmation";
 import {
   onAddEventData,
   onAddEventInfoDetail,
@@ -24,13 +29,9 @@ import {
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../styles/global/GrayButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
-import PaymentIcon from "../../../components/icons/paymentIcon";
-import WithdrawIcon from "../../../components/icons/WithdrawIcon";
-import { useMediaQuery } from "@uidotdev/usehooks";
 const FooterExpandedRow = ({
   dataRendering,
   formattedData,
@@ -190,65 +191,23 @@ const FooterExpandedRow = ({
             gap: "5px",
           }}
         >
-          <Popconfirm
-            onConfirm={() =>
-              returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
-            }
-            title="Are you sure?"
-          >
-            <Button
-              loading={isLoadingState}
-              style={{ ...GrayButton, width: "100%" }}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
-                &nbsp;Mark selected as returned
-              </p>
-            </Button>
-          </Popconfirm>
-          <Button
-            style={{ ...GrayButton, width: "100%" }}
-            onClick={() => setExpressCheckoutModal(true)}
-          >
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
-            >
-              <img src={ScanIcon} alt="ScanIcon" /> &nbsp;Scan-in devices
-            </p>
-          </Button>
-          <Popconfirm
-            onConfirm={() => returningAllItemsAtOnce(transactionDeviceData)}
-            title="Are you sure?"
-          >
-            <Button
-              loading={isLoadingState}
-              style={{ ...GrayButton, width: "100%" }}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
-                &nbsp;Mark all as returned
-              </p>
-            </Button>
-          </Popconfirm>
+          <GrayButtonConfirmationComponent
+            func={() => returningAllItemsAtOnce(selectedItemsToMarkAsReturned)}
+            title="Mark selected as returned"
+            confirmationTitle="Are you sure?"
+            icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+          />
+          <GrayButtonComponent
+            func={() => setExpressCheckoutModal(true)}
+            title="Scan-in devices"
+            icon={<img src={ScanIcon} alt="ScanIcon" />}
+          />
+          <GrayButtonConfirmationComponent
+            title={"Mark all as returned"}
+            confirmationTitle="Are you sure?"
+            func={() => returningAllItemsAtOnce(transactionDeviceData)}
+            icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+          />
         </div>
       ),
     },
@@ -263,58 +222,21 @@ const FooterExpandedRow = ({
             gap: "5px",
           }}
         >
-          <Button
-            loading={isLoadingState}
-            style={{ ...GrayButton, width: "100%" }}
-            onClick={() => sendEmailDeviceReport()}
-          >
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
-            >
-              <img src={Report} alt="Report" /> &nbsp;Send report to client
-            </p>
-          </Button>
-          <Button
-            loading={isLoadingState}
-            style={{ ...GrayButton, width: "100%" }}
-            onClick={() => setOpenModalCapturingDeposit(true)}
-          >
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
-            >
-              {/* <img src={Report} alt="Report" /> &nbsp; */}
-              <PaymentIcon />
-              &nbsp;Capture deposit
-            </p>
-          </Button>
-          <Button
-            loading={isLoadingState}
-            style={{ ...GrayButton, width: "100%" }}
-            onClick={() => setOpenModalReleasingDeposit(true)}
-          >
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 600,
-                color: "var(--gray700)",
-              }}
-            >
-              {/* <img src={Report} alt="Report" /> &nbsp; */}
-              <WithdrawIcon />
-              &nbsp;Release deposit
-            </p>
-          </Button>
+          <GrayButtonComponent
+            func={() => sendEmailDeviceReport()}
+            title="Send report to client"
+            icon={<img src={Report} alt="Report" />}
+          />
+          <GrayButtonComponent
+            func={() => setOpenModalCapturingDeposit(true)}
+            title="Capture deposit"
+            icon={<PaymentIcon />}
+          />
+          <GrayButtonComponent
+            func={() => setOpenModalReleasingDeposit(true)}
+            title="Release deposit"
+            icon={<WithdrawIcon />}
+          />
         </div>
       ),
     },
@@ -394,26 +316,12 @@ const FooterExpandedRow = ({
               gap: "20px",
             }}
           >
-            <Popconfirm
-              title="Are you sure that you want to charge consumer for all devices marked as lost?"
-              onConfirm={() => lostFeeChargeCustomer(lostItemsList)}
-            >
-              <Button
-                style={{ ...GrayButton, width: "100%" }}
-                // onClick={() => lostFeeChargeCustomer(lostItemsList)}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    ...CenteringGrid,
-                    fontWeight: 600,
-                    color: "var(--gray700)",
-                  }}
-                >
-                  <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
-                </p>
-              </Button>
-            </Popconfirm>{" "}
+            <GrayButtonConfirmationComponent
+              title={"Charge for all lost"}
+              confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
+              func={() => lostFeeChargeCustomer(lostItemsList)}
+              icon={<img src={Lost} alt="Lost" />}
+            />
             <p
               style={{
                 ...Subtitle,
@@ -447,137 +355,46 @@ const FooterExpandedRow = ({
               gap: "5px",
             }}
           >
-            <Popconfirm
-              onConfirm={() =>
+            <GrayButtonConfirmationComponent
+              func={() =>
                 returningAllItemsAtOnce(selectedItemsToMarkAsReturned)
               }
-              title="Are you sure?"
-            >
-              <Button
-                loading={isLoadingState}
-                style={{ ...GrayButton, width: "100%" }}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    ...CenteringGrid,
-                    fontWeight: 600,
-                    color: "var(--gray700)",
-                  }}
-                >
-                  <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
-                  &nbsp;Mark selected as returned
-                </p>
-              </Button>
-            </Popconfirm>
-            <Button
-              style={{ ...GrayButton, width: "100%" }}
-              onClick={() => setExpressCheckoutModal(true)}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                <img src={ScanIcon} alt="ScanIcon" /> &nbsp;Scan-in devices
-              </p>
-            </Button>
-            <Popconfirm
-              onConfirm={() => returningAllItemsAtOnce(transactionDeviceData)}
-              title="Are you sure?"
-            >
-              <Button
-                loading={isLoadingState}
-                style={{ ...GrayButton, width: "100%" }}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    ...CenteringGrid,
-                    fontWeight: 600,
-                    color: "var(--gray700)",
-                  }}
-                >
-                  <img src={ReverseRightArrow} alt="ReverseRightArrow" />{" "}
-                  &nbsp;Mark all as returned
-                </p>
-              </Button>
-            </Popconfirm>
-            <Button
-              loading={isLoadingState}
-              style={{ ...GrayButton, width: "100%" }}
-              onClick={() => sendEmailDeviceReport()}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                <img src={Report} alt="Report" /> &nbsp;Send report to client
-              </p>
-            </Button>
-            <Button
-              loading={isLoadingState}
-              style={{ ...GrayButton, width: "100%" }}
-              onClick={() => setOpenModalCapturingDeposit(true)}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                {/* <img src={Report} alt="Report" /> &nbsp; */}
-                <PaymentIcon />
-                &nbsp;Capture deposit
-              </p>
-            </Button>
-            <Button
-              loading={isLoadingState}
-              style={{ ...GrayButton, width: "100%" }}
-              onClick={() => setOpenModalReleasingDeposit(true)}
-            >
-              <p
-                style={{
-                  ...Subtitle,
-                  ...CenteringGrid,
-                  fontWeight: 600,
-                  color: "var(--gray700)",
-                }}
-              >
-                {/* <img src={Report} alt="Report" /> &nbsp; */}
-                <WithdrawIcon />
-                &nbsp;Release deposit
-              </p>
-            </Button>
-            <Popconfirm
-              title="Are you sure that you want to charge consumer for all devices marked as lost?"
-              onConfirm={() => lostFeeChargeCustomer(lostItemsList)}
-            >
-              <Button
-                style={{ ...GrayButton, width: "100%" }}
-                // onClick={() => lostFeeChargeCustomer(lostItemsList)}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    ...CenteringGrid,
-                    fontWeight: 600,
-                    color: "var(--gray700)",
-                  }}
-                >
-                  <img src={Lost} alt="Lost" /> &nbsp;Charge for all lost
-                </p>
-              </Button>
-            </Popconfirm>{" "}
+              title="Mark selected as returned"
+              confirmationTitle="Are you sure?"
+              icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            />
+            <GrayButtonComponent
+              func={() => setExpressCheckoutModal(true)}
+              title="Scan-in devices"
+              icon={<img src={ScanIcon} alt="ScanIcon" />}
+            />
+            <GrayButtonConfirmationComponent
+              title={"Mark all as returned"}
+              confirmationTitle="Are you sure?"
+              func={() => returningAllItemsAtOnce(transactionDeviceData)}
+              icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            />
+            <GrayButtonComponent
+              func={() => sendEmailDeviceReport()}
+              title="Send report to client"
+              icon={<img src={Report} alt="Report" />}
+            />
+            <GrayButtonComponent
+              func={() => setOpenModalCapturingDeposit(true)}
+              title="Capture deposit"
+              icon={<PaymentIcon />}
+            />
+            <GrayButtonComponent
+              func={() => setOpenModalReleasingDeposit(true)}
+              title="Release deposit"
+              icon={<WithdrawIcon />}
+            />
+            <GrayButtonConfirmationComponent
+              title={"Charge for all lost"}
+              confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
+              func={() => lostFeeChargeCustomer(lostItemsList)}
+              icon={<img src={Lost} alt="Lost" />}
+            />
           </div>
         );
       },
@@ -595,7 +412,15 @@ const FooterExpandedRow = ({
       }
     );
     return setTransactionDeviceData([
-      ...response.data.listOfReceivers.map((item) => item.device),
+      // Keep the full receiver object to preserve the _id field
+      ...response.data.listOfReceivers.map((item) => {
+        return {
+          ...item.device,
+          key: item._id ?? item.id,
+          _id: item._id ?? item.id, // Preserve the receiver ID
+          receiverId: item._id ??item.id,
+        };
+      }),
     ]);
   };
 
