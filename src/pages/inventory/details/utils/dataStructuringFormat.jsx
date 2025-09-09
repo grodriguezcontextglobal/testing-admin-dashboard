@@ -80,6 +80,8 @@ export const BodyComponent = ({
   isLoadingComponent,
   trigger,
   setResultedData,
+  setValue,
+  watch,
 }) => {
   return (
     <>
@@ -111,17 +113,23 @@ export const BodyComponent = ({
               <InputAdornment position="end">
                 <IconButton
                   style={{
+                    background: "transparent",
+                    outline: "none",
                     color: "var(--danger-action)",
                     display:
-                      searchedValueItem && searchedValueItem?.length > 0
+                      watch("searchDevice") ||
+                      watch("searchDevice") !== "" ||
+                      watch("searchDevice") !== null ||
+                      (searchedValueItem && searchedValueItem?.length > 0)
                         ? "flex"
                         : "none",
                   }}
                   onClick={() => {
                     setSearchedValueItem(null);
+                    setValue("searchDevice", "");
                   }}
                 >
-                  x{/* <CloseIcon /> */}
+                  x
                 </IconButton>
               </InputAdornment>
             }
