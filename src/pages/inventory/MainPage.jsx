@@ -288,7 +288,7 @@ const MainPage = () => {
             >
               Search inventory:&nbsp;
             </Typography>
-            <Grid
+            {/* <Grid
               item
               sx={{
                 display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
@@ -301,7 +301,7 @@ const MainPage = () => {
                 chosen={chosenOption}
                 setChosen={setChosenOption}
               />
-            </Grid>
+            </Grid> */}
           </div>
           <Grid justifyContent={"flex-start"} gap={1} container>
             <Grid item xs={12} sm={12} md={8} lg={8}>
@@ -431,7 +431,7 @@ const MainPage = () => {
                 <DownloadingXlslFile props={downloadDataReport} />
               </Button>
             </Grid>
-            <Grid
+            {/* <Grid
               item
               sx={{
                 display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
@@ -444,7 +444,7 @@ const MainPage = () => {
                 chosen={chosenOption}
                 setChosen={setChosenOption}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
         <Grid
