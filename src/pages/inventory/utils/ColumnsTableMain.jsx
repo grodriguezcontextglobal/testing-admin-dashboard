@@ -280,47 +280,47 @@ const columnsTableMain = ({
       title: "Main Serial Number",
       dataIndex: "serial_number",
       key: "serial_number",
-      showSorterTooltip: { target: "full-header" },
-      // For serial numbers, we can add a search filter instead of dropdown
-      filterDropdown: ({
-        setSelectedKeys,
-        selectedKeys,
-        confirm,
-        clearFilters,
-      }) => (
-        <div style={{ padding: 8 }}>
-          <input
-            placeholder="Search serial number"
-            value={selectedKeys[0]}
-            onChange={(e) =>
-              setSelectedKeys(e.target.value ? [e.target.value] : [])
-            }
-            // ={() => confirm()}
-            style={{ width: 188, marginBottom: 8, display: "block" }}
-          />
-          <div>
-            <button
-              type="button"
-              onClick={() => confirm()}
-              style={{ width: 90, marginRight: 8 }}
-            >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => clearFilters()}
-              style={{ width: 90 }}
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-      ),
-      onFilter: (value, record) =>
-        record.serial_number
-          .toString()
-          .toLowerCase()
-          .includes(value.toLowerCase()),
+      // showSorterTooltip: { target: "full-header" },
+      // // For serial numbers, we can add a search filter instead of dropdown
+      // filterDropdown: ({
+      //   setSelectedKeys,
+      //   selectedKeys,
+      //   confirm,
+      //   clearFilters,
+      // }) => (
+      //   <div style={{ padding: 8 }}>
+      //     <input
+      //       placeholder="Search serial number"
+      //       value={selectedKeys[0]}
+      //       onChange={(e) =>
+      //         setSelectedKeys(e.target.value ? [e.target.value] : [])
+      //       }
+      //       // ={() => confirm()}
+      //       style={{ width: 188, marginBottom: 8, display: "block" }}
+      //     />
+      //     <div>
+      //       <button
+      //         type="button"
+      //         onClick={() => confirm()}
+      //         style={{ width: 90, marginRight: 8 }}
+      //       >
+      //         Search
+      //       </button>
+      //       <button
+      //         type="button"
+      //         onClick={() => clearFilters()}
+      //         style={{ width: 90 }}
+      //       >
+      //         Reset
+      //       </button>
+      //     </div>
+      //   </div>
+      // ),
+      // onFilter: (value, record) =>
+      //   record.serial_number
+      //     .toString()
+      //     .toLowerCase()
+      //     .includes(value.toLowerCase()),
       sorter: (a, b) => a.serial_number - b.serial_number,
       responsive: responsive[6],
       render: (serial_number) => (
