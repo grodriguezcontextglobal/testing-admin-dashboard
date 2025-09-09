@@ -6,12 +6,47 @@ import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCirc
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
-const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
+import FilterIconSVG from "../../../components/icons/filter.svg";
+const columnsTableMain = ({
+  groupingByDeviceType,
+  navigate,
+  responsive,
+  data = [],
+}) => {
+  // Generate dynamic filters based on actual data
+  const generateFilters = (dataKey) => {
+    const uniqueValues = [
+      ...new Set(
+        data
+          .map((item) => {
+            if (dataKey.includes(".")) {
+              const keys = dataKey.split(".");
+              return keys.reduce((obj, key) => obj?.[key], item);
+            }
+            return item[dataKey];
+          })
+          .filter(Boolean)
+      ),
+    ];
+
+    return uniqueValues.map((value) => ({
+      text:
+        typeof value === "string"
+          ? value.charAt(0).toUpperCase() + value.slice(1)
+          : value,
+      value: value,
+    }));
+  };
+
   const columns = [
     {
       title: "Device category",
       dataIndex: "data",
       key: "data",
+      filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
+      showSorterTooltip: { target: "full-header" },
+      filters: generateFilters("category_name"),
+      onFilter: (value, record) => record.category_name === value,
       sorter: {
         compare: (a, b) =>
           ("" + a.data.item_group).localeCompare(b.data.item_group),
@@ -53,6 +88,10 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       title: "Device name",
       dataIndex: "item_group",
       key: "item_group",
+      showSorterTooltip: { target: "full-header" },
+      filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
+      filters: generateFilters("item_group"),
+      onFilter: (value, record) => record.item_group === value,
       sorter: {
         compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
       },
@@ -71,6 +110,7 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       dataIndex: "warehouse",
       key: "warehouse",
       showSorterTooltip: { target: "full-header" },
+      filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
       filters: [
         {
           text: "In Stock",
@@ -87,7 +127,6 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       },
       responsive: responsive[2],
       render: (warehouse) => {
-        // if (record.enableAssignFeature === 1) {
         return (
           <span
             style={{
@@ -131,6 +170,7 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       dataIndex: "ownership",
       key: "ownership",
       showSorterTooltip: { target: "full-header" },
+      filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
       filters: [
         {
           text: "Leased",
@@ -190,6 +230,10 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       title: "Taxable address",
       dataIndex: "data",
       key: "data",
+      // showSorterTooltip: { target: "full-header" },
+      // filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
+      // filters: generateFilters("data.main_warehouse"),
+      // onFilter: (value, record) => record.data.main_warehouse === value,
       sorter: {
         compare: (a, b) =>
           ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
@@ -208,6 +252,16 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       title: "Location",
       dataIndex: "data",
       key: "data",
+      showSorterTooltip: { target: "full-header" },
+      // filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
+      // filters: generateFilters("data.location"),
+      // onFilter: (value, record) => {
+      //   const location =
+      //     record.data.warehouse === 1
+      //       ? record.data.location
+      //       : record.data.event_name;
+      //   return location === value;
+      // },
       sorter: {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
@@ -226,6 +280,47 @@ const columnsTableMain = ({ groupingByDeviceType, navigate, responsive }) => {
       title: "Main Serial Number",
       dataIndex: "serial_number",
       key: "serial_number",
+      showSorterTooltip: { target: "full-header" },
+      // For serial numbers, we can add a search filter instead of dropdown
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <input
+            placeholder="Search serial number"
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            // ={() => confirm()}
+            style={{ width: 188, marginBottom: 8, display: "block" }}
+          />
+          <div>
+            <button
+              type="button"
+              onClick={() => confirm()}
+              style={{ width: 90, marginRight: 8 }}
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={() => clearFilters()}
+              style={{ width: 90 }}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      ),
+      onFilter: (value, record) =>
+        record.serial_number
+          .toString()
+          .toLowerCase()
+          .includes(value.toLowerCase()),
       sorter: (a, b) => a.serial_number - b.serial_number,
       responsive: responsive[6],
       render: (serial_number) => (
