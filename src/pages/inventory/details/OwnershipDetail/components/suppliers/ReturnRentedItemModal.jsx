@@ -16,10 +16,16 @@ import BlueButtonConfirmationComponent from "../../../../../../components/UX/but
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 import { utils, write } from "xlsx";
 import { Progress } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 
 const { Search } = Input;
 
-const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) => {
+const ReturnRentedItemModal = ({
+  handleClose,
+  open,
+  supplier_id,
+  data = null,
+}) => {
   const [activeTab, setActiveTab] = useState("1");
   const [renterItemList, setRenterItemList] = useState([]);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -32,6 +38,24 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
   const [isUsingProvidedData, setIsUsingProvidedData] = useState(false);
   const { user } = useSelector((state) => state.admin);
 
+  const queryClient = useQueryClient();
+  const invalidatingQueriesForRefresh = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerGroupName"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerCategory"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerCategory"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerBrand"] });
+    queryClient.invalidateQueries({ queryKey: ["currentStateDevicePerBrand"] });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    return null;
+  };
   // Request size validation helper
   const checkRequestSize = (data) => {
     const jsonString = JSON.stringify(data);
@@ -49,21 +73,23 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
   // Filtered data when using provided data prop
   const filteredProvidedData = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
-    
+
     if (!searchText) return data;
-    
+
     const searchLower = searchText.toLowerCase();
-    return data.filter(item => 
-      String(item.item_id).toLowerCase().includes(searchLower) ||
-      (item.serial_number && item.serial_number.toLowerCase().includes(searchLower)) ||
-      (item.item_group && item.item_group.toLowerCase().includes(searchLower))
+    return data.filter(
+      (item) =>
+        String(item.item_id).toLowerCase().includes(searchLower) ||
+        (item.serial_number &&
+          item.serial_number.toLowerCase().includes(searchLower)) ||
+        (item.item_group && item.item_group.toLowerCase().includes(searchLower))
     );
   }, [data, searchText]);
 
   // Paginated data for provided data
   const paginatedProvidedData = useMemo(() => {
     if (!isUsingProvidedData) return [];
-    
+
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredProvidedData.slice(startIndex, endIndex);
@@ -88,7 +114,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
   const fetchItemsForRenter = useCallback(
     async (page = 1, search = "") => {
       if (isUsingProvidedData) return; // Don't fetch if using provided data
-      
+
       setLoading(true);
       try {
         let query = "";
@@ -254,7 +280,12 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
 
       return () => clearTimeout(timeoutId);
     }
-  }, [searchText, isUsingProvidedData, filteredProvidedData.length, fetchItemsForRenter]);
+  }, [
+    searchText,
+    isUsingProvidedData,
+    filteredProvidedData.length,
+    fetchItemsForRenter,
+  ]);
 
   // Update displayed data when using provided data
   useEffect(() => {
@@ -270,7 +301,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
       if (size !== pageSize) {
         setPageSize(size);
       }
-      
+
       if (!isUsingProvidedData) {
         fetchItemsForRenter(page, searchText);
       }
@@ -420,7 +451,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
     );
   };
 
-  // Step 3: Improved email notification with batched XLSX generation
+  // Step 3: Improved email notification with complete data fetching
   const emailNotification = async ({ items }) => {
     try {
       setProgress({
@@ -441,19 +472,72 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
       const itemsArray = Array.from(items);
       const itemsData = [];
 
-      // Process items data in smaller chunks to avoid memory issues
+      // Fetch complete item data for all items, not just from renterItemList
       const ITEMS_BATCH_SIZE = 1000;
       for (let i = 0; i < itemsArray.length; i += ITEMS_BATCH_SIZE) {
         const batch = itemsArray.slice(i, i + ITEMS_BATCH_SIZE);
-        const batchData = batch.map(
-          (item) =>
-            renterItemList.find((ele) => ele.item_id === item) || {
-              item_id: item,
+
+        // Fetch complete data for this batch from database
+        const placeholders = batch.map(() => "?").join(",");
+        let fetchQuery = "";
+        let fetchValues = [];
+
+        if (supplier_id) {
+          fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
+          fetchValues = [
+            ...batch,
+            "Rent",
+            user.sqlInfo.company_id,
+            supplier_id,
+          ];
+        } else {
+          fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
+          fetchValues = [...batch, "Rent", user.sqlInfo.company_id];
+        }
+
+        try {
+          const batchResult = await devitrakApi.post(
+            "/db_company/inventory-based-on-submitted-parameters",
+            {
+              query: fetchQuery,
+              values: fetchValues,
+            }
+          );
+
+          if (batchResult.data?.result) {
+            // Map fetched data, fallback to default for missing items
+            const batchData = batch.map((itemId) => {
+              const foundItem = batchResult.data.result.find(
+                (ele) => ele.item_id === itemId
+              );
+              return (
+                foundItem || {
+                  item_id: itemId,
+                  serial_number: "N/A",
+                  item_group: "N/A",
+                }
+              );
+            });
+            itemsData.push(...batchData);
+          } else {
+            // Fallback if API call fails
+            const fallbackData = batch.map((itemId) => ({
+              item_id: itemId,
               serial_number: "N/A",
               item_group: "N/A",
-            }
-        );
-        itemsData.push(...batchData);
+            }));
+            itemsData.push(...fallbackData);
+          }
+        } catch (fetchError) {
+          console.error("Error fetching batch data:", fetchError);
+          // Fallback for failed batch
+          const fallbackData = batch.map((itemId) => ({
+            item_id: itemId,
+            serial_number: "N/A",
+            item_group: "N/A",
+          }));
+          itemsData.push(...fallbackData);
+        }
       }
 
       // Generate XLSX file with size optimization
@@ -633,10 +717,10 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
     setLoading(true);
     try {
       let allItemIds;
-      
+
       if (isUsingProvidedData) {
         // Use all items from provided data
-        allItemIds = data.map(item => item.item_id);
+        allItemIds = data.map((item) => item.item_id);
       } else {
         // Get all item IDs for the current filter (existing logic)
         let getAllQuery = "";
@@ -700,7 +784,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
         content: `Successfully processed ${allItemIds.length} items`,
         key: "processing",
       });
-
+      invalidatingQueriesForRefresh();
       setRenterItemList([]);
       setTotalItems(0);
       setSelectedItems(new Set());
@@ -751,7 +835,7 @@ const ReturnRentedItemModal = ({ handleClose, open, supplier_id, data = null }) 
         content: `Successfully processed ${itemIds.length} selected items`,
         key: "processing",
       });
-
+      invalidatingQueriesForRefresh();
       // Refresh current page
       setSelectedItems(new Set());
       setProgress({ current: 0, total: 0, step: "" });
