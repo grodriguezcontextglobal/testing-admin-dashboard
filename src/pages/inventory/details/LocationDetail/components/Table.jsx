@@ -245,6 +245,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
               ["xs", "sm", "md", "lg"],
               ["xs", "sm", "md", "lg"],
             ],
+            data: dataToDisplay()
           })}
           dataSource={dataToDisplay()}
           className="table-ant-customized"

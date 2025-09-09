@@ -192,6 +192,7 @@ const TableItemBrand = ({
                 ["xs", "sm", "md", "lg"],
                 ["xs", "sm", "md", "lg"],
               ],
+              data: dataRenderingMemo
             })}
             dataSource={dataRenderingMemo}
             className="table-ant-customized"
