@@ -20,15 +20,24 @@ const MainPage = () => {
   const categoryName = location.search.split("&")[0];
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: location.search.split("&")[1].split("=")[1],
+      searchDevice: location.search.split("&")[1].split("=")[1] ?? "",
     },
   });
 
-  useEffect(() => {
-    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
-      setValue("searchDevice", "");
+  const checkSearchDeviceValueOnMounted = () => {
+    if (!decodeURI(categoryName[1].split("=")[1])) {
+      return setValue("searchDevice", "");
     }
-  }, [categoryName]);
+    if (watch("searchDevice") === "undefined") {
+      return setValue("searchDevice", "");
+    }
+    if (watch("searchDevice") === null) {
+      return setValue("searchDevice", "");
+    }
+  };
+  useEffect(() => {
+    checkSearchDeviceValueOnMounted();
+  }, [!categoryName, decodeURI(categoryName[1].split("=")[1])]);
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
@@ -82,7 +91,9 @@ const MainPage = () => {
           setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"category"}
+          setValue={setValue}
           setResultedData={setResultedData}
+          watch={watch}
         />
       </Grid>
     </Suspense>

@@ -20,15 +20,23 @@ const MainPageOwnership = () => {
   const ownership = location.search.split("&");
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: decodeURI(ownership[1].split("=")[1]),
+      searchDevice: decodeURI(ownership[1].split("=")[1]) ?? "",
     },
   });
-
-  useEffect(() => {
-    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
-      setValue("searchDevice", "");
+  const checkSearchDeviceValueOnMounted = () => {
+    if (!decodeURI(ownership[1].split("=")[1])) {
+      return setValue("searchDevice", "");
     }
-  }, [ownership]);
+    if (watch("searchDevice") === "undefined") {
+      return setValue("searchDevice", "");
+    }
+    if (watch("searchDevice") === null) {
+      return setValue("searchDevice", "");
+    }
+  };
+  useEffect(() => {
+    checkSearchDeviceValueOnMounted();
+  }, [!ownership, decodeURI(ownership[1].split("=")[1])]);
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
@@ -36,7 +44,7 @@ const MainPageOwnership = () => {
       setIsLoadingComponent(false);
     }, 1100);
   }, []);
-  
+
   const [searchedValueItem, setSearchedValueItem] = useState(null);
   const handleSubmitForm = (data) => {
     return setSearchedValueItem(data.searchDevice);
@@ -66,7 +74,12 @@ const MainPageOwnership = () => {
         />
         <CardInfo referenceData={referenceData} />
         <Divider />
-        {decodeURI(ownership[0].slice(1)) === "Rent" && <FilterBody setSearchedValueItem={setSearchedValueItem} setValue={setValue} />}
+        {decodeURI(ownership[0].slice(1)) === "Rent" && (
+          <FilterBody
+            setSearchedValueItem={setSearchedValueItem}
+            setValue={setValue}
+          />
+        )}
         <Divider />
         <BodyComponent
           register={register}
@@ -77,6 +90,8 @@ const MainPageOwnership = () => {
           setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"ownership"}
+          setValue={setValue}
+          watch={watch}
         />
       </Grid>
     </Suspense>

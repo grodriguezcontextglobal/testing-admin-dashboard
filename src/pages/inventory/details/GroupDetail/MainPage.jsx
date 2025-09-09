@@ -21,15 +21,24 @@ const MainPageGrouping = () => {
   const groupName = location.search.split("&");
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: decodeURI(groupName[1].split("=")[1]),
+      searchDevice: decodeURI(groupName[1].split("=")[1]) ?? "",
     },
   });
 
-  useEffect(() => {
-    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
-      setValue("searchDevice", "");
+  const checkSearchDeviceValueOnMounted = () => {
+    if (!decodeURI(groupName[1].split("=")[1])) {
+      return setValue("searchDevice", "");
     }
-  }, [groupName]);
+    if (watch("searchDevice") === "undefined") {
+      return setValue("searchDevice", "");
+    }
+    if (watch("searchDevice") === null) {
+      return setValue("searchDevice", "");
+    }
+  };
+  useEffect(() => {
+    checkSearchDeviceValueOnMounted();
+  }, [!groupName, decodeURI(groupName[1].split("=")[1])]);
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {
@@ -80,7 +89,9 @@ const MainPageGrouping = () => {
           setReferenceData={setReferenceData}
           isLoadingComponent={isLoadingComponent}
           trigger={"group"}
+          setValue={setValue}
           setResultedData={setResultedData}
+          watch={watch}
         />
       </Grid>
     </Suspense>

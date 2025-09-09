@@ -1,14 +1,14 @@
 import { Grid } from "@mui/material";
 import { Divider } from "antd";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
 import { BodyComponent } from "../utils/dataStructuringFormat";
-import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 const MainPageBrand = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -20,14 +20,24 @@ const MainPageBrand = () => {
   const brandName = location.search.split("&");
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: decodeURI(brandName[1].split("=")[1]),
+      searchDevice: decodeURI(brandName[1].split("=")[1]) ?? "",
     },
   });
-  useEffect(() => {
-    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
-      setValue("searchDevice", "");
+
+  const checkSearchDeviceValueOnMounted = () => {
+    if (!decodeURI(brandName[1].split("=")[1])) {
+      return setValue("searchDevice", "");
     }
-  }, [brandName]);
+    if (watch("searchDevice") === "undefined") {
+      return setValue("searchDevice", "");
+    }
+    if (watch("searchDevice") === null) {
+      return setValue("searchDevice", "");
+    }
+  };
+  useMemo(() => {
+    checkSearchDeviceValueOnMounted();
+  }, [!brandName, decodeURI(brandName[1].split("=")[1])]);
 
   const [searchedValueItem, setSearchedValueItem] = useState(null);
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
@@ -78,6 +88,8 @@ const MainPageBrand = () => {
           isLoadingComponent={isLoadingComponent}
           trigger={"brand"}
           setResultedData={setResultedData}
+          setValue={setValue}
+          watch={watch}
         />
       </Grid>
     </Suspense>
