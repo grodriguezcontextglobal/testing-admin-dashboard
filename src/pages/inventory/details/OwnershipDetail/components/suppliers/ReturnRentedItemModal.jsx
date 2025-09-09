@@ -470,75 +470,103 @@ const ReturnRentedItemModal = ({
 
       // Get items data in batches to avoid memory issues
       const itemsArray = Array.from(items);
-      const itemsData = [];
+      let itemsData = [];
 
-      // Fetch complete item data for all items, not just from renterItemList
-      const ITEMS_BATCH_SIZE = 1000;
-      for (let i = 0; i < itemsArray.length; i += ITEMS_BATCH_SIZE) {
-        const batch = itemsArray.slice(i, i + ITEMS_BATCH_SIZE);
+      // First, try to get data from existing renterItemList or provided data
+      if (isUsingProvidedData && data && Array.isArray(data)) {
+        // Use provided data directly
+        itemsData = data.filter(item => itemsArray.includes(item.item_id));
+      } else if (renterItemList && renterItemList.length > 0) {
+        // Use existing renterItemList data
+        itemsData = renterItemList.filter(item => itemsArray.includes(item.item_id));
+      }
 
-        // Fetch complete data for this batch from database
-        const placeholders = batch.map(() => "?").join(",");
-        let fetchQuery = "";
-        let fetchValues = [];
+      // If we don't have enough data from existing sources, fetch from database
+      if (itemsData.length < itemsArray.length) {
+        const missingItemIds = itemsArray.filter(
+          itemId => !itemsData.find(item => item.item_id === itemId)
+        );
 
-        if (supplier_id) {
-          fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
-          fetchValues = [
-            ...batch,
-            "Rent",
-            user.sqlInfo.company_id,
-            supplier_id,
-          ];
-        } else {
-          fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
-          fetchValues = [...batch, "Rent", user.sqlInfo.company_id];
-        }
+        if (missingItemIds.length > 0) {
+          // Fetch complete item data for missing items
+          const ITEMS_BATCH_SIZE = 1000;
+          for (let i = 0; i < missingItemIds.length; i += ITEMS_BATCH_SIZE) {
+            const batch = missingItemIds.slice(i, i + ITEMS_BATCH_SIZE);
 
-        try {
-          const batchResult = await devitrakApi.post(
-            "/db_company/inventory-based-on-submitted-parameters",
-            {
-              query: fetchQuery,
-              values: fetchValues,
+            // Fetch complete data for this batch from database
+            const placeholders = batch.map(() => "?").join(",");
+            let fetchQuery = "";
+            let fetchValues = [];
+
+            if (supplier_id) {
+              fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
+              fetchValues = [
+                ...batch,
+                "Rent",
+                user.sqlInfo.company_id,
+                supplier_id,
+              ];
+            } else {
+              fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
+              fetchValues = [...batch, "Rent", user.sqlInfo.company_id];
             }
-          );
 
-          if (batchResult.data?.result) {
-            // Map fetched data, fallback to default for missing items
-            const batchData = batch.map((itemId) => {
-              const foundItem = batchResult.data.result.find(
-                (ele) => ele.item_id === itemId
+            try {
+              const batchResult = await devitrakApi.post(
+                "/db_company/inventory-based-on-submitted-parameters",
+                {
+                  query: fetchQuery,
+                  values: fetchValues,
+                }
               );
-              return (
-                foundItem || {
+
+              if (batchResult.data?.result) {
+                // Map fetched data, fallback to default for missing items
+                const batchData = batch.map((itemId) => {
+                  const foundItem = batchResult.data.result.find(
+                    (ele) => ele.item_id === itemId
+                  );
+                  return (
+                    foundItem || {
+                      item_id: itemId,
+                      serial_number: "N/A",
+                      item_group: "N/A",
+                    }
+                  );
+                });
+                itemsData.push(...batchData);
+              } else {
+                // Fallback if API call fails
+                const fallbackData = batch.map((itemId) => ({
                   item_id: itemId,
                   serial_number: "N/A",
                   item_group: "N/A",
-                }
-              );
-            });
-            itemsData.push(...batchData);
-          } else {
-            // Fallback if API call fails
-            const fallbackData = batch.map((itemId) => ({
-              item_id: itemId,
-              serial_number: "N/A",
-              item_group: "N/A",
-            }));
-            itemsData.push(...fallbackData);
+                }));
+                itemsData.push(...fallbackData);
+              }
+            } catch (fetchError) {
+              console.error("Error fetching batch data:", fetchError);
+              // Fallback for failed batch
+              const fallbackData = batch.map((itemId) => ({
+                item_id: itemId,
+                serial_number: "N/A",
+                item_group: "N/A",
+              }));
+              itemsData.push(...fallbackData);
+            }
           }
-        } catch (fetchError) {
-          console.error("Error fetching batch data:", fetchError);
-          // Fallback for failed batch
-          const fallbackData = batch.map((itemId) => ({
-            item_id: itemId,
-            serial_number: "N/A",
-            item_group: "N/A",
-          }));
-          itemsData.push(...fallbackData);
         }
       }
+
+      // Ensure we have data for all requested items
+      const finalItemsData = itemsArray.map(itemId => {
+        const foundItem = itemsData.find(item => item.item_id === itemId);
+        return foundItem || {
+          item_id: itemId,
+          serial_number: "N/A",
+          item_group: "N/A",
+        };
+      });
 
       // Generate XLSX file with size optimization
       const generateOptimizedXLSXFile = () => {
@@ -552,7 +580,7 @@ const ReturnRentedItemModal = ({
         // Limit data to essential fields to reduce file size
         const wsData = [
           headers,
-          ...itemsData.map((item) => [
+          ...finalItemsData.map((item) => [
             item?.item_id || "",
             item?.serial_number || "",
             item?.item_group || "",
