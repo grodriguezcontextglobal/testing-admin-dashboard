@@ -25,7 +25,7 @@ const MainPageOwnership = () => {
   });
 
   useEffect(() => {
-    if (watch("searchDevice") === "undefined") {
+    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
       setValue("searchDevice", "");
     }
   }, [ownership]);
