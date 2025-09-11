@@ -1,13 +1,12 @@
 import { InputLabel, Typography } from "@mui/material";
-import { Button, DatePicker, message, Modal, Select, Tooltip } from "antd";
+import { DatePicker, message, Modal, Select } from "antd";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { onAddAdvanceSearch } from "../../../../store/slices/searchBarResultSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
@@ -52,16 +51,16 @@ const AdvanceSearchModal = ({
       const advanceSearchResponseQuery = await devitrakApi.get(
         `/search/advance_searching_query?category=${data.category}&group=${data.group}&brand=${data.brand}&location=${data.location}&date_start=${date_start}&date_end=${date_end}&company_id=${user.companyData.id}&company_sql_id=${user.sqlInfo.company_id}`
       );
-      if (
-        advanceSearchResponseQuery.data.ok &&
-        advanceSearchResponseQuery.data.advanceSearchResult.length > 0
-      ) {
+      console.log(advanceSearchResponseQuery.data);
+      // Handle the new API response structure
+      if (advanceSearchResponseQuery.data.ok) {
+        const responseData = advanceSearchResponseQuery.data;
         return setTimeout(() => {
           setDisplayMessage(false);
           setIsLoadingState(false);
           dispatch(
             onAddAdvanceSearch(
-              advanceSearchResponseQuery.data //.advanceSearchResult
+              responseData // Pass the entire response object with all new fields
             )
           );
           return navigate("/inventory/advance_search_result");
@@ -72,13 +71,18 @@ const AdvanceSearchModal = ({
       }
     } catch (error) {
       setIsLoadingState(false);
-      if (error.response.data.msg) {
+      if (error.response?.data?.msg) {
         setErrorMessage(
           error.response.data.msg ===
             "Cannot read properties of undefined (reading 'length')"
             ? "There is not available inventory for the period selected."
             : error.response.data.msg
         );
+        return setDisplayMessage(true);
+      }
+      // Handle new API error structure if it includes a message field
+      if (error.response?.data?.message) {
+        setErrorMessage(error.response.data.message);
         return setDisplayMessage(true);
       }
       setDisplayMessage(true);
@@ -228,16 +232,17 @@ const AdvanceSearchModal = ({
             onChange={(value) => setValue("date", value)}
           />
         </div>
-        <Tooltip title="Still in construction">
-          <Button
-            // disabled
-            htmlType="submit"
-            loading={isLoadingState}
-            style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-          >
-            <Typography style={BlueButtonText}>Search</Typography>
-          </Button>
-        </Tooltip>
+        <BlueButtonComponent
+          title={"Search"}
+          func={() => null}
+          buttonType="submit"
+          loadingState={isLoadingState}
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
       </form>
       <div
         style={{
