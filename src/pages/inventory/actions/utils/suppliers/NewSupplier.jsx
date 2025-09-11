@@ -12,23 +12,24 @@ const NewSupplier = ({
   refetchingAfterNewSupplier,
 }) => {
   const [newProvider, setNewProvider] = useState({
-    companyName: "",
-    industry: "",
-    services: [],
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "USA",
-    },
-    contactInfo: {
-      email: "",
-      phone: "",
-      website: "",
-    },
-    status: "active",
-    documents: [],
+      companyName: "",
+      industry: "not needed",
+      services: ["not needed"],
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "USA",
+      },
+      contactInfo: {
+        name:"",
+        email: "",
+        phone: "",
+        website: "",
+      },
+      status: "active",
+      documents: [],
   });
 
   const handleInputChange = (e) => {

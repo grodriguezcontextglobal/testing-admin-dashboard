@@ -11,19 +11,18 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Button, message } from "antd";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { EditIcon } from "../../../components/icons/EditIcon";
 // import { UploadIcon } from "../../../components/icons/UploadIcon";
-import ViewIcon from "../../../components/icons/ViewIcon";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import UpdateProvider from "./components/UpdateProvider";
-import HistoryDocumentProvider from "./components/HistoryDocumentProvider";
-import { useSelector } from "react-redux";
-import DocumentUpload from "./actions/UploadDocument";
-import { devitrakApi } from "../../../api/devitrakApi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import ViewIcon from "../../../components/icons/ViewIcon";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import DocumentUpload from "./actions/UploadDocument";
+import HistoryDocumentProvider from "./components/HistoryDocumentProvider";
+import UpdateProvider from "./components/UpdateProvider";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
   const providersList = useQuery({
@@ -49,23 +48,24 @@ const Main = () => {
   const [uploadDocumentModal, setUploadDocumentModal] = useState(false);
   const [documentSortOrder, setDocumentSortOrder] = useState("desc");
   const [newProvider, setNewProvider] = useState({
-    companyName: "",
-    industry: "",
-    services: [],
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "USA",
-    },
-    contactInfo: {
-      email: "",
-      phone: "",
-      website: "",
-    },
-    status: "active",
-    documents: [],
+      companyName: "",
+      industry: "not needed",
+      services: ["not needed"],
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "USA",
+      },
+      contactInfo: {
+        name:"",
+        email: "",
+        phone: "",
+        website: "",
+      },
+      status: "active",
+      documents: [],
   });
 
   useEffect(() => {
@@ -248,15 +248,13 @@ const Main = () => {
         >
           Company Suppliers
         </Typography>
-        <Button
-          style={BlueButton}
-          onClick={() => {
-            setDialogMode("add");
-            setOpenDialog(true);
-          }}
-        >
-          <p style={BlueButtonText}>Add Provider</p>
-        </Button>
+        <BlueButtonComponent
+        title={"Add Provider"}
+        func={() => {
+          setDialogMode("add");
+          setOpenDialog(true);
+        }}
+        />
       </Grid>
 
       {providers?.map((provider) => (

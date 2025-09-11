@@ -26,8 +26,8 @@ const UpdateProvider = ({
     setOpenDialog(false);
     setNewProvider({
       companyName: "",
-      industry: "",
-      services: [],
+      industry: "not needed",
+      services: ["not needed"],
       address: {
         street: "",
         city: "",
@@ -36,6 +36,7 @@ const UpdateProvider = ({
         country: "USA",
       },
       contactInfo: {
+        name:"",
         email: "",
         phone: "",
         website: "",
@@ -68,34 +69,6 @@ const UpdateProvider = ({
               value={newProvider.companyName}
               onChange={handleInputChange}
               placeholder="Enter company name"
-              style={OutlinedInputStyle}
-            />
-          </Box>
-
-          <Box>
-            <InputLabel required sx={{ mb: 1 }}>
-              Industry
-            </InputLabel>
-            <OutlinedInput
-              fullWidth
-              name="industry"
-              value={newProvider.industry}
-              onChange={handleInputChange}
-              placeholder="Enter industry type"
-              style={OutlinedInputStyle}
-            />
-          </Box>
-
-          <Box>
-            <InputLabel required sx={{ mb: 1 }}>
-              Services/Equipment
-            </InputLabel>
-            <OutlinedInput
-              fullWidth
-              name="services"
-              value={newProvider?.services?.map((item) => item).join(", ")}
-              onChange={handleInputChange}
-              placeholder="Enter services or equipment (comma-separated)"
               style={OutlinedInputStyle}
             />
           </Box>
@@ -138,7 +111,7 @@ const UpdateProvider = ({
                   name="address.postalCode"
                   value={newProvider?.address?.postalCode}
                   onChange={handleInputChange}
-                  placeholder="Postal Code"
+                  placeholder="Zip Code"
                   style={OutlinedInputStyle}
                 />
                 <OutlinedInput
@@ -160,6 +133,15 @@ const UpdateProvider = ({
               Contact Information
             </InputLabel>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <OutlinedInput
+                fullWidth
+                name="contactInfo.name"
+                value={newProvider?.contactInfo?.name}
+                onChange={handleInputChange}
+                placeholder="Name of contact"
+                type="text"
+                style={OutlinedInputStyle}
+              />
               <OutlinedInput
                 fullWidth
                 name="contactInfo.email"
@@ -220,6 +202,7 @@ const UpdateProvider = ({
             !newProvider?.address?.city ||
             !newProvider?.address?.state ||
             !newProvider?.address?.postalCode ||
+            !newProvider?.contactInfo?.name ||
             !newProvider?.contactInfo?.email ||
             !newProvider?.contactInfo?.phone
           }
