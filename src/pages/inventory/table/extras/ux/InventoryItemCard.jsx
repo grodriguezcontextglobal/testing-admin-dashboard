@@ -5,7 +5,6 @@ const InventoryItemCard = ({ item }) => {
 
   const {
     serial_number,
-    descript_item,
     status,
     brand,
     location,
@@ -68,12 +67,12 @@ const InventoryItemCard = ({ item }) => {
       </Box>
 
       {/* Description Column */}
-      <Box sx={{ flex: 1 }}>
+      {/* <Box sx={{ flex: 1 }}>
         <Typography variant="body2">
           {descript_item || "No description"}
         </Typography>
       </Box>
-
+ */}
       {/* Brand Column */}
       <Box sx={{ width: 120, flexShrink: 0 }}>
         <Typography variant="body2">
