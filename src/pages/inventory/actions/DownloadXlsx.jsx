@@ -3,10 +3,10 @@ import { Button, message } from "antd";
 import { useEffect, useState } from "react";
 import { utils, writeFile } from "xlsx";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import { BlueButton } from "../../../styles/global/BlueButton";
+import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 
-const DownloadingXlslFile = ({ props }) => {
+const DownloadingXlslFile = ({ props, selectedColumns }) => {
   const [fileName, setFileName] = useState("");
 
   const [messageApi, contextHolder] = message.useMessage();
@@ -24,7 +24,6 @@ const DownloadingXlslFile = ({ props }) => {
   };
 
   const generateExcelFile = async () => {
-    // Define the header columns for Sheet1
     const headers = [
       "Serial Number",
       "Warehouse",
@@ -40,31 +39,46 @@ const DownloadingXlslFile = ({ props }) => {
       "Rented Equipment Return Date",
       "Extra Info",
       "Description",
+      "Image (URL)",
+      "Updated At",
+      "Created At",
     ];
+
+    // Filter headers based on selectedColumns
+    const filteredHeaders = headers.filter((header) =>
+      selectedColumns.includes(header)
+    );
 
     // Convert data to worksheet format for Sheet1
     const wsData = [
-      headers,
-      ...props.map((item) => [
-        item?.data?.serial_number,
-        item?.data?.warehouse === 1 ? "In-Stock" : "In-Use",
-        item?.data?.brand,
-        item?.data?.category_name,
-        item?.data?.item_group,
-        dictionaryOwnership[item?.data?.ownership],
-        item?.data?.cost,
-        item?.data?.status,
-        item?.data?.warehouse === 1 ? item?.data?.location : item?.event_name,
-        item?.data?.main_warehouse,
-        item?.data?.enableAssignFeature === 1 ? "Assignable" : "No Assignable",
-        item?.data?.ownership === "Rent" ? item?.data?.return_date : "",
+      filteredHeaders,
+      ...props.map((item) =>
         [
-          item?.data?.extra_serial_number?.map(
-            (item) => `- ${item.keyObject}: ${item.valueObject}`
-          ),
-        ].toLocaleString(),
-        item?.data?.descript_item,
-      ]),
+          item?.data?.serial_number,
+          item?.data?.warehouse === 1 ? "In-Stock" : "In-Use",
+          item?.data?.brand,
+          item?.data?.category_name,
+          item?.data?.item_group,
+          dictionaryOwnership[item?.data?.ownership],
+          item?.data?.cost,
+          item?.data?.status,
+          item?.data?.warehouse === 1 ? item?.data?.location : item?.event_name,
+          item?.data?.main_warehouse,
+          item?.data?.enableAssignFeature === 1
+            ? "Assignable"
+            : "No Assignable",
+          item?.data?.ownership === "Rent" ? item?.data?.return_date : "",
+          [
+            item?.data?.extra_serial_number?.map(
+              (item) => `- ${item.keyObject}: ${item.valueObject}`
+            ),
+          ].toLocaleString(),
+          item?.data?.descript_item,
+          item?.data?.image_url,
+          item?.data?.update_at,
+          item?.data?.create_at,
+        ].filter((_, index) => selectedColumns.includes(headers[index]))
+      ),
     ];
 
     // Create a new workbook
@@ -73,70 +87,11 @@ const DownloadingXlslFile = ({ props }) => {
     // Add Sheet1 to the workbook
     const wsSheet1 = utils.aoa_to_sheet(wsData);
     // Set cell styles for Sheet1
-    wsSheet1["!cols"] = [
-      { width: 20 },
-      { width: 20 },
-      { width: 30 },
-      { width: 30 },
-      { width: 20 },
-      { width: 20 },
-      { width: 10 },
-      { width: 20 },
-      { width: 40 },
-      { width: 40 },
-      { width: 20 },
-      { width: 30 },
-      { width: 50 },
-      { width: 50 },
-    ];
-    // Set styles for Sheet1 headers
-    for (let colTitle of headers) {
-      const headerCellAddress = utils.encode_cell({
-        r: 0,
-        c: headers.indexOf(`${colTitle}`),
-      });
-      wsSheet1[headerCellAddress].s = {
-        fill: { patternType: "solid", fgColor: { rgb: "EE1515" } },
-        font: {
-          name: "Inter",
-          sz: 16,
-          color: { rgb: "FFFFFF" },
-          bold: true,
-          italic: false,
-          underline: true,
-        },
-      };
-    }
-
-    // Set background color for "Warehouse" column cells based on value
-    props.forEach((item, index) => {
-      const rowIndex = index + 1; // Start from row 1 (since row 0 is headers)
-      const warehouseCellAddress = utils.encode_cell({ r: rowIndex, c: 1 }); // Column index 1 (Warehouse column)
-      wsSheet1[warehouseCellAddress].s = {
-        fill: {
-          patternType: "solid",
-          fgColor: { rgb: item.data.warehouse === 1 ? "00FF00" : "FF0000" }, // Green for warehouse === 1, otherwise red
-        },
-      };
-      const costCellAddress = utils.encode_cell({ r: rowIndex, c: 6 }); // Column index 6 (Warehouse column)
-      wsSheet1[costCellAddress].s = {
-        fill: {
-          patternType: "solid",
-          font: {
-            name: "Inter",
-            sz: 16,
-            color: "#000000",
-            bold: true,
-            italic: false,
-            underline: false,
-          },
-        },
-      };
-    });
+    wsSheet1["!cols"] = filteredHeaders.map(() => ({ width: 20 }));
 
     utils.book_append_sheet(wb, wsSheet1, "Stock - Report");
 
-    // Generate a random file name (you can customize this logic)
+    // Generate a random file name
     const newFileName = `excel_stock_report_${Date.now()}.xlsx`;
 
     // Write the workbook to a file
