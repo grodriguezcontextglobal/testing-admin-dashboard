@@ -4,9 +4,15 @@
 .customized__blueButton.ant-btn-variant-outlined,
 .customized__blueButton.ant-btn-variant-dashed {
   /* width: 100%; */
+  align-items: center !important;
+  border-radius: 6px !important;
   display: flex !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 8px 12px !important;
+  position: relative !important;
+  /* width: fit-content; */
   align-self: stretch !important;
-  border-radius: 8px !important;
   border: 1px solid var(--bluedark600, #155eef) !important;
   background: var(--bluedark600, #155eef) !important;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
@@ -31,7 +37,7 @@
   font-size: 14px !important;
   font-weight: 600 !important;
   font-family: Inter !important;
-  line-height: 20px !important;
+  /* line-height: 20px !important; */
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -50,12 +56,16 @@
 .customized__dangerButton.ant-btn-variant-outlined,
 .customized__dangerButton.ant-btn-variant-dashed {
   /* width: 100%; */
-  display: flex !important;
-  justify-content: center !important;
   align-items: center !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 8px 12px !important;
+  position: relative !important;
+  /* width: fit-content; */
+  justify-content: center !important;
   gap: 8px !important;
-  padding: 10px 16px !important;
-  border-radius: 8px !important;
   background-color: var(--danger-action) !important;
   border: 1px solid var(--danger-action) !important;
   outline: none !important;
@@ -76,10 +86,15 @@
 .customized__grayButton.ant-btn-variant-outlined,
 .customized__grayButton.ant-btn-variant-dashed {
   /* width: 100%; */
+  align-items: center !important;
+  border-radius: 6px !important;
   display: flex !important;
-  align-items: flex-start !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 8px 12px !important;
+  position: relative !important;
+  /* width: fit-content; */
   align-self: stretch !important;
-  border-radius: 8px !important;
   border: 1px solid var(--gray300, #D0D5DD) !important;
   background: var(--basewhite, #FFF) !important;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
@@ -100,10 +115,15 @@
 .customized__lightBlueButton.ant-btn-variant-outlined,
 .customized__lightBlueButton.ant-btn-variant-dashed {
   /* width: 100%; */
+  align-items: center !important;
+  border-radius: 6px !important;
   display: flex !important;
-  align-items: flex-start !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 8px 12px !important;
+  position: relative !important;
+  /* width: fit-content; */
   align-self: stretch !important;
-  border-radius: 8px !important;
   border: 1px solid var(--blue-dark--50, #EFF4FF) !important;
   background: var(--blue-dark--100, #D1E0FF) !important;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05) !important;
@@ -126,7 +146,7 @@
   font-size: 14px !important;
   font-style: normal !important;
   font-weight: 600 !important;
-  line-height: 20px !important;
+  /* line-height: 20px !important; */
   color: var(--basewhite) !important;
   transition: all 0.3s ease !important;
 }
@@ -141,7 +161,7 @@
   font-size: 14px !important;
   font-weight: 600 !important;
   font-family: Inter !important;
-  line-height: 20px !important;
+  /* line-height: 20px !important; */
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -159,7 +179,7 @@
   font-size: 14px !important;
   font-weight: 600 !important;
   font-family: Inter !important;
-  line-height: 20px !important;
+  /* line-height: 20px !important; */
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
