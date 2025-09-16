@@ -304,7 +304,7 @@ const MainPage = () => {
             </Grid> */}
           </div>
           <Grid justifyContent={"flex-start"} gap={1} container>
-            <Grid item xs={12} sm={12} md={8} lg={8}>
+            <Grid item xs={12} sm={12} md={12} lg={12}>
               <form
                 style={{ width: "100%" }}
                 id="search-form"
@@ -320,43 +320,16 @@ const MainPage = () => {
                       style={{
                         display: "flex",
                         justifyContent: "flex-end",
-                        alignSelf: "flex-start",
                         gap: "5px",
                       }}
                     >
                       <button
-                        type="submit"
                         style={{
                           backgroundColor: "transparent",
                           margin: 0,
                           padding: 0,
                           border: "none",
                           boxShadow: "-moz-initial",
-                          display: watch("searchItem") === "" ? "none" : "flex",
-                        }}
-                      >
-                        <p
-                          style={{
-                            ...GrayButtonText,
-                            ...GrayButton,
-                            width: GrayButton.width,
-                            padding: "0 12px",
-                          }}
-                        >
-                          Search
-                        </p>
-                      </button>
-                      <button
-                        style={{
-                          backgroundColor: "transparent",
-                          margin: 0,
-                          padding: 0,
-                          border: "none",
-                          boxShadow: "-moz-initial",
-                          display:
-                            watch("searchItem") === "" && !params
-                              ? "none"
-                              : "flex",
                         }}
                         onClick={() => {
                           setValue("searchItem", "");
@@ -375,14 +348,36 @@ const MainPage = () => {
                           Clear
                         </p>
                       </button>
+                      <button
+                        type="submit"
+                        style={{
+                          backgroundColor: "transparent",
+                          margin: 0,
+                          padding: 0,
+                          border: "none",
+                          boxShadow: "-moz-initial",
+                        }}
+                      >
+                        <p
+                          style={{
+                            ...GrayButtonText,
+                            ...GrayButton,
+                            width: GrayButton.width,
+                            padding: "0 12px",
+                          }}
+                        >
+                          Search
+                        </p>
+                      </button>
                     </div>
                   }
                 />
               </form>
             </Grid>
+            <Divider />
             <Grid
               display={"flex"}
-              justifyContent={"flex-end"}
+              justifyContent={"flex-start"}
               gap={1}
               item
               xs={12}
@@ -419,6 +414,7 @@ const MainPage = () => {
                 }}
               />
             </Grid>
+
             <Grid
               item
               sx={{
@@ -431,20 +427,6 @@ const MainPage = () => {
                 <DownloadingXlslFile props={downloadDataReport} />
               </Button>
             </Grid>
-            {/* <Grid
-              item
-              sx={{
-                display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
-              }}
-              md
-              lg
-            >
-              <FilterOptionsUX
-                filterOptions={dataFilterOptions}
-                chosen={chosenOption}
-                setChosen={setChosenOption}
-              />
-            </Grid> */}
           </Grid>
         </Grid>
         <Grid
