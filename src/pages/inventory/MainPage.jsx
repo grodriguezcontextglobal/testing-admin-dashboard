@@ -27,8 +27,8 @@ import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
-import FilterOptionsUX from "./utils/filterOptionsUX";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
+import { useHover } from "usehooks-ts";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -223,7 +223,9 @@ const MainPage = () => {
                 func={() => null}
                 icon={
                   <WhiteCirclePlusIcon
-                    style={{ height: "21px", margin: "auto" }}
+                    hoverStroke={"var(--blue-dark--800)"}
+                    width={21}
+                    height={18}
                   />
                 }
                 buttonType="button"
