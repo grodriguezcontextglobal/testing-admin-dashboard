@@ -51,21 +51,19 @@ const BodyRendering = ({
             mb: 2,
           }}
         >
-          <Grid item xs={12} sm={12} md={8} lg={8}>
+          <Grid
+            display={"flex"}
+            justifyContent={"space-between"}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
             <Header
               title={"Personal Info"}
               description={"Update your photo and personal details."}
             />
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={4}
-          >
             <BlueButtonComponent
               buttonType="submit"
               loadingState={loading}
