@@ -53,6 +53,7 @@ const UpdateProvider = ({
       centered
       width={1000}
       footer={null}
+      maskClosable={false}
     >
       <DialogTitle sx={{ pb: 1 }}>
         {dialogMode === "add" ? "Add New Provider" : "Edit Provider"}
