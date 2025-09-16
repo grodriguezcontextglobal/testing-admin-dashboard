@@ -1,9 +1,11 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Checkbox,
   Input,
   Modal,
   Pagination,
+  Progress,
   Space,
   Table,
   Tabs,
@@ -14,9 +16,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
-// import { utils, write } from "xlsx";
-import { Progress } from "antd";
-import { useQueryClient } from "@tanstack/react-query";
+import generateOptimizedXLSXFile from "./actions/generateOptimizedXLSXFile";
 
 const { Search } = Input;
 
@@ -452,293 +452,142 @@ const ReturnRentedItemModal = ({
   };
 
   // Step 3: Improved email notification with complete data fetching
-  // const emailNotification = async ({ items }) => {
-  //   try {
-  //     setProgress({
-  //       current: 0,
-  //       total: 1,
-  //       step: "Preparing email notification",
-  //     });
+  const emailNotification = async ({ items }) => {
+    try {
+      setProgress({
+        current: 0,
+        total: 1,
+        step: "Preparing email notification",
+      });
+      let query;
+      let values;
+      const supplierInfo = await devitrakApi.post(
+        `/company/provider-company/${supplier_id}`,
+        {
+          creator: user?.companyData?.id,
+          provider_id: supplier_id,
+        }
+      );
+      const props = Array.from(items);
+      const placeholders = props.map((item) => item);
+      if (supplier_id) {
+        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE  item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
+        values = ["Rent", user.sqlInfo.company_id, supplier_id];
+      } else {
+        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE  item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
+        values = ["Rent", user.sqlInfo.company_id];
+      }
+      const itemsData = await devitrakApi.post(
+        "/db_company/inventory-based-on-submitted-parameters",
+        {
+          query: query,
+          values: values,
+        }
+      );
+      if (itemsData.data.result.length === 0) {
+        return message.warning("No items found to return");
+      }
+      const itemsDataResult = itemsData.data.result;
+      // Generate XLSX file with size optimization
 
-  //     const supplierInfo = await devitrakApi.post(
-  //       `/company/provider-company/${supplier_id}`,
-  //       {
-  //         creator: user?.companyData?.id,
-  //         provider_id: supplier_id,
-  //       }
-  //     );
+      const xlsxAttachment = generateOptimizedXLSXFile({ itemsDataResult });
 
-  //     // Get items data in batches to avoid memory issues
-  //     const itemsArray = Array.from(items);
-  //     let itemsData = [];
+      // If file is too large, send summary email instead
+      if (xlsxAttachment.size > 20) {
+        const summaryPayload = {
+          subject: "Returned items to renter - Summary",
+          staffEmails: [
+            ...user.companyData.employees
+              .filter((element) => Number(element.role) < 2)
+              .map((ele) => ele.user),
+          ],
+          supplierInfo: supplierInfo.data.providerCompanies,
+          itemCount: props.length,
+          returnDate: new Date().toISOString().split("T")[0],
+          message: `Due to the large number of items (${props.length}), detailed information has been omitted. Please check the system for complete details.`,
+        };
 
-  //     // First, try to get data from existing renterItemList or provided data
-  //     if (isUsingProvidedData && data && Array.isArray(data)) {
-  //       // Use provided data directly
-  //       itemsData = data.filter(item => itemsArray.includes(item.item_id));
-  //     } else if (renterItemList && renterItemList.length > 0) {
-  //       // Use existing renterItemList data
-  //       itemsData = renterItemList.filter(item => itemsArray.includes(item.item_id));
-  //     }
+        const response = await devitrakApi.post(
+          "/nodemailer/returned-items-summary-notification",
+          summaryPayload
+        );
 
-  //     // If we don't have enough data from existing sources, fetch from database
-  //     if (itemsData.length < itemsArray.length) {
-  //       const missingItemIds = itemsArray.filter(
-  //         itemId => !itemsData.find(item => item.item_id === itemId)
-  //       );
+        if (response.data) {
+          return message.success(
+            "Items returned and summary notification sent (file too large for attachment)."
+          );
+        }
+      } else {
+        // Send with attachment if file size is acceptable
+        const emailPayload = {
+          subject: "Returned items to renter",
+          staffEmails: [
+            ...user.companyData.employees
+              .filter((element) => Number(element.role) < 2)
+              .map((ele) => ele.user),
+          ],
+          supplierInfo: supplierInfo.data.providerCompanies,
+          attachments: [
+            {
+              filename: xlsxAttachment.filename,
+              content: xlsxAttachment.content,
+              contentType: xlsxAttachment.contentType,
+              encoding: "base64",
+            },
+          ],
+        };
 
-  //       if (missingItemIds.length > 0) {
-  //         // Fetch complete item data for missing items
-  //         const ITEMS_BATCH_SIZE = 1000;
-  //         for (let i = 0; i < missingItemIds.length; i += ITEMS_BATCH_SIZE) {
-  //           const batch = missingItemIds.slice(i, i + ITEMS_BATCH_SIZE);
+        // Check email payload size
+        const emailSizeCheck = checkRequestSize(emailPayload);
+        if (emailSizeCheck.isLarge) {
+          console.warn(
+            `Large email payload: ${emailSizeCheck.size.toFixed(2)} MB`
+          );
+        }
 
-  //           // Fetch complete data for this batch from database
-  //           const placeholders = batch.map(() => "?").join(",");
-  //           let fetchQuery = "";
-  //           let fetchValues = [];
+        const response = await devitrakApi.post(
+          "/nodemailer/returned-items-to-renter-notification",
+          emailPayload
+        );
 
-  //           if (supplier_id) {
-  //             fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
-  //             fetchValues = [
-  //               ...batch,
-  //               "Rent",
-  //               user.sqlInfo.company_id,
-  //               supplier_id,
-  //             ];
-  //           } else {
-  //             fetchQuery = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
-  //             fetchValues = [...batch, "Rent", user.sqlInfo.company_id];
-  //           }
-
-  //           try {
-  //             const batchResult = await devitrakApi.post(
-  //               "/db_company/inventory-based-on-submitted-parameters",
-  //               {
-  //                 query: fetchQuery,
-  //                 values: fetchValues,
-  //               }
-  //             );
-
-  //             if (batchResult.data?.result) {
-  //               // Map fetched data, fallback to default for missing items
-  //               const batchData = batch.map((itemId) => {
-  //                 const foundItem = batchResult.data.result.find(
-  //                   (ele) => ele.item_id === itemId
-  //                 );
-  //                 return (
-  //                   foundItem || {
-  //                     item_id: itemId,
-  //                     serial_number: "N/A",
-  //                     item_group: "N/A",
-  //                   }
-  //                 );
-  //               });
-  //               itemsData.push(...batchData);
-  //             } else {
-  //               // Fallback if API call fails
-  //               const fallbackData = batch.map((itemId) => ({
-  //                 item_id: itemId,
-  //                 serial_number: "N/A",
-  //                 item_group: "N/A",
-  //               }));
-  //               itemsData.push(...fallbackData);
-  //             }
-  //           } catch (fetchError) {
-  //             console.error("Error fetching batch data:", fetchError);
-  //             // Fallback for failed batch
-  //             const fallbackData = batch.map((itemId) => ({
-  //               item_id: itemId,
-  //               serial_number: "N/A",
-  //               item_group: "N/A",
-  //             }));
-  //             itemsData.push(...fallbackData);
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // Ensure we have data for all requested items
-  //     const finalItemsData = itemsArray.map(itemId => {
-  //       const foundItem = itemsData.find(item => item.item_id === itemId);
-  //       return foundItem || {
-  //         item_id: itemId,
-  //         serial_number: "N/A",
-  //         item_group: "N/A",
-  //       };
-  //     });
-
-  //     // Generate XLSX file with size optimization
-  //     const generateOptimizedXLSXFile = () => {
-  //       const headers = [
-  //         "Item ID",
-  //         "Serial Number",
-  //         "Item Group",
-  //         "Return Date",
-  //       ];
-
-  //       // Limit data to essential fields to reduce file size
-  //       const wsData = [
-  //         headers,
-  //         ...finalItemsData.map((item) => [
-  //           item?.item_id || "",
-  //           item?.serial_number || "",
-  //           item?.item_group || "",
-  //           new Date().toISOString().split("T")[0],
-  //         ]),
-  //       ];
-
-  //       const wb = utils.book_new();
-  //       const ws = utils.aoa_to_sheet(wsData);
-
-  //       // Optimize column widths
-  //       ws["!cols"] = [
-  //         { width: 15 },
-  //         { width: 20 },
-  //         { width: 20 },
-  //         { width: 15 },
-  //       ];
-
-  //       utils.book_append_sheet(wb, ws, "Returned Items");
-
-  //       // Generate with compression
-  //       const fileArrayBuffer = write(wb, {
-  //         type: "array",
-  //         bookType: "xlsx",
-  //         compression: true,
-  //       });
-
-  //       const uint8Array = new Uint8Array(fileArrayBuffer);
-  //       let binaryString = "";
-
-  //       // Process in chunks to avoid memory issues with large files
-  //       const chunkSize = 8192;
-  //       for (let i = 0; i < uint8Array.length; i += chunkSize) {
-  //         const chunk = uint8Array.slice(i, i + chunkSize);
-  //         for (let j = 0; j < chunk.length; j++) {
-  //           binaryString += String.fromCharCode(chunk[j]);
-  //         }
-  //       }
-
-  //       const base64File = btoa(binaryString);
-
-  //       // Check file size
-  //       const fileSizeMB = (base64File.length * 0.75) / (1024 * 1024); // Approximate size
-
-  //       if (fileSizeMB > 25) {
-  //         // Most email services limit to 25MB
-  //         console.warn(`Large XLSX file: ${fileSizeMB.toFixed(2)} MB`);
-  //       }
-
-  //       return {
-  //         filename: `returned_items_${
-  //           new Date().toISOString().split("T")[0]
-  //         }.xlsx`,
-  //         content: base64File,
-  //         contentType:
-  //           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //         size: fileSizeMB,
-  //       };
-  //     };
-
-  //     const xlsxAttachment = generateOptimizedXLSXFile();
-
-  //     // If file is too large, send summary email instead
-  //     if (xlsxAttachment.size > 20) {
-  //       const summaryPayload = {
-  //         subject: "Returned items to renter - Summary",
-  //         staffEmails: [
-  //           ...user.companyData.employees
-  //             .filter((element) => Number(element.role) < 2)
-  //             .map((ele) => ele.user),
-  //         ],
-  //         supplierInfo: supplierInfo.data.providerCompanies,
-  //         itemCount: itemsArray.length,
-  //         returnDate: new Date().toISOString().split("T")[0],
-  //         message: `Due to the large number of items (${itemsArray.length}), detailed information has been omitted. Please check the system for complete details.`,
-  //       };
-
-  //       const response = await devitrakApi.post(
-  //         "/nodemailer/returned-items-summary-notification",
-  //         summaryPayload
-  //       );
-
-  //       if (response.data) {
-  //         return message.success(
-  //           "Items returned and summary notification sent (file too large for attachment)."
-  //         );
-  //       }
-  //     } else {
-  //       // Send with attachment if file size is acceptable
-  //       const emailPayload = {
-  //         subject: "Returned items to renter",
-  //         staffEmails: [
-  //           ...user.companyData.employees
-  //             .filter((element) => Number(element.role) < 2)
-  //             .map((ele) => ele.user),
-  //         ],
-  //         supplierInfo: supplierInfo.data.providerCompanies,
-  //         attachments: [
-  //           {
-  //             filename: xlsxAttachment.filename,
-  //             content: xlsxAttachment.content,
-  //             contentType: xlsxAttachment.contentType,
-  //             encoding: "base64",
-  //           },
-  //         ],
-  //       };
-
-  //       // Check email payload size
-  //       const emailSizeCheck = checkRequestSize(emailPayload);
-  //       if (emailSizeCheck.isLarge) {
-  //         console.warn(
-  //           `Large email payload: ${emailSizeCheck.size.toFixed(2)} MB`
-  //         );
-  //       }
-
-  //       const response = await devitrakApi.post(
-  //         "/nodemailer/returned-items-to-renter-notification",
-  //         emailPayload
-  //       );
-
-  //       if (response.data) {
-  //         return message.success(
-  //           "Items returned and notification sent with XLSX attachment."
-  //         );
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error in email notification:", error);
-  //     if (error.response?.status === 413) {
-  //       message.error(
-  //         "Email attachment too large. Summary notification sent instead."
-  //       );
-  //       // Fallback to summary email without attachment
-  //       try {
-  //         await devitrakApi.post(
-  //           "/nodemailer/returned-items-summary-notification",
-  //           {
-  //             subject:
-  //               "Returned items to renter - Summary (Attachment too large)",
-  //             staffEmails: [
-  //               ...user.companyData.employees
-  //                 .filter((element) => Number(element.role) < 2)
-  //                 .map((ele) => ele.user),
-  //             ],
-  //             itemCount: Array.from(items).length,
-  //             returnDate: new Date().toISOString().split("T")[0],
-  //           }
-  //         );
-  //         message.success("Summary notification sent successfully.");
-  //       } catch (summaryError) {
-  //         console.error("Failed to send summary notification:", summaryError);
-  //         message.error("Failed to send any notification.");
-  //       }
-  //     } else {
-  //       message.error("Failed to send email notification.");
-  //     }
-  //   }
-  // };
+        if (response.data) {
+          return message.success(
+            "Items returned and notification sent with XLSX attachment."
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error in email notification:", error);
+      if (error.response?.status === 413) {
+        message.error(
+          "Email attachment too large. Summary notification sent instead."
+        );
+        // Fallback to summary email without attachment
+        try {
+          await devitrakApi.post(
+            "/nodemailer/returned-items-summary-notification",
+            {
+              subject:
+                "Returned items to renter - Summary (Attachment too large)",
+              staffEmails: [
+                ...user.companyData.employees
+                  .filter((element) => Number(element.role) < 2)
+                  .map((ele) => ele.user),
+              ],
+              itemCount: Array.from(items).length,
+              returnDate: new Date().toISOString().split("T")[0],
+            }
+          );
+          message.success("Summary notification sent successfully.");
+        } catch (summaryError) {
+          console.error("Failed to send summary notification:", summaryError);
+          message.error("Failed to send any notification.");
+        }
+      } else {
+        message.error("Failed to send email notification.");
+      }
+    }
+  };
 
   const handleReturnAllItems = async () => {
     setLoading(true);
@@ -799,14 +648,13 @@ const ReturnRentedItemModal = ({
 
       // Step 2: Delete items from records
       await deleteItemsFromRecords(allItemIds);
-
       // Step 3: Email notification to staff
       setProgress({ current: 0, total: 1, step: "Sending email notification" });
-      // await emailNotification({ items: allItemIds });
+      await emailNotification({ items: allItemIds });
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       message.success({
-        content: `Successfully processed ${allItemIds.length} items`,
+        content: `Successfully returned ${allItemIds.length} items to the Rental Company`,
         key: "processing",
       });
       invalidatingQueriesForRefresh();
@@ -851,8 +699,7 @@ const ReturnRentedItemModal = ({
       await deleteItemsFromRecords(itemIds);
 
       // Step 3: Email notification to staff
-      // await emailNotification({ items: selectedItems });
-
+      await emailNotification({ items: selectedItems });
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
