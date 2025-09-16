@@ -1,5 +1,4 @@
-/* @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css"); */
-
+@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
 @import url("https://fonts.googleapis.com/css?family=Inter:500,400,600");
 :root {
   --baseblack: rgba(0, 0, 0, 1);
@@ -95,6 +94,11 @@
   position: relative;
   width: fit-content;
   margin-right: 5px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.nav-item-base-main-navbar-updated:hover {
+  background-color: var(--blue-dark--700);
 }
 
 .content-1-main-navbar-updated {
@@ -132,6 +136,11 @@
   position: relative;
   width: fit-content;
   margin-right: 5px;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+
+.nav-item-base-1-main-navbar-updated:hover {
+  background-color: var(--blue-dark--700);
 }
 
 .content-2-main-navbar-updated {
