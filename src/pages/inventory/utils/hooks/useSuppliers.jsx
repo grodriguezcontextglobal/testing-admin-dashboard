@@ -64,7 +64,37 @@ const useSuppliers = () => {
         });
       }
       const final = new Set(result);
-      return setSupplierList([...Array.from(final?.map((item) => ({ value: item })))]);
+      const unique =
+        final.size > 0
+          ? Array.from(final).map((item) => ({ value: item }))
+          : [];
+      return setSupplierList([
+        {
+          value: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <BlueButtonComponent
+                title={"Add supplier"}
+                styles={{ with: "100%" }}
+                icon={<WhiteCirclePlusIcon />}
+                buttonType="button"
+                titleStyles={{
+                  textTransform: "none",
+                  with: "100%",
+                }}
+                func={() => setSupplierModal(true)}
+              />
+            </div>
+          ),
+        },
+        ...unique,
+      ]);
     };
     const diccionarySuppliers = () => {
       const dic = new Map();
