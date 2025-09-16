@@ -63,7 +63,8 @@ const useSuppliers = () => {
           result.push({ value: item.companyName });
         });
       }
-      return setSupplierList([...supplierList, ...result]);
+      const final = new Set(result);
+      return setSupplierList([...supplierList, ...Array.from(final)]);
     };
     const diccionarySuppliers = () => {
       const dic = new Map();
@@ -82,6 +83,7 @@ const useSuppliers = () => {
     diccionarySuppliers();
   }, [providersList.data, providersList.isRefetching]);
 
+  console.log(providersList?.data?.data?.providerCompanies);
   return {
     providersList,
     queryClient,
