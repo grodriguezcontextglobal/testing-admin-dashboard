@@ -69,6 +69,7 @@ const NewSupplier = ({
         country: "USA",
       },
       contactInfo: {
+        name: "",
         email: "",
         phone: "",
         website: "",
@@ -122,8 +123,7 @@ const NewSupplier = ({
           setSupplierModal(false);
         }
       } catch (error) {
-        console.error("Error saving provider:", error);
-        message.error("Error saving provider");
+        return message.error("Error saving provider");
       }
     }
   };
