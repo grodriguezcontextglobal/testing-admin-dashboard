@@ -391,7 +391,7 @@ const MainPage = () => {
               lg
             >
               <GrayButtonComponent
-                title={"Advance search"}
+                title={"Forecast Inventory"}
                 func={() => {
                   setOpenAdvanceSearchModal(true);
                 }}

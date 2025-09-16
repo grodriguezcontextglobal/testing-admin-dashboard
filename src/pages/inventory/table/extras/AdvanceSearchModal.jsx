@@ -28,7 +28,7 @@ const AdvanceSearchModal = ({
   const dispatch = useDispatch();
   const renderTitle = () => {
     return (
-      <Typography style={TextFontsize18LineHeight28}>Advance search</Typography>
+      <Typography style={TextFontsize18LineHeight28}>Forecast Inventory</Typography>
     );
   };
   const closeModal = () => {
@@ -110,7 +110,7 @@ const AdvanceSearchModal = ({
           }}
         >
           <Typography style={Subtitle} fontWeight={600}>
-            Parameters for advance search query
+            Parameters for Forecast Inventory query
           </Typography>
         </div>
         <div style={{ margin: "0.5rem 0 0.25rem" }}>
