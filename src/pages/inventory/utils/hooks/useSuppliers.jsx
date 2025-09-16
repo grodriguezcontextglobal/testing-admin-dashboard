@@ -60,11 +60,11 @@ const useSuppliers = () => {
       let result = [];
       if (providersList?.data?.data?.providerCompanies?.length > 0) {
         providersList?.data?.data?.providerCompanies?.map((item) => {
-          result.push({ value: item.companyName });
+          result.push(item.companyName);
         });
       }
       const final = new Set(result);
-      return setSupplierList([...supplierList, ...Array.from(final)]);
+      return setSupplierList([...Array.from(final?.map((item) => ({ value: item })))]);
     };
     const diccionarySuppliers = () => {
       const dic = new Map();
@@ -83,7 +83,6 @@ const useSuppliers = () => {
     diccionarySuppliers();
   }, [providersList.data, providersList.isRefetching]);
 
-  console.log(providersList?.data?.data?.providerCompanies);
   return {
     providersList,
     queryClient,
