@@ -29,7 +29,7 @@ const BannerNotificationTemplate = ({
             : "var(--basewhite)",
       }}
       styles={{
-        body: { ...CenteringGrid, padding: 0 },
+        body: { ...CenteringGrid, padding: '0px 0px 5px 0px' },
       }}
       // bodyStyle={{ ...CenteringGrid, padding: 0 }}
     >
@@ -42,7 +42,7 @@ const BannerNotificationTemplate = ({
               alignItems: "center",
               justifyContent: "flex-end",
               width: "fit-content",
-              padding: "15px 5px 0 0",
+              padding: "15px 5px 10px 0",
               alignSelf: "flex-start",
             }}
           >
