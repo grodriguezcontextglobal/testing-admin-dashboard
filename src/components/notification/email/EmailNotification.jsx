@@ -1,11 +1,12 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Input, Modal, notification } from "antd";
+import { Input, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
+import ModalUX from "../../UX/modal/ModalUX";
 const { TextArea } = Input;
 
 const EmailNotification = ({
@@ -76,20 +77,9 @@ const EmailNotification = ({
       openNotificationWithIcon("Error", `${error}`);
     }
   };
-  return (
-    <>
-      {contextHolder}
-      <Modal
-        title={renderTitle()}
-        centered
-        open={customizedEmailNotificationModal}
-        onOk={() => closeModal()}
-        onCancel={() => closeModal()}
-        footer={[]}
-        width={1000}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
-      >
+  const body = () => {
+    return (
+      <>
         <Grid
           display={"flex"}
           alignItems={"center"}
@@ -158,12 +148,36 @@ const EmailNotification = ({
                 />
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12}>
-                <BlueButtonComponent buttonType="submit" title={"Send email"} loadingState={loadingState} styles={{ width: "100%" }} func={null} />
+                <BlueButtonComponent
+                  buttonType="submit"
+                  title={"Send email"}
+                  loadingState={loadingState}
+                  styles={{ width: "100%" }}
+                  func={null}
+                />
               </Grid>
             </form>
           </Grid>
         </Grid>
-      </Modal>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <ModalUX title={renderTitle()} body={body()} openDialog={customizedEmailNotificationModal} modalStyles={{ zIndex: 30 }} onClose={closeModal} />
+      {/* <Modal notification
+        title={renderTitle()}
+        centered
+        open={customizedEmailNotificationModal}
+        onOk={() => closeModal()}
+        onCancel={() => closeModal()}
+        footer={[]}
+        width={1000}
+        maskClosable={false}
+        style={{ zIndex: 30 }}
+      ></Modal> */}
     </>
   );
 };
