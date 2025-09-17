@@ -1,6 +1,6 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Breadcrumb, Button, Divider } from "antd";
+import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -9,8 +9,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
@@ -123,59 +122,53 @@ const MainPage = () => {
           key={item_id}
           container
         >
-            <Grid marginY={0} item xs={12} sm={12} md={6} lg={6}>
-              <Typography
-                textTransform={"none"}
-                style={{
-                  color: "var(--gray-900, #101828)",
-                  lineHeight: "38px",
-                }}
-                textAlign={"left"}
-                fontWeight={600}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-              >
-                Devices
-              </Typography>
-            </Grid>
-            <Grid
-              textAlign={"right"}
-              display={"flex"}
-              alignItems={"center"}
-              gap={1}
-              sx={{
-                justifyContent: {
-                  xs: "flex-start",
-                  sm: "flex-start",
-                  md: "flex-end",
-                  lg: "flex-end",
-                },
-                margin: {
-                  xs: "0.5rem 0",
-                  sm: "0.5rem 0",
-                  md: "0",
-                  lg: "0",
-                },
+          <Grid marginY={0} item xs={12} sm={12} md={6} lg={6}>
+            <Typography
+              textTransform={"none"}
+              style={{
+                color: "var(--gray-900, #101828)",
+                lineHeight: "38px",
               }}
-              item
-              xs={12}
-              sm={12}
-              md={6}
-              lg={6}
+              textAlign={"left"}
+              fontWeight={600}
+              fontFamily={"Inter"}
+              fontSize={"30px"}
             >
-              <Button
-                style={{ ...BlueButton }}
-                onClick={() => navigate("/inventory/new-bulk-items")}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={{ ...BlueButtonText, ...CenteringGrid }}
-                >
-                  <WhiteCirclePlusIcon />
-                  &nbsp; Add new group of devices{" "}
-                </Typography>
-              </Button>
-            </Grid>
+              Devices
+            </Typography>
+          </Grid>
+          <Grid
+            textAlign={"right"}
+            display={"flex"}
+            alignItems={"center"}
+            gap={1}
+            sx={{
+              justifyContent: {
+                xs: "flex-start",
+                sm: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
+              },
+              margin: {
+                xs: "0.5rem 0",
+                sm: "0.5rem 0",
+                md: "0",
+                lg: "0",
+              },
+            }}
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
+          >
+            <BlueButtonComponent
+              title={"Add new group of devices"}
+              func={() => navigate("/inventory/new-bulk-items")}
+              icon={<WhiteCirclePlusIcon />}
+              buttonType="button"
+            />
+          </Grid>
           <Grid
             display={"flex"}
             justifyContent={"flex-start"}
@@ -190,7 +183,7 @@ const MainPage = () => {
             <Breadcrumb separator=">" items={options} />
           </Grid>
         </Grid>
-        <Divider style={{margin:"0 0 15px 0"}}/>
+        <Divider style={{ margin: "0 0 15px 0" }} />
         <Grid
           display={"flex"}
           justifyContent={"space-between"}
