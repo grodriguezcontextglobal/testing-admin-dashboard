@@ -7,12 +7,11 @@ import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import {
   addingExtraInfo,
   gripingFields,
@@ -467,19 +466,13 @@ const BulkItemForm = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+      <BlueButtonComponent
+      title={"Add more information"}
+      func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+      icon={<WhiteCirclePlusIcon stroke="var(--basewhite)"/>}
+      styles={{ width: "100%" }}
+      buttonType="button"
+      />
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -502,25 +495,13 @@ const BulkItemForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-            <Button
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
+          <GrayButtonComponent
+          title={"Go back"}
+          func={() => null}
+          // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
+          styles={{ width: "100%" }}
+          buttonType="reset"
+          />
           </Link>
         </div>
         <div
@@ -534,7 +515,7 @@ const BulkItemForm = ({
             loadingState={loadingStatus}
             disabled={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            icon={<WhiteCirclePlusIcon />}
+            // icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
           />
