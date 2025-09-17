@@ -202,8 +202,9 @@ const MainPage = () => {
                 icon={
                   <EditIcon
                     stroke={"var(--blue-dark--800)"}
-                    width={"21"}
-                    height={"18"}
+                    width={21}
+                    height={18}
+                    hoverStroke={"var(--basewhite)"}
                   />
                 }
                 buttonType="button"
@@ -243,7 +244,14 @@ const MainPage = () => {
               <LightBlueButtonComponent
                 title={"Add one item"}
                 func={() => null}
-                icon={<RectangleBluePlusIcon />}
+                icon={
+                  <RectangleBluePlusIcon
+                    stroke={"var(--blue-dark--800)"}
+                    width={21}
+                    height={18}
+                    hoverStroke={"var(--basewhite)"}
+                  />
+                }
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
