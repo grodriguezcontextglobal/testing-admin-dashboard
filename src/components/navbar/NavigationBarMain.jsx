@@ -443,6 +443,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               margin: 0,
               padding: 0,
               backgroundColor: "transparent",
+              display: searchValue?.length === 0 ? "none" : "flex",
             }}
             key={"item.title"}
             onClick={(e) => handleSearch(e)}
