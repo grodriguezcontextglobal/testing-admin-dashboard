@@ -1,5 +1,6 @@
 import { Button } from "antd";
-import "./styles.css"
+import { useState } from "react";
+import "./styles.css";
 
 const LightBlueButtonComponent = ({
   disabled = false,
@@ -11,6 +12,13 @@ const LightBlueButtonComponent = ({
   loadingState = false,
   titleStyles = {},
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const iconWithHover =
+    icon && typeof icon.type === "function"
+      ? { ...icon, props: { ...icon.props, isHovered, hoverStroke: "#fff" } }
+      : icon;
+
   return (
     <Button
       disabled={disabled}
@@ -18,10 +26,13 @@ const LightBlueButtonComponent = ({
       htmlType={buttonType}
       onClick={func}
       style={{ ...styles }}
+      solid={true}
       className="customized__lightBlueButton"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <p className="customized__lightBlueButtonText" style={{ ...titleStyles }}>
-        {icon && icon} {title}
+        {iconWithHover && iconWithHover} {title}
       </p>
     </Button>
   );
