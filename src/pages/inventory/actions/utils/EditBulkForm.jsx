@@ -6,12 +6,12 @@ import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import {
   addingExtraInfo,
   gripingFields,
@@ -22,7 +22,6 @@ import {
 } from "./BulkComponents";
 import { renderFields } from "./BulkItemsFields";
 import { styleUpdateAllItemsButton } from "./EditBulkComponents";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 const EditBulkForm = ({
   acceptImage,
@@ -493,19 +492,7 @@ const EditBulkForm = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+      <BlueButtonComponent title={"Add more information"} func={() => setMoreInfoDisplay(!moreInfoDisplay)} icon={<WhiteCirclePlusIcon stroke="var(--basewhite)"/>} styles={{ width: "100%" }} buttonType="button" />
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -528,7 +515,11 @@ const EditBulkForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-            <Button
+          <GrayButtonComponent title={"Go back"} func={() => null} buttonType="reset" styles={{ width: "100%" }} titleStyles={{ textTransform: "none" }} />
+            
+          
+            
+            {/* <Button
               htmlType="reset"
               disabled={loadingStatus}
               style={{
@@ -546,7 +537,7 @@ const EditBulkForm = ({
               >
                 Go back
               </p>
-            </Button>
+            </Button> */}
           </Link>
         </div>
         <div
@@ -561,26 +552,10 @@ const EditBulkForm = ({
             loadingState={loadingStatus}
             // func={handleSubmit}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            icon={<WhiteCirclePlusIcon />}
+            // icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
           />
-          {/* <Button
-            disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              Update
-            </p>
-          </Button> */}
         </div>
       </div>
     </form>

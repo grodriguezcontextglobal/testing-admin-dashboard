@@ -29,9 +29,11 @@ import BulkItemForm from "./utils/BulkItemForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
-    const {
+  const {
     supplierList,
     supplierModal,
     providersList,
@@ -64,7 +66,7 @@ const AddNewBulkItems = () => {
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
- const { user } = useSelector((state) => state.admin);
+  const { user } = useSelector((state) => state.admin);
   const {
     register,
     handleSubmit,
@@ -315,7 +317,7 @@ const AddNewBulkItems = () => {
             setSubLocationsSubmitted([]);
           }}
           style={{
-            ...BlueButton,
+            ...DangerButton,
             ...CenteringGrid,
             alignSelf: "stretch",
             display:
@@ -326,7 +328,7 @@ const AddNewBulkItems = () => {
             borderRadius: "8px",
           }}
         >
-          <p style={BlueButtonText}>Remove all sub location</p>
+          <p style={DangerButtonText}>Remove all sub location</p>
         </Button>
       );
     };

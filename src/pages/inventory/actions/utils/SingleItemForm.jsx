@@ -10,11 +10,10 @@ import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { renderFields } from "../utils/SingleItemFields";
 
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
@@ -451,19 +450,13 @@ const SingleItemForm = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+      <BlueButtonComponent
+        title={"Add more information"}
+        func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+        icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
+        styles={{ width: "100%" }}
+        buttonType="button"
+      />
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -486,25 +479,13 @@ const SingleItemForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-            <Button
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button>
+            <GrayButtonComponent
+              title={"Go back"}
+              func={() => null}
+              buttonType="reset"
+              styles={{ width: "100%" }}
+              titleStyles={{ textTransform: "none" }}
+            />
           </Link>
         </div>
         <div
@@ -518,7 +499,6 @@ const SingleItemForm = ({
             loadingState={loadingStatus}
             disabled={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
           />
