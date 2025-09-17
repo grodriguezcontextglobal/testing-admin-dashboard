@@ -7,11 +7,11 @@
   align-items: center !important;
   border-radius: 6px !important;
   display: flex !important;
-  height: auto !important;
+  height: fit-content !important;
   overflow: hidden !important;
   padding: 8px 12px !important;
   position: relative !important;
-  /* width: fit-content; */
+  /* height: 14px !important; */
   align-self: stretch !important;
   border: 1px solid var(--bluedark600, #155eef) !important;
   background: var(--bluedark600, #155eef) !important;
