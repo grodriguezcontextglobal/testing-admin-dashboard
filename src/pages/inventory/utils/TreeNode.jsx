@@ -267,7 +267,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                       <EditIcon />
                     </Button>
                 )}
-                <GrayButtonComponent icon={<ViewIcon />} func={() => setOpenDetails(true)} />
+                <GrayButtonComponent styles={{ padding:'2.5px !important', borderRadius:"50% !important"}} icon={<ViewIcon />} func={() => setOpenDetails(true)} />
               </div>
             </Typography>
           </Button>
