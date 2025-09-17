@@ -1,13 +1,27 @@
-const UpDoubleArrow = () => {
+const UpDoubleArrow = ({
+  width = "24",
+  height = "24",
+  fill = "currentColor",
+  className,
+  style,
+  isHovered = false,
+  hoverFill,
+  ...props
+}) => {
+  const currentFill = isHovered && hoverFill ? hoverFill : fill;
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
+      className={className}
+      style={style}
+      {...props}
     >
       <path
-        fill="currentColor"
+        fill={currentFill}
         d="M7.4 18.4L6 17l6-6l6 6l-1.4 1.4l-4.6-4.575zm0-6L6 11l6-6l6 6l-1.4 1.4L12 7.825z"
       />
     </svg>

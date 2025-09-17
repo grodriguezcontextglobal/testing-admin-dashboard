@@ -1,20 +1,35 @@
-export const UpdateIcon = () => {
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-      >
-        <path
-          d="M14.166 4.27133C15.9338 5.55927 17.0827 7.64555 17.0827 10.0002C17.0827 13.9122 13.9114 17.0835 9.99935 17.0835H9.58268M5.83268 15.729C4.0649 14.4411 2.91602 12.3548 2.91602 10.0002C2.91602 6.08815 6.08733 2.91683 9.99935 2.91683H10.416M10.8327 18.6668L9.16602 17.0002L10.8327 15.3335M9.16602 4.66683L10.8327 3.00016L9.16602 1.3335"
-          stroke="#344054"
-          strokeWidth="1.66667"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  };
+export const UpdateIcon = ({
+  width = "20",
+  height = "20",
+  stroke = "#344054",
+  strokeWidth = "1.66667",
+  className,
+  style,
+  isHovered = false,
+  hoverStroke,
+  ...props
+}) => {
+  const currentStroke = isHovered && hoverStroke ? hoverStroke : stroke;
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      viewBox="0 0 20 20"
+      fill="none"
+      className={className}
+      style={style}
+      {...props}
+    >
+      <path
+        d="M14.166 4.27133C15.9338 5.55927 17.0827 7.64555 17.0827 10.0002C17.0827 13.9122 13.9114 17.0835 9.99935 17.0835H9.58268M5.83268 15.729C4.0649 14.4411 2.91602 12.3548 2.91602 10.0002C2.91602 6.08815 6.08733 2.91683 9.99935 2.91683H10.416M10.8327 18.6668L9.16602 17.0002L10.8327 15.3335M9.16602 4.66683L10.8327 3.00016L9.16602 1.3335"
+        stroke={currentStroke}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
   
