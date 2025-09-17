@@ -69,29 +69,46 @@ const ButtonSections = () => {
 
   const options = [
     {
-      icon: <WhiteCirclePlusIcon />,
+      icon: (
+        <WhiteCirclePlusIcon
+          stroke="#344054"
+          hoverStroke="var(--basewhite)"
+          width={21}
+          height={18}
+        />
+      ),
       text: "Add new consumer",
       disableStatus: !event.active,
       fn: () => setCreateUserButton(true),
     },
     {
-      icon: <EmailIcon />,
+      icon: (
+        <EmailIcon
+          fill="#344054"
+          hoverFill="var(--basewhite)"
+          width={21}
+          height={18}
+        />
+      ),
       text: "Email Notifications to Attendees",
       disableStatus: !event.active,
       fn: () => setCustomizedEmailNotificationModal(true),
     },
     {
-      icon: <LinkIcon />,
+      icon: (
+        <LinkIcon
+          fill="#344054"
+          stroke="#344054"
+          hoverFill="var(--basewhite)"
+          hoverStroke={"var(--basewhite)"}
+          width={25}
+          height={25}
+        />
+      ),
       text: "Send event link.",
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
-    // {
-    //   icon: <FeedbackIcon />,
-    //   text: "Feedback",
-    //   disableStatus: !event.active,
-    //   fn: () => setFeedbackEventModal(true),
-    // },
   ];
 
   const groupingByCompany = groupBy(
