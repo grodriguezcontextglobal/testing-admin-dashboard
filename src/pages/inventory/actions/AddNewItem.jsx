@@ -27,6 +27,8 @@ import { singleItemInserting } from "./utils/singleItemIserting";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const {
@@ -271,7 +273,7 @@ const AddNewItem = () => {
             setSubLocationsSubmitted([]);
           }}
           style={{
-            ...BlueButton,
+            ...DangerButton,
             ...CenteringGrid,
             alignSelf: "stretch",
             display:
@@ -282,7 +284,7 @@ const AddNewItem = () => {
             borderRadius: "8px",
           }}
         >
-          <p style={BlueButtonText}>Remove all sub location</p>
+          <p style={DangerButtonText}>Remove all sub location</p>
         </Button>
       );
     };

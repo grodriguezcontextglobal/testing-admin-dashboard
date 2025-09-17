@@ -10,6 +10,7 @@ import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlu
 import ScanningModal from "./ScanningModal";
 import ScanningMethod from "./ScanningMethod";
 import DatePicker from "react-datepicker";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 export const renderTitle = () => {
   return (
@@ -50,15 +51,23 @@ export const renderingOptionsButtons = ({
 }) => {
   if (label === "Sub location") {
     return (
-      <Button
-        style={{
+      <BlueButtonComponent
+        title={"Add sub location"}
+        func={() => addingSubLocation(watch("sub_location"))}
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
-        onClick={() => addingSubLocation(watch("sub_location"))}
-      >
-        Add sub location
-      </Button>
+      />
+      // <Button
+      //   style={{
+      //     display: "flex",
+      //     margin: "10px 0 0",
+      //   }}
+      //   onClick={() => addingSubLocation(watch("sub_location"))}
+      // >
+      //   Add sub location
+      // </Button>
     );
   }
   if (
@@ -66,15 +75,24 @@ export const renderingOptionsButtons = ({
     watch("format_range_serial_number") === "Alphanumeric"
   ) {
     return (
-      <Button
+      <BlueButtonComponent
+        title={"Add serial number"}
+        func={() => setAddSerialNumberField(true)}
         style={{
           display: "flex",
           margin: "10px 0 0",
         }}
-        onClick={() => setAddSerialNumberField(true)}
-      >
-        Add serial number
-      </Button>
+      />
+
+      // <Button
+      //   style={{
+      //     display: "flex",
+      //     margin: "10px 0 0",
+      //   }}
+      //   onClick={() => setAddSerialNumberField(true)}
+      // >
+      //   Add serial number
+      // </Button>
     );
   }
   if (
@@ -99,7 +117,13 @@ export const renderingOptionsButtons = ({
           gap: "10px",
         }}
       >
-        <Button
+        <BlueButtonComponent
+          title={watch("feed_serial_number") === "Scanning"
+            ? "Click for scanning"
+            : "Add serial number"}
+          func={() => redirectOptions()}
+        />
+        {/* <Button
           style={{
             display: "flex",
             margin: "10px 0 0",
@@ -109,8 +133,14 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "Click for scanning"
             : "Add serial number"}
-        </Button>
-        <Button
+        </Button> */}
+        <BlueButtonComponent
+          title={watch("feed_serial_number") === "Scanning"
+            ? "View scanned serial numbers"
+            : "View inserted serial numbers"}
+          func={() => setOpenScannedItemView(true)}
+        />
+        {/* <Button
           style={{
             display: "flex",
             margin: "10px 0 0",
@@ -120,7 +150,7 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "View scanned serial numbers"
             : "View inserted serial numbers"}
-        </Button>
+        </Button> */}
       </div>
     );
   }
@@ -413,8 +443,8 @@ export const renderTitleSingleItem = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Item serial number can be created by inputting a serial number
-          base to define the category of item depending on your inventory.
+          Item serial number can be created by inputting a serial number base to
+          define the category of item depending on your inventory.
         </Typography>
       </InputLabel>
     </>

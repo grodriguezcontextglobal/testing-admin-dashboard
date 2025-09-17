@@ -32,6 +32,8 @@ import validatingInputFields from "./utils/validatingInputFields";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import NewSupplier from "./utils/suppliers/NewSupplier";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditGroup = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -399,7 +401,7 @@ const EditGroup = () => {
             setSubLocationsSubmitted([]);
           }}
           style={{
-            ...BlueButton,
+            ...DangerButton,
             ...CenteringGrid,
             alignSelf: "stretch",
             display:
@@ -410,7 +412,7 @@ const EditGroup = () => {
             borderRadius: "8px",
           }}
         >
-          <p style={BlueButtonText}>Remove all sub location</p>
+          <p style={DangerButtonText}>Remove all sub location</p>
         </Button>
       );
     };
