@@ -5,29 +5,22 @@ import DeleteItemModal from "../components/DeleteItemModal";
 import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import { Button } from "antd";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 
 const DeleteItem = ({ dataFound }) => {
   const [{ x, y }, scrollTo] = useWindowScroll();
   const [openDeleteItemModal, setOpenDeleteItemModal] = useState(false);
   return (
     <>
-      <Button
-        onClick={() => {
+      <DangerButtonComponent
+        title={"Delete"}
+        func={() => {
           scrollTo({ left: 0, top: "50dv", behavior: "smooth" });
           setOpenDeleteItemModal(true);
         }}
-        style={{
-          ...DangerButton,
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          margin: "0",
-        }}
-      >
-        <p style={{ ...DangerButtonText, textAlign: "center" }}>Delete</p>
-      </Button>
-
+        buttonType="button"
+        styles={{ width: "100%" }}
+      />
       {openDeleteItemModal && (
         <DeleteItemModal
           dataFound={dataFound}

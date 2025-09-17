@@ -5,28 +5,17 @@ import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import EditItemModal from "../components/EditItemModal";
 import { Button } from "antd";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 
 const EditItem = ({ dataFound, refetchingFn }) => {
   const [{ x, y }, scrollTo] = useWindowScroll();
   const [openEditItemModal, setOpenEditItemModal] = useState(false);
   return (
     <>
-      <Button
-        onClick={() => {
-          scrollTo({ left: 0, top: "50dv", behavior: "smooth" });
-          setOpenEditItemModal(true);
-        }}
-        style={{
-          ...LightBlueButton,
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          margin: "0",
-        }}
-      >
-        <p style={{ ...LightBlueButtonText, textAlign: "center" }}>Edit</p>
-      </Button>
+    <LightBlueButtonComponent title={"Edit"} func={() => {
+      scrollTo({ left: 0, top: "50dv", behavior: "smooth" });
+      setOpenEditItemModal(true);
+    }} styles={{ width: "100%" }} buttonType="button" />
       {openEditItemModal && (
         <EditItemModal
           dataFound={dataFound}
