@@ -11,12 +11,11 @@ const GrayButtonComponent = ({
   icon = null,
   loadingState = false,
   titleStyles = {},
-  hoverStroke = "#344054",
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke } }
+    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke:"var(--basewhite)" } }
     : icon;
 
   return (

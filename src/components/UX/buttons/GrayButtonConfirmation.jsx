@@ -12,12 +12,11 @@ const GrayButtonConfirmationComponent = ({
   loadingState = false,
   titleStyles = {},
   confirmationTitle = "Are you sure?",
-  hoverStroke = "#6b7280",
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke } }
+    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke: "var(--basewhite)" } }
     : icon;
 
   return (

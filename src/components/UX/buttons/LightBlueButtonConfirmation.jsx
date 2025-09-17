@@ -12,12 +12,11 @@ const LightBlueButtonConfirmationComponent = ({
   loadingState = false,
   titleStyles = {},
   confirmationTitle = "Are you sure?",
-  hoverStroke = "#3b82f6",
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke } }
+    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke: "#3b82f6" } }
     : icon;
 
   return (
