@@ -648,6 +648,7 @@ const ReturnRentedItemModal = ({
 
       // Step 2: Delete items from records
       await deleteItemsFromRecords(allItemIds);
+      
       // Step 3: Email notification to staff
       setProgress({ current: 0, total: 1, step: "Sending email notification" });
       await emailNotification({ items: allItemIds });
@@ -700,6 +701,7 @@ const ReturnRentedItemModal = ({
 
       // Step 3: Email notification to staff
       await emailNotification({ items: selectedItems });
+
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
 
@@ -952,7 +954,10 @@ const ReturnRentedItemModal = ({
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Tabs
+              size="large"
+              tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
               activeKey={activeTab}
+              type="card"
               onChange={(key) => {
                 setActiveTab(key);
                 setCurrentPage(1);
