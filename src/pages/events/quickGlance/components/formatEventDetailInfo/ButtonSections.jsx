@@ -102,7 +102,7 @@ const ButtonSections = () => {
           hoverFill="var(--basewhite)"
           hoverStroke={"var(--basewhite)"}
           width={25}
-          height={25}
+          // height={20}
         />
       ),
       text: "Send event link.",
