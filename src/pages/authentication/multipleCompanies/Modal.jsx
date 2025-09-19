@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, Select, Spin, notification } from "antd";
+import { Button, Select, Spin, notification } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import Loading from "../../../components/animation/Loading";
 import dicRole from "../../../components/general/dicRole";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import {
   clearErrorMessage,
   onAddErrorMessage,
@@ -130,15 +131,8 @@ const ModalMultipleCompanies = ({
     };
   };
 
-  return (
-    <Modal
-      open={openMultipleCompanies}
-      onCancel={() => closeModal()}
-      centered
-      footer={[]}
-      style={{ zIndex: 30 }}
-    >
-      {contextHolder}
+  const body = () => {
+    return (
       <Grid container>
         <Grid
           display={"flex"}
@@ -327,7 +321,25 @@ const ModalMultipleCompanies = ({
 
         {isLoading && <Spin indicator={<Loading />} fullscreen />}
       </Grid>
-    </Modal>
+    );
+  };
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        body={body()}
+        openDialog={openMultipleCompanies}
+        closeModal={closeModal}
+      />
+      {/* <Modal
+      open={openMultipleCompanies}
+      onCancel={() => closeModal()}
+      centered
+      footer={[]}
+      style={{ zIndex: 30 }}
+    >
+    </Modal> */}
+    </>
   );
 };
 

@@ -5,9 +5,10 @@ const ModalUX = ({
   body,
   openDialog,
   closeModal,
-  onClose = null,
+  // onClose = null,
+  // onOk = null,
   width = 1000,
-  footer = null,
+  footer = [],
   modalStyles = {},
 }) => {
   return (
@@ -15,7 +16,7 @@ const ModalUX = ({
       open={openDialog}
       onClose={() => closeModal()}
       onCancel={() => closeModal()}
-      onOk={onClose}
+      onOk={() => closeModal()}
       centered
       width={width}
       footer={footer}

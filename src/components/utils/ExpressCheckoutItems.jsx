@@ -1,5 +1,5 @@
 import { Chip, OutlinedInput } from "@mui/material";
-import { Button, message, Modal, notification, Popconfirm, Space } from "antd";
+import { Button, message, notification, Popconfirm, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import ModalUX from "../UX/modal/ModalUX";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
@@ -83,11 +84,15 @@ const ExpressCheckoutItems = ({
       await returnDeviceInPool();
       setLoadingStatus(false);
       openNotificationWithIcon("Success", "All devices returned!");
-      refetchingDevicePerTransaction()
+      refetchingDevicePerTransaction();
       message.success("All devices returned!");
-      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`);
-      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`);
-      
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
+
       setSelectedItems([]);
       return closeModal();
     } catch (error) {
@@ -124,73 +129,78 @@ const ExpressCheckoutItems = ({
     }
   };
 
-  return (
-    <Modal
-      open={openReturnDeviceBulkModal}
-      title={renderingTitle()}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      width={1000}
-      style={{ zIndex: 30 }}
-    >
-      {contextHolder}
-      <form
-        style={{
-          display: "flex",
-          gap: "20px",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          width: "100%",
-          margin: "1rem auto",
-        }}
-        onSubmit={handleSubmit(handleAddDevices)}
-      >
-        <OutlinedInput
-          {...register("serialNumber")}
-          style={OutlinedInputStyle}
-          placeholder="Scan serial number to check in."
-          fullWidth
-        />
-        <Button style={{ ...BlueButton, width: "100%" }} htmlType="submit">
-          <p style={BlueButtonText}>Add</p>
-        </Button>
-      </form>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          justifyContent: "center",
-          alignItems: "center",
-          width: "100%",
-        }}
-      >
-        <Space size={[8, 16]} wrap>
-          {scannedDevice.map((item, index) => (
-            <Chip
-              key={item.key}
-              label={item.serialNumber}
-              onDelete={() => removeItemFromSelectedItems(index)}
-            />
-          ))}
-        </Space>
-        <Popconfirm
-          title="Are you sure you want to return all scanned devices?"
-          onConfirm={(e) => handleReturnDevices(e)}
+  const body = () => {
+    return (
+      <>
+        <form
+          style={{
+            display: "flex",
+            gap: "20px",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            width: "100%",
+            margin: "1rem auto",
+          }}
+          onSubmit={handleSubmit(handleAddDevices)}
         >
-          <Button
-            style={{ ...BlueButton, width: "100%" }}
-            loading={loadingStatus}
-          >
-            <p style={BlueButtonText}>
-              Confirm return | Total items to return: {scannedDevice.length}
-            </p>
+          <OutlinedInput
+            {...register("serialNumber")}
+            style={OutlinedInputStyle}
+            placeholder="Scan serial number to check in."
+            fullWidth
+          />
+          <Button style={{ ...BlueButton, width: "100%" }} htmlType="submit">
+            <p style={BlueButtonText}>Add</p>
           </Button>
-        </Popconfirm>
-      </div>
-    </Modal>
+        </form>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <Space size={[8, 16]} wrap>
+            {scannedDevice.map((item, index) => (
+              <Chip
+                key={item.key}
+                label={item.serialNumber}
+                onDelete={() => removeItemFromSelectedItems(index)}
+              />
+            ))}
+          </Space>
+          <Popconfirm
+            title="Are you sure you want to return all scanned devices?"
+            onConfirm={(e) => handleReturnDevices(e)}
+          >
+            <Button
+              style={{ ...BlueButton, width: "100%" }}
+              loading={loadingStatus}
+            >
+              <p style={BlueButtonText}>
+                Confirm return | Total items to return: {scannedDevice.length}
+              </p>
+            </Button>
+          </Popconfirm>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        openDialog={openReturnDeviceBulkModal}
+        closeModal={closeModal}
+        body={body()}
+        width={1000}
+        title={renderingTitle()}
+      />
+    </>
   );
 };
 

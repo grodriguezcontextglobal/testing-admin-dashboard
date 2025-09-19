@@ -7,13 +7,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, notification, Button } from "antd";
+import { Button, notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { devitrakApi } from "../../api/devitrakApi";
+import ModalUX from "../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 // import axios from "axios";
 
@@ -118,124 +119,123 @@ const ForgotPassword = ({ open, close }) => {
       </Typography>
     );
   };
+  const body = () => {
+    return (
+      <Grid container>
+        <Grid
+          display={"flex"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          alignSelf={"stretch"}
+          margin={"0 auto"}
+          item
+          xs={10}
+        >
+          <Typography id="transition-modal-description" sx={{ mt: 2, mb: 2 }}>
+            Enter your email to get a link to reset your password.
+          </Typography>
+        </Grid>
+        <Grid container>
+          <form
+            style={{
+              width: "100%",
+            }}
+            onSubmit={handleSubmit(handleSubmitEmailLink)}
+          >
+            <Grid
+              display={"flex"}
+              flexDirection={"column"}
+              alignItems={"center"}
+              alignSelf={"stretch"}
+              marginY={2}
+              marginX={"auto"}
+              paddingX={"9px"}
+              item
+              xs={10}
+            >
+              <FormControl fullWidth>
+                <FormLabel>
+                  {" "}
+                  <Typography
+                    style={{
+                      color: "var(--gray-700, #344054)",
+                      textAlign: "left",
+                      fontFamily: "Inter",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      lineHeight: "20px",
+                      paddingBottom: "5px",
+                    }}
+                  >
+                    Email
+                  </Typography>
+                </FormLabel>
+                <OutlinedInput
+                  {...register("email")}
+                  type="email"
+                  style={OutlinedInputStyle}
+                  placeholder="Enter your email"
+                />
+                {errors && (
+                  <Typography
+                    style={{
+                      color: "red",
+                      textAlign: "left",
+                      fontFamily: "Inter",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      lineHeight: "20px",
+                      paddingBottom: "5px",
+                    }}
+                  >
+                    {errors?.email?.message}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+            <Grid marginX={"auto"} paddingX={"9px"} marginY={3} item xs={10}>
+              <Button
+                style={{
+                  width: "100%",
+                  borderRadius: "8px",
+                  border: "1px solid var(--blue-dark-600, #155EEF)",
+                  background: "var(--blue-dark-600, #155EEF)",
+                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+                }}
+                loading={loading}
+                htmlType="submit"
+              >
+                <Typography
+                  style={{
+                    color: "var(--base-white, #FFF)",
+                    textAlign: "center",
+                    fontFamily: "Inter",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    lineHeight: "24px",
+                  }}
+                  id="transition-modal-title"
+                >
+                  Reset password
+                </Typography>
+              </Button>
+            </Grid>
+          </form>
+        </Grid>
+      </Grid>
+    );
+  };
+
   return (
     <>
       {contextHolder}
-      <Modal
+      <ModalUX
+        openDialog={open}
+        closeModal={handleClose}
         title={renderTitle()}
-        style={{
-          top: 20,
-          zIndex: 30,
-        }}
-        open={open}
-        onOk={() => handleClose()}
-        onCancel={() => handleClose()}
-        footer={[]}
-        maskClosable={false}
-      >
-        <Grid container>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            alignSelf={"stretch"}
-            margin={"0 auto"}
-            item
-            xs={10}
-          >
-            <Typography id="transition-modal-description" sx={{ mt: 2, mb: 2 }}>
-              Enter your email to get a link to reset your password.
-            </Typography>
-          </Grid>
-          <Grid container>
-            <form
-              style={{
-                width: "100%",
-              }}
-              onSubmit={handleSubmit(handleSubmitEmailLink)}
-            >
-              <Grid
-                display={"flex"}
-                flexDirection={"column"}
-                alignItems={"center"}
-                alignSelf={"stretch"}
-                marginY={2}
-                marginX={"auto"}
-                paddingX={"9px"}
-                item
-                xs={10}
-              >
-                <FormControl fullWidth>
-                  <FormLabel>
-                    {" "}
-                    <Typography
-                      style={{
-                        color: "var(--gray-700, #344054)",
-                        textAlign: "left",
-                        fontFamily: "Inter",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        lineHeight: "20px",
-                        paddingBottom: "5px",
-                      }}
-                    >
-                      Email
-                    </Typography>
-                  </FormLabel>
-                  <OutlinedInput
-                    {...register("email")}
-                    type="email"
-                    style={OutlinedInputStyle}
-                    placeholder="Enter your email"
-                  />
-                  {errors && (
-                    <Typography
-                      style={{
-                        color: "red",
-                        textAlign: "left",
-                        fontFamily: "Inter",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        lineHeight: "20px",
-                        paddingBottom: "5px",
-                      }}
-                    >
-                      {errors?.email?.message}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid marginX={"auto"} paddingX={"9px"} marginY={3} item xs={10}>
-                <Button
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    border: "1px solid var(--blue-dark-600, #155EEF)",
-                    background: "var(--blue-dark-600, #155EEF)",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                  }}
-                  loading={loading}
-                  htmlType="submit"
-                >
-                  <Typography
-                    style={{
-                      color: "var(--base-white, #FFF)",
-                      textAlign: "center",
-                      fontFamily: "Inter",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      lineHeight: "24px",
-                    }}
-                    id="transition-modal-title"
-                  >
-                    Reset password
-                  </Typography>
-                </Button>
-              </Grid>
-            </form>
-          </Grid>
-        </Grid>
-      </Modal>
+        modalStyles={{ top: 20 }}
+        body={body()}
+      />
     </>
   );
 };

@@ -6,28 +6,21 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Button, Modal } from "antd";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { Subtitle } from "../../../styles/global/Subtitle";
+import { Button } from "antd";
 import { useForm } from "react-hook-form";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../styles/global/Subtitle";
 
 const ChargeLostFee = ({ openModal, setOpenModal, record }) => {
   const { register, handleSubmit } = useForm();
   const closeModal = () => {
     return setOpenModal(false);
   };
-  return (
-    <Modal
-      open={openModal}
-      onCancel={() => closeModal()}
-      onClose={() => closeModal()}
-      title="Charge lost fee"
-      footer={null}
-      centered
-      maskClosable={false}
-    >
+  const bodyUX = () => {
+    return (
       <Grid
         display={"flex"}
         flexDirection={"column"}
@@ -112,8 +105,24 @@ const ChargeLostFee = ({ openModal, setOpenModal, record }) => {
             </Button>
           </form>
         </Grid>
-      </Grid>{" "}
-    </Modal>
+      </Grid>
+    )
+  }
+
+  return (
+    <>
+    <ModalUX body={bodyUX} title={"Charge lost fee"} openDialog={openModal} closeModal={closeModal} />
+    {/* <Modal
+      open={openModal}
+      onCancel={() => closeModal()}
+      onClose={() => closeModal()}
+      title="Charge lost fee"
+      footer={null}
+      centered
+      maskClosable={false}
+      >
+    </Modal> */}
+      </>
   );
 };
 

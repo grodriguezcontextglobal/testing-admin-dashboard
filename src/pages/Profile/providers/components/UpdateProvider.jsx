@@ -216,14 +216,6 @@ const UpdateProvider = ({
   };
   return (
     <ModalUX body={body()} openDialog={openDialog} closeModal={closeModal} />
-    // <Modal
-    //   open={openDialog}
-    //   onClose={() => closeModal()}
-    //   onCancel={() => closeModal()}
-    //   width={1000}
-    //   footer={null}
-    //   maskClosable={false}
-    // ></Modal>
   );
 };
 

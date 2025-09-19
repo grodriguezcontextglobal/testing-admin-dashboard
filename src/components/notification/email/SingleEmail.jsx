@@ -136,7 +136,7 @@ const SingleEmailNotification = ({
         body={body()}
         openDialog={customizedEmailNotificationModal}
         modalStyles={{ zIndex: 30 }}
-        onClose={closeModal}
+        closeModal={closeModal}
       />
     </>
   );

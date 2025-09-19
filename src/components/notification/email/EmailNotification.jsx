@@ -166,18 +166,7 @@ const EmailNotification = ({
   return (
     <>
       {contextHolder}
-      <ModalUX title={renderTitle()} body={body()} openDialog={customizedEmailNotificationModal} modalStyles={{ zIndex: 30 }} onClose={closeModal} />
-      {/* <Modal notification
-        title={renderTitle()}
-        centered
-        open={customizedEmailNotificationModal}
-        onOk={() => closeModal()}
-        onCancel={() => closeModal()}
-        footer={[]}
-        width={1000}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
-      ></Modal> */}
+      <ModalUX title={renderTitle()} body={body()} openDialog={customizedEmailNotificationModal} modalStyles={{ zIndex: 30 }} closeModal={closeModal} />
     </>
   );
 };
