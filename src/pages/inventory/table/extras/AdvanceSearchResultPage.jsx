@@ -27,15 +27,20 @@ import {
 import { Divider as DivAnt } from "antd";
 // import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Alert } from "antd";
-import { onAddAdvanceSearch } from "../../../../store/slices/searchBarResultSlice";
+import { onAddAdvanceSearch, onAddSearchParameters } from "../../../../store/slices/searchBarResultSlice";
 
 // import Bars from "../../charts/Bars";
 // import BarAnimation from "../../charts/BarAnimation";
 // import InventoryItemCard from "./ux/InventoryItemCard";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-// import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { EditIcon } from "../../../../components/icons/EditIcon";
+import AdvanceSearchModal from "./AdvanceSearchModal";
+import { AdvanceSearchContext } from "./RenderingFilters";
+import { useQuery } from "@tanstack/react-query";
+import { devitrakApi } from "../../../../api/devitrakApi";
 
 const KPI = ({ label, value, color = "default" }) => (
   <Card variant="outlined" sx={{ height: "100%" }}>
@@ -391,14 +396,58 @@ const RentedInventoryTable = ({
   );
 };
 const AdvanceSearchResultPage = () => {
-  const { advanceSearch } = useSelector((state) => state.searchResult);
+  const { advanceSearch, searchParameters } = useSelector((state) => state.searchResult);
+  const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
+  const [periodUpdateOnly, setPeriodUpdateOnly] = useState(false); // New state
+
+  // Get filter options for the search modal
+  const structuredCompanyInventory = useQuery({
+    queryKey: ["structuredCompanyInventory"],
+    queryFn: () =>
+      devitrakApi.post(`/db_company/company-inventory-structure`, {
+        company_id: user.sqlInfo.company_id,
+      }),
+    enabled: !!user.sqlInfo.company_id,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Prepare filter options for AdvanceSearchContext
+  const filterOptions = useMemo(() => {
+    if (!structuredCompanyInventory.data?.data?.inventory) return {
+      category: [],
+      group: [],
+      brand: [],
+      location: []
+    };
+
+    const inventory = structuredCompanyInventory.data.data.inventory;
+    const categories = [...new Set(inventory.map(item => item.category_name))].map(key => ({ key }));
+    const groups = [...new Set(inventory.map(item => item.item_group))].map(key => ({ key }));
+    const brands = [...new Set(inventory.map(item => item.brand))].map(key => ({ key }));
+    const locations = [...new Set(inventory.map(item => item.location))].map(key => ({ key }));
+
+    return {
+      category: categories,
+      group: groups,
+      brand: brands,
+      location: locations
+    };
+  }, [structuredCompanyInventory.data]);
 
   const handleReturnNavigation = useCallback(() => {
     dispatch(onAddAdvanceSearch(null));
+    dispatch(onAddSearchParameters(null));
     return navigate("/inventory");
   }, [dispatch, navigate]);
+
+  const handleUpdatePeriodOnly = () => {
+    setPeriodUpdateOnly(true);
+    setOpenAdvanceSearchModal(true);
+  };
 
   // ===== Extract payload pieces safely =====
   const availabilityProjection =
@@ -483,17 +532,6 @@ const AdvanceSearchResultPage = () => {
 
     return uniqueGroups.size;
   }, [allItems, ownedInventory?.raw_results, rentedInventory?.raw_results]);
-
-  // ===== CHARTS =====
-  // const chartAvailabilityByLocation = useMemo(() => {
-  //   const src = advanceSearch?.comprehensiveAnalysis?.location_summary ?? [];
-  //   return src.map((d) => ({
-  //     group: d.location,
-  //     available: Number(d.permanent_count ?? 0),
-  //     notAvailable: Number(d.rental_count ?? 0),
-  //     availabilityPercentage: Number(d.availability_percentage ?? 0),
-  //   }));
-  // }, [advanceSearch?.comprehensiveAnalysis?.location_summary]);
 
   // Updated event columns to match new data structure
   const eventDeviceColumns = [
@@ -589,188 +627,265 @@ const AdvanceSearchResultPage = () => {
 
   // ===== RENDER =====
   return (
-    <Grid
-      container
-      display="flex"
-      justifyContent="flex-start"
-      alignItems="stretch"
-      spacing={2}
-    >
-      {/* Header */}
+    <AdvanceSearchContext.Provider value={filterOptions}>
       <Grid
-        item
-        xs={12}
+        container
         display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        justifyContent="flex-start"
+        alignItems="stretch"
+        spacing={2}
       >
-        <GrayButtonComponent
-          title={"Go back"}
-          func={handleReturnNavigation}
-          buttonType="button"
-          titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
-        />
-        {/* <BlueButtonComponent
-          title={"Export CSV"}
-          func={handleExport}
-          buttonType="button"
-          titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
-        /> */}
-      </Grid>
+        {/* Header */}
+        <Grid
+          item
+          xs={12}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <GrayButtonComponent
+            title={"Go back"}
+            func={handleReturnNavigation}
+            buttonType="button"
+            titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
+          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <BlueButtonComponent
+              title={"Update Period"}
+              func={handleUpdatePeriodOnly}
+              buttonType="button"
+              titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
+              icon={<EditIcon stroke="#fff" hoverStroke="#1890ff" />}
+            />
+          </div>
+        </Grid>
 
-      {/* Period */}
-      {period && (
-        <Grid item xs={12}>
-          <Alert
-            message={`Search Period: ${period.start} to ${period.end}`}
-            type="info"
-            showIcon
-            style={{ marginBottom: 8 }}
+        {/* Period */}
+        {period && (
+          <Grid item xs={12}>
+            <Alert
+              message={`Search Period: ${period.start} to ${period.end}`}
+              type="info"
+              showIcon
+              style={{ marginBottom: 8 }}
+            />
+          </Grid>
+        )}
+
+        {/* KPI Summary */}
+        <Grid item xs={12} md={3}>
+          <KPI
+            label="Total Locations"
+            value={overallSummary?.total_locations}
+            color="primary"
           />
         </Grid>
-      )}
+        <Grid item xs={12} md={3}>
+          <KPI label="Item Types" value={uniqueItemGroupsCount} color="primary" />
+        </Grid>
 
-      {/* KPI Summary */}
-      <Grid item xs={12} md={3}>
-        <KPI
-          label="Total Locations"
-          value={overallSummary?.total_locations}
-          color="primary"
-        />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <KPI label="Item Types" value={uniqueItemGroupsCount} color="primary" />
-      </Grid>
-
-      {/* Per-location projection summary pulled from projection.locations[].location_summary */}
-      <Grid item xs={12}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Per-Location Projection Summary
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Grid container spacing={2}>
-              {locationData.map((loc, idx) => (
-                <Grid item xs={12} md={6} key={`${loc.location}-${idx}`}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="subtitle1">
-                        Items available at <strong>{loc.location}</strong>
-                      </Typography>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        mt={1}
-                        useFlexGap
-                        flexWrap="wrap"
-                      >
-                        <Chip
-                          label={`Item Types: ${
-                            loc.location_summary?.total_items ?? 0
-                          }`}
-                        />
-                      </Stack>
-                      {/* Small table of items in this location */}
-                      <Box mt={2}>
-                        <SimpleTable
-                          columns={[
-                            {
-                              key: "category",
-                              title: "Category",
-                              dataIndex: "category",
-                            },
-                            {
-                              key: "group",
-                              title: "Item",
-                              dataIndex: "group",
-                            },
-                            {
-                              key: "owned_count",
-                              title: "Owned",
-                              dataIndex: "owned_count",
-                            },
-                            {
-                              key: "rental_no_return_date",
-                              title: "Rental available",
-                              dataIndex: "rental_no_return_date",
-                              render: (row) => {
-                                if (row.owned_count === row.total_available) {
-                                  return 0;
-                                } else {
-                                  return row.total_available - row.owned_count;
-                                }
+        {/* Per-location projection summary pulled from projection.locations[].location_summary */}
+        <Grid item xs={12}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Per-Location Projection Summary
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                {locationData.map((loc, idx) => (
+                  <Grid item xs={12} md={6} key={`${loc.location}-${idx}`}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="subtitle1">
+                          Items available at <strong>{loc.location}</strong>
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          mt={1}
+                          useFlexGap
+                          flexWrap="wrap"
+                        >
+                          <Chip
+                            label={`Item Types: ${
+                              loc.location_summary?.total_items ?? 0
+                            }`}
+                          />
+                        </Stack>
+                        {/* Small table of items in this location */}
+                        <Box mt={2}>
+                          <SimpleTable
+                            columns={[
+                              {
+                                key: "category",
+                                title: "Category",
+                                dataIndex: "category",
                               },
-                            },
-                            {
-                              key: "total_available",
-                              title: "Total Avail",
-                              dataIndex: "total_available",
-                            },
-                          ]}
-                          rows={loc.items || []}
-                          emptyText="No items"
-                        />
-                      </Box>
-                    </CardContent>
-                  </Card>
+                              {
+                                key: "group",
+                                title: "Item",
+                                dataIndex: "group",
+                              },
+                              {
+                                key: "owned_count",
+                                title: "Owned",
+                                dataIndex: "owned_count",
+                              },
+                              {
+                                key: "rental_no_return_date",
+                                title: "Rental available",
+                                dataIndex: "rental_no_return_date",
+                                render: (row) => {
+                                  if (row.owned_count === row.total_available) {
+                                    return 0;
+                                  } else {
+                                    return row.total_available - row.owned_count;
+                                  }
+                                },
+                              },
+                              {
+                                key: "total_available",
+                                title: "Total Avail",
+                                dataIndex: "total_available",
+                              },
+                            ]}
+                            rows={loc.items || []}
+                            emptyText="No items"
+                          />
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+        <DivAnt />
+        {/* Owned vs Rented Raw Inventory */}
+        <Grid item xs={12} md={6}>
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<DownNarrow />}>
+              <Typography variant="subtitle1">Owned Available Inventory</Typography>
+              <Chip
+                sx={{ ml: 1 }}
+                size="small"
+                label={ownedInventory?.total_items ?? 0}
+              />
+            </AccordionSummary>
+            <AccordionDetails>
+              <RentedInventoryTable
+                type={1}
+                rows={ownedInventory?.raw_results ?? []}
+                emptyText="No owned items"
+                collapsible={true}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<DownNarrow />}>
+              <Typography variant="subtitle1">Rented Available Inventory</Typography>
+              <Chip
+                sx={{ ml: 1 }}
+                size="small"
+                label={rentedInventory?.total_items ?? 0}
+              />
+            </AccordionSummary>
+            <AccordionDetails>
+              <RentedInventoryTable
+              type={2}
+                rows={rentedInventory?.raw_results ?? []}
+                emptyText="No rented items"
+                collapsible={true}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+        <DivAnt />
+        {/* Rental Analysis Buckets */}
+        <Grid item xs={12}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Rental Equipment Inventory
+              </Typography>
+              {rentalAnalysis?.summary && (
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  mb={2}
+                  useFlexGap
+                  flexWrap="wrap"
+                >
+                  <Chip
+                    color="default"
+                    label={`Before: ${rentalAnalysis.summary.before_count}`}
+                  />
+                  <Chip
+                    color="warning"
+                    label={`Within: ${rentalAnalysis.summary.within_count}`}
+                  />
+                  <Chip
+                    color="success"
+                    label={`After: ${rentalAnalysis.summary.after_count}`}
+                  />
+                  <Chip
+                    color="primary"
+                    label={`Total: ${rentalAnalysis.summary.total_analyzed}`}
+                  />
+                </Stack>
+              )}
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2">
+                    Returned Before Period
+                  </Typography>
+                  <RentedInventoryTable
+                  type={2}
+                    rows={rentalAnalysis?.before_period ?? []}
+                    emptyText="—"
+                    collapsible={true}
+                  />
                 </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
-      </Grid>
-      <DivAnt />
-      {/* Owned vs Rented Raw Inventory */}
-      <Grid item xs={12} md={6}>
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<DownNarrow />}>
-            <Typography variant="subtitle1">Owned Available Inventory</Typography>
-            <Chip
-              sx={{ ml: 1 }}
-              size="small"
-              label={ownedInventory?.total_items ?? 0}
-            />
-          </AccordionSummary>
-          <AccordionDetails>
-            <RentedInventoryTable
-              type={1}
-              rows={ownedInventory?.raw_results ?? []}
-              emptyText="No owned items"
-              collapsible={true}
-            />
-          </AccordionDetails>
-        </Accordion>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<DownNarrow />}>
-            <Typography variant="subtitle1">Rented Available Inventory</Typography>
-            <Chip
-              sx={{ ml: 1 }}
-              size="small"
-              label={rentedInventory?.total_items ?? 0}
-            />
-          </AccordionSummary>
-          <AccordionDetails>
-            <RentedInventoryTable
-            type={2}
-              rows={rentedInventory?.raw_results ?? []}
-              emptyText="No rented items"
-              collapsible={true}
-            />
-          </AccordionDetails>
-        </Accordion>
-      </Grid>
-      <DivAnt />
-      {/* Rental Analysis Buckets */}
-      <Grid item xs={12}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Rental Equipment Inventory
-            </Typography>
-            {rentalAnalysis?.summary && (
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2">
+                    Returning Within Period
+                  </Typography>
+                  <RentedInventoryTable
+                  type={2}
+                    rows={rentalAnalysis?.within_period ?? []}
+                    emptyText="—"
+                    collapsible={true}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2">
+                    Returning After Period
+                  </Typography>
+                  <RentedInventoryTable
+                  type={2}
+                    rows={rentalAnalysis?.after_period ?? []}
+                    emptyText="—"
+                    collapsible={true}
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+        <DivAnt />
+        {/* Event Inventory - Enhanced */}
+        <Grid item xs={12}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Events in Search Window
+              </Typography>
+
+              {/* Event Summary */}
               <Stack
                 direction="row"
                 spacing={2}
@@ -779,140 +894,75 @@ const AdvanceSearchResultPage = () => {
                 flexWrap="wrap"
               >
                 <Chip
-                  color="default"
-                  label={`Before: ${rentalAnalysis.summary.before_count}`}
-                />
-                <Chip
-                  color="warning"
-                  label={`Within: ${rentalAnalysis.summary.within_count}`}
-                />
-                <Chip
-                  color="success"
-                  label={`After: ${rentalAnalysis.summary.after_count}`}
-                />
-                <Chip
                   color="primary"
-                  label={`Total: ${rentalAnalysis.summary.total_analyzed}`}
+                  label={`Total Events: ${eventInventory?.total_events ?? 0}`}
                 />
-              </Stack>
-            )}
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2">
-                  Returned Before Period
-                </Typography>
-                <RentedInventoryTable
-                type={2}
-                  rows={rentalAnalysis?.before_period ?? []}
-                  emptyText="—"
-                  collapsible={true}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2">
-                  Returning Within Period
-                </Typography>
-                <RentedInventoryTable
-                type={2}
-                  rows={rentalAnalysis?.within_period ?? []}
-                  emptyText="—"
-                  collapsible={true}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2">
-                  Returning After Period
-                </Typography>
-                <RentedInventoryTable
-                type={2}
-                  rows={rentalAnalysis?.after_period ?? []}
-                  emptyText="—"
-                  collapsible={true}
-                />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      </Grid>
-      <DivAnt />
-      {/* Event Inventory - Enhanced */}
-      <Grid item xs={12}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Events in Search Window
-            </Typography>
-
-            {/* Event Summary */}
-            <Stack
-              direction="row"
-              spacing={2}
-              mb={2}
-              useFlexGap
-              flexWrap="wrap"
-            >
-              <Chip
-                color="primary"
-                label={`Total Events: ${eventInventory?.total_events ?? 0}`}
-              />
-              <Chip
-                color="secondary"
-                label={`Total Devices: ${eventInventory?.total_devices ?? 0}`}
-              />
-              <Chip
-                color="info"
-                label={`Device Categories: ${eventDeviceRows.length}`}
-              />
-              {eventInventory?.period && (
                 <Chip
-                  color="default"
-                  label={`Period: ${eventInventory.period.date_start} to ${eventInventory.period.date_end}`}
+                  color="secondary"
+                  label={`Total Devices: ${eventInventory?.total_devices ?? 0}`}
                 />
-              )}
-            </Stack>
+                <Chip
+                  color="info"
+                  label={`Device Categories: ${eventDeviceRows.length}`}
+                />
+                {eventInventory?.period && (
+                  <Chip
+                    color="default"
+                    label={`Period: ${eventInventory.period.date_start} to ${eventInventory.period.date_end}`}
+                  />
+                )}
+              </Stack>
 
-            {/* Device Counts Table */}
-            <Box mb={3}>
-              <Typography variant="subtitle1" gutterBottom>
-                Device Requirements by Category
-              </Typography>
-              <SimpleTable
-                columns={eventDeviceColumns}
-                rows={eventDeviceRows}
-                emptyText="No device requirements"
-                collapsible={true}
+              {/* Device Counts Table */}
+              <Box mb={3}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Device Requirements by Category
+                </Typography>
+                <SimpleTable
+                  columns={eventDeviceColumns}
+                  rows={eventDeviceRows}
+                  emptyText="No device requirements"
+                  collapsible={true}
+                />
+              </Box>
+
+              {/* Event Details Table */}
+              <Box mb={2}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Event Details
+                </Typography>
+                <SimpleTable
+                  columns={eventDetailsColumns}
+                  rows={uniqueEvents}
+                  emptyText="No events found"
+                  collapsible={true}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Empty state fallback for the whole page */}
+        {allItems.length === 0 &&
+          (ownedInventory?.total_items ?? 0) === 0 &&
+          (rentedInventory?.total_items ?? 0) === 0 && (
+            <Grid item xs={12}>
+              <Alert
+                message="No inventory items found for the specified criteria."
+                type="info"
+                showIcon
               />
-            </Box>
-
-            {/* Event Details Table */}
-            <Box mb={2}>
-              <Typography variant="subtitle1" gutterBottom>
-                Event Details
-              </Typography>
-              <SimpleTable
-                columns={eventDetailsColumns}
-                rows={uniqueEvents}
-                emptyText="No events found"
-                collapsible={true}
-              />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* Empty state fallback for the whole page */}
-      {allItems.length === 0 &&
-        (ownedInventory?.total_items ?? 0) === 0 &&
-        (rentedInventory?.total_items ?? 0) === 0 && (
-          <Grid item xs={12}>
-            <Alert
-              message="No inventory items found for the specified criteria."
-              type="info"
-              showIcon
-            />
-          </Grid>
-        )}
+            </Grid>
+          )}
+    {/* Search Modal */}
+        <AdvanceSearchModal
+          openAdvanceSearchModal={openAdvanceSearchModal}
+          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+          existingParameters={searchParameters}
+          periodUpdateOnly={periodUpdateOnly}
+        />
     </Grid>
+    </AdvanceSearchContext.Provider>
   );
 };
 
