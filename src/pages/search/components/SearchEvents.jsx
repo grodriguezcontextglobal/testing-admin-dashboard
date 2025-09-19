@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -17,7 +17,7 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardEventsFound from "../utils/CardEventsFound";
 import NoDataFound from "../utils/NoDataFound";
-const SearchEvents = ({ searchParams }) => {
+const SearchEvents = ({ searchParams, setCountingResult, countingResults }) => {
   const searchValue = String(searchParams).replaceAll("%20", " ");
   const { user } = useSelector((state) => state.admin);
   const staffMembersQuery = useQuery({
@@ -104,6 +104,7 @@ const SearchEvents = ({ searchParams }) => {
       return result;
     }
   };
+
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
@@ -134,6 +135,20 @@ const SearchEvents = ({ searchParams }) => {
     );
     return navigate("/events/event-quickglance");
   };
+
+  const trigger = setInterval(() => {
+    return null;
+  }, 1000);
+
+  useMemo(() => {
+    const counting = sortAndRenderFoundData()?.length;
+    setCountingResult([
+      ...countingResults,
+      { title: "events", count: counting },
+    ]);
+    return () => clearInterval(trigger);
+  }, [trigger]);
+
 
   if (staffMembersQuery.isLoading)
     return (
