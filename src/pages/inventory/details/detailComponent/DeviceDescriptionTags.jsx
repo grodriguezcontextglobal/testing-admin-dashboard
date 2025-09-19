@@ -137,11 +137,12 @@ const DeviceDescriptionTags = ({ dataFound }) => {
                       "Returning date"
                     : "Returned equipment date"}
                   <br />{" "}
-                  {dataPropsCopy?.return_date
+                  {new Date(dataPropsCopy?.return_date).toLocaleString()}
+                  {/* {dataPropsCopy?.return_date
                     ?.split(" ")
                     .slice(0, 5)
                     .toString()
-                    .replaceAll(",", " ")}
+                    .replaceAll(",", " ")} */}
                 </Typography>
               </button>
             </Tooltip>
