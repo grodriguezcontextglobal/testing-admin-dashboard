@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { notification } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,7 +10,7 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardSearchStaffFound from "../utils/CardSearchStaffFound";
 import NoDataFound from "../utils/NoDataFound";
-const SearchStaff = ({ searchParams }) => {
+const SearchStaff = ({ searchParams, setCountingResult, countingResults }) => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const SearchStaff = ({ searchParams }) => {
 
   const [staffSearchFound, setStaffSearchFound] = useState([]);
   const checkStaffInfo = async () => {
-    const result = new Set()
+    const result = new Set();
     if (
       Array.isArray(sortAndRenderFoundData()) &&
       sortAndRenderFoundData()?.length > 0
@@ -53,13 +53,15 @@ const SearchStaff = ({ searchParams }) => {
         });
         if (searchFound.data) {
           const found = checkArray(searchFound.data.adminUsers);
-        result.add(found)        }
+          result.add(found);
+        }
       }
-      const finalResult = [...staffSearchFound, ...Array.from(result)]
+      const finalResult = [...staffSearchFound, ...Array.from(result)];
       setStaffSearchFound(finalResult);
       return;
     }
   };
+
   useEffect(() => {
     const controller = new AbortController();
     sortAndRenderFoundData();
@@ -81,6 +83,19 @@ const SearchStaff = ({ searchParams }) => {
     sortAndRenderFoundData().length,
   ]);
 
+  const trigger = setInterval(() => {
+    return null;
+  }, 1000);
+
+  useMemo(() => {
+    const counting = sortAndRenderFoundData()?.length;
+    setCountingResult([
+      ...countingResults,
+      { title: "staff", count: counting },
+    ]);
+    return () => clearInterval(trigger);
+  }, [trigger]);
+
   const handleDetailStaff = async (record) => {
     const template = {
       ...record.data,
@@ -92,10 +107,9 @@ const SearchStaff = ({ searchParams }) => {
       return openNotification("Staff member has not confirmed invitation yet.");
     }
     dispatch(onAddStaffProfile(template));
-    return navigate(
-      `/staff/${record.other.id ?? record.other.uid}/main`
-    );
+    return navigate(`/staff/${record.other.id ?? record.other.uid}/main`);
   };
+
   return (
     <Grid
       key={"searching-staff-container"}
