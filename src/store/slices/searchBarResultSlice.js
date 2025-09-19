@@ -7,6 +7,7 @@ const searchBarResultSlice = createSlice({
     searchResult: [],
     searchValue: undefined,
     advanceSearch: null,
+    searchParameters: null,
   },
   reducers: {
     onAddNewResult: (state, { payload }) => {
@@ -24,6 +25,12 @@ const searchBarResultSlice = createSlice({
     onAddAdvanceSearch: (state, { payload }) => {
       state.advanceSearch = payload;
     },
+    onAddSearchParameters: (state, { payload }) => {
+      state.searchParameters = payload;
+    },
+    onResetSearchParameters: (state) => {
+      state.searchParameters = null;
+    },
   },
 });
 
@@ -35,6 +42,8 @@ export const {
   onAddSearchValue,
   onResetSearchValue,
   onAddAdvanceSearch,
+  onAddSearchParameters,
+  onResetSearchParameters,
 } = searchBarResultSlice.actions;
 
 export default searchBarResultSlice.reducer;
