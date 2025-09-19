@@ -14,7 +14,6 @@ const CardDeviceFound = ({
   loadingStatus,
   returnLoading,
 }) => {
-  console.log(props)
   const styleDic = {
     true: {
       backgroundColor: "#FFF4ED",
