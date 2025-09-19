@@ -222,6 +222,7 @@ const AssignmentFromExistingInventory = () => {
         provider: user.company,
         type: db[index].item_group,
         company: user.companyData.id,
+        contract_type:"lease"
       });
       items.push({
         serial_number: db[index].serial_number,
