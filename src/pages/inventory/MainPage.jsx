@@ -146,6 +146,9 @@ const MainPage = () => {
       user.sqlInfo.company_id,
     ]);
     setIsLoadingState(false);
+    setValue("searchItem", "");
+    setParams(null);
+    setSearchedResult(null);
     return setRenderingData(false);
   };
 
