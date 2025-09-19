@@ -496,6 +496,7 @@ const ReturnRentedItemModal = ({
           values: values,
         }
       );
+      console.log("itemsData", itemsData);
       if (itemsData.data.result.length === 0) {
         return message.warning("No items found to return");
       }
@@ -659,11 +660,12 @@ const ReturnRentedItemModal = ({
       });
 
       // Step 2: Delete items from records
-      await deleteItemsFromRecords(allItemIds);
+      await emailNotification({ items: allItemIds });
       
       // Step 3: Email notification to staff
+      await deleteItemsFromRecords(allItemIds);
       setProgress({ current: 0, total: 1, step: "Sending email notification" });
-      await emailNotification({ items: allItemIds });
+      
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       message.success({
@@ -707,12 +709,11 @@ const ReturnRentedItemModal = ({
         content: "Items returned to renter, now deleting records...",
         key: "processing",
       });
-
-      // Step 2: Delete items from records
-      await deleteItemsFromRecords(itemIds);
-
-      // Step 3: Email notification to staff
+      // Step 2: Email notification to staff
       await emailNotification({ items: selectedItems });
+
+      // Step 3: Delete items from records
+      await deleteItemsFromRecords(itemIds);
 
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
