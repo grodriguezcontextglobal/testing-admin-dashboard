@@ -452,8 +452,11 @@ const ReturnRentedItemModal = ({
   };
 
   // Step 3: Improved email notification with complete data fetching
-  const emailNotification = async ({ items }) => {
+  const emailNotification = async ({items}) => {
     try {
+      console.log("Email notification started");
+      console.log("items", items);
+      console.log("supplier_id", supplier_id);
       setProgress({
         current: 0,
         total: 1,
@@ -469,14 +472,23 @@ const ReturnRentedItemModal = ({
         }
       );
       const props = Array.from(items);
-      const placeholders = props.map((item) => item);
+      console.log("props", props);
+      
+      // Create proper SQL placeholders for the IN clause
+      const placeholders = props.map(() => '?').join(',');
+      console.log("placeholders", placeholders);
+      
       if (supplier_id) {
-        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE  item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
-        values = ["Rent", user.sqlInfo.company_id, supplier_id];
+        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
+        values = [...props, "Rent", user.sqlInfo.company_id, supplier_id];
       } else {
-        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE  item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
-        values = ["Rent", user.sqlInfo.company_id];
+        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
+        values = [...props, "Rent", user.sqlInfo.company_id];
       }
+      
+      console.log("Final query:", query);
+      console.log("Final values:", values);
+      
       const itemsData = await devitrakApi.post(
         "/db_company/inventory-based-on-submitted-parameters",
         {
