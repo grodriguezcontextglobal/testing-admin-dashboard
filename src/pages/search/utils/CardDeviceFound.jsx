@@ -14,6 +14,7 @@ const CardDeviceFound = ({
   loadingStatus,
   returnLoading,
 }) => {
+  console.log(props)
   const styleDic = {
     true: {
       backgroundColor: "#FFF4ED",
@@ -43,7 +44,7 @@ const CardDeviceFound = ({
         border: "1px solid #D0D5DD",
         background: "#FFF",
         boxShadow: "0px 2px 4px 0px rgba(0, 0, 0, 0.05)",
-        display: "flex",
+        display: props?.data?.contract_type === "lease" ? "none" : "flex",
         padding: "5px",
         flexDirection: "column",
         alignItems: "flex-start",
