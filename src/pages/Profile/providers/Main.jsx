@@ -319,7 +319,7 @@ const Main = () => {
                 {formatAddress(provider.address)}
               </Typography>
 
-              <Typography
+              {/* <Typography
                 sx={{
                   mb: 1,
                   fontSize: isMobile ? "0.875rem" : "1rem",
@@ -335,7 +335,7 @@ const Main = () => {
                 }}
               >
                 <strong>Services/Equipment:</strong> {provider.services}
-              </Typography>
+              </Typography> */}
 
               {provider?.documents?.length > 0 && (
                 <Box>
