@@ -1,119 +1,133 @@
-import { Icon } from "@iconify/react";
-import {
-  Chip,
-  Grid,
-  InputLabel,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
-import { Button, Divider, Modal, notification, Space, Tooltip } from "antd";
-import { useState } from "react";
-import DatePicker from "react-datepicker";
+import { Box, Grid, InputLabel, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
+import { message, Modal, Progress } from "antd";
+import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import EmailReturnRentalItems from "../../../../../components/notification/email/EmailReturnRentalItems";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import "../../../../../styles/global/reactInput.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import "../../../../events/newEventProcess/style/NewEventInfoSetup.css";
 
 const ReturningLeasedEquipModal = ({
   dataFound,
   openReturningModal,
   setOpenReturningModal,
-  setDataPropsCopy,
+  // setDataPropsCopy,
 }) => {
+  const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [begin, setBegin] = useState(new Date());
-  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
-  const [moreInfo, setMoreInfo] = useState([]);
-  const [keyObject, setKeyObject] = useState("");
-  const [valueObject, setValueObject] = useState("");
+  const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
+  const [supplierInfo, setSupplierInfo] = useState(null);
   const { handleSubmit } = useForm();
-  // const { user } = useSelector((state) => state.admin);
-  const [api, contextHolder] = notification.useNotification();
-  const openNotification = (msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const closeModal = () => {
     return setOpenReturningModal(false);
   };
+  const invalidatingQueriesForRefresh = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerGroupName"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerCategory"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    queryClient.invalidateQueries({
+      queryKey: ["currentStateDevicePerCategory"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerBrand"] });
+    queryClient.invalidateQueries({ queryKey: ["currentStateDevicePerBrand"] });
+    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    return null;
+  };
+  useEffect(() => {
+    if (dataFound.supplier_info.length > 0 || dataFound.supplier_info !== "") {
+      const checkingSupplier = async () => {
+        const supplier = await devitrakApi.get("/company/provider-companies", {
+          params: {
+            creator: user?.companyData?.id,
+          },
+        });
+        setSupplierInfo(
+          supplier?.data?.providerCompanies.filter(
+            (ele) => ele.id === dataFound.supplier_info
+          )
+        );
+      };
+      checkingSupplier();
+    }
+  }, []);
 
-  // const emailNotificationAdmins = async () => {
-  //   const response = await devitrakApi.post(
-  //     "/nodemailer/leased-equip-staff-notification",
-  //     {
-  //       subject: "Leased device returned in company records.",
-  //       message: `The device with serial number ${
-  //         dataFound.serial_number
-  //       } was returned for staff member ${user.name} ${
-  //         user.lastName
-  //       } at Date ${new Date().toString()} to original renter company.`,
-  //       company: user.companyData.company_name,
-  //       staff: [
-  //         ...user.companyData.employees
-  //           .filter((element) => Number(element.role) < 2)
-  //           .map((ele) => ele.user),
-  //       ],
-  //       contactInfo: {
-  //         staff: `${user.name} ${user.lastName}`,
-  //         email: user.email,
-  //       },
-  //     }
-  //   );
-  //   if (response.data) {
-  //     return openNotification("Item is returned to the company.");
-  //   }
-  // };
-
-  const handleReturningLeasedEquip = async () => {
+  const handleReturnRentalItem = async () => {
     setLoadingStatus(true);
     try {
-      const response = await devitrakApi.post(
-        "/db_company/returning-leased-equipment",
-        {
-          item_id: dataFound.item_id,
-          return_date: begin.toString(),
-          enableAssignFeature: 0,
-          returnedRentedInfo: JSON.stringify(moreInfo),
-        }
+      message.loading({
+        content: `Processing item...`,
+        key: "processing",
+      });
+
+      // Step 1: Return items to renter
+      const returnDate = new Date().toISOString();
+      const payload = {
+        item_ids: [dataFound.item_id],
+        warehouse: 1,
+        enableAssignFeature: 0,
+        returnedRentedInfo: JSON.stringify([]),
+        return_date: returnDate,
+      };
+      await devitrakApi.post("/db_inventory/update-large-data", payload);
+
+      message.loading({
+        content: "Items returned to renter, now deleting records...",
+        key: "processing",
+      });
+
+      // Step 2: Email notification to staff
+      await EmailReturnRentalItems({
+        items: [dataFound.item_id],
+        supplier_id: dataFound.supplier_info,
+        user: user,
+        setProgress,
+      });
+
+      // Step 3: Delete items from records
+      const deleteQuery = `DELETE FROM item_inv WHERE item_id = ? AND company_id = ?`;
+      const deleteValues = [dataFound.item_id, dataFound.company_id];
+      const payloadDelete = {
+        query: deleteQuery,
+        values: deleteValues,
+      };
+      await devitrakApi.post(
+        "/db_company/inventory-based-on-submitted-parameters",
+        payloadDelete
       );
-      setLoadingStatus(false);
-      if (response.data.ok) {
-        setDataPropsCopy({ ...dataFound, enableAssignFeature: 0 });
-        // await emailNotificationAdmins();
-        setLoadingStatus(false);
-        openNotification("Item is returned to the company.");
-        return closeModal();
-      }
+
+      // Step 4: Clear cache memory
+      await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
+      message.success({
+        content: `Successfully returned item to the Rental Company`,
+        key: "processing",
+      });
+      invalidatingQueriesForRefresh();
+      return navigate("/inventory");
     } catch (error) {
+      message.error({ content: "Failed to process items", key: "processing" });
+      console.error("Error processing items:", error);
+    } finally {
       setLoadingStatus(false);
-      throw Error(error);
     }
   };
 
-  const handleAddingMoreInfo = () => {
-    setMoreInfo([...moreInfo, { keyObject, valueObject }]);
-    setKeyObject("");
-    setValueObject("");
-    return;
-  };
-  const renderMoreInfoProps = (props) => {
-    return <p style={{ ...LightBlueButtonText, ...CenteringGrid }}>{props}</p>;
-  };
   const renderTitle = () => {
     return (
       <>
@@ -147,10 +161,149 @@ const ReturningLeasedEquipModal = ({
     );
   };
 
-  const handleRemovingMoreInfo = (index) => {
-    const filter = moreInfo.filter((element, i) => i !== index);
-    return setMoreInfo(filter);
+  // Render supplier information component
+  const renderSupplierInfo = () => {
+    if (!supplierInfo || supplierInfo.length === 0) {
+      return null;
+    }
+
+    const supplier = supplierInfo[0];
+    
+    return (
+      <div
+        style={{
+          width: "100%",
+          marginBottom: "24px",
+          padding: "16px",
+          borderRadius: "8px",
+          border: "1px solid var(--blue-200, #B2DDFF)",
+          background: "var(--blue-50, #EFF8FF)",
+        }}
+      >
+        <Typography
+          style={{
+            ...Subtitle,
+            fontWeight: 600,
+            marginBottom: "12px",
+            color: "var(--blue-700, #175CD3)",
+          }}
+        >
+          Returning to Provider
+        </Typography>
+        
+        <Grid container spacing={2}>
+          {/* Company Name */}
+          <Grid item xs={12} sm={6}>
+            <div style={{ marginBottom: "8px" }}>
+              <Typography
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--gray-600, #475467)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Company Name
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: "var(--gray-900, #101828)",
+                  marginTop: "2px",
+                }}
+              >
+                {supplier.companyName}
+              </Typography>
+            </div>
+          </Grid>
+
+          {/* Contact Email */}
+          <Grid item xs={12} sm={6}>
+            <div style={{ marginBottom: "8px" }}>
+              <Typography
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--gray-600, #475467)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Email
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  color: "var(--gray-700, #344054)",
+                  marginTop: "2px",
+                }}
+              >
+                {supplier.contactInfo.email}
+              </Typography>
+            </div>
+          </Grid>
+
+          {/* Contact Phone */}
+          <Grid item xs={12} sm={6}>
+            <div style={{ marginBottom: "8px" }}>
+              <Typography
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--gray-600, #475467)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Phone
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  color: "var(--gray-700, #344054)",
+                  marginTop: "2px",
+                }}
+              >
+                {supplier.contactInfo.phone}
+              </Typography>
+            </div>
+          </Grid>
+
+          {/* Address */}
+          <Grid item xs={12} sm={6}>
+            <div style={{ marginBottom: "8px" }}>
+              <Typography
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--gray-600, #475467)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Address
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  color: "var(--gray-700, #344054)",
+                  marginTop: "2px",
+                }}
+              >
+                {`${supplier.address.street}, ${supplier.address.city}, ${supplier.address.state} ${supplier.address.postalCode}, ${supplier.address.country}`}
+              </Typography>
+            </div>
+          </Grid>
+        </Grid>
+      </div>
+    );
   };
+
   return (
     <Modal
       key={dataFound.item_id}
@@ -167,7 +320,6 @@ const ReturningLeasedEquipModal = ({
         alignItems={"center"}
         container
       >
-        {contextHolder}
         {renderTitle()}
         <form
           key={dataFound.item_id}
@@ -187,8 +339,10 @@ const ReturningLeasedEquipModal = ({
             background: "var(--gray-100, #F2F4F7)",
           }}
           className="form"
-          onSubmit={handleSubmit(handleReturningLeasedEquip)}
+          onSubmit={handleSubmit(handleReturnRentalItem)}
         >
+          {/* Supplier Information Section */}
+          {supplierInfo ? renderSupplierInfo() : "Supplier information not found"}
           <div
             style={{
               width: "100%",
@@ -199,219 +353,41 @@ const ReturningLeasedEquipModal = ({
               gap: "10px",
             }}
           >
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            >
-              <InputLabel style={{ marginBottom: "6px", width: "100%" }}>
-                <Tooltip title="Date when the item was returned.">
-                  <Typography
-                    textTransform={"none"}
-                    style={{ ...Subtitle, fontWeight: 500 }}
-                    color={"var(--gray-700, #344054)"}
-                  >
-                    Return date&nbsp;
-                    <QuestionIcon />
-                  </Typography>
-                </Tooltip>
-              </InputLabel>
-              <DatePicker
-                id="calender-event"
-                autoComplete="checking"
-                showTimeSelect
-                dateFormat="Pp"
-                selected={begin}
-                onChange={(date) => setBegin(date)}
-                placeholderText="Event start date"
-                startDate={new Date()}
-                style={{
-                  ...OutlinedInputStyle,
-                  margin: "0.1rem 0 1.5rem",
-                  width: "100%",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            >
-              <Tooltip title="Add useful information such as courier company or tracking number or more.">
-                <InputLabel
-                  style={{
-                    marginBottom: "6px",
-                    width: "100%",
-                    background: "transparent",
-                    color: "transparent",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{ ...Subtitle, fontWeight: 500 }}
-                    color={"var(--gray-700, #344054)"}
-                  >
-                    Add more information&nbsp;
-                    <QuestionIcon />
-                  </Typography>
-                </InputLabel>
-              </Tooltip>
-              <button
-                style={{ ...BlueButton, width: "100%" }}
-                type="button"
-                onClick={() => setMoreInfoDisplay(true)}
-              >
-                <WhiteCirclePlusIcon />
-                <Typography style={BlueButtonText}>
-                  &nbsp;Add more information
-                </Typography>
-              </button>
-            </div>
-          </div>
-          {moreInfoDisplay && (
-            <>
-              <Divider />
-              <div
-                style={{
-                  width: "100%",
-                  ...CenteringGrid,
-                  justifyContent: "space-between",
-                  gap: "5px",
-                }}
-              >
-                <OutlinedInput
-                  style={{ ...OutlinedInputStyle, width: "100%" }}
-                  placeholder="e.g Courier company or tracking number"
-                  name="key"
-                  value={keyObject}
-                  onChange={(e) => setKeyObject(e.target.value)}
-                />
-                <OutlinedInput
-                  style={{ ...OutlinedInputStyle, width: "100%" }}
-                  placeholder="e.g Fedex or UPS"
-                  name="key"
-                  value={valueObject}
-                  onChange={(e) => setValueObject(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleAddingMoreInfo()}
-                  style={{ ...BlueButton, ...CenteringGrid }}
-                >
-                  <Icon
-                    icon="ic:baseline-plus"
-                    color="var(--base-white, #FFF)"
-                    width={20}
-                    height={20}
-                  />{" "}
-                </button>
-              </div>
-            </>
-          )}
-          <Divider style={{ margin: "0.5rem 0" }} />
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              margin: "-5px 0 0",
-            }}
-          >
-            <Space size={[8, 16]} wrap>
-              {moreInfo.length > 0 &&
-                moreInfo.map((item, index) => (
-                  <Chip
-                    key={`${item.keyObject}-${item.valueObject}`}
-                    label={renderMoreInfoProps(
-                      `${item.keyObject}:${item.valueObject}`
-                    )}
-                    style={{ ...LightBlueButton, ...CenteringGrid }}
-                    variant="outlined"
-                    onDelete={() => handleRemovingMoreInfo(index)}
-                  />
-                ))}
-            </Space>
-          </div>
-
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              textAlign: "left",
-              gap: "10px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "left",
-                width: "50%",
-              }}
-            >
-              <Button
-                onClick={() => closeModal()}
-                disabled={loadingStatus}
-                style={{
-                  ...GrayButton,
-                  ...CenteringGrid,
-                  width: "100%",
-                }}
-              >
-                <Icon
-                  icon="ri:arrow-go-back-line"
-                  color="#344054"
-                  width={20}
-                  height={20}
-                />
-                &nbsp;
-                <Typography
-                  textTransform={"none"}
-                  style={{
-                    ...GrayButtonText,
-                  }}
-                >
-                  Go back
-                </Typography>
-              </Button>
-            </div>
-            <div
-              style={{
-                textAlign: "right",
-                width: "50%",
-              }}
-            >
-              <Button
-                disabled={loadingStatus}
-                htmlType="submit"
-                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-                // style={{
-                //   width: "100%",
-                //   border: `1px solid ${
-                //     loadingStatus
-                //       ? "var(--disabled-blue-button)"
-                //       : "var(--blue-dark-600)"
-                //   }`,
-                //   borderRadius: "8px",
-                //   background: `${
-                //     loadingStatus
-                //       ? "var(--disabled-blue-button)"
-                //       : "var(--blue-dark-600)"
-                //   }`,
-                //   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                // }}
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Return item
-                </Typography>
-              </Button>
-            </div>
+            <GrayButtonComponent
+              title={"Go back"}
+              func={() => closeModal()}
+              styles={{ width: "100%" }}
+            />
+            <BlueButtonComponent
+              title={"Return item"}
+              func={() => null}
+              loadingState={loadingStatus}
+              confirmationTitle={
+                "Are you sure you want to return the item? This action can not be reversed."
+              }
+              buttonType={"submit"}
+              styles={{ width: "100%" }}
+            />
           </div>
         </form>
       </Grid>
+      
+      {/* Add this in the Modal content, before the Tabs component: */}
+      {progress.total > 0 && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+          <Typography variant="body2" gutterBottom>
+            {progress.step}
+          </Typography>
+          <Progress
+            percent={Math.round((progress.current / progress.total) * 100)}
+            status="active"
+            showInfo
+            format={(percent) =>
+              `${progress.current}/${progress.total} (${percent}%)`
+            }
+          />
+        </Box>
+      )}
     </Modal>
   );
 };

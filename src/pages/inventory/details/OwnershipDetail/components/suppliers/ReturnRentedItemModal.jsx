@@ -14,9 +14,10 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import EmailReturnRentalItems from "../../../../../../components/notification/email/EmailReturnRentalItems";
+import { checkRequestSize } from "../../../../../../components/utils/checkRequestSize";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
-import generateOptimizedXLSXFile from "./actions/generateOptimizedXLSXFile";
 
 const { Search } = Input;
 
@@ -57,18 +58,18 @@ const ReturnRentedItemModal = ({
     return null;
   };
   // Request size validation helper
-  const checkRequestSize = (data) => {
-    const jsonString = JSON.stringify(data);
-    const sizeInBytes = new Blob([jsonString]).size;
-    const sizeInMB = sizeInBytes / (1024 * 1024);
-    // Warn if approaching 10MB limit (most servers have 10-50MB limits)
-    if (sizeInMB > 8) {
-      console.warn(`Large request detected: ${sizeInMB.toFixed(2)} MB`);
-      return { isLarge: true, size: sizeInMB };
-    }
+  // const checkRequestSize = (data) => {
+  //   const jsonString = JSON.stringify(data);
+  //   const sizeInBytes = new Blob([jsonString]).size;
+  //   const sizeInMB = sizeInBytes / (1024 * 1024);
+  //   // Warn if approaching 10MB limit (most servers have 10-50MB limits)
+  //   if (sizeInMB > 8) {
+  //     console.warn(`Large request detected: ${sizeInMB.toFixed(2)} MB`);
+  //     return { isLarge: true, size: sizeInMB };
+  //   }
 
-    return { isLarge: false, size: sizeInMB };
-  };
+  //   return { isLarge: false, size: sizeInMB };
+  // };
 
   // Filtered data when using provided data prop
   const filteredProvidedData = useMemo(() => {
@@ -451,156 +452,6 @@ const ReturnRentedItemModal = ({
     );
   };
 
-  // Step 3: Improved email notification with complete data fetching
-  const emailNotification = async ({items}) => {
-    try {
-      console.log("Email notification started");
-      console.log("items", items);
-      console.log("supplier_id", supplier_id);
-      setProgress({
-        current: 0,
-        total: 1,
-        step: "Preparing email notification",
-      });
-      let query;
-      let values;
-      const supplierInfo = await devitrakApi.post(
-        `/company/provider-company/${supplier_id}`,
-        {
-          creator: user?.companyData?.id,
-          provider_id: supplier_id,
-        }
-      );
-      const props = Array.from(items);
-      console.log("props", props);
-      
-      // Create proper SQL placeholders for the IN clause
-      const placeholders = props.map(() => '?').join(',');
-      console.log("placeholders", placeholders);
-      
-      if (supplier_id) {
-        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
-        values = [...props, "Rent", user.sqlInfo.company_id, supplier_id];
-      } else {
-        query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
-        values = [...props, "Rent", user.sqlInfo.company_id];
-      }
-      
-      console.log("Final query:", query);
-      console.log("Final values:", values);
-      
-      const itemsData = await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        {
-          query: query,
-          values: values,
-        }
-      );
-      console.log("itemsData", itemsData);
-      if (itemsData.data.result.length === 0) {
-        return message.warning("No items found to return");
-      }
-      const itemsDataResult = itemsData.data.result;
-      // Generate XLSX file with size optimization
-
-      const xlsxAttachment = generateOptimizedXLSXFile({ itemsDataResult });
-
-      // If file is too large, send summary email instead
-      if (xlsxAttachment.size > 20) {
-        const summaryPayload = {
-          subject: "Returned items to renter - Summary",
-          staffEmails: [
-            ...user.companyData.employees
-              .filter((element) => Number(element.role) < 2)
-              .map((ele) => ele.user),
-          ],
-          supplierInfo: supplierInfo.data.providerCompanies,
-          itemCount: props.length,
-          returnDate: new Date().toISOString().split("T")[0],
-          message: `Due to the large number of items (${props.length}), detailed information has been omitted. Please check the system for complete details.`,
-        };
-
-        const response = await devitrakApi.post(
-          "/nodemailer/returned-items-summary-notification",
-          summaryPayload
-        );
-
-        if (response.data) {
-          return message.success(
-            "Items returned and summary notification sent (file too large for attachment)."
-          );
-        }
-      } else {
-        // Send with attachment if file size is acceptable
-        const emailPayload = {
-          subject: "Returned items to renter",
-          staffEmails: [
-            ...user.companyData.employees
-              .filter((element) => Number(element.role) < 2)
-              .map((ele) => ele.user),
-          ],
-          supplierInfo: supplierInfo.data.providerCompanies,
-          attachments: [
-            {
-              filename: xlsxAttachment.filename,
-              content: xlsxAttachment.content,
-              contentType: xlsxAttachment.contentType,
-              encoding: "base64",
-            },
-          ],
-        };
-
-        // Check email payload size
-        const emailSizeCheck = checkRequestSize(emailPayload);
-        if (emailSizeCheck.isLarge) {
-          console.warn(
-            `Large email payload: ${emailSizeCheck.size.toFixed(2)} MB`
-          );
-        }
-
-        const response = await devitrakApi.post(
-          "/nodemailer/returned-items-to-renter-notification",
-          emailPayload
-        );
-
-        if (response.data) {
-          return message.success(
-            "Items returned and notification sent with XLSX attachment."
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error in email notification:", error);
-      if (error.response?.status === 413) {
-        message.error(
-          "Email attachment too large. Summary notification sent instead."
-        );
-        // Fallback to summary email without attachment
-        try {
-          await devitrakApi.post(
-            "/nodemailer/returned-items-summary-notification",
-            {
-              subject:
-                "Returned items to renter - Summary (Attachment too large)",
-              staffEmails: [
-                ...user.companyData.employees
-                  .filter((element) => Number(element.role) < 2)
-                  .map((ele) => ele.user),
-              ],
-              itemCount: Array.from(items).length,
-              returnDate: new Date().toISOString().split("T")[0],
-            }
-          );
-          message.success("Summary notification sent successfully.");
-        } catch (summaryError) {
-          console.error("Failed to send summary notification:", summaryError);
-          message.error("Failed to send any notification.");
-        }
-      } else {
-        message.error("Failed to send email notification.");
-      }
-    }
-  };
 
   const handleReturnAllItems = async () => {
     setLoading(true);
@@ -659,13 +510,18 @@ const ReturnRentedItemModal = ({
         key: "processing",
       });
 
-      // Step 2: Delete items from records
-      await emailNotification({ items: allItemIds });
-      
+      // Step 2: Email notification to staff
+      await EmailReturnRentalItems({
+        items: allItemIds,
+        supplier_id,
+        user,
+        setProgress,
+      });
+
       // Step 3: Email notification to staff
       await deleteItemsFromRecords(allItemIds);
       setProgress({ current: 0, total: 1, step: "Sending email notification" });
-      
+
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       message.success({
@@ -709,8 +565,21 @@ const ReturnRentedItemModal = ({
         content: "Items returned to renter, now deleting records...",
         key: "processing",
       });
+      // Step 1: Return items to renter
+      await returnItemsToRenter(itemIds);
+
+      message.loading({
+        content: "Items returned to renter, now deleting records...",
+        key: "processing",
+      });
+      
       // Step 2: Email notification to staff
-      await emailNotification({ items: selectedItems });
+      await EmailReturnRentalItems({
+        items: selectedItems,
+        supplier_id,
+        user,
+        setProgress,
+      });
 
       // Step 3: Delete items from records
       await deleteItemsFromRecords(itemIds);
