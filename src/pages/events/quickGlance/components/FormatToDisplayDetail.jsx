@@ -113,14 +113,14 @@ const FormatToDisplayDetail = () => {
                 event,
               }) ?? 0
             }
-            title={"Total inventory of event."}
+            title={"Total inventory of event included consumers items."}
           />
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={4}>
           <CardRendered
             key={"Total devices on hand for consumer use"}
             props={numberDisplayDynamically()}
-            title={"Total devices on hand, including not functional"}
+            title={"Total devices on hand for consumers, including not functional"}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={6} lg={4}>
