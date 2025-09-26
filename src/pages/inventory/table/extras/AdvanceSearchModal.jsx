@@ -1,11 +1,13 @@
 import { InputLabel, Typography } from "@mui/material";
-import { DatePicker, message, Modal, Select } from "antd";
-import { useContext, useState, useEffect } from "react";
+import { DatePicker, message, Select } from "antd";
+import dayjs from "dayjs";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 import {
   onAddAdvanceSearch,
   onAddSearchParameters,
@@ -15,7 +17,6 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { AdvanceSearchContext } from "./RenderingFilters";
-import dayjs from "dayjs";
 const { RangePicker } = DatePicker;
 
 const AdvanceSearchModal = ({
@@ -106,7 +107,7 @@ const AdvanceSearchModal = ({
               responseData // Pass the entire response object with all new fields
             )
           );
-          if(periodUpdateOnly) {
+          if (periodUpdateOnly) {
             return setOpenAdvanceSearchModal(false);
           }
           return navigate("/inventory/advance_search_result");
@@ -137,208 +138,212 @@ const AdvanceSearchModal = ({
     }
   };
 
-  return (
-    <Modal
-      title={renderTitle()}
-      centered
-      footer={[]}
-      style={{ zIndex: 30 }}
-      open={openAdvanceSearchModal}
-      onCancel={() => closeModal()}
-      onOk={() => closeModal()}
-    >
-      <form onSubmit={handleSubmit(handleSearchQuery)}>
-        <div
-          style={{
-            width: "100%",
-            textAlign: "left",
-            marginBottom: "1rem",
-            gap: "10px",
-          }}
-        >
-          <Typography style={Subtitle} fontWeight={600}>
-            {periodUpdateOnly
-              ? "Update the period for your current search"
-              : "Parameters for Forecast Inventory query"}
-          </Typography>
-        </div>
+  const bodyModal = () => {
+    return (
+      <>
+        <form onSubmit={handleSubmit(handleSearchQuery)}>
+          <div
+            style={{
+              width: "100%",
+              textAlign: "left",
+              marginBottom: "1rem",
+              gap: "10px",
+            }}
+          >
+            <Typography style={Subtitle} fontWeight={600}>
+              {periodUpdateOnly
+                ? "Update the period for your current search"
+                : "Parameters for Forecast Inventory query"}
+            </Typography>
+          </div>
 
-        {/* Category Field */}
-        {!periodUpdateOnly && (
+          {/* Category Field */}
+          {!periodUpdateOnly && (
+            <div style={{ margin: "0.5rem 0 0.25rem" }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <Typography
+                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                >
+                  Category
+                </Typography>
+              </InputLabel>
+              <Select
+                style={{ width: "100%" }}
+                showSearch
+                placeholder="Select a category"
+                optionFilterProp="label"
+                {...register("category")}
+                onChange={(value) => setValue("category", value)}
+                onSearch={(value) => setValue("category", value)}
+                options={[
+                  ...values.category.map((item) => ({
+                    value: item.key,
+                    label: item.key,
+                  })),
+                ]}
+                allowClear
+                disabled={periodUpdateOnly} // Disable when period-only update
+              />
+            </div>
+          )}
+
+          {/* Device Field */}
+          {!periodUpdateOnly && (
+            <div style={{ margin: "0.5rem 0 0.25rem" }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <Typography
+                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                >
+                  Device name
+                </Typography>
+              </InputLabel>
+              <Select
+                style={{ width: "100%" }}
+                showSearch
+                placeholder="Select a device"
+                optionFilterProp="label"
+                {...register("group")}
+                onChange={(value) => setValue("group", value)}
+                onSearch={(value) => setValue("group", value)}
+                options={[
+                  ...values.group.map((item) => ({
+                    value: item.key,
+                    label: item.key,
+                  })),
+                ]}
+                allowClear
+                disabled={periodUpdateOnly} // Disable when period-only update
+              />
+            </div>
+          )}
+
+          {/* Brand Field */}
+          {!periodUpdateOnly && (
+            <div style={{ margin: "0.5rem 0 0.25rem" }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <Typography
+                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                >
+                  Brand
+                </Typography>
+              </InputLabel>
+              <Select
+                style={{ width: "100%" }}
+                showSearch
+                placeholder="Select a brand"
+                optionFilterProp="label"
+                {...register("brand")}
+                onChange={(value) => setValue("brand", value)}
+                onSearch={(value) => setValue("brand", value)}
+                options={[
+                  ...values.brand.map((item) => ({
+                    value: item.key,
+                    label: item.key,
+                  })),
+                ]}
+                allowClear
+                disabled={periodUpdateOnly} // Disable when period-only update
+              />
+            </div>
+          )}
+
+          {/* Location Field */}
+          {!periodUpdateOnly && (
+            <div style={{ margin: "0.5rem 0 0.25rem" }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <Typography
+                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                >
+                  Location
+                </Typography>
+              </InputLabel>
+              <Select
+                style={{ width: "100%" }}
+                showSearch
+                placeholder="Select a location"
+                optionFilterProp="label"
+                {...register("location")}
+                onChange={(value) => setValue("location", value)}
+                onSearch={(value) => setValue("location", value)}
+                options={[
+                  ...values.location.map((item) => ({
+                    value: item.key,
+                    label: item.key,
+                  })),
+                ]}
+                allowClear
+                disabled={periodUpdateOnly} // Disable when period-only update
+              />
+            </div>
+          )}
+
+          {/* Period Field - Always enabled */}
           <div style={{ margin: "0.5rem 0 0.25rem" }}>
             <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
               <Typography
                 style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
               >
-                Category
-              </Typography>
-            </InputLabel>
-            <Select
-              style={{ width: "100%" }}
-              showSearch
-              placeholder="Select a category"
-              optionFilterProp="label"
-              {...register("category")}
-              onChange={(value) => setValue("category", value)}
-              onSearch={(value) => setValue("category", value)}
-              options={[
-                ...values.category.map((item) => ({
-                  value: item.key,
-                  label: item.key,
-                })),
-              ]}
-              allowClear
-              disabled={periodUpdateOnly} // Disable when period-only update
-            />
-          </div>
-        )}
-
-        {/* Device Field */}
-        {!periodUpdateOnly && (
-          <div style={{ margin: "0.5rem 0 0.25rem" }}>
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-              >
-                Device name
-              </Typography>
-            </InputLabel>
-            <Select
-              style={{ width: "100%" }}
-              showSearch
-              placeholder="Select a device"
-              optionFilterProp="label"
-              {...register("group")}
-              onChange={(value) => setValue("group", value)}
-              onSearch={(value) => setValue("group", value)}
-              options={[
-                ...values.group.map((item) => ({
-                  value: item.key,
-                  label: item.key,
-                })),
-              ]}
-              allowClear
-              disabled={periodUpdateOnly} // Disable when period-only update
-            />
-          </div>
-        )}
-
-        {/* Brand Field */}
-        {!periodUpdateOnly && (
-          <div style={{ margin: "0.5rem 0 0.25rem" }}>
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-              >
-                Brand
-              </Typography>
-            </InputLabel>
-            <Select
-              style={{ width: "100%" }}
-              showSearch
-              placeholder="Select a brand"
-              optionFilterProp="label"
-              {...register("brand")}
-              onChange={(value) => setValue("brand", value)}
-              onSearch={(value) => setValue("brand", value)}
-              options={[
-                ...values.brand.map((item) => ({
-                  value: item.key,
-                  label: item.key,
-                })),
-              ]}
-              allowClear
-              disabled={periodUpdateOnly} // Disable when period-only update
-            />
-          </div>
-        )}
-
-        {/* Location Field */}
-        {!periodUpdateOnly && (
-          <div style={{ margin: "0.5rem 0 0.25rem" }}>
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-              >
-                Location
-              </Typography>
-            </InputLabel>
-            <Select
-              style={{ width: "100%" }}
-              showSearch
-              placeholder="Select a location"
-              optionFilterProp="label"
-              {...register("location")}
-              onChange={(value) => setValue("location", value)}
-              onSearch={(value) => setValue("location", value)}
-              options={[
-                ...values.location.map((item) => ({
-                  value: item.key,
-                  label: item.key,
-                })),
-              ]}
-              allowClear
-              disabled={periodUpdateOnly} // Disable when period-only update
-            />
-          </div>
-        )}
-
-        {/* Period Field - Always enabled */}
-        <div style={{ margin: "0.5rem 0 0.25rem" }}>
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <Typography
-              style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-            >
-              Period{" "}
-              {/* {periodUpdateOnly && (
+                Period{" "}
+                {/* {periodUpdateOnly && (
                 <span style={{ color: "#1890ff" }}>
                   (Only this field can be changed)
                 </span>
               )} */}
-            </Typography>
-          </InputLabel>
-          <RangePicker
-            size="large"
-            style={{ width: "100%", margin: "0rem 0 1rem" }}
-            {...register("date")}
-            onChange={(value) => setValue("date", value)}
-          />
-        </div>
+              </Typography>
+            </InputLabel>
+            <RangePicker
+              size="large"
+              style={{ width: "100%", margin: "0rem 0 1rem" }}
+              {...register("date")}
+              onChange={(value) => setValue("date", value)}
+            />
+          </div>
 
-        <BlueButtonComponent
-          title={
-            periodUpdateOnly
-              ? "Update Period"
-              : existingParameters || searchParameters
-              ? "Update Search"
-              : "Search"
-          }
-          func={() => null}
-          buttonType="submit"
-          loadingState={isLoadingState}
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
+          <BlueButtonComponent
+            title={
+              periodUpdateOnly
+                ? "Update Period"
+                : existingParameters || searchParameters
+                ? "Update Search"
+                : "Search"
+            }
+            func={() => null}
+            buttonType="submit"
+            loadingState={isLoadingState}
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+              gap: "2px",
+            }}
+          />
+        </form>
+        <div
+          style={{
+            display: displayMessage ? "flex" : "none",
+            backgroundColor: "var(--danger-action)",
+            margin: "0.5rem 0",
+            borderRadius: "12px",
+            padding: "0.5rem",
           }}
-        />
-      </form>
-      <div
-        style={{
-          display: displayMessage ? "flex" : "none",
-          backgroundColor: "var(--danger-action)",
-          margin: "0.5rem 0",
-          borderRadius: "12px",
-          padding: "0.5rem",
-        }}
-      >
-        <p style={{ ...Subtitle, ...CenteringGrid, color: "var(--basewhite)" }}>
-          {errorMessage
-            ? errorMessage
-            : "There is not result based on parameters passed."}
-        </p>
-      </div>
-    </Modal>
+        >
+          <p
+            style={{ ...Subtitle, ...CenteringGrid, color: "var(--basewhite)" }}
+          >
+            {errorMessage
+              ? errorMessage
+              : "There is not result based on parameters passed."}
+          </p>
+        </div>
+      </>
+    );
+  };
+  return (
+    <ModalUX
+      title={renderTitle()}
+      openDialog={openAdvanceSearchModal}
+      closeModal={closeModal}
+      body={bodyModal()}
+    />
   );
 };
 
