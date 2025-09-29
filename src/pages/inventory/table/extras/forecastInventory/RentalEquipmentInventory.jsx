@@ -1,6 +1,7 @@
 import { CardContent, Chip, Grid, Stack, Typography } from "@mui/material";
+import { RentedInventoryTable } from "../ux/forecastInventory/RentedInventoryTable";
 
-const RentalEquipmentInventory = ({ rentalAnalysis, RentedInventoryTable }) => {
+const RentalEquipmentInventory = ({ rentalAnalysis }) => { //RentedInventoryTable
   return (
     <CardContent>
       <Typography variant="h6" gutterBottom>
