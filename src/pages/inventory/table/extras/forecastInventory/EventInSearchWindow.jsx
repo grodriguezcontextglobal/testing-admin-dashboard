@@ -5,7 +5,7 @@ const EventInSearchWindow = ({
   eventInventory,
   eventDeviceRows,
   uniqueEvents,
-  eventDeviceColumns,
+  // eventDeviceColumns,
   eventDetailsColumns,
   // SimpleTable,
 }) => {
@@ -13,7 +13,7 @@ const EventInSearchWindow = ({
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Events in Search Window
+          On Going Events in Current Search{" "}
         </Typography>
 
         {/* Event Summary */}
@@ -22,10 +22,10 @@ const EventInSearchWindow = ({
             color="primary"
             label={`Total Events: ${eventInventory?.total_events ?? 0}`}
           />
-          <Chip
+          {/* <Chip
             color="secondary"
             label={`Total Items: ${eventInventory?.total_devices ?? 0}`}
-          />
+          /> */}
           <Chip
             color="info"
             label={`Device Categories: ${eventDeviceRows.length}`}
@@ -39,7 +39,7 @@ const EventInSearchWindow = ({
         </Stack>
 
         {/* Device Counts Table */}
-        <Box mb={3}>
+        {/* <Box mb={3}>
           <Typography variant="subtitle1" gutterBottom>
             Device Requirements by Category
           </Typography>
@@ -49,7 +49,7 @@ const EventInSearchWindow = ({
             emptyText="No device requirements"
             collapsible={true}
           />
-        </Box>
+        </Box> */}
 
         {/* Event Details Table */}
         <Box mb={2}>
@@ -60,7 +60,7 @@ const EventInSearchWindow = ({
             columns={eventDetailsColumns}
             rows={uniqueEvents}
             emptyText="No events found"
-            collapsible={true}
+            collapsible={false}
           />
         </Box>
       </CardContent>
