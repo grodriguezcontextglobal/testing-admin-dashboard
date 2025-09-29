@@ -1,373 +1,18 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Collapse,
-  IconButton,
-  List,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
-  Typography
-} from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 // import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
 import {
   onAddAdvanceSearch,
   onAddSearchParameters,
 } from "../../../../store/slices/searchBarResultSlice";
 import UX from "./forecastInventory/UX";
 import { AdvanceSearchContext } from "./RenderingFilters";
-const VirtualizedTable = ({
-  rows,
-  columns,
-  emptyText = "No data",
-  itemHeight = 53,
-}) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [expanded, setExpanded] = useState(false);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const paginatedRows = useMemo(() => {
-    const startIndex = page * rowsPerPage;
-    return rows.slice(startIndex, startIndex + rowsPerPage);
-  }, [rows, page, rowsPerPage]);
-
-  const TableRow = ({ index, style }) => {
-    const row = paginatedRows[index];
-    if (!row) return null;
-
-    return (
-      <div style={style}>
-        <Table size="small">
-          <TableBody>
-            <TableRow hover>
-              {columns.map((column) => (
-                <TableCell key={column.key} sx={{ py: 1 }}>
-                  {typeof column.render === "function"
-                    ? column.render(row)
-                    : row[column.dataIndex]}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-    );
-  };
-
-  if (rows.length === 0) {
-    return (
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="body2" color="text.secondary" align="center">
-            {emptyText}
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 0 }}>
-        {/* Header with collapse/expand */}
-        <Box
-          sx={{
-            p: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="subtitle2">{rows.length} items</Typography>
-          <IconButton
-            onClick={() => setExpanded(!expanded)}
-            size="small"
-            aria-label={expanded ? "collapse" : "expand"}
-          >
-            {expanded ? <DownNarrow /> : <UpNarrowIcon />}
-          </IconButton>
-        </Box>
-
-        <Collapse in={expanded}>
-          {/* Table Header */}
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column.key} sx={{ fontWeight: "bold" }}>
-                    {column.title}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-          </Table>
-
-          {/* Virtualized Table Body */}
-          {paginatedRows.length > 0 && (
-            <List
-              height={Math.min(400, paginatedRows.length * itemHeight)}
-              itemCount={paginatedRows.length}
-              itemSize={itemHeight}
-              width="100%"
-            >
-              {TableRow}
-            </List>
-          )}
-
-          {/* Pagination */}
-          <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
-            <TablePagination
-              component="div"
-              count={rows.length}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50, 100]}
-              showFirstButton
-              showLastButton
-            />
-          </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
-  );
-};
-const SimpleTable = ({
-  rows,
-  columns,
-  emptyText = "No data",
-  virtualized = false,
-  collapsible = false,
-}) => {
-  const [expanded, setExpanded] = useState(!collapsible);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const paginatedRows = useMemo(() => {
-    if (rows.length <= 10) return rows; // No pagination for small datasets
-    const startIndex = page * rowsPerPage;
-    return rows.slice(startIndex, startIndex + rowsPerPage);
-  }, [rows, page, rowsPerPage]);
-
-  // Use virtualized table for large datasets
-  if (virtualized || rows.length > 50) {
-    return (
-      <VirtualizedTable rows={rows} columns={columns} emptyText={emptyText} />
-    );
-  }
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 0 }}>
-        {collapsible && (
-          <Box
-            sx={{
-              p: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Typography variant="subtitle2">{rows.length} items</Typography>
-            <IconButton
-              onClick={() => setExpanded(!expanded)}
-              size="small"
-              aria-label={expanded ? "collapse" : "expand"}
-            >
-              {expanded ? <DownNarrow /> : <UpNarrowIcon />}
-            </IconButton>
-          </Box>
-        )}
-
-        <Collapse in={expanded}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column.key} sx={{ fontWeight: "bold" }}>
-                    {column.title}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedRows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      {emptyText}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedRows.map((row, index) => (
-                  <TableRow key={index} hover>
-                    {columns.map((column) => (
-                      <TableCell key={column.key}>
-                        {typeof column.render === "function"
-                          ? column.render(row)
-                          : row[column.dataIndex]}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-
-          {/* Pagination for larger datasets */}
-          {rows.length > 10 && (
-            <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
-              <TablePagination
-                component="div"
-                count={rows.length}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                showFirstButton
-                showLastButton
-              />
-            </Box>
-          )}
-        </Collapse>
-      </CardContent>
-    </Card>
-  );
-};
-const RentedInventoryTable = ({
-  type,
-  rows,
-  emptyText = "No rented items",
-  collapsible = true,
-}) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [expanded, setExpanded] = useState(false);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleToggleExpanded = () => {
-    setExpanded(!expanded);
-  };
-
-  const paginatedRows = rows.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  if (!rows || rows.length === 0) {
-    return (
-      <Box p={2} textAlign="center">
-        <Typography variant="body2" color="textSecondary">
-          {emptyText}
-        </Typography>
-      </Box>
-    );
-  }
-
-  return (
-    <Box>
-      {collapsible && (
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          p={1}
-          sx={{
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-            borderRadius: 1,
-            cursor: "pointer",
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.08)",
-            },
-          }}
-          onClick={handleToggleExpanded}
-        >
-          <Typography variant="subtitle2" fontWeight="medium">
-            {type === 1 ? "Owned" : "Rented"} Inventory Details ({rows.length}{" "}
-            items)
-          </Typography>
-          <IconButton size="small">
-            {expanded ? <UpNarrowIcon /> : <DownNarrow />}
-          </IconButton>
-        </Box>
-      )}
-
-      <Collapse in={!collapsible || expanded}>
-        <Box mt={collapsible ? 1 : 0}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Category</TableCell>
-                <TableCell>Item</TableCell>
-                <TableCell>Serial</TableCell>
-                <TableCell>Location</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedRows.map((row, index) => (
-                <TableRow key={row.serial_number || index}>
-                  <TableCell>{row.category_name || "N/A"}</TableCell>
-                  <TableCell>{row.item_group || "N/A"}</TableCell>
-                  <TableCell>{row.serial_number || "N/A"}</TableCell>
-                  <TableCell>{row.location || "N/A"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={rows.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-          />
-        </Box>
-      </Collapse>
-    </Box>
-  );
-};
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
+import useSelectedEventInfo from "./forecastInventory/useSelectedEventInfo";
 const AdvanceSearchResultPage = () => {
   const { advanceSearch, searchParameters } = useSelector(
     (state) => state.searchResult
@@ -377,7 +22,7 @@ const AdvanceSearchResultPage = () => {
   const navigate = useNavigate();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [periodUpdateOnly, setPeriodUpdateOnly] = useState(false); // New state
-
+  const { setProps, quickGlance } = useSelectedEventInfo();
   // Get filter options for the search modal
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
@@ -390,6 +35,12 @@ const AdvanceSearchResultPage = () => {
     refetchOnWindowFocus: false,
   });
 
+  const navigateToEvent = (row) => {
+    setProps(row);
+    return setTimeout(() => {
+      quickGlance();
+    }, 1500);
+  };
   // Prepare filter options for AdvanceSearchContext
   const filterOptions = useMemo(() => {
     if (!structuredCompanyInventory.data?.data?.inventory)
@@ -571,6 +222,19 @@ const AdvanceSearchResultPage = () => {
         return `${hours}h`;
       },
     },
+    {
+      key: "",
+      title: "",
+      width: "5%",
+      align:"right",
+      render: (row) => {
+        return (
+          <button style={{outline: "none", backgroundColor: "transparent", margin:0, padding:0, border:"none"}} onClick={() => navigateToEvent(row)}>
+            <RightNarrowInCircle />
+          </button>
+        );
+      },
+    },
   ];
 
   // Process event inventory data
@@ -629,10 +293,10 @@ const AdvanceSearchResultPage = () => {
         periodUpdateOnly={periodUpdateOnly}
         rentalAnalysis={rentalAnalysis}
         rentedInventory={rentedInventory}
-        RentedInventoryTable={RentedInventoryTable}
+        // RentedInventoryTable={RentedInventoryTable}
         searchParameters={searchParameters}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-        SimpleTable={SimpleTable}
+        // SimpleTable={SimpleTable}
         uniqueEvents={uniqueEvents}
         uniqueItemGroupsCount={uniqueItemGroupsCount}
       />
