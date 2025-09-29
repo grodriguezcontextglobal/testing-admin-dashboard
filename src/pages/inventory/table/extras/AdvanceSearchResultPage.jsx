@@ -12,7 +12,15 @@ import {
 import UX from "./forecastInventory/UX";
 import { AdvanceSearchContext } from "./RenderingFilters";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
-import useSelectedEventInfo from "./forecastInventory/useSelectedEventInfo";
+import {
+  onAddEventData,
+  onAddExtraServiceListSetup,
+  onAddExtraServiceNeeded,
+  onAddQRCodeLink,
+  onSelectCompany,
+  onSelectEvent,
+} from "../../../../store/slices/eventSlice";
+import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
 const AdvanceSearchResultPage = () => {
   const { advanceSearch, searchParameters } = useSelector(
     (state) => state.searchResult
@@ -22,7 +30,7 @@ const AdvanceSearchResultPage = () => {
   const navigate = useNavigate();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [periodUpdateOnly, setPeriodUpdateOnly] = useState(false); // New state
-  const { setProps, quickGlance } = useSelectedEventInfo();
+
   // Get filter options for the search modal
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
@@ -35,12 +43,71 @@ const AdvanceSearchResultPage = () => {
     refetchOnWindowFocus: false,
   });
 
-  const navigateToEvent = (row) => {
-    setProps(row);
-    return setTimeout(() => {
-      quickGlance();
-    }, 1500);
+  const navigateToEvent = async (row) => {
+    try {
+      // Fetch event information
+      const eventResponse = await devitrakApi.post(`/event/event-list`, {
+        _id: row.event_id,
+      });
+
+      if (!eventResponse.data.ok) {
+        console.error("Failed to fetch event information");
+        return;
+      }
+
+      const selectedEventInfo = eventResponse.data.list?.at(-1);
+      if (!selectedEventInfo) {
+        console.error("No event information found");
+        return;
+      }
+
+      // Fetch additional event information for SQL data
+      const sqpFetchInfo = await devitrakApi.post(
+        "/db_event/events_information",
+        {
+          zip_address: selectedEventInfo.eventInfoDetail.address
+            .split(" ")
+            .at(-1),
+          event_name: selectedEventInfo.eventInfoDetail.eventName,
+        }
+      );
+
+      // Dispatch Redux actions to store event information
+      dispatch(onSelectEvent(selectedEventInfo.eventInfoDetail.eventName));
+      dispatch(onSelectCompany(selectedEventInfo.company));
+
+      if (sqpFetchInfo.data.ok) {
+        dispatch(
+          onAddEventData({
+            ...selectedEventInfo,
+            sql: sqpFetchInfo.data.events.at(-1),
+          })
+        );
+      } else {
+        dispatch(onAddEventData(selectedEventInfo));
+      }
+
+      dispatch(onAddSubscription(selectedEventInfo.subscription));
+      dispatch(
+        onAddQRCodeLink(
+          selectedEventInfo.qrCodeLink ??
+            `https://app.devitrak.net/?event=${encodeURI(
+              selectedEventInfo.eventInfoDetail.eventName
+            )}&company=${encodeURI(selectedEventInfo.company)}`
+        )
+      );
+      dispatch(
+        onAddExtraServiceListSetup(selectedEventInfo.extraServiceListSetup)
+      );
+      dispatch(onAddExtraServiceNeeded(selectedEventInfo.extraServiceNeeded));
+
+      // Navigate to event quickglance
+      navigate("/events/event-quickglance");
+    } catch (error) {
+      console.error("Error navigating to event:", error);
+    }
   };
+
   // Prepare filter options for AdvanceSearchContext
   const filterOptions = useMemo(() => {
     if (!structuredCompanyInventory.data?.data?.inventory)
@@ -213,18 +280,48 @@ const AdvanceSearchResultPage = () => {
       render: (row) => new Date(row.date_end).toLocaleDateString(),
     },
     {
-      key: "duration",
-      title: "Duration",
+      key: "device_count",
+      title: "Device Count",
       render: (row) => {
-        const start = new Date(row.date_begin);
-        const end = new Date(row.date_end);
-        const hours = Math.round((end - start) / (1000 * 60 * 60));
-        return `${hours}h`;
+        // Calculate device quantity for this specific event from raw_events
+        let totalQuantity = 0;
+
+        if (eventInventory?.raw_events) {
+          // Find the event that matches the current row's event_id
+          const matchingEvent = eventInventory.raw_events.find(
+            event => event._id === row.event_id
+          );
+          
+          if (matchingEvent && matchingEvent.deviceSetup) {
+            // Iterate through deviceSetup array to sum quantities for matching devices
+            matchingEvent.deviceSetup.forEach((device) => {
+              // Check if device matches search parameters
+              const matchesCategory = !searchParameters?.category?.length || 
+                searchParameters.category.includes(device.category);
+              const matchesGroup = !searchParameters?.group?.length || 
+                searchParameters.group.includes(device.group);
+              // Note: brand matching would need to be added if brand info is available in deviceSetup
+              
+              // If device matches search criteria, add its quantity
+              if (matchesCategory && matchesGroup) {
+                totalQuantity += device.quantity || 0;
+              }
+            });
+          }
+        }
+        
+        return (
+          <Chip 
+            size="small" 
+            color={totalQuantity > 0 ? "primary" : "default"} 
+            label={totalQuantity} 
+          />
+        );
       },
     },
     {
       key: "",
-      title: "",
+      title: "Go to event",
       width: "5%",
       align:"right",
       render: (row) => {
