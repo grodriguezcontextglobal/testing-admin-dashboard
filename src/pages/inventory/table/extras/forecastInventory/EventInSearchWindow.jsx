@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
+import { SimpleTable } from "../ux/forecastInventory/SimpleTable";
 
 const EventInSearchWindow = ({
   eventInventory,
@@ -6,7 +7,7 @@ const EventInSearchWindow = ({
   uniqueEvents,
   eventDeviceColumns,
   eventDetailsColumns,
-  SimpleTable,
+  // SimpleTable,
 }) => {
   return (
     <Card variant="outlined">

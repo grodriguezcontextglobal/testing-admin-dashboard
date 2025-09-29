@@ -8,8 +8,9 @@ import {
     Stack,
     Typography
 } from "@mui/material";
+import { SimpleTable } from "../ux/forecastInventory/SimpleTable";
 
-const ProjectionPerLocation = ({locationData, SimpleTable}) => {
+const ProjectionPerLocation = ({locationData}) => { //SimpleTable
   return (
           <Card variant="outlined">
             <CardContent>
