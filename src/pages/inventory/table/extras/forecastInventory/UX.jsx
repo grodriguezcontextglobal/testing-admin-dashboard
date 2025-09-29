@@ -27,10 +27,10 @@ const UX = ({
   periodUpdateOnly,
   rentalAnalysis,
   rentedInventory,
-  RentedInventoryTable,
+  // RentedInventoryTable,
   searchParameters,
   setOpenAdvanceSearchModal,
-  SimpleTable,
+  // SimpleTable,
   uniqueEvents,
   uniqueItemGroupsCount,
 }) => {
@@ -104,7 +104,7 @@ const UX = ({
       <Grid item xs={12}>
         <ProjectionPerLocation
           locationData={locationData}
-          SimpleTable={SimpleTable}
+          // SimpleTable={SimpleTable}
         />
       </Grid>
       <DivAnt />
@@ -114,7 +114,7 @@ const UX = ({
           <Card variant="outlined">
             <RentalEquipmentInventory
               rentalAnalysis={rentalAnalysis}
-              RentedInventoryTable={RentedInventoryTable}
+              // RentedInventoryTable={RentedInventoryTable}
             />
           </Card>
         </Grid>
@@ -128,7 +128,7 @@ const UX = ({
           uniqueEvents={uniqueEvents}
           eventDeviceColumns={eventDeviceColumns}
           eventDetailsColumns={eventDetailsColumns}
-          SimpleTable={SimpleTable}
+          // SimpleTable={SimpleTable}
         />
       </Grid>
       {/* Empty state fallback for the whole page */}
