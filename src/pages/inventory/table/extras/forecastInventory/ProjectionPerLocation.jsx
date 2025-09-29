@@ -15,7 +15,7 @@ const ProjectionPerLocation = ({locationData}) => { //SimpleTable
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Per-Location Current Inventory Summary
+                Total Inventory Per-Location
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
@@ -24,7 +24,7 @@ const ProjectionPerLocation = ({locationData}) => { //SimpleTable
                     <Card variant="outlined">
                       <CardContent>
                         <Typography variant="subtitle1">
-                          Current Inventory at <strong>{loc.location}</strong>
+                          Total Inventory at <strong>{loc.location}</strong>
                         </Typography>
                         <Stack
                           direction="row"
