@@ -272,7 +272,7 @@ const RegisterCompany = () => {
         }
       } catch (error) {
         notification.destroy("info");
-        console.log(error);
+        // console.log(error);
         openNotificationWithIcon(
           "error",
           "Action failed",

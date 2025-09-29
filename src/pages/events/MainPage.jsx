@@ -300,6 +300,7 @@ const MainPage = () => {
           <Grid marginY={3} container spacing={1}>
             {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
               dataToBeRenderedInUpcomingSection()?.map((event) => {
+                // console.log('event', event)
                 return (
                   <Grid
                     key={event.id}

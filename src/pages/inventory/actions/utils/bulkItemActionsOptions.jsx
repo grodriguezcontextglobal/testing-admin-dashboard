@@ -94,8 +94,8 @@ export const bulkItemInsertSequential = async ({
   dicSuppliers,
 }) => {
   try {
-    console.log(data)
-    console.log(dicSuppliers)
+    // console.log(data)
+    // console.log(dicSuppliers)
     const template = {
       category_name: data.category_name,
       item_group: data.item_group,

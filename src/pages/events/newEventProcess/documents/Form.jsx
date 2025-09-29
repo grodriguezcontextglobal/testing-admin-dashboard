@@ -14,8 +14,9 @@ import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { useNavigate } from "react-router-dom";
 
 const FormDocuments = () => {
+  // eslint-disable-next-line no-unused-vars
   const { eventInfoDetail, eventSettingUpProcess } = useSelector((state) => state.event);
-  console.log(eventSettingUpProcess);
+  // console.log(eventSettingUpProcess);
   const { user } = useSelector((state) => state.admin);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState([]);

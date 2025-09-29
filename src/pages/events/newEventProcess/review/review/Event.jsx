@@ -68,7 +68,7 @@ const Event = () => {
       key: "action",
       title: "Action",
       render: (_, record) => (
-        console.log(record),
+        // console.log(record),
         <div
           style={{
             display: "flex",

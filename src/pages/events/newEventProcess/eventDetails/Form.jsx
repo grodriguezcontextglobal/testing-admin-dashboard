@@ -74,7 +74,7 @@ const Form = () => {
   };
 
   const handleEventInfo = async (data) => {
-    console.log(data);
+    // console.log(data);
     const format = {
       eventName: data.eventName,
       eventLocation: `${data.city}, ${data.state}`,

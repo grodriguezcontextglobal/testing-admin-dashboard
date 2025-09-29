@@ -122,7 +122,7 @@ const ModalReturnDeviceFromStaff = ({
       }
     } catch (error) {
       setIsLoading(false);
-      console.log(error);
+      // console.log(error);
       return closeModal();
     } finally {
       setIsLoading(false);

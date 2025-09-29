@@ -214,7 +214,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
       },
       responsive: ["xs", "sm", "md", "lg"],
       render: (record) => {
-        console.log(record);
+        // console.log(record);
         const renderingLocation = () => {
           if (record.warehouse === 1) {
             return record.location;

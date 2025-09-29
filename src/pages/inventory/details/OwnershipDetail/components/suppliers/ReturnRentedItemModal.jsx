@@ -332,9 +332,9 @@ const ReturnRentedItemModal = ({
         // If batch is too large, reduce size and retry
         if (sizeCheck.isLarge && currentBatchSize > 50) {
           currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.7));
-          console.log(
-            `Reducing batch size to ${currentBatchSize} due to large payload`
-          );
+          // console.log(
+          //   `Reducing batch size to ${currentBatchSize} due to large payload`
+          // );
           i -= currentBatchSize; // Retry with smaller batch
           continue;
         }
@@ -362,9 +362,9 @@ const ReturnRentedItemModal = ({
         // If error is due to payload size, reduce batch size and retry
         if (error.response?.status === 413 && currentBatchSize > 50) {
           currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.5));
-          console.log(
-            `HTTP 413 error: Reducing batch size to ${currentBatchSize}`
-          );
+          // console.log(
+          //   `HTTP 413 error: Reducing batch size to ${currentBatchSize}`
+          // );
           i -= currentBatchSize; // Retry with smaller batch
           continue;
         }

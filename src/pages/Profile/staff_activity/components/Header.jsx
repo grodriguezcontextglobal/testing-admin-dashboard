@@ -30,20 +30,20 @@ const Header = () => {
     userSelectionRef.current = value;
   };
   const onSearchUser = (value) => {
-    console.log("search:", value);
+    // console.log("search:", value);
   };
 
   const onChangeEvents = (value) => {
     eventsSelectionRef.current = value;
   };
   const onSearchEvents = (value) => {
-    console.log("search:", value);
+    // console.log("search:", value);
   };
   const onChangeActions = (value) => {
     actionsSelectionRef.current = value;
   };
   const onSearchActions = (value) => {
-    console.log("search:", value);
+    // console.log("search:", value);
   };
   // Filter `option.label` match the user type `input`
   const filterOption = (input, option) =>

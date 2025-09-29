@@ -405,7 +405,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       }
       return message.warning("Container does not have any stored items.");
     } catch (error) {
-      console.log("extractContainersItemsInfo", error);
+      // console.log("extractContainersItemsInfo", error);
       // message.error("Failed to get items in container. Please try again.");
     }
   };

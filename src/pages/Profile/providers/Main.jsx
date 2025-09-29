@@ -218,7 +218,7 @@ const Main = () => {
   }
 
   if (providersList.isLoading) {
-    console.log(providersList.error.message);
+    // console.log(providersList.error.message);
     return (
       <Box sx={{ p: 3 }}>
         <Typography color="error">

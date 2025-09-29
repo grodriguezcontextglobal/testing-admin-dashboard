@@ -70,7 +70,7 @@ const ContainerContent = ({
       <Grid container spacing={2} sx={{ mb: 2 }}>
         {FILTER_CONFIG.map(({ dataKey, placeholder, stateKey }) => {
           const options = data[dataKey] || {};
-          console.log(filters[stateKey]);
+          // console.log(filters[stateKey]);
           return (
             <Grid item xs={3} key={stateKey}>
               <Select
@@ -305,7 +305,8 @@ const ContainerContent = ({
             <Button
               style={BlueButton}
               onClick={() => {
-                console.log(itemToContent);
+                // console.log(itemToContent);
+                null
               }}
             >
               <p style={BlueButtonText}>
