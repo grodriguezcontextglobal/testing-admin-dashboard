@@ -12,15 +12,20 @@ Explore the full app functionality with detailed charts and visual breakdowns on
 
 ## 🚀 Features
 
-- **Inventory Management**
+- **Advanced Inventory Management**
   - View, add, edit, and track device groups, individual items, and status (e.g., assigned, available, lost).
   - Bulk and single item uploads.
   - Tree view for hierarchical location/sub-location structure.
+  - **NEW**: Advanced search with comprehensive filtering by category, group, brand, and location.
+  - **NEW**: Daily inventory analysis with interactive charts showing availability trends.
 
-- **Event Control**
+- **Enhanced Event Control**
   - Manage event-based inventory allocation.
   - Assign devices to specific events and staff.
   - Track check-in/check-out history.
+  - **NEW**: Event-specific device count tracking with real-time quantity calculations.
+  - **NEW**: Streamlined event navigation with improved Redux state management.
+  - **NEW**: Event details table with device count per event based on search parameters.
 
 - **Consumer & Staff Management**
   - Assign devices to consumers or staff.
@@ -31,10 +36,15 @@ Explore the full app functionality with detailed charts and visual breakdowns on
   - Responsive layout optimized for desktop and mobile.
   - Breadcrumb navigation, reusable buttons, and table components.
   - Visual status indicators and intuitive interaction flow.
+  - **NEW**: Improved table columns with contextual device counting.
+  - **NEW**: Enhanced navigation buttons with better user feedback.
 
-- **Data Visualization**
+- **Advanced Data Visualization**
   - Embedded chart components to visualize inventory statistics and event status.
   - Real-time updates and data-driven decision-making tools.
+  - **NEW**: Daily timeline charts using ReactECharts for inventory tracking.
+  - **NEW**: Multi-series bar and line charts with dual y-axes for comprehensive analytics.
+  - **NEW**: Interactive tooltips and scrollable legends for better data exploration.
 
 ---
 
@@ -45,6 +55,8 @@ Explore the full app functionality with detailed charts and visual breakdowns on
 - **State Management**: Redux Toolkit
 - **API Layer**: Axios (`devitrakApi`)
 - **Authentication**: JWT-based with session and inactivity handling
+- **Charts**: ReactECharts (Apache ECharts for React)
+- **UI Components**: Material-UI (MUI) + Ant Design
 - **Server**: Node.js (Express) — managed in separate repo
 - **Database**: PlanetScale (MySQL), NoSQL (Firebase for event-specific items)
 
