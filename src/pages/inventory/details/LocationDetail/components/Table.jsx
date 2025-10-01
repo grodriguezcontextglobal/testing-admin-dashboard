@@ -3,24 +3,32 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
 import { groupBy, uniqueId } from "lodash";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
-// import DownloadingXlslFile from "../../../actions/DownloadXlsx";
+
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
+
 const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const location = useLocation();
   const locationName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  
+  // State to track filtered data count for dynamic pagination
+  const [filteredDataCount, setFilteredDataCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
   const urlQuery =
     location.state === null
       ? `/db_company/inventory-based-on-location-and-sublocation`
       : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
+      
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
@@ -48,9 +56,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       }),
     refetchOnMount: false,
   });
+  
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data.result;
+  
   const dataStructuringFormat = () => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = groupBy(
@@ -81,6 +91,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     }
     return [];
   };
+  
   useEffect(() => {
     const controller = new AbortController();
     dataStructuringFormat();
@@ -94,17 +105,25 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [user.company, location.key]);
 
   const dataToDisplay = () => {
+    const structuredData = dataStructuringFormat();
     if (!searchItem || searchItem === "") {
-      if (dataStructuringFormat().length > 0) {
-        return dataStructuringFormat();
+      if (structuredData.length > 0) {
+        // Initialize filtered count with the full data length
+        if (filteredDataCount === 0) {
+          setFilteredDataCount(structuredData.length);
+        }
+        return structuredData;
       }
       return [];
     } else if (String(searchItem).length > 0) {
-      return dataStructuringFormat()?.filter((item) =>
+      const filteredData = structuredData?.filter((item) =>
         JSON.stringify(item)
           .toLowerCase()
           .includes(String(searchItem).toLowerCase())
       );
+      // Update filtered count when search is applied
+      setFilteredDataCount(filteredData.length);
+      return filteredData;
     }
   };
 
@@ -115,6 +134,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     }
     return result;
   };
+  
   const totalAvailable = () => {
     const itemList = groupBy(
       itemsInInventoryQuery?.data?.data?.items,
@@ -125,6 +145,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       totalAvailable: itemList[1]?.length,
     };
   };
+  
   useEffect(() => {
     const controller = new AbortController();
     referenceData({
@@ -142,11 +163,26 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     location.key,
   ]);
 
+  // Handle table changes including filtering, pagination, and sorting
+  const handleTableChange = (pagination, filters, sorter, extra) => {
+    // Update pagination state
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+    
+    // Update filtered data count when filters are applied
+    if (extra.action === 'filter') {
+      setFilteredDataCount(extra.currentDataSource.length);
+      // Reset to first page when filtering
+      setCurrentPage(1);
+    }
+  };
+
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
     Sale: "For sale",
   };
+  
   const cellStyle = {
     display: "flex",
     justifyContent: "flex-start",
@@ -225,9 +261,13 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           pagination={{
             position: ["bottomCenter"],
             pageSizeOptions: [10, 20, 30, 50, 100],
-            total: dataToDisplay().length,
-            defaultPageSize: 10,
-            defaultCurrent: 1,
+            total: filteredDataCount,
+            current: currentPage,
+            pageSize: pageSize,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => 
+              `${range[0]}-${range[1]} of ${total} items`,
           }}
           style={{ width: "100%" }}
           columns={columnsTableMain({
@@ -249,6 +289,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay()}
           className="table-ant-customized"
+          onChange={handleTableChange}
         />
       </Grid>
     </Suspense>

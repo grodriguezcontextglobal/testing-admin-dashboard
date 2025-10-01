@@ -14,7 +14,7 @@ import {
   dataStructuringFormat,
   dataToDisplay,
 } from "../../utils/dataStructuringFormat";
-// import DownloadingXlslFile from "../../../actions/DownloadXlsx";
+
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 
 const TableItemBrand = ({
@@ -26,6 +26,12 @@ const TableItemBrand = ({
   const brandName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  
+  // State to track filtered data count for dynamic pagination
+  const [filteredDataCount, setFilteredDataCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerBrand", decodeURI(brandName[0].slice(1))],
     queryFn: () =>
@@ -57,6 +63,7 @@ const TableItemBrand = ({
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const [structuredDataRendering, setStructuredDataRendering] = useState([]);
+  
   useEffect(() => {
     setStructuredDataRendering(
       dataStructuringFormat(
@@ -97,8 +104,27 @@ const TableItemBrand = ({
   }, [structuredDataRendering.length, location.key]);
 
   const dataRenderingMemo = useMemo(() => {
-    return dataToDisplay(structuredDataRendering, searchItem);
-  }, [isLoadingComponent, searchItem]);
+    const result = dataToDisplay(structuredDataRendering, searchItem);
+    // Initialize filtered count with the full data length
+    if (filteredDataCount === 0) {
+      setFilteredDataCount(result.length);
+    }
+    return result;
+  }, [structuredDataRendering, searchItem]);
+
+  // Handle table changes including filtering, pagination, and sorting
+  const handleTableChange = (pagination, filters, sorter, extra) => {
+    // Update pagination state
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+    
+    // Update filtered data count when filters are applied
+    if (extra.action === 'filter') {
+      setFilteredDataCount(extra.currentDataSource.length);
+      // Reset to first page when filtering
+      setCurrentPage(1);
+    }
+  };
 
   return (
     <Suspense
@@ -174,9 +200,13 @@ const TableItemBrand = ({
             pagination={{
               position: ["bottomCenter"],
               pageSizeOptions: [10, 20, 30, 50, 100],
-              total: dataRenderingMemo.length,
-              defaultPageSize: 10,
-              defaultCurrent: 1,
+              total: filteredDataCount,
+              current: currentPage,
+              pageSize: pageSize,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => 
+                `${range[0]}-${range[1]} of ${total} items`,
             }}
             style={{ width: "100%" }}
             columns={columnsTableMain({
@@ -196,6 +226,7 @@ const TableItemBrand = ({
             })}
             dataSource={dataRenderingMemo}
             className="table-ant-customized"
+            onChange={handleTableChange}
           />
         )}
       </Grid>
