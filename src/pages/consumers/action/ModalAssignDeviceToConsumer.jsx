@@ -1,10 +1,11 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, Modal, Switch } from "antd";
+import { Divider, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import "../../../styles/global/ant-select.css";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
@@ -32,14 +33,9 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
   const closeModal = () => {
     return setAssignDevice(false);
   };
-  return (
-    <Modal
-      open={assignDevice}
-      onCancel={() => closeModal()}
-      width={1000}
-      footer={[]}
-      style={{ zIndex: 30 }}
-    >
+
+  const bodyModal = () => {
+    return (
       <Grid
         container
         display={"flex"}
@@ -87,7 +83,18 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
           />
         )}
       </Grid>
-    </Modal>
+    );
+  };
+
+  return (
+    <ModalUX openDialog={assignDevice} closeModal={closeModal} body={bodyModal} />
+    // <Modal
+    //   open={assignDevice}
+    //   onCancel={() => closeModal()}
+    //   width={1000}
+    //   footer={[]}
+    //   style={{ zIndex: 30 }}
+    // ></Modal>
   );
 };
 

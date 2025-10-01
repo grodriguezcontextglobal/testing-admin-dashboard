@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Modal, Select, Spin, Tooltip } from "antd";
+import { Avatar, Button, Select, Spin, Tooltip } from "antd";
 import {
   useCallback,
   useEffect,
@@ -13,6 +13,7 @@ import Loading from "../../../components/animation/Loading";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { StripeCheckoutElementFromConsumerPage } from "../../../components/stripe/elements/StripeCheckoutElementFromConsumerPage";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import { onAddTransactionInfo } from "../../../store/slices/customerSlice";
 import "../../../styles/global/ant-select.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -229,15 +230,9 @@ const ModalAssignDeviceInEvent = ({
     padding: "10px 5px",
   };
 
-  return (
-    <Modal
-      open={assignDevice}
-      onCancel={() => closeModal()}
-      centered
-      footer={[]}
-      style={{ zIndex: 30 }}
-    >
-      <Grid container>
+  const bodyModal = () => {
+    return (
+            <Grid container>
         <Grid
           display={"flex"}
           flexDirection={"column"}
@@ -589,7 +584,18 @@ const ModalAssignDeviceInEvent = ({
           />
         )}
       </Grid>
-    </Modal>
+
+    )};
+  return (
+    <ModalUX openDialog={assignDevice} closeModal={closeModal} body={bodyModal} />
+    // <Modal
+    //   open={assignDevice}
+    //   onCancel={() => closeModal()}
+    //   centered
+    //   footer={[]}
+    //   style={{ zIndex: 30 }}
+    // >
+    // </Modal>
   );
 };
 
