@@ -1,11 +1,12 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal } from "antd";
+import { Button } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import renderingTitle from "../../../components/general/renderingTitle";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -49,15 +50,18 @@ const ModalReturnItem = ({
 
   const updateLeaseInfo = async () => {
     const returnedDate = formatDate(new Date());
-    const response = await devitrakApi.post("/db_lease/update-consumer-lease-info", {
-      subscription_returned_date: returnedDate,
-      staff_admin_id: deviceInfo.staff_admin_id,
-      company_id: deviceInfo.company_id,
-      subscription_current_in_use: 0,
-      consumer_member_id: deviceInfo.consumer_member_id,
-      device_id: deviceInfo.item_id_info.item_id,
-      active: 0,
-    });
+    const response = await devitrakApi.post(
+      "/db_lease/update-consumer-lease-info",
+      {
+        subscription_returned_date: returnedDate,
+        staff_admin_id: deviceInfo.staff_admin_id,
+        company_id: deviceInfo.company_id,
+        subscription_current_in_use: 0,
+        consumer_member_id: deviceInfo.consumer_member_id,
+        device_id: deviceInfo.item_id_info.item_id,
+        active: 0,
+      }
+    );
     if (response.data && response.data.ok) {
       await devitrakApi.post("/db_lease/delete-consumer-lease-info", {
         company_id: deviceInfo.company_id,
@@ -119,18 +123,9 @@ const ModalReturnItem = ({
   const closeModal = () => {
     return setOpenReturnDeviceStaffModal(false);
   };
-  return (
-    <Modal
-      title={renderingTitle(
-        `Returning device #: ${deviceInfo?.item_id_info?.serial_number}`
-      )}
-      centered
-      open={openReturnDeviceStaffModal}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      style={{ zIndex: 30 }}
-    >
+
+  const bodyModal = () => {
+    return (
       <form
         style={{
           ...CenteringGrid,
@@ -180,7 +175,28 @@ const ModalReturnItem = ({
           )}{" "}
         </Grid>
       </form>
-    </Modal>
+    );
+  };
+  return (
+    <ModalUX
+      title={renderingTitle(
+        `Returning device #: ${deviceInfo?.item_id_info?.serial_number}`
+      )}
+      openDialog={openReturnDeviceStaffModal}
+      closeModal={closeModal}
+      body={bodyModal()}
+    />
+    // <Modal
+    //  title={renderingTitle(
+    //     `Returning device #: ${deviceInfo?.item_id_info?.serial_number}`
+    //   )}
+    //   centered
+    //   open={openReturnDeviceStaffModal}
+    //   onCancel={() => closeModal()}
+    //   footer={[]}
+    //   maskClosable={false}
+    //   style={{ zIndex: 30 }}
+    // ></Modal>
   );
 };
 

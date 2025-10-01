@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, notification, Select } from "antd";
+import { Button, notification, Select } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
+import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
@@ -27,8 +30,6 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
-import { onAddCustomer } from "../../../store/slices/stripeSlice";
 
 const schema = yup.object({
   firstName: yup.string().required("first name is required"),
@@ -79,7 +80,8 @@ export const CreateNewConsumer = ({
     const controller = new AbortController();
     if (location.pathname === "/events/event-quickglance") {
       const eventInfo = listOfAvailableEventsPerAdmin.find(
-        (item) => item.eventInfoDetail.eventName === event?.eventInfoDetail?.eventName
+        (item) =>
+          item.eventInfoDetail.eventName === event?.eventInfoDetail?.eventName
       );
       setEventAssignedTo(JSON.stringify(eventInfo));
     } else if (location.pathname === "/consumers") {
@@ -256,10 +258,239 @@ export const CreateNewConsumer = ({
     );
   };
 
+  const bodyModal = () => {
+    return (
+      <Grid
+        display={"flex"}
+        flexDirection={"column"}
+        justifyContent={"space-around"}
+        alignItems={"center"}
+        gap={2}
+        container
+      >
+        <Grid
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"space-around"}
+          alignItems={"center"}
+          gap={2}
+          item
+          xs={12}
+        >
+          <Grid
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignSelf={"stretch"}
+            // marginBottom={5}
+            gap={2}
+            container
+          >
+            <Grid style={CenteringGrid} item xs={12} sm={12} md={12} lg={10}>
+              <form
+                style={{
+                  width: "100%",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  textAlign: "left",
+                }}
+                onSubmit={handleSubmit(handleNewConsumer)}
+                className="form"
+              >
+                <p style={Subtitle}>
+                  Enter all the user details for a consumer.
+                </p>
+                <div
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    textAlign: "left",
+                    gap: "10px",
+                    margin: "0.5rem 0 0",
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: "left",
+                      width: "50%",
+                    }}
+                  >
+                    <InputLabel style={{ margin: 0, width: "100%" }}>
+                      <p style={paragraphStyle}>First name</p>
+                    </InputLabel>
+                    <OutlinedInput
+                      required
+                      {...register("firstName")}
+                      style={{
+                        ...OutlinedInputStyle,
+                      }}
+                      placeholder="First name"
+                    />
+                  </div>
+                  <div
+                    style={{
+                      textAlign: "left",
+                      width: "50%",
+                    }}
+                  >
+                    <InputLabel style={{ margin: 0, width: "100%" }}>
+                      <p style={paragraphStyle}>Last name</p>
+                    </InputLabel>
+                    <OutlinedInput
+                      required
+                      {...register("lastName")}
+                      style={{
+                        ...OutlinedInputStyle,
+                      }}
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    textAlign: "left",
+                    margin: "0.5rem 0 0",
+                  }}
+                >
+                  <InputLabel style={{ margin: 0, width: "100%" }}>
+                    <p style={paragraphStyle}>Email</p>
+                  </InputLabel>
+                  <OutlinedInput
+                    required
+                    type="email"
+                    {...register("email", {
+                      minLength: 10,
+                      pattern: /^\S+@\S+$/i,
+                    })}
+                    style={{
+                      ...OutlinedInputStyle,
+                    }}
+                    placeholder="Enter your email"
+                    fullWidth
+                  />
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    textAlign: "left",
+                    margin: "0.5rem 0 0",
+                  }}
+                >
+                  <InputLabel style={{ margin: 0, width: "100%" }}>
+                    <p style={paragraphStyle}>Phone number</p>
+                  </InputLabel>
+                  <PhoneInput
+                    style={{
+                      ...OutlinedInputStyle,
+                      margin: "0.5rem 0 ",
+                      padding: "0px 20px",
+                      width: "90%",
+                      boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
+                      border: "solid 0.1px rgba(16,24,40,0.2)",
+                    }}
+                    id="phone_input_check"
+                    countrySelectProps={{ unicodeFlags: true }}
+                    defaultCountry="US"
+                    placeholder="(555) 000-0000"
+                    value={contactPhoneNumber}
+                    onChange={setContactPhoneNumber}
+                  />
+                </div>
+                <div>
+                  <InputLabel style={{ margin: 0, width: "100%" }}>
+                    <p style={paragraphStyle}>Event assigned to</p>
+                  </InputLabel>
+                  <Select
+                    className="custom-autocomplete"
+                    displayEmpty
+                    name="eventAssignedTo"
+                    value={eventAssignedTo}
+                    onChange={(value) => setEventAssignedTo(value)}
+                    style={{
+                      ...AntSelectorStyle,
+                      width: "100%",
+                      margin: "0 0 0.3rem",
+                      display:
+                        location.pathname === "/events/event-quickglance"
+                          ? "none"
+                          : "flex",
+                    }}
+                  >
+                    <MenuItem disabled value="">
+                      <em>Select event</em>
+                    </MenuItem>
+                    {listOfAvailableEventsPerAdmin?.map((event) => {
+                      return (
+                        <MenuItem value={JSON.stringify(event)} key={event?.id}>
+                          <p style={paragraphStyle}>
+                            {event?.eventInfoDetail?.eventName}
+                          </p>
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>{" "}
+                  <OutlinedInput
+                    required
+                    readOnly
+                    type="text"
+                    style={{
+                      ...OutlinedInputStyle,
+                      display:
+                        location.pathname === "/events/event-quickglance"
+                          ? "flex"
+                          : "none",
+                    }}
+                    defaultValue={
+                      location.pathname === "/events/event-quickglance"
+                        ? event.eventInfoDetail.eventName
+                        : ""
+                    }
+                    fullWidth
+                  />
+                </div>
+                <Button
+                  loading={loading}
+                  htmlType="submit"
+                  style={{
+                    ...BlueButton,
+                    ...CenteringGrid,
+                    width: "100%",
+                    margin: "1.5rem 0 0",
+                  }}
+                >
+                  <Typography textTransform={"none"} style={BlueButtonText}>
+                    Add new consumer
+                  </Typography>
+                </Button>
+              </form>
+            </Grid>
+          </Grid>{" "}
+        </Grid>
+      </Grid>
+    );
+  };
+
   return (
     <>
       {loading && <Loading />}
       {contextHolder}
+      <ModalUX
+        title={titleRender()}
+        openDialog={createUserButton}
+        closeModal={closeDeviceModal}
+        body={bodyModal()}
+      />
+      {/* <Modal
       <Modal
         title={titleRender()}
         centered
@@ -270,220 +501,8 @@ export const CreateNewConsumer = ({
         maskClosable={false}
         style={{ zIndex: 30 }}
       >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          gap={2}
-          container
-        >
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"space-around"}
-            alignItems={"center"}
-            gap={2}
-            item
-            xs={12}
-          >
-            <Grid
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignSelf={"stretch"}
-              // marginBottom={5}
-              gap={2}
-              container
-            >
-              <Grid style={CenteringGrid} item xs={12} sm={12} md={12} lg={10}>
-                <form
-                  style={{
-                    width: "100%",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    textAlign: "left",
-                  }}
-                  onSubmit={handleSubmit(handleNewConsumer)}
-                  className="form"
-                >
-                  <p style={Subtitle}>
-                    Enter all the user details for a consumer.
-                  </p>
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      textAlign: "left",
-                      gap: "10px",
-                      margin: "0.5rem 0 0",
-                    }}
-                  >
-                    <div
-                      style={{
-                        textAlign: "left",
-                        width: "50%",
-                      }}
-                    >
-                      <InputLabel style={{ margin: 0, width: "100%" }}>
-                        <p style={paragraphStyle}>First name</p>
-                      </InputLabel>
-                      <OutlinedInput
-                        required
-                        {...register("firstName")}
-                        style={{
-                          ...OutlinedInputStyle,
-                        }}
-                        placeholder="First name"
-                      />
-                    </div>
-                    <div
-                      style={{
-                        textAlign: "left",
-                        width: "50%",
-                      }}
-                    >
-                      <InputLabel style={{ margin: 0, width: "100%" }}>
-                        <p style={paragraphStyle}>Last name</p>
-                      </InputLabel>
-                      <OutlinedInput
-                        required
-                        {...register("lastName")}
-                        style={{
-                          ...OutlinedInputStyle,
-                        }}
-                        placeholder="Last name"
-                      />
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      textAlign: "left",
-                      margin: "0.5rem 0 0",
-                    }}
-                  >
-                    <InputLabel style={{ margin: 0, width: "100%" }}>
-                      <p style={paragraphStyle}>Email</p>
-                    </InputLabel>
-                    <OutlinedInput
-                      required
-                      type="email"
-                      {...register("email", {
-                        minLength: 10,
-                        pattern: /^\S+@\S+$/i,
-                      })}
-                      style={{
-                        ...OutlinedInputStyle,
-                      }}
-                      placeholder="Enter your email"
-                      fullWidth
-                    />
-                  </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      textAlign: "left",
-                      margin: "0.5rem 0 0",
-                    }}
-                  >
-                    <InputLabel style={{ margin: 0, width: "100%" }}>
-                      <p style={paragraphStyle}>Phone number</p>
-                    </InputLabel>
-                    <PhoneInput
-                      style={{
-                        ...OutlinedInputStyle,
-                        margin: "0.5rem 0 ",
-                        padding: "0px 20px",
-                        width: "90%",
-                        boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
-                        border: "solid 0.1px rgba(16,24,40,0.2)",
-                      }}
-                      id="phone_input_check"
-                      countrySelectProps={{ unicodeFlags: true }}
-                      defaultCountry="US"
-                      placeholder="(555) 000-0000"
-                      value={contactPhoneNumber}
-                      onChange={setContactPhoneNumber}
-                    />
-                  </div>
-                  <div>
-                    <InputLabel style={{ margin: 0, width: "100%" }}>
-                      <p style={paragraphStyle}>Event assigned to</p>
-                    </InputLabel>
-                    <Select
-                      className="custom-autocomplete"
-                      displayEmpty
-                      name="eventAssignedTo"
-                      value={eventAssignedTo}
-                      onChange={(value) => setEventAssignedTo(value)}
-                      style={{
-                        ...AntSelectorStyle,
-                        width: "100%",
-                        margin: "0 0 0.3rem",
-                        display:
-                          location.pathname === "/events/event-quickglance"
-                            ? "none"
-                            : "flex",
-                      }}
-                    >
-                      <MenuItem disabled value="">
-                        <em>Select event</em>
-                      </MenuItem>
-                      {listOfAvailableEventsPerAdmin?.map((event) => {
-                        return (
-                          <MenuItem
-                            value={JSON.stringify(event)}
-                            key={event?.id}
-                          >
-                            <p style={paragraphStyle}>
-                              {event?.eventInfoDetail?.eventName}
-                            </p>
-                          </MenuItem>
-                        );
-                      })}
-                    </Select>{" "}
-                    <OutlinedInput
-                      required
-                      readOnly
-                      type="text"
-                      style={{
-                        ...OutlinedInputStyle,
-                        display: location.pathname === "/events/event-quickglance" ? "flex" : "none",
-                      }}
-                      defaultValue={location.pathname === "/events/event-quickglance" ? event.eventInfoDetail.eventName : ""}
-                      fullWidth
-                    />
-                  </div>
-                  <Button
-                    loading={loading}
-                    htmlType="submit"
-                    style={{
-                      ...BlueButton,
-                      ...CenteringGrid,
-                      width: "100%",
-                      margin: "1.5rem 0 0",
-                    }}
-                  >
-                    <Typography textTransform={"none"} style={BlueButtonText}>
-                      Add new consumer
-                    </Typography>
-                  </Button>
-                </form>
-              </Grid>
-            </Grid>{" "}
-          </Grid>
-        </Grid>
       </Modal>
+      */}
     </>
   );
 };

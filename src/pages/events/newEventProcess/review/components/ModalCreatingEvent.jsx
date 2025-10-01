@@ -1,31 +1,14 @@
-import { Modal } from "antd";
 import Loading from "../../../../../components/animation/Loading";
 import { DevitrakLogo } from "../../../../../components/icons/DevitrakLogo";
 import { DevitrakName } from "../../../../../components/icons/DevitrakName";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {
   const innerHeight = window.innerHeight;
   const innerWidth = window.innerHeight;
-
-  return (
-    <Modal
-      open={openEndingEventModal}
-      onCancel={() => null}
-      closable={false}
-      footer={[]}
-      width={innerWidth - 200}
-      centered
-      maskClosable={false}
-      style={{
-        top: "5dvh",
-        backgroundColor: "var(--basewhite)",
-        borderRadius: "8px",
-        padding: "24px",
-        height: innerHeight - 450,
-        zIndex: 30,
-      }}
-    >
+  const bodyModal = () => {
+    return (
       <div
         style={{
           margin: "auto",
@@ -66,7 +49,8 @@ const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {
               Creating event...
             </h4>
             <p style={{ ...Subtitle, width: "100%" }}>
-              This event is being created. Please wait until progress is completed.
+              This event is being created. Please wait until progress is
+              completed.
             </p>
           </div>
         </div>
@@ -79,7 +63,35 @@ const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {
           }}
         ></div>
       </div>
-    </Modal>
+    );
+  };
+  return (
+    <ModalUX
+      openDialog={openEndingEventModal}
+      closeModal={null}
+      body={bodyModal()}
+      modalStyles={{
+        height: innerHeight - 450,
+      }}
+      width={innerWidth - 200}
+    />
+    // <Modal
+    //   open={openEndingEventModal}
+    //   onCancel={() => null}
+    //   closable={false}
+    //   footer={[]}
+    //   width={innerWidth - 200}
+    //   centered
+    //   maskClosable={false}
+    //   style={{
+    //     top: "5dvh",
+    //     backgroundColor: "var(--basewhite)",
+    //     borderRadius: "8px",
+    //     padding: "24px",
+    //     height: innerHeight - 450,
+    //     zIndex: 30,
+    //   }}
+    // ></Modal>
   );
 };
 

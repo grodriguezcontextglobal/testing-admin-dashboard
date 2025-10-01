@@ -8,11 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
-import { useSelector } from "react-redux";
+import { notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
@@ -141,19 +142,9 @@ const Releasing = ({
       await closeModal();
     }
   };
-
+const bodyModal = () => {
   return (
-    <Modal
-      open={openCancelingDepositModal}
-      title={renderingTitle()}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      style={{ zIndex: 30 }}
-    >
-      {contextHolder}
-      <Grid
+          <Grid
         display={"flex"}
         flexDirection={"column"}
         justifyContent={"space-around"}
@@ -306,8 +297,24 @@ const Releasing = ({
             </Grid>
           </Grid>{" "}
         </Grid>
-      </Grid>{" "}
-    </Modal>
+      </Grid>
+  )
+};
+  return (
+    <>
+    {contextHolder}
+    <ModalUX title={renderingTitle()} openDialog={openCancelingDepositModal} closeModal={closeModal} body={bodyModal()} />
+    </>
+    // <Modal
+    //   open={openCancelingDepositModal}
+    //   title={renderingTitle()}
+    //   onOk={() => closeModal()}
+    //   onCancel={() => closeModal()}
+    //   footer={[]}
+    //   maskClosable={false}
+    //   style={{ zIndex: 30 }}
+    // >
+    // </Modal>
   );
 };
 

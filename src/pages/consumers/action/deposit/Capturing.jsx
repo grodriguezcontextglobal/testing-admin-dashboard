@@ -9,16 +9,17 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { notification } from "antd";
+import PropTypes from "prop-types";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
-import PropTypes from "prop-types";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { Subtitle } from "../../../../styles/global/Subtitle";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -28,7 +29,7 @@ const schema = yup
 const Capturing = ({
   openCapturingDepositModal,
   setOpenCapturingDepositModal,
-  rowRecord
+  rowRecord,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
   const [api, contextHolder] = notification.useNotification();
@@ -38,16 +39,12 @@ const Capturing = ({
       duration: 0,
     });
   };
-  const { customer } = useSelector(
-    (state) => state.stripe
-  );
+  const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const stripeTransactionQuery = useQuery({
     queryKey: ["oneStripeTransaction"],
     queryFn: () =>
-      devitrakApi.get(
-        `/stripe/payment_intents/${rowRecord?.paymentIntent}`
-      ),
+      devitrakApi.get(`/stripe/payment_intents/${rowRecord?.paymentIntent}`),
     refetchOnMount: false,
   });
   const transactionQuery = useQuery({
@@ -108,7 +105,7 @@ const Capturing = ({
       setValue("amount", "");
       return setOpenCapturingDepositModal(false);
     };
-    
+
     const handleEventInfo = async (data) => {
       if (data.amount > parseInt(amountWithNoDecimal)) {
         return alert(`Max amount to capture: $${amountWithNoDecimal}`);
@@ -142,7 +139,12 @@ const Capturing = ({
             date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
             time: dateRef[4],
             company: rowRecord?.eventInfo[0].provider,
-            link: `https://app.devitrak.net/authentication/${rowRecord?.eventInfo[0]?.event_id}/${user.companyData.id}/${rowRecord?.eventInfo[0].consumerInfo.uid ?? rowRecord?.eventInfo[0]?.consumerInfo.id}`,
+            link: `https://app.devitrak.net/authentication/${
+              rowRecord?.eventInfo[0]?.event_id
+            }/${user.companyData.id}/${
+              rowRecord?.eventInfo[0].consumerInfo.uid ??
+              rowRecord?.eventInfo[0]?.consumerInfo.id
+            }`,
           });
           queryClient.invalidateQueries({
             queryKey: ["transactionPerConsumerListQuery"],
@@ -156,18 +158,8 @@ const Capturing = ({
       }
     };
 
-    return (
-      <Modal
-        open={openCapturingDepositModal}
-        title={renderingTitle()}
-        onOk={() => closeModal()}
-        onCancel={() => closeModal()}
-        footer={[]}
-        maskClosable={false}
-        centered
-        style={{ zIndex: 30 }}
-      >
-        {contextHolder}
+    const bodyModal = () => {
+      return (
         <Grid
           display={"flex"}
           flexDirection={"column"}
@@ -266,7 +258,7 @@ const Capturing = ({
                     style={{
                       ...BlueButton,
                       width: "100%",
-                      display: transactionStatus? "none" : "flex",
+                      display: transactionStatus ? "none" : "flex",
                     }}
                   >
                     <Typography
@@ -284,7 +276,30 @@ const Capturing = ({
             </Grid>{" "}
           </Grid>
         </Grid>
-      </Modal>
+      );
+    };
+    return (
+      <>
+        {contextHolder}
+        <ModalUX
+          title={renderingTitle()}
+          openDialog={openCapturingDepositModal}
+          closeModal={closeModal}
+          body={bodyModal()}
+        />
+      </>
+      // <Modal
+      //   open={openCapturingDepositModal}
+      //   title={renderingTitle()}
+      //   onOk={() => closeModal()}
+      //   onCancel={() => closeModal()}
+      //   footer={[]}
+      //   maskClosable={false}
+      //   centered
+      //   style={{ zIndex: 30 }}
+      // >
+      //   {contextHolder}
+      // </Modal>
     );
   }
 };

@@ -1,9 +1,13 @@
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, notification, Table } from "antd";
+import { Button, notification, Table } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
+import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -11,9 +15,6 @@ import { GrayButton } from "../../../styles/global/GrayButton";
 import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
-import { onAddCustomer } from "../../../store/slices/stripeSlice";
 const UpdateListOfNotesPerConsumer = ({
   openDeleteNoteModal,
   setOpenDeleteNoteModal,
@@ -144,10 +145,73 @@ const UpdateListOfNotesPerConsumer = ({
       return setLoading(false);
     }
   };
+
+  const bodyModal = () => {
+    return (
+      <Grid
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        gap={2}
+        container
+      >
+        <Table
+          style={{ width: "100%", cursor: "pointer" }}
+          dataSource={formattingData()}
+          columns={columns}
+          rowClassName="editable-row"
+          className="table-ant-customized"
+          rowSelection={{
+            ...rowSelection,
+          }}
+        />
+
+        <form
+          style={{
+            ...CenteringGrid,
+            margin: 0,
+            flexDirection: "column",
+            width: "100%",
+          }}
+          onSubmit={handleSubmit(handleDeleteNote)}
+        >
+          <Button
+            loading={loading}
+            htmlType="submit"
+            style={{
+              ...BlueButton,
+              ...CenteringGrid,
+              width: "100%",
+              margin: "1.5rem 0 0",
+            }}
+          >
+            <Typography textTransform={"none"} style={BlueButtonText}>
+              Update consumer information
+            </Typography>
+          </Button>
+          <Button
+            onClick={() => closeDeviceModal()}
+            htmlType="reset"
+            style={{
+              ...GrayButton,
+              ...CenteringGrid,
+              width: "100%",
+              margin: "0.5rem 0 0",
+            }}
+          >
+            <Typography textTransform={"none"} style={GrayButtonText}>
+              Cancel{" "}
+            </Typography>
+          </Button>
+        </form>
+      </Grid>
+    );
+  };
   return (
     <>
       {contextHolder}
-      <Modal
+      <ModalUX title={titleRender()} openDialog={openDeleteNoteModal} closeModal={closeDeviceModal} body={bodyModal()} width={1000} />
+      {/* <Modal
         title={titleRender()}
         centered
         width={1000}
@@ -160,65 +224,7 @@ const UpdateListOfNotesPerConsumer = ({
           zIndex: 30,
           margin: "12dvh 0 0",
         }}
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          gap={2}
-          container
-        >
-          <Table
-            style={{ width: "100%", cursor: "pointer" }}
-            dataSource={formattingData()}
-            columns={columns}
-            rowClassName="editable-row"
-            className="table-ant-customized"
-            rowSelection={{
-              ...rowSelection,
-            }}
-          />
-
-          <form
-            style={{
-              ...CenteringGrid,
-              margin: 0,
-              flexDirection: "column",
-              width: "100%",
-            }}
-            onSubmit={handleSubmit(handleDeleteNote)}
-          >
-            <Button
-              loading={loading}
-              htmlType="submit"
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
-                width: "100%",
-                margin: "1.5rem 0 0",
-              }}
-            >
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                Update consumer information
-              </Typography>
-            </Button>
-            <Button
-              onClick={() => closeDeviceModal()}
-              htmlType="reset"
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-                margin: "0.5rem 0 0",
-              }}
-            >
-              <Typography textTransform={"none"} style={GrayButtonText}>
-                Cancel{" "}
-              </Typography>
-            </Button>
-          </form>
-        </Grid>
-      </Modal>
+      ></Modal> */}
     </>
   );
 };

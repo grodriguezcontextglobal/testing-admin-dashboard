@@ -2,11 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, Select, Spin, Tooltip } from "antd";
-import {
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
@@ -51,7 +47,7 @@ const ModalAssignDeviceInEvent = ({
       }),
     refetchOnMount: false,
   });
-  
+
   useEffect(() => {
     const controller = new AbortController();
     eventsWhereStaffIsAssigned.refetch();
@@ -66,7 +62,10 @@ const ModalAssignDeviceInEvent = ({
 
   const sortedByCompany =
     eventsWhereStaffIsAssigned?.data?.data?.events?.filter(
-      (item) => item.company_id === user.companyData.id && item.active && item.type === "event"
+      (item) =>
+        item.company_id === user.companyData.id &&
+        item.active &&
+        item.type === "event"
     ) ?? [];
 
   const renderingInventoryOptionsBasedOnSelectedEvent = useCallback(() => {
@@ -232,7 +231,7 @@ const ModalAssignDeviceInEvent = ({
 
   const bodyModal = () => {
     return (
-            <Grid container>
+      <Grid container>
         <Grid
           display={"flex"}
           flexDirection={"column"}
@@ -584,10 +583,14 @@ const ModalAssignDeviceInEvent = ({
           />
         )}
       </Grid>
-
-    )};
+    );
+  };
   return (
-    <ModalUX openDialog={assignDevice} closeModal={closeModal} body={bodyModal} />
+    <ModalUX
+      openDialog={assignDevice}
+      closeModal={closeModal}
+      body={bodyModal()}
+    />
     // <Modal
     //   open={assignDevice}
     //   onCancel={() => closeModal()}

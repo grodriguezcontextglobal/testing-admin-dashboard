@@ -1,17 +1,18 @@
 //
 
-import { useForm } from "react-hook-form";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { formatDate } from "../../inventory/utils/dateFormat";
-import { Button, Modal } from "antd";
-import renderingTitle from "../../../components/general/renderingTitle";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "antd";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import renderingTitle from "../../../components/general/renderingTitle";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { formatDate } from "../../inventory/utils/dateFormat";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
 const UpdatingConsumerLease = ({
@@ -80,18 +81,9 @@ const UpdatingConsumerLease = ({
   const closeModal = () => {
     return setOpenReturnDeviceStaffModal(false);
   };
-  return (
-    <Modal
-      title={renderingTitle(
-        `Returning device #: ${deviceInfo.item_id_info.serial_number}`
-      )}
-      centered
-      open={openReturnDeviceStaffModal}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      style={{ zIndex: 30 }}
-    >
+
+  const bodyModal = () => {
+    return (
       <form
         style={{
           ...CenteringGrid,
@@ -140,7 +132,29 @@ const UpdatingConsumerLease = ({
           )}{" "}
         </Grid>
       </form>
-    </Modal>
+    );
+  };
+  return (
+    <ModalUX
+      title={renderingTitle(
+        `Returning device #: ${deviceInfo.item_id_info.serial_number}`
+      )}
+      openDialog={openReturnDeviceStaffModal}
+      closeModal={closeModal}
+      body={bodyModal()}
+    />
+    // <Modal
+    //   title={renderingTitle(
+    //     `Returning device #: ${deviceInfo.item_id_info.serial_number}`
+    //   )}
+    //   centered
+    //   open={openReturnDeviceStaffModal}
+    //   onCancel={() => closeModal()}
+    //   footer={[]}
+    //   maskClosable={false}
+    //   style={{ zIndex: 30 }}
+    // >
+    // </Modal>
   );
 };
 export default UpdatingConsumerLease;

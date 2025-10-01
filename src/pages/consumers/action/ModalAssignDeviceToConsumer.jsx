@@ -87,7 +87,11 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
   };
 
   return (
-    <ModalUX openDialog={assignDevice} closeModal={closeModal} body={bodyModal} />
+    <ModalUX
+      openDialog={assignDevice}
+      closeModal={closeModal}
+      body={bodyModal()}
+    />
     // <Modal
     //   open={assignDevice}
     //   onCancel={() => closeModal()}
