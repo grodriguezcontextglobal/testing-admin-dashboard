@@ -1,11 +1,12 @@
 import { Chip, OutlinedInput, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message, Modal, notification, Popconfirm, Space } from "antd";
+import { Button, message, Modal, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
@@ -126,10 +127,15 @@ const ExpressCheckInDevices = ({
         (element) => element.serialNumber === data.serialNumber
       );
 
-      if (add.length > 0 && !scannedDevice.some((element) => element.key === add[0].key)) {
+      if (
+        add.length > 0 &&
+        !scannedDevice.some((element) => element.key === add[0].key)
+      ) {
         resultToReturn.set(add[0].key, add[0]);
       } else {
-        return message.warning("Serial number is not in use or already scanned or invalid for this transaction.");
+        return message.warning(
+          "Serial number is not in use or already scanned or invalid for this transaction."
+        );
       }
       // eslint-disable-next-line no-unused-vars
       for (let [_, value] of resultToReturn) {
@@ -194,7 +200,15 @@ const ExpressCheckInDevices = ({
             />
           ))}
         </Space>
-        <Popconfirm
+        <BlueButtonConfirmationComponent
+          title={`Confirm return | Total items to return: ${scannedDevice.length}`}
+          styles={{width:"100%"}}
+          buttonType={"button"}
+          func={(e) => handleReturnDevices(e)}
+          loadingState={loadingStatus}
+          confirmationTitle="Are you sure you want to return all scanned devices?"
+        />
+        {/* <Popconfirm
           title="Are you sure you want to return all scanned devices?"
           onConfirm={(e) => handleReturnDevices(e)}
         >
@@ -206,7 +220,7 @@ const ExpressCheckInDevices = ({
               Confirm return | Total items to return: {scannedDevice.length}
             </p>
           </Button>
-        </Popconfirm>
+        </Popconfirm> */}
       </div>
     </Modal>
   );
