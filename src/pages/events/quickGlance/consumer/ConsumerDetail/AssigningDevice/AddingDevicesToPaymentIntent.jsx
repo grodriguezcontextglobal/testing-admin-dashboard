@@ -1,10 +1,9 @@
 import {
-  Button,
   FormHelperText,
   Grid,
   InputLabel,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
@@ -16,9 +15,10 @@ import {
   devitrakApi,
   devitrakApiAdmin,
 } from "../../../../../../api/devitrakApi";
+import DeviceAssigned from "../../../../../../classes/deviceAssigned";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
@@ -372,7 +372,8 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             </FormHelperText>
           </Grid>
           <Grid height={"auto"} alignSelf={"flex-end"} item xs={2}>
-            <Button
+          <BlueButtonComponent disabled={submittedAction} buttonType="submit" title={"Add"} />
+            {/* <Button
               disabled={submittedAction}
               style={{
                 width: "fit-content",
@@ -395,7 +396,7 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
               >
                 Add
               </Typography>
-            </Button>
+            </Button> */}
           </Grid>
         </Grid>
       </form>
@@ -404,24 +405,3 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
 };
 
 export default AddingDevicesToPaymentIntent;
-// await axios.post(
-//   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/assign_item",
-//   {
-//     consumer: {
-//       name: `${customer.name} ${customer.lastName}`,
-//       email: customer.email,
-//     },
-//     device: {
-//       serialNumber: newDeviceObject.serialNumber,
-//       deviceType: newDeviceObject.deviceType,
-//     },
-//     event: event.eventInfoDetail.eventName,
-//     company: event.company,
-//     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-//     time: dateRef[4],
-//     transaction: record.paymentIntent,
-//     link: `https://app.devitrak.net/authentication/${event.id}/${
-//       user.companyData.id
-//     }/${customer.id ?? customer.iud}`,
-//   }
-// );

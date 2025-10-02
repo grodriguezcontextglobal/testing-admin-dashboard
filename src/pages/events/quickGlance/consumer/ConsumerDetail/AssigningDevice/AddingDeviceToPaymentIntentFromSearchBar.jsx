@@ -1,9 +1,7 @@
 import {
-  Button,
   FormHelperText,
   Grid,
-  OutlinedInput,
-  Typography,
+  OutlinedInput
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
@@ -16,9 +14,8 @@ import {
   devitrakApiAdmin,
 } from "../../../../../../api/devitrakApi";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
@@ -387,11 +384,12 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
           md
           lg
         >
-          <Button disabled={submittedAction} style={BlueButton} type="submit">
+          <BlueButtonComponent title={"Add"} disabled={submittedAction} buttonType="submit" />
+          {/* <Button disabled={submittedAction} style={BlueButton} type="submit">
             <Typography textTransform={"none"} style={BlueButtonText}>
               Add
             </Typography>
-          </Button>
+          </Button> */}
         </Grid>
       </Grid>
     </form>
