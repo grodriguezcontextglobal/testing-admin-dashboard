@@ -1,10 +1,12 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Popconfirm, Space, Table, message, notification } from "antd";
+import { Button, Table, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -17,12 +19,13 @@ import {
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import "../../../../../styles/global/ant-table.css";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
+import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
-import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
-import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import ExpandedTableButtons from "./ux/ExpandedTableButtons";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
@@ -173,7 +176,7 @@ const ExpandedRowInTable = ({
           // const dateString = new Date().toString();
           // const dateRef = dateString.split(" ");
           await clearCacheMemory(
-           `event_id=${event.id}&company=${
+            `event_id=${event.id}&company=${
               user.companyData.id
             }&consumerInfo.id=${customer.id ?? customer.uid}`
           );
@@ -279,7 +282,6 @@ const ExpandedRowInTable = ({
             `/receiver/receivers-pool-update/${devicePoolData.id}`,
             deviceInPoolProfile
           );
-          // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
 
           // const emailStructure = new EmailStructureUpdateItem(
           //   customer.name,
@@ -436,145 +438,159 @@ const ExpandedRowInTable = ({
       key: "action",
       width: "10%",
       render: (_, record) => (
-        <Space size="middle">
-          {record.status === "Lost" || record.status === false ? (
-            <Button
-              onClick={() => handleAssignSingleDevice(record)}
-              disabled={String(record.status).toLowerCase() === "lost"}
-              loading={record.key === statusRecordState}
-              style={{
-                width: "fit-content",
-                border: `${
-                  String(record.status).toLowerCase() === "lost"
-                    ? "1px solid var(--disabled-blue-button)"
-                    : "1px solid var(--blue-dark-600, #155EEF)"
-                }`,
-                backgroundColor: `${
-                  String(record.status).toLowerCase() === "lost"
-                    ? "var(--disabled-blue-button)"
-                    : "var(--blue-dark-600, #155EEF)"
-                }`,
-                borderRadius: "8px",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                padding: "5px",
-              }}
-            >
-              <p
-                style={{
-                  cursor: "pointer",
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 400,
-                  fontSize: "16px",
-                  fontFamily: "Inter",
-                  lineHeight: "24px",
-                  color: "var(--basewhite)",
-                }}
-              >
-                Assign
-              </p>
-            </Button>
-          ) : (
-            <Button
-              loading={record.key === statusRecordState}
-              onClick={() => handleReturnSingleDevice(record)}
-              disabled={!event.active}
-              style={{
-                width: "fit-content",
-                border: "1px solid var(--error-700, #B42318)",
-                backgroundColor: "var(--error-700, #B42318)",
-                borderRadius: "8px",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                padding: "5px",
-                color: "#B42318",
-              }}
-            >
-              <p
-                style={{
-                  cursor: "pointer",
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 400,
-                  fontSize: "16px",
-                  fontFamily: "Inter",
-                  lineHeight: "24px",
-                  color: "var(--basewhite)",
-                }}
-              >
-                Return
-              </p>
-            </Button>
-          )}
-          {record.status === true && (
-            <button
-              onClick={() => {
-                dispatch(onTriggerModalToReplaceReceiver(true));
-                dispatch(onReceiverObjectToReplace(record));
-                handleRecord(rowRecord);
-              }}
-              disabled={!event.active}
-              style={{
-                width: "fit-content",
-                border: "1px solid var(--blue-dark-600, #155EEF)",
-                backgroundColor: "var(--blue-dark-600, #155EEF)",
-                borderRadius: "8px",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                padding: "5px",
-              }}
-            >
-              <p
-                style={{
-                  cursor: "pointer",
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 400,
-                  fontSize: "16px",
-                  fontFamily: "Inter",
-                  lineHeight: "24px",
-                  color: "var(--basewhite)",
-                }}
-              >
-                Replace
-              </p>
-            </button>
-          )}
-          {record.status === true &&
-            event.staff.adminUser.some(
-              (element) => element.email === user.email
-            ) && (
-              <Popconfirm
-                title="Are you sure it is lost?"
-                onConfirm={() => handleLostSingleDevice(record)}
-              >
-                <button
-                  style={{
-                    width: "fit-content",
-                    border: "1px solid var(--error-700, #B42318)",
-                    backgroundColor: "var(--error-700, #B42318)",
-                    borderRadius: "8px",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    padding: "5px",
-                    color: "#B42318",
-                  }}
-                >
-                  <p
-                    style={{
-                      cursor: "pointer",
-                      textTransform: "none",
-                      textAlign: "left",
-                      fontWeight: 400,
-                      fontSize: "16px",
-                      fontFamily: "Inter",
-                      lineHeight: "24px",
-                      color: "var(--basewhite)",
-                    }}
-                  >
-                    Lost
-                  </p>
-                </button>
-              </Popconfirm>
-            )}
-        </Space>
+        <ExpandedTableButtons
+          record={record}
+          handleAssignSingleDevice={handleAssignSingleDevice}
+          handleReturnSingleDevice={handleReturnSingleDevice}
+          statusRecordState={statusRecordState}
+          handleRecord={handleRecord}
+          handleLostSingleDevice={handleLostSingleDevice}
+          user={user}
+          event={event}
+          dispatch={dispatch}
+          rowRecord={rowRecord}
+          onTriggerModalToReplaceReceiver={onTriggerModalToReplaceReceiver}
+          onReceiverObjectToReplace={onReceiverObjectToReplace}
+        />
+        // <Space size="middle">
+        //   {record.status === "Lost" || record.status === false ? (
+        //     <Button
+        //       onClick={() => handleAssignSingleDevice(record)}
+        //       disabled={String(record.status).toLowerCase() === "lost"}
+        //       loading={record.key === statusRecordState}
+        //       style={{
+        //         width: "fit-content",
+        //         border: `${
+        //           String(record.status).toLowerCase() === "lost"
+        //             ? "1px solid var(--disabled-blue-button)"
+        //             : "1px solid var(--blue-dark-600, #155EEF)"
+        //         }`,
+        //         backgroundColor: `${
+        //           String(record.status).toLowerCase() === "lost"
+        //             ? "var(--disabled-blue-button)"
+        //             : "var(--blue-dark-600, #155EEF)"
+        //         }`,
+        //         borderRadius: "8px",
+        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+        //         padding: "5px",
+        //       }}
+        //     >
+        //       <p
+        //         style={{
+        //           cursor: "pointer",
+        //           textTransform: "none",
+        //           textAlign: "left",
+        //           fontWeight: 400,
+        //           fontSize: "16px",
+        //           fontFamily: "Inter",
+        //           lineHeight: "24px",
+        //           color: "var(--basewhite)",
+        //         }}
+        //       >
+        //         Assign
+        //       </p>
+        //     </Button>
+        //   ) : (
+        //     <Button
+        //       loading={record.key === statusRecordState}
+        //       onClick={() => handleReturnSingleDevice(record)}
+        //       disabled={!event.active}
+        //       style={{
+        //         width: "fit-content",
+        //         border: "1px solid var(--error-700, #B42318)",
+        //         backgroundColor: "var(--error-700, #B42318)",
+        //         borderRadius: "8px",
+        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+        //         padding: "5px",
+        //         color: "#B42318",
+        //       }}
+        //     >
+        //       <p
+        //         style={{
+        //           cursor: "pointer",
+        //           textTransform: "none",
+        //           textAlign: "left",
+        //           fontWeight: 400,
+        //           fontSize: "16px",
+        //           fontFamily: "Inter",
+        //           lineHeight: "24px",
+        //           color: "var(--basewhite)",
+        //         }}
+        //       >
+        //         Return
+        //       </p>
+        //     </Button>
+        //   )}
+        //   {record.status === true && (
+        //     <button
+        //       onClick={() => {
+        //         dispatch(onTriggerModalToReplaceReceiver(true));
+        //         dispatch(onReceiverObjectToReplace(record));
+        //         handleRecord(rowRecord);
+        //       }}
+        //       disabled={!event.active}
+        //       style={{
+        //         width: "fit-content",
+        //         border: "1px solid var(--blue-dark-600, #155EEF)",
+        //         backgroundColor: "var(--blue-dark-600, #155EEF)",
+        //         borderRadius: "8px",
+        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+        //         padding: "5px",
+        //       }}
+        //     >
+        //       <p
+        //         style={{
+        //           cursor: "pointer",
+        //           textTransform: "none",
+        //           textAlign: "left",
+        //           fontWeight: 400,
+        //           fontSize: "16px",
+        //           fontFamily: "Inter",
+        //           lineHeight: "24px",
+        //           color: "var(--basewhite)",
+        //         }}
+        //       >
+        //         Replace
+        //       </p>
+        //     </button>
+        //   )}
+        //   {record.status === true &&
+        //     event.staff.adminUser.some(
+        //       (element) => element.email === user.email
+        //     ) && (
+        //       <Popconfirm
+        //         title="Are you sure it is lost?"
+        //         onConfirm={() => handleLostSingleDevice(record)}
+        //       >
+        //         <button
+        //           style={{
+        //             width: "fit-content",
+        //             border: "1px solid var(--error-700, #B42318)",
+        //             backgroundColor: "var(--error-700, #B42318)",
+        //             borderRadius: "8px",
+        //             boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+        //             padding: "5px",
+        //             color: "#B42318",
+        //           }}
+        //         >
+        //           <p
+        //             style={{
+        //               cursor: "pointer",
+        //               textTransform: "none",
+        //               textAlign: "left",
+        //               fontWeight: 400,
+        //               fontSize: "16px",
+        //               fontFamily: "Inter",
+        //               lineHeight: "24px",
+        //               color: "var(--basewhite)",
+        //             }}
+        //           >
+        //             Lost
+        //           </p>
+        //         </button>
+        //       </Popconfirm>
+        //     )}
+        // </Space>
       ),
     },
   ];
@@ -616,7 +632,7 @@ const ExpandedRowInTable = ({
       const data = checkingNewStatus?.data?.listOfReceivers;
       const groupingByStatus = groupBy(data, "device.status");
       returnConfirmationEmailNotification([...groupingByStatus[false]]);
-      if(!groupingByStatus[true]){
+      if (!groupingByStatus[true]) {
         handleRecord(rowRecord);
         return setOpenCancelingDepositModal(true);
       }
@@ -729,7 +745,6 @@ const ExpandedRowInTable = ({
     }
   };
 
-
   return (
     <div key={rowRecord.paymentIntent}>
       {contextHolder}
@@ -780,41 +795,24 @@ const ExpandedRowInTable = ({
                 return: {selectedItems.length}
               </p>
             </Button>
-            <Popconfirm
-              title="Are you sure you want to return all items of this transaction?"
-              onConfirm={() => handleAllItemsReturn()}
-            >
-              <Button
-                style={{
-                  ...BlueButton,
-                  display: selectedItems.length === 0 ? "flex" : "none",
-                  gap: "5px",
-                }}
-              >
-                <p style={BlueButtonText}>
-                  Return all items of this transaction
-                </p>
-              </Button>
-            </Popconfirm>
-            <Button
-              style={{
-                ...BlueButton,
-                gap: "5px",
-              }}
-              onClick={() => setOpenReturnExpressCheckInDeviceModal(true)}
-            >
-              <p style={BlueButtonText}>Express check-in devices</p>
-            </Button>
-            <Button
-              loading={isLoadingAction}
-              onClick={() => sendEmailDeviceReport()}
-              style={{
-                ...BlueButton,
-                gap: "5px",
-              }}
-            >
-              <p style={BlueButtonText}>Send device report</p>
-            </Button>
+            <BlueButtonConfirmationComponent
+              title={`Return all items of this transaction`}
+              styles={{ gap: "5px" }}
+              buttonType="button"
+              func={() => handleAllItemsReturn(true)}
+              confirmationTitle="Are you sure you want to return all items of this transaction?"
+            />
+            <BlueButtonComponent
+              title={"Express check-in devices"}
+              func={() => setOpenReturnExpressCheckInDeviceModal(true)}
+              styles={{ gap: "5px" }}
+            />
+            <BlueButtonComponent
+              loadingState={isLoadingAction}
+              buttonType="button"
+              title={"Send device report"}
+              func={() => sendEmailDeviceReport()}
+            />
           </div>
 
           <Table
