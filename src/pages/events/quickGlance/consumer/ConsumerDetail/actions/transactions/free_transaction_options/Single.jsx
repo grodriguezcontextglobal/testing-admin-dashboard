@@ -1,19 +1,18 @@
 import { OutlinedInput, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Select, Button } from "antd";
+import { Select } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import DeviceAssigned from "../../../../../../../../classes/deviceAssigned";
 import clearCacheMemory from "../../../../../../../../utils/actions/clearCacheMemory";
+import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
 const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
   const { register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
@@ -313,15 +312,13 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
           />
         </div>
 
-        <Button
-          loading={isLoading}
-          style={{ ...BlueButton, width: "100%" }}
-          htmlType="submit"
-        >
-          <Typography textTransform={"none"} style={BlueButtonText}>
-            Create transaction
-          </Typography>
-        </Button>
+        <BlueButtonComponent
+          disabled={deviceSelection === null}
+          loadingState={isLoading}
+          buttonType="submit"
+          title="Create transaction"
+          styles={{ width: "100%" }}
+        />
       </form>
     </div>
   );

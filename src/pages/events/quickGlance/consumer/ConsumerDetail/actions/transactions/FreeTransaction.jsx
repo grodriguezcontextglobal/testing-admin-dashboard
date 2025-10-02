@@ -1,10 +1,10 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { Divider, Modal } from "antd";
 import { useState } from "react";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import TextFontsize18LineHeight28 from "../../../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
+import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../../../../../../components/UX/buttons/LigthBlueButton";
 import Multiple from "./free_transaction_options/Multiple";
 import SingleFreeTransaction from "./free_transaction_options/Single";
 
@@ -15,6 +15,10 @@ const FreeTransaction = ({
   const [optionToRender, setOptionToRender] = useState(0);
   const closeModal = () => {
     setCreateTransactionForNoRegularUser(false);
+  };
+
+  const handleOptionChange = (option) => {
+    setOptionToRender(option);
   };
 
   const renderTitle = () => {
@@ -68,38 +72,41 @@ const FreeTransaction = ({
             gap: "5px",
           }}
         >
-          <Button
-            style={{ ...BlueButton, width: "100%" }}
-            onClick={() => setOptionToRender(0)}
-          >
-            <Typography
-              style={{
-                ...BlueButtonText,
-                textDecoration: `${
-                  optionToRender === 0 ? "underline" : "none"
-                }`,
-                textTransform: `${optionToRender === 0 ? "uppercase" : "none"}`,
+          {optionToRender === 0 ? (
+            <BlueButtonComponent
+              title="Single Device"
+              func={() => handleOptionChange(0)}
+              styles={{ 
+                width: "100%",
+                textTransform: "uppercase",
+                textDecoration: "underline"
               }}
-            >
-              single device
-            </Typography>
-          </Button>
-          <Button
-            style={{ ...BlueButton, width: "100%" }}
-            onClick={() => setOptionToRender(1)}
-          >
-            <Typography
-              style={{
-                ...BlueButtonText,
-                textDecoration: `${
-                  optionToRender === 1 ? "underline" : "none"
-                }`,
-                textTransform: `${optionToRender === 1 ? "uppercase" : "none"}`,
+            />
+          ) : (
+            <LightBlueButtonComponent
+              title="Single Device"
+              func={() => handleOptionChange(0)}
+              styles={{ width: "100%" }}
+            />
+          )}
+          
+          {optionToRender === 1 ? (
+            <BlueButtonComponent
+              title="Multiple Devices"
+              func={() => handleOptionChange(1)}
+              styles={{ 
+                width: "100%",
+                textTransform: "uppercase",
+                textDecoration: "underline"
               }}
-            >
-              multiple devices
-            </Typography>
-          </Button>
+            />
+          ) : (
+            <LightBlueButtonComponent
+              title="Multiple Devices"
+              func={() => handleOptionChange(1)}
+              styles={{ width: "100%" }}
+            />
+          )}
         </Box>
         <Divider />
         <Typography>

@@ -6,21 +6,19 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Button, Divider, Modal, Select } from "antd";
+import { Divider, Modal, Select } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import StripeElementServicesTransaction from "../../../../../../../components/stripe/elements/StripeElementServicesTransaction";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../../styles/global/CenteringGrid";
-import { LightBlueButton } from "../../../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
+import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../../../../../../components/UX/buttons/LigthBlueButton";
 import { onAddDevicesSelectionPaidTransactions } from "../../../../../../../store/slices/devicesHandleSlice";
 
 const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
@@ -50,6 +48,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
   useEffect(() => {
     setValue("price", serviceSelected.deposit);
   }, [serviceSelected]);
+  
   const renderServiceList = () => {
     const result = new Set();
     for (let data of serviceList) {
@@ -104,6 +103,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
     );
     return setServicesAddedForCustomer(filter);
   };
+  
   const refData = useRef(null);
   const submitServicesAddedForCustomerPaymentIntent = async () => {
     refData.current = { amount: Number(totalToBeCharged() * 100) };
@@ -142,6 +142,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       user.companyData.employees.some((ele) => ele.email === user.email)
     );
   };
+  
   return (
     <Modal
       title={renderTitle()}
@@ -260,9 +261,11 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
               />
             </Grid>
           </Grid>
-          <Button htmlType="submit" style={LightBlueButton}>
-            <p style={LightBlueButtonText}>Adding service</p>
-          </Button>
+          <LightBlueButtonComponent
+            buttonType="submit"
+            title="Adding service"
+            styles={{ marginTop: "1rem" }}
+          />
         </form>
         <Divider />
         {servicesAddedForCustomer?.length > 0 &&
@@ -282,20 +285,15 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
           }}
         />
         {totalToBeCharged() > 0 && clientSecret == null && (
-          <Button
-            onClick={() => submitServicesAddedForCustomerPaymentIntent()}
-            style={{
-              ...BlueButton,
+          <BlueButtonComponent
+            func={() => submitServicesAddedForCustomerPaymentIntent()}
+            title={`Total to be charged: $${totalToBeCharged()} | Click to submit CC information`}
+            styles={{
               ...CenteringGrid,
               display: clientSecret !== null ? "none" : "flex",
               width: "100%",
             }}
-          >
-            <p style={{ ...BlueButtonText, textAlign: "left" }}>
-              Total to be charged: ${totalToBeCharged()} | Click to submit CC
-              information
-            </p>
-          </Button>
+          />
         )}
         {clientSecret !== "" && (
           <StripeElementServicesTransaction
