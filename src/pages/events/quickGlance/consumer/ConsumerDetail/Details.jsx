@@ -1,21 +1,20 @@
-import { Icon } from "@iconify/react";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Card, Dropdown } from "antd";
+import { Card, Dropdown } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
 import CashTransaction from "./actions/transactions/CashTransaction";
 import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import FreeTransaction from "./actions/transactions/FreeTransaction";
-import ConsumerDetails from "./details/ConsumerDetails";
-import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 import ServicesTransaction from "./actions/transactions/ServicesTransaction";
+import ConsumerDetails from "./details/ConsumerDetails";
+import Vertical3Dots from "../../../../../components/icons/Vertical3Dots";
 
 const items = [
   {
@@ -53,7 +52,7 @@ const FormatAttendeeDetailInfo = () => {
     } else if (key === "2") {
       return setCreateTransactionInCash(true);
     } else {
-        return setExtraServiceNeeded(true);
+      return setExtraServiceNeeded(true);
     }
   };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -124,27 +123,15 @@ const FormatAttendeeDetailInfo = () => {
             sm={12}
             md={12}
           >
-            <Button
+            <BlueButtonComponent
               disabled={!event.active}
-              style={{
-                ...BlueButton,
-                width: "100%",
-              }}
-              onClick={() => handleDeviceForFree()}
-            >
-              <Typography
-                textTransform={"none"}
-                style={{
-                  ...BlueButtonText,
-                  textAlign: "left",
-                  padding: "0px 10px 0px 15px",
-                  ...CenteringGrid,
-                }}
-              >
-                <Icon icon="simple-line-icons:plus" width={22} height={22} />
-                &nbsp; Create a new free transaction
-              </Typography>
-            </Button>
+              func={() => handleDeviceForFree()}
+              styles={{ width: "100%" }}
+              buttonType="button"
+              title={"Create a new free transaction"}
+              icon={<WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />
+              }
+            />
             {event?.eventInfoDetail?.merchant && (
               <Dropdown
                 disabled={!event.active}
@@ -156,71 +143,45 @@ const FormatAttendeeDetailInfo = () => {
                 arrow
                 trigger={["click"]}
               >
-                <Button
-                  disabled={!event.active}
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      ...BlueButtonText,
-                      textAlign: "left",
-                      padding: "0px 10px 0px 15px",
-                      ...CenteringGrid,
-                    }}
-                  >
-                    <Icon icon="guidance:bank" width={22} height={22} />
-                    &nbsp;Create a new paid transaction
-                  </Typography>
-                </Button>
+                <BlueButtonComponent disabled={!event.active} title="Create a new paid transaction" buttonType="button" styles={{ width: "100%" }} icon={<WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />} />
               </Dropdown>
-              // </Tooltip>
             )}
             {event?.extraServicesNeeded && (
-              <Button
+              <BlueButtonComponent
                 disabled={!event.active}
-                style={{
-                  ...BlueButton,
-                  width: "100%",
-                }}
-                onClick={() => setExtraServiceNeeded(true)}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={{
-                    ...BlueButtonText,
-                    textAlign: "left",
-                    padding: "0px 10px 0px 15px",
-                    ...CenteringGrid,
-                  }}
-                >
-                  Services
-                </Typography>
-              </Button>
+                func={() => setExtraServiceNeeded(true)}
+                title="Services"
+                icon={<Vertical3Dots stroke="#fff" hoverStroke="#155EEF" width="20" height="18" />}
+              />
+              // <Button
+              //   disabled={!event.active}
+              //   style={{
+              //     ...BlueButton,
+              //     width: "100%",
+              //   }}
+              //   onClick={() => setExtraServiceNeeded(true)}
+              // >
+              //   <Typography
+              //     textTransform={"none"}
+              //     style={{
+              //       ...BlueButtonText,
+              //       textAlign: "left",
+              //       padding: "0px 10px 0px 15px",
+              //       ...CenteringGrid,
+              //     }}
+              //   >
+              //     Services
+              //   </Typography>
+              // </Button>
             )}
-            <Button
+            <BlueButtonComponent
               disabled={!event.active}
-              style={{
-                ...BlueButton,
-                width: "100%",
-              }}
-              onClick={() => setNotificationActivation(true)}
-            >
-              <Typography
-                textTransform={"none"}
-                style={{
-                  ...BlueButtonText,
-                  textAlign: "left",
-                  padding: "0px 10px 0px 15px",
-                  ...CenteringGrid,
-                }}
-              >
-                <EmailIcon /> Email notification
-              </Typography>
-            </Button>
+              func={() => setNotificationActivation(true)}
+              title="Email notification"
+              buttonType="button"
+              styles={{ width: "100%" }}
+              icon={<EmailIcon style={{ marginRight: "0.25rem", alignSelf: "baseline" }} width="20" height="18" />}
+            />
           </Grid>
         </Card>
       </Grid>
@@ -258,14 +219,12 @@ const FormatAttendeeDetailInfo = () => {
           setOpenCashTransaction={setCreateTransactionInCash}
         />
       )}
-      {
-        extraServiceNeeded && (
-          <ServicesTransaction
-            setExtraServiceNeeded={setExtraServiceNeeded}
-            extraServiceNeeded={extraServiceNeeded}
-          />
-        )
-      }
+      {extraServiceNeeded && (
+        <ServicesTransaction
+          setExtraServiceNeeded={setExtraServiceNeeded}
+          extraServiceNeeded={extraServiceNeeded}
+        />
+      )}
     </Grid>
   );
 };
