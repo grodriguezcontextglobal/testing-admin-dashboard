@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Divider,
-  Modal,
   Popconfirm,
   Select,
   Space,
@@ -17,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
@@ -493,7 +493,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         event_id: event_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,
-        quantity: assignAllDevices ? String(valueItemSelected.qty) : props.quantity,
+        quantity: assignAllDevices
+          ? String(valueItemSelected.qty)
+          : props.quantity,
         company_id: user.sqlInfo.company_id,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
@@ -503,7 +505,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,
-        quantity: assignAllDevices ? String(valueItemSelected.qty) : props.quantity,
+        quantity: assignAllDevices
+          ? String(valueItemSelected.qty)
+          : props.quantity,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
       });
@@ -566,22 +570,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     }
   };
 
-  return (
-    <Modal
-      open={editingInventory}
-      onCancel={() => closeModal()}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 30,
-        marginTop: "100px",
-      }}
-      footer={[]}
-      width={1000}
-    >
-      {contextHolder}
-      <Grid width={"80vw"} container>
+  const bodyModal = () => {
+    return (
+      <Grid container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <Grid
             style={{
@@ -796,7 +787,32 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           </Grid>
         </Grid>
       </Grid>
-    </Modal>
+    );
+  };
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        body={bodyModal()}
+        openDialog={editingInventory}
+        closeModal={closeModal}
+        width={1000}
+      />
+      {/* <Modal
+    open={editingInventory}
+    onCancel={() => closeModal()}
+    style={{
+      display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 30,
+        marginTop: "100px",
+      }}
+      footer={[]}
+      width={1000}
+      >
+    </Modal> */}
+    </>
   );
 };
 

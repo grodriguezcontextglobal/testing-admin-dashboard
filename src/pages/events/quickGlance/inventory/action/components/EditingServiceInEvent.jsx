@@ -5,12 +5,13 @@ import {
   InputLabel,
   OutlinedInput,
 } from "@mui/material";
-import { Divider, Modal, Space, Switch, notification } from "antd";
+import { Divider, Space, Switch, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
@@ -59,7 +60,7 @@ const EditingServiceInEvent = ({
     setLoadingStatus(true);
     let newServices = [...eventServiceCopy, data];
     let updatingEvent = {
-      ...event
+      ...event,
     };
     updatingEvent.extraServices = newServices;
     const response = await devitrakApi.patch(`/event/edit-event/${event.id}`, {
@@ -94,24 +95,17 @@ const EditingServiceInEvent = ({
       );
       setNeedService(e);
       setLoadingStatus(false);
-      return openNotification(e ? "Enabling service in this event." : "Disabling service in this event.");
+      return openNotification(
+        e
+          ? "Enabling service in this event."
+          : "Disabling service in this event."
+      );
     }
   };
-  return (
-    <Modal
-      open={editingServicesInEvent}
-      onCancel={() => closeModal()}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 30,
-        margin: "15rem auto 0px",
-      }}
-      footer={[]}
-    >
-      {contextHolder}
-      <Grid width={"70vw"} container>
+
+  const bodyModal = () => {
+    return (
+      <Grid container>
         <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
           <FormLabel
             style={{
@@ -266,7 +260,18 @@ const EditingServiceInEvent = ({
           </Grid>
         </Grid>
       </Grid>
-    </Modal>
+    );
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        body={bodyModal()}
+        openDialog={editingServicesInEvent}
+        closeModal={closeModal}
+      />
+    </>
   );
 };
 
