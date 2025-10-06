@@ -1,11 +1,12 @@
 import { Grid } from "@mui/material";
-import { Divider, Modal } from "antd";
+import { Divider } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "../../../../../styles/global/ant-select.css";
 // import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
 import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
 import CustomizedSwitch from "./assingmentComponents/components/CustomizedSwitch";
@@ -17,14 +18,8 @@ const Assignment = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
 
-  return (
-    <Modal
-      open={true}
-      onCancel={() => closeModal()}
-      width={1000}
-      footer={[]}
-      style={{ zIndex: 30 }}
-    >
+  const modalBody = () => {
+    return (
       <Grid
         container
         display={"flex"}
@@ -46,7 +41,15 @@ const Assignment = () => {
           <AssignmentNewDeviceToStaffInInventory />
         )}
       </Grid>
-    </Modal>
+    );
+  };
+  return (
+    <ModalUX
+      body={modalBody()}
+      openDialog={true}
+      closeModal={closeModal}
+      width={1000}
+    />
   );
 };
 
