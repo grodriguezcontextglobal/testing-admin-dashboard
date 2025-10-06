@@ -1,17 +1,17 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Breadcrumb, Button, Divider } from "antd";
+import { Avatar, Breadcrumb, Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Loading from "../../../../components/animation/Loading";
 import dicRole from "../../../../components/general/dicRole";
 import { PointFilled } from "../../../../components/icons/PointFilled";
-import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
-import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
@@ -189,11 +189,7 @@ const HeaderStaffDetail = () => {
             lg={6}
           >
             {" "}
-            <Button style={BlueButton} onClick={() => setModalState(true)}>
-              <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                <WhitePlusIcon /> Add new staff
-              </p>
-            </Button>
+            <BlueButtonComponent title={"Add new staff"} func={() => setModalState(true)} icon={<WhiteCirclePlusIcon />} />
           </Grid>
           <Breadcrumb style={{margin:"15px 0px 7.5px"}} separator=">" items={breadcrumbItems} />
           <Divider style={{margin:"0 0 15px"}} />
