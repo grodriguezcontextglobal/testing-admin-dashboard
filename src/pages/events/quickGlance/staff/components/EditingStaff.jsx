@@ -4,11 +4,10 @@ import {
   Button,
   Card,
   Divider,
-  Modal,
   Popconfirm,
   Select,
   Space,
-  notification,
+  notification
 } from "antd";
 import { groupBy } from "lodash";
 import PropTypes from "prop-types";
@@ -16,20 +15,19 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import {
   onAddEventData,
   onAddEventStaff,
 } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
@@ -359,21 +357,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       return "none";
     };
 
-    // const checkAdminSpots = () => {
-    //   const data = event.staff.adminUser;
-    //   let index = data.length;
-    //   return index;
-    // };
-    return (
-      <Modal
-        open={editingStaff}
-        onCancel={() => closeModal()}
-        centered
-        width={1000}
-        footer={[]}
-        style={{ zIndex: 30 }}
-      >
-        {contextHolder}
+    const bodyModal = () => {
+      return (
         <Grid container>
           <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
             <form
@@ -477,20 +462,8 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                   gap: "10px",
                 }}
               >
-                <Button
-                  style={{ ...BlueButton, width: "fit-content" }}
-                  loading={loadingStatus}
-                  htmlType="submit"
-                >
-                  <Typography style={BlueButtonText}>Add staff</Typography>
-                </Button>
-                <Button
-                  style={{ ...DangerButton, width: "fit-content" }}
-                  htmlType="reset"
-                  onClick={() => setEditingStaff(false)}
-                >
-                  <Typography style={DangerButtonText}>Cancel</Typography>
-                </Button>
+                <DangerButtonComponent title={"Cancel"} func={() => setEditingStaff(false)} buttonType="reset" />
+                <BlueButtonComponent title={"Add staff"} buttonType="submit" loadingState={loadingStatus} />
               </div>
             </form>
             <Divider />
@@ -534,7 +507,19 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
             </Grid>
           </Grid>
         </Grid>
-      </Modal>
+      );
+    };
+
+    return (
+      <>
+        {contextHolder}
+        <ModalUX
+          body={bodyModal()}
+          openDialog={editingStaff}
+          closeModal={closeModal}
+          width={1000}
+        />
+      </>
     );
   }
 };
