@@ -5,24 +5,24 @@ import {
   InputLabel,
   MenuItem,
   OutlinedInput,
-  Select,
-  Typography,
+  Select
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, message } from "antd";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
 import dicRole from "../../../components/general/dicRole";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import "../detail/components/equipment_components/assingmentComponents/style.css"
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -150,189 +150,161 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     const renderTitle = () => {
       return <p style={TextFontSize30LineHeight38}>New staff</p>;
     };
+
+    const bodyModal = () => {
+      return (
+        <form onSubmit={handleSubmit(onSubmitRegister)} style={{ width: "100%" }}>
+          <Grid marginY={"20px"} marginX={0} textAlign={"center"} item xs={12}>
+            <InputLabel
+              style={{
+                marginTop: "0.5rem",
+                marginBottom: "0px",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                textAlign: "left",
+              }}
+            >
+              Name
+            </InputLabel>
+            <OutlinedInput
+              type="text"
+              {...register("name", { required: true })}
+              aria-invalid={errors.name ? true : false}
+              style={OutlinedInputStyle}
+              placeholder="Enter your name"
+              fullWidth
+            />
+            {errors?.name?.message}
+          </Grid>
+          <Grid marginY={"20px"} marginX={0} textAlign={"center"} item xs={12}>
+            <InputLabel
+              style={{
+                marginTop: "0.5rem",
+                marginBottom: "0px",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                textAlign: "left",
+              }}
+            >
+              Last name
+            </InputLabel>
+            <OutlinedInput
+              type="text"
+              {...register("lastName", { required: true })}
+              aria-invalid={errors.lastName ? true : false}
+              style={OutlinedInputStyle}
+              placeholder="Enter your last name"
+              fullWidth
+            />
+            {errors?.lastName?.message}
+          </Grid>
+          <Grid marginY={"20px"} marginX={0} textAlign={"center"} item xs={12}>
+            <InputLabel
+              style={{
+                marginTop: "0.5rem",
+                marginBottom: "0px",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                textAlign: "left",
+              }}
+            >
+              Email
+            </InputLabel>
+            <OutlinedInput
+              {...register("email", { required: true, minLength: 6 })}
+              style={OutlinedInputStyle}
+              placeholder="Enter your email"
+              type="text"
+              fullWidth
+            />
+            {errors?.email?.message}
+          </Grid>
+          <Grid marginY={"20px"} marginX={0} textAlign={"center"} item xs={12}>
+            <InputLabel
+              style={{
+                marginTop: "0.5rem",
+                marginBottom: "0px",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                textAlign: "left",
+              }}
+            >
+              Role
+            </InputLabel>
+            <Grid
+              item
+              xs={12}
+              display={"flex"}
+              alignItems={"center"}
+              justifyContent={"space-between"}
+            >
+              <Select
+                {...register("role")}
+                displayEmpty
+                fullWidth
+                style={AntSelectorStyle}
+              >
+                {roles.map((company) => {
+                  return (
+                    <MenuItem key={company} value={company}>
+                      {dicRole[company]}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </Grid>
+            {errors?.role?.message}
+          </Grid>
+
+          <Grid
+            marginY={"20px"}
+            marginX={0}
+            textAlign={"center"}
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            gap={1}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <GrayButtonComponent
+              title={"Cancel"}
+              func={closeModal}
+              buttonType="reset"
+              styles={{ width: "100%" }}
+              disabled={loadingStatus}
+            />
+            <BlueButtonComponent
+              title={"Save"}
+              func={() => handleSubmit()}
+              buttonType="submit"
+              styles={{ width: "100%" }}
+              disabled={loadingStatus}
+            />
+          </Grid>
+        </form>
+      );
+    };
     return (
       <>
         {contextHolder}
-        <Modal
+        <ModalUX
           title={renderTitle()}
-          centered
-          open={modalState}
-          onOk={() => closeModal()}
-          onCancel={() => closeModal()}
-          footer={[]}
-          width={1000}
-          maskClosable={false}
-          style={{ zIndex: 30 }}
-        >
-          <form onSubmit={handleSubmit(onSubmitRegister)}>
-            <Grid
-              marginY={"20px"}
-              marginX={0}
-              textAlign={"center"}
-              item
-              xs={12}
-            >
-              <InputLabel
-                style={{
-                  marginTop: "0.5rem",
-                  marginBottom: "0px",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  textAlign: "left",
-                }}
-              >
-                Name
-              </InputLabel>
-              <OutlinedInput
-                type="text"
-                {...register("name", { required: true })}
-                aria-invalid={errors.name ? true : false}
-                style={OutlinedInputStyle}
-                placeholder="Enter your name"
-                fullWidth
-              />
-              {errors?.name?.message}
-            </Grid>
-            <Grid
-              marginY={"20px"}
-              marginX={0}
-              textAlign={"center"}
-              item
-              xs={12}
-            >
-              <InputLabel
-                style={{
-                  marginTop: "0.5rem",
-                  marginBottom: "0px",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  textAlign: "left",
-                }}
-              >
-                Last name
-              </InputLabel>
-              <OutlinedInput
-                type="text"
-                {...register("lastName", { required: true })}
-                aria-invalid={errors.lastName ? true : false}
-                style={OutlinedInputStyle}
-                placeholder="Enter your last name"
-                fullWidth
-              />
-              {errors?.lastName?.message}
-            </Grid>
-            <Grid
-              marginY={"20px"}
-              marginX={0}
-              textAlign={"center"}
-              item
-              xs={12}
-            >
-              <InputLabel
-                style={{
-                  marginTop: "0.5rem",
-                  marginBottom: "0px",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  textAlign: "left",
-                }}
-              >
-                Email
-              </InputLabel>
-              <OutlinedInput
-                {...register("email", { required: true, minLength: 6 })}
-                style={OutlinedInputStyle}
-                placeholder="Enter your email"
-                type="text"
-                fullWidth
-              />
-              {errors?.email?.message}
-            </Grid>
-            <Grid
-              marginY={"20px"}
-              marginX={0}
-              textAlign={"center"}
-              item
-              xs={12}
-            >
-              <InputLabel
-                style={{
-                  marginTop: "0.5rem",
-                  marginBottom: "0px",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  textAlign: "left",
-                }}
-              >
-                Role
-              </InputLabel>
-              <Grid
-                item
-                xs={12}
-                display={"flex"}
-                alignItems={"center"}
-                justifyContent={"space-between"}
-              >
-                <Select
-                  {...register("role")}
-                  displayEmpty
-                  fullWidth
-                  style={AntSelectorStyle}
-                >
-                  {roles.map((company) => {
-                    return (
-                      <MenuItem key={company} value={company}>
-                        {dicRole[company]}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </Grid>
-              {errors?.role?.message}
-            </Grid>
-
-            <Grid
-              marginY={"20px"}
-              marginX={0}
-              textAlign={"center"}
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignItems={"center"}
-              gap={1}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <GrayButtonComponent
-                title={"Cancel"}
-                func={closeModal}
-                buttonType="reset"
-                styles={{ width: "100%" }}
-                disabled={loadingStatus}
-              />
-
-              <Button
-                disabled={loadingStatus}
-                style={{ ...BlueButton, width: "100%" }}
-                htmlType="submit"
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Save
-                </Typography>
-              </Button>
-            </Grid>
-          </form>
-        </Modal>
+          openDialog={modalState}
+          closeModal={closeModal}
+          body={bodyModal()}
+        />
       </>
     );
   }
