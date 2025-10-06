@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Checkbox, message, notification, Typography } from "antd";
+import { Checkbox, notification, Typography } from "antd";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -33,8 +33,6 @@ import {
   onSelectEvent,
 } from "../../store/slices/eventSlice";
 import { onAddSubscription } from "../../store/slices/subscriptionSlice";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -42,6 +40,8 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import "./style/authStyle.css";
 import VisibleIcon from "../../components/icons/VisibleIcon";
 import HidenIcon from "../../components/icons/HidenIcon";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../components/UX/buttons/LigthBlueButton";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -53,22 +53,30 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [currentStep, setCurrentStep] = useState("email"); // "email" or "password"
+  const [userEmail, setUserEmail] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
+  
   const openNotificationWithIcon = useCallback(
     (type, msg) => {
       api.open({
         message: (
           <div style={{ display: "flex", alignItems: "center" }}>{msg}</div>
         ),
-        duration: 3000, // Add duration to auto-close notifications
+        duration: 3000,
       });
     },
     [api]
   );
+  
   const dataPassed = useRef(null);
+
+  // ... existing code ...
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const addingEventState = async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
       "/db_event/events_information",
@@ -205,7 +213,6 @@ const Login = () => {
       role: props.role,
       email: props.email,
     });
-    // }
   };
 
   const handleMulitpleCompanyLogin = async (props) => {
@@ -213,20 +220,57 @@ const Login = () => {
     return (dataPassed.current = props);
   };
 
+  // New function to verify email exists
+  const onSubmitEmail = async (data) => {
+    try {
+      setIsLoading(true);
+      dispatch(onChecking());
+
+      // Check if email exists in company employees
+      const companyResponse = await devitrakApi.post("/company/search-company", {
+        "employees.user": data.email,
+      });
+
+      if (!companyResponse.data || companyResponse.data.company.length === 0) {
+        openNotificationWithIcon("error", "Email not found. Please check your email address.");
+        return;
+      }
+
+      // Email exists, proceed to password step
+      setUserEmail(data.email);
+      setEmailVerified(true);
+      setCurrentStep("password");
+      openNotificationWithIcon("success", "Email verified. Please enter your password.");
+      
+    } catch (error) {
+      openNotificationWithIcon("error", "Failed to verify email. Please try again.");
+      dispatch(onAddErrorMessage(error?.response?.data?.msg));
+    } finally {
+      setIsLoading(false);
+      dispatch(clearErrorMessage());
+    }
+  };
+
   const onSubmitLogin = async (data) => {
     try {
       setIsLoading(true);
       dispatch(onChecking());
 
+      // Use the verified email from the first step
+      const loginData = {
+        email: userEmail,
+        password: data.password,
+      };
+
       // Parallel API calls for better performance
       const [loginResponse, companyResponse] = await Promise.all([
         devitrakApiAdmin.post("/login", {
-          email: data.email,
-          password: data.password,
+          email: loginData.email,
+          password: loginData.password,
           rememberMe,
         }),
         devitrakApi.post("/company/search-company", {
-          "employees.user": data.email,
+          "employees.user": loginData.email,
         }),
       ]);
 
@@ -235,13 +279,13 @@ const Login = () => {
       }
 
       const activeCompanies = await processCompanyData(
-        data.email,
+        loginData.email,
         companyResponse.data.company
       );
 
       if (activeCompanies.length > 1) {
         await handleMulitpleCompanyLogin({
-          ...data,
+          ...loginData,
           companyInfo: activeCompanies,
           company_data: companyResponse.data.company,
           respo: loginResponse.data,
@@ -249,8 +293,8 @@ const Login = () => {
       } else if (activeCompanies.length === 1) {
         await loginIntoOneCompanyAccount({
           props: {
-            email: data.email,
-            password: data.password,
+            email: loginData.email,
+            password: loginData.password,
             company_name: activeCompanies[0].company,
             role: activeCompanies[0].role,
             company_data: companyResponse.data.company,
@@ -272,7 +316,6 @@ const Login = () => {
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
     } finally {
       setIsLoading(false);
-      setValue("email", "");
       setValue("password", "");
       dispatch(clearErrorMessage());
     }
@@ -295,6 +338,15 @@ const Login = () => {
     return activeCompanies;
   }, []);
 
+  // Function to go back to email step
+  const handleBackToEmail = () => {
+    setCurrentStep("email");
+    setEmailVerified(false);
+    setUserEmail("");
+    setValue("email", "");
+    setValue("password", "");
+  };
+
   const isSmallDevice = useMediaQuery("only screen and (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)"
@@ -315,19 +367,6 @@ const Login = () => {
     }
   };
 
-  // const [token, setToken] = useState(null);
-  // const handleVerify = (responseToken) => {
-  //   if (responseToken) {
-  //     return setToken(responseToken);
-  //   } else {
-  //     message.error({
-  //       message: "Verification Failed",
-  //       description: "Please complete the verification process.",
-  //     });
-  //     return setToken(null);
-  //   }
-  // };
-
   return (
     <Suspense
       fallback={
@@ -343,7 +382,6 @@ const Login = () => {
           backgroundColor: "var(--basewhite)",
           height: "100dvh",
           margin: "auto",
-          // width: "100vw",
         }}
       >
         <Grid
@@ -399,187 +437,191 @@ const Login = () => {
                 lineHeight: "24px",
               }}
             >
-              Please enter your email
+              {currentStep === "email" 
+                ? "Please enter your email" 
+                : `Welcome back, ${userEmail}`}
             </p>
-            <form
-              onSubmit={handleSubmit(onSubmitLogin)}
-              style={{ width: formFittingTrigger() }} //formFittingTrigger(),padding: "0 20px 0 0"
-            >
-              <Grid
-                marginY={"20px"}
-                marginX={0}
-                textAlign={"left"}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-              >
-                <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
-                <OutlinedInput
-                  required
-                  {...register("email", { required: true, minLength: 10 })}
-                  type="email"
-                  style={{
-                    ...OutlinedInputStyle,
-                    marginTop: "6px",
-                  }}
-                  placeholder="Enter your email"
-                  fullWidth
-                />
-              </Grid>
-              <Grid
-                marginY={"20px"}
-                marginX={0}
-                textAlign={"left"}
-                item
-                xs={12}
-              >
-                <FormLabel style={{ marginBottom: "0.9rem" }}>
-                  Password
-                </FormLabel>
-                <OutlinedInput
-                  required
-                  {...register("password", { required: true, minLength: 6 })}
-                  style={{
-                    ...OutlinedInputStyle,
-                    marginTop: "6px",
-                  }}
-                  placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <button
-                        type="button"
-                        style={{
-                          padding: 0,
-                          backgroundColor: "transparent",
-                          outline: "none",
-                          margin: 0,
-                          width: "fit-content",
-                          aspectRatio: "1",
-                          borderRadius: "50%",
-                        }}
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <VisibleIcon fill={"var(--blue-dark-600)"} /> : <HidenIcon stroke={"var(--blue-dark-600)"}/>}
-                      </button>
-                    </InputAdornment>
-                  }
-                />
-              </Grid>
-              <Grid
-                marginY={"20px"}
-                marginX={0}
-                textAlign={"left"}
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                item
-                xs={12}
+
+            {/* Email Step */}
+            {currentStep === "email" && (
+              <form
+                onSubmit={handleSubmit(onSubmitEmail)}
+                style={{ width: formFittingTrigger() }}
               >
                 <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
                   item
-                  xs={6}
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                  alignItems={"center"}
-                  style={{ padding: "0rem 0rem 0rem 0.6rem" }}
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
                 >
-                  {" "}
-                  <FormControlLabel
+                  <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
+                  <OutlinedInput
+                    required
+                    {...register("email", { required: true, minLength: 10 })}
+                    type="email"
                     style={{
-                      color: "#var(--gray-700, #344054)",
-                      fontSize: "14px",
-                      fontFamily: "Inter",
-                      fontWeight: "500",
-                      lineHeight: "20px",
+                      ...OutlinedInputStyle,
+                      marginTop: "6px",
                     }}
-                    labelPlacement="end"
-                    control={
-                      <Checkbox
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        style={{ paddingRight: "0.5rem" }}
-                      />
-                    }
-                    label={`${" "}Remember for 30 days`}
+                    placeholder="Enter your email"
+                    fullWidth
                   />
                 </Grid>
+                <BlueButtonComponent
+                  disabled={false}
+                  loadingState={isLoading}
+                  buttonType="submit"
+                  title="Continue"
+                  styles={{ width: "100%" }}
+                />
+              </form>
+            )}
 
+            {/* Password Step */}
+            {currentStep === "password" && (
+              <form
+                onSubmit={handleSubmit(onSubmitLogin)}
+                style={{ width: formFittingTrigger() }}
+              >
                 <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
                   item
-                  xs={6}
-                  display={"flex"}
-                  justifyContent={"flex-end"}
-                  alignItems={"center"}
+                  xs={12}
                 >
-                  <button
-                    type="button"
+                  <FormLabel style={{ marginBottom: "0.9rem" }}>
+                    Password
+                  </FormLabel>
+                  <OutlinedInput
+                    required
+                    {...register("password", { required: true, minLength: 6 })}
                     style={{
-                      backgroundColor: "transparent",
-                      outline: "none",
-                      margin: 0,
-                      padding: 0,
+                      ...OutlinedInputStyle,
+                      marginTop: "6px",
                     }}
-                    onClick={() => setUpdatePasswordModalState(true)}
+                    placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <button
+                          type="button"
+                          style={{
+                            padding: 0,
+                            backgroundColor: "transparent",
+                            outline: "none",
+                            margin: 0,
+                            width: "fit-content",
+                            aspectRatio: "1",
+                            borderRadius: "50%",
+                          }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <VisibleIcon fill={"var(--blue-dark-600)"} />
+                          ) : (
+                            <HidenIcon stroke={"var(--blue-dark-600)"} />
+                          )}
+                        </button>
+                      </InputAdornment>
+                    }
+                  />
+                </Grid>
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  display={"flex"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  item
+                  xs={12}
+                >
+                  <Grid
+                    item
+                    xs={6}
+                    display={"flex"}
+                    justifyContent={"flex-start"}
+                    alignItems={"center"}
+                    style={{ padding: "0rem 0rem 0rem 0.6rem" }}
                   >
-                    {" "}
-                    <p
+                    <FormControlLabel
                       style={{
-                        color: "#004EEB",
+                        color: "#var(--gray-700, #344054)",
                         fontSize: "14px",
                         fontFamily: "Inter",
-                        fontWeight: "600",
+                        fontWeight: "500",
                         lineHeight: "20px",
-                        cursor: "pointer",
                       }}
+                      labelPlacement="end"
+                      control={
+                        <Checkbox
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          style={{ paddingRight: "0.5rem" }}
+                        />
+                      }
+                      label={`${" "}Remember for 30 days`}
+                    />
+                  </Grid>
+
+                  <Grid
+                    item
+                    xs={6}
+                    display={"flex"}
+                    justifyContent={"flex-end"}
+                    alignItems={"center"}
+                  >
+                    <button
+                      type="button"
+                      style={{
+                        backgroundColor: "transparent",
+                        outline: "none",
+                        margin: 0,
+                        padding: 0,
+                      }}
+                      onClick={() => setUpdatePasswordModalState(true)}
                     >
-                      Forgot password?
-                    </p>
-                  </button>
+                      <p
+                        style={{
+                          color: "#004EEB",
+                          fontSize: "14px",
+                          fontFamily: "Inter",
+                          fontWeight: "600",
+                          lineHeight: "20px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Forgot password?
+                      </p>
+                    </button>
+                  </Grid>
                 </Grid>
-              </Grid>
-              {/* <div
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                }}
-              >
-                <Turnstile
-                  sitekey={"0x4AAAAAAA8O1W9R4nOXuKqU"}
-                  execution="execute"
-                  theme="light"
-                  size="flexible"
-                  appearance="execute"
-                  style={{
-                    width: "100%",
-                    margin: "15px 0px",
-                    borderRadius: "12px",
-                  }}
-                  onLoad={(widgetId, bound) => {
-                    // before:
-                    window.turnstile.execute(widgetId);
-                    // now:
-                    bound.execute();
-                  }}
-                  onVerify={handleVerify}
-                />
-              </div> */}
-              <Button
-                // disabled={token === null}
-                loading={isLoading}
-                htmlType="submit"
-                style={{
-                  ...BlueButton,
-                  width: "100%",
-                  // background: token === null ? "var(--disabled-blue-button)" : BlueButton.background
-                }}
-              >
-                <p style={BlueButtonText}>Sign in</p>
-              </Button>
-            </form>
+                
+                <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+                  <LightBlueButtonComponent
+                    disabled={false}
+                    loadingState={false}
+                    buttonType="button"
+                    title="Back"
+                    func={handleBackToEmail}
+                    styles={{ flex: "1" }}
+                  />
+                  <BlueButtonComponent
+                    disabled={false}
+                    loadingState={isLoading}
+                    buttonType="submit"
+                    title="Sign in"
+                    styles={{ flex: "1" }}
+                  />
+                </div>
+              </form>
+            )}
+
             <div style={{ ...CenteringGrid, margin: ".8rem auto" }}>
               <Typography
                 style={Subtitle}
