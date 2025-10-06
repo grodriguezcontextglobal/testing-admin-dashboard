@@ -1,14 +1,13 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Button,
   Card,
   Divider,
   Popconfirm,
   Select,
   Space,
   message,
-  notification,
+  notification
 } from "antd";
 import { sortBy } from "lodash";
 import { useCallback, useMemo, useState } from "react";
@@ -16,15 +15,13 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
@@ -730,18 +727,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                       Quantity
                     </p>
                   </InputLabel>
-                  <Button
-                    loading={loadingStatus}
-                    disabled={loadingStatus}
-                    htmlType="submit"
-                    style={{
-                      ...LightBlueButton,
-                      ...CenteringGrid,
-                      width: "100%",
-                    }}
-                  >
-                    <p style={LightBlueButtonText}>Add item</p>
-                  </Button>
+                  <BlueButtonComponent title={"Add item"} buttonType="submit" loadingState={loadingStatus} disabled={loadingStatus} />
                 </Grid>
               </Grid>
             </form>
