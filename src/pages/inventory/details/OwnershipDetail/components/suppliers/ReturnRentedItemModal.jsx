@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Checkbox,
   Input,
-  Modal,
   Pagination,
   Progress,
   Space,
@@ -17,6 +16,7 @@ import { devitrakApi } from "../../../../../../api/devitrakApi";
 import EmailReturnRentalItems from "../../../../../../components/notification/email/EmailReturnRentalItems";
 import { checkRequestSize } from "../../../../../../components/utils/checkRequestSize";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 
 const { Search } = Input;
@@ -452,7 +452,6 @@ const ReturnRentedItemModal = ({
     );
   };
 
-
   const handleReturnAllItems = async () => {
     setLoading(true);
     try {
@@ -572,7 +571,7 @@ const ReturnRentedItemModal = ({
         content: "Items returned to renter, now deleting records...",
         key: "processing",
       });
-      
+
       // Step 2: Email notification to staff
       await EmailReturnRentalItems({
         items: selectedItems,
@@ -822,53 +821,59 @@ const ReturnRentedItemModal = ({
     },
   ];
 
-  return (
-    <Modal
-      open={open}
-      onCancel={handleClose}
-      footer={null}
-      centered
-      width={1200}
-      title="Return Rented Items"
-      destroyOnClose
-    >
-      <Box sx={{ mt: 2 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Tabs
-              size="large"
-              tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
-              activeKey={activeTab}
-              type="card"
-              onChange={(key) => {
-                setActiveTab(key);
-                setCurrentPage(1);
-                setSelectedItems(new Set());
-                setSearchText("");
-                fetchItemsForRenter(1, "");
-              }}
-              items={items}
-            />
+  const bodyModal = () => {
+    return (
+      <>
+        <Box sx={{ mt: 2 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Tabs
+                size="large"
+                tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
+                activeKey={activeTab}
+                type="card"
+                onChange={(key) => {
+                  setActiveTab(key);
+                  setCurrentPage(1);
+                  setSelectedItems(new Set());
+                  setSearchText("");
+                  fetchItemsForRenter(1, "");
+                }}
+                items={items}
+              />
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
-      {/* Add this in the Modal content, before the Tabs component: */}
-      {progress.total > 0 && (
-        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
-          <Typography variant="body2" gutterBottom>
-            {progress.step}
-          </Typography>
-          <Progress
-            percent={Math.round((progress.current / progress.total) * 100)}
-            status="active"
-            showInfo
-            format={(percent) =>
-              `${progress.current}/${progress.total} (${percent}%)`
-            }
-          />
         </Box>
-      )}
-    </Modal>
+        {/* Add this in the Modal content, before the Tabs component: */}
+        {progress.total > 0 && (
+          <Box
+            sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}
+          >
+            <Typography variant="body2" gutterBottom>
+              {progress.step}
+            </Typography>
+            <Progress
+              percent={Math.round((progress.current / progress.total) * 100)}
+              status="active"
+              showInfo
+              format={(percent) =>
+                `${progress.current}/${progress.total} (${percent}%)`
+              }
+            />
+          </Box>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <ModalUX
+      openDialog={open}
+      closeModal={handleClose}
+      title="Return Rented Items"
+      body={bodyModal()}
+      width={1200}
+    />
   );
 };
 
