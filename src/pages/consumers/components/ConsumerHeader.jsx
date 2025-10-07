@@ -1,15 +1,14 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Divider } from "antd";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import ChartComponent from "./UI/ChartComponent";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 
 const ConsumerHeader = ({
   setCreateUserButton,
@@ -60,12 +59,7 @@ const ConsumerHeader = ({
           md={6}
           lg={6}
         >
-          <Button onClick={() => setCreateUserButton(true)} style={BlueButton}>
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              <WhiteCirclePlusIcon />
-              &nbsp;Add new consumer
-            </Typography>
-          </Button>
+          <BlueButtonComponent func={()=> setCreateUserButton(true)} title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} />
         </Grid>
       </Grid>
       <Divider />
