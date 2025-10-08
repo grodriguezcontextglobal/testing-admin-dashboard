@@ -20,17 +20,13 @@ import costValueInputFormat from "../utils/costValueInputFormat";
 import useSuppliers from "../utils/hooks/useSuppliers";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
-import {
-  bulkItemInsertAlphanumeric,
-  bulkItemInsertSequential,
-  storeAndGenerateImageUrl,
-} from "./utils/BulkItemActionsOptions";
 import BulkItemForm from "./utils/BulkItemForm";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import { bulkItemInsertAlphanumeric, bulkItemInsertSequential, storeAndGenerateImageUrl } from "./utils/bulkItemActionsOptions";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const {
