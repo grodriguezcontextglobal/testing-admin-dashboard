@@ -1,9 +1,5 @@
 /* eslint-disable no-unused-vars */
-import {
-  Button,
-  Grid,
-  Typography
-} from "@mui/material";
+import { Button, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Spin } from "antd";
 import { useCallback, useEffect, useId, useState } from "react";
@@ -20,6 +16,8 @@ import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHe
 import ConsumerHeader from "./components/ConsumerHeader";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [counting, setCounting] = useState(null);
@@ -33,7 +31,7 @@ const MainPage = () => {
       devitrakApi.get(
         `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
       ),
-      enabled: !!user.companyData.id,
+    enabled: !!user.companyData.id,
   });
 
   useEffect(() => {
@@ -171,7 +169,9 @@ const MainPage = () => {
               </p>
             </div>
           </p>
-          <RefreshButton propsFn={allConsumersBasedOnEventsPerCompany.refetch} />
+          <RefreshButton
+            propsFn={allConsumersBasedOnEventsPerCompany.refetch}
+          />
         </Grid>
         <Grid item xs={12}>
           <TablesConsumers
@@ -221,11 +221,11 @@ const MainPage = () => {
           md={10}
           lg={10}
         >
-          <Button onClick={() => setCreateUserButton(true)} style={BlueButton}>
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Add new consumer
-            </Typography>
-          </Button>
+          <BlueButtonComponent
+            func={() => setCreateUserButton(true)}
+            title={"Add new consumer"}
+            icon={<WhiteCirclePlusIcon />}
+          />
         </Grid>
       </Grid>
       {createUserButton && (
