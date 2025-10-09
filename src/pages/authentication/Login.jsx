@@ -60,7 +60,7 @@ const Login = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
-  
+
   const openNotificationWithIcon = useCallback(
     (type, msg) => {
       api.open({
@@ -72,11 +72,9 @@ const Login = () => {
     },
     [api]
   );
-  
+
   const dataPassed = useRef(null);
 
-  // ... existing code ...
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const addingEventState = async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
       "/db_event/events_information",
@@ -221,34 +219,11 @@ const Login = () => {
   };
 
   // New function to verify email exists
+  // Simplified function to just collect email and move to password step
   const onSubmitEmail = async (data) => {
-    try {
-      setIsLoading(true);
-      dispatch(onChecking());
-
-      // Check if email exists in company employees
-      const companyResponse = await devitrakApi.post("/company/search-company", {
-        "employees.user": data.email,
-      });
-
-      if (!companyResponse.data || companyResponse.data.company.length === 0) {
-        openNotificationWithIcon("error", "Email not found. Please check your email address.");
-        return;
-      }
-
-      // Email exists, proceed to password step
-      setUserEmail(data.email);
-      setEmailVerified(true);
-      setCurrentStep("password");
-      openNotificationWithIcon("success", "Email verified. Please enter your password.");
-      
-    } catch (error) {
-      openNotificationWithIcon("error", "Failed to verify email. Please try again.");
-      dispatch(onAddErrorMessage(error?.response?.data?.msg));
-    } finally {
-      setIsLoading(false);
-      dispatch(clearErrorMessage());
-    }
+    // Simply collect email and move to password step without verification
+    setUserEmail(data.email);
+    setCurrentStep("password");
   };
 
   const onSubmitLogin = async (data) => {
@@ -256,7 +231,7 @@ const Login = () => {
       setIsLoading(true);
       dispatch(onChecking());
 
-      // Use the verified email from the first step
+      // Use the collected email from the first step
       const loginData = {
         email: userEmail,
         password: data.password,
@@ -276,6 +251,11 @@ const Login = () => {
 
       if (!loginResponse.data || !companyResponse.data) {
         throw new Error("Authentication failed");
+      }
+
+      // Check if email exists in company employees
+      if (!companyResponse.data || companyResponse.data.company.length === 0) {
+        throw new Error("Email not found in any company");
       }
 
       const activeCompanies = await processCompanyData(
@@ -308,15 +288,27 @@ const Login = () => {
         );
       }
     } catch (error) {
-      openNotificationWithIcon(
-        "error",
-        error.response?.data?.msg || "Login failed"
-      );
+      const message = () => {
+        switch (error.response?.data?.msg) {
+          case "User is not found":
+            return "Invalid email or password";
+          case "Incorrect password":
+            return "Incorrect password";
+          default:
+            return error.response?.data?.msg;
+        }
+      };
+      openNotificationWithIcon("error", message());
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
+
+      // Reset form and go back to email step on error
+      setValue("password", "");
+      setCurrentStep("email");
+      setUserEmail("");
+      setValue("email", "");
     } finally {
       setIsLoading(false);
-      setValue("password", "");
       dispatch(clearErrorMessage());
     }
   };
@@ -437,8 +429,8 @@ const Login = () => {
                 lineHeight: "24px",
               }}
             >
-              {currentStep === "email" 
-                ? "Please enter your email" 
+              {currentStep === "email"
+                ? "Please enter your email"
                 : `Welcome back, ${userEmail}`}
             </p>
 
@@ -458,7 +450,9 @@ const Login = () => {
                   md={12}
                   lg={12}
                 >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
+                  <FormLabel style={{ marginBottom: "0.9rem" }}>
+                    Email
+                  </FormLabel>
                   <OutlinedInput
                     required
                     {...register("email", { required: true, minLength: 10 })}
@@ -601,7 +595,7 @@ const Login = () => {
                     </button>
                   </Grid>
                 </Grid>
-                
+
                 <div style={{ display: "flex", gap: "12px", width: "100%" }}>
                   <LightBlueButtonComponent
                     disabled={false}
