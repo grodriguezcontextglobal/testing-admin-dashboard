@@ -196,7 +196,7 @@ const AssignmentFromExistingInventory = () => {
         state_address: props.state,
         zip_address: props.zip,
         email_company: profile.email,
-        phone_number: profile.adminUserInfo.phone,
+        phone_number: profile.adminUserInfo.phone ?? "000-000-0000",
         company_assigned_event_id: user.sqlInfo.company_id,
         contact_name: `${user.name} ${user.lastName}`,
       });
