@@ -111,14 +111,19 @@ const TableItemGroup = ({
   }, [structuredDataRendering.length, location.key]);
 
   const dataRenderingMemo = useMemo(() => {
-    const result = dataToDisplay(structuredDataRendering, searchItem);
-    setResultedData(result);
-    // Initialize filtered count with the full data length
-    if (filteredDataCount === 0) {
-      setFilteredDataCount(result.length);
-    }
-    return result;
+    return dataToDisplay(structuredDataRendering, searchItem);
   }, [structuredDataRendering, searchItem]);
+
+  // Move setState calls to useEffect
+  useEffect(() => {
+    if (setResultedData) {
+      setResultedData(dataRenderingMemo);
+    }
+    // Initialize filtered count with the full data length
+    if (filteredDataCount === 0 && dataRenderingMemo.length > 0) {
+      setFilteredDataCount(dataRenderingMemo.length);
+    }
+  }, [dataRenderingMemo, setResultedData, filteredDataCount]);
 
   // Handle table changes including filtering, pagination, and sorting
   const handleTableChange = (pagination, filters, sorter, extra) => {
