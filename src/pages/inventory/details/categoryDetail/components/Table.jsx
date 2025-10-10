@@ -3,7 +3,7 @@ import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Table } from "antd";
 import { groupBy } from "lodash";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -13,112 +13,216 @@ import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
 import { dataStructuringFormat, dataToDisplay } from "../../utils/dataStructuringFormat";
 
-const TableDeviceCategory = ({ searchItem, referenceData, isLoadingComponent }) => {
+const TableDeviceCategory = ({ searchItem = '', referenceData, isLoadingComponent }) => {
   const location = useLocation();
-  const categoryName = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   
-  // State to track filtered data count for dynamic pagination
-  const [filteredDataCount, setFilteredDataCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  // Consolidated pagination state
+  const [paginationState, setPaginationState] = useState({
+    current: 1,
+    pageSize: 10,
+    filteredCount: 0
+  });
+
+  // Memoize category name extraction to prevent recalculation
+  const categoryName = useMemo(() => {
+    const searchParams = location.search.split("&");
+    return decodeURI(searchParams[0].slice(1));
+  }, [location.search]);
+
+  // Memoize query keys to prevent unnecessary re-renders
+  const queryKeys = useMemo(() => ({
+    items: ["currentStateDevicePerCategory", categoryName],
+    images: ["deviceImagePerCategory", categoryName],
+    inventory: ["deviceInInventoryPerCategory", categoryName]
+  }), [categoryName]);
 
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerCategory", categoryName[0].slice(1)],
+    queryKey: queryKeys.items,
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
         query: 'select * from item_inv where category_name = ? and company_id = ?',
-        values: [decodeURI(categoryName[0].slice(1)),user.sqlInfo.company_id]
+        values: [categoryName, user.sqlInfo.company_id]
       }),
-    enabled: !!user.sqlInfo.company_id,
+    enabled: !!user.sqlInfo?.company_id && !!categoryName,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    retry: 2,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerCategory", categoryName[0].slice(1)],
+    queryKey: queryKeys.images,
     queryFn: () =>
-      devitrakApi.post("/image/images", { company: user.companyData.id, category: decodeURI(categoryName[0].slice(1)), }),
-    enabled: !!user.sqlInfo.company_id,
+      devitrakApi.post("/image/images", { 
+        company: user.companyData.id, 
+        category: categoryName 
+      }),
+    enabled: !!user.companyData?.id && !!categoryName,
+    staleTime: 10 * 60 * 1000, // 10 minutes - images change less frequently
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+    retry: 2,
   });
 
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["deviceInInventoryPerCategory", categoryName[0].slice(1)],
+    queryKey: queryKeys.inventory,
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
-        category_name: decodeURI(categoryName[0].slice(1)),
+        category_name: categoryName,
       }),
-      enabled: !!user.sqlInfo.company_id,
+    enabled: !!user.sqlInfo?.company_id && !!categoryName,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    retry: 2,
   });
 
-  const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data?.result;
-  const [structuredDataRendering, setStructuredDataRendering] = useState([]);
-  
-  useEffect(() => {
-    if (renderedListItems && groupingByDeviceType) {
-      setStructuredDataRendering(
-        dataStructuringFormat(
-          renderedListItems,
-          groupingByDeviceType,
-          itemsInInventoryQuery
-        )
-      );
-    }
+  // Memoize derived data to prevent unnecessary recalculations
+  const derivedData = useMemo(() => {
+    const imageSource = listImagePerItemQuery?.data?.data?.item;
+    const groupingByDeviceType = groupBy(imageSource, "item_group");
+    const renderedListItems = listItemsQuery?.data?.data?.result;
+    
+    return {
+      imageSource,
+      groupingByDeviceType,
+      renderedListItems
+    };
   }, [
-    renderedListItems,
-    groupingByDeviceType,
+    listImagePerItemQuery?.data?.data?.item,
+    listItemsQuery?.data?.data?.result
+  ]);
+
+  // Memoize structured data to prevent unnecessary processing
+  const structuredDataRendering = useMemo(() => {
+    if (!derivedData.renderedListItems || !derivedData.groupingByDeviceType) {
+      return [];
+    }
+    
+    return dataStructuringFormat(
+      derivedData.renderedListItems,
+      derivedData.groupingByDeviceType,
+      itemsInInventoryQuery
+    );
+  }, [
+    derivedData.renderedListItems,
+    derivedData.groupingByDeviceType,
     itemsInInventoryQuery?.data
   ]);
 
-  const calculatingValue = () => {
-    let result = 0;
-    for (let data of structuredDataRendering) {
-      result += Number(data.cost);
-    }
-    return result;
-  };
-
-  const totalAvailable = () => {
-    const itemList = groupBy(listItemsQuery?.data?.data.result, "warehouse");
-    return itemList[1]?.length;
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    referenceData({
+  // Memoize calculations to prevent recalculation on every render
+  const calculations = useMemo(() => {
+    const totalValue = structuredDataRendering.reduce((sum, item) => 
+      sum + Number(item.cost || 0), 0
+    );
+    
+    const itemList = groupBy(derivedData.renderedListItems, "warehouse");
+    const totalAvailable = itemList[1]?.length || 0;
+    
+    return {
       totalDevices: structuredDataRendering.length,
-      totalValue: calculatingValue(),
-      totalAvailable: totalAvailable(),
-    });
-    return () => {
-      controller.abort();
+      totalValue,
+      totalAvailable
     };
-  }, [structuredDataRendering.length, location.key]);
+  }, [structuredDataRendering, derivedData.renderedListItems]);
+
+  // Update reference data when calculations change
+  useEffect(() => {
+    if (referenceData && calculations.totalDevices >= 0) {
+      referenceData(calculations);
+    }
+  }, [calculations, referenceData]);
 
   const dataRenderingMemo = useMemo(() => {
-    const result = dataToDisplay(structuredDataRendering, searchItem);
-    // Initialize filtered count with the full data length
-    if (filteredDataCount === 0) {
-      setFilteredDataCount(result.length);
-    }
-    return result;
+    return dataToDisplay(structuredDataRendering, searchItem);
   }, [structuredDataRendering, searchItem]);
 
-  // Handle table changes including filtering, pagination, and sorting
-  const handleTableChange = (pagination, filters, sorter, extra) => {
-    // Update pagination state
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
-    
-    // Update filtered data count when filters are applied
-    if (extra.action === 'filter') {
-      setFilteredDataCount(extra.currentDataSource.length);
-      // Reset to first page when filtering
-      setCurrentPage(1);
+  // Update filtered count when data changes - Fix infinite loop
+  useEffect(() => {
+    if (dataRenderingMemo.length !== paginationState.filteredCount) {
+      setPaginationState(prev => ({
+        ...prev,
+        filteredCount: dataRenderingMemo.length,
+        current: 1 // Reset to first page when data changes
+      }));
     }
-  };
+  }, [dataRenderingMemo.length]); // Remove filteredDataCount from dependencies
+
+  // Memoized refresh handler
+  const handleRefresh = useCallback(() => {
+    listImagePerItemQuery.refetch();
+    listItemsQuery.refetch();
+    itemsInInventoryQuery.refetch();
+  }, [listImagePerItemQuery, listItemsQuery, itemsInInventoryQuery]);
+
+  // Optimized table change handler
+  const handleTableChange = useCallback((pagination, filters, sorter, extra) => {
+    setPaginationState(prev => ({
+      ...prev,
+      current: extra.action === 'filter' ? 1 : pagination.current,
+      pageSize: pagination.pageSize,
+      filteredCount: extra.action === 'filter' ? 
+        extra.currentDataSource.length : prev.filteredCount
+    }));
+  }, []);
+
+  // Memoize table columns to prevent recreation
+  const tableColumns = useMemo(() => 
+    columnsTableMain({
+      groupingByDeviceType: derivedData.groupingByDeviceType,
+      navigate,
+      responsive: [
+        ["lg"],
+        ["lg"],
+        ["xs", "sm", "md", "lg"],
+        ["md", "lg"],
+        ["md", "lg"],
+        ["md", "lg"],
+        ["xs", "sm", "md", "lg"],
+        ["xs", "sm", "md", "lg"],
+      ],
+      data: dataRenderingMemo
+    }), [derivedData.groupingByDeviceType, navigate, dataRenderingMemo]
+  );
+
+  // Memoize pagination config
+  const paginationConfig = useMemo(() => ({
+    position: ["bottomCenter"],
+    pageSizeOptions: [10, 20, 30, 50, 100],
+    total: paginationState.filteredCount,
+    current: paginationState.current,
+    pageSize: paginationState.pageSize,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    showTotal: (total, range) => 
+      `${range[0]}-${range[1]} of ${total} items`,
+  }), [paginationState]);
+
+  // Memoize button styles to prevent object recreation
+  const buttonStyle = useMemo(() => ({
+    display: "flex",
+    alignItems: "center",
+    borderTop: "transparent",
+    borderLeft: "transparent",
+    borderBottom: "transparent",
+    borderRadius: "8px 8px 0 0",
+  }), []);
+
+  // const containerStyle = useMemo(() => ({
+  //   display: "flex",
+  //   alignItems: "center",
+  //   marginRight: "5px",
+  //   padding: "0 0 0 0",
+  // }), []);
+
+  // Early return for loading states
+  if (isLoadingComponent) {
+    return (
+      <div style={CenteringGrid}>
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <Suspense
@@ -149,19 +253,8 @@ const TableDeviceCategory = ({ searchItem, referenceData, isLoadingComponent }) 
             }}
           >
             <Button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                borderTop: "transparent",
-                borderLeft: "transparent",
-                borderBottom: "transparent",
-                borderRadius: "8px 8px 0 0",
-              }}
-              onClick={() => {
-                listImagePerItemQuery.refetch();
-                listItemsQuery.refetch();
-                itemsInInventoryQuery.refetch();
-              }}
+              style={buttonStyle}
+              onClick={handleRefresh}
             >
               <Typography
                 textTransform={"none"}
@@ -191,36 +284,13 @@ const TableDeviceCategory = ({ searchItem, referenceData, isLoadingComponent }) 
         {isLoadingComponent && <Loading />}
         {!isLoadingComponent && (
           <Table
-            pagination={{
-              position: ["bottomCenter"],
-              pageSizeOptions: [10, 20, 30, 50, 100],
-              total: filteredDataCount,
-              current: currentPage,
-              pageSize: pageSize,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => 
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
+            pagination={paginationConfig}
             style={{ width: "100%" }}
-            columns={columnsTableMain({
-              groupingByDeviceType,
-              navigate,
-              responsive: [
-                ["lg"],
-                ["lg"],
-                ["xs", "sm", "md", "lg"],
-                ["md", "lg"],
-                ["md", "lg"],
-                ["md", "lg"],
-                ["xs", "sm", "md", "lg"],
-                ["xs", "sm", "md", "lg"],
-              ],
-              data: dataRenderingMemo
-            })}
+            columns={tableColumns}
             dataSource={dataRenderingMemo}
             className="table-ant-customized"
             onChange={handleTableChange}
+            loading={listItemsQuery.isLoading || listImagePerItemQuery.isLoading || itemsInInventoryQuery.isLoading}
           />
         )}
       </Grid>
