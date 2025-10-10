@@ -230,10 +230,6 @@ const columnsTableMain = ({
       title: "Taxable address",
       dataIndex: "data",
       key: "data",
-      // showSorterTooltip: { target: "full-header" },
-      // filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
-      // filters: generateFilters("data.main_warehouse"),
-      // onFilter: (value, record) => record.data.main_warehouse === value,
       sorter: {
         compare: (a, b) =>
           ("" + a.data.main_warehouse).localeCompare(b.data.main_warehouse),
@@ -253,15 +249,6 @@ const columnsTableMain = ({
       dataIndex: "data",
       key: "data",
       showSorterTooltip: { target: "full-header" },
-      // filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
-      // filters: generateFilters("data.location"),
-      // onFilter: (value, record) => {
-      //   const location =
-      //     record.data.warehouse === 1
-      //       ? record.data.location
-      //       : record.data.event_name;
-      //   return location === value;
-      // },
       sorter: {
         compare: (a, b) =>
           ("" + a.data.location).localeCompare(b.data.location),
@@ -280,47 +267,6 @@ const columnsTableMain = ({
       title: "Main Serial Number",
       dataIndex: "serial_number",
       key: "serial_number",
-      // showSorterTooltip: { target: "full-header" },
-      // // For serial numbers, we can add a search filter instead of dropdown
-      // filterDropdown: ({
-      //   setSelectedKeys,
-      //   selectedKeys,
-      //   confirm,
-      //   clearFilters,
-      // }) => (
-      //   <div style={{ padding: 8 }}>
-      //     <input
-      //       placeholder="Search serial number"
-      //       value={selectedKeys[0]}
-      //       onChange={(e) =>
-      //         setSelectedKeys(e.target.value ? [e.target.value] : [])
-      //       }
-      //       // ={() => confirm()}
-      //       style={{ width: 188, marginBottom: 8, display: "block" }}
-      //     />
-      //     <div>
-      //       <button
-      //         type="button"
-      //         onClick={() => confirm()}
-      //         style={{ width: 90, marginRight: 8 }}
-      //       >
-      //         Search
-      //       </button>
-      //       <button
-      //         type="button"
-      //         onClick={() => clearFilters()}
-      //         style={{ width: 90 }}
-      //       >
-      //         Reset
-      //       </button>
-      //     </div>
-      //   </div>
-      // ),
-      // onFilter: (value, record) =>
-      //   record.serial_number
-      //     .toString()
-      //     .toLowerCase()
-      //     .includes(value.toLowerCase()),
       sorter: (a, b) => a.serial_number - b.serial_number,
       responsive: responsive[6],
       render: (serial_number) => (
@@ -334,17 +280,42 @@ const columnsTableMain = ({
     },
     {
       title: "",
-      dataIndex: "data",
-      key: "data",
+      dataIndex: "",
+      key: "action",
       responsive: responsive[7],
-      render: (record) => (
+      render: (_, record) => (
         <button
           style={{
             ...cellStyle,
             backgroundColor: "transparent",
             border: "none",
+            cursor: "pointer",
+            padding: "8px",
+            borderRadius: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-          onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try multiple approaches to find the item_id
+            let itemId = null;
+            if (record.item_id) {
+              itemId = record.item_id;
+            } else if (record.data?.item_id) {
+              itemId = record.data.item_id;
+            } else if (record.key && record.key.includes("-")) {
+              itemId = record.key.split("-")[0];
+            }
+            if (itemId) {
+              navigate(`/inventory/item?id=${itemId}`);
+            } else {
+              // Show user-friendly error or fallback behavior
+              alert("Unable to navigate to item details. Please try again.");
+            }
+          }}
         >
           <RightNarrowInCircle />
         </button>
