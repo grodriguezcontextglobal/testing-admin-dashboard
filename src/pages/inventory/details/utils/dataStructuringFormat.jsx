@@ -23,6 +23,7 @@ export const dataStructuringFormat = (
       if (groupingBySerialNumber[data.serial_number]) {
         resultFormatToDisplay.add({
           key: `${data.item_id}-${uniqueId()}`,
+          item_id: data.item_id,
           ...data,
           data: {
             ...data,
