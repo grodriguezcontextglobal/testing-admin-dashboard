@@ -3,14 +3,12 @@ import { ConfigEnvExport } from "../config/ConfigEnvExport";
 
 const { devitrack_api, aws_api, header_auth_token } = ConfigEnvExport;
 
-// Helper function to get client IP information
+// Helper function to get client information (excluding unsafe headers)
 const getClientInfo = () => {
-  const userAgent = navigator.userAgent;
   const language = navigator.language;
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
   return {
-    userAgent,
     language,
     timezone,
     timestamp: new Date().toISOString()
@@ -28,7 +26,7 @@ devitrakApi.interceptors.request.use((config) => {
     "X-Forwarded-For": "", // Will be populated by proxy/load balancer
     "X-Real-IP": "", // Will be populated by proxy/load balancer
     "X-Client-IP": "", // Will be populated by proxy/load balancer
-    "User-Agent": clientInfo.userAgent,
+    // Removed "User-Agent" - browsers set this automatically,
     "Accept-Language": clientInfo.language,
     "X-Timezone": clientInfo.timezone,
     "X-Request-Timestamp": clientInfo.timestamp,
