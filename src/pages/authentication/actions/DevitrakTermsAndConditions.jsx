@@ -1,18 +1,17 @@
 import { Drawer, Space, Table } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 // Import PDF documents
+import { OutlinedInput } from "@mui/material";
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
 import document1 from "../../../assets/pdf/document_1.pdf";
 import document2 from "../../../assets/pdf/document_2.pdf";
 import document3 from "../../../assets/pdf/document_3.pdf";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import { OutlinedInput } from "@mui/material";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { useState } from "react";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { useLocation } from "react-router-dom";
-// import { devitrakApi } from "../../../api/devitrakApi";
+
 const policyDocuments = [
   {
     id: 1,
@@ -46,8 +45,36 @@ const DevitrakTermsAndConditions = ({
   action = null,
 }) => {
   const location = useLocation();
-  const [name, setName] = useState(staffMember);
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle form submission properly
+  const handleFormSubmit = async (e) => {
+    e.preventDefault(); // Prevent default form submission
+    
+    // Validate name field
+    if (!name.trim()) {
+      return; // Let HTML5 validation handle this
+    }
+
+    try {
+      if (location.pathname.includes("/invitation")) {
+        await agreedAgreement({
+          staffMember,
+          company_id,
+          policyDocuments,
+          setOpen,
+          setIsLoading,
+        });
+      } else if (action) {
+        await action();
+      }
+    } catch (error) {
+      console.error("Error handling agreement:", error);
+      setIsLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "Document Name",
@@ -82,6 +109,7 @@ const DevitrakTermsAndConditions = ({
       ),
     },
   ];
+
   const handleViewDocument = (document) => {
     try {
       // Open PDF in new tab
@@ -90,6 +118,7 @@ const DevitrakTermsAndConditions = ({
       console.error("Error opening document:", error);
     }
   };
+
   return (
     <Drawer
       title="Devitrak App Agreement and Privacy Policy"
@@ -105,36 +134,39 @@ const DevitrakTermsAndConditions = ({
         },
       }}
       extra={
-        <Space>
-          <OutlinedInput
-            placeholder="Enter your full name"
-            style={OutlinedInputStyle}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <DangerButtonComponent
-            title={"No agreed"}
-            func={() =>
-              location.pathname.includes("/invitation")
-                ? navigate("/login", { replace: true })
-                : navigate()
-            }
-          />
-          <BlueButtonComponent
-            title={"Agree"}
-            func={() =>
-              location.pathname.includes("/invitation")
-                ? agreedAgreement({
-                    staffMember,
-                    company_id,
-                    policyDocuments,
-                    setOpen,
-                    setIsLoading,
-                  })
-                : action()
-            }
-            loadingState={isLoading}
-          />
+        <Space direction="horizontal" styles={{ display: "flex" }}>
+          <form
+            style={{
+              display: "flex",
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "10px",
+            }}
+            onSubmit={handleFormSubmit}
+          >
+            <OutlinedInput
+              placeholder="Enter your full name"
+              style={OutlinedInputStyle}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <GrayButtonComponent
+              title={"Decline"}
+              buttonType="button"
+              func={() =>
+                location.pathname.includes("/invitation")
+                  ? navigate("/login", { replace: true })
+                  : navigate()
+              }
+            />
+            <BlueButtonComponent
+              title={"Agree"}
+              buttonType="submit"
+              loadingState={isLoading}
+            />
+          </form>
         </Space>
       }
     >
@@ -166,9 +198,10 @@ export const agreedAgreement = async ({
         company_id: company_id,
       });
     }
-    return setOpen();
+    setOpen(false);
   } catch (error) {
-    console.error("Error opening document:", error);
+    console.error("Error submitting agreement:", error);
+    throw error; // Re-throw to be handled by the form submission
   } finally {
     setIsLoading(false);
   }
