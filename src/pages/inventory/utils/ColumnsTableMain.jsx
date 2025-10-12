@@ -283,43 +283,44 @@ const columnsTableMain = ({
       dataIndex: "",
       key: "action",
       responsive: responsive[7],
-      render: (_, record) => (
-        <button
-          style={{
-            ...cellStyle,
-            backgroundColor: "transparent",
-            border: "none",
-            cursor: "pointer",
-            padding: "8px",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // Try multiple approaches to find the item_id
-            let itemId = null;
-            if (record.item_id) {
-              itemId = record.item_id;
-            } else if (record.data?.item_id) {
-              itemId = record.data.item_id;
-            } else if (record.key && record.key.includes("-")) {
-              itemId = record.key.split("-")[0];
-            }
-            if (itemId) {
-              navigate(`/inventory/item?id=${itemId}`);
-            } else {
-              // Show user-friendly error or fallback behavior
-              alert("Unable to navigate to item details. Please try again.");
-            }
-          }}
-        >
-          <RightNarrowInCircle />
-        </button>
-      ),
+      render: (_, record) => {
+        // Robust item_id resolution across possible shapes
+        const itemId =
+          record?.item_id ??
+          record?.data?.item_id ??
+          (record?.key && String(record.key).includes("-")
+            ? String(record.key).split("-")[0]
+            : null);
+
+        return (
+          <button
+            style={{
+              ...cellStyle,
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: itemId ? "pointer" : "not-allowed",
+              padding: "8px",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: itemId ? 1 : 0.5,
+            }}
+            type="button"
+            disabled={!itemId}
+            onClick={() => {
+              if (itemId) {
+                navigate(`/inventory/item?id=${itemId}`);
+              } else {
+                alert("Unable to navigate to item details. Please try again.");
+              }
+            }}
+            aria-label="View item details"
+          >
+            <RightNarrowInCircle />
+          </button>
+        );
+      },
     },
   ];
   return columns;
