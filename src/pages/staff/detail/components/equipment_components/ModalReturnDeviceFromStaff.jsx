@@ -1,6 +1,7 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Modal } from "antd";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -9,9 +10,8 @@ import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { formatDate } from "../../../../inventory/utils/dateFormat";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
-import { useState } from "react";
+import { formatDate } from "../../../../inventory/utils/dateFormat";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnDeviceFromStaff = ({
@@ -46,7 +46,6 @@ const ModalReturnDeviceFromStaff = ({
       throw new Error(error);
     }
   };
-
   const updateLeaseInfo = async () => {
     const initialDate = formatDate(
       new Date(deviceInfo.subscription_initial_date)
