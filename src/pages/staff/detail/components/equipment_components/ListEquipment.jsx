@@ -49,15 +49,18 @@ function ListEquipment() {
     staleTime: 60 * 60,
   });
 
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   staffMemberQuery.refetch();
-  //   listImagePerItemQuery.refetch();
-  //   itemsInInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
+  const [canSeeSignedColumns, setCanSeeSignedColumns] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    const role = user.companyData.employees.find(
+      (el) => el.user === user.email
+    )?.role;
+    const isSameUser = (user?.id ?? user?.uid) === profile?.adminUserInfo?.id;
+    setCanSeeSignedColumns([0, 1].includes(Number(role)) || isSameUser);
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const fetchLeasePerStaffMember = async (staffMember) => {
     const staffmemberInfo = await checkArray(staffMember?.data?.member);
@@ -108,9 +111,12 @@ function ListEquipment() {
         let docs = [];
         try {
           // Prefer fetching the verification document to read its contract_list
-          const res = await devitrakApi.post(`/document/verification/staff_member/check_signed_document`, {
-            verificationID: verificationId,
-          });
+          const res = await devitrakApi.post(
+            `/document/verification/staff_member/check_signed_document`,
+            {
+              verificationID: verificationId,
+            }
+          );
           const contractList =
             res?.data?.contract_info?.contract_list ||
             res?.data?.verification?.contract_list ||
@@ -206,16 +212,23 @@ function ListEquipment() {
         </span>
       ),
     },
-    {
-      title: "Contract Status",
-      key: "contract_status",
-      render: (_, record) => {
-        const verificationId = record.verification_id;
-        const allSigned =
-          verificationId && verificationDetailsMap[verificationId]?.allSigned;
-        return renderStatusBadge(!!allSigned);
-      },
-    },
+    ...(
+      canSeeSignedColumns
+        ? [
+            {
+              title: "Contract Status",
+              key: "contract_status",
+              render: (_, record) => {
+                const verificationId = record.verification_id;
+                const allSigned =
+                  verificationId &&
+                  verificationDetailsMap[verificationId]?.allSigned;
+                return renderStatusBadge(!!allSigned);
+              },
+            },
+          ]
+        : []
+    ),
     {
       title: "",
       dataIndex: "address",
@@ -367,21 +380,22 @@ function ListEquipment() {
               const key = getRowKey(record);
               setExpandedRowKey(expanded ? key : null);
             },
-            expandIcon: ({ expanded, onExpand, record }) => (
-              <span
-                onClick={(e) => onExpand(record, e)}
-                role="button"
-                aria-label={expanded ? "Collapse row" : "Expand row"}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  padding: "4px",
-                }}
-              >
-                {expanded ? <UpDoubleArrow /> : <DownDoubleArrowIcon />}
-              </span>
-            ),
+            expandIcon: ({ expanded, onExpand, record }) =>
+              canSeeSignedColumns && (
+                <span
+                  onClick={(e) => onExpand(record, e)}
+                  role="button"
+                  aria-label={expanded ? "Collapse row" : "Expand row"}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    padding: "4px",
+                  }}
+                >
+                  {expanded ? <UpDoubleArrow /> : <DownDoubleArrowIcon />}
+                </span>
+              ),
           }}
         />
         {openReturnDeviceStaffModal && (
