@@ -412,8 +412,9 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
       return message.warning("Container does not have any stored items.");
     } catch (error) {
-      console.log("extractContainersItemsInfo", error);
+      // console.log("extractContainersItemsInfo", error);
       // message.error("Failed to get items in container. Please try again.");
+      throw new Error("Failed to get items in container. Please try again.");
     }
   };
 
@@ -428,7 +429,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       }
       return null;
     } catch (error) {
-      console.log("checkIfContainer", error);
+      // console.log("checkIfContainer", error);
       // message.error(
       //   "Failed to extract containers items info. Please try again."
       // );
@@ -441,7 +442,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         device: props,
       });
     } catch (error) {
-      console.log("updateDeviceSetupInEvent", error);
+      // console.log("updateDeviceSetupInEvent", error);
       message.error(
         "Failed to update device setup in event. Please try again."
       );
@@ -459,7 +460,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         await updateDeviceSetupInEvent(checking.data.receiversInventory);
       }
     } catch (error) {
-      console.log("checkInsertedDataAndUpdateInventoryEvent", error);
+      // console.log("checkInsertedDataAndUpdateInventoryEvent", error);
       message.error("Failed to add device. Please try again.");
     }
   };
@@ -483,7 +484,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       await checkInsertedDataAndUpdateInventoryEvent(data);
       await checkIfContainer(data);
     } catch (error) {
-      console.log("createDeviceRecordInNoSQLDatabase", error);
+      // console.log("createDeviceRecordInNoSQLDatabase", error);
       message.error(
         "Failed to add device to NoSQL database. Please try again."
       );
@@ -514,7 +515,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       });
       await createDeviceRecordInNoSQLDatabase(props);
     } catch (error) {
-      console.log("createDeviceInEvent", error);
+      // console.log("createDeviceInEvent", error);
       message.error("Failed to add device to event. Please try again.");
     }
   };

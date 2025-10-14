@@ -27,9 +27,11 @@ const useSuppliersCompanyFetch = () => {
           setSuppliers(sortedData);
         }
       } catch (error) {
-        if (error.name !== "AbortError") {
+        // Handle both AbortError and CanceledError from Axios
+        if (error.name !== "AbortError" && error.name !== "CanceledError") {
           console.error("Error fetching suppliers:", error);
         }
+        // Silently ignore cancellation errors as they're expected
       }
     };
 

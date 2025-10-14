@@ -14,7 +14,6 @@ import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import ModalUX from "../../UX/modal/ModalUX";
 
 const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
-  console.log("sendEventLink", sendEventLink);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [emailConsumersList, setEmailConsumersList] = useState([]);

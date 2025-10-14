@@ -4,10 +4,6 @@ import generateOptimizedXLSXFile from "../../../pages/inventory/details/Ownershi
 import { checkRequestSize } from "../../utils/checkRequestSize";
 
 const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user }) => {
-  console.log("items", items);
-  console.log("supplier_id", supplier_id);
-  console.log("user", user);
-  
   try {
     setProgress({
       current: 0,
@@ -70,7 +66,6 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
         "/nodemailer/returned-items-summary-notification",
         summaryPayload
       );
-      console.log("response", response);
       if (response.data) {
         return message.success(
           "Items returned and summary notification sent (file too large for attachment)."
