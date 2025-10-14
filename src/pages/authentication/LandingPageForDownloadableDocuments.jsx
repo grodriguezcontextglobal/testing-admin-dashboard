@@ -7,20 +7,20 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { message, Tooltip } from "antd";
-import { Footer } from "antd/es/layout/layout";
 import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import HidenIcon from "../../components/icons/HidenIcon";
+import { InformationIcon } from "../../components/icons/InformationIcon";
+import VisibleIcon from "../../components/icons/VisibleIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
-import { InformationIcon } from "../../components/icons/InformationIcon";
-import VisibleIcon from "../../components/icons/VisibleIcon";
-import HidenIcon from "../../components/icons/HidenIcon";
 
 const LandingPageForDownloadableDocuments = () => {
+  const navigate = useNavigate();
   const company_id = new URLSearchParams(window.location.search).get(
     "company_id"
   );
@@ -37,13 +37,27 @@ const LandingPageForDownloadableDocuments = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
     useState(false);
+  // Redirect if already signed
+  useEffect(() => {
+    if (checkIfDocumentIsSignedAlready) {
+      message.info(
+        "This contract is already signed. Redirecting to staff details..."
+      );
+      const t = setTimeout(
+        () => navigate(`/staff/${staff_member_id}/main`),
+        1500
+      );
+      return () => clearTimeout(t);
+    }
+  }, [checkIfDocumentIsSignedAlready, navigate, staff_member_id]);
   const [contractInfo, setContractInfo] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [validPassword, setValidPassword] = useState(false);
   const { register, handleSubmit } = useForm();
-  const navigate = useNavigate();
   const [url, setUrl] = useState(null);
   const downloadDocument = async (x) => {
     try {
+      console.log(x);
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
         {
@@ -81,8 +95,7 @@ const LandingPageForDownloadableDocuments = () => {
         }
         return null;
       } catch (error) {
-        message.error("Failed to check if document is signed already");
-        throw new Error(error);
+        return;
       }
     };
     checkIfDocumentIsSignedAlready();
@@ -122,6 +135,7 @@ const LandingPageForDownloadableDocuments = () => {
           props.current_password,
           staffMemberInfo.password
         );
+        setValidPassword(isValid);
         return isValid;
       } catch (error) {
         message.error(
@@ -130,32 +144,40 @@ const LandingPageForDownloadableDocuments = () => {
         return false;
       }
     };
-    const submitNewPassword = async (data) => {
-      setLoadingStatus(true);
-      const isAuthenticated = await staffMemberAuthentication(data);
-      if (!isAuthenticated) {
-        setLoadingStatus(false);
-        message.error(
-          "Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation."
-        );
-        return false;
-      } else {
-        const response = await devitrakApi.post("/company/signatures", {
-          signature: data.fullName,
-          date: data.date,
-          company_id: company_id,
-          contract_url: documentUrl,
-        });
-        if (response.data.ok) {
-          await addSignatureToDocument();
-          return setTimeout(() => {
+    const submitSignaturesContracting = async (data) => {
+      try {
+        setLoadingStatus(true);
+        const isAuthenticated = await staffMemberAuthentication(data);
+        if (!isAuthenticated) {
+          setLoadingStatus(false);
+          message.error(
+            "Failed to authenticate staff member. Without a staff member verification, staff can not proceed to check and sign documentation."
+          );
+          return false;
+        } else {
+          const response = await devitrakApi.post("/company/signatures", {
+            signature: data.fullName,
+            date: data.date,
+            company_id: company_id,
+            contract_url: documentUrl,
+            staff_member_id: staff_member_id,
+          });
+          if (response.data.ok) {
+            await addSignatureToDocument();
             setLoadingStatus(false);
             const token = localStorage.getItem("admin-token");
             message.success("Signature collected successfully");
-            if (token) return navigate("/");
+            if (token) return navigate(`/staff/${staff_member_id}/main`);
             return navigate("/login");
-          }, 1500);
+          }
         }
+      } catch (error) {
+        message.error(
+          (error?.data?.msg ?? error?.message) || "Failed to sign contract"
+        );
+        return setLoadingStatus(false);
+      } finally {
+        setLoadingStatus(false);
       }
     };
     return (
@@ -208,7 +230,7 @@ const LandingPageForDownloadableDocuments = () => {
                 </Grid>
                 <form
                   className="register-form-container"
-                  onSubmit={handleSubmit(submitNewPassword)}
+                  onSubmit={handleSubmit(submitSignaturesContracting)}
                 >
                   <Grid
                     marginY={"20px"}
@@ -238,7 +260,30 @@ const LandingPageForDownloadableDocuments = () => {
                       type="text"
                       fullWidth
                       required
+                      disabled={checkIfDocumentIsSignedAlready}
                     />
+                  </Grid>
+                  <Grid
+                    marginY={"20px"}
+                    marginX={0}
+                    textAlign={"left"}
+                    item
+                    xs={12}
+                  >
+                    <Tooltip title="Staff member login email/user is required for authentication and proceed to checking and signing the document">
+                      <FormLabel style={{ marginBottom: "0.5rem" }}>
+                        Staff member login email/user <InformationIcon />
+                      </FormLabel>
+                      <OutlinedInput
+                        {...register("email")}
+                        style={OutlinedInputStyle}
+                        placeholder="e.g. test@test.com"
+                        type="email"
+                        fullWidth
+                        required
+                        disabled={checkIfDocumentIsSignedAlready}
+                      />
+                    </Tooltip>
                   </Grid>
                   <Grid
                     marginY={"20px"}
@@ -249,15 +294,21 @@ const LandingPageForDownloadableDocuments = () => {
                   >
                     <Tooltip title="Staff member login password is required for authentication and proceed to checking and signing the document">
                       <FormLabel style={{ marginBottom: "0.5rem" }}>
-                        Staff member authentication <InformationIcon />
+                        Staff member login password <InformationIcon />
                       </FormLabel>
                       <OutlinedInput
                         {...register("current_password")}
-                        style={OutlinedInputStyle}
+                        style={{
+                          ...OutlinedInputStyle,
+                          border: validPassword
+                            ? OutlinedInputStyle.backgroundColor
+                            : "0.5px solid var(--danger-action",
+                        }}
                         placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         fullWidth
                         required
+                        disabled={checkIfDocumentIsSignedAlready}
                         endAdornment={
                           <InputAdornment position="end">
                             <button
@@ -270,8 +321,15 @@ const LandingPageForDownloadableDocuments = () => {
                                 width: "fit-content",
                                 aspectRatio: "1",
                                 borderRadius: "50%",
+                                cursor: checkIfDocumentIsSignedAlready
+                                  ? "not-allowed"
+                                  : "pointer",
                               }}
-                              onClick={() => setShowPassword(!showPassword)}
+                              onClick={() =>
+                                !checkIfDocumentIsSignedAlready &&
+                                setShowPassword(!showPassword)
+                              }
+                              disabled={checkIfDocumentIsSignedAlready}
                             >
                               {showPassword ? (
                                 <VisibleIcon fill={"var(--blue-dark-600)"} />
@@ -324,40 +382,21 @@ const LandingPageForDownloadableDocuments = () => {
                     <BlueButtonComponent
                       disabled={checkIfDocumentIsSignedAlready}
                       buttonType="submit"
-                      title={"Submit"}
+                      title={"Agree"}
                       loadingState={loadingStatus}
                     />
                   </Grid>
                 </form>
               </Grid>
             </Grid>
-            <Footer
-              style={{
-                height: "5dvh",
-                padding: "2rem",
-                backgroundColor: "var(--basewhite)",
-              }}
-            >
-              <Grid
-                item
-                xs={2}
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-              >
-                <Typography
-                  style={{
-                    fontSize: "14px",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
-                  }}
-                >
-                  @ devitrak {new Date().getFullYear()}
-                </Typography>
-              </Grid>
-            </Footer>
           </Grid>
-          <Grid id="section-img-login-component" item md={6} lg={6}></Grid>
+          <Grid
+            display={token ? "none" : "flex"}
+            id="section-img-login-component"
+            item
+            md={6}
+            lg={6}
+          ></Grid>
         </Grid>
       </>
     );
