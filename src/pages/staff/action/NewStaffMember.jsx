@@ -5,7 +5,7 @@ import {
   InputLabel,
   MenuItem,
   OutlinedInput,
-  Select
+  Select,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
@@ -22,7 +22,7 @@ import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
-import "../detail/components/equipment_components/assingmentComponents/style.css"
+import "../detail/components/equipment_components/assingmentComponents/style.css";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -153,7 +153,10 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
 
     const bodyModal = () => {
       return (
-        <form onSubmit={handleSubmit(onSubmitRegister)} style={{ width: "100%" }}>
+        <form
+          onSubmit={handleSubmit(onSubmitRegister)}
+          style={{ width: "100%" }}
+        >
           <Grid marginY={"20px"} marginX={0} textAlign={"center"} item xs={12}>
             <InputLabel
               style={{
