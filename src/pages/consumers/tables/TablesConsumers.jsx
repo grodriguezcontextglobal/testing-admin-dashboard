@@ -57,10 +57,10 @@ export default function TablesConsumers({ searching, data, getCounting }) {
 
     useEffect(() => {
       if (eventInfoCompanyQuery.data) {
-        console.log("Company events:", eventInfoCompanyQuery.data.data);
+        // console.log("Company events:", eventInfoCompanyQuery.data.data);
       }
       if (eventInfoCompanyQuery.error) {
-        console.error("Error fetching company events:", eventInfoCompanyQuery.error);
+        // console.error("Error fetching company events:", eventInfoCompanyQuery.error);
       }
     }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
   
