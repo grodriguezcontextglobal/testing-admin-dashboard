@@ -168,6 +168,20 @@ const AssignmentNewDeviceToStaffInInventory = () => {
     }
     return result;
   };
+  const verificationContractStaffMember = async () => {
+    const stampTime = new Date().toISOString();
+    const verificationResponse = await devitrakApi.post(
+      "/document/verification/staff_member/signed_document",
+      {
+        staff_member_id: profile.adminUserInfo.id,
+        contract_list: contractList,
+        company_id: user.companyData.id,
+        assigner_staff_member_id: user.id ?? user.uid,
+        date: stampTime,
+      }
+    );
+    return verificationResponse;
+  };
   const emailNotification = async (props) => {
     const stampTime = new Date().toISOString();
     try {
@@ -191,16 +205,6 @@ const AssignmentNewDeviceToStaffInInventory = () => {
           ],
           subject: "Device Liability Contract",
           date_reference: stampTime,
-        }
-      );
-      await devitrakApi.post(
-        "/document/verification/staff_member/signed_document",
-        {
-          staff_member_id: profile.adminUserInfo.id,
-          contract_list: contractList,
-          company_id: user.companyData.id,
-          assigner_staff_member_id: user.id ?? user.uid,
-          date: stampTime,
         }
       );
     } catch (error) {
@@ -259,6 +263,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         invalidateQueries,
         dicSuppliers,
       });
+      const verificationID = await verificationContractStaffMember();
       await createNewLease({
         address: {
           street: data.address_street,
@@ -270,6 +275,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         user,
         formatDate,
         insertId: newInsertedItem.insertId,
+        verificationID: verificationID,
       });
       const newEventInfo = await createEvent({
         street: data.address_street,
@@ -287,6 +293,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         serial_number: data.serial_number,
         item_group: data.item_group,
         contractList,
+        device_id: newInsertedItem.insertId,
       });
       setLoadingStatus(false);
       return closeModal();
