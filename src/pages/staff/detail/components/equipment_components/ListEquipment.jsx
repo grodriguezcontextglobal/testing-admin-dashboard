@@ -212,63 +212,65 @@ function ListEquipment() {
         </span>
       ),
     },
-    ...(
-      canSeeSignedColumns
-        ? [
-            {
-              title: "Contract Status",
-              key: "contract_status",
-              render: (_, record) => {
-                const verificationId = record.verification_id;
-                const allSigned =
-                  verificationId &&
-                  verificationDetailsMap[verificationId]?.allSigned;
-                return renderStatusBadge(!!allSigned);
-              },
+    ...(canSeeSignedColumns
+      ? [
+          {
+            title: "Contract Status",
+            key: "contract_status",
+            render: (_, record) => {
+              const verificationId = record.verification_id;
+              const allSigned =
+                verificationId &&
+                verificationDetailsMap[verificationId]?.allSigned;
+              return renderStatusBadge(!!allSigned);
             },
-          ]
-        : []
-    ),
-    {
-      title: "",
-      dataIndex: "address",
-      key: "address",
-      render: (_, record) => (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: "20px",
-          }}
-        >
-          <BlueButtonComponent
-            title={"Mark as returned"}
-            func={() => {
-              setDeviceInfo({
-                ...record,
-                ...dataSpecificItemInAssignedDevicePerStaffMember(
-                  record.device_id
-                ),
-              });
-              setOpenReturnDeviceStaffModal(true);
-            }}
-            buttonType="button"
-            titleStyles={{
-              textTransform: "none",
-              with: "100%",
-              gap: "2px",
-            }}
-            disabled={record.active === 0}
-          />
-          <GrayButtonComponent
-            title={"Mark as lost"}
-            func={() => null}
-            disabled={true}
-          />
-        </div>
-      ),
-    },
+          },
+        ]
+      : []),
+    ...(canSeeSignedColumns
+      ? [
+          {
+            title: "",
+            dataIndex: "address",
+            key: "address",
+            render: (_, record) => (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: "20px",
+                }}
+              >
+                <BlueButtonComponent
+                  title={"Mark as returned"}
+                  func={() => {
+                    setDeviceInfo({
+                      ...record,
+                      ...dataSpecificItemInAssignedDevicePerStaffMember(
+                        record.device_id
+                      ),
+                    });
+                    setOpenReturnDeviceStaffModal(true);
+                  }}
+                  buttonType="button"
+                  titleStyles={{
+                    textTransform: "none",
+                    with: "100%",
+                    gap: "2px",
+                  }}
+                  disabled={record.active === 0}
+                />
+                <GrayButtonComponent
+                  title={"Mark as lost"}
+                  func={() => null}
+                  disabled={true}
+                />
+              </div>
+            ),
+          },
+        ]
+      : [])
   ];
 
   // Single expanded row control (moved here to avoid conditional hook call)
