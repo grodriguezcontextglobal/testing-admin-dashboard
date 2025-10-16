@@ -3,7 +3,7 @@ import { Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
@@ -48,15 +48,18 @@ function ListEquipment() {
     enabled: !!user.uid,
     staleTime: 60 * 60,
   });
-
+  const navigate = useNavigate();
   const [canSeeSignedColumns, setCanSeeSignedColumns] = useState(false);
+  const [canSeeSignedColumnsBasedOnRole, setCanSeeSignedColumnsBasedOnRole] =
+    useState(false);
   useEffect(() => {
     const controller = new AbortController();
     const role = user.companyData.employees.find(
       (el) => el.user === user.email
     )?.role;
     const isSameUser = (user?.id ?? user?.uid) === profile?.adminUserInfo?.id;
-    setCanSeeSignedColumns([0, 1].includes(Number(role)) || isSameUser);
+    setCanSeeSignedColumns(isSameUser);
+    setCanSeeSignedColumnsBasedOnRole([0, 1].includes(Number(role)));
     return () => {
       controller.abort();
     };
@@ -212,7 +215,7 @@ function ListEquipment() {
         </span>
       ),
     },
-    ...(canSeeSignedColumns
+    ...(canSeeSignedColumnsBasedOnRole || canSeeSignedColumns
       ? [
           {
             title: "Contract Status",
@@ -227,7 +230,7 @@ function ListEquipment() {
           },
         ]
       : []),
-    ...(canSeeSignedColumns
+    ...(canSeeSignedColumnsBasedOnRole
       ? [
           {
             title: "",
@@ -270,7 +273,7 @@ function ListEquipment() {
             ),
           },
         ]
-      : [])
+      : []),
   ];
 
   // Single expanded row control (moved here to avoid conditional hook call)
@@ -297,10 +300,14 @@ function ListEquipment() {
 
   // New: Expanded row with document links and per-document status
   const expandedRowRender = (record) => {
+    const groupByVerificationId = groupBy(
+      assignedEquipmentList,
+      "verification_id"
+    );
+
     const verificationId = record.verification_id;
     const docs =
       (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
-
     const data = docs.map((doc) => ({
       key: doc.key,
       title: doc.title,
@@ -308,6 +315,13 @@ function ListEquipment() {
       signed: !!doc.signed,
     }));
 
+    const itemIdsParam =
+      groupByVerificationId[verificationId] &&
+      groupByVerificationId[verificationId].length > 0
+        ? groupByVerificationId[verificationId]
+            .map((id) => encodeURIComponent(id.device_id))
+            .join(",")
+        : "";
     const innerColumns = [
       { title: "Document Name", dataIndex: "title", key: "title" },
       {
@@ -328,16 +342,34 @@ function ListEquipment() {
             profile.adminUserInfo.id
           )}&date_reference=${encodeURIComponent(
             record.subscription_initial_date
-          )}`;
+          )}&ver_id=${encodeURIComponent(
+            verificationId
+          )}&item_ids=${encodeURIComponent(itemIdsParam)}`;
+
+          const handleView = () => {
+            return navigate(
+              `/staff/${profile.adminUserInfo.id}/view_actions_staff_taken`,
+              {
+                state: {
+                  contract_url: rowDoc.url,
+                  verificationId: verificationId,
+                  item_ids: record.device_id,
+                  company_id: user.companyData.id,
+                },
+              }
+            );
+          };
           return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "#1677ff" }}
-            >
-              View & Sign
-            </a>
+            <>
+              {canSeeSignedColumns ? (
+                <BlueButtonComponent title={rowDoc.signed ? "View" : "View & Sign"} func={() => navigate(href)} />
+              ) : (
+                canSeeSignedColumnsBasedOnRole &&
+                rowDoc.signed && (
+                  <BlueButtonComponent title={"View"} func={() => handleView()} />
+                )
+              )}
+            </>
           );
         },
       },
@@ -383,7 +415,7 @@ function ListEquipment() {
               setExpandedRowKey(expanded ? key : null);
             },
             expandIcon: ({ expanded, onExpand, record }) =>
-              canSeeSignedColumns && (
+              (canSeeSignedColumns || canSeeSignedColumnsBasedOnRole) && (
                 <span
                   onClick={(e) => onExpand(record, e)}
                   role="button"
