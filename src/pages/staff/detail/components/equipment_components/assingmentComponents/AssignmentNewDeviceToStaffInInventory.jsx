@@ -201,10 +201,12 @@ const AssignmentNewDeviceToStaffInInventory = () => {
             {
               serial_number: props.serial_number,
               type: props.item_group,
+              id: props.device_id,
             },
           ],
           subject: "Device Liability Contract",
           date_reference: stampTime,
+          verification_id:props.verification_id
         }
       );
     } catch (error) {
@@ -294,6 +296,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
         item_group: data.item_group,
         contractList,
         device_id: newInsertedItem.insertId,
+        verification_id: verificationID,
       });
       setLoadingStatus(false);
       return closeModal();
