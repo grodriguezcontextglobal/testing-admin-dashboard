@@ -42,6 +42,7 @@ const AssignmentFromExistingInventory = () => {
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const verificationInfo = {};
   const newEventInfo = {};
   const dateToUse = useMemo(() => formatDate(new Date()), []);
   let dataFound = useRef([]);
@@ -173,7 +174,8 @@ const AssignmentFromExistingInventory = () => {
   const createNewLease = async (props) => {
     const staffMember = staffMemberQuery.data.data.member;
     const newLeaseIds = [];
-    const verificationContractID = await verificationContratStaffMember()
+    const verificationContractID = await verificationContratStaffMember();
+    console.log(verificationContractID);
     for (let data of props.deviceInfo) {
       const newLease = await devitrakApi.post("/db_lease/new-lease", {
         staff_admin_id: user.sqlMemberInfo.staff_id,
@@ -182,11 +184,12 @@ const AssignmentFromExistingInventory = () => {
         location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
         staff_member_id: staffMember.at(-1).staff_id,
         device_id: data.item_id,
-        verification_id: verificationContractID.data.verificationInfo._id
+        verification_id: verificationContractID.data.verificationInfo._id,
       });
       newLeaseIds.push(newLease.insertId);
     }
-    return;
+    return (verificationInfo._id =
+      verificationContractID.data.verificationInfo._id);
   };
   const createEvent = async (props) => {
     try {
@@ -247,6 +250,7 @@ const AssignmentFromExistingInventory = () => {
           },
           contractList: contractList,
           items: items,
+          verification_id: verificationInfo._id,
         }));
     }
     return null;
@@ -397,6 +401,8 @@ const AssignmentFromExistingInventory = () => {
   };
 
   const emailContractToStaffMember = async (props) => {
+    console.log({ props });
+    console.log({ verificationInfo });
     await devitrakApi.post(
       "/nodemailer/liability-contract-email-notification",
       {
@@ -412,18 +418,10 @@ const AssignmentFromExistingInventory = () => {
         items: props.items,
         company_id: user.companyData.id,
         date_reference: stampTime,
+        verification_id: props.verification_id ?? verificationInfo._id,
       }
     );
-    // await devitrakApi.post(
-    //   "/document/verification/staff_member/signed_document",
-    //   {
-    //     staff_member_id: profile.adminUserInfo.id,
-    //     contract_list: props.contractList,
-    //     company_id: user.companyData.id,
-    //     assigner_staff_member_id: user.id ?? user.uid,
-    //     date: stampTime,
-    //   }
-    // );
+    console.log("verificationInfo", verificationInfo);
     return null;
   };
   const assignDeviceToStaffMember = async (data) => {
@@ -526,6 +524,7 @@ const AssignmentFromExistingInventory = () => {
     };
     checkingSerialNumberInputted();
   }, [watch("startingNumber"), valueItemSelected]);
+
   return (
     <>
       {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
