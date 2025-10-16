@@ -5,12 +5,11 @@ import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../../../../styles/global/GrayButtonText";
 import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
@@ -18,8 +17,8 @@ import {
   renderOptional,
   stylingComponents,
 } from "../../../../../../../inventory/actions/utils/BulkComponents";
-import { renderFields } from "../utils/Fields";
 import "../../style.css";
+import { renderFields } from "../utils/Fields";
 
 const SingleItemForm = ({
   acceptImage,
@@ -450,19 +449,12 @@ const SingleItemForm = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+      <BlueButtonComponent
+        title={"Add more information"}
+        func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+        styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+        icon={<WhiteCirclePlusIcon />}
+      />
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -484,26 +476,11 @@ const SingleItemForm = ({
             width: "50%",
           }}
         >
-          <Button
-            onClick={() => closeModal()}
-            htmlType="reset"
-            disabled={loadingStatus}
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              width: "100%",
-            }}
-          >
-            <p
-              style={{
-                ...GrayButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              Go back
-            </p>
-          </Button>
+          <GrayButtonComponent
+            title={"Go back"}
+            func={() => closeModal()}
+            styles={{ width: "100%" }}
+          />
         </div>
         <div
           style={{
@@ -511,23 +488,13 @@ const SingleItemForm = ({
             width: "50%",
           }}
         >
-          <Button
+          <BlueButtonComponent
+            title={"Create item and assign it to staff member"}
             disabled={loadingStatus}
-            loading={loadingStatus}
-            htmlType="submit"
-            style={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          >
-            <p
-              style={{
-                ...BlueButtonText,
-                ...CenteringGrid,
-                textTransform: "none",
-              }}
-            >
-              <WhiteCirclePlusIcon />
-              &nbsp; Create item and assign it to staff member
-            </p>
-          </Button>
+            loadingState={loadingStatus}
+            buttonType="submit"
+            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+          />
         </div>
       </div>
     </form>
