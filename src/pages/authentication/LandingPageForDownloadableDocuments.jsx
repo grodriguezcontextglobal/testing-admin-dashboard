@@ -148,8 +148,10 @@ const LandingPageForDownloadableDocuments = () => {
     }
   }, []);
   useEffect(() => {
-    const staffMemberInformation = adminStaffQuery?.data?.data?.adminUsers[0];
-    setValue("email", staffMemberInformation.email);
+    if (adminStaffQuery.data) {
+      const staffMemberInformation = adminStaffQuery?.data?.data?.adminUsers[0];
+      setValue("email", staffMemberInformation.email);
+    }
   }, [adminStaffQuery.data]);
 
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
