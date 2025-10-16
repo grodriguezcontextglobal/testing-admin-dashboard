@@ -15,6 +15,7 @@ import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
 import EditDocument from "../../pages/Profile/Documents/EditDocument";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPolicies";
+import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -245,7 +246,10 @@ const AuthRoutes = () => {
               >
                 <Route path="event-detail" element={<FormEventDetail />} />
                 <Route path="staff-detail" element={<FormStaffDetail />} />
-                <Route path="document-detail" element={<FormDocumentDetail />} />
+                <Route
+                  path="document-detail"
+                  element={<FormDocumentDetail />}
+                />
                 <Route path="device-detail" element={<FormDeviceDetail />} />
                 <Route
                   path="review-submit"
@@ -343,6 +347,11 @@ const AuthRoutes = () => {
                   path="assign-staff-events"
                   element={<AssignStaffMemberToEvent />}
                 />
+                <Route
+                  key={"/staff/:id/view_actions_staff_taken"}
+                  path="view_actions_staff_taken"
+                  element={<SignedContractViewHigherPermissionLevel />}
+                />
               </Route>
               <Route path="/profile" element={<MainProfileSetting />}>
                 <Route path="my_details" element={<MyDetailsMainPage />} />
@@ -364,8 +373,14 @@ const AuthRoutes = () => {
                 <Route path="documents" element={<Documents />} />
                 <Route path="documents/view/:id" element={<ViewDocument />} />
                 <Route path="providers" element={<Providers />} />
-                <Route path="/profile/documents/edit/:id" element={<EditDocument />} />
-                <Route path="platform_policies" element={<PlatformPolicies />} />
+                <Route
+                  path="/profile/documents/edit/:id"
+                  element={<EditDocument />}
+                />
+                <Route
+                  path="platform_policies"
+                  element={<PlatformPolicies />}
+                />
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route
@@ -404,7 +419,10 @@ const AuthRoutes = () => {
                   <UpdatingCompanyInfoAfterStripeConnectedAccountCreated />
                 }
               />
-              <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
+              <Route
+                path="/display-contracts"
+                element={<LandingPageForDownloadableDocuments />}
+              />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>
