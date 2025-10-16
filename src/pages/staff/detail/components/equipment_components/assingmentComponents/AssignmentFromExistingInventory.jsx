@@ -175,7 +175,6 @@ const AssignmentFromExistingInventory = () => {
     const staffMember = staffMemberQuery.data.data.member;
     const newLeaseIds = [];
     const verificationContractID = await verificationContratStaffMember();
-    console.log(verificationContractID);
     for (let data of props.deviceInfo) {
       const newLease = await devitrakApi.post("/db_lease/new-lease", {
         staff_admin_id: user.sqlMemberInfo.staff_id,
@@ -401,8 +400,6 @@ const AssignmentFromExistingInventory = () => {
   };
 
   const emailContractToStaffMember = async (props) => {
-    console.log({ props });
-    console.log({ verificationInfo });
     await devitrakApi.post(
       "/nodemailer/liability-contract-email-notification",
       {
