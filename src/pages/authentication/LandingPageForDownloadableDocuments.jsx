@@ -18,6 +18,7 @@ import VisibleIcon from "../../components/icons/VisibleIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 
 const LandingPageForDownloadableDocuments = () => {
   const navigate = useNavigate();
@@ -33,31 +34,28 @@ const LandingPageForDownloadableDocuments = () => {
   const date_reference = new URLSearchParams(window.location.search).get(
     "date_reference"
   );
+  const verification_id = new URLSearchParams(window.location.search).get(
+    "ver_id"
+  );
+
+  const item_ids = new URLSearchParams(window.location.search).get("item_ids");
   const [token, setToken] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
     useState(false);
-  // Redirect if already signed
-  useEffect(() => {
-    if (checkIfDocumentIsSignedAlready) {
-      message.info(
-        "This contract is already signed. Redirecting to staff details..."
-      );
-      const t = setTimeout(
-        () => navigate(`/staff/${staff_member_id}/main`),
-        1500
-      );
-      return () => clearTimeout(t);
-    }
-  }, [checkIfDocumentIsSignedAlready, navigate, staff_member_id]);
   const [contractInfo, setContractInfo] = useState(null);
+  const [signatureInfo, setSignatureInfo] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [validPassword, setValidPassword] = useState(false);
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, setValue } = useForm({
+    defaultValues: {
+      password: "",
+      date: new Date().toISOString(),
+    },
+  });
   const [url, setUrl] = useState(null);
   const downloadDocument = async (x) => {
     try {
-      console.log(x);
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
         {
@@ -86,8 +84,43 @@ const LandingPageForDownloadableDocuments = () => {
             date_reference,
           }
         );
-        if (response.data.ok) {
-          setCheckIfDocumentIsSignedAlready(response.data.document.signature);
+        const checkIfDocumentIsSignedAlready = await devitrakApi.post(
+          "/company/consulting-signatures",
+          {
+            item_ids: String(item_ids).split(","),
+            staff_member_id,
+            company_id,
+            contract_url: documentUrl,
+          }
+        );
+        const staffMemberInfo = await devitrakApi.post("/staff/admin-users", {
+          _id: staff_member_id,
+        });
+        if (
+          response.data.ok &&
+          checkIfDocumentIsSignedAlready.data.ok &&
+          staffMemberInfo.data.ok
+        ) {
+          const staffMemberInfoResponse =
+            staffMemberInfo.data.adminUsers.at(-1);
+          setCheckIfDocumentIsSignedAlready(
+            response.data.contract_info.contract_list
+              .filter((item) => item.document_url === documentUrl)
+              ?.at(-1)?.signature
+          );
+          setSignatureInfo(
+            checkIfDocumentIsSignedAlready.data.data.length > 0
+              ? checkIfDocumentIsSignedAlready.data.data[0]
+              : null
+          );
+          if (checkIfDocumentIsSignedAlready.data.data.length > 0) {
+            setValue(
+              "fullName",
+              checkIfDocumentIsSignedAlready.data.data[0].signature
+            );
+            setValue("date", checkIfDocumentIsSignedAlready.data.data[0].date);
+            setValue("email", staffMemberInfoResponse.email);
+          }
           return setContractInfo({
             contract_info: response.data.contract_info,
             document_info: response.data.document,
@@ -114,6 +147,10 @@ const LandingPageForDownloadableDocuments = () => {
       setToken(token);
     }
   }, []);
+  useEffect(() => {
+    const staffMemberInformation = adminStaffQuery.data.data.adminUsers[0];
+    setValue("email", staffMemberInformation.email);
+  }, [adminStaffQuery.data]);
 
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
   if (adminStaffQuery.data) {
@@ -161,6 +198,8 @@ const LandingPageForDownloadableDocuments = () => {
             company_id: company_id,
             contract_url: documentUrl,
             staff_member_id: staff_member_id,
+            item_ids: String(item_ids).split(","),
+            verification_id: verification_id,
           });
           if (response.data.ok) {
             await addSignatureToDocument();
@@ -180,6 +219,31 @@ const LandingPageForDownloadableDocuments = () => {
         setLoadingStatus(false);
       }
     };
+
+    const layoutUX = () => {
+      if (token) {
+        return (
+          <>
+            <GrayButtonComponent
+              title={"Back"}
+              func={() => navigate(`/staff/${staff_member_id}/main`)}
+            />
+            <BlueButtonComponent
+              buttonType="submit"
+              title={"Agree"}
+              loadingState={loadingStatus}
+            />
+          </>
+        );
+      }
+      return (
+        <BlueButtonComponent
+          buttonType="submit"
+          title={"Agree"}
+          loadingState={loadingStatus}
+        />
+      );
+    };
     return (
       <>
         <Grid
@@ -198,7 +262,7 @@ const LandingPageForDownloadableDocuments = () => {
                 <Grid
                   item
                   xs={12}
-                  display={"flex"}
+                  display={!signatureInfo ? "flex" : "none"}
                   flexDirection={"column"}
                   justifyContent={"space-around"}
                   alignItems={"center"}
@@ -241,6 +305,10 @@ const LandingPageForDownloadableDocuments = () => {
                     sm={12}
                     md
                   >
+                    {" "}
+                    <FormLabel style={{ marginBottom: "0.5rem" }}>
+                      {signatureInfo && "Contract/Document signed"}
+                    </FormLabel>
                     <iframe src={url} width="100%" height="400"></iframe>
                   </Grid>
                   <Grid
@@ -251,7 +319,16 @@ const LandingPageForDownloadableDocuments = () => {
                     xs={12}
                   >
                     <FormLabel style={{ marginBottom: "0.5rem" }}>
-                      Full name
+                      {signatureInfo ? (
+                        "Signature"
+                      ) : (
+                        <Tooltip title="Full name will be considered as signature and agreement to the document.">
+                          {" "}
+                          <span>
+                            Full name <InformationIcon />
+                          </span>
+                        </Tooltip>
+                      )}
                     </FormLabel>
                     <OutlinedInput
                       {...register("fullName")}
@@ -270,25 +347,33 @@ const LandingPageForDownloadableDocuments = () => {
                     item
                     xs={12}
                   >
-                    <Tooltip title="Staff member login email/user is required for authentication and proceed to checking and signing the document">
-                      <FormLabel style={{ marginBottom: "0.5rem" }}>
-                        Staff member login email/user <InformationIcon />
-                      </FormLabel>
-                      <OutlinedInput
-                        {...register("email")}
-                        style={OutlinedInputStyle}
-                        placeholder="e.g. test@test.com"
-                        type="email"
-                        fullWidth
-                        required
-                        disabled={checkIfDocumentIsSignedAlready}
-                      />
-                    </Tooltip>
+                    <FormLabel style={{ marginBottom: "0.5rem" }}>
+                      {signatureInfo ? (
+                        <Tooltip title="Staff member login email/user is required for authentication and proceed to checking and signing the document">
+                          <p>
+                            Staff member login email/user <InformationIcon />{" "}
+                          </p>
+                        </Tooltip>
+                      ) : (
+                        "Email Staff Member"
+                      )}
+                    </FormLabel>
+                    <OutlinedInput
+                      {...register("email")}
+                      style={OutlinedInputStyle}
+                      placeholder="e.g. test@test.com"
+                      type="email"
+                      fullWidth
+                      required
+                      readOnly
+                      disabled={checkIfDocumentIsSignedAlready}
+                    />
                   </Grid>
                   <Grid
                     marginY={"20px"}
                     marginX={0}
                     textAlign={"left"}
+                    display={!signatureInfo ? "flex" : "none"}
                     item
                     xs={12}
                   >
@@ -351,16 +436,16 @@ const LandingPageForDownloadableDocuments = () => {
                     xs={12}
                   >
                     <FormLabel style={{ marginBottom: "0.5rem" }}>
-                      Date
+                      {signatureInfo ? "Stamp signature date" : "Date"}
                     </FormLabel>
                     <OutlinedInput
                       {...register("date")}
                       style={OutlinedInputStyle}
                       placeholder="e.g. John Doe"
                       type="text"
-                      value={new Date().toISOString()}
                       fullWidth
                       readOnly
+                      disabled
                     />
                   </Grid>
 
@@ -379,12 +464,16 @@ const LandingPageForDownloadableDocuments = () => {
                       opacity: "1",
                     }}
                   >
-                    <BlueButtonComponent
-                      disabled={checkIfDocumentIsSignedAlready}
-                      buttonType="submit"
-                      title={"Agree"}
-                      loadingState={loadingStatus}
-                    />
+                    {checkIfDocumentIsSignedAlready ? (
+                      <BlueButtonComponent
+                        func={() => navigate(`/staff/${staff_member_id}/main`)}
+                        buttonType="button"
+                        title={"Go back"}
+                        loadingState={loadingStatus}
+                      />
+                    ) : (
+                      layoutUX()
+                    )}
                   </Grid>
                 </form>
               </Grid>
