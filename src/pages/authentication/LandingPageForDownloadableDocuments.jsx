@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Tooltip } from "antd";
+import { message, Spin, Tooltip } from "antd";
 import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,7 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "./style/authStyle.css";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import Loading from "../../components/animation/Loading";
 
 const LandingPageForDownloadableDocuments = () => {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ const LandingPageForDownloadableDocuments = () => {
   const [signatureInfo, setSignatureInfo] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [validPassword, setValidPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
       password: "",
@@ -151,10 +153,14 @@ const LandingPageForDownloadableDocuments = () => {
     if (adminStaffQuery.data) {
       const staffMemberInformation = adminStaffQuery?.data?.data?.adminUsers[0];
       setValue("email", staffMemberInformation.email);
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
     }
   }, [adminStaffQuery.data]);
 
-  if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
+  if (adminStaffQuery.isLoading)
+    return <Spin fullscreen indicator={<Loading />} />;
   if (adminStaffQuery.data) {
     const addSignatureToDocument = async () => {
       return await devitrakApi.patch(
@@ -248,6 +254,7 @@ const LandingPageForDownloadableDocuments = () => {
     };
     return (
       <>
+        {isLoading ? <Spin indicator={<Loading />} fullscreen /> : null}
         <Grid
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container
