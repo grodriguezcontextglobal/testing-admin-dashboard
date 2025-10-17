@@ -291,9 +291,9 @@ const Login = () => {
       const message = () => {
         switch (error.response?.data?.msg) {
           case "User is not found":
-            return "Invalid email or password";
+            return "You have entered an invalid username or password";
           case "Incorrect password":
-            return "Incorrect password";
+            return "You have entered an invalid username or password";
           default:
             return error.response?.data?.msg;
         }
