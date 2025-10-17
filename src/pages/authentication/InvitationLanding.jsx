@@ -8,23 +8,22 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, message, Progress } from "antd";
+import { message, Progress } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import FooterComponent from "../../components/general/FooterComponent";
-import VisibleIcon from "../../components/icons/VisibleIcon";
 import HidenIcon from "../../components/icons/HidenIcon";
+import VisibleIcon from "../../components/icons/VisibleIcon";
 import { onLogin } from "../../store/slices/adminSlice";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
-import "./style/authStyle.css";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
+import "./style/authStyle.css";
 
 const InvitationLanding = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -177,17 +176,6 @@ const InvitationLanding = () => {
     });
   };
 
-  // Refetch queries on company change
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   allStaffSavedQuery.refetch();
-  //   companiesQuery.refetch();
-  //   sqlSavedStaffQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [company, allStaffSavedQuery, companiesQuery, sqlSavedStaffQuery]);
-
   // Helper functions
   const displayMaskedPassword = (password) => {
     return "*".repeat(password.length);
@@ -258,9 +246,11 @@ const InvitationLanding = () => {
         ...employeesInCompany[findInvitedStaff],
         status: "Confirmed",
       };
-      await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
+      const response = await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
         employees: employeesInCompany,
       });
+      console.log(response)
+      return;
     }
   };
 
@@ -313,7 +303,8 @@ const InvitationLanding = () => {
       setLoadingStatus(true);
 
       if (checkIfUserExistsInOtherCompany()) {
-        await updateExistingUser();
+        const updatingExistingUser = await updateExistingUser();
+        console.log(updatingExistingUser)
       } else {
         if (data.password !== data.password2) {
           setLoadingStatus(false);
@@ -546,35 +537,45 @@ const InvitationLanding = () => {
                   item
                   xs={12}
                 >
+                  {/* Password field: apply rules only if user does not exist */}
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Password <span style={{ fontWeight: 800 }}>*</span>
+                    Password{" "}
+                    {!checkIfUserExistsInOtherCompany() && (
+                      <span style={{ fontWeight: 800 }}>*</span>
+                    )}
                   </FormLabel>
                   <OutlinedInput
                     disabled={
                       loadingStatus ||
                       checkIfUserExistsInOtherCompany() !== null
                     }
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 8,
-                        message: "Password must be at least 8 characters",
-                      },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                        message:
-                          "Password must contain uppercase, lowercase, and number",
-                      },
-                    })}
+                    {...register(
+                      "password",
+                      checkIfUserExistsInOtherCompany()
+                        ? {}
+                        : {
+                            required: "Password is required",
+                            minLength: {
+                              value: 8,
+                              message: "Password must be at least 8 characters",
+                            },
+                            pattern: {
+                              value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                              message:
+                                "Password must contain uppercase, lowercase, and number",
+                            },
+                          }
+                    )}
                     style={{
                       ...OutlinedInputStyle,
                       border:
+                        !checkIfUserExistsInOtherCompany() &&
                         watch("password") === ""
                           ? "0.5px solid #ff4d4f"
                           : undefined,
                     }}
                     placeholder="Enter a strong password"
-                    required
+                    required={!checkIfUserExistsInOtherCompany()}
                     type={showPassword ? "text" : "password"}
                     fullWidth
                     endAdornment={
@@ -605,8 +606,7 @@ const InvitationLanding = () => {
                       )
                     }
                   />
-
-                  {/* Password strength indicator for new users */}
+                  {/* Password strength indicator only for new users */}
                   {!checkIfUserExistsInOtherCompany() && watchPassword && (
                     <div style={{ marginTop: "8px" }}>
                       <div
@@ -654,7 +654,6 @@ const InvitationLanding = () => {
                       </div>
                     </div>
                   )}
-
                   {/* Password validation error */}
                   {errors.password && (
                     <Typography
@@ -676,25 +675,36 @@ const InvitationLanding = () => {
                   item
                   xs={12}
                 >
+                  {/* // Confirm password field: apply rules only if user does not exist */}
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Confirm password <span style={{ fontWeight: 800 }}>*</span>
+                    Confirm password{" "}
+                    {!checkIfUserExistsInOtherCompany() && (
+                      <span style={{ fontWeight: 800 }}>*</span>
+                    )}
                   </FormLabel>
                   <OutlinedInput
-                    required
+                    required={!checkIfUserExistsInOtherCompany()}
                     disabled={
                       loadingStatus ||
                       checkIfUserExistsInOtherCompany() !== null
                     }
-                    {...register("password2", {
-                      required: "Please confirm your password",
-                      validate: (value) =>
-                        value === watchPassword || "Passwords do not match",
-                    })}
+                    {...register(
+                      "password2",
+                      checkIfUserExistsInOtherCompany()
+                        ? {}
+                        : {
+                            required: "Please confirm your password",
+                            validate: (value) =>
+                              value === watchPassword ||
+                              "Passwords do not match",
+                          }
+                    )}
                     style={{
                       ...OutlinedInputStyle,
                       borderColor:
-                        (!passwordMatch && watchPassword2) ||
-                        watch("password2") === ""
+                        !checkIfUserExistsInOtherCompany() &&
+                        ((!passwordMatch && watchPassword2) ||
+                          watch("password2") === "")
                           ? "#ff4d4f"
                           : undefined,
                     }}
@@ -731,9 +741,8 @@ const InvitationLanding = () => {
                       )
                     }
                   />
-
-                  {/* Password match indicator */}
-                  {watchPassword2 && (
+                  {/* Password match indicator only for new users */}
+                  {!checkIfUserExistsInOtherCompany() && watchPassword2 && (
                     <div
                       style={{
                         display: "flex",
@@ -764,9 +773,8 @@ const InvitationLanding = () => {
                       </Typography>
                     </div>
                   )}
-
                   {/* Confirm password validation error */}
-                  {errors.password2 && (
+                  {!checkIfUserExistsInOtherCompany() && errors.password2 && (
                     <Typography
                       style={{
                         fontSize: "12px",
@@ -789,15 +797,13 @@ const InvitationLanding = () => {
                   item
                   xs={12}
                 >
-                  <Button
+                  <BlueButtonComponent
+                    title={"Submit registration"}
+                    buttonType="submit"
                     disabled={loadingStatus}
-                    htmlType="submit"
-                    style={{ ...BlueButton, width: "100%" }}
-                  >
-                    <Typography style={{ ...BlueButtonText, margin: "auto" }}>
-                      Submit registration
-                    </Typography>
-                  </Button>
+                    styles={{ width: "100%" }}
+                    loadingState={loadingStatus}
+                  />
                 </Grid>
 
                 <Grid
