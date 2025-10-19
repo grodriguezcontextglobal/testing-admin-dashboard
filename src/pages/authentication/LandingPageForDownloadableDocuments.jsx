@@ -120,7 +120,10 @@ const LandingPageForDownloadableDocuments = () => {
               "fullName",
               checkIfDocumentIsSignedAlready.data.data[0].signature
             );
-            setValue("date", checkIfDocumentIsSignedAlready.data.data[0].date);
+            setValue(
+              "date",
+              new Date(checkIfDocumentIsSignedAlready.data.data[0].date).toLocaleString()
+            );
             setValue("email", staffMemberInfoResponse.email);
           }
           return setContractInfo({
