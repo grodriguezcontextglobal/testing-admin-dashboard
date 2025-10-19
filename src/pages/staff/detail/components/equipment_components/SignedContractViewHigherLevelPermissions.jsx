@@ -108,7 +108,7 @@ const SignedContractViewHigherPermissionLevel = () => {
   useEffect(() => {
     if (signatureInfo) {
       setValue("signature", signatureInfo.signature);
-      setValue("date", signatureInfo.date);
+      setValue("date", new Date(signatureInfo.date).toLocaleString());
     }
   }, [signatureInfo])
   
