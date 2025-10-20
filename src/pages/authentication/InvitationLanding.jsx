@@ -376,6 +376,7 @@ const InvitationLanding = () => {
           setAcceptanceTermsAndPoliciesResult={
             setAcceptanceTermsAndPoliciesResult
           }
+          staffEmail={email}
         />
       )}
       <Grid
