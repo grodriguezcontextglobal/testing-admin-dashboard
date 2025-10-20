@@ -418,7 +418,6 @@ const AssignmentFromExistingInventory = () => {
         verification_id: props.verification_id ?? verificationInfo._id,
       }
     );
-    console.log("verificationInfo", verificationInfo);
     return null;
   };
   const assignDeviceToStaffMember = async (data) => {
