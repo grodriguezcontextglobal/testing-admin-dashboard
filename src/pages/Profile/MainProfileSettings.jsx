@@ -23,24 +23,27 @@ const MainProfileSettings = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const logout = async () => {
-    await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, {
-      online: false,
-    });
-    persistor.purge();
-    dispatch(onResetArticleEdited());
-    dispatch(onResetCustomer());
-    dispatch(onResetDevicesHandle());
-    dispatch(onResetDeviceInQuickGlance());
-    dispatch(onResetEventInfo());
-    dispatch(onResetStaffProfile());
-    dispatch(onResetHelpers());
-    dispatch(onResetStripesInfo());
-    dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
-    dispatch(onLogout());
-    return;
+    try {
+      await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, { online: false });
+      await devitrakApi.post("/admin/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Client-side cleanup
+      persistor.purge();
+      dispatch(onResetArticleEdited());
+      dispatch(onResetCustomer());
+      dispatch(onResetDevicesHandle());
+      dispatch(onResetDeviceInQuickGlance());
+      dispatch(onResetEventInfo());
+      dispatch(onResetStaffProfile());
+      dispatch(onResetHelpers());
+      dispatch(onResetStripesInfo());
+      dispatch(onResetSubscriptionInfo());
+      localStorage.removeItem("admin-token", "");
+      dispatch(onLogout());
+    }
   };
-
   const tabOptions = [
     {
       label: "My details",
