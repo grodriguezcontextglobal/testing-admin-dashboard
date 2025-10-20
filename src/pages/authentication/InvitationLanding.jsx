@@ -285,15 +285,13 @@ const InvitationLanding = () => {
     );
 
     if (resp.data.ok) {
-      console.log(resp.data)
-      const addingStaffIdToAcceptance = await devitrakApi.patch(
+      await devitrakApi.patch(
         `/devitrak/${acceptanceTermsAndPoliciesResult.acceptanceInfo.id}`,
         {
           staff_id: resp.data.uid,
           email: email,
         }
       );
-      console.log({ addingStaffIdToAcceptance });
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
         (element) => element.user === email
       );
