@@ -166,7 +166,7 @@ const DevitrakTermsAndConditions = ({
               }
             />
             <BlueButtonComponent
-              title={"Agree"}
+              title={"Agree And Sign"}
               buttonType="submit"
               loadingState={isLoading}
             />
