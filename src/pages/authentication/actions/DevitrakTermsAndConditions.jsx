@@ -43,7 +43,8 @@ const DevitrakTermsAndConditions = ({
   company_id = null,
   staffMember = null,
   action = null,
-  setAcceptanceTermsAndPoliciesResult
+  setAcceptanceTermsAndPoliciesResult,
+  staffEmail
 }) => {
   const location = useLocation();
   const [name, setName] = useState("");
@@ -66,7 +67,8 @@ const DevitrakTermsAndConditions = ({
           policyDocuments,
           setOpen,
           setIsLoading,
-          setAcceptanceTermsAndPoliciesResult
+          setAcceptanceTermsAndPoliciesResult,
+          staffEmail
         });
       } else if (action) {
         await action();
