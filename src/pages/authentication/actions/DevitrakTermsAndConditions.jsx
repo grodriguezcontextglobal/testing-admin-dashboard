@@ -192,12 +192,10 @@ export const agreedAgreement = async ({
 }) => {
   try {
     setIsLoading(true);
-    const date = new Date().toISOString();
     const acceptanceTermsAndPolicies = await devitrakApi.post(
       "/devitrak/new_acceptance",
       {
         signature: staffMember,
-        date,
         documentsAndPolicies: [
           ...policyDocuments.map((item) => ({
             url: item.url,
