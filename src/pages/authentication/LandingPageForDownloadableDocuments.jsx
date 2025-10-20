@@ -241,7 +241,7 @@ const LandingPageForDownloadableDocuments = () => {
             />
             <BlueButtonComponent
               buttonType="submit"
-              title={"Agree"}
+              title={"Sign and Agree"}
               loadingState={loadingStatus}
             />
           </>
@@ -250,7 +250,7 @@ const LandingPageForDownloadableDocuments = () => {
       return (
         <BlueButtonComponent
           buttonType="submit"
-          title={"Agree"}
+          title={"Sign and Agree"}
           loadingState={loadingStatus}
         />
       );
