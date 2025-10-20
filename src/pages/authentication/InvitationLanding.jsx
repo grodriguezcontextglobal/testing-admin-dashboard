@@ -39,7 +39,10 @@ const InvitationLanding = () => {
   const email = new URLSearchParams(window.location.search).get("email");
   const company = new URLSearchParams(window.location.search).get("company");
   const role = new URLSearchParams(window.location.search).get("role");
-
+  const [
+    acceptanceTermsAndPoliciesResult,
+    setAcceptanceTermsAndPoliciesResult,
+  ] = useState(null);
   // Form setup with proper destructuring
   const {
     register,
@@ -246,10 +249,9 @@ const InvitationLanding = () => {
         ...employeesInCompany[findInvitedStaff],
         status: "Confirmed",
       };
-      const response = await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
+      await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
         employees: employeesInCompany,
       });
-      console.log(response)
       return;
     }
   };
@@ -283,6 +285,15 @@ const InvitationLanding = () => {
     );
 
     if (resp.data.ok) {
+      console.log(resp.data)
+      const addingStaffIdToAcceptance = await devitrakApi.patch(
+        `/devitrak/${acceptanceTermsAndPoliciesResult.acceptanceInfo.id}`,
+        {
+          staff_id: resp.data.uid,
+          email: email,
+        }
+      );
+      console.log({ addingStaffIdToAcceptance });
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
         (element) => element.user === email
       );
@@ -303,8 +314,7 @@ const InvitationLanding = () => {
       setLoadingStatus(true);
 
       if (checkIfUserExistsInOtherCompany()) {
-        const updatingExistingUser = await updateExistingUser();
-        console.log(updatingExistingUser)
+        await updateExistingUser();
       } else {
         if (data.password !== data.password2) {
           setLoadingStatus(false);
@@ -365,6 +375,9 @@ const InvitationLanding = () => {
           navigate={navigate}
           company_id={company}
           staffMember={`${firstName} ${lastName}`}
+          setAcceptanceTermsAndPoliciesResult={
+            setAcceptanceTermsAndPoliciesResult
+          }
         />
       )}
       <Grid
