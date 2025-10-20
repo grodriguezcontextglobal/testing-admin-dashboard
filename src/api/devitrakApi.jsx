@@ -42,6 +42,7 @@ devitrakApi.interceptors.request.use((config) => {
 
 export const devitrakApiAdmin = axios.create({
   baseURL: `${devitrack_api}/admin`,
+  withCredentials: true, // ensure cookies are sent
 });
 
 //*config interceptors
