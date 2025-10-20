@@ -185,7 +185,7 @@ export default DevitrakTermsAndConditions;
 
 export const agreedAgreement = async ({
   staffMember,
-  // company_id,
+  staffEmail,
   setOpen,
   setIsLoading,
   setAcceptanceTermsAndPoliciesResult
@@ -204,6 +204,7 @@ export const agreedAgreement = async ({
             documentName: item.title,
           })),
         ],
+        email: staffEmail
       }
     );
     if (acceptanceTermsAndPolicies.data.ok) {
