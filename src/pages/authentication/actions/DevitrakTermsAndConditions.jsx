@@ -1,4 +1,4 @@
-import { Drawer, Space, Table } from "antd";
+import { Drawer, message, Space, Table } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 // Import PDF documents
@@ -43,6 +43,7 @@ const DevitrakTermsAndConditions = ({
   company_id = null,
   staffMember = null,
   action = null,
+  setAcceptanceTermsAndPoliciesResult
 }) => {
   const location = useLocation();
   const [name, setName] = useState("");
@@ -51,7 +52,7 @@ const DevitrakTermsAndConditions = ({
   // Handle form submission properly
   const handleFormSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
-    
+
     // Validate name field
     if (!name.trim()) {
       return; // Let HTML5 validation handle this
@@ -65,6 +66,7 @@ const DevitrakTermsAndConditions = ({
           policyDocuments,
           setOpen,
           setIsLoading,
+          setAcceptanceTermsAndPoliciesResult
         });
       } else if (action) {
         await action();
@@ -183,24 +185,34 @@ export default DevitrakTermsAndConditions;
 
 export const agreedAgreement = async ({
   staffMember,
-  company_id,
+  // company_id,
   setOpen,
   setIsLoading,
+  setAcceptanceTermsAndPoliciesResult
 }) => {
   try {
     setIsLoading(true);
     const date = new Date().toISOString();
-    for (let data of policyDocuments) {
-      await devitrakApi.post("/company/signatures", {
+    const acceptanceTermsAndPolicies = await devitrakApi.post(
+      "/devitrak/new_acceptance",
+      {
         signature: staffMember,
         date,
-        contract_url: data.url,
-        company_id: company_id,
-      });
+        documentsAndPolicies: [
+          ...policyDocuments.map((item) => ({
+            url: item.url,
+            documentName: item.title,
+          })),
+        ],
+      }
+    );
+    if (acceptanceTermsAndPolicies.data.ok) {
+      message.success("Agreement submitted successfully.");
+      setAcceptanceTermsAndPoliciesResult(acceptanceTermsAndPolicies.data)
+      return setOpen(false);
     }
-    setOpen(false);
   } catch (error) {
-    console.error("Error submitting agreement:", error);
+    message.error("Error submitting agreement:", (error?.message || error?.msg) || error);
     throw error; // Re-throw to be handled by the form submission
   } finally {
     setIsLoading(false);
