@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Select, Spin, notification } from "antd";
+import { Select, Spin, message, notification } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -16,12 +16,23 @@ import {
   onLogin,
   onLogout,
 } from "../../../store/slices/adminSlice";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import { onResetArticleEdited } from "../../../store/slices/articleSlide";
+import { onResetCustomer } from "../../../store/slices/customerSlice";
+import {
+  onResetDeviceInQuickGlance,
+  onResetDevicesHandle,
+} from "../../../store/slices/devicesHandleSlice";
+import { onResetEventInfo } from "../../../store/slices/eventSlice";
+import { onResetStaffProfile } from "../../../store/slices/staffDetailSlide";
+import { onResetHelpers } from "../../../store/slices/helperSlice";
+import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
+import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
+import { persistor } from "../../../store/Store";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -131,6 +142,35 @@ const ModalMultipleCompanies = ({
     };
   };
 
+  const logout = async () => {
+    try {
+      await devitrakApi.post("/admin/logout", {
+        uid: dataPassed.respo.uid,
+      });
+    } catch (error) {
+      message.error("Logout error:", error);
+    } finally {
+      // Client-side cleanup
+      persistor.purge();
+      dispatch(onResetArticleEdited());
+      dispatch(onResetCustomer());
+      dispatch(onResetDevicesHandle());
+      dispatch(onResetDeviceInQuickGlance());
+      dispatch(onResetEventInfo());
+      dispatch(onResetStaffProfile());
+      dispatch(onResetHelpers());
+      dispatch(onResetStripesInfo());
+      dispatch(onResetSubscriptionInfo());
+      localStorage.removeItem("admin-token", "");
+      dispatch(onLogout());
+    }
+  };
+
+  const handleCancel = async () => {
+    localStorage.removeItem("admin-token");
+    await logout();
+    setOpenMultipleCompanies(false);
+  };
   const body = () => {
     return (
       <Grid container>
@@ -301,16 +341,11 @@ const ModalMultipleCompanies = ({
             gap: "10px",
           }}
         >
-          <Button
-            loading={isLoading}
-            onClick={() => {
-              localStorage.removeItem("admin-token");
-              setOpenMultipleCompanies(false);
-            }}
-            style={{ ...GrayButton, width: "100%", margin: "20px 0px" }}
-          >
-            <p style={GrayButtonText}>Cancel</p>
-          </Button>
+          <GrayButtonComponent
+            title={"Cancel"}
+            func={handleCancel}
+            styles={{ width: "100%", margin: "20px 0px" }}
+          />
           <BlueButtonComponent
             loadingState={isLoading}
             title={"Enter account"}
@@ -331,14 +366,6 @@ const ModalMultipleCompanies = ({
         openDialog={openMultipleCompanies}
         closeModal={closeModal}
       />
-      {/* <Modal
-      open={openMultipleCompanies}
-      onCancel={() => closeModal()}
-      centered
-      footer={[]}
-      style={{ zIndex: 30 }}
-    >
-    </Modal> */}
     </>
   );
 };
