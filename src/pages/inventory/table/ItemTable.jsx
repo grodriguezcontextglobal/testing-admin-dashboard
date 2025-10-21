@@ -37,7 +37,7 @@ const ItemTable = ({
   searchItem,
   date,
   loadingState,
-  reference,
+  // reference,
   openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
   setDataFilterOptions,
@@ -45,12 +45,43 @@ const ItemTable = ({
   downloadDataReport,
   total,
   searchedResult,
-  companyHasInventoryQuery,
+  // companyHasInventoryQuery,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
   const [chosenConditionState, setChosenConditionState] = useState(0);
-  const [searchDateResult, setSearchDateResult] = useState([]);
+  const [searchResult, setSearchResult] = useState([]);
+
+  // Shared cell style for table cells
+  const cellStyle = useMemo(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      width: "100%",
+    }),
+    []
+  );
+
+  // Display title based on search/filter/date
+  const getDisplayTitle = useCallback(() => {
+    if (chosenConditionState === 3 && date)
+      return "Inventory for selected period";
+    if (searchItem) return `Search results for "${searchItem}"`;
+    if (chosen?.value !== null && chosen?.category !== null) {
+      const labels = {
+        0: "Brand",
+        1: "Device name",
+        2: "Serial number",
+        3: "Location",
+        4: "Ownership",
+        5: "Status",
+      };
+      const label = labels[chosen.category] ?? "Filter";
+      return `Filtered by ${label}: ${chosen.value}`;
+    }
+    return "Inventory";
+  }, [searchItem, chosen?.value, chosen?.category, chosenConditionState, date]);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -114,6 +145,10 @@ const ItemTable = ({
               const valu = {
                 key: `${data.item_id}`,
                 ...data,
+                condition:
+                  data.status ??
+                  groupingBySerialNumber[data.serial_number].at(-1).status ??
+                  groupingBySerialNumber[data.serial_number].at(-1).condition,
                 brand: groupingBySerialNumber[data.serial_number].at(-1).brand,
                 data: {
                   ...data,
@@ -126,7 +161,7 @@ const ItemTable = ({
                 image_url:
                   groupingBySerialNumber[data.serial_number].at(-1).image_url ??
                   null,
-              }
+              };
               resultFormatToDisplay.set(data.item_id, valu);
             }
           }
@@ -141,13 +176,16 @@ const ItemTable = ({
     [renderedListItems, itemsInInventoryQuery]
   );
 
-  const refactoredGetDataStructuringFormat = useCallback(() => {
-    const resultFormatToDisplay = [];
-    const data = refactoredListInventoryCompany?.data?.data?.items;
-    const groupingByImage = groupBy(data, "image_url");
+  // Prefer refactored inventory dataset; fallback to legacy format
+  const refactoredDataset = useMemo(() => {
+    const items = refactoredListInventoryCompany?.data?.data?.items;
+    if (!Array.isArray(items) || items.length === 0) return [];
 
-    const processItems = (items) => {
-      const groupingByItem = groupBy(items, "item_group");
+    const resultFormatToDisplay = [];
+    const groupingByImage = groupBy(items, "image_url");
+
+    const processItems = (itemsChunk) => {
+      const groupingByItem = groupBy(itemsChunk, "item_group");
       for (let [key, value] of Object.entries(groupingByItem)) {
         const imageSource = groupingByDeviceType[key]
           ? groupingByDeviceType[key][0].source
@@ -168,38 +206,57 @@ const ItemTable = ({
             serial_number: data.serial_number,
             enableAssignFeature: data.enableAssignFeature,
             usage: data.usage,
+            status: data.status ?? null,
+            condition: data.status ?? null,
           });
         }
       }
     };
 
-    if (groupingByImage[null]) {
-      processItems(groupingByImage[null]);
-    }
-    if (groupingByImage[""]) {
-      processItems(groupingByImage[""]);
-    }
+    // Process groups, including null/empty image_url buckets
+    if (groupingByImage[null]) processItems(groupingByImage[null]);
+    if (groupingByImage[""]) processItems(groupingByImage[""]);
+    Object.entries(groupingByImage)
+      .filter(([k]) => k !== null && k !== "")
+      .forEach(([, chunk]) => processItems(chunk));
 
     return resultFormatToDisplay;
-  }, [refactoredListInventoryCompany, groupingByDeviceType]);
+  }, [refactoredListInventoryCompany?.data?.data?.items, groupingByDeviceType]);
+
+  // Legacy join-based dataset (existing function retained)
+  const legacyDataset = useMemo(
+    () => getDataStructuringFormat(renderedListItems),
+    [renderedListItems, itemsInInventoryQuery?.data?.data?.items]
+  );
+
+  // Unified dataset
+  const baseDataset = useMemo(
+    () => (refactoredDataset.length > 0 ? refactoredDataset : legacyDataset),
+    [refactoredDataset, legacyDataset]
+  );
+
+  // Remove redundant calls; only mark loading done when data exists
+  useEffect(() => {
+    if (baseDataset.length > 0) {
+      loadingState(false);
+    }
+  }, [baseDataset.length, loadingState]);
+
+  // Filtering helpers now use baseDataset
+  const filterOptionsBasedOnProps = (props) => {
+    const sortingByProps = groupBy(baseDataset, props);
+    return Object.keys(sortingByProps);
+  };
 
   useEffect(() => {
-    getDataStructuringFormat(renderedListItems);
-    loadingState(false); // ✅ State update happens inside useEffect, not render
-    refactoredGetDataStructuringFormat();
-  }, [getDataStructuringFormat, loadingState]);
-
-  const filterOptionsBasedOnProps = (props) => {
-    const options = new Set();
-    const sortingByProps = groupBy(
-      getDataStructuringFormat(renderedListItems),
-      props
-    );
-    for (let [key, _] of Object.entries(sortingByProps)) {
-      options.add(key);
+    if (chosen?.value !== null && chosen?.category !== null) {
+      setChosenConditionState(2); // filter-by-props
+    } else if (date) {
+      setChosenConditionState(3); // date filter
+    } else {
+      setChosenConditionState(0); // default
     }
-    return Array.from(options);
-  };
+  }, [chosen?.value, chosen?.category, date]);
 
   const filterByProps = () => {
     const dicSelectedOptions = {
@@ -211,65 +268,43 @@ const ItemTable = ({
       5: "status",
     };
     const sortingByProps = groupBy(
-      getDataStructuringFormat(renderedListItems),
+      baseDataset,
       dicSelectedOptions[chosen.category]
     );
-    return sortingByProps[chosen.value];
+    return sortingByProps?.[chosen.value] || [];
   };
 
   const searchingData = () => {
-    return getDataStructuringFormat(renderedListItems)?.filter((item) =>
+    return baseDataset.filter((item) =>
       JSON.stringify(item)
         .toLowerCase()
         .includes(String(searchItem).toLowerCase())
     );
   };
-  useEffect(() => {
-    if (searchItem && searchItem !== "") {
-      setSearchDateResult([]);
-      setChosenConditionState(1);
-    }
-    if (chosen.value !== null) {
-      setSearchDateResult([]);
-      setChosenConditionState(2);
-    }
-    if (date !== null) {
-      setChosenConditionState(3);
-    }
-    if (
-      chosen.value === null &&
-      date === null &&
-      (!searchItem || searchItem.length === 0)
-    ) {
-      setSearchDateResult([]);
-      setChosenConditionState(0);
-    }
-  }, [searchItem, chosen.value, date, loadingState]);
 
-  const querySearchingDataByDate = async () => {
-    const date1Format = `${new Date(date).getTime()}`;
-    const date2Format = `${new Date(date).getFullYear()}-${
-      new Date(date).getMonth() + 1
-    }-${new Date(date).getDate()}`;
-    const responseQuery = await devitrakApi.get(
-      `/event/event-inventory-based-on-period?company_id=${user.companyData.id}&date=${date1Format}&date2=${date2Format}&company_sql_id=${user.sqlInfo.company_id}`
-    );
-    setSearchDateResult(responseQuery.data.events);
-    return responseQuery?.data?.events;
-  };
-
-  useEffect(() => {
-    if (date) {
-      querySearchingDataByDate();
-    }
-  }, [date]); // ✅ This will ensure the query runs when the date is updated
-
+  // Date filtering: keep existing behavior using legacy transformation,
+  // since the event endpoint structure is different/unknown.
   const filterDataByDate = useMemo(() => {
-    return getDataStructuringFormat(searchDateResult);
-  }, [reference]);
+    return getDataStructuringFormat(searchResult);
+  }, [searchResult, itemsInInventoryQuery?.data?.data?.items]);
+
+  // Keep search results in state; if no term, show all
+  useEffect(() => {
+    const term = String(searchItem || "")
+      .trim()
+      .toLowerCase();
+    if (term.length === 0) {
+      setSearchResult(baseDataset);
+      return;
+    }
+    const filtered = baseDataset.filter((item) =>
+      JSON.stringify(item).toLowerCase().includes(term)
+    );
+    setSearchResult(filtered);
+  }, [searchItem, baseDataset]);
 
   const options = {
-    0: getDataStructuringFormat(renderedListItems),
+    0: searchResult, // default branch reflects search or all
     1: searchItem && searchingData(),
     2: chosen.value !== null && filterByProps(),
     3: date !== null && filterDataByDate,
@@ -277,76 +312,39 @@ const ItemTable = ({
 
   const dataToDisplay = useCallback(() => {
     if (chosenConditionState === 3) {
-      return getDataStructuringFormat(searchDateResult);
+      return filterDataByDate;
     }
     return options[chosenConditionState] || [];
-  }, [chosenConditionState, searchDateResult, renderedListItems]);
+  }, [chosenConditionState, filterDataByDate, options]);
 
-  const filterOptions = {
-    0: filterOptionsBasedOnProps("brand"),
-    1: filterOptionsBasedOnProps("item_group"),
-    2: filterOptionsBasedOnProps("serial_number"),
-    3: filterOptionsBasedOnProps("location"),
-    4: filterOptionsBasedOnProps("ownership"),
-    5: filterOptionsBasedOnProps("status"),
-  };
-
-  const memoizedDataToDisplay = useMemo(
-    () => dataToDisplay(),
-    [chosenConditionState, searchDateResult, renderedListItems]
-  );
+  const memoizedDataToDisplay = useMemo(() => dataToDisplay(), [dataToDisplay]);
 
   useEffect(() => {
-    setDataFilterOptions(filterOptions);
-    // Only call once data is ready
+    setDataFilterOptions({
+      0: filterOptionsBasedOnProps("brand"),
+      1: filterOptionsBasedOnProps("item_group"),
+      2: filterOptionsBasedOnProps("serial_number"),
+      3: filterOptionsBasedOnProps("location"),
+      4: filterOptionsBasedOnProps("ownership"),
+      5: filterOptionsBasedOnProps("status"),
+    });
+
     if (memoizedDataToDisplay?.length > 0) {
       downloadDataReport(memoizedDataToDisplay);
     }
   }, [chosen, memoizedDataToDisplay]);
 
-  const cellStyle = {
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  };
-
-  const refreshFn = () => {
-    listImagePerItemQuery.refetch();
-    listItemsQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    queryClient.invalidateQueries({ queryKey: ["itemInInventory"] });
+  // Refresh: invalidate inventory-related queries
+  const refreshFn = useCallback(() => {
     queryClient.invalidateQueries({
       queryKey: ["RefactoredListInventoryCompany"],
     });
-    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
     queryClient.invalidateQueries({
       queryKey: ["ItemsInInventoryCheckingQuery"],
     });
-    return refactoredGetDataStructuringFormat();
-  };
-
-  useEffect(() => {
-    dataToDisplay();
-  }, []);
-
-  // Add function to get display title based on current filter state
-  const getDisplayTitle = () => {
-    if (searchItem && searchItem !== "") {
-      return `Search results for "${searchItem}"`;
-    }
-    if (chosen.value !== null) {
-      const categoryNames = {
-        0: "brand",
-        1: "item_group",
-        2: "serial_number",
-        3: "location",
-        4: "ownership",
-        5: "status",
-      };
-      return `Filtered by ${categoryNames[chosen.category]}: "${chosen.value}"`;
-    }
-    return "All devices";
-  };
+    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
+    queryClient.invalidateQueries({ queryKey: ["imagePerItemList"] });
+  }, [queryClient]);
 
   return (
     <Suspense
@@ -392,49 +390,6 @@ const ItemTable = ({
             }}
             open={true}
           >
-            <div //summary
-              style={{
-                width: "100%",
-              }}
-              open
-            >
-              <div
-                style={{
-                  ...CenteringGrid,
-                  justifyContent: "space-between",
-                }}
-              >
-                <p
-                  style={{
-                    ...TextFontsize18LineHeight28,
-                    width: "60%",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    textWrap: "balance",
-                  }}
-                >
-                  {getDisplayTitle()}{" "}
-                  <span
-                    style={{
-                      ...Subtitle,
-                      width: "100%",
-                      textAlign: "left",
-                    }}
-                  >
-                    | Total <strong>{total}</strong> units
-                    {(searchItem || chosen.value !== null) && (
-                      <span style={{ color: "var(--blue-600)" }}>
-                        {" "}
-                        (filtered from{" "}
-                        {companyHasInventoryQuery?.data?.data?.total ?? 0}{" "}
-                        total)
-                      </span>
-                    )}
-                  </span>{" "}
-                  &nbsp;{" "}
-                </p>
-              </div>
-            </div>
             <Divider />
             <Grid container>
               <Grid
@@ -482,7 +437,7 @@ const ItemTable = ({
                 }}
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
-                dataSource={memoizedDataToDisplay} //refactoredGetDataStructuringFormat()} //dataToDisplay()}
+                dataSource={memoizedDataToDisplay} // unified dataset
                 className="table-ant-customized"
               />
               <Divider />
