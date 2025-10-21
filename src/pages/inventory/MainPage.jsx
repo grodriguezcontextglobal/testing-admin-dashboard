@@ -28,7 +28,7 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 import { Title } from "../../styles/global/Title";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
-import { useHover } from "usehooks-ts";
+import FilterOptionsUX from "./utils/FilterOptionsUX";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
@@ -93,7 +93,7 @@ const MainPage = () => {
   // Calculate the total to display based on current state
   const getTotalToDisplay = () => {
     if (params || chosenOption.value !== null) {
-      return filteredDataCount;
+      return filteredDataCount > 0 ? filteredDataCount : 0;
     }
     return companyHasInventoryQuery?.data?.data?.total ?? 0;
   };
@@ -301,20 +301,6 @@ const MainPage = () => {
             >
               Search inventory:&nbsp;
             </Typography>
-            {/* <Grid
-              item
-              sx={{
-                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
-              }}
-              md={12}
-              lg={12}
-            >
-              <FilterOptionsUX
-                filterOptions={dataFilterOptions}
-                chosen={chosenOption}
-                setChosen={setChosenOption}
-              />
-            </Grid> */}
           </div>
           <Grid justifyContent={"flex-start"} gap={1} container>
             <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -442,6 +428,23 @@ const MainPage = () => {
             </Grid>
           </Grid>
         </Grid>
+        {/* <Divider />
+        <Grid
+          display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
+          justifyContent={"flex-start"}
+          alignItems={"center"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <FilterOptionsUX
+            filterOptions={dataFilterOptions}
+            chosen={chosenOption}
+            setChosen={setChosenOption}
+          />
+        </Grid> */}
         <Grid
           display={"flex"}
           justifyContent={"center"}
