@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "antd";
 // import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useState } from "react";
+import { createContext, useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
@@ -61,13 +61,6 @@ const RenderingFilters = ({
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-  const locationsAndSublocationsData = () => {
-    let result = {};
-    if (locationsAndSublocationsWithTypes?.data?.data?.ok) {
-      result = locationsAndSublocationsWithTypes?.data?.data?.data;
-    }
-    return result;
-  };
   const renderingCardData = user?.companyData?.employees?.find(
     (element) => element.user === user.email
   );
@@ -157,6 +150,81 @@ const RenderingFilters = ({
       setEditingSection(null);
     }
   };
+  // Compute filtered base list for chosen option, otherwise all data
+  const keyMap = useMemo(
+    () => ({
+      0: "brand",
+      1: "item_group",
+      2: "serial_number",
+      3: "location",
+      4: "ownership",
+      5: "status",
+    }),
+    []
+  );
+  const filteredList = useMemo(() => {
+    const base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
+    if (chosen?.category != null && chosen?.value != null) {
+      const key = keyMap[chosen.category];
+      if (!key) return base;
+      return base.filter((item) => item?.[key] === chosen.value);
+    }
+    return base;
+  }, [dataToDisplay, chosen?.category, chosen?.value, keyMap]);
+
+  // Derived groupings from filtered or full list
+  const byCategory = useMemo(
+    () => sortingByParameters({ props: "category_name", data: filteredList }),
+    [filteredList]
+  );
+  const byGroup = useMemo(
+    () => sortingByParameters({ props: "item_group", data: filteredList }),
+    [filteredList]
+  );
+  const byBrand = useMemo(
+    () => sortingByParameters({ props: "brand", data: filteredList }),
+    [filteredList]
+  );
+  const byOwnership = useMemo(
+    () => sortingByParameters({ props: "ownership", data: filteredList }),
+    [filteredList]
+  );
+
+  const locationsAndSublocationsData = () => {
+    const source =
+      locationsAndSublocationsWithTypes?.data?.data?.ok &&
+      locationsAndSublocationsWithTypes?.data?.data?.data
+        ? locationsAndSublocationsWithTypes.data.data.data
+        : {};
+
+    // If a specific Location was chosen, filter the hierarchy to that node
+    if (chosen?.category === 3 && chosen?.value) {
+      const target = chosen.value;
+
+      // Recursively search the tree and lift the matched node to the top-level
+      const findNode = (obj, name) => {
+        if (!obj || typeof obj !== "object") return null;
+        for (const [key, node] of Object.entries(obj)) {
+          if (key === name) {
+            return { [key]: node };
+          }
+          if (node?.children && typeof node.children === "object") {
+            const found = findNode(node.children, name);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const filtered = findNode(source, target);
+      // If not found, keep the full tree
+      return filtered ?? source;
+    }
+
+    // No chosen option: return all locations
+    return source;
+  };
+
   // Update total calculation to reflect current filtered state
   const totalUnitsAllLocations = () => {
     let result = 0;
@@ -177,9 +245,9 @@ const RenderingFilters = ({
           result += value.total;
         }
       }
-    } else if ((searchItem || chosen.value) && dataToDisplay) {
-      // Fallback to filtered data count
-      result = dataToDisplay()?.length || 0;
+    } else {
+      // Fallback to filtered items count from chosen or search
+      result = filteredList?.length || 0;
     }
     return result;
   };
@@ -274,8 +342,13 @@ const RenderingFilters = ({
       ),
       data: searchedResult
         ? extractedSearchedData.category_name
+        : chosen?.value != null && chosen?.category != null
+        ? byCategory
         : extractedData.category_name || [],
-      totalUnits: extractedData.category_name?.length || 0,
+      totalUnits:
+        chosen?.value != null && chosen?.category != null
+          ? byCategory.length
+          : extractedData.category_name?.length || 0,
       open: true,
       routeTitle: "category_name",
       renderMoreOptions: false,
@@ -327,8 +400,13 @@ const RenderingFilters = ({
       ),
       data: searchedResult
         ? extractedSearchedData.item_group
+        : chosen?.value != null && chosen?.category != null
+        ? byGroup
         : extractedData.item_group || [],
-      totalUnits: extractedData.item_group?.length || 0,
+      totalUnits:
+        chosen?.value != null && chosen?.category != null
+          ? byGroup.length
+          : extractedData.item_group?.length || 0,
       open: true,
       routeTitle: "group",
       renderMoreOptions: false,
@@ -378,8 +456,13 @@ const RenderingFilters = ({
       ),
       data: searchedResult
         ? extractedSearchedData.brand
+        : chosen?.value != null && chosen?.category != null
+        ? byBrand
         : extractedData.brand || [],
-      totalUnits: extractedData.brand?.length || 0,
+      totalUnits:
+        chosen?.value != null && chosen?.category != null
+          ? byBrand.length
+          : extractedData.brand?.length || 0,
       open: true,
       routeTitle: "brand",
       renderMoreOptions: false,
@@ -431,8 +514,13 @@ const RenderingFilters = ({
       ),
       data: searchedResult
         ? extractedSearchedData.ownership
+        : chosen?.value != null && chosen?.category != null
+        ? byOwnership
         : extractedData.ownership || [],
-      totalUnits: extractedData.ownership?.length || 0,
+      totalUnits:
+        chosen?.value != null && chosen?.category != null
+          ? byOwnership.length
+          : extractedData.ownership?.length || 0,
       open: true,
       routeTitle: "ownership",
       renderMoreOptions: false,
