@@ -75,7 +75,7 @@ const ItemTable = ({
         2: "Serial number",
         3: "Location",
         4: "Ownership",
-        5: "Status",
+        5: "Condition",
       };
       const label = labels[chosen.category] ?? "Filter";
       return `Filtered by ${label}: ${chosen.value}`;
@@ -268,7 +268,7 @@ const ItemTable = ({
       2: "serial_number",
       3: "location",
       4: "ownership",
-      5: "status",
+      5: "condition",
     };
     const sortingByProps = groupBy(
       baseDataset,

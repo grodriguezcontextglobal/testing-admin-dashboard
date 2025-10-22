@@ -4,7 +4,7 @@ export const dicSelectedOptions = {
   2: "Serial Number",
   3: "Location",
   4: "Ownership",
-  5: "Status",
+  5: "Condition",
 };
 
 export const dictionary = {
