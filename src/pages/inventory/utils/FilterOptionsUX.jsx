@@ -3,7 +3,7 @@ import { Select, Space } from "antd";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 
-const FilterOptionsUX = ({ filterOptions, chosen, setChosen }) => {
+const FilterOptionsUX = ({ filterOptions = {}, chosen, setChosen }) => {
   return (
     <div
       style={{
@@ -16,7 +16,7 @@ const FilterOptionsUX = ({ filterOptions, chosen, setChosen }) => {
         alignItems: "center",
       }}
     >
-      <Space size={[8, 16]} wrap styles={{ width: "100%" }}>
+      <Space size={[8, 16]} wrap style={{ width: "100%" }}>
         {new Array(6).fill(null).map((_, index) => {
           return (
             <Select
@@ -34,7 +34,7 @@ const FilterOptionsUX = ({ filterOptions, chosen, setChosen }) => {
                   style={{ color: "var(--gray-600, #475467)" }}
                 />
               }
-              value={chosen.category === index ? chosen.value : null}
+              value={chosen.category === index ? chosen.value : undefined}
               options={[
                 ...filterOptions[index].map((item) => ({
                   value: item,
@@ -42,17 +42,25 @@ const FilterOptionsUX = ({ filterOptions, chosen, setChosen }) => {
                 })),
               ]}
               allowClear
+              onClear={() => {
+                if (chosen.category === null && chosen.value === null) return;
+                setChosen({ category: null, value: null });
+              }}
               onChange={(value) => {
-                if (value === undefined || value === null) {
-                  return setChosen({
-                    category: null,
-                    value: null,
-                  });
+                const next =
+                  value == null
+                    ? { category: null, value: null }
+                    : { category: index, value };
+
+                // Prevent redundant state updates that can cause render loops
+                if (
+                  next.category === chosen.category &&
+                  next.value === chosen.value
+                ) {
+                  return;
                 }
-                return setChosen({
-                  category: value === null ? null : index,
-                  value: value,
-                });
+
+                setChosen(next);
               }}
             />
           );
