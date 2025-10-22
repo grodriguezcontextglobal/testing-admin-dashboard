@@ -428,7 +428,7 @@ const MainPage = () => {
             </Grid>
           </Grid>
         </Grid>
-        {/* <Divider />
+        <Divider />
         <Grid
           display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
           justifyContent={"flex-start"}
@@ -444,7 +444,7 @@ const MainPage = () => {
             chosen={chosenOption}
             setChosen={setChosenOption}
           />
-        </Grid> */}
+        </Grid>
         <Grid
           display={"flex"}
           justifyContent={"center"}
