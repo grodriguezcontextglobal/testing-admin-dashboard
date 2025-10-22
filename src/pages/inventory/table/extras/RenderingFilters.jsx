@@ -196,12 +196,11 @@ const RenderingFilters = ({
       locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
-
+  
     // If a specific Location was chosen, filter the hierarchy to that node
     if (chosen?.category === 3 && chosen?.value) {
       const target = chosen.value;
-
-      // Recursively search the tree and lift the matched node to the top-level
+  
       const findNode = (obj, name) => {
         if (!obj || typeof obj !== "object") return null;
         for (const [key, node] of Object.entries(obj)) {
@@ -215,41 +214,214 @@ const RenderingFilters = ({
         }
         return null;
       };
-
-      const filtered = findNode(source, target);
-      // If not found, keep the full tree
-      return filtered ?? source;
+  
+      const filteredDirect = findNode(source, target);
+      if (!filteredDirect) return source;
+  
+      // When a location is directly chosen, also apply filtered counts so totals reflect other filters
+      const resolveName = (item) => {
+        const loc = item?.location;
+        if (!loc) return null;
+        if (Array.isArray(loc)) {
+          const lastEntry = [...loc]
+            .reverse()
+            .find((e) => !!(typeof e === "string" ? e : e?.location));
+          if (!lastEntry) return null;
+          return typeof lastEntry === "string"
+            ? lastEntry
+            : lastEntry.location ?? null;
+        }
+        if (typeof loc === "object" && loc?.location) return loc.location;
+        return typeof loc === "string" ? loc : null;
+      };
+      const counts = new Map();
+      (filteredList || []).forEach((item) => {
+        const name = resolveName(item);
+        if (!name) return;
+        counts.set(name, (counts.get(name) || 0) + 1);
+      });
+      const filterTree = (treeObj) => {
+        if (!treeObj || typeof treeObj !== "object") return {};
+        const result = {};
+        for (const [name, node] of Object.entries(treeObj)) {
+          const filteredChildren =
+            node?.children && typeof node.children === "object"
+              ? filterTree(node.children)
+              : {};
+          const own = counts.get(name) || 0;
+          const childrenTotal = Object.values(filteredChildren).reduce(
+            (sum, child) => sum + (child.total || 0),
+            0
+          );
+          const total = own + childrenTotal;
+          if (total > 0) {
+            result[name] = {
+              ...node,
+              total,
+              children: filteredChildren,
+            };
+          }
+        }
+        return result;
+      };
+      const withCounts = filterTree(filteredDirect);
+      return Object.keys(withCounts).length ? withCounts : filteredDirect;
     }
-
-    // No chosen option: return all locations
+  
+    // If searchedResult exists with location hierarchy, prefer it
+    if (searchedResult?.main_location) {
+      return searchedResult.main_location;
+    }
+  
+    // If there is a chosen non-location filter or search text, derive locations from filteredList
+    const shouldFilterByItems =
+      (chosen?.value != null && chosen?.category != null) ||
+      !!searchItem ||
+      !!searchedResult;
+  
+    if (shouldFilterByItems) {
+      const resolveName = (item) => {
+        const loc = item?.location;
+        if (!loc) return null;
+        if (Array.isArray(loc)) {
+          const lastEntry = [...loc]
+            .reverse()
+            .find((e) => !!(typeof e === "string" ? e : e?.location));
+          if (!lastEntry) return null;
+          return typeof lastEntry === "string"
+            ? lastEntry
+            : lastEntry.location ?? null;
+        }
+        if (typeof loc === "object" && loc?.location) return loc.location;
+        return typeof loc === "string" ? loc : null;
+      };
+  
+      const counts = new Map();
+      (filteredList || []).forEach((item) => {
+        const name = resolveName(item);
+        if (!name) return;
+        counts.set(name, (counts.get(name) || 0) + 1);
+      });
+  
+      // If no counts were found, return empty to indicate no matching locations
+      if (counts.size === 0) return {};
+  
+      const filterTree = (treeObj) => {
+        if (!treeObj || typeof treeObj !== "object") return {};
+        const result = {};
+        for (const [name, node] of Object.entries(treeObj)) {
+          const filteredChildren =
+            node?.children && typeof node.children === "object"
+              ? filterTree(node.children)
+              : {};
+          const own = counts.get(name) || 0;
+          const childrenTotal = Object.values(filteredChildren).reduce(
+            (sum, child) => sum + (child.total || 0),
+            0
+          );
+          const total = own + childrenTotal;
+          if (total > 0) {
+            result[name] = {
+              ...node,
+              total,
+              children: filteredChildren,
+            };
+          }
+        }
+        return result;
+      };
+  
+      const withCounts = filterTree(source);
+      return Object.keys(withCounts).length ? withCounts : {};
+    }
+  
+    // No chosen option or search: return all locations
     return source;
   };
 
-  // Update total calculation to reflect current filtered state
   const totalUnitsAllLocations = () => {
+    // Sum totals from the currently displayed location tree for consistency
+    const tree = locationsAndSublocationsData();
+    if (!tree || typeof tree !== "object") return 0;
     let result = 0;
-    let data = null;
-    if (!searchItem && !chosen.value && locationsAndSublocationsWithTypes?.data?.data?.ok) {
-      result = 0;
-      data = locationsAndSublocationsWithTypes?.data?.data?.data;
-      if (data) {
-        for (let [, value] of Object.entries(data)) {
-          result += value.total;
+    for (const [, value] of Object.entries(tree)) {
+      // Prefer node.total; fallback to computing from children if missing
+      if (typeof value?.total === "number") {
+        result += value.total;
+      } else if (value?.children && typeof value.children === "object") {
+        for (const [, child] of Object.entries(value.children)) {
+          if (typeof child?.total === "number") {
+            result += child.total;
+          }
         }
       }
-    } else if ((searchItem || chosen.value) && searchedResult?.main_location) {
-      data = searchedResult;
-      result = 0;
-      if (data.main_location) {
-        for (let [, value] of Object.entries(data.main_location)) {
-          result += value.total;
-        }
-      }
-    } else {
-      // Fallback to filtered items count from chosen or search
-      result = filteredList?.length || 0;
     }
     return result;
+  };
+
+  // Helper function to get data based on priority: searchedResult > chosen > all data
+  const getDataForSection = (sectionKey) => {
+    // Priority 1: If searchedResult exists, use it
+    if (searchedResult) {
+      if (sectionKey === "location_1") {
+        return searchedResult.main_location;
+      }
+      return extractedSearchedData[sectionKey] || [];
+    }
+    
+    // Priority 2: If chosen option exists, use filtered data
+    if (chosen?.value != null && chosen?.category != null) {
+      switch (sectionKey) {
+        case "location_1":
+          return locationsAndSublocationsData();
+        case "category_name":
+          return byCategory;
+        case "item_group":
+          return byGroup;
+        case "brand":
+          return byBrand;
+        case "ownership":
+          return byOwnership;
+        default:
+          return [];
+      }
+    }
+    
+    // Priority 3: Fallback to all data
+    if (sectionKey === "location_1") {
+      return locationsAndSublocationsData();
+    }
+    return extractedData[sectionKey] || [];
+  };
+
+  // Helper function to get total units for each section
+  const getTotalUnitsForSection = (sectionKey) => {
+    // Special handling for location section
+    if (sectionKey === "location_1") {
+      return totalUnitsAllLocations();
+    }
+    
+    // For other sections, calculate based on current data state
+    if (searchedResult) {
+      return extractedSearchedData[sectionKey]?.length || 0;
+    }
+    
+    if (chosen?.value != null && chosen?.category != null) {
+      switch (sectionKey) {
+        case "category_name":
+          return byCategory.length;
+        case "item_group":
+          return byGroup.length;
+        case "brand":
+          return byBrand.length;
+        case "ownership":
+          return byOwnership.length;
+        default:
+          return 0;
+      }
+    }
+    
+    return extractedData[sectionKey]?.length || 0;
   };
 
   const optionsToRenderInDetailsHtmlTags = [
@@ -287,16 +459,13 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult
-        ? searchedResult.main_location
-        : locationsAndSublocationsData(),
-      totalUnits: totalUnitsAllLocations(),
+      data: getDataForSection("location_1"),
+      totalUnits: getTotalUnitsForSection("location_1"),
       open: true,
       routeTitle: "location",
       renderMoreOptions: false,
       tree: true,
       identifierRender: 1,
-      // show: searchItem && searchItem.length > 0 ? false : true,
       show: true,
       columns: [
         {
@@ -340,21 +509,13 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult
-        ? extractedSearchedData.category_name
-        : chosen?.value != null && chosen?.category != null
-        ? byCategory
-        : extractedData.category_name || [],
-      totalUnits:
-        chosen?.value != null && chosen?.category != null
-          ? byCategory.length
-          : extractedData.category_name?.length || 0,
+      data: getDataForSection("category_name"),
+      totalUnits: getTotalUnitsForSection("category_name"),
       open: true,
       routeTitle: "category_name",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      // show: searchItem && searchItem.length > 0 ? false : true,
       show: true,
       columns: [
         {
@@ -398,21 +559,13 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult
-        ? extractedSearchedData.item_group
-        : chosen?.value != null && chosen?.category != null
-        ? byGroup
-        : extractedData.item_group || [],
-      totalUnits:
-        chosen?.value != null && chosen?.category != null
-          ? byGroup.length
-          : extractedData.item_group?.length || 0,
+      data: getDataForSection("item_group"),
+      totalUnits: getTotalUnitsForSection("item_group"),
       open: true,
       routeTitle: "group",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      // show: searchItem && searchItem.length > 0 ? false : true,
       show: true,
       columns: [
         {
@@ -454,21 +607,13 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult
-        ? extractedSearchedData.brand
-        : chosen?.value != null && chosen?.category != null
-        ? byBrand
-        : extractedData.brand || [],
-      totalUnits:
-        chosen?.value != null && chosen?.category != null
-          ? byBrand.length
-          : extractedData.brand?.length || 0,
+      data: getDataForSection("brand"),
+      totalUnits: getTotalUnitsForSection("brand"),
       open: true,
       routeTitle: "brand",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      // show: searchItem && searchItem.length > 0 ? false : true,
       show: true,
       columns: [
         {
@@ -512,21 +657,13 @@ const RenderingFilters = ({
           )}
         </>
       ),
-      data: searchedResult
-        ? extractedSearchedData.ownership
-        : chosen?.value != null && chosen?.category != null
-        ? byOwnership
-        : extractedData.ownership || [],
-      totalUnits:
-        chosen?.value != null && chosen?.category != null
-          ? byOwnership.length
-          : extractedData.ownership?.length || 0,
+      data: getDataForSection("ownership"),
+      totalUnits: getTotalUnitsForSection("ownership"),
       open: true,
       routeTitle: "ownership",
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      // show: searchItem && searchItem.length > 0 ? false : true,
       show: true,
       columns: [
         {
@@ -562,7 +699,8 @@ const RenderingFilters = ({
       deepEqual(obj1, sortedArr2[index])
     );
   };
-  return (
+
+    return (
     <Grid key="rendering-filter-option-container" container>
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
         return (
