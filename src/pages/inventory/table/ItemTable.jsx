@@ -181,7 +181,8 @@ const ItemTable = ({
     const items = refactoredListInventoryCompany?.data?.data?.items;
     if (!Array.isArray(items) || items.length === 0) return [];
 
-    const resultFormatToDisplay = [];
+    // Deduplicate rows by item_id to avoid repeated keys
+    const rowMap = new Map();
     const groupingByImage = groupBy(items, "image_url");
 
     const processItems = (itemsChunk) => {
@@ -191,8 +192,8 @@ const ItemTable = ({
           ? groupingByDeviceType[key][0].source
           : null;
         for (let data of value) {
-          resultFormatToDisplay.push({
-            key: data.item,
+          const row = {
+            key: data.item, // stable key equals item_id
             item_id: data.item,
             item_group: data.item_group,
             category_name: data.category_name,
@@ -200,15 +201,17 @@ const ItemTable = ({
             ownership: data.ownership,
             main_warehouse: data.main_warehouse,
             warehouse: data.warehouse,
-            location:
-              data.usage && data.usage.length > 0 ? data.usage : data.location,
+            location: data.usage && data.usage.length > 0 ? data.usage : data.location,
             image_url: data.image_url || imageSource,
             serial_number: data.serial_number,
             enableAssignFeature: data.enableAssignFeature,
             usage: data.usage,
             status: data.status ?? null,
             condition: data.status ?? null,
-          });
+          };
+
+          // Always keep the latest row for this item_id
+          rowMap.set(row.item_id, row);
         }
       }
     };
@@ -220,7 +223,7 @@ const ItemTable = ({
       .filter(([k]) => k !== null && k !== "")
       .forEach(([, chunk]) => processItems(chunk));
 
-    return resultFormatToDisplay;
+    return Array.from(rowMap.values());
   }, [refactoredListInventoryCompany?.data?.data?.items, groupingByDeviceType]);
 
   // Legacy join-based dataset (existing function retained)
@@ -438,6 +441,7 @@ const ItemTable = ({
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
                 dataSource={memoizedDataToDisplay} // unified dataset
+                rowKey={(record) => record.item_id || record.key}
                 className="table-ant-customized"
               />
               <Divider />
