@@ -12,11 +12,11 @@ const FilterOptionsUX = ({ filterOptions, chosen, setChosen }) => {
         textAlign: "right",
         cursor: "pointer",
         display: "flex",
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         alignItems: "center",
       }}
     >
-      <Space size={[8, 16]} wrap>
+      <Space size={[8, 16]} wrap styles={{ width: "100%" }}>
         {new Array(6).fill(null).map((_, index) => {
           return (
             <Select
