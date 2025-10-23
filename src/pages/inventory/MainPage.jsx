@@ -33,10 +33,7 @@ const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 
 const MainPage = () => {
-  const [chosenOption, setChosenOption] = useState({
-    category: null,
-    value: null,
-  });
+  const [chosenOption, setChosenOption] = useState([]);
   const [searchedResult, setSearchedResult] = useState(null);
   const [params, setParams] = useState(null);
   const [dataFilterOptions, setDataFilterOptions] = useState({
@@ -92,7 +89,7 @@ const MainPage = () => {
 
   // Calculate the total to display based on current state
   const getTotalToDisplay = () => {
-    if (params || chosenOption.value !== null) {
+    if (params || (Array.isArray(chosenOption) && chosenOption.length > 0)) {
       return filteredDataCount > 0 ? filteredDataCount : 0;
     }
     return companyHasInventoryQuery?.data?.data?.total ?? 0;
