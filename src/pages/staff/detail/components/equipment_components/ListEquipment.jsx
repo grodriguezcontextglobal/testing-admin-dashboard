@@ -132,6 +132,7 @@ function ListEquipment() {
               title: deriveTitleFromUrl(c.document_url),
               url: c.document_url,
               signed: !!c.signature,
+              date: c?.date,
             }));
           }
         } catch (e) {
@@ -304,16 +305,18 @@ function ListEquipment() {
       assignedEquipmentList,
       "verification_id"
     );
-
     const verificationId = record.verification_id;
     const docs =
-      (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
-    const data = docs.map((doc) => ({
-      key: doc.key,
-      title: doc.title,
-      url: doc.url,
-      signed: !!doc.signed,
-    }));
+    (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
+    const data = docs.map((doc) => {
+      return {
+        key: doc.key,
+        title: doc.title,
+        url: doc.url,
+        date: doc.date,
+        signed: !!doc.signed,
+      };
+    });
 
     const itemIdsParam =
       groupByVerificationId[verificationId] &&
@@ -329,6 +332,12 @@ function ListEquipment() {
         dataIndex: "signed",
         key: "signed",
         render: (signed) => renderStatusBadge(!!signed),
+      },
+      {
+        title: "Date/Time",
+        dataIndex: "date",
+        key: "date",
+        render: (date) => date ? new Date(date).toLocaleString() : "No sign",
       },
       {
         title: "Actions",
@@ -362,11 +371,17 @@ function ListEquipment() {
           return (
             <>
               {canSeeSignedColumns ? (
-                <BlueButtonComponent title={rowDoc.signed ? "View" : "View & Sign"} func={() => navigate(href)} />
+                <BlueButtonComponent
+                  title={rowDoc.signed ? "View" : "View & Sign"}
+                  func={() => navigate(href)}
+                />
               ) : (
                 canSeeSignedColumnsBasedOnRole &&
                 rowDoc.signed && (
-                  <BlueButtonComponent title={"View"} func={() => handleView()} />
+                  <BlueButtonComponent
+                    title={"View"}
+                    func={() => handleView()}
+                  />
                 )
               )}
             </>
