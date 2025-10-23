@@ -68,7 +68,7 @@ const ItemTable = ({
     if (chosenConditionState === 3 && date)
       return "Inventory for selected period";
     if (searchItem) return `Search results for "${searchItem}"`;
-    if (chosen?.value !== null && chosen?.category !== null) {
+    if (Array.isArray(chosen) && chosen.length > 0) {
       const labels = {
         0: "Brand",
         1: "Device name",
@@ -77,11 +77,14 @@ const ItemTable = ({
         4: "Ownership",
         5: "Condition",
       };
-      const label = labels[chosen.category] ?? "Filter";
-      return `Filtered by ${label}: ${chosen.value}`;
+      const filterDescriptions = chosen.map(filter => {
+        const label = labels[filter.category] ?? "Filter";
+        return `${label}: ${filter.value}`;
+      });
+      return `Filtered by ${filterDescriptions.join(", ")}`;
     }
     return "Inventory";
-  }, [searchItem, chosen?.value, chosen?.category, chosenConditionState, date]);
+  }, [searchItem, chosen, chosenConditionState, date]);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -252,16 +255,20 @@ const ItemTable = ({
   };
 
   useEffect(() => {
-    if (chosen?.value !== null && chosen?.category !== null) {
+    if (Array.isArray(chosen) && chosen.length > 0) {
       setChosenConditionState(2); // filter-by-props
     } else if (date) {
       setChosenConditionState(3); // date filter
     } else {
       setChosenConditionState(0); // default
     }
-  }, [chosen?.value, chosen?.category, date]);
+  }, [chosen, date]);
 
   const filterByProps = () => {
+    if (!Array.isArray(chosen) || chosen.length === 0) {
+      return baseDataset;
+    }
+
     const dicSelectedOptions = {
       0: "brand",
       1: "item_group",
@@ -270,11 +277,15 @@ const ItemTable = ({
       4: "ownership",
       5: "condition",
     };
-    const sortingByProps = groupBy(
-      baseDataset,
-      dicSelectedOptions[chosen.category]
-    );
-    return sortingByProps?.[chosen.value] || [];
+
+    // Apply all filters simultaneously
+    return baseDataset.filter(item => {
+      return chosen.every(filter => {
+        const propertyKey = dicSelectedOptions[filter.category];
+        if (!propertyKey) return true; // Skip invalid filters
+        return item?.[propertyKey] === filter.value;
+      });
+    });
   };
 
   const searchingData = () => {
