@@ -429,22 +429,12 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Divider />
-        <Grid
-          display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
+        {/* Ensure FilterOptionsUX occupies full width (12 columns) */}
           <FilterOptionsUX
             filterOptions={dataFilterOptions}
             chosen={chosenOption}
             setChosen={setChosenOption}
           />
-        </Grid>
         <Grid
           display={"flex"}
           justifyContent={"center"}
