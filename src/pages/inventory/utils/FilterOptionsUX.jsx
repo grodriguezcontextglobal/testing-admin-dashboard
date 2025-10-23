@@ -95,6 +95,7 @@ const FilterOptionsUX = ({ filterOptions = {}, chosen, setChosen }) => {
 
                 updateChosenFilters(index, value);
               }}
+              virtual={true}
             />
         );
       })}
