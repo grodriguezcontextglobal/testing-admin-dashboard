@@ -164,13 +164,18 @@ const RenderingFilters = ({
   );
   const filteredList = useMemo(() => {
     const base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
-    if (chosen?.category != null && chosen?.value != null) {
-      const key = keyMap[chosen.category];
-      if (!key) return base;
-      return base.filter((item) => item?.[key] === chosen.value);
+    if (Array.isArray(chosen) && chosen.length > 0) {
+      // Apply all filters simultaneously
+      return base.filter(item => {
+        return chosen.every(filter => {
+          const key = keyMap[filter.category];
+          if (!key) return true; // Skip invalid filters
+          return item?.[key] === filter.value;
+        });
+      });
     }
     return base;
-  }, [dataToDisplay, chosen?.category, chosen?.value, keyMap]);
+  }, [dataToDisplay, chosen, keyMap]);
 
   // Derived groupings from filtered or full list
   const byCategory = useMemo(
@@ -198,8 +203,9 @@ const RenderingFilters = ({
         : {};
   
     // If a specific Location was chosen, filter the hierarchy to that node
-    if (chosen?.category === 3 && chosen?.value) {
-      const target = chosen.value;
+    const locationFilter = Array.isArray(chosen) ? chosen.find(filter => filter.category === 3) : null;
+    if (locationFilter) {
+      const target = locationFilter.value;
   
       const findNode = (obj, name) => {
         if (!obj || typeof obj !== "object") return null;
@@ -273,9 +279,9 @@ const RenderingFilters = ({
       return searchedResult.main_location;
     }
   
-    // If there is a chosen non-location filter or search text, derive locations from filteredList
+    // If there is a chosen filter or search text, derive locations from filteredList
     const shouldFilterByItems =
-      (chosen?.value != null && chosen?.category != null) ||
+      (Array.isArray(chosen) && chosen.length > 0) ||
       !!searchItem ||
       !!searchedResult;
   
@@ -369,8 +375,8 @@ const RenderingFilters = ({
       return extractedSearchedData[sectionKey] || [];
     }
     
-    // Priority 2: If chosen option exists, use filtered data
-    if (chosen?.value != null && chosen?.category != null) {
+    // Priority 2: If chosen filters exist, use filtered data
+    if (Array.isArray(chosen) && chosen.length > 0) {
       switch (sectionKey) {
         case "location_1":
           return locationsAndSublocationsData();
