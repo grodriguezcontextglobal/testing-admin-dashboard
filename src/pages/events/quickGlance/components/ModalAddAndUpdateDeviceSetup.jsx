@@ -289,7 +289,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       const checkingDiff = Number(quantity) - existingDevice.length;
       if (Number(data.quantity) > checkingDiff) {
         message.warning(
-          `Quantity assigned is bigger than needed to reach out the quantity set in event.`
+          `Quantity assigned is larger than the allocation for this event.`
         );
         return;
       }
