@@ -1,19 +1,19 @@
+import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { message, Select, Table, Tabs, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { message, Select, Table, Tooltip, Tabs } from "antd";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
-import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import { Box, Typography } from "@mui/material";
-import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import { useNavigate } from "react-router-dom";
+import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
+import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
 
 const FormDocuments = () => {
   // eslint-disable-next-line no-unused-vars
-  const { eventInfoDetail, eventSettingUpProcess } = useSelector(
+  const { eventInfoDetail } = useSelector(
     (state) => state.event
   );
   // console.log(eventSettingUpProcess);
