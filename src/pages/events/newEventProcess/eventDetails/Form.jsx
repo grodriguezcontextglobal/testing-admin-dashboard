@@ -15,8 +15,9 @@ import "../../../../styles/global/ant-select.css";
 import "../../../../styles/global/reactInput.css";
 import "../style/NewEventInfoSetup.css";
 import FormFields from "./ux/FormFields";
+import AddingEventCreated from "../staff/components/AddingEventCreated";
 const Form = () => {
-  const { eventInfoDetail } = useSelector((state) => state.event);
+  const { eventInfoDetail, staff } = useSelector((state) => state.event);
   const addressSplit = eventInfoDetail?.address?.split(" ");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -51,6 +52,17 @@ const Form = () => {
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
+  const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (staff.adminUser.length === 0) {
+      return setTriggerAddingAdminStaff(true);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
     setEnd(
@@ -111,6 +123,7 @@ const Form = () => {
       gap={2}
       container
     >
+      {triggerAddingAdminStaff && <AddingEventCreated />}
       <FormFields
         isMobile={isMobile}
         handleSubmit={handleSubmit}
