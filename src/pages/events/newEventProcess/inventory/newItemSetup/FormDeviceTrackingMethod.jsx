@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
+import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -23,14 +24,10 @@ import {
   bulkItemInsertAlphanumericWithEventCheck,
   bulkItemInsertSequentialWithEventCheck,
 } from "./components/BulkRentedItemsActions";
-import {
-  renderingModals,
-  renderTitle,
-} from "./components/BulkRentedItemsComponents";
+import { renderingModals } from "./components/BulkRentedItemsComponents";
 import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
 import validatingInputFields from "./components/validatingFields";
 import "./style.css";
-import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 
 const options = [{ value: "Rent" }];
 
@@ -414,10 +411,9 @@ const FormDeviceTrackingMethod = ({
 
   useEffect(() => {
     const controller = new AbortController();
-    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("reference_item_group")
-      );
+    const newReference = String(watch("reference_item_group"));
+    if (retrieveItemDataSelected().has(newReference)) {
+      const dataToRetrieve = retrieveItemDataSelected().get(newReference);
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (key === "enableAssignFeature" || key === "container") {
@@ -453,11 +449,28 @@ const FormDeviceTrackingMethod = ({
             setValue("ownership", "Rent");
             setIsRented(true);
           }
-          if(key === "enableAssignFeature") {
+          if (key === "enableAssignFeature") {
             setValue("enableAssignFeature", 1);
           }
         });
       }
+    } else {
+      setValue("item_group", newReference);
+    }
+    if (newReference.length === 0) {
+      setValue("item_group", "");
+      setValue("photo", []);
+      setValue("category_name", "");
+      setValue("cost", "");
+      setValue("brand", "");
+      setValue("descript_item", "");
+      setValue("min_serial_number", "");
+      setValue("max_serial_number", "");
+      setValue("sub_location", "");
+      setValue("quantity", 0);
+      setValue("container", "");
+      setValue("containerSpotLimit", "0");
+      setValue("enabledAssignFeature", 1);
     }
     return () => {
       controller.abort();
@@ -579,7 +592,7 @@ const FormDeviceTrackingMethod = ({
       container
     >
       {contextHolder}
-      {renderTitle()}
+      {/* {renderTitle()} */}
       <BulkRentedItems
         acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
