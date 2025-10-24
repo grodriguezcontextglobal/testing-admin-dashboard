@@ -1,11 +1,11 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { Button, Select } from "antd";
+import { Select } from "antd";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import Services from "../extra/Services";
@@ -30,7 +30,7 @@ const MainBody = ({
   onChange,
   removeItemSelected,
   removeServiceAdded,
-  renderingStyle,
+  // renderingStyle,
   selectedItem,
   selectOptions,
   setAssignAllDevices,
@@ -52,43 +52,6 @@ const MainBody = ({
       {!displayFormToCreateCategory && (
         <>
           {" "}
-          <InputLabel
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              textTransform="none"
-              style={{
-                ...TextFontSize20LineHeight30,
-                color: "var(--gray600)",
-              }}
-            >
-              Assign from existing groups in the inventory
-            </Typography>
-          </InputLabel>
-          <Typography
-            textTransform="none"
-            textAlign="justify"
-            style={{
-              ...Subtitle,
-              color: "var(--gray600)",
-              wordWrap: "break-word",
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              margin: "0.2rem auto 1rem",
-            }}
-          >
-            You can select groups of devices from existing inventory in your
-            database and assign to this event. When assigning, you can choose
-            the whole group of devices, or only a range of serial numbers per
-            group. You will see the groups selected as small tags below.
-          </Typography>
           <Grid
             style={{
               borderRadius: "8px",
@@ -107,7 +70,7 @@ const MainBody = ({
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "flex-start",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
@@ -115,30 +78,8 @@ const MainBody = ({
                 textTransform="none"
                 style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
               >
-                Existing groups
-              </Typography>
-            </InputLabel>
-            <InputLabel
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                margin: "0 0 0.5rem",
-              }}
-            >
-              <Typography
-                textTransform="none"
-                style={{
-                  ...TextFontSize20LineHeight30,
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: "#000",
-                }}
-              >
                 Select from existing inventory
               </Typography>
-
               <RefreshButton propsFn={handleRefresh} />
             </InputLabel>
             <Select
@@ -198,7 +139,7 @@ const MainBody = ({
           style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
           color="var(--gray600)"
         >
-          Generate a new category or group of devices
+          Generate a new inventory for company
         </Typography>
       </InputLabel>
       <Typography
@@ -211,18 +152,22 @@ const MainBody = ({
           alignItems: "center",
         }}
       >
-        If you haven&apos;t added the devices you&apos;re taking to this event
-        into the inventory, create a new category of devices for this event; or
-        create a new group within an existing category. Then you can enter a
-        range of serial numbers starting with a serial number base, to register
-        the new devices in your inventory.
+        Use this section to create new company inventory that can be used in
+        this event. Inventory created here is classified as Rental equipment
+        (not owned company equipment) and will be available to be assigned to the event. If you need to create owned company inventory, please go to the Inventory page, add the new owned inventory there, and then assign it to this event.
       </Typography>
       <LightBlueButtonComponent
-      title={"Add new category or group"}
-      buttonType="button"
-      func={() => setDisplayFormToCreateCategory(!displayFormToCreateCategory)}
-      styles={{width:"100%", margin: "1rem auto"}}
-      icon={<RectangleBluePlusIcon />}
+        title={
+          displayFormToCreateCategory
+            ? "Close form for new inventory"
+            : "Add new category or group"
+        }
+        buttonType="button"
+        func={() =>
+          setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+        }
+        styles={{ width: "100%", margin: "1rem auto" }}
+        icon={displayFormToCreateCategory ? null : <RectangleBluePlusIcon />}
       />
       {displayFormToCreateCategory && (
         <FormDeviceTrackingMethod
@@ -248,37 +193,23 @@ const MainBody = ({
         md={12}
         lg={12}
       >
-        <Button
+        <GrayButtonComponent
+          title={"Skip this step"}
           disabled={staff.adminUser.length === 0}
-          onClick={() => navigate("/create-event-page/review-submit")}
-          style={{
-            ...GrayButton,
-            width: "100%",
-          }}
-        >
-          <Typography
-            style={{
-              ...GrayButtonText,
-              color:
-                staff.adminUser.length === 0 &&
-                "var(--disabled-gray-button-text)",
-              textTransform: "none",
-            }}
-          >
-            Skip this step
-          </Typography>
-        </Button>
-        <Button
-          disabled={filled}
-          onClick={(e) => handleNextStepEventSetup(e)}
-          style={renderingStyle().button}
-        >
-          <Typography style={renderingStyle().text}>
-            {filled
+          func={() => navigate("/create-event-page/review-submit")}
+          styles={{ width: "100%" }}
+        />
+        <BlueButtonComponent
+          title={
+            filled
               ? "Service fields are filled. Please clear the fields or add service to continue."
-              : "Next step"}
-          </Typography>
-        </Button>
+              : "Next step"
+          }
+          disabled={filled}
+          func={(e) => handleNextStepEventSetup(e)}
+          styles={{ width: "100%" }}
+          titleStyles={{ textWrap: "balance", width: "100%" }}
+        />
       </Grid>
     </Grid>
   );
