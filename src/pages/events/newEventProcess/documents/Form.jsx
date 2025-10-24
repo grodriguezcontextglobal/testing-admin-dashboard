@@ -7,18 +7,18 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { Box, Typography } from "@mui/material";
-import {
-  onAddEventInfoDetail,
-} from "../../../../store/slices/eventSlice";
+import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { useNavigate } from "react-router-dom";
 
 const FormDocuments = () => {
   // eslint-disable-next-line no-unused-vars
-  const { eventInfoDetail, eventSettingUpProcess } = useSelector((state) => state.event);
+  const { eventInfoDetail, eventSettingUpProcess } = useSelector(
+    (state) => state.event
+  );
   // console.log(eventSettingUpProcess);
   const { user } = useSelector((state) => state.admin);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(1);
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [dataToDisplay, setDataToDisplay] = useState(
     eventInfoDetail.legal_documents_list || []
@@ -67,9 +67,7 @@ const FormDocuments = () => {
       ...dataToDisplay,
       ...newDocuments.filter(
         (newDoc) =>
-          !dataToDisplay.some(
-            (existingDoc) => existingDoc.id === newDoc.id
-          )
+          !dataToDisplay.some((existingDoc) => existingDoc.id === newDoc.id)
       ),
     ];
 
@@ -128,24 +126,25 @@ const FormDocuments = () => {
 
   const items = [
     {
-      label: "Assigned Documents",
-      key: "0",
+      label: "Add Documents",
+      key: "1",
     },
     {
-      label: "Assign Documents",
-      key: "1",
+      label: "Added Documents",
+      key: "0",
     },
   ];
 
   // Filter out already assigned documents from the select options
-  const availableOptions = availableDocuments?.data?.documents
-    ?.filter(
-      (doc) => !dataToDisplay.some((assigned) => assigned.id === doc._id)
-    )
-    ?.map((doc) => ({
-      label: doc.title,
-      value: doc._id,
-    })) || [];
+  const availableOptions =
+    availableDocuments?.data?.documents
+      ?.filter(
+        (doc) => !dataToDisplay.some((assigned) => assigned.id === doc._id)
+      )
+      ?.map((doc) => ({
+        label: doc.title,
+        value: doc._id,
+      })) || [];
 
   const nextStep = () => {
     // Update the store with all assigned documents
@@ -155,12 +154,39 @@ const FormDocuments = () => {
         legal_documents_list: dataToDisplay,
       })
     );
-    
-    message.success("Documents updated successfully");
+    if (dataToDisplay.length > 0) {
+      message.success("Documents updated successfully");
+    }
     // Navigate to next step or perform next action
     return navigate(`/create-event-page/device-detail`);
   };
 
+  const uxNavigation = () => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "10px",
+          marginTop: "1rem",
+        }}
+      >
+        <GrayButtonComponent
+          title={`Go to staff detail`}
+          styles={{ width: "100%" }}
+          func={() => navigate(`/create-event-page/staff-detail`)}
+          loadingState={false}
+        />
+        <BlueButtonComponent
+          title={`Next Step`}
+          styles={{ width: "100%" }}
+          func={nextStep}
+          loadingState={false}
+        />
+      </div>
+    );
+  };
+  
   return (
     <Box sx={{ width: "100%" }}>
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
@@ -185,10 +211,11 @@ const FormDocuments = () => {
             rowKey="id"
             pagination={false}
           />
+          {uxNavigation()}
         </Box>
       ) : (
         <Box>
-          <Tooltip title="All documents must be uploaded to the company's document library before they can be assigned to an event.">
+          <Tooltip title="All documents assigned to this event are related to device assignment policies, event policies, and privacy policies that help the company be released from liability. All documents must be uploaded to the company's document library before they can be assigned to an event.">
             <Typography variant="subtitle1" sx={{ mb: 2 }}>
               Select documents to assign to this event: <QuestionIcon />
             </Typography>
@@ -209,30 +236,9 @@ const FormDocuments = () => {
             loadingState={false}
             disabled={selectedDocuments.length === 0}
           />
+          {uxNavigation()}
         </Box>
       )}
-      
-      <div
-        style={{
-          display: activeTab === 1 ? "none" : "flex",
-          justifyContent: "space-between",
-          gap: "10px",
-          marginTop: "1rem",
-        }}
-      >
-        <GrayButtonComponent
-          title={`Go to staff detail`}
-          styles={{ width: "100%" }}
-          func={() => navigate(`/create-event-page/staff-detail`)}
-          loadingState={false}
-        />
-        <BlueButtonComponent
-          title={`Next Step`}
-          styles={{ width: "100%" }}
-          func={nextStep}
-          loadingState={false}
-        />
-      </div>
     </Box>
   );
 };
