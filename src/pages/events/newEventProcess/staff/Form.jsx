@@ -33,47 +33,74 @@ const Form = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Pull employees from redux based on provided schema
+  const companyEmployees = user?.companyData?.employees ?? [];
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [isAddingNewMember, setIsAddingNewMember] = useState(false);
+
+  // Auto-fill form fields when selecting an employee
   useEffect(() => {
-    const controller = new AbortController();
-    const addUserCreatingEventAsAdminStaffMember = () => {
-      const newMemberProfile = {
-        firstName: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone ?? "000-000-0000",
-        role: "Administrator",
-      };
-      return setAdminStaff([...adminStaff, newMemberProfile]);
-    };
-    if (!adminStaff.some((item) => item.email === user.email)) {
-      addUserCreatingEventAsAdminStaffMember();
+    if (selectedEmployee && !isAddingNewMember) {
+      setValue("firstName", selectedEmployee.firstName ?? "");
+      setValue("lastName", selectedEmployee.lastName ?? "");
+      setValue("email", selectedEmployee.user ?? ""); // 'user' holds email in schema
+      // Keep role manual unless you want to map company role codes
     }
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  }, [selectedEmployee, isAddingNewMember]);
+
+  const onSelectEmployee = (idOrNew) => {
+    if (idOrNew === "__new__") {
+      setSelectedEmployee(null);
+      setIsAddingNewMember(true);
+      setValue("firstName", "");
+      setValue("lastName", "");
+      setValue("email", "");
+      setValue("role", "");
+      return;
+    }
+    const emp = companyEmployees.find((e) => e?._id === idOrNew);
+    setSelectedEmployee(emp || null);
+    setIsAddingNewMember(false);
+  };
 
   const addNewMember = (e) => {
     e.preventDefault();
-    const newMemberProfile = {
-      firstName: watch("firstName"),
-      lastName: watch("lastName"),
-      email: watch("email"),
-      role: watch("role"),
-    };
+    const newMemberProfile =
+      selectedEmployee && !isAddingNewMember
+        ? {
+            firstName: selectedEmployee.firstName,
+            lastName: selectedEmployee.lastName,
+            email: selectedEmployee.user || "", // schema email
+            role: watch("role") || "HeadsetAttendees",
+          }
+        : {
+            firstName: watch("firstName"),
+            lastName: watch("lastName"),
+            email: watch("email"),
+            role: watch("role"),
+          };
     if (newMemberProfile.role === "Administrator") {
       let newAdminList = [...adminStaff, newMemberProfile];
       setAdminStaff(newAdminList);
       setValue("firstName", "");
       setValue("lastName", "");
       setValue("email", "");
+      setSelectedEmployee(null);
+      setIsAddingNewMember(false);
+      setValue("role", "");
       return;
     }
-    let newHeadsetAttendeesList = [...headsetAttendeesStaff, newMemberProfile];
+    let newHeadsetAttendeesList = [
+      ...headsetAttendeesStaff,
+      newMemberProfile,
+    ];
     setHeadsetAttendeesStaff(newHeadsetAttendeesList);
     setValue("firstName", "");
     setValue("lastName", "");
     setValue("email", "");
+    setSelectedEmployee(null);
+    setIsAddingNewMember(false);
+    setValue("role", "");
     return;
   };
 
@@ -155,6 +182,7 @@ const Form = () => {
     background: "var(--gray-100, #F2F4F7)",
     padding: "24px",
   };
+  
   return (
     <Grid
       display={"flex"}
@@ -187,6 +215,10 @@ const Form = () => {
           addNewMember={addNewMember}
           handleDeleteMember={handleDeleteMember}
           handleHeadsetAttendeeDeleteMember={handleHeadsetAttendeeDeleteMember}
+          companyEmployees={companyEmployees}
+          selectedEmployee={selectedEmployee}
+          isAddingNewMember={isAddingNewMember}
+          onSelectEmployee={onSelectEmployee}
         />
       </Grid>
     </Grid>
