@@ -32,6 +32,10 @@ const FormFields = ({
   addNewMember,
   handleDeleteMember,
   handleHeadsetAttendeeDeleteMember,
+  companyEmployees,
+  selectedEmployee,
+  isAddingNewMember,
+  onSelectEmployee,
 }) => {
   return (
     <form
@@ -44,97 +48,101 @@ const FormFields = ({
       onSubmit={handleSubmit(handleEventInfo)}
       className="form"
     >
-      <Grid
-        display={"flex"}
-        flexDirection={"column"}
-        alignItems={"flex-start"}
-        alignSelf={"stretch"}
-        gap={"24px"}
-        style={cardBackgroundStyles}
-        item
-        xs={12}
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
-          item
-          xs={12}
-        >
+      <Grid /* card wrapper */ item xs={12} style={cardBackgroundStyles}>
+        <Grid /* row */ item xs={12}>
+          {/* Employee selector using _id and schema's 'user' field */}
           <Grid item xs={12}>
-            <InputLabel>Role</InputLabel>
+            <InputLabel>Employee</InputLabel>
             <FormControl fullWidth>
               <Select
                 className="custom-autocomplete"
                 style={{ ...AntSelectorStyle, background: "#fff" }}
-                {...register("role")}
+                value={
+                  selectedEmployee?._id ?? (isAddingNewMember ? "__new__" : "")
+                }
+                onChange={(e) => onSelectEmployee(e.target.value)}
+                displayEmpty
               >
-                <MenuItem defaultChecked defaultValue={"Select role"} disabled>
-                  <Typography>Select role</Typography>
+                <MenuItem value="" disabled>
+                  <Typography>Select company employee</Typography>
                 </MenuItem>
-                {checkAdminSpots() === subscription?.adminUser ? null : (
-                  <MenuItem value={"Administrator"}>
-                    <Typography>Administrator</Typography>
+                {companyEmployees?.map((emp) => (
+                  <MenuItem key={emp?._id} value={emp?._id}>
+                    <Typography>
+                      {emp?.firstName} {emp?.lastName} - {emp?.user}
+                    </Typography>
                   </MenuItem>
-                )}
-                <MenuItem value={"HeadsetAttendees"}>
-                  <Typography>Assistant</Typography>
+                ))}
+                <MenuItem value={"__new__"}>
+                  <Typography>Add new staff (not in company)</Typography>
                 </MenuItem>
               </Select>
             </FormControl>
           </Grid>
         </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
-          item
-          xs={12}
-        >
-          <Grid item xs={6}>
+
+        {/* Role selection remains manual */}
+        <Grid item xs={12}>
+          <InputLabel>Role</InputLabel>
+          <FormControl fullWidth>
+            <Select
+              className="custom-autocomplete"
+              style={{ ...AntSelectorStyle, background: "#fff" }}
+              {...register("role")}
+            >
+              <MenuItem defaultChecked defaultValue={"Select role"} disabled>
+                <Typography>Select role</Typography>
+              </MenuItem>
+              {checkAdminSpots() === subscription?.adminUser ? null : (
+                <MenuItem value={"Administrator"}>
+                  <Typography>Administrator</Typography>
+                </MenuItem>
+              )}
+              <MenuItem value={"HeadsetAttendees"}>
+                <Typography>Assistant</Typography>
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        {/* Name fields auto-filled and disabled unless adding new */}
+        <Grid /* name row item xs={12} sm={12} md={12} lg={12}*/ container spacing={1}>
+          <Grid item xs={12} sm={12} md={6} lg={6}>
             <InputLabel fullWidth>First Name</InputLabel>
             <OutlinedInput
               {...register("firstName")}
               style={OutlinedInputStyle}
               placeholder="First name"
               fullWidth
+              disabled={!!selectedEmployee && !isAddingNewMember}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={12} md={6} lg={6}>
             <InputLabel fullWidth>Last Name</InputLabel>
             <OutlinedInput
               {...register("lastName")}
               style={OutlinedInputStyle}
               placeholder="Last name"
               fullWidth
+              disabled={!!selectedEmployee && !isAddingNewMember}
             />
           </Grid>
         </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
-          item
-          xs={12}
-        >
-          <Grid item xs={12}>
-            <InputLabel fullWidth>Email</InputLabel>
-            <OutlinedInput
-              {...register("email")}
-              style={OutlinedInputStyle}
-              type="email"
-              placeholder="Email"
-              fullWidth
-            />
-          </Grid>
+
+        {/* Email field uses employee.user and is disabled unless adding new */}
+        <Grid item xs={12}>
+          <InputLabel fullWidth>Email</InputLabel>
+          <OutlinedInput
+            {...register("email")}
+            style={OutlinedInputStyle}
+            type="email"
+            placeholder="Email"
+            fullWidth
+            disabled={!!selectedEmployee && !isAddingNewMember}
+          />
         </Grid>
       </Grid>
+
       <div
         style={{
           margin: "0.3rem auto",
@@ -170,6 +178,7 @@ const FormFields = ({
         </InputLabel>
         <Space size={[8, 16]} wrap>
           {adminStaff?.map((member, index) => {
+            console.log(member);
             return (
               <Card key={member.email}>
                 <label>
@@ -183,6 +192,7 @@ const FormFields = ({
                     <div>
                       <ProfileIcon /> {member.firstName} {member.lastName}
                     </div>{" "}
+                    
                     <button
                       type="button"
                       style={tagStyles}
@@ -261,7 +271,14 @@ const FormFields = ({
           })}
         </Space>
       </Grid>
-      <div style={{ display: "flex",flexDirection: "column", gap: "1rem", margin: "1rem 0" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+          margin: "1rem 0",
+        }}
+      >
         <LightBlueButtonComponent
           title={"Save and add more staff"}
           buttonType="button"
