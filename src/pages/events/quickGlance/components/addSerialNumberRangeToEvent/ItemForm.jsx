@@ -47,7 +47,7 @@ const ItemForm = ({
         </Typography> */}
       <div style={{ margin: "0px auto 1rem", width: "100%" }}>
         <label style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-          Select location from where items will be added to inventory.
+          Select location from where items will be added and enabled to this event&apos;s inventory.
         </label>
         <Select
           className="custom-autocomplete"
@@ -89,7 +89,7 @@ const ItemForm = ({
               style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
             >
               <Tooltip title="The items will be added to inventory event from the serial number input and will continue in the order of the available serial numbers in the inventory until the quantity is reached.">
-                Starting sequence of {deviceTitle} from serial number{" "}
+                Custom serial number of {deviceTitle}
                 <QuestionIcon />
               </Tooltip>
             </Typography>
@@ -128,7 +128,7 @@ const ItemForm = ({
               textAlign={"left"}
               style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
             >
-              Qty of from {valueItemSelected?.location}
+              Qty added from {valueItemSelected?.location}
             </Typography>
           </InputLabel>
           <OutlinedInput
@@ -143,7 +143,7 @@ const ItemForm = ({
       </div>
       <span style={{ width: "100%", textAlign: "right" }}>
         <p style={Subtitle}>
-          series starts: {valueItemSelected?.start} - series ends:{" "}
+          Custom serial number stars: {valueItemSelected?.start} and ends:{" "}
           {valueItemSelected?.end}
         </p>
       </span>
