@@ -1,7 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  Grid
-} from "@mui/material";
+import { Grid } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,11 +9,15 @@ import { onAddEventStaff } from "../../../../store/slices/eventSlice";
 import "../../../../styles/global/ant-select.css";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import FormFields from "./components/FormFields";
+import AddingEventCreated from "./components/AddingEventCreated";
 const schema = yup.object().shape({
-  firstName: yup.string(),
-  lastName: yup.string(),
-  email: yup.string().email("Email format is not valid"),
-  role: yup.string(),
+  firstName: yup.string().required("First name is required"),
+  lastName: yup.string().required("Last name is required"),
+  email: yup
+    .string()
+    .email("Email format is not valid")
+    .required("Email is required"),
+  role: yup.string().required("Role is required"),
 });
 
 const Form = () => {
@@ -38,6 +40,29 @@ const Form = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isAddingNewMember, setIsAddingNewMember] = useState(false);
 
+  // Helper function to get all assigned staff emails
+  const getAllAssignedEmails = () => {
+    const adminEmails = adminStaff.map((staff) => staff.email);
+    const assistantEmails = headsetAttendeesStaff.map((staff) => staff.email);
+    return [...adminEmails, ...assistantEmails];
+  };
+
+  // Helper function to check if employee is already assigned
+  const isEmployeeAlreadyAssigned = (employee) => {
+    const assignedEmails = getAllAssignedEmails();
+    return assignedEmails.includes(employee.user);
+  };
+
+  // Helper function to validate form data before adding
+  const validateMemberData = (memberData) => {
+    return (
+      memberData.firstName?.trim() &&
+      memberData.lastName?.trim() &&
+      memberData.email?.trim() &&
+      memberData.role?.trim()
+    );
+  };
+
   // Auto-fill form fields when selecting an employee
   useEffect(() => {
     if (selectedEmployee && !isAddingNewMember) {
@@ -47,6 +72,10 @@ const Form = () => {
       // Keep role manual unless you want to map company role codes
     }
   }, [selectedEmployee, isAddingNewMember]);
+
+  useEffect(() => {
+    <AddingEventCreated />;
+  }, [adminStaff.length]);
 
   const onSelectEmployee = (idOrNew) => {
     if (idOrNew === "__new__") {
@@ -79,6 +108,30 @@ const Form = () => {
             email: watch("email"),
             role: watch("role"),
           };
+    // Validate that all fields are filled
+    if (!validateMemberData(newMemberProfile)) {
+      alert(
+        `Please fill in all required fields before adding a staff member. 
+        Missing field: ${
+          newMemberProfile.firstName.length === 0
+            ? "First Name"
+            : newMemberProfile.lastName.length === 0
+            ? "Last Name"
+            : newMemberProfile.email.length === 0
+            ? "Email"
+            : "Role"
+        }`
+      );
+      return;
+    }
+
+    // Check if email is already assigned
+    const assignedEmails = getAllAssignedEmails();
+    if (assignedEmails.includes(newMemberProfile.email)) {
+      alert("This staff member is already assigned to the event.");
+      return;
+    }
+
     if (newMemberProfile.role === "Administrator") {
       let newAdminList = [...adminStaff, newMemberProfile];
       setAdminStaff(newAdminList);
@@ -90,10 +143,7 @@ const Form = () => {
       setValue("role", "");
       return;
     }
-    let newHeadsetAttendeesList = [
-      ...headsetAttendeesStaff,
-      newMemberProfile,
-    ];
+    let newHeadsetAttendeesList = [...headsetAttendeesStaff, newMemberProfile];
     setHeadsetAttendeesStaff(newHeadsetAttendeesList);
     setValue("firstName", "");
     setValue("lastName", "");
@@ -111,6 +161,7 @@ const Form = () => {
     }
     return 0;
   };
+
   const checkAssistantsSpots = () => {
     if (headsetAttendeesStaff?.length > 0) {
       if (headsetAttendeesStaff) return headsetAttendeesStaff.length;
@@ -125,12 +176,14 @@ const Form = () => {
     );
     return setAdminStaff(updateAdminMemberList);
   };
+
   const handleHeadsetAttendeeDeleteMember = (props) => {
     const updateHeadsetMemberList = headsetAttendeesStaff?.filter(
       (_, index) => index !== props
     );
     return setHeadsetAttendeesStaff(updateHeadsetMemberList);
   };
+
   const handleEventInfo = async (data) => {
     const newMemberProfile = {
       firstName: data.firstName,
@@ -138,31 +191,46 @@ const Form = () => {
       email: data.email,
       role: data.role,
     };
-    if (newMemberProfile.email === "") {
+
+    // If no data in form, just proceed with existing staff
+    if (!data.firstName && !data.lastName && !data.email && !data.role) {
       const format = {
         adminUser: adminStaff,
         headsetAttendees: headsetAttendeesStaff,
       };
       dispatch(onAddEventStaff(format));
       return navigate("/create-event-page/document-detail");
+    }
+
+    // Validate that all fields are filled if any data is provided
+    if (!validateMemberData(newMemberProfile)) {
+      alert("Please fill in all required fields before proceeding.");
+      return;
+    }
+
+    // Check if email is already assigned
+    const assignedEmails = getAllAssignedEmails();
+    if (assignedEmails.includes(newMemberProfile.email)) {
+      alert("This staff member is already assigned to the event.");
+      return;
+    }
+
+    if (newMemberProfile.role === "Administrator") {
+      const format = {
+        adminUser: [...adminStaff, newMemberProfile],
+        headsetAttendees: headsetAttendeesStaff,
+      };
+      setAdminStaff([...adminStaff, newMemberProfile]);
+      dispatch(onAddEventStaff(format));
+      return navigate("/create-event-page/document-detail");
     } else {
-      if (newMemberProfile.role === "Administrator") {
-        const format = {
-          adminUser: [...adminStaff, newMemberProfile],
-          headsetAttendees: headsetAttendeesStaff,
-        };
-        setAdminStaff([...adminStaff, newMemberProfile]);
-        dispatch(onAddEventStaff(format));
-        return navigate("/create-event-page/document-detail");
-      } else {
-        const format = {
-          adminUser: adminStaff,
-          headsetAttendees: [...headsetAttendeesStaff, newMemberProfile],
-        };
-        setHeadsetAttendeesStaff([...headsetAttendeesStaff, newMemberProfile]);
-        dispatch(onAddEventStaff(format));
-        return navigate("/create-event-page/document-detail");
-      }
+      const format = {
+        adminUser: adminStaff,
+        headsetAttendees: [...headsetAttendeesStaff, newMemberProfile],
+      };
+      setHeadsetAttendeesStaff([...headsetAttendeesStaff, newMemberProfile]);
+      dispatch(onAddEventStaff(format));
+      return navigate("/create-event-page/document-detail");
     }
   };
 
@@ -182,7 +250,7 @@ const Form = () => {
     background: "var(--gray-100, #F2F4F7)",
     padding: "24px",
   };
-  
+
   return (
     <Grid
       display={"flex"}
@@ -219,6 +287,9 @@ const Form = () => {
           selectedEmployee={selectedEmployee}
           isAddingNewMember={isAddingNewMember}
           onSelectEmployee={onSelectEmployee}
+          isEmployeeAlreadyAssigned={isEmployeeAlreadyAssigned}
+          currentRole={watch("role")}  // NEW: bind current role to child
+          navigate={navigate}
         />
       </Grid>
     </Grid>
