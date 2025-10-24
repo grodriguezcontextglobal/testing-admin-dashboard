@@ -5,15 +5,13 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Button } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { onAddExtraServiceNeeded } from "../../../../../store/slices/eventSlice";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
@@ -92,7 +90,12 @@ const Services = ({
         >
           Other services
         </Typography>
-        <Button
+        <LightBlueButtonComponent
+          title="Need extra services?"
+          styles={{ width: "fit-content" }}
+          func={() => handleExtraServiceNeeded()}
+        />
+        {/* <Buttonx
           style={{
             ...LightBlueButton,
             display: "flex",
@@ -101,7 +104,7 @@ const Services = ({
           onClick={() => handleExtraServiceNeeded()}
         >
           <p style={LightBlueButtonText}>Need extra services?</p>
-        </Button>
+        </Buttonx> */}
       </InputLabel>
       {extraServicesNeeded && (
         <>
@@ -135,6 +138,7 @@ const Services = ({
                 </InputLabel>
                 <OutlinedInput
                   {...register("service")}
+                  required
                   style={{
                     ...OutlinedInputStyle,
                     width: "100%",
@@ -162,6 +166,7 @@ const Services = ({
                 </InputLabel>
                 <OutlinedInput
                   {...register("deposit")}
+                  required
                   style={{
                     ...OutlinedInputStyle,
                     width: "100%",
@@ -187,7 +192,18 @@ const Services = ({
               md={12}
               lg={12}
             >
-              <Button
+              <BlueButtonComponent
+                buttonType="submit"
+                title="Add service"
+                icon={
+                  <RectangleBluePlusIcon
+                    hoverStroke="var(--Blue-dark-800)"
+                    stroke="var(--basewhite)"
+                  />
+                }
+                styles={{ width: "100%" }}
+              />
+              {/* <Button
                 htmlType="submit"
                 style={{
                   ...LightBlueButton,
@@ -200,7 +216,7 @@ const Services = ({
                 <Typography textTransform="none" style={LightBlueButtonText}>
                   Add service
                 </Typography>
-              </Button>
+              </Button> */}
             </Grid>
           </form>
           <SelectedServiceAddedRendered
