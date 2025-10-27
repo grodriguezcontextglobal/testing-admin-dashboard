@@ -1,34 +1,25 @@
-import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Card,
-  Divider,
-  Popconfirm,
-  Select,
-  Space,
-  message,
-  notification
-} from "antd";
-import { sortBy } from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { Card, Divider, Select, Space, notification } from "antd";
+import { createContext, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import DangerButtonConfirmationComponent from "../../../../../components/UX/buttons/DangerButtonConfirmation";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import Main from "./components/EditingINventoryUXOptions/main";
+
+export const valueContext = createContext(null);
 
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [valueItemSelected, setValueItemSelected] = useState({});
@@ -157,7 +148,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             [devicesFetchedPool[0].type],
             [props.category],
             [...devicesFetchedPool.map((item) => item.device)],
-            133,
+            user.sqlInfo.company_id,
           ],
         }
       );
@@ -223,350 +214,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const handleRefresh = async () => {
     return itemQuery.refetch();
   };
-
-  const updateGlobalState = async () => {
-    const latestUpdatedInventoryEvent = await devitrakApi.post(
-      "/event/event-list",
-      {
-        _id: event.id,
-      }
-    );
-    const checkInv = new Map();
-    for (const [, value] of Object.entries(
-      latestUpdatedInventoryEvent.data.list[0].deviceSetup
-    )) {
-      if (checkInv.has(value.group)) {
-        checkInv.set(value.group, {
-          ...checkInv.get(value.group),
-          quantity:
-            Number(checkInv.get(value.group).quantity) + Number(value.quantity),
-          endingNumber: value.endingNumber,
-        });
-      } else {
-        checkInv.set(value.group, value);
-      }
-    }
-    const finalDeviceUpdated = [...checkInv.values()];
-    await devitrakApi.patch(`/event/edit-event/${event.id}`, {
-      deviceSetup: finalDeviceUpdated,
-    });
-    dispatch(
-      onAddEventData({
-        ...event,
-        deviceSetup: finalDeviceUpdated,
-      })
-    );
-  };
-
-  const eventInventoryRef = useCallback(
-    async ({ device = null, database = null, checking = null }) => {
-      const eventInventoryRef = await devitrakApi.post("/event/event-list", {
-        _id: event.id,
-      });
-      const updateDeviceInv = [...eventInventoryRef.data.list[0].deviceSetup];
-      const sortingData = sortBy(device, "device", "asc");
-      const foundIndex = updateDeviceInv.findIndex(
-        (element) =>
-          String(element.group).toLowerCase() ===
-          String(sortingData[0].type).toLowerCase()
-      );
-      if (foundIndex > -1) {
-        // Update existing device setup entry
-        const updatedInventoryEvent = {
-          ...updateDeviceInv[foundIndex],
-          startingNumber: sortingData[0].device,
-          endingNumber: sortingData.at(-1).device,
-          quantity: sortingData.length,
-        };
-        updateDeviceInv[foundIndex] = updatedInventoryEvent;
-        const updatingEventInventory = await devitrakApi.patch(
-          `/event/edit-event/${event.id}`,
-          {
-            deviceSetup: updateDeviceInv,
-          }
-        );
-        return dispatch(
-          onAddEventData({
-            ...event,
-            deviceSetup: updatingEventInventory.data.event.deviceSetup,
-          })
-        );
-      } else {
-        const templateUpdateEventInventory = {
-          category: database[0].category_name,
-          group: database[0].item_group,
-          value: database[0].cost,
-          description: database[0].descript_item,
-          company: user.companyData.company_name,
-          quantity: database.length,
-          ownership: database[0].ownership,
-          createdBy: new Date().toISOString(),
-          key: database[0].id,
-          dateCreated: new Date().toISOString(),
-          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${user.companyData.company_name} ${database[0].ownership}`,
-          consumerUses: false,
-          startingNumber: checking.data.receiversInventory[0].device,
-          endingNumber: checking.data.receiversInventory.at(-1).device,
-          existing: true,
-        };
-        // Add the new templateUpdateEventInventory to the device setup array
-        const updatedDeviceSetup = [
-          ...eventInventoryRef.data.list[0].deviceSetup,
-          templateUpdateEventInventory,
-        ];
-        // Update the event with the new device setup
-        await devitrakApi.patch(`/event/edit-event/${event.id}`, {
-          deviceSetup: updatedDeviceSetup,
-        });
-        return dispatch(
-          onAddEventData({
-            ...event,
-            deviceSetup: eventInventoryRef.data.list[0].deviceSetup,
-          })
-        );
-      }
-    },
-    []
-  );
-
-  const gettingItemsInContainer = async (props) => {
-    try {
-      const gettingItemsInContainer = await devitrakApi.get(
-        `/db_inventory/container-items/${props.item_id}`
-      );
-      return gettingItemsInContainer;
-    } catch (error) {
-      // message.error("Failed to get items in container. Please try again.");
-      return null;
-    }
-  };
-
-  const extractContainersItemsInfo = async (containerSetup) => {
-    try {
-      const itemsInContainer = await gettingItemsInContainer(containerSetup);
-      if (
-        itemsInContainer.data &&
-        itemsInContainer.data.container.items.length > 0
-      ) {
-        const sortedItems = itemsInContainer.data.container.items.sort((a, b) =>
-          a.serial_number.localeCompare(b.serial_number)
-        );
-        let database = [...sortedItems];
-        const event_id = event.sql.event_id;
-        await devitrakApi.post("/db_event/event_device", {
-          event_id: event_id,
-          item_group: database[0].item_group,
-          startingNumber: database[0].serial_number,
-          quantity: `${database.length}`,
-          company_id: user.sqlInfo.company_id,
-          category_name: database[0].category_name,
-          data: database.map((item) => item.serial_number),
-        });
-        await devitrakApi.post("/db_item/item-out-warehouse", {
-          warehouse: false,
-          company_id: user.sqlInfo.company_id,
-          item_group: database[0].item_group,
-          startingNumber: database[0].serial_number,
-          quantity: `${database.length}`,
-          category_name: database[0].category_name,
-          data: database.map((item) => item.serial_number),
-        });
-        const template = {
-          deviceList: JSON.stringify(
-            database.map((item) => item.serial_number)
-          ),
-          status: "Operational",
-          activity: false,
-          comment: "No comment",
-          eventSelected: eventName,
-          provider: user.company,
-          type: database[0].item_group,
-          company: user.companyData.id,
-          event_id: event.id,
-        };
-        await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-        const checking = await devitrakApi.post(
-          "/receiver/receiver-pool-list",
-          {
-            type: database[0].item_group,
-            eventSelected: event.eventInfoDetail.eventName,
-            company: user.companyData.id,
-          }
-        );
-        await eventInventoryRef({
-          device: checking,
-          database: database,
-          checking: checking,
-        });
-        return null;
-      }
-      return message.warning("Container does not have any stored items.");
-    } catch (error) {
-      // console.log("extractContainersItemsInfo", error);
-      // message.error("Failed to get items in container. Please try again.");
-    }
-  };
-
-  const checkIfContainer = async (props) => {
-    try {
-      const extractingContainers = props.filter((item) => item.container > 0);
-      if (extractingContainers.length > 0) {
-        for (const container of extractingContainers) {
-          // extract items info from container
-          await extractContainersItemsInfo(container);
-        }
-      }
-      return null;
-    } catch (error) {
-      return message.error(
-        "Failed to extract containers items info. Please try again."
-      );
-    }
-  };
-
-  const updateDeviceSetupInEvent = async (props) => {
-    try {
-      await eventInventoryRef({
-        device: props.pool,
-        database: props.database,
-        checking: props.checking,
-      });
-    } catch (error) {
-      return message.error(
-        "Failed to update device setup in event. Please try again."
-      );
-    }
-  };
-
-  const checkInsertedDataAndUpdateInventoryEvent = async (props) => {
-    try {
-      const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
-        type: props[0].item_group,
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-      });
-      if (checking.data.receiversInventory.length > 0) {
-        await updateDeviceSetupInEvent({
-          pool: checking.data.receiversInventory,
-          database: props,
-          checking: checking,
-        });
-      }
-    } catch (error) {
-      return message.error("Failed to add device. Please try again.");
-    }
-  };
-
-  const createDeviceRecordInNoSQLDatabase = async (props) => {
-    try {
-      let data = null;
-      data = props.deviceInfo;
-      const template = {
-        deviceList: JSON.stringify(data.map((item) => item.serial_number)),
-        status: "Operational",
-        activity: false,
-        comment: "No comment",
-        eventSelected: eventName,
-        provider: user.company,
-        type: data[0].item_group,
-        company: user.companyData.id,
-        event_id: event.id,
-      };
-      await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-      await checkInsertedDataAndUpdateInventoryEvent(data);
-      await checkIfContainer(data);
-    } catch (error) {
-      return message.error(
-        "Failed to add device to NoSQL database. Please try again."
-      );
-    }
-  };
-
-  const createDeviceInEvent = async (props) => {
-    try {
-      let database = [...props.deviceInfo];
-      const event_id = event.sql.event_id;
-      await devitrakApi.post("/db_event/event_device", {
-        event_id: event_id,
-        item_group: database[0].item_group,
-        startingNumber: database[0].serial_number,
-        quantity: assignAllDevices
-          ? String(valueItemSelected.qty)
-          : props.quantity,
-        company_id: user.sqlInfo.company_id,
-        category_name: database[0].category_name,
-        data: props.deviceInfo.map((item) => item.serial_number),
-      });
-      await devitrakApi.post("/db_item/item-out-warehouse", {
-        warehouse: 0,
-        company_id: user.sqlInfo.company_id,
-        item_group: database[0].item_group,
-        startingNumber: database[0].serial_number,
-        quantity: assignAllDevices
-          ? String(valueItemSelected.qty)
-          : props.quantity,
-        category_name: database[0].category_name,
-        data: props.deviceInfo.map((item) => item.serial_number),
-      });
-      await createDeviceRecordInNoSQLDatabase(props);
-    } catch (error) {
-      return message.error("Failed to add device to event. Please try again.");
-    }
-  };
-
-  const handleUpdateEventInventory = async (data) => {
-    if (Object.keys(valueItemSelected).length === 0)
-      return message.warning("Please select item to add to inventory.");
-    try {
-      setLoadingStatus(true);
-      const c = await devitrakApi.post(
-        "/db_event/retrieve-item-location-quantity",
-        {
-          company_id: user.sqlInfo.company_id,
-          warehouse: 1,
-          item_group: valueItemSelected.item_group,
-          enableAssignFeature: 1,
-        }
-      );
-      const response = await devitrakApi.post(
-        "/db_event/retrieve-item-location-quantity-full-details",
-        {
-          location: valueItemSelected.location,
-          company_id: user.sqlInfo.company_id,
-          warehouse: 1,
-          item_group: valueItemSelected.item_group,
-          enableAssignFeature: 1,
-          serial_number: c.data.items[valueItemSelected.location].start,
-          quantity: assignAllDevices
-            ? Number(valueItemSelected.qty)
-            : Number(data.quantity),
-          category_name: valueItemSelected.category_name,
-        }
-      );
-      const deviceInfo = response.data.data;
-      if (deviceInfo.length > 0) {
-        await createDeviceInEvent({ ...data, deviceInfo });
-        openNotification("Items added to event inventory.");
-      } else {
-        message.warning("Device not found");
-      }
-      await updateGlobalState();
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`
-      );
-      queryClient.invalidateQueries(["listOfreceiverInPool"]);
-      setLoadingStatus(false);
-      closeModal();
-    } catch (error) {
-      message.error("Failed to add devices to event. Please try again.");
-    } finally {
-      setLoadingStatus(false);
-    }
-  };
-
   const bodyModal = () => {
     return (
       <Grid container>
@@ -589,7 +236,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               style={{
                 width: "100%",
                 display: "flex",
-                justifyContent: "flex-start",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
@@ -597,30 +244,9 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                 textTransform="none"
                 style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
               >
-                Existing groups
+                Select from existing company&apos;s inventory
               </Typography>
-            </InputLabel>
-            <InputLabel
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                margin: "0 0 0.5rem",
-              }}
-            >
-              <Typography
-                textTransform="none"
-                style={{
-                  ...TextFontSize20LineHeight30,
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: "#000",
-                }}
-              >
-                Select from existing category
-              </Typography>
-              <RefreshButton propsFn={handleRefresh} />
+              <RefreshButton propsFn={handleRefresh}/>
             </InputLabel>
             <Select
               className="custom-autocomplete"
@@ -631,106 +257,28 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               onChange={onChange}
               options={selectOptions}
             />
-            <form
-              onSubmit={handleSubmit(handleUpdateEventInventory)}
-              style={{
-                width: "100%",
-              }}
-            >
-              <Grid
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                marginY={2}
-                gap={2}
-                style={{
-                  width: "100%",
-                }}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-              >
-                <Grid item xs={6} sm={6} md={6} lg={6}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <Typography
-                      textTransform={"none"}
-                      textAlign={"left"}
-                      style={{ ...Subtitle, fontWeight: 500 }}
-                    >
-                      Assign all&nbsp;
-                      <input
-                        type="checkbox"
-                        value={assignAllDevices}
-                        onChange={(e) => setAssignAllDevices(e.target.checked)}
-                      />
-                    </Typography>
-                  </InputLabel>
-                </Grid>
-              </Grid>
-              <Grid
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                marginY={2}
-                gap={2}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-              >
-                <Grid item xs={6} sm={6} md={6} lg={6}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p
-                      style={{
-                        ...Subtitle,
-                        fontWeight: 500,
-                        textTransform: "none",
-                        textAlign: "left",
-                      }}
-                    >
-                      Quantity
-                    </p>
-                  </InputLabel>
-                  <OutlinedInput
-                    disabled={assignAllDevices}
-                    {...register("quantity")}
-                    style={{
-                      ...OutlinedInputStyle,
-                      width: "100%",
-                    }}
-                    placeholder="Enter quantity needed."
-                    fullWidth
-                  />
-                </Grid>
-                <Grid
-                  style={{ alignSelf: "baseline" }}
-                  item
-                  xs={6}
-                  sm={6}
-                  md={6}
-                  lg={6}
-                >
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p
-                      style={{
-                        ...Subtitle,
-                        fontWeight: 500,
-                        color: "transparent",
-                        textTransform: "none",
-                        textAlign: "left",
-                      }}
-                      color={"transparent"}
-                    >
-                      Quantity
-                    </p>
-                  </InputLabel>
-                  <BlueButtonComponent title={"Add item"} buttonType="submit" loadingState={loadingStatus} disabled={loadingStatus} />
-                </Grid>
-              </Grid>
-            </form>
+            {/* form to add item to event inventory */}
+            <valueContext.Provider value={{
+              valueItemSelected:valueItemSelected,
+              eventInfo: event
+            }}>
+              <Main
+                assignAllDevices={assignAllDevices}
+                closeModal={closeModal}
+                handleSubmit={handleSubmit}
+                loadingStatus={loadingStatus}
+                openNotification={openNotification}
+                OutlinedInputStyle={OutlinedInputStyle}
+                queryClient={queryClient}
+                register={register}
+                setAssignAllDevices={setAssignAllDevices}
+                setLoadingStatus={setLoadingStatus}
+                Subtitle={Subtitle}
+                valueItemSelected={valueItemSelected}
+                watch={watch}
+                eventName={eventName}
+              />
+            </valueContext.Provider>
           </Grid>
           <Divider />
           <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -741,17 +289,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                     title={item.group}
                     key={item.id}
                     extra={[
-                      <Popconfirm
-                        title="Are you sure you want to remove this item from event?"
+                      <DangerButtonConfirmationComponent
                         key={item.id}
-                        onConfirm={() =>
-                          handleRemoveItemFromInventoryEvent(item)
-                        }
-                      >
-                        <button style={DangerButton}>
-                          <p style={DangerButtonText}>X</p>
-                        </button>
-                      </Popconfirm>,
+                        title={"X"}
+                        confirmationTitle="Are you sure you want to remove this item from event?"
+                        func={() => handleRemoveItemFromInventoryEvent(item)}
+                      />,
                     ]}
                     style={{ ...CardStyle, alignSelf: "flex-start" }}
                   >
@@ -775,6 +318,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       </Grid>
     );
   };
+
   return (
     <>
       {contextHolder}
@@ -784,20 +328,6 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         closeModal={closeModal}
         width={1000}
       />
-      {/* <Modal
-    open={editingInventory}
-    onCancel={() => closeModal()}
-    style={{
-      display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 30,
-        marginTop: "100px",
-      }}
-      footer={[]}
-      width={1000}
-      >
-    </Modal> */}
     </>
   );
 };
