@@ -26,7 +26,11 @@ import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
 import { DangerButton } from "../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../styles/global/DangerButtonText";
-import { bulkItemInsertAlphanumeric, bulkItemInsertSequential, storeAndGenerateImageUrl } from "./utils/bulkItemActionsOptions";
+import {
+  bulkItemInsertAlphanumeric,
+  bulkItemInsertSequential,
+  storeAndGenerateImageUrl,
+} from "./utils/bulkItemActionsOptions";
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
   const {
@@ -393,6 +397,7 @@ const AddNewBulkItems = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    const newReference = watch("reference_item_group");
     if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("reference_item_group")
@@ -430,7 +435,25 @@ const AddNewBulkItems = () => {
           }
         });
       }
+    } else {
+      setValue("item_group", newReference);
     }
+    if (newReference.length === 0) {
+      setValue("item_group", "");
+      setValue("photo", []);
+      setValue("category_name", "");
+      setValue("cost", "");
+      setValue("brand", "");
+      setValue("descript_item", "");
+      setValue("min_serial_number", "");
+      setValue("max_serial_number", "");
+      setValue("sub_location", "");
+      setValue("quantity", 0);
+      setValue("container", "");
+      setValue("containerSpotLimit", "0");
+      setValue("enabledAssignFeature", 1);
+    }
+
     return () => {
       controller.abort();
     };
