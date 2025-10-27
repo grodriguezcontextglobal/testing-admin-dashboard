@@ -29,7 +29,7 @@ import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForC
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
-import InventoryEventValue from "./components/InventoryEventValue";
+// import InventoryEventValue from "./components/InventoryEventValue";
 import Report from "./components/lostFee/Report";
 import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
@@ -202,7 +202,7 @@ const MainPageQuickGlance = () => {
           border: 0,
           background: "none",
           width: "100%",
-          height: "100%",
+          aspectRatio: 1,
           overflow: "hidden",
         }}
         type="button"
@@ -483,8 +483,8 @@ const MainPageQuickGlance = () => {
                   onChange={handleUploadImage}
                   style={{
                     backgroundColor: "var(--gray500)",
-                    height: "100%",
                     width: "100%",
+                    aspectRatio: 1,
                   }}
                 >
                   {event?.eventInfoDetail?.logo ? (
@@ -532,13 +532,13 @@ const MainPageQuickGlance = () => {
             xs={12}
             sm={12}
             md={6}
-            lg={4}
+            lg={6}
           >
             <GraphicInventoryEventActivity />
           </Grid>
-          <Grid item xs={12} sm={12} md={6} lg={2}>
+          {/* <Grid item xs={12} sm={12} md={6} lg={2}>
             <InventoryEventValue />
-          </Grid>
+          </Grid> */}
           <Grid
             style={{ padding: `${isExtraLargeDevice && "0px 0px 0px 8px"}` }}
             item
