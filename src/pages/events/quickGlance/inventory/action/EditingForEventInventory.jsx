@@ -15,6 +15,7 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import Main from "./components/EditingINventoryUXOptions/main";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 
 export const valueContext = createContext(null);
 
@@ -202,7 +203,16 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       );
       if (updatingDeviceInEventProcess.data) {
         await returningDevicesInStockAfterBeingRemoveFromInventoryEvent(props);
-        await updateDeviceSetupStore(removing);
+        updateDeviceSetupStore(removing);
+        queryClient.refetchQueries({
+          queryKey: ["listOfreceiverInPool"],
+        });
+        await clearCacheMemory(
+          `eventSelected=${event.eventDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
       }
     } else {
       return alert(
@@ -246,7 +256,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               >
                 Select from existing company&apos;s inventory
               </Typography>
-              <RefreshButton propsFn={handleRefresh}/>
+              <RefreshButton propsFn={handleRefresh} />
             </InputLabel>
             <Select
               className="custom-autocomplete"
@@ -258,10 +268,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
               options={selectOptions}
             />
             {/* form to add item to event inventory */}
-            <valueContext.Provider value={{
-              valueItemSelected:valueItemSelected,
-              eventInfo: event
-            }}>
+            <valueContext.Provider
+              value={{
+                valueItemSelected: valueItemSelected,
+                eventInfo: event,
+              }}
+            >
               <Main
                 assignAllDevices={assignAllDevices}
                 closeModal={closeModal}
