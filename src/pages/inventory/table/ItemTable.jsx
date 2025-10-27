@@ -64,27 +64,27 @@ const ItemTable = ({
   );
 
   // Display title based on search/filter/date
-  const getDisplayTitle = useCallback(() => {
-    if (chosenConditionState === 3 && date)
-      return "Inventory for selected period";
-    if (searchItem) return `Search results for "${searchItem}"`;
-    if (Array.isArray(chosen) && chosen.length > 0) {
-      const labels = {
-        0: "Brand",
-        1: "Device name",
-        2: "Serial number",
-        3: "Location",
-        4: "Ownership",
-        5: "Condition",
-      };
-      const filterDescriptions = chosen.map(filter => {
-        const label = labels[filter.category] ?? "Filter";
-        return `${label}: ${filter.value}`;
-      });
-      return `Filtered by ${filterDescriptions.join(", ")}`;
-    }
-    return "Inventory";
-  }, [searchItem, chosen, chosenConditionState, date]);
+  // const getDisplayTitle = useCallback(() => {
+  //   if (chosenConditionState === 3 && date)
+  //     return "Inventory for selected period";
+  //   if (searchItem) return `Search results for "${searchItem}"`;
+  //   if (Array.isArray(chosen) && chosen.length > 0) {
+  //     const labels = {
+  //       0: "Brand",
+  //       1: "Device name",
+  //       2: "Serial number",
+  //       3: "Location",
+  //       4: "Ownership",
+  //       5: "Condition",
+  //     };
+  //     const filterDescriptions = chosen.map((filter) => {
+  //       const label = labels[filter.category] ?? "Filter";
+  //       return `${label}: ${filter.value}`;
+  //     });
+  //     return `Filtered by ${filterDescriptions.join(", ")}`;
+  //   }
+  //   return "Inventory";
+  // }, [searchItem, chosen, chosenConditionState, date]);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -204,13 +204,15 @@ const ItemTable = ({
             ownership: data.ownership,
             main_warehouse: data.main_warehouse,
             warehouse: data.warehouse,
-            location: data.usage && data.usage.length > 0 ? data.usage : data.location,
+            location: data.location,
             image_url: data.image_url || imageSource,
             serial_number: data.serial_number,
             enableAssignFeature: data.enableAssignFeature,
             usage: data.usage,
             status: data.status ?? null,
             condition: data.status ?? null,
+            assignedToStaffMember:
+              data.usage && data.usage.length > 0 ? data.usage : null,
           };
 
           // Always keep the latest row for this item_id
@@ -279,8 +281,8 @@ const ItemTable = ({
     };
 
     // Apply all filters simultaneously
-    return baseDataset.filter(item => {
-      return chosen.every(filter => {
+    return baseDataset.filter((item) => {
+      return chosen.every((filter) => {
         const propertyKey = dicSelectedOptions[filter.category];
         if (!propertyKey) return true; // Skip invalid filters
         return item?.[propertyKey] === filter.value;
