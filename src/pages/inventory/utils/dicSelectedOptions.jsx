@@ -1,6 +1,6 @@
 export const dicSelectedOptions = {
   0: "Brand",
-  1: "Group (Device Name)",
+  1: "Group",
   2: "Serial Number",
   3: "Location",
   4: "Ownership",
