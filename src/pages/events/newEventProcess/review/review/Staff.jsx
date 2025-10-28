@@ -2,6 +2,7 @@ import { Grid, InputLabel } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddContactInfo } from "../../../../../store/slices/eventSlice";
+import { dicStaff } from "../../staff/components/dictionary";
 
 const Staff = () => {
   const { staff, contactInfo } = useSelector((state) => state.event);
@@ -72,13 +73,14 @@ const Staff = () => {
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           {staff.adminUser &&
             staff?.adminUser?.map((item) => {
+              console.log(item);
               return (
                 <h4 style={{ ...inputValueStyle, margin:"0.5rem 0"}} key={item.email}>
                   {item.firstName} {item.lastName}
                   <br />
                   {item.email}
                   <br />
-                  {item.role}
+                  {dicStaff[item.role]}
                 </h4>
               );
             })}
@@ -94,7 +96,7 @@ const Staff = () => {
                   <br />
                   {item.email}
                   <br />
-                  {item.role}
+                  {dicStaff[item.role]}
                 </h4>
               );
             })}
