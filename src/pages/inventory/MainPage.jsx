@@ -2,7 +2,14 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -66,6 +73,16 @@ const MainPage = () => {
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
 
+  const optionsUX = useMemo(
+    () => (
+      <FilterOptionsUX
+        filterOptions={dataFilterOptions}
+        chosen={chosenOption}
+        setChosen={setChosenOption}
+      />
+    ),
+    [chosenOption, dataFilterOptions]
+  );
   useEffect(() => {
     setValue("searchItem", "");
     setRenderingData(false);
@@ -134,14 +151,24 @@ const MainPage = () => {
 
   const refetchingQueriesFn = () => {
     setIsLoadingState(true);
-    queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-    queryClient.refetchQueries(["listOfItemsInStock"]);
-    queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-    queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
-    queryClient.refetchQueries([
-      "companyHasInventoryQuery",
-      user.sqlInfo.company_id,
-    ]);
+    queryClient.resetQueries({
+      queryKey: ["ItemsInInventoryCheckingQuery"],
+    });
+    queryClient.resetQueries({
+      queryKey: ["listOfItemsInStock"],
+    });
+    queryClient.resetQueries({
+      queryKey: ["RefactoredListInventoryCompany"],
+    });
+    queryClient.resetQueries({
+      queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
+    });
+    // queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
+    // queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+    // queryClient.refetchQueries([
+    //   "companyHasInventoryQuery",
+    //   user.sqlInfo.company_id,
+    // ]);
     setIsLoadingState(false);
     setValue("searchItem", "");
     setParams(null);
@@ -428,11 +455,12 @@ const MainPage = () => {
         </Grid>
         <Divider />
         {/* Ensure FilterOptionsUX occupies full width (12 columns) */}
-        <FilterOptionsUX
+        {/* <FilterOptionsUX
           filterOptions={dataFilterOptions}
           chosen={chosenOption}
           setChosen={setChosenOption}
-        />
+        /> */}
+        {optionsUX}{" "}
         <Grid
           display={"flex"}
           justifyContent={"center"}
