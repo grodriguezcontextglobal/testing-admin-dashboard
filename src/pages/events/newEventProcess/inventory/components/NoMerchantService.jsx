@@ -77,6 +77,7 @@ const NoMerchantService = ({
             }}
             placeholder="Enter quantity needed."
             fullWidth
+            required
           />
         </Grid>
         <Grid
