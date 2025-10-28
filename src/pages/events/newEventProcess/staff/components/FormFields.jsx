@@ -17,6 +17,7 @@ import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCircle
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import { dicStaff } from "./dictionary";
 
 const FormFields = ({
   addNewMember,
@@ -110,18 +111,18 @@ const FormFields = ({
               displayEmpty // NEW: show placeholder when empty
               renderValue={
                 (selected) =>
-                  selected && selected.length > 0 ? selected : "Select role" // NEW: UX placeholder
+                  selected && selected.length > 0 ? dicStaff[selected] : "Select role" // NEW: UX placeholder
               }
             >
               <MenuItem value="" disabled>
                 <Typography>Select role</Typography>
               </MenuItem>
               {checkAdminSpots() === subscription?.adminUser ? null : (
-                <MenuItem value={"Administrator"}>
+                <MenuItem value={"adminUser"}>
                   <Typography>Administrator</Typography>
                 </MenuItem>
               )}
-              <MenuItem value={"HeadsetAttendees"}>
+              <MenuItem value={"headsetAttendees"}>
                 <Typography>Assistant</Typography>
               </MenuItem>
             </Select>
