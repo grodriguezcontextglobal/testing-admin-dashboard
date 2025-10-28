@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useSelector } from "react-redux";
+import "./StepsLine.css";
 
 const StepsLine = () => {
   const { eventInfoDetail, staff } = useSelector((state) => state.event)
@@ -18,7 +19,7 @@ const StepsLine = () => {
   const error = () => {
     messageApi.open({
       type: 'error',
-      content: 'This is an error message',
+      content: 'To access to last step, all previous steps must be filled.',
     });
   };
   const step = [
@@ -98,6 +99,7 @@ const StepsLine = () => {
   return (
     <Box>
       <Steps
+        className="steps-hoverable"
         direction="vertical"
         percent={progression()}
         current={currentPath}

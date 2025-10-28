@@ -1,0 +1,27 @@
+.steps-hoverable .ant-steps-item-container {
+  border-radius: 8px;
+  transition: background-color 150ms ease, color 150ms ease;
+  padding: 6px 8px; /* extra hit area for nicer hover */
+}
+
+.steps-hoverable .ant-steps-item-container:hover {
+  background-color: rgba(25, 103, 210, 0.08); /* subtle blue hover */
+  cursor: pointer;
+}
+
+/* Optional: slightly accent the title on hover */
+.steps-hoverable .ant-steps-item-container:hover .ant-steps-item-title {
+  color: #1967d2;
+}
+
+/* Optional: tweak icon on hover */
+.steps-hoverable .ant-steps-item-container:hover .ant-steps-item-icon {
+  filter: brightness(1.05);
+}
+
+/* Dark mode tweak */
+@media (prefers-color-scheme: dark) {
+  .steps-hoverable .ant-steps-item-container:hover {
+    background-color: rgba(25, 103, 210, 0.16);
+  }
+}
