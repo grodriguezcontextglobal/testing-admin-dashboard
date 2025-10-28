@@ -327,6 +327,7 @@ const MainPage = () => {
                           border: "none",
                           boxShadow: "-moz-initial",
                         }}
+                        type="button"
                         onClick={() => {
                           setValue("searchItem", "");
                           setParams(null);
@@ -427,11 +428,11 @@ const MainPage = () => {
         </Grid>
         <Divider />
         {/* Ensure FilterOptionsUX occupies full width (12 columns) */}
-          <FilterOptionsUX
-            filterOptions={dataFilterOptions}
-            chosen={chosenOption}
-            setChosen={setChosenOption}
-          />
+        <FilterOptionsUX
+          filterOptions={dataFilterOptions}
+          chosen={chosenOption}
+          setChosen={setChosenOption}
+        />
         <Grid
           display={"flex"}
           justifyContent={"center"}
