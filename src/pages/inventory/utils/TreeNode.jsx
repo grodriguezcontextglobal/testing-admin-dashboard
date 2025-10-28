@@ -17,7 +17,9 @@ import "../style/viewtree.css";
 import ViewIcon from "../../../components/icons/ViewIcon";
 
 const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
-  const [messageApi, contextHolder] = message.useMessage();
+  // ... existing code ...
+  // Removed per-node message.useMessage hook to avoid effect-triggered re-render loops
+  // const [messageApi, contextHolder] = message.useMessage();
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -45,7 +47,8 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         return;
       }
       setIsLoading(true);
-      messageApi.open({
+      // Use global message API with a stable key to update status
+      message.open({
         type: "loading",
         content: "Updating location path...",
         duration: 0,
@@ -70,20 +73,29 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
         await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
         setIsEditing(false);
         setIsLoading(false);
-        messageApi.destroy("updateLocationPath");
-        return messageApi.open({
+        // Update the same message key to success (no destroy needed)
+        message.open({
           type: "success",
           content: `Location/Sub locations updated successfully. Total: ${
             response.data.affectedRows ?? 0
           }`,
           duration: 2.5,
+          key: "updateLocationPath",
         });
+        return;
       }
     } catch (error) {
       console.error("Error updating location:", error);
       setIsLoading(false);
       setEditedName(nodeName);
       setIsEditing(false);
+      // Optional: show error with a different key
+      message.open({
+        type: "error",
+        content: "Failed to update location path.",
+        duration: 2.5,
+        key: "updateLocationPath",
+      });
     }
   };
 
@@ -186,7 +198,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
 
   return (
     <div key={nodeName} className="tree-card">
-      {contextHolder}
+      {/* Removed contextHolder to avoid hooking per-node message portals */}
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
           sx={{
