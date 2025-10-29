@@ -344,7 +344,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
       });
 
       // Recompute global event deviceSetup after inserts
-      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch);
+      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data);
 
       // Clear caches and notify
       await clearCacheMemory(
