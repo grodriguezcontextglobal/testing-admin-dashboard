@@ -1,60 +1,45 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, memo } from "react";
 
-const FilterOptionsUX = ({ filterOptions = {}, chosen, setChosen }) => {
-  // Helper function to get current value for a specific category
-  const getCurrentValue = useCallback(
-    (categoryIndex) => {
-      if (!Array.isArray(chosen)) return undefined;
-      const filter = chosen.find((item) => item.category === categoryIndex);
-      return filter ? filter.value : undefined;
-    },
-    [chosen]
-  );
+const FilterOptionsUX = memo(function FilterOptionsUX({ filterOptions = {}, chosen, setChosen }) {
+  // Helper: current value for a specific category
+  const getCurrentValue = useCallback((categoryIndex) => {
+    if (!Array.isArray(chosen)) return undefined;
+    const filter = chosen.find((item) => item.category === categoryIndex);
+    return filter ? filter.value : undefined;
+  }, [chosen]);
 
-  // Helper function to update chosen filters (guard against redundant updates)
-  const updateChosenFilters = useCallback(
-    (categoryIndex, value) => {
-      if (!Array.isArray(chosen)) {
-        const nextChosen =
-          value == null ? [] : [{ category: categoryIndex, value }];
-        setChosen(nextChosen);
-        return;
-      }
+  // Update chosen filters (guard against redundant updates)
+  const updateChosenFilters = useCallback((categoryIndex, value) => {
+    if (!Array.isArray(chosen)) {
+      const nextChosen = value == null ? [] : [{ category: categoryIndex, value }];
+      setChosen(nextChosen);
+      return;
+    }
 
-      if (value == null) {
-        const newChosen = chosen.filter(
-          (item) => item.category !== categoryIndex
-        );
-        // Avoid redundant state update
-        if (newChosen.length === chosen.length) return;
+    if (value == null) {
+      const newChosen = chosen.filter((item) => item.category !== categoryIndex);
+      if (newChosen.length === chosen.length) return; // no change
+      setChosen(newChosen);
+    } else {
+      const existingIndex = chosen.findIndex((item) => item.category === categoryIndex);
+      if (existingIndex >= 0) {
+        if (chosen[existingIndex].value === value) return; // no change
+        const newChosen = [...chosen];
+        newChosen[existingIndex] = { category: categoryIndex, value };
         setChosen(newChosen);
       } else {
-        const existingIndex = chosen.findIndex(
-          (item) => item.category === categoryIndex
-        );
-        if (existingIndex >= 0) {
-          // Update existing filter only if value actually changes
-          if (chosen[existingIndex].value === value) return;
-          const newChosen = [...chosen];
-          newChosen[existingIndex] = { category: categoryIndex, value };
-          setChosen(newChosen);
-        } else {
-          setChosen([...chosen, { category: categoryIndex, value }]);
-        }
+        setChosen([...chosen, { category: categoryIndex, value }]);
       }
-    },
-    [chosen, setChosen]
-  );
+    }
+  }, [chosen, setChosen]);
 
-  // Memoize options for each select index to avoid recreating arrays on every render
+  // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
     return new Array(6).fill(null).map((_, index) => {
-      const opts = Array.isArray(filterOptions[index])
-        ? filterOptions[index]
-        : [];
+      const opts = Array.isArray(filterOptions[index]) ? filterOptions[index] : [];
       return opts.map((item) => ({
         value: item,
         label: (
@@ -89,13 +74,11 @@ const FilterOptionsUX = ({ filterOptions = {}, chosen, setChosen }) => {
         const currentValue = getCurrentValue(index);
 
         const onChange = (value) => {
-          // Prevent redundant state updates that can cause render loops
           if (value === currentValue) return;
           updateChosenFilters(index, value);
         };
 
         const onClear = () => {
-          // Guard: avoid clearing when already cleared
           if (currentValue == null) return;
           updateChosenFilters(index, null);
         };
@@ -137,6 +120,6 @@ const FilterOptionsUX = ({ filterOptions = {}, chosen, setChosen }) => {
       })}
     </div>
   );
-};
+});
 
 export default FilterOptionsUX;
