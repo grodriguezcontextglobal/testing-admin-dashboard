@@ -8,9 +8,13 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 import { Title } from "../../../../styles/global/Title";
 import { CustomerDatabase } from "./table/CustomerDatabase";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { useSelector } from "react-redux";
 
 const CustomerInformationSection = () => {
   const { register, watch } = useForm();
+  const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
   const queryClient = useQueryClient();
 
   const styleDic = {
@@ -40,6 +44,10 @@ const CustomerInformationSection = () => {
     },
   };
 
+  const refreshCustomerDatabase = async () => {
+    await clearCacheMemory(`event=${event.id}&company=${user.companyData.id}`);
+    return queryClient.resetQueries({ queryKey: ["customerDatabase"] });
+  };
   return (
     <>
       <Grid
@@ -100,14 +108,14 @@ const CustomerInformationSection = () => {
                   color={styleDic[index].backgroundColor}
                   style={{
                     ...TextFontSize14LineHeight20,
-                    letterSpacing:"0.00938em",
+                    letterSpacing: "0.00938em",
                     fontWeight: 500,
                     color: styleDic[index].color,
                     borderRadius: "16px",
                     padding: "2px 8px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent:"flex-start"
+                    justifyContent: "flex-start",
                   }}
                 >
                   <p style={{ color: styleDic[index].color }}>
@@ -136,7 +144,7 @@ const CustomerInformationSection = () => {
               marginRight: "5px",
             }}
           >
-            <RefreshButton propsFn={queryClient.invalidateQueries} /> 
+            <RefreshButton propsFn={refreshCustomerDatabase} />
           </div>
         </Grid>
         <Grid item xs={12}>
@@ -149,8 +157,8 @@ const CustomerInformationSection = () => {
 
 export default CustomerInformationSection;
 
-
-{/* <Button
+{
+  /* <Button
 style={{
   display: "flex",
   alignItems: "center",
@@ -171,4 +179,5 @@ onClick={() => queryClient.invalidateQueries("listOfAttendees")}
 >
   <Icon icon="jam:refresh" /> Refresh
 </Typography>
-</Button> */}
+</Button> */
+}
