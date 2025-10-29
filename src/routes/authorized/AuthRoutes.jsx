@@ -429,7 +429,7 @@ const AuthRoutes = () => {
         </div>
       </Suspense>
       <div
-        style={{ minWidth: "768px", maxWidth: "1228px", margin: "0 auto 15px" }}
+        style={{ minWidth: "768px", maxWidth: "1400px", margin: "0 auto 15px" }}
       >
         <FooterComponent ref={navbarRef} />
       </div>
