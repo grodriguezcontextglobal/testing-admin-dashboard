@@ -131,8 +131,8 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
         )}
       </Box>
 
-      {/* Submit Button */}
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+      {/* Submit with Deposit Amount */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
         <form
           onSubmit={handleSubmit(
             useAddingItemsToEventInventoryOneByOne({
@@ -149,13 +149,41 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
               watch,
             })
           )}
+          style={{ width: "100%" }}
         >
-          <BlueButtonComponent
-            title={`Submit ${serialNumbers.length} Serial Numbers`}
-            buttonType="submit"
-            disabled={serialNumbers.length === 0 || loadingStatus}
-            loadingState={loadingStatus}
-          />
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={8}>
+              <InputLabel style={{ marginBottom: "0.2rem" }}>
+                <Typography
+                  style={{
+                    ...Subtitle,
+                    fontWeight: 500,
+                    textTransform: "none",
+                  }}
+                >
+                  Deposit Amount
+                </Typography>
+              </InputLabel>
+              <OutlinedInput
+                {...register("deposit")}
+                type="number"
+                inputProps={{ step: "0.01", min: "0" }}
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                placeholder="Enter deposit amount (optional)"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <Box mt={3} display="flex" justifyContent="flex-end">
+                <BlueButtonComponent
+                  title={`Submit ${serialNumbers.length} Serial Numbers`}
+                  buttonType="submit"
+                  disabled={serialNumbers.length === 0 || loadingStatus}
+                  loadingState={loadingStatus}
+                />
+              </Box>
+            </Grid>
+          </Grid>
         </form>
       </Box>
     </Box>
