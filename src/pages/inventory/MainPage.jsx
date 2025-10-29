@@ -55,7 +55,7 @@ const MainPage = () => {
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
-  const { register, watch, setValue, handleSubmit } = useForm({
+  const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchItem: "...",
     },
@@ -83,6 +83,12 @@ const MainPage = () => {
     ),
     [chosenOption, dataFilterOptions]
   );
+
+  const settingParamsForSearchResult = useMemo(
+    () => params,
+    [params, user.sqlInfo.company_id]
+  );
+
   useEffect(() => {
     setValue("searchItem", "");
     setRenderingData(false);
@@ -111,44 +117,6 @@ const MainPage = () => {
     }
     return companyHasInventoryQuery?.data?.data?.total ?? 0;
   };
-
-  // Add state to track filtered data count
-  const [filteredDataCount, setFilteredDataCount] = useState(0);
-
-  const renderingOption = {
-    0: <Spin indicator={<Loading />} fullscreen={true} />,
-    1: (
-      <ItemTable
-        searchItem={params}
-        date={null}
-        loadingState={setIsLoadingState}
-        companyInventoryExisting={companyHasInventoryQuery.data}
-        reference={null}
-        openAdvanceSearchModal={openAdvanceSearchModal}
-        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-        chosen={chosenOption}
-        setDataFilterOptions={setDataFilterOptions}
-        downloadDataReport={handleFilteredDataUpdate}
-        total={getTotalToDisplay()}
-        searchedResult={searchedResult}
-        companyHasInventoryQuery={companyHasInventoryQuery}
-      />
-    ),
-    2: (
-      <BannerMsg
-        props={{
-          title: "Add to your inventory",
-          message:
-            "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-          link: "/inventory/new-item",
-          button: BlueButton,
-          paragraphStyle: BlueButtonText,
-          paragraphText: "Add to inventory",
-        }}
-      />
-    ),
-  };
-
   const refetchingQueriesFn = () => {
     setIsLoadingState(true);
     queryClient.resetQueries({
@@ -174,6 +142,44 @@ const MainPage = () => {
     setParams(null);
     setSearchedResult(null);
     return setRenderingData(false);
+  };
+
+  // Add state to track filtered data count
+  const [filteredDataCount, setFilteredDataCount] = useState(0);
+
+  const renderingOption = {
+    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    1: (
+      <ItemTable
+        searchItem={settingParamsForSearchResult}
+        date={null}
+        loadingState={setIsLoadingState}
+        companyInventoryExisting={companyHasInventoryQuery.data}
+        reference={null}
+        openAdvanceSearchModal={openAdvanceSearchModal}
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+        chosen={chosenOption}
+        setDataFilterOptions={setDataFilterOptions}
+        downloadDataReport={handleFilteredDataUpdate}
+        total={getTotalToDisplay()}
+        searchedResult={searchedResult}
+        companyHasInventoryQuery={companyHasInventoryQuery}
+        refreshFn={refetchingQueriesFn}
+      />
+    ),
+    2: (
+      <BannerMsg
+        props={{
+          title: "Add to your inventory",
+          message:
+            "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
+          link: "/inventory/new-item",
+          button: BlueButton,
+          paragraphStyle: BlueButtonText,
+          paragraphText: "Add to inventory",
+        }}
+      />
+    ),
   };
 
   const searchItem = async (data) => {
