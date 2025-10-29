@@ -46,6 +46,7 @@ const ItemTable = ({
   total,
   searchedResult,
   // companyHasInventoryQuery,
+  refreshFn,
 }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
@@ -306,9 +307,7 @@ const ItemTable = ({
 
   // Keep search results in state; if no term, show all
   useEffect(() => {
-    const term = String(searchItem || "")
-      .trim()
-      .toLowerCase();
+    const term = String(searchItem || "").trim().toLowerCase();
     if (term.length === 0) {
       setSearchResult(baseDataset);
       return;
@@ -319,22 +318,39 @@ const ItemTable = ({
     setSearchResult(filtered);
   }, [searchItem, baseDataset]);
 
-  const options = {
-    0: searchResult, // default branch reflects search or all
-    1: searchItem && searchingData(),
-    2: chosen.value !== null && filterByProps(),
-    3: date !== null && filterDataByDate,
-  };
-
-  const dataToDisplay = useCallback(() => {
+  // Replace options + useCallback with a stable, memoized dataset
+  const dataToDisplayMemo = useMemo(() => {
     if (chosenConditionState === 3) {
+      // date filter branch retains legacy transform behavior
       return filterDataByDate;
     }
-    return options[chosenConditionState] || [];
-  }, [chosenConditionState, filterDataByDate, options]);
+    if (chosenConditionState === 2) {
+      // apply selected filters simultaneously
+      const dicSelectedOptions = {
+        0: "brand",
+        1: "item_group",
+        2: "serial_number",
+        3: "location",
+        4: "ownership",
+        5: "condition",
+      };
+      if (!Array.isArray(chosen) || chosen.length === 0) return baseDataset;
+      return baseDataset.filter((item) =>
+        chosen.every((filter) => {
+          const propertyKey = dicSelectedOptions[filter.category];
+          if (!propertyKey) return true;
+          return item?.[propertyKey] === filter.value;
+        })
+      );
+    }
+    // default branch reflects search or all
+    return searchResult;
+  }, [chosenConditionState, filterDataByDate, chosen, baseDataset, searchResult]);
 
-  const memoizedDataToDisplay = useMemo(() => dataToDisplay(), [dataToDisplay]);
+  // Provide a stable accessor for components expecting a function
+  const dataToDisplay = useCallback(() => dataToDisplayMemo, [dataToDisplayMemo]);
 
+  // Update filter options and report download only when inputs change
   useEffect(() => {
     setDataFilterOptions({
       0: filterOptionsBasedOnProps("brand"),
@@ -345,22 +361,10 @@ const ItemTable = ({
       5: filterOptionsBasedOnProps("status"),
     });
 
-    if (memoizedDataToDisplay?.length > 0) {
-      downloadDataReport(memoizedDataToDisplay);
+    if (Array.isArray(dataToDisplayMemo) && dataToDisplayMemo.length > 0) {
+      downloadDataReport(dataToDisplayMemo);
     }
-  }, [chosen, memoizedDataToDisplay]);
-
-  // Refresh: invalidate inventory-related queries
-  const refreshFn = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ["RefactoredListInventoryCompany"],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["ItemsInInventoryCheckingQuery"],
-    });
-    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
-    queryClient.invalidateQueries({ queryKey: ["imagePerItemList"] });
-  }, [queryClient]);
+  }, [baseDataset, dataToDisplayMemo]);
 
   return (
     <Suspense
@@ -396,7 +400,7 @@ const ItemTable = ({
           md={12}
           lg={12}
         >
-          <div //details
+          <div
             style={{
               width: "100%",
               display: "flex",
@@ -435,11 +439,11 @@ const ItemTable = ({
                     display: "flex",
                     justifyContent: "flex-end",
                     alignItems: "center",
-                    // marginRight: "5px",
                     padding: "0 0 0 0",
                   }}
                 >
-                  <DownloadingXlslFile props={dataToDisplay()} />
+                  {/* Use stable memoized dataset */}
+                  <DownloadingXlslFile props={dataToDisplayMemo} />
                 </div>{" "}
               </Grid>
 
@@ -447,13 +451,13 @@ const ItemTable = ({
                 pagination={{
                   position: ["bottomCenter"],
                   pageSizeOptions: [10, 20, 30, 50, 100],
-                  total: dataToDisplay()?.length,
+                  total: dataToDisplayMemo.length,
                   defaultPageSize: 10,
                   defaultCurrent: 1,
                 }}
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
-                dataSource={memoizedDataToDisplay} // unified dataset
+                dataSource={dataToDisplayMemo}
                 rowKey={(record) => record.item_id || record.key}
                 className="table-ant-customized"
               />
