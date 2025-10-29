@@ -1,7 +1,11 @@
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../../../../store/slices/eventSlice";
 
-export const checkAndUpdateGlobalEventStatus = async (eventInfo, dispatch) => {
+export const checkAndUpdateGlobalEventStatus = async (
+  eventInfo,
+  dispatch,
+  data = null
+) => {
   const latestUpdatedInventoryEvent = await devitrakApi.post(
     "/event/event-list",
     {
@@ -34,6 +38,7 @@ export const checkAndUpdateGlobalEventStatus = async (eventInfo, dispatch) => {
         quantity: qty,
         startingNumber: item.startingNumber ?? null,
         endingNumber: item.endingNumber ?? null,
+        value: Number(data.deposit) ?? 0,
       };
     } else {
       const prev = acc[groupKey];
@@ -43,7 +48,6 @@ export const checkAndUpdateGlobalEventStatus = async (eventInfo, dispatch) => {
         startingNumber: minSerial(prev.startingNumber, item.startingNumber),
         endingNumber: maxSerial(prev.endingNumber, item.endingNumber),
       };
-      console.log("acc[groupKey]", acc[groupKey]);
     }
     return acc;
   }, {});
