@@ -40,6 +40,7 @@ const MainBody = ({
   staff,
   triggerAddingAdminStaff,
 }) => {
+  console.log(eventInfoDetail);
   return (
     <Grid
       container
@@ -154,7 +155,10 @@ const MainBody = ({
       >
         Use this section to create new company inventory that can be used in
         this event. Inventory created here is classified as Rental equipment
-        (not owned company equipment) and will be available to be assigned to the event. If you need to create owned company inventory, please go to the Inventory page, add the new owned inventory there, and then assign it to this event.
+        (not owned company equipment) and will be available to be assigned to
+        the event. If you need to create owned company inventory, please go to
+        the Inventory page, add the new owned inventory there, and then assign
+        it to this event.
       </Typography>
       <LightBlueButtonComponent
         title={
@@ -195,7 +199,10 @@ const MainBody = ({
       >
         <GrayButtonComponent
           title={"Skip this step"}
-          disabled={staff.adminUser.length === 0}
+          disabled={
+            (!eventInfoDetail.eventName && !eventInfoDetail.building) ||
+            staff.adminUser.length === 0
+          }
           func={() => navigate("/create-event-page/review-submit")}
           styles={{ width: "100%" }}
         />
@@ -205,7 +212,9 @@ const MainBody = ({
               ? "Service fields are filled. Please clear the fields or add service to continue."
               : "Next step"
           }
-          disabled={filled}
+          disabled={
+            (!eventInfoDetail.eventName && !eventInfoDetail.building) || filled
+          }
           func={(e) => handleNextStepEventSetup(e)}
           styles={{ width: "100%" }}
           titleStyles={{ textWrap: "balance", width: "100%" }}
