@@ -271,6 +271,7 @@ const useAddingByStartingSerialNumber = ({
   };
 
   const handleUpdateEventInventory = async (data) => {
+    console.log(data)
     if (Object.keys(valueItemSelected).length === 0)
       return message.warning("Please select item to add to inventory.");
     const startingSerial = String(data.starting ?? "").trim();
@@ -341,7 +342,7 @@ const useAddingByStartingSerialNumber = ({
       } else {
         message.warning("Device not found");
       }
-      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch);
+      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data);
       await clearCacheMemory(
         `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
       );
