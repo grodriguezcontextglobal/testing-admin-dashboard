@@ -1,16 +1,29 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { Icon } from "@iconify/react";
-import { useForm } from "react-hook-form";
-import { Button } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import DeviceDatabase from "./table/DeviceDatabase";
-import { Title } from "../../../../styles/global/Title";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import RefreshButton from "../../../../components/utils/UX/RefreshButton";
+import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { Title } from "../../../../styles/global/Title";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import DeviceDatabase from "./table/DeviceDatabase";
 
 const DevicesInformationSection = (dataToRenderInComponent) => {
   const { register, watch } = useForm();
-  const queryClient = useQueryClient()
+  const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
+  const queryClient = useQueryClient();
+  const handleRefreshingData = async () => {
+    await clearCacheMemory(
+      `eventSelected=${event.id}&company=${user.companyData.id}`
+    );
+    await clearCacheMemory(
+      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+    );
+
+    return queryClient.invalidateQueries({ queryKey: "deviceInPoolList" });
+  };
   return (
     <>
       <Grid
@@ -21,8 +34,8 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
         container
       >
         <Grid
-          display={'flex'}
-          justifyContent={'flex-start'}
+          display={"flex"}
+          justifyContent={"flex-start"}
           alignItems={"center"}
           item
           xs={12}
@@ -30,7 +43,16 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
           md={12}
           lg={12}
         >
-          <Typography style={{ ...Title, fontSize: "28px", padding: 0, width: "fit-content" }}>Search inventory:&nbsp;</Typography>
+          <Typography
+            style={{
+              ...Title,
+              fontSize: "28px",
+              padding: 0,
+              width: "fit-content",
+            }}
+          >
+            Search inventory:&nbsp;
+          </Typography>
           <Grid item xs sm md lg>
             <OutlinedInput
               {...register("searchDevice")}
@@ -44,7 +66,6 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
               }
             />
           </Grid>
-
         </Grid>
       </Grid>
       <Grid
@@ -59,36 +80,28 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
           border={"1px solid var(--gray-200, #eaecf0)"}
           borderRadius={"12px 12px 0 0"}
           display={"flex"}
-          justifyContent={'space-between'}
+          justifyContent={"space-between"}
           alignItems={"center"}
           marginBottom={-2}
           paddingBottom={-2}
           item
           xs={12}
         >
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            marginRight: "5px"
-          }}>
-            <Button style={{ display: "flex", alignItems: "center", outline:"none", backgroundColor:"transparent" }} onClick={() => queryClient.invalidateQueries('deviceInPoolList')}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={500}
-                fontSize={"12px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-700, #004EEB)"}
-                padding={"0px 8px"}
-              >
-                <Icon icon="jam:refresh" /> Refresh
-              </Typography>
-            </Button>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginRight: "5px",
+            }}
+          >
+            <RefreshButton propsFn={handleRefreshingData} />
           </div>
         </Grid>
         <Grid item xs={12}>
-          <DeviceDatabase searchDevice={watch("searchDevice")} eventInventoryData={dataToRenderInComponent} />
+          <DeviceDatabase
+            searchDevice={watch("searchDevice")}
+            eventInventoryData={dataToRenderInComponent}
+          />
         </Grid>
       </Grid>
     </>
