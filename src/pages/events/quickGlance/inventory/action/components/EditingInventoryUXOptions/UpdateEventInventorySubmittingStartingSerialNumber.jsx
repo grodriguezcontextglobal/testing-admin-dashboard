@@ -94,7 +94,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
       )}
       style={{ width: "100%" }}
     >
-      {/* Option 1: auto by location and quantity */}
+      {/* Option 2: starting serial + quantity (+ deposit) */}
       <Grid
         display={"flex"}
         justifyContent={"space-between"}
@@ -165,6 +165,29 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
             {...register("quantity")}
             style={{ ...OutlinedInputStyle, width: "100%" }}
             placeholder="Enter quantity needed."
+            fullWidth
+          />
+        </Grid>
+        {/* New: Deposit Amount */}
+        <Grid item xs={6} sm={6} md={6} lg={6}>
+          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                fontWeight: 500,
+                textTransform: "none",
+                textAlign: "left",
+              }}
+            >
+              Deposit Amount
+            </p>
+          </InputLabel>
+          <OutlinedInput
+            {...register("deposit")}
+            type="number"
+            inputProps={{ step: "0.01", min: "0" }}
+            style={{ ...OutlinedInputStyle, width: "100%" }}
+            placeholder="Enter deposit amount (optional)"
             fullWidth
           />
         </Grid>
