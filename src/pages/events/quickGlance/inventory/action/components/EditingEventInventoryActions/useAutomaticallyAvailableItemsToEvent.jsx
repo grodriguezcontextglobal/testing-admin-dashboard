@@ -310,7 +310,7 @@ const useAutomaticallyAvailableItemsToEvent = ({
       } else {
         message.warning("Device not found");
       }
-      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch);
+      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data);
       await clearCacheMemory(
         `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
       );
