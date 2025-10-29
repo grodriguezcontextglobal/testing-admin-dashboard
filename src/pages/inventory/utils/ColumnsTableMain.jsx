@@ -258,7 +258,8 @@ const columnsTableMain = ({
         <span style={cellStyle}>
           {" "}
           <Typography style={Subtitle} textTransform={"capitalize"}>
-            {data.warehouse === 1 ? data.location : data.event_name}
+            {/* {data.warehouse === 1 ? data.location : data.event_name} */}
+            {data.location}
           </Typography>
         </span>
       ),
