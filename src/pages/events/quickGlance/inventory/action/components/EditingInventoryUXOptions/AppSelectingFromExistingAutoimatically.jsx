@@ -97,6 +97,42 @@ export const AppSelectingFromExistingAutomatically = ({
               fullWidth
             />
           </Grid>
+          {/* Deposit Amount input */}
+          <Grid
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            marginY={2}
+            gap={2}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <Grid item xs={6} sm={6} md={6} lg={6}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <p
+                  style={{
+                    ...Subtitle,
+                    fontWeight: 500,
+                    textTransform: "none",
+                    textAlign: "left",
+                  }}
+                >
+                  Deposit Amount
+                </p>
+              </InputLabel>
+              <OutlinedInput
+                {...register("deposit")}
+                type="number"
+                inputProps={{ step: "0.01", min: "0" }}
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                placeholder="Enter deposit amount (optional)"
+                fullWidth
+              />
+            </Grid>
+          </Grid>
           <Grid
             style={{ alignSelf: "baseline" }}
             item
