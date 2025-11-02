@@ -7,6 +7,7 @@ import {
   onAddDeviceSetup,
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const DisplayAllItemsSetInventoryEvent = (database) => {
   const { event } = useSelector((state) => state.event);
@@ -30,7 +31,9 @@ const DisplayAllItemsSetInventoryEvent = (database) => {
         })
       );
       dispatch(onAddDeviceSetup(deviceInventoryUpdated));
-
+      await clearCacheMemory(`company=${event.company}&type=${event.type}`);
+      await clearCacheMemory(`company=${event.company_id}&type=${event.type}`);
+      await clearCacheMemory(`company=${event.company}`)
       return setLoadingStatus(false);
     }
     return setLoadingStatus(false);
@@ -48,8 +51,9 @@ const DisplayAllItemsSetInventoryEvent = (database) => {
                 consumerUses: item.consumerUses,
                 startingNumber: item.startingNumber,
                 endingNumber: item.endingNumber,
-                isItSetAsContainerForEvent: item.isItSetAsContainerForEvent ?? false,
-                item
+                isItSetAsContainerForEvent:
+                  item.isItSetAsContainerForEvent ?? false,
+                item,
               }}
               title={item.group}
               onChange={(e) => onChange({ index: index, checked: e })}
