@@ -208,7 +208,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           queryKey: ["listOfreceiverInPool"],
         });
         await clearCacheMemory(
-          `eventSelected=${event.eventDetail.eventName}&company=${user.companyData.id}`
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
         );
         await clearCacheMemory(
           `eventSelected=${event.id}&company=${user.companyData.id}`
