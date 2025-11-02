@@ -15,13 +15,14 @@ import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonTex
 import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
+import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
 
 const Releasing = ({
   openCancelingDepositModal,
   setOpenCancelingDepositModal,
   refetchingTransactionFn,
 }) => {
-    const [transactionStatus, setTransactionStatus] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title) => {
     api.open({
@@ -66,7 +67,7 @@ const Releasing = ({
         stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
       ) {
         setTransactionStatus(true);
-        setOpenCancelingDepositModal(false)
+        setOpenCancelingDepositModal(false);
         return alert("This transaction has been released or canceled already.");
       }
       if (
@@ -80,18 +81,7 @@ const Releasing = ({
 
   const renderingTitle = () => {
     return (
-      <Typography
-        textTransform={"none"}
-        color="var(--gray-900, #101828)"
-        lineHeight={"38px"}
-        textAlign={"center"}
-        fontWeight={600}
-        fontFamily={"Inter"}
-        fontSize={"30px"}
-        textWrap={"balance"}
-        textOverflow={"ellipsis"}
-        padding={"1rem 1.5rem"}
-      >
+      <Typography style={TextFontSize30LineHeight38}>
         Cancelling deposit
       </Typography>
     );
@@ -292,8 +282,8 @@ const Releasing = ({
                   style={{
                     ...BlueButton,
                     width: "100%",
-                    display: transactionStatus? "none" : "flex",
-                }}
+                    display: transactionStatus ? "none" : "flex",
+                  }}
                 >
                   <Typography
                     textTransform={"none"}
@@ -305,7 +295,7 @@ const Releasing = ({
                       ?.status === "canceled"
                       ? "Transaction released already"
                       : "Cancelling deposit"} */}
-                      Cancelling deposit
+                    Cancelling deposit
                   </Typography>
                 </Button>
               </form>
