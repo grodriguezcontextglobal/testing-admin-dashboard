@@ -17,7 +17,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
   queryClient,
   openNotification,
   setLoadingStatus,
-}) => {
+UXMandatoryFieldsSign}) => {
   const { user } = useSelector((state) => state.admin);
   const ctx = useContext(valueContext);
   const { valueItemSelected } = ctx || {};
@@ -117,7 +117,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
                 textAlign: "left",
               }}
             >
-              Starting serial number.
+              Starting serial number. {UXMandatoryFieldsSign}
               {String(startingValue ?? "").trim().length > 0 &&
               Number.isFinite(Number(quantityValue)) &&
               Number(quantityValue) > 0 ? (
@@ -158,7 +158,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
                 textAlign: "left",
               }}
             >
-              Quantity
+              Quantity {UXMandatoryFieldsSign}
             </p>
           </InputLabel>
           <OutlinedInput
@@ -179,7 +179,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
                 textAlign: "left",
               }}
             >
-              Deposit Amount
+              Deposit Amount {UXMandatoryFieldsSign}
             </p>
           </InputLabel>
           <OutlinedInput
@@ -215,7 +215,7 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
             </p>
           </InputLabel>
           <BlueButtonComponent
-            title={"Apply Option 2"}
+            title={"Add and Exit"}
             buttonType="submit"
             loadingState={loadingStatus}
             disabled={loadingStatus || !serialExists}
