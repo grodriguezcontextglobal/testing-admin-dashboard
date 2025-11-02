@@ -271,7 +271,7 @@ const useAddingByStartingSerialNumber = ({
   };
 
   const handleUpdateEventInventory = async (data) => {
-    console.log(data)
+    console.log(data);
     if (Object.keys(valueItemSelected).length === 0)
       return message.warning("Please select item to add to inventory.");
     const startingSerial = String(data.starting ?? "").trim();
@@ -294,14 +294,14 @@ const useAddingByStartingSerialNumber = ({
       const result1 = await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
-          query:query1,
-          values:values1,
+          query: query1,
+          values: values1,
         }
       );
-      if(result1.data.result.length < 1)
-      return message.warning(
-        "Starting serial not found or no available items from that serial."
-      );
+      if (result1.data.result.length < 1)
+        return message.warning(
+          "Starting serial not found or no available items from that serial."
+        );
       const query = `Select item_id, serial_number, location, container, category_name, item_group from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number >= ? Order by serial_number Asc limit ?`;
       const values = [
         user.sqlInfo.company_id,
@@ -342,7 +342,12 @@ const useAddingByStartingSerialNumber = ({
       } else {
         message.warning("Device not found");
       }
-      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data);
+      await checkAndUpdateGlobalEventStatus(
+        eventInfo,
+        dispatch,
+        data,
+        contextValue
+      );
       await clearCacheMemory(
         `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
       );
