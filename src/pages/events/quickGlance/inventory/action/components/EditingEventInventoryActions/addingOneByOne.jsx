@@ -10,15 +10,15 @@ import { checkAndUpdateGlobalEventStatus } from "./checkAndUpdateGlobalEventStat
 
 const useAddingItemsToEventInventoryOneByOne = ({
   closeModal,
-//   handleSubmit,
-//   loadingStatus,
+  handleSubmit,
+  loadingStatus,
   openNotification,
-//   OutlinedInputStyle,
+  OutlinedInputStyle,
   queryClient,
-//   register,
+  register,
   setLoadingStatus,
-//   Subtitle,
-//   watch,
+  Subtitle,
+  watch,
   serialNumbers,
 }) => {
   const contextValue = useContext(valueContext);
@@ -256,7 +256,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
       await devitrakApi.post("/db_event/event_device", {
         event_id: event_id,
         item_group: database[0].item_group,
-        startingNumber: props.startingSerial,
+        startingNumber: props.startingSerial, // start at user-provided serial
         quantity: Number(props.quantity),
         company_id: user.sqlInfo.company_id,
         category_name: database[0].category_name,
@@ -266,7 +266,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
         warehouse: 0,
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
-        startingNumber: props.startingSerial,
+        startingNumber: props.startingSerial, // start at user-provided serial
         quantity: Number(props.quantity),
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
@@ -280,73 +280,75 @@ const useAddingItemsToEventInventoryOneByOne = ({
   const handleUpdateEventInventory = async (data) => {
     if (Object.keys(valueItemSelected).length === 0)
       return message.warning("Please select item to add to inventory.");
-
-    // Use serials coming from modal submit; fallback to prop value if needed
-    const serials = (data?.serialNumbers || serialNumbers || [])
-      .map((s) => String(s).trim())
-      .filter(Boolean);
-
-    if (serials.length < 1)
+    console.log(data);
+    console.log(serialNumbers);
+    console.log(valueItemSelected);
+    if (!serialNumbers)
       return message.warning("Please enter at least one serial number.");
-
     try {
       setLoadingStatus(true);
-
-      // Fetch available items matching submitted serials (parameterized IN)
-      const deviceInfoQuery = `
-        Select item_id, serial_number, location, container, category_name, item_group
-        from item_inv
-        where company_id = ?
-          and warehouse = 1
-          and enableAssignFeature = 1
-          and location = ?
-          and item_group = ?
-          and category_name = ?
-          and serial_number in (${serials.map(() => "?").join(",")})
-      `;
-      const deviceInfoValues = [
+      const query1 = `Select * from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number in (${serialNumbers
+        .map((item) => `'${item}'`)
+        .join(",")})`;
+      const values1 = [
         user.sqlInfo.company_id,
         valueItemSelected.location,
         valueItemSelected.item_group,
         valueItemSelected.category_name,
-        ...serials,
       ];
-      const deviceInfoResponse = await devitrakApi.post(
+      const result1 = await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
         {
-          query: deviceInfoQuery,
-          values: deviceInfoValues,
+          query: query1,
+          values: values1,
         }
       );
-      const deviceInfo = Array.isArray(deviceInfoResponse.data?.result)
-        ? deviceInfoResponse.data.result
-        : [];
-
-      if (deviceInfo.length < 1) {
-        setLoadingStatus(false);
+      console.log(result1.data.result);
+      if (result1.data.result.length < 1)
         return message.warning(
-          "No matching available items found for submitted serials."
+          "Starting serial not found or no available items from that serial."
         );
-      }
-
-      // Sort to compute a consistent startingNumber
-      const sortedBySerial = deviceInfo
-        .slice()
-        .sort((a, b) =>
-          String(a.serial_number).localeCompare(String(b.serial_number))
-        );
-
-      // Persist to SQL event_device and item-out-warehouse, then NoSQL receivers pool
-      await createDeviceInEvent({
-        deviceInfo,
-        startingSerial: sortedBySerial[0].serial_number,
-        quantity: deviceInfo.length,
-      });
-
-      // Recompute global event deviceSetup after inserts
-      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data);
-
-      // Clear caches and notify
+      //   const query = `Select item_id, serial_number, location, container, category_name, item_group from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number >= ? Order by serial_number Asc limit ?`;
+      //   const values = [
+      //     user.sqlInfo.company_id,
+      //     valueItemSelected.location,
+      //     valueItemSelected.item_group,
+      //     valueItemSelected.category_name,
+      //     startingSerial,
+      //     quantity,
+      //   ];
+      //   const response = await devitrakApi.post(
+      //     "/db_event/inventory-based-on-submitted-parameters",
+      //     {
+      //       query,
+      //       values,
+      //     }
+      //   );
+      //   const deviceInfo = Array.isArray(response.data?.result)
+      //     ? response.data.result
+      //     : [];
+      //   if (deviceInfo.length < 1) {
+      //     message.warning(
+      //       "Starting serial not found or no available items from that serial."
+      //     );
+      //   } else if (deviceInfo.length < quantity) {
+      //     message.warning(
+      //       `Only ${deviceInfo.length} items available starting at ${startingSerial}.`
+      //     );
+      //   }
+      //   if (deviceInfo.length > 0) {
+      //     // Submit with startingSerial so downstream SQL updates align
+      //     await createDeviceInEvent({
+      //       ...data,
+      //       startingSerial,
+      //       quantity,
+      //       deviceInfo,
+      //     });
+      //     openNotification("Items added to event inventory.");
+      //   } else {
+      //     message.warning("Device not found");
+      //   }
+      await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data, contextValue);
       await clearCacheMemory(
         `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
       );
@@ -354,7 +356,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
         `eventSelected=${eventInfo.id}&company=${user.companyData.id}`
       );
       queryClient.invalidateQueries(["listOfreceiverInPool"]);
-      openNotification("Items added to event inventory.");
+      setLoadingStatus(false);
       closeModal();
     } catch (error) {
       console.log(error);
