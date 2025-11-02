@@ -15,55 +15,89 @@ export const AppSelectingFromExistingAutomatically = ({
   setAssignAllDevices,
   setLoadingStatus,
   Subtitle,
+  UXMandatoryFieldsSign,
 }) => {
   return (
-    (
-      <form
-        onSubmit={handleSubmit(
-          useAutomaticallyAvailableItemsToEvent({
-            assignAllDevices,
-            closeModal,
-            eventName,
-            openNotification,
-            queryClient,
-            setLoadingStatus,
-          })
-        )}
-        style={{ width: "100%" }}
+    <form
+      onSubmit={handleSubmit(
+        useAutomaticallyAvailableItemsToEvent({
+          assignAllDevices,
+          closeModal,
+          eventName,
+          openNotification,
+          queryClient,
+          setLoadingStatus,
+        })
+      )}
+      style={{ width: "100%" }}
+    >
+      {/* Option 1: auto by location and quantity */}
+      <Grid
+        display={"flex"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        marginY={2}
+        gap={2}
+        style={{
+          width: "100%",
+        }}
+        item
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
       >
-        {/* Option 1: auto by location and quantity */}
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginY={2}
-          gap={2}
-          style={{
-            width: "100%",
-          }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <Grid item xs={6} sm={6} md={6} lg={6}>
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                style={{ ...Subtitle, fontWeight: 500 }}
-              >
-                Assign all&nbsp;
-                <input
-                  type="checkbox"
-                  value={assignAllDevices}
-                  onChange={(e) => setAssignAllDevices(e.target.checked)}
-                />
-              </Typography>
-            </InputLabel>
-          </Grid>
+        <Grid item xs={6} sm={6} md={6} lg={6}>
+          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              style={{ ...Subtitle, fontWeight: 500 }}
+            >
+              Assign all&nbsp;
+              <input
+                type="checkbox"
+                value={assignAllDevices}
+                onChange={(e) => setAssignAllDevices(e.target.checked)}
+              />
+            </Typography>
+          </InputLabel>
         </Grid>
+      </Grid>
+      <Grid
+        display={"flex"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        marginY={2}
+        gap={2}
+        item
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
+      >
+        <Grid item xs={6} sm={6} md={6} lg={6}>
+          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                fontWeight: 500,
+                textTransform: "none",
+                textAlign: "left",
+              }}
+            >
+              Quantity {UXMandatoryFieldsSign}
+            </p>
+          </InputLabel>
+          <OutlinedInput
+            disabled={assignAllDevices}
+            {...register("quantity")}
+            style={{ ...OutlinedInputStyle, width: "100%" }}
+            placeholder="Enter quantity needed."
+            fullWidth
+          />
+        </Grid>
+        {/* Deposit Amount input */}
         <Grid
           display={"flex"}
           justifyContent={"space-between"}
@@ -86,84 +120,49 @@ export const AppSelectingFromExistingAutomatically = ({
                   textAlign: "left",
                 }}
               >
-                Quantity
+                Deposit Amount {UXMandatoryFieldsSign}
               </p>
             </InputLabel>
             <OutlinedInput
-              disabled={assignAllDevices}
-              {...register("quantity")}
+              {...register("deposit")}
+              type="number"
+              inputProps={{ step: "0.01", min: "0" }}
               style={{ ...OutlinedInputStyle, width: "100%" }}
-              placeholder="Enter quantity needed."
+              placeholder="Enter deposit amount (optional)"
               fullWidth
             />
           </Grid>
-          {/* Deposit Amount input */}
-          <Grid
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            marginY={2}
-            gap={2}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <Grid item xs={6} sm={6} md={6} lg={6}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <p
-                  style={{
-                    ...Subtitle,
-                    fontWeight: 500,
-                    textTransform: "none",
-                    textAlign: "left",
-                  }}
-                >
-                  Deposit Amount
-                </p>
-              </InputLabel>
-              <OutlinedInput
-                {...register("deposit")}
-                type="number"
-                inputProps={{ step: "0.01", min: "0" }}
-                style={{ ...OutlinedInputStyle, width: "100%" }}
-                placeholder="Enter deposit amount (optional)"
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-          <Grid
-            style={{ alignSelf: "baseline" }}
-            item
-            xs={6}
-            sm={6}
-            md={6}
-            lg={6}
-          >
-            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-              <p
-                style={{
-                  ...Subtitle,
-                  fontWeight: 500,
-                  color: "transparent",
-                  textTransform: "none",
-                  textAlign: "left",
-                }}
-                color={"transparent"}
-              >
-                Quantity
-              </p>
-            </InputLabel>
-            <BlueButtonComponent
-              title={"Apply Option 1"}
-              buttonType="submit"
-              loadingState={loadingStatus}
-              disabled={loadingStatus}
-            />
-          </Grid>
         </Grid>
-      </form>
-    )
+        <Grid
+          style={{ alignSelf: "baseline" }}
+          item
+          xs={6}
+          sm={6}
+          md={6}
+          lg={6}
+        >
+          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+            <p
+              style={{
+                ...Subtitle,
+                fontWeight: 500,
+                color: "transparent",
+                textTransform: "none",
+                textAlign: "left",
+              }}
+              color={"transparent"}
+            >
+              Quantity
+            </p>
+          </InputLabel>
+          <BlueButtonComponent
+            title={"Add and Exit"}
+            buttonType="submit"
+            loadingState={loadingStatus}
+            disabled={loadingStatus}
+          />
+        </Grid>
+      </Grid>
+    </form>
   );
 };
