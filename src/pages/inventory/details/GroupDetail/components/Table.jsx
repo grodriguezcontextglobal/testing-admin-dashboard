@@ -1,13 +1,13 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Table } from "antd";
+import { Table } from "antd";
 import { groupBy } from "lodash";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
@@ -198,16 +198,6 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
       `${range[0]}-${range[1]} of ${total} items`,
   }), [paginationState]);
 
-  // Memoize button styles to prevent object recreation
-  const buttonStyle = useMemo(() => ({
-    display: "flex",
-    alignItems: "center",
-    borderTop: "transparent",
-    borderLeft: "transparent",
-    borderBottom: "transparent",
-    borderRadius: "8px 8px 0 0",
-  }), []);
-
   // const containerStyle = useMemo(() => ({
   //   display: "flex",
   //   alignItems: "center",
@@ -252,7 +242,8 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
               padding: "0 0 0 0",
             }}
           >
-            <Button
+            <RefreshButton propsFn={handleRefresh} />
+            {/* <Button
               style={buttonStyle}
               onClick={handleRefresh}
             >
@@ -268,7 +259,7 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
               >
                 <Icon icon="jam:refresh" /> Refresh
               </Typography>
-            </Button>
+            </Button> */}
           </div>
           <div
             style={{
