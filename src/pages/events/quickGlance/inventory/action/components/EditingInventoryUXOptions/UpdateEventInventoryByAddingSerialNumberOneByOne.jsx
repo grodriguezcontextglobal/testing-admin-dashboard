@@ -26,6 +26,7 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
   setLoadingStatus,
   Subtitle,
   watch,
+  UXMandatoryFieldsSign,
 }) => {
   const [serialNumbers, setSerialNumbers] = useState([]);
   const [currentSerial, setCurrentSerial] = useState("");
@@ -64,7 +65,7 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
                   textTransform: "none",
                 }}
               >
-                Serial Number
+                Serial Number {UXMandatoryFieldsSign}
               </Typography>
             </InputLabel>
             <OutlinedInput
@@ -132,7 +133,12 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
       </Box>
 
       {/* Submit with Deposit Amount */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+      >
         <form
           onSubmit={handleSubmit(
             useAddingItemsToEventInventoryOneByOne({
@@ -161,7 +167,7 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
                     textTransform: "none",
                   }}
                 >
-                  Deposit Amount
+                  Deposit Amount {UXMandatoryFieldsSign}
                 </Typography>
               </InputLabel>
               <OutlinedInput
@@ -176,7 +182,7 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
             <Grid item xs={4}>
               <Box mt={3} display="flex" justifyContent="flex-end">
                 <BlueButtonComponent
-                  title={`Submit ${serialNumbers.length} Serial Numbers`}
+                  title={`Add ${serialNumbers.length} items and Exit.`}
                   buttonType="submit"
                   disabled={serialNumbers.length === 0 || loadingStatus}
                   loadingState={loadingStatus}
