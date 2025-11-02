@@ -22,6 +22,9 @@ const Main = ({
   watch,
 }) => {
   const [mode, setMode] = useState("OPTION_1"); // OPTION_1, OPTION_2, OPTION_3
+  const UXMandatoryFieldsSign = (
+    <strong style={{ color: "red", fontWeight: 600 }}>*</strong>
+  );
   return (
     <Space
       direction="vertical"
@@ -78,6 +81,7 @@ const Main = ({
             RefreshButton={RefreshButton}
             queryClient={queryClient}
             openNotification={openNotification}
+            UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
         )}
 
@@ -95,9 +99,9 @@ const Main = ({
             setLoadingStatus={setLoadingStatus}
             Subtitle={Subtitle}
             watch={watch}
+            UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
         )}
-
         {mode === "OPTION_3" && (
           <UpdateEventInventoryByAddingSerialNumberOneByOne
             closeModal={closeModal}
@@ -110,6 +114,7 @@ const Main = ({
             setLoadingStatus={setLoadingStatus}
             Subtitle={Subtitle}
             watch={watch}
+            UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
         )}
       </Space>
