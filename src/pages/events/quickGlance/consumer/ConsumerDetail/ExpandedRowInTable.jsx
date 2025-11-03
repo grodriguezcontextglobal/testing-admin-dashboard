@@ -26,11 +26,13 @@ import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpandedTableButtons from "./ux/ExpandedTableButtons";
+import SignaturesProof from "./SignaturesProof";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
   refetching,
   setOpenCancelingDepositModal,
+  signatureProof,
 }) => {
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
@@ -194,24 +196,6 @@ const ExpandedRowInTable = ({
             `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
             deviceInPoolProfile
           );
-          // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-          // const emailStructure = new EmailStructureUpdateItem(
-          //   customer.name,
-          //   customer.lastName,
-          //   customer.email,
-          //   returnedItem.serialNumber,
-          //   returnedItem.deviceType,
-          //   event.eventInfoDetail.eventName,
-          //   event.company,
-          //   rowRecord.paymentIntent,
-          //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
-          //   dateRef[4],
-          //   linkStructure
-          // );
-          // await devitrakApi.post(
-          //   "/nodemailer/confirm-returned-device-notification",
-          //   emailStructure.render()
-          // );
           openNotificationWithIcon("Device returned.");
           setStatusRecordState(null);
 
@@ -282,24 +266,6 @@ const ExpandedRowInTable = ({
             `/receiver/receivers-pool-update/${devicePoolData.id}`,
             deviceInPoolProfile
           );
-
-          // const emailStructure = new EmailStructureUpdateItem(
-          //   customer.name,
-          //   customer.lastName,
-          //   customer.email,
-          //   assignedItem.serialNumber,
-          //   assignedItem.deviceType,
-          //   event.eventInfoDetail.eventName,
-          //   event.company,
-          //   rowRecord.paymentIntent,
-          //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
-          //   dateRef[4],
-          //   linkStructure
-          // );
-          // await devitrakApi.post(
-          //   "/nodemailer/assignig-device-notification",
-          //   emailStructure.render()
-          // );
           openNotificationWithIcon("Device assigned.");
           setStatusRecordState(null);
         }
@@ -452,145 +418,6 @@ const ExpandedRowInTable = ({
           onTriggerModalToReplaceReceiver={onTriggerModalToReplaceReceiver}
           onReceiverObjectToReplace={onReceiverObjectToReplace}
         />
-        // <Space size="middle">
-        //   {record.status === "Lost" || record.status === false ? (
-        //     <Button
-        //       onClick={() => handleAssignSingleDevice(record)}
-        //       disabled={String(record.status).toLowerCase() === "lost"}
-        //       loading={record.key === statusRecordState}
-        //       style={{
-        //         width: "fit-content",
-        //         border: `${
-        //           String(record.status).toLowerCase() === "lost"
-        //             ? "1px solid var(--disabled-blue-button)"
-        //             : "1px solid var(--blue-dark-600, #155EEF)"
-        //         }`,
-        //         backgroundColor: `${
-        //           String(record.status).toLowerCase() === "lost"
-        //             ? "var(--disabled-blue-button)"
-        //             : "var(--blue-dark-600, #155EEF)"
-        //         }`,
-        //         borderRadius: "8px",
-        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-        //         padding: "5px",
-        //       }}
-        //     >
-        //       <p
-        //         style={{
-        //           cursor: "pointer",
-        //           textTransform: "none",
-        //           textAlign: "left",
-        //           fontWeight: 400,
-        //           fontSize: "16px",
-        //           fontFamily: "Inter",
-        //           lineHeight: "24px",
-        //           color: "var(--basewhite)",
-        //         }}
-        //       >
-        //         Assign
-        //       </p>
-        //     </Button>
-        //   ) : (
-        //     <Button
-        //       loading={record.key === statusRecordState}
-        //       onClick={() => handleReturnSingleDevice(record)}
-        //       disabled={!event.active}
-        //       style={{
-        //         width: "fit-content",
-        //         border: "1px solid var(--error-700, #B42318)",
-        //         backgroundColor: "var(--error-700, #B42318)",
-        //         borderRadius: "8px",
-        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-        //         padding: "5px",
-        //         color: "#B42318",
-        //       }}
-        //     >
-        //       <p
-        //         style={{
-        //           cursor: "pointer",
-        //           textTransform: "none",
-        //           textAlign: "left",
-        //           fontWeight: 400,
-        //           fontSize: "16px",
-        //           fontFamily: "Inter",
-        //           lineHeight: "24px",
-        //           color: "var(--basewhite)",
-        //         }}
-        //       >
-        //         Return
-        //       </p>
-        //     </Button>
-        //   )}
-        //   {record.status === true && (
-        //     <button
-        //       onClick={() => {
-        //         dispatch(onTriggerModalToReplaceReceiver(true));
-        //         dispatch(onReceiverObjectToReplace(record));
-        //         handleRecord(rowRecord);
-        //       }}
-        //       disabled={!event.active}
-        //       style={{
-        //         width: "fit-content",
-        //         border: "1px solid var(--blue-dark-600, #155EEF)",
-        //         backgroundColor: "var(--blue-dark-600, #155EEF)",
-        //         borderRadius: "8px",
-        //         boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-        //         padding: "5px",
-        //       }}
-        //     >
-        //       <p
-        //         style={{
-        //           cursor: "pointer",
-        //           textTransform: "none",
-        //           textAlign: "left",
-        //           fontWeight: 400,
-        //           fontSize: "16px",
-        //           fontFamily: "Inter",
-        //           lineHeight: "24px",
-        //           color: "var(--basewhite)",
-        //         }}
-        //       >
-        //         Replace
-        //       </p>
-        //     </button>
-        //   )}
-        //   {record.status === true &&
-        //     event.staff.adminUser.some(
-        //       (element) => element.email === user.email
-        //     ) && (
-        //       <Popconfirm
-        //         title="Are you sure it is lost?"
-        //         onConfirm={() => handleLostSingleDevice(record)}
-        //       >
-        //         <button
-        //           style={{
-        //             width: "fit-content",
-        //             border: "1px solid var(--error-700, #B42318)",
-        //             backgroundColor: "var(--error-700, #B42318)",
-        //             borderRadius: "8px",
-        //             boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-        //             padding: "5px",
-        //             color: "#B42318",
-        //           }}
-        //         >
-        //           <p
-        //             style={{
-        //               cursor: "pointer",
-        //               textTransform: "none",
-        //               textAlign: "left",
-        //               fontWeight: 400,
-        //               fontSize: "16px",
-        //               fontFamily: "Inter",
-        //               lineHeight: "24px",
-        //               color: "var(--basewhite)",
-        //             }}
-        //           >
-        //             Lost
-        //           </p>
-        //         </button>
-        //       </Popconfirm>
-        //     )}
-        // </Space>
       ),
     },
   ];
@@ -826,6 +653,7 @@ const ExpandedRowInTable = ({
               ...rowSelection,
             }}
           />
+          <SignaturesProof data={signatureProof[rowRecord.paymentIntent]} />
         </div>
       )}
       {openModal && (
