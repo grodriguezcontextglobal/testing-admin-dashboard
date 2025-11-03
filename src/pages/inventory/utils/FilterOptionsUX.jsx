@@ -78,7 +78,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
                 fontFamily: "Inter, sans-serif",
               }}
             > */}
-              {item}
+            {item}
             {/* </p> */}
           </div>
         ),
@@ -142,7 +142,11 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
                 .includes((input ?? "").trim().toLowerCase());
             }}
             virtual={true}
-            placeholder="Type or scan"
+            placeholder={
+              dicSelectedOptions[index] !== "Serial Number"
+                ? null
+                : "Type or scan"
+            }
           />
         );
       })}
