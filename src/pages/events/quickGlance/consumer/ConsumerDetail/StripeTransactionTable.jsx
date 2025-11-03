@@ -26,6 +26,7 @@ import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
+import { groupBy } from "lodash";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -64,7 +65,22 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         eventSelected: event.eventInfoDetail.eventName,
       }),
     // enabled: false,
-    refetchOnMount: false,
+    enabled:
+      !!customer.email &&
+      !!event.eventInfoDetail.eventName &&
+      !!user.companyData.id,
+  });
+
+  const signaturesProofUrl = useQuery({
+    queryKey: ["signaturesProofUrl", event.id, user.companyData.id, customer.id],
+    queryFn: () =>
+      devitrakApi.post("/company/consumer-signatures", {
+        event_id: event.id,
+        company_id: user.companyData.id,
+        consumer_id: customer.id,
+      }),
+    staleTime: 1000 * 60 * 5,
+    enabled: !!event.id && !!user.companyData.id && !!customer.id,
   });
 
   useEffect(() => {
@@ -129,10 +145,6 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
   };
-  // const handleReturnDeviceInBulk = (record) => {
-  //   setOpenReturnDeviceInBulkModal(true);
-  //   return (recordRef.current = record);
-  // };
 
   const cellStyle = {
     display: "flex",
@@ -454,6 +466,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 refetching={refetchingFn}
                 setOpenCancelingDepositModal={setOpenCancelingDepositModal}
                 handleRecord={handleRecord}
+                signatureProof={signaturesProofUrl.data ? groupBy(signaturesProofUrl.data.data.signatures, "transaction_id") : []}
               />
             ) : (
               <Spin indicator={<Loading />} />
