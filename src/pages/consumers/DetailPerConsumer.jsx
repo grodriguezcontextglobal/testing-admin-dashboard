@@ -51,16 +51,17 @@ const DetailPerConsumer = () => {
         "consumerInfo.email": customer.email,
         active: { $in: [true, false] },
       }),
-    refetchOnMount: false,
+    // refetchOnMount: false,
+    enabled:!!user.companyData.id && !!customer.email,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    transactionsConsumerQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [customerInfoTemplate.id, user.companyData.id, user.id]);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   transactionsConsumerQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, [customerInfoTemplate.id, user.companyData.id, user.id]);
 
   const refetchingAfterReturnDeviceAssignedInTransaction = () => {
     return transactionsConsumerQuery.refetch();
