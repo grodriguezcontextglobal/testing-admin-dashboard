@@ -14,9 +14,11 @@ import "../../../styles/global/ant-table.css";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { groupBy } from "lodash";
 
 export default function TablesConsumers({ searching, data, getCounting }) {
   const { user } = useSelector((state) => state.admin);
+  const { eventsPerAdmin } = useSelector((state) => state.event);
   const dataRef = useRef(null);
   const [responseData, setResponseData] = useState(data);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,15 +57,15 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     setResponseData(dataRef.current);
   }, [getCounting]);
 
-    useEffect(() => {
-      if (eventInfoCompanyQuery.data) {
-        // console.log("Company events:", eventInfoCompanyQuery.data.data);
-      }
-      if (eventInfoCompanyQuery.error) {
-        // console.error("Error fetching company events:", eventInfoCompanyQuery.error);
-      }
-    }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
-  
+  useEffect(() => {
+    if (eventInfoCompanyQuery.data) {
+      // console.log("Company events:", eventInfoCompanyQuery.data.data);
+    }
+    if (eventInfoCompanyQuery.error) {
+      // console.error("Error fetching company events:", eventInfoCompanyQuery.error);
+    }
+  }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
+
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
       const check = responseData?.filter((item) =>
@@ -161,6 +163,23 @@ export default function TablesConsumers({ searching, data, getCounting }) {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
+
+  const renderingEventsPermittedForAdminBasedOnAdminAssignment = (record) => {
+    const active = eventsPerAdmin?.active.map((item) => item.id) ?? [];
+    const completed = eventsPerAdmin?.completed.map((item) => item.id) ?? [];
+    const adminPermitted = [...active, ...completed];
+    if(!eventInfoCompanyQuery?.data?.data?.list) return [];
+    const eventCompanyData = groupBy(eventInfoCompanyQuery?.data?.data?.list, "id");
+    const checked = new Map();
+    if (adminPermitted?.length > 0) {
+      for (let event of record.event_providers) {
+        if (adminPermitted.includes(event)) {
+          checked.set(event, ...eventCompanyData[event]);
+        }
+      }
+    }
+    return Array.from(checked.values()).flat();
+  };
   const columns = [
     {
       title: renderingRowStyling("User"),
@@ -294,22 +313,35 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       dataIndex: "entireData",
       width: "fit-content",
       responsive: ["md", "lg"],
-      render: (entireData) => (
-        <>
-          <Chip
-            style={{ background: "var(--Indigo-50, #EEF4FF)" }}
-            label={renderingStyleInChip(entireData?.eventSelected?.at(-1))}
-          />
-          &nbsp;
-          {entireData.eventSelected?.length > 1 && (
+      render: (entireData) => {
+        const data =
+          renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ?? [];
+        return (
+          <>
             <Chip
-              label={renderingRowStyling(
-                `+${Number(entireData.eventSelected?.length) - 1}`
+              style={{
+                background: "var(--Indigo-50, #EEF4FF)",
+                position: "relative",
+                zIndex: 2, // ensure this chip overlays the next
+                border: "1px solid var(--Indigo-700, #004EEB)",
+              }}
+              label={renderingStyleInChip(
+                data?.at(-1)?.eventInfoDetail?.eventName
               )}
             />
-          )}
-        </>
-      ),
+            {data?.length > 1 && (
+              <Chip
+                label={renderingRowStyling(`+${Number(data?.length) - 1}`)}
+                style={{
+                  marginLeft: -13, // pull under the first chip
+                  position: "relative",
+                  zIndex: 1, // sits behind the first chip
+                }}
+              />
+            )}
+          </>
+        );
+      },
     },
   ];
 
