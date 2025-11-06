@@ -279,6 +279,7 @@ const ItemTable = ({
       3: "location",
       4: "ownership",
       5: "condition",
+      6: "assignedToStaffMember",
     };
 
     // Apply all filters simultaneously
@@ -307,7 +308,9 @@ const ItemTable = ({
 
   // Keep search results in state; if no term, show all
   useEffect(() => {
-    const term = String(searchItem || "").trim().toLowerCase();
+    const term = String(searchItem || "")
+      .trim()
+      .toLowerCase();
     if (term.length === 0) {
       setSearchResult(baseDataset);
       return;
@@ -333,11 +336,15 @@ const ItemTable = ({
         3: "location",
         4: "ownership",
         5: "condition",
+        6: "assignedToStaffMember",
       };
       if (!Array.isArray(chosen) || chosen.length === 0) return baseDataset;
       return baseDataset.filter((item) =>
         chosen.every((filter) => {
           const propertyKey = dicSelectedOptions[filter.category];
+          if (filter.category === 6) {
+            return item?.[propertyKey]?.includes(filter.value);
+          }
           if (!propertyKey) return true;
           return item?.[propertyKey] === filter.value;
         })
@@ -345,10 +352,19 @@ const ItemTable = ({
     }
     // default branch reflects search or all
     return searchResult;
-  }, [chosenConditionState, filterDataByDate, chosen, baseDataset, searchResult]);
+  }, [
+    chosenConditionState,
+    filterDataByDate,
+    chosen,
+    baseDataset,
+    searchResult,
+  ]);
 
   // Provide a stable accessor for components expecting a function
-  const dataToDisplay = useCallback(() => dataToDisplayMemo, [dataToDisplayMemo]);
+  const dataToDisplay = useCallback(
+    () => dataToDisplayMemo,
+    [dataToDisplayMemo]
+  );
 
   // Update filter options and report download only when inputs change
   useEffect(() => {
@@ -359,8 +375,13 @@ const ItemTable = ({
       3: filterOptionsBasedOnProps("location"),
       4: filterOptionsBasedOnProps("ownership"),
       5: filterOptionsBasedOnProps("status"),
+      6: [
+        ...user.companyData.employees.map(
+          (employee) =>
+            `${employee.firstName} ${employee.lastName} / ${employee.user}`
+        ),
+      ],
     });
-
     if (Array.isArray(dataToDisplayMemo) && dataToDisplayMemo.length > 0) {
       downloadDataReport(dataToDisplayMemo);
     }
