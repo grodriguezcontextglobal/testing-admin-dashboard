@@ -1,4 +1,9 @@
 /* eslint-disable no-unused-vars */
+import { Grid } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { Divider, Table } from "antd";
+import { groupBy, orderBy } from "lodash";
+import { PropTypes } from "prop-types";
 import {
   lazy,
   Suspense,
@@ -7,27 +12,17 @@ import {
   useMemo,
   useState,
 } from "react";
-import "../../../styles/global/ant-table.css";
-import "../style/details.css";
-import { Avatar, Divider, Table } from "antd";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { dictionary } from "../utils/dicSelectedOptions";
-import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
-import { Grid, Typography } from "@mui/material";
-import { groupBy, orderBy } from "lodash";
-import { Icon } from "@iconify/react";
-import { PropTypes } from "prop-types";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
-import { Subtitle } from "../../../styles/global/Subtitle";
-import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
-import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import "../../../styles/global/ant-table.css";
+import { BlueButton } from "../../../styles/global/BlueButton";
+import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import CenteringGrid from "../../../styles/global/CenteringGrid";
+import "../style/details.css";
+import { dictionary } from "../utils/dicSelectedOptions";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
@@ -45,7 +40,7 @@ const ItemTable = ({
   downloadDataReport,
   total,
   searchedResult,
-  // companyHasInventoryQuery,
+  dataFilterOptions,
   refreshFn,
 }) => {
   const navigate = useNavigate();
@@ -63,29 +58,6 @@ const ItemTable = ({
     }),
     []
   );
-
-  // Display title based on search/filter/date
-  // const getDisplayTitle = useCallback(() => {
-  //   if (chosenConditionState === 3 && date)
-  //     return "Inventory for selected period";
-  //   if (searchItem) return `Search results for "${searchItem}"`;
-  //   if (Array.isArray(chosen) && chosen.length > 0) {
-  //     const labels = {
-  //       0: "Brand",
-  //       1: "Device name",
-  //       2: "Serial number",
-  //       3: "Location",
-  //       4: "Ownership",
-  //       5: "Condition",
-  //     };
-  //     const filterDescriptions = chosen.map((filter) => {
-  //       const label = labels[filter.category] ?? "Filter";
-  //       return `${label}: ${filter.value}`;
-  //     });
-  //     return `Filtered by ${filterDescriptions.join(", ")}`;
-  //   }
-  //   return "Inventory";
-  // }, [searchItem, chosen, chosenConditionState, date]);
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
@@ -134,7 +106,7 @@ const ItemTable = ({
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
       const resultFormatToDisplay = new Map();
@@ -267,38 +239,38 @@ const ItemTable = ({
     }
   }, [chosen, date]);
 
-  const filterByProps = () => {
-    if (!Array.isArray(chosen) || chosen.length === 0) {
-      return baseDataset;
-    }
+  // const filterByProps = () => {
+  //   if (!Array.isArray(chosen) || chosen.length === 0) {
+  //     return baseDataset;
+  //   }
 
-    const dicSelectedOptions = {
-      0: "brand",
-      1: "item_group",
-      2: "serial_number",
-      3: "location",
-      4: "ownership",
-      5: "condition",
-      6: "assignedToStaffMember",
-    };
+  //   const dicSelectedOptions = {
+  //     0: "brand",
+  //     1: "item_group",
+  //     2: "serial_number",
+  //     3: "location",
+  //     4: "ownership",
+  //     5: "condition",
+  //     6: "assignedToStaffMember",
+  //   };
 
-    // Apply all filters simultaneously
-    return baseDataset.filter((item) => {
-      return chosen.every((filter) => {
-        const propertyKey = dicSelectedOptions[filter.category];
-        if (!propertyKey) return true; // Skip invalid filters
-        return item?.[propertyKey] === filter.value;
-      });
-    });
-  };
+  //   // Apply all filters simultaneously
+  //   return baseDataset.filter((item) => {
+  //     return chosen.every((filter) => {
+  //       const propertyKey = dicSelectedOptions[filter.category];
+  //       if (!propertyKey) return true; // Skip invalid filters
+  //       return item?.[propertyKey] === filter.value;
+  //     });
+  //   });
+  // };
 
-  const searchingData = () => {
-    return baseDataset.filter((item) =>
-      JSON.stringify(item)
-        .toLowerCase()
-        .includes(String(searchItem).toLowerCase())
-    );
-  };
+  // const searchingData = () => {
+  //   return baseDataset.filter((item) =>
+  //     JSON.stringify(item)
+  //       .toLowerCase()
+  //       .includes(String(searchItem).toLowerCase())
+  //   );
+  // };
 
   // Date filtering: keep existing behavior using legacy transformation,
   // since the event endpoint structure is different/unknown.
