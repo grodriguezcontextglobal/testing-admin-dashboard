@@ -91,7 +91,7 @@ const RenderingFilters = ({
     try {
       await clearCacheMemory(`company_id=${user.companyData.id}`);
       if (!sectionName?.trim() || !sectionKey) {
-        console.error("Invalid section name or key");
+        alert("Invalid section name or key");
         return;
       }
 
