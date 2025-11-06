@@ -51,10 +51,13 @@ const AssigmentAction = ({ refetching }) => {
         }}
         trigger={["click"]}
       >
-        <Button htmlType="button" style={{ ...BlueButton, width: "100%", margin: "0 0 12.5px 0" }}>
-          <p style={BlueButtonText}>
-            <WhiteCirclePlusIcon />&nbsp;
-            Create new transaction
+        <Button
+          htmlType="button"
+          style={{ ...BlueButton, width: "100%", margin: "0 0 12.5px 0" }}
+        >
+          <p style={{ ...BlueButtonText, alignItems: "center" }}>
+              <WhiteCirclePlusIcon width="18px" height="18px" />
+            &nbsp; Create new transaction
           </p>
         </Button>
       </Dropdown>
