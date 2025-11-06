@@ -53,36 +53,30 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
 
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
-    return new Array(6).fill(null).map((_, index) => {
+    return new Array(7).fill(null).map((_, index) => {
       const opts = Array.isArray(filterOptions[index])
         ? filterOptions[index]
         : [];
-      return opts.map((item) => ({
-        value: item,
-        label: (
-          <div
-            style={{
-              width: "100%",
-              padding: 0,
-              margin: 0,
-              textIndent: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
-          >
-            {/* <p
+      return opts.map((item) => {
+        return {
+          value: item,
+          label: (
+            <div
               style={{
-                fontSize: "14px",
-                fontWeight: 600,
-                fontFamily: "Inter, sans-serif",
+                width: "100%",
+                padding: 0,
+                margin: 0,
+                textIndent: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
               }}
-            > */}
-            {item}
-            {/* </p> */}
-          </div>
-        ),
-      }));
+            >
+              {item}
+            </div>
+          ),
+        };
+      });
     });
   }, [filterOptions]);
 
@@ -95,7 +89,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
         gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
       }}
     >
-      {new Array(6).fill(null).map((_, index) => {
+      {new Array(7).fill(null).map((_, index) => {
         const currentValue = getCurrentValue(index);
 
         const onChange = (value) => {
