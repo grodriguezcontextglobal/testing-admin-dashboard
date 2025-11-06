@@ -159,6 +159,7 @@ const RenderingFilters = ({
       3: "location",
       4: "ownership",
       5: "status",
+      6:"assignedToStaffMember"
     }),
     []
   );
