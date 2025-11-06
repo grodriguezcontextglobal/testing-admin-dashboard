@@ -50,6 +50,7 @@ const MainPage = () => {
     3: [],
     4: [],
     5: [],
+    6: [],
   });
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
@@ -131,12 +132,6 @@ const MainPage = () => {
     queryClient.resetQueries({
       queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
     });
-    // queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-    // queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
-    // queryClient.refetchQueries([
-    //   "companyHasInventoryQuery",
-    //   user.sqlInfo.company_id,
-    // ]);
     setIsLoadingState(false);
     setValue("searchItem", "");
     setParams(null);
@@ -151,20 +146,21 @@ const MainPage = () => {
     0: <Spin indicator={<Loading />} fullscreen={true} />,
     1: (
       <ItemTable
-        searchItem={settingParamsForSearchResult}
-        date={null}
-        loadingState={setIsLoadingState}
-        companyInventoryExisting={companyHasInventoryQuery.data}
-        reference={null}
-        openAdvanceSearchModal={openAdvanceSearchModal}
-        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         chosen={chosenOption}
-        setDataFilterOptions={setDataFilterOptions}
-        downloadDataReport={handleFilteredDataUpdate}
-        total={getTotalToDisplay()}
-        searchedResult={searchedResult}
         companyHasInventoryQuery={companyHasInventoryQuery}
+        companyInventoryExisting={companyHasInventoryQuery.data}
+        dataFilterOptions={dataFilterOptions}
+        date={null}
+        downloadDataReport={handleFilteredDataUpdate}
+        loadingState={setIsLoadingState}
+        openAdvanceSearchModal={openAdvanceSearchModal}
+        reference={null}
         refreshFn={refetchingQueriesFn}
+        searchedResult={searchedResult}
+        searchItem={settingParamsForSearchResult}
+        setDataFilterOptions={setDataFilterOptions}
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+        total={getTotalToDisplay()}
       />
     ),
     2: (
