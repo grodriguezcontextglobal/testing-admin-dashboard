@@ -227,24 +227,6 @@ const DetailPerConsumer = () => {
               lg={4}
             >
               <BlueButtonComponent title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} func={() => setCreateUserButton(true)} />
-              {/* <Button
-              onClick={() => setCreateUserButton(true)}
-                style={{
-                  ...BlueButton,
-                  ...CenteringGrid,
-                  margin:0
-                }}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={{
-                    ...BlueButtonText,
-                  }}
-                >
-                  <WhiteCirclePlusIcon />
-                  &nbsp;Add new consumer
-                </Typography>
-              </Button> */}
             </Grid>
           </Grid>
           <Grid
