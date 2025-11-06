@@ -368,7 +368,7 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid item xs={12} sm={12} md={12} lg={12}>
+        <Grid display={chosen?.at(-1)?.category === 6 && "none"} item xs={12} sm={12} md={12} lg={12}>
           <RenderingFilters
             dataToDisplay={dataToDisplay}
             searchItem={searchItem}
