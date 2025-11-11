@@ -22,11 +22,12 @@ import "../../../../../styles/global/ant-table.css";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
+import SignaturesProof from "./SignaturesProof";
 import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpandedTableButtons from "./ux/ExpandedTableButtons";
-import SignaturesProof from "./SignaturesProof";
+import DisplayDeviceRequestedLegendPerTransaction from "./AssigningDevice/components/DisplayDeviceRequestedLegendPerTransaction";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
@@ -276,6 +277,25 @@ const ExpandedRowInTable = ({
       await clearCacheMemory(
         `eventSelected=${event.id}&company=${user.companyData.id}`
       );
+      await devitrakApi.post("/nodemailer/assignig-device-notification", {
+        consumer: {
+          email: customer.email,
+          firstName: customer.name,
+          lastName: customer.lastName,
+        },
+        devices: [
+          {
+            serialNumber: props.serialNumber,
+            deviceType: props.deviceType,
+            paymentIntent: rowRecord.paymentIntent,
+          },
+        ],
+        event: event.eventInfoDetail.eventName,
+        transaction: rowRecord.paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+        admin: user.email,
+      });
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -583,6 +603,7 @@ const ExpandedRowInTable = ({
           }`,
         }}
       >
+        <DisplayDeviceRequestedLegendPerTransaction record={rowRecord} checked={checkDevicesInTransaction()}/>
         {checkDevicesInTransaction()?.length !==
           rowRecord.device[0].deviceNeeded && (
           <AddingDevicesToPaymentIntent
