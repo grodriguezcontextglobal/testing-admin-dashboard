@@ -3,12 +3,12 @@ import {
   Grid,
   InputLabel,
   OutlinedInput,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
 import { groupBy } from "lodash";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -16,13 +16,16 @@ import {
   devitrakApiAdmin,
 } from "../../../../../../api/devitrakApi";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
+import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import { checkArray } from "../../../../../../components/utils/checkArray";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
-const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
+function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
   const [submittedAction, setSubmittedAction] = useState(false);
   // const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -67,6 +70,118 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
       placement: "bottomRight",
     });
   };
+
+  // Normalize and aggregation helpers
+  const normalizeType = (t) =>
+    String(t ?? "")
+      .trim()
+      .replace(/\s+/g, " ");
+  const KNOWN_CATEGORIES = [...event.deviceSetup.map((ds) => ds.category)];
+  const extractCategoryAndGroup = (typeRaw) => {
+    const t = normalizeType(typeRaw);
+    for (const cat of KNOWN_CATEGORIES) {
+      // const prefix = `${cat} `;
+      if (t) {
+        const group = t; //.slice(prefix.length).trim();
+        return { category: cat, group };
+      }
+      if (t === cat) {
+        return { category: cat, group: "" };
+      }
+    }
+    return { category: "", group: t };
+  };
+
+  // Build group → category map using event.deviceSetup
+  const groupToCategory = useMemo(() => {
+    const map = {};
+    const setup = Array.isArray(event?.deviceSetup) ? event.deviceSetup : [];
+    for (const ds of setup) {
+      const group = normalizeType(ds?.group);
+      const category = normalizeType(ds?.category);
+      if (group && category) {
+        map[group] = category;
+      }
+    }
+    return map;
+  }, [event?.deviceSetup]);
+
+  const makeCanonicalKey = (group) => {
+    // const c = normalizeType(category);
+    const g = normalizeType(group);
+    return g ? `${g}` : g;
+  };
+
+  const requestedByType = useMemo(() => {
+    const map = {};
+    try {
+      const root = Array.isArray(record?.device) ? record.device : [];
+      for (const entry of root) {
+        if (Array.isArray(entry?.device)) {
+          for (const d of entry.device) {
+            const rawType = d?.deviceType;
+            const needed = Number(d?.deviceNeeded) || 0;
+            const lowered = String(rawType ?? "").toLowerCase();
+            if (needed > 0 && lowered !== "undefined") {
+              const { category, group } = extractCategoryAndGroup(rawType);
+              const key =
+                category && group
+                  ? makeCanonicalKey(group)
+                  : makeCanonicalKey(group);
+              const finalKey = normalizeType(key);
+              if (finalKey) {
+                map[finalKey] = (map[finalKey] || 0) + needed;
+              }
+            }
+          }
+        }
+        const rawTypeFlat = entry?.deviceType;
+        const neededFlat = Number(entry?.deviceNeeded) || 0;
+        const loweredFlat = String(rawTypeFlat ?? "").toLowerCase();
+        if (neededFlat > 0 && loweredFlat !== "undefined") {
+          const { category, group } = extractCategoryAndGroup(rawTypeFlat);
+          const key =
+            category && group
+              ? makeCanonicalKey(group)
+              : makeCanonicalKey(group);
+          const finalKey = normalizeType(key);
+          if (finalKey) {
+            map[finalKey] = (map[finalKey] || 0) + neededFlat;
+          }
+        }
+      }
+    } catch (_) {
+      return;
+    }
+    return map;
+  }, [record, groupToCategory]);
+
+  const assignedByType = useMemo(async () => {
+    const map = {};
+    // try {
+    const checkAssignedDevicesToTransactionIntent = await devitrakApi.post(
+      "/receiver/receiver-assigned",
+      {
+        paymentIntent: record?.paymentIntent,
+      }
+    );
+    if (checkAssignedDevicesToTransactionIntent.data) {
+      const assignedDevices =
+        checkAssignedDevicesToTransactionIntent.data.receiver;
+      const grouping = groupBy(assignedDevices, "device.deviceType");
+      for (const key in grouping) {
+        map[key] = grouping[key].length;
+      }
+    }
+    // } catch (_) {
+    //   return;
+    // }
+    return map;
+  }, [
+    checkDeviceInUseInOtherCustomerInTheSameEventQuery,
+    record?.paymentIntent,
+    groupToCategory,
+  ]);
 
   let serialNumber = watch("serialNumber");
 
@@ -126,14 +241,16 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   };
   retrieveDeviceInfoSetInEventForConsumers();
 
+  // Ensure we store a single device object for the serial, not an array
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
-    const dataToRetrieve = new Set();
-    if (sortedByDevice[serialNumber]) {
-      refDeviceObjectRetrieve.current = sortedByDevice[serialNumber];
-      return sortedByDevice[serialNumber];
+    const list = sortedByDevice?.[serialNumber];
+    if (Array.isArray(list) && list.length > 0) {
+      const latest = list.at(-1);
+      refDeviceObjectRetrieve.current = latest;
+      return latest;
     }
-    refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
-    return Array.from(dataToRetrieve);
+    refDeviceObjectRetrieve.current = null;
+    return null;
   };
 
   if (serialNumber?.length > 0) {
@@ -207,20 +324,57 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true);
 
-    if (
-      !retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() ||
-      retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
-    ) {
+    const deviceLookup = retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
+    if (!deviceLookup) {
       openNotificationWithIcon(
         "Warning",
         `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`
       );
       setValue("serialNumber", "");
+      // Refresh transaction intent to keep UI aligned
+      refetchingFn?.();
       return setSubmittedAction(false);
     }
+
+    // Build canonical type key: "category_name item_group"
+    const rawType =
+      checkArray(refDeviceObjectRetrieve.current)?.type ||
+      checkArray(refDeviceObjectRetrieve.current)?.deviceType;
+    const parsed = extractCategoryAndGroup(rawType);
+    const currentKey = parsed.group
+      ? makeCanonicalKey(parsed.group)
+      : makeCanonicalKey(parsed.group);
+    const canonicalKey = normalizeType(currentKey);
+    // Enforce requested type and quantity limits
+    const requestedCount = requestedByType[canonicalKey];
+    if (!requestedCount) {
+      openNotificationWithIcon(
+        "Warning",
+        `Type "${canonicalKey}" was not requested for this transaction. Please assign one of the requested types.`
+      );
+      setValue("serialNumber", "");
+      // Refresh transaction intent
+      refetchingFn?.();
+      return setSubmittedAction(false);
+    }
+    const alreadyAssignedCheck = await assignedByType;
+    const alreadyAssigned = alreadyAssignedCheck?.[canonicalKey] || 0;
+    if (alreadyAssigned >= requestedCount) {
+      const remaining = Math.max(requestedCount - alreadyAssigned, 0);
+      openNotificationWithIcon(
+        "Info",
+        `Limit reached for "${canonicalKey}". Requested: ${requestedCount}, assigned: ${alreadyAssigned}, remaining: ${remaining}.`
+      );
+      setValue("serialNumber", "");
+      // Refresh to reflect latest counts and prevent stale UI
+      refetchingFn?.();
+      deviceInPoolQuery.refetch();
+      return setSubmittedAction(false);
+    }
+
     const newDeviceObject = {
       serialNumber: data.serialNumber,
-      deviceType: refDeviceObjectRetrieve.current.at(-1).type,
+      deviceType: canonicalKey,
       status: true,
     };
     const template = new DeviceAssigned(
@@ -275,44 +429,26 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
           deviceInPoolQuery.refetch();
           refetchingFn();
           if (Number(record.device[0].deviceNeeded) === 1) {
-            // const dateString = new Date().toString();
-            // const dateRef = dateString.split(" ");
-            // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-            // const emailStructure = new EmailStructureUpdateItem(
-            //   customer.name,
-            //   customer.lastName,
-            //   customer.email,
-            //   newDeviceObject.serialNumber,
-            //   newDeviceObject.deviceType,
-            //   event.eventInfoDetail.eventName,
-            //   event.company,
-            //   record.paymentIntent,
-            //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //   dateRef[4],
-            //   linkStructure
-            // );
-            // await devitrakApi.post(
-            //   "/nodemailer/assignig-device-notification",
-            //   emailStructure.render()
-            // );
-            // await devitrakApi.post("/nodemailer/assignig-device-notification", {
-            //   consumer: {
-            //     name: `${customer.name} ${customer.lastName}`,
-            //     email: customer.email,
-            //   },
-            //   device: {
-            //     serialNumber: newDeviceObject.serialNumber,
-            //     deviceType: newDeviceObject.deviceType,
-            //   },
-            //   event: event.eventInfoDetail.eventName,
-            //   company: event.company,
-            //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //   time: dateRef[4],
-            //   transaction: record.paymentIntent,
-            //   link: `https://app.devitrak.net/authentication/${event.id}/${
-            //     user.companyData.id
-            //   }/${customer.id ?? customer.iud}`
-            // });
+            const dateString = new Date().toString();
+            const dateRef = dateString.split(" ");
+            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            const emailStructure = new EmailStructureUpdateItem(
+              customer.name,
+              customer.lastName,
+              customer.email,
+              newDeviceObject.serialNumber,
+              newDeviceObject.deviceType,
+              event.eventInfoDetail.eventName,
+              event.company,
+              record.paymentIntent,
+              String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              dateRef[4],
+              linkStructure
+            );
+            await devitrakApi.post(
+              "/nodemailer/assignig-device-notification",
+              emailStructure.render()
+            );
           }
 
           openNotificationWithIcon(
@@ -348,20 +484,12 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
         >
           <Grid item xs={9}>
             <InputLabel>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={400}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-600, #475467)"}
-              >
+              <Typography style={TextFontsize18LineHeight28}>
                 Serial number
               </Typography>
             </InputLabel>
             <OutlinedInput
-              disabled={submittedAction}
+              // disabled={submittedAction}
               autoFocus={true}
               {...register("serialNumber", { required: true })}
               fullWidth
@@ -372,36 +500,16 @@ const AddingDevicesToPaymentIntent = ({ record, refetchingFn }) => {
             </FormHelperText>
           </Grid>
           <Grid height={"auto"} alignSelf={"flex-end"} item xs={2}>
-          <BlueButtonComponent disabled={submittedAction} buttonType="submit" title={"Add"} />
-            {/* <Button
+            <BlueButtonComponent
               disabled={submittedAction}
-              style={{
-                width: "fit-content",
-                border: "1px solid var(--blue-dark-600, #155EEF)",
-                borderRadius: "8px",
-                background: "var(--blue-dark-600, #155EEF)",
-                boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-              }}
-              type="submit"
-            >
-              <Typography
-                textTransform={"none"}
-                style={{
-                  color: "var(--base-white, #FFF",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                }}
-              >
-                Add
-              </Typography>
-            </Button> */}
+              buttonType="submit"
+              title={"Add"}
+            />
           </Grid>
         </Grid>
       </form>
     </>
   );
-};
+}
 
 export default AddingDevicesToPaymentIntent;
