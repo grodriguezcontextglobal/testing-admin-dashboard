@@ -240,9 +240,7 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
 
   // Ensure we store a single device object for the serial, not an array
   const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
-    console.log(sortedByDevice)
     const list = sortedByDevice?.[serialNumber];
-    console.log(list);
     if (Array.isArray(list) && list.length > 0) {
       const latest = list.at(-1);
       refDeviceObjectRetrieve.current = latest;
