@@ -12,6 +12,9 @@ import { DangerButton } from "../../../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
+import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
+import { groupBy } from "lodash";
+import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
@@ -20,23 +23,41 @@ const ModalAddingDeviceFromSearchbar = () => {
   const { event } = useSelector((state) => state.event);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const dispatch = useDispatch();
-  // const navigate = useNavigate();
   const findingAssignedInPaymentIntentQuery = useQuery({
     queryKey: ["assignedDeviceInPaymentIntent"],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned", {
         paymentIntent: paymentIntentSelected,
       }),
+    enabled: paymentIntentSelected !== "",
+  });
+  const transactionsQuery = useQuery({
+    queryKey: ["transactionPerConsumerListQuery", customer.uid],
+    queryFn: () =>
+      devitrakApi.get(
+        `/transaction/transaction?event_id=${event.id}&company=${
+          user.companyData.id
+        }&consumerInfo.id=${customer.id ?? customer.uid}`
+      ),
     refetchOnMount: false,
   });
 
+  const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
+  const [transactionInformation, setTransactionInformation] = useState(null);
   useEffect(() => {
     const controller = new AbortController();
-    findingAssignedInPaymentIntentQuery.refetch();
+    // findingAssignedInPaymentIntentQuery.refetch();
+    const grouping = groupBy(stripeTransactionsSavedQuery, "paymentIntent");
+    if(grouping[paymentIntentSelected]){
+      setTransactionInformation(grouping[paymentIntentSelected]?.[0]);
+    }else {
+      setTransactionInformation(null);
+    }
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [findingAssignedInPaymentIntentQuery.data]);
+
   const { openModalToAssignDevice } = useSelector(
     (state) => state.devicesHandle
   );
@@ -173,7 +194,7 @@ const ModalAddingDeviceFromSearchbar = () => {
       },
       {
         title: "Remove",
-        key:"key",
+        key: "key",
         width: "10%",
         render: (record) => (
           <Button
@@ -212,48 +233,6 @@ const ModalAddingDeviceFromSearchbar = () => {
       );
     };
 
-    // const navigateToDeviceDetailPage = async (record) => {
-    //   const deviceInPoolListQuery = await devitrakApi.post(
-    //     "/receiver/receiver-pool-list",
-    //     {
-    //       eventSelected: event.eventInfoDetail.eventName,
-    //       company: user.companyData.id,
-    //       device: record.serialNumber,
-    //       type: record.deviceType,
-    //       activity: true,
-    //     }
-    //   );
-    //   if (deviceInPoolListQuery.data) {
-    //     const format = {
-    //       company: [`${record.deviceType}`, `${event.company}`],
-    //       activity: record.status,
-    //       status: checkArray(deviceInPoolListQuery.data.receiversInventory)
-    //         .status,
-    //       serialNumber: record.serialNumber,
-    //       user: true,
-    //       entireData: {
-    //         eventSelected: `${event.eventInfoDetail.eventName}`,
-    //         device: `${record.serialNumber}`,
-    //         type: `${record.deviceType}`,
-    //         status: `${
-    //           checkArray(deviceInPoolListQuery.data.receiversInventory).status
-    //         }`,
-    //         activity: record.status,
-    //         comment: `${
-    //           checkArray(deviceInPoolListQuery.data.receiversInventory).comment
-    //         }`,
-    //         provider: `${event.company}`,
-    //         company: `${user.companyData.id}`,
-    //         id: `${
-    //           checkArray(deviceInPoolListQuery.data.receiversInventory).id
-    //         }`,
-    //       },
-    //     };
-
-    //     dispatch(onAddDeviceToDisplayInQuickGlance(format));
-    //     navigate("/device-quick-glance");
-    //   }
-    // };
     return (
       <Modal
         title={renderTitle()}
@@ -271,6 +250,7 @@ const ModalAddingDeviceFromSearchbar = () => {
           paymentIntentDetailSelected?.device ? null : (
             <Grid
               display={"flex"}
+              flexDirection={"column"}
               alignItems={"center"}
               justifyContent={"center"}
               item
@@ -279,9 +259,17 @@ const ModalAddingDeviceFromSearchbar = () => {
               md={12}
               lg={12}
             >
+              {transactionInformation && (
+                <DisplayDeviceRequestedLegendPerTransaction
+                  record={transactionInformation}
+                  checked={checkDevicesInTransaction()}
+                />
+              )}
+
               <AddingDeviceToPaymentIntentFromSearchBar
                 refetchingFn={refetchingFn}
                 key={"adding-single-device"}
+                record={transactionInformation}
               />
             </Grid>
           )}
@@ -297,8 +285,9 @@ const ModalAddingDeviceFromSearchbar = () => {
             md={12}
             lg={12}
           >
+            <BlueButtonComponent title={"Done"} />
             <Button
-            onClick={() => closeModal()}
+              onClick={() => closeModal()}
               style={{
                 ...BlueButton,
                 display:
@@ -311,7 +300,7 @@ const ModalAddingDeviceFromSearchbar = () => {
               <p style={BlueButtonText}>Done</p>
             </Button>
             <Button
-            onClick={() => closeModal()}
+              onClick={() => closeModal()}
               style={{
                 ...BlueButton,
                 display:
@@ -332,14 +321,6 @@ const ModalAddingDeviceFromSearchbar = () => {
                 pagination={{
                   position: ["bottomLeft"],
                 }}
-                // onRow={(record) => {
-                //   return {
-                //     onClick: () => {
-                //       navigateToDeviceDetailPage(record);
-                //     },
-                //   };
-                // }}
-                // style={{ cursor: "pointer" }}
               />
             )}
           </Grid>
