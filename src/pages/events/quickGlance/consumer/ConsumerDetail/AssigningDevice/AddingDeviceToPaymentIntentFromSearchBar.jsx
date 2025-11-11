@@ -1,8 +1,4 @@
-import {
-  FormHelperText,
-  Grid,
-  OutlinedInput
-} from "@mui/material";
+import { FormHelperText, Grid, OutlinedInput } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
 import { groupBy } from "lodash";
@@ -18,6 +14,7 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
   const { paymentIntentDetailSelected } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -275,23 +272,27 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
           deviceInPoolQuery.refetch();
           refetchingFn();
           if (paymentIntentDetailSelected.device === 1) {
-            // const dateString = new Date().toString();
-            // const dateRef = dateString.split(" ");
-            // const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
-            // const emailStructure = new EmailStructureUpdateItem(
-            //   customer.name,
-            //   customer.lastName,
-            //   customer.email,
-            //   newDeviceObject.serialNumber,
-            //   newDeviceObject.deviceType,
-            //   event.eventInfoDetail.eventName,
-            //   event.company,
-            //   paymentIntentDetailSelected.paymentIntent,
-            //   String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //   dateRef[4],
-            //   linkStructure
-            // );
-            // await devitrakApi.post("/nodemailer/assignig-device-notification", emailStructure.render());
+            const dateString = new Date().toString();
+            const dateRef = dateString.split(" ");
+            const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
+            const emailStructure = new EmailStructureUpdateItem(
+              customer.name,
+              customer.lastName,
+              customer.email,
+              newDeviceObject.serialNumber,
+              newDeviceObject.deviceType,
+              event.eventInfoDetail.eventName,
+              event.company,
+              paymentIntentDetailSelected.paymentIntent,
+              String(dateRef.slice(0, 4)).replaceAll(",", " "),
+              dateRef[4],
+              linkStructure
+            );
+            const check = await devitrakApi.post(
+              "/nodemailer/assignig-device-notification",
+              emailStructure.render()
+            );
+            console.log(check);
             //   {
             //   consumer: {
             //     name: `${customer.name} ${customer.lastName}`,
@@ -384,7 +385,11 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
           md
           lg
         >
-          <BlueButtonComponent title={"Add"} disabled={submittedAction} buttonType="submit" />
+          <BlueButtonComponent
+            title={"Add"}
+            disabled={submittedAction}
+            buttonType="submit"
+          />
           {/* <Button disabled={submittedAction} style={BlueButton} type="submit">
             <Typography textTransform={"none"} style={BlueButtonText}>
               Add
