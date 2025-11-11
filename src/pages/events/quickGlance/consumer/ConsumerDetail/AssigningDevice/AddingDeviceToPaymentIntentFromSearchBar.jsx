@@ -1,8 +1,14 @@
-import { FormHelperText, Grid, OutlinedInput } from "@mui/material";
+import {
+  FormHelperText,
+  Grid,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
 import { groupBy } from "lodash";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -15,14 +21,15 @@ import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/sli
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
-const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
-  const { paymentIntentDetailSelected } = useSelector((state) => state.stripe);
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
+import { checkArray } from "../../../../../../components/utils/checkArray";
+function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
+  const [submittedAction, setSubmittedAction] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { choice, event } = useSelector((state) => state.event);
-  const { customer } = useSelector((state) => state.stripe);
+  const { customer } = useSelector((state) => state.customer);
   const dispatch = useDispatch();
   const { deviceSetup } = event;
-  const [submittedAction, setSubmittedAction] = useState(false);
   const refDeviceObjectRetrieve = useRef(null);
   const refDeviceHasRecordInEvent = useRef(null);
   const refDeviceSetInEvent = useRef(null);
@@ -33,7 +40,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     watch,
     setValue,
   } = useForm();
-
   const queryClient = useQueryClient();
   const saveDevicesAssignedListInDataBasedMutation = useMutation({
     mutationFn: (template) => {
@@ -61,18 +67,120 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       placement: "bottomRight",
     });
   };
-  let serialNumber = watch("serialNumber");
-  const sortAndFilterDeviceListPerCompanyAndEvent = () => {
-    if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
-      return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
+
+  // Normalize and aggregation helpers
+  const normalizeType = (t) =>
+    String(t ?? "")
+      .trim()
+      .replace(/\s+/g, " ");
+  const KNOWN_CATEGORIES = [...event.deviceSetup.map((ds) => ds.category)];
+  const extractCategoryAndGroup = (typeRaw) => {
+    const t = normalizeType(typeRaw);
+    for (const cat of KNOWN_CATEGORIES) {
+      // const prefix = `${cat} `;
+      if (t) {
+        const group = t; //.slice(prefix.length).trim();
+        return { category: cat, group };
+      }
+      if (t === cat) {
+        return { category: cat, group: "" };
+      }
     }
-    return [];
+    return { category: "", group: t };
   };
-  sortAndFilterDeviceListPerCompanyAndEvent();
-  const sortedByDevice = groupBy(
-    sortAndFilterDeviceListPerCompanyAndEvent(),
-    "device"
-  );
+
+  // Build group → category map using event.deviceSetup
+  const groupToCategory = useMemo(() => {
+    const map = {};
+    const setup = Array.isArray(event?.deviceSetup) ? event.deviceSetup : [];
+    for (const ds of setup) {
+      const group = normalizeType(ds?.group);
+      const category = normalizeType(ds?.category);
+      if (group && category) {
+        map[group] = category;
+      }
+    }
+    return map;
+  }, [event?.deviceSetup]);
+
+  const makeCanonicalKey = (group) => {
+    // const c = normalizeType(category);
+    const g = normalizeType(group);
+    return g ? `${g}` : g;
+  };
+
+  const requestedByType = useMemo(() => {
+    const map = {};
+    try {
+      const root = Array.isArray(record?.device) ? record.device : [];
+      for (const entry of root) {
+        if (Array.isArray(entry?.device)) {
+          for (const d of entry.device) {
+            const rawType = d?.deviceType;
+            const needed = Number(d?.deviceNeeded) || 0;
+            const lowered = String(rawType ?? "").toLowerCase();
+            if (needed > 0 && lowered !== "undefined") {
+              const { category, group } = extractCategoryAndGroup(rawType);
+              const key =
+                category && group
+                  ? makeCanonicalKey(group)
+                  : makeCanonicalKey(group);
+              const finalKey = normalizeType(key);
+              if (finalKey) {
+                map[finalKey] = (map[finalKey] || 0) + needed;
+              }
+            }
+          }
+        }
+        const rawTypeFlat = entry?.deviceType;
+        const neededFlat = Number(entry?.deviceNeeded) || 0;
+        const loweredFlat = String(rawTypeFlat ?? "").toLowerCase();
+        if (neededFlat > 0 && loweredFlat !== "undefined") {
+          const { category, group } = extractCategoryAndGroup(rawTypeFlat);
+          const key =
+            category && group
+              ? makeCanonicalKey(group)
+              : makeCanonicalKey(group);
+          const finalKey = normalizeType(key);
+          if (finalKey) {
+            map[finalKey] = (map[finalKey] || 0) + neededFlat;
+          }
+        }
+      }
+    } catch (_) {
+      return;
+    }
+    return map;
+  }, [record, groupToCategory]);
+
+  const assignedByType = useMemo(async () => {
+    const map = {};
+    // try {
+    const checkAssignedDevicesToTransactionIntent = await devitrakApi.post(
+      "/receiver/receiver-assigned",
+      {
+        paymentIntent: record?.paymentIntent,
+      }
+    );
+    if (checkAssignedDevicesToTransactionIntent.data) {
+      const assignedDevices =
+        checkAssignedDevicesToTransactionIntent.data.receiver;
+      const grouping = groupBy(assignedDevices, "device.deviceType");
+      for (const key in grouping) {
+        map[key] = grouping[key].length;
+      }
+    }
+    // } catch (_) {
+    //   return;
+    // }
+    return map;
+  }, [
+    checkDeviceInUseInOtherCustomerInTheSameEventQuery,
+    record?.paymentIntent,
+    groupToCategory,
+  ]);
+
+  let serialNumber = watch("serialNumber");
 
   const assignItemEmailNotification = async (props) => {
     try {
@@ -95,6 +203,19 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     }
   };
 
+  const sortAndFilterDeviceListPerCompanyAndEvent = () => {
+    if (checkDeviceInUseInOtherCustomerInTheSameEventQuery?.length > 0) {
+      return checkDeviceInUseInOtherCustomerInTheSameEventQuery;
+    }
+    return [];
+  };
+  sortAndFilterDeviceListPerCompanyAndEvent();
+
+  const sortedByDevice = groupBy(
+    sortAndFilterDeviceListPerCompanyAndEvent(),
+    "device"
+  );
+
   const retrieveDeviceInfoSetInEventForConsumers = () => {
     const sortInventory = groupBy(
       sortAndFilterDeviceListPerCompanyAndEvent(),
@@ -116,16 +237,21 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     return Array.from(result);
   };
   retrieveDeviceInfoSetInEventForConsumers();
-  const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
-    const dataToRetrieve = new Set();
-    if (sortedByDevice[serialNumber]) {
-      refDeviceObjectRetrieve.current = sortedByDevice[serialNumber];
-      return sortedByDevice[serialNumber];
-    }
-    refDeviceObjectRetrieve.current = Array.from(dataToRetrieve);
 
-    return Array.from(dataToRetrieve);
+  // Ensure we store a single device object for the serial, not an array
+  const retrieveDeviceSetupValueBaseOnTypeOfSerialNumber = () => {
+    console.log(sortedByDevice)
+    const list = sortedByDevice?.[serialNumber];
+    console.log(list);
+    if (Array.isArray(list) && list.length > 0) {
+      const latest = list.at(-1);
+      refDeviceObjectRetrieve.current = latest;
+      return latest;
+    }
+    refDeviceObjectRetrieve.current = null;
+    return null;
   };
+
   if (serialNumber?.length > 0) {
     retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
   }
@@ -139,7 +265,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
         for (let data of deviceCheck[serialNumber]) {
           if (data.activity || String(data.status).toLowerCase() === "lost") {
             openNotificationWithIcon(
-              "info",
+              "Info",
               `device ${serialNumber} is already assigned to other customer`
             );
             setValue("serialNumber", "");
@@ -153,6 +279,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
     }
   };
   checkDeviceIsAssignedInEvent();
+
   const retrieveDeviceDataInPoolToUpdateIt = () => {
     if (sortAndFilterDeviceListPerCompanyAndEvent().length > 0) {
       const deviceCheck = groupBy(
@@ -168,6 +295,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       return [];
     }
   };
+
   const saveAndUpdateDeviceInPool = async () => {
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${
@@ -180,9 +308,10 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       }
     );
   };
+
   const createEventInTransactionLog = async () => {
     await devitrakApi.post("/transaction-audit-log/create-audit", {
-      transaction: paymentIntentDetailSelected.paymentIntent,
+      transaction: record.paymentIntent,
       user: user.email,
       actionTaken: `Receivers ${serialNumber} were assigned to transaction`,
       time: `${new Date()}`,
@@ -193,27 +322,72 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
 
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true);
-    if (
-      !retrieveDeviceSetupValueBaseOnTypeOfSerialNumber() ||
-      retrieveDeviceSetupValueBaseOnTypeOfSerialNumber().length < 1
-    ) {
+
+    const deviceLookup = retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
+    console.log(deviceLookup);
+    if (!deviceLookup) {
       openNotificationWithIcon(
-        "warning",
+        "Warning",
         `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`
       );
       setValue("serialNumber", "");
+      // Refresh transaction intent to keep UI aligned
+      refetchingFn?.();
       return setSubmittedAction(false);
     }
+
+    // Build canonical type key: "category_name item_group"
+    const rawType =
+      checkArray(refDeviceObjectRetrieve.current)?.type ||
+      checkArray(refDeviceObjectRetrieve.current)?.deviceType;
+      console.log(rawType);
+    const parsed = extractCategoryAndGroup(rawType);
+    console.log(parsed)
+    const currentKey = parsed.group
+      ? makeCanonicalKey(parsed.group)
+      : makeCanonicalKey(parsed.group);
+      console.log(currentKey);
+    const canonicalKey = normalizeType(currentKey);
+    console.log(canonicalKey);
+    // Enforce requested type and quantity limits
+    const requestedCount = requestedByType[canonicalKey];
+    console.log(requestedCount);
+    if (!requestedCount) {
+      openNotificationWithIcon(
+        "Warning",
+        `Type "${canonicalKey}" was not requested for this transaction. Please assign one of the requested types.`
+      );
+      setValue("serialNumber", "");
+      // Refresh transaction intent
+      refetchingFn?.();
+      return setSubmittedAction(false);
+    }
+    const alreadyAssignedCheck = await assignedByType;
+    console.log(alreadyAssignedCheck);
+    const alreadyAssigned = alreadyAssignedCheck?.[canonicalKey] || 0;
+    console.log(alreadyAssigned)
+    if (alreadyAssigned >= requestedCount) {
+      const remaining = Math.max(requestedCount - alreadyAssigned, 0);
+      openNotificationWithIcon(
+        "Info",
+        `Limit reached for "${canonicalKey}". Requested: ${requestedCount}, assigned: ${alreadyAssigned}, remaining: ${remaining}.`
+      );
+      setValue("serialNumber", "");
+      // Refresh to reflect latest counts and prevent stale UI
+      refetchingFn?.();
+      deviceInPoolQuery.refetch();
+      return setSubmittedAction(false);
+    }
+
     const newDeviceObject = {
       serialNumber: data.serialNumber,
-      deviceType: refDeviceObjectRetrieve.current.at(-1).type,
+      deviceType: canonicalKey,
       status: true,
     };
-
     const template = new DeviceAssigned(
-      paymentIntentDetailSelected.paymentIntent,
+      record.paymentIntent,
       newDeviceObject,
-      paymentIntentDetailSelected.consumerInfo.email,
+      record.consumerInfo.email,
       true,
       choice,
       user.company,
@@ -222,16 +396,6 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       event.id
     );
 
-    // const template = {
-    //   paymentIntent: paymentIntentDetailSelected.paymentIntent,
-    //   device: newDeviceObject,
-    //   user: paymentIntentDetailSelected.consumerInfo.email,
-    //   active: true,
-    //   eventSelected: choice,
-    //   provider: user.company,
-    //   timeStamp: new Date().getTime(),
-    //   company: user.companyData.id,
-    // };
     try {
       if (checkDeviceIsAssignedInEvent()) {
         const resp = await devitrakApiAdmin.post(
@@ -271,7 +435,7 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
           });
           deviceInPoolQuery.refetch();
           refetchingFn();
-          if (paymentIntentDetailSelected.device === 1) {
+          if (Number(record.device[0].deviceNeeded) === 1) {
             const dateString = new Date().toString();
             const dateRef = dateString.split(" ");
             const linkStructure = `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`;
@@ -283,37 +447,20 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
               newDeviceObject.deviceType,
               event.eventInfoDetail.eventName,
               event.company,
-              paymentIntentDetailSelected.paymentIntent,
+              record.paymentIntent,
               String(dateRef.slice(0, 4)).replaceAll(",", " "),
               dateRef[4],
               linkStructure
             );
-            const check = await devitrakApi.post(
+            await devitrakApi.post(
               "/nodemailer/assignig-device-notification",
               emailStructure.render()
             );
-            console.log(check);
-            //   {
-            //   consumer: {
-            //     name: `${customer.name} ${customer.lastName}`,
-            //     email: customer.email,
-            //   },
-            //   device: {
-            //     serialNumber: newDeviceObject.serialNumber,
-            //     deviceType: newDeviceObject.deviceType,
-            //   },
-            //   event: event.eventInfoDetail.eventName,
-            //   company: event.company,
-            //   date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-            //   time: dateRef[4],
-            //   transaction: paymentIntentDetailSelected.paymentIntent,
-            //   link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-            // }
           }
 
           openNotificationWithIcon(
             "Success",
-            "devices are being added, they will be displayed shortly."
+            "Devices are being added, they will be displayed shortly."
           );
           setValue("serialNumber", "");
           await assignItemEmailNotification(template.render());
@@ -322,103 +469,54 @@ const AddingDeviceToPaymentIntentFromSearchBar = ({ refetchingFn }) => {
       }
     } catch (error) {
       openNotificationWithIcon(
-        "error",
+        "Error",
         "something went wrong, please try later."
       );
-      return setSubmittedAction(false);
+      setSubmittedAction(false);
     }
   };
+
   return (
-    <form
-      onSubmit={handleSubmit(handleDevicesAssignedToPaymentIntentInEvent)}
-      style={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
+    <div style={{ width: "100%" }}>
       {contextHolder}
-      <Grid
-        display={"flex"}
-        justifyContent={"space-around"}
-        alignItems={"center"}
-        alignSelf={"flex-end"}
-        marginY={1}
-        container
+      <form
+        onSubmit={handleSubmit(handleDevicesAssignedToPaymentIntentInEvent)}
       >
         <Grid
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-          item
-          xs={11}
-          sm={11}
-          md={11}
-          lg={11}
+          display={"flex"}
+          justifyContent={"space-around"}
+          alignItems={"center"}
+          marginY={1}
+          container
         >
-          <OutlinedInput
-            disabled={submittedAction}
-            autoFocus={true}
-            {...register("serialNumber", { required: true })}
-            placeholder="Scan a serial number here."
-            fullWidth
-            style={OutlinedInputStyle}
-          />
-          <FormHelperText id="outlined-weight-helper-text">
-            {errors?.serialNumber && <p>Serial number is required</p>}
-          </FormHelperText>
+          <Grid item xs={9}>
+            <InputLabel>
+              <Typography style={TextFontsize18LineHeight28}>
+                Serial number
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              // disabled={submittedAction}
+              autoFocus={true}
+              {...register("serialNumber", { required: true })}
+              fullWidth
+              style={OutlinedInputStyle}
+            />
+            <FormHelperText id="outlined-weight-helper-text">
+              {errors?.serialNumber && <p>Serial number is required</p>}
+            </FormHelperText>
+          </Grid>
+          <Grid height={"auto"} alignSelf={"flex-end"} item xs={2}>
+            <BlueButtonComponent
+              disabled={submittedAction}
+              buttonType="submit"
+              title={"Add"}
+            />
+          </Grid>
         </Grid>
-        <Grid
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-          item
-          xs
-          sm
-          md
-          lg
-        >
-          <BlueButtonComponent
-            title={"Add"}
-            disabled={submittedAction}
-            buttonType="submit"
-          />
-          {/* <Button disabled={submittedAction} style={BlueButton} type="submit">
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Add
-            </Typography>
-          </Button> */}
-        </Grid>
-      </Grid>
-    </form>
+      </form>
+    </div>
   );
-  // }
-};
+}
 
 export default AddingDeviceToPaymentIntentFromSearchBar;
-// await axios.post(
-//   "https://9dsiqsqjtk.execute-api.us-east-1.amazonaws.com/prod/devitrak/notifications/assign_item",
-//   {
-//     consumer: {
-//       name: `${customer.name} ${customer.lastName}`,
-//       email: customer.email,
-//     },
-//     device: {
-//       serialNumber: newDeviceObject.serialNumber,
-//       deviceType: newDeviceObject.deviceType,
-//     },
-//     event: event.eventInfoDetail.eventName,
-//     company: event.company,
-//     date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
-//     time: dateRef[4],
-//     transaction: paymentIntentDetailSelected.paymentIntent,
-//     link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-//   }
-// );
