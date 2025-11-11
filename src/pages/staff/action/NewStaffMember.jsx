@@ -140,7 +140,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     const email = watch("email");
     const role = watch("role");
     if (email.length === 0 || String(role) === "") {
-      console.log({ email, role });
       return warning(
         "warning",
         "Please enter email and select a role before verifying."

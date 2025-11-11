@@ -73,7 +73,6 @@ const Staff = () => {
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           {staff.adminUser &&
             staff?.adminUser?.map((item) => {
-              console.log(item);
               return (
                 <h4 style={{ ...inputValueStyle, margin:"0.5rem 0"}} key={item.email}>
                   {item.firstName} {item.lastName}

@@ -271,7 +271,6 @@ const useAddingByStartingSerialNumber = ({
   };
 
   const handleUpdateEventInventory = async (data) => {
-    console.log(data);
     if (Object.keys(valueItemSelected).length === 0)
       return message.warning("Please select item to add to inventory.");
     const startingSerial = String(data.starting ?? "").trim();
@@ -358,7 +357,6 @@ const useAddingByStartingSerialNumber = ({
       setLoadingStatus(false);
       closeModal();
     } catch (error) {
-      console.log(error);
       message.error("Failed to add devices to event. Please try again.");
     } finally {
       setLoadingStatus(false);

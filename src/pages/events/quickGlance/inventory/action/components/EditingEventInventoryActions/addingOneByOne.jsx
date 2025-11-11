@@ -280,9 +280,6 @@ const useAddingItemsToEventInventoryOneByOne = ({
   const handleUpdateEventInventory = async (data) => {
     if (Object.keys(valueItemSelected).length === 0)
       return message.warning("Please select item to add to inventory.");
-    console.log(data);
-    console.log(serialNumbers);
-    console.log(valueItemSelected);
     if (!serialNumbers)
       return message.warning("Please enter at least one serial number.");
     try {
@@ -303,7 +300,6 @@ const useAddingItemsToEventInventoryOneByOne = ({
           values: values1,
         }
       );
-      console.log(result1.data.result);
       if (result1.data.result.length < 1)
         return message.warning(
           "Starting serial not found or no available items from that serial."
@@ -359,7 +355,6 @@ const useAddingItemsToEventInventoryOneByOne = ({
       setLoadingStatus(false);
       closeModal();
     } catch (error) {
-      console.log(error);
       message.error("Failed to add devices to event. Please try again.");
     } finally {
       setLoadingStatus(false);

@@ -322,7 +322,6 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
     setSubmittedAction(true);
 
     const deviceLookup = retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
-    console.log(deviceLookup);
     if (!deviceLookup) {
       openNotificationWithIcon(
         "Warning",
@@ -338,18 +337,13 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
     const rawType =
       checkArray(refDeviceObjectRetrieve.current)?.type ||
       checkArray(refDeviceObjectRetrieve.current)?.deviceType;
-      console.log(rawType);
     const parsed = extractCategoryAndGroup(rawType);
-    console.log(parsed)
     const currentKey = parsed.group
       ? makeCanonicalKey(parsed.group)
       : makeCanonicalKey(parsed.group);
-      console.log(currentKey);
     const canonicalKey = normalizeType(currentKey);
-    console.log(canonicalKey);
     // Enforce requested type and quantity limits
     const requestedCount = requestedByType[canonicalKey];
-    console.log(requestedCount);
     if (!requestedCount) {
       openNotificationWithIcon(
         "Warning",
@@ -361,9 +355,7 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
       return setSubmittedAction(false);
     }
     const alreadyAssignedCheck = await assignedByType;
-    console.log(alreadyAssignedCheck);
     const alreadyAssigned = alreadyAssignedCheck?.[canonicalKey] || 0;
-    console.log(alreadyAssigned)
     if (alreadyAssigned >= requestedCount) {
       const remaining = Math.max(requestedCount - alreadyAssigned, 0);
       openNotificationWithIcon(

@@ -7,7 +7,6 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -83,23 +82,8 @@ export const ReplaceDevice = ({ refetching }) => {
       !!user.companyData.id,
     // refetchOnMount: false,
   });
-  useEffect(() => {
-    const controller = new AbortController();
-    // assignedDeviceInTransactionQuery.refetch();
-    // deviceInPoolQuery.refetch();
-    console.log(
-      "assignedDeviceInTransactionQuery",
-      assignedDeviceInTransactionQuery?.data?.data
-    );
-    console.log("deviceInPoolQuery", deviceInPoolQuery?.data?.data);
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory;
-  console.log(deviceInPoolQuery?.data?.data);
   const assignedDeviceInTransaction =
     assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers;
 
@@ -146,7 +130,6 @@ export const ReplaceDevice = ({ refetching }) => {
 
   //*function to update old device in pool
   const updateOldDeviceInPool = async (props) => {
-    console.log(deviceInPool);
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${checkArray(deviceInPool).id}`,
       {
