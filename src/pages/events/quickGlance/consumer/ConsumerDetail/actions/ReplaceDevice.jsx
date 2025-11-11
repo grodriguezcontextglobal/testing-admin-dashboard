@@ -1,10 +1,9 @@
 import {
-  Button,
   Grid,
   MenuItem,
   OutlinedInput,
   Select,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
@@ -12,6 +11,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { checkArray } from "../../../../../../components/utils/checkArray";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -22,11 +24,7 @@ import {
 } from "../../../../../../store/slices/stripeSlice";
 import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
@@ -62,28 +60,38 @@ export const ReplaceDevice = ({ refetching }) => {
         "device.deviceType": receiverToReplaceObject.deviceType,
         paymentIntent: paymentIntentSelected,
       }),
-    refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
+    enabled:
+      !!receiverToReplaceObject.serialNumber &&
+      !!receiverToReplaceObject.deviceType &&
+      !!paymentIntentSelected,
+    // refetchOnMount: false,
   });
 
   const deviceInPoolQuery = useQuery({
-    queryKey: ["deviceInPoolList"],
+    queryKey: ["deviceInPoolList", user.companyData.id],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
+        eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
         activity: true,
         device: receiverToReplaceObject.serialNumber,
         type: receiverToReplaceObject.deviceType,
       }),
-    // enabled: false,
-    refetchOnMount: false,
-    notifyOnChangeProps: ["data", "dataUpdatedAt"],
+    enabled:
+      !!receiverToReplaceObject.serialNumber &&
+      !!receiverToReplaceObject.deviceType &&
+      !!user.companyData.id,
+    // refetchOnMount: false,
   });
   useEffect(() => {
     const controller = new AbortController();
-    assignedDeviceInTransactionQuery.refetch();
-    deviceInPoolQuery.refetch();
+    // assignedDeviceInTransactionQuery.refetch();
+    // deviceInPoolQuery.refetch();
+    console.log(
+      "assignedDeviceInTransactionQuery",
+      assignedDeviceInTransactionQuery?.data?.data
+    );
+    console.log("deviceInPoolQuery", deviceInPoolQuery?.data?.data);
 
     return () => {
       controller.abort();
@@ -91,6 +99,7 @@ export const ReplaceDevice = ({ refetching }) => {
   }, []);
 
   const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory;
+  console.log(deviceInPoolQuery?.data?.data);
   const assignedDeviceInTransaction =
     assignedDeviceInTransactionQuery?.data?.data?.listOfReceivers;
 
@@ -137,8 +146,9 @@ export const ReplaceDevice = ({ refetching }) => {
 
   //*function to update old device in pool
   const updateOldDeviceInPool = async (props) => {
+    console.log(deviceInPool);
     await devitrakApi.patch(
-      `/receiver/receivers-pool-update/${deviceInPool.at(-1).id}`,
+      `/receiver/receivers-pool-update/${checkArray(deviceInPool).id}`,
       {
         status: props.reason,
         activity: false,
@@ -225,8 +235,12 @@ export const ReplaceDevice = ({ refetching }) => {
       });
       refetching();
       openNotificationWithIcon("Success", "Device replaced successfully.");
-      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
-      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)  
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      );
       closeModal();
     }
   };
@@ -321,25 +335,16 @@ export const ReplaceDevice = ({ refetching }) => {
             </Grid>
             {watch("reason") !== "" && (
               <Grid display={"flex"} alignItems={"center"} gap={2} container>
-                <Button
-                  disabled={watch("reason") !== ""}
-                  onClick={closeModal}
-                  style={{ ...GrayButton, width: "100%" }}
-                >
-                  <Typography textTransform={"none"} style={GrayButtonText}>
-                    Cancel
-                  </Typography>
-                </Button>
-
-                <Button
+                <GrayButtonComponent
+                  title={"Cancel"}
                   disabled={watch("reason") === ""}
-                  type="submit"
-                  style={{ ...BlueButton, width: "100%" }}
-                >
-                  <Typography textTransform={"none"} style={BlueButtonText}>
-                    Save
-                  </Typography>
-                </Button>
+                  func={closeModal}
+                />
+                <BlueButtonComponent
+                  title={"Replace"}
+                  buttonType="submit"
+                  disabled={watch("reason") === ""}
+                />
               </Grid>
             )}{" "}
           </Grid>
