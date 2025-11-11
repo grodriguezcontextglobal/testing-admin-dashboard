@@ -72,7 +72,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   });
 
   const signaturesProofUrl = useQuery({
-    queryKey: ["signaturesProofUrl", event.id, user.companyData.id, customer.id],
+    queryKey: [
+      "signaturesProofUrl",
+      event.id,
+      user.companyData.id,
+      customer.id,
+    ],
     queryFn: () =>
       devitrakApi.post("/company/consumer-signatures", {
         event_id: event.id,
@@ -205,7 +210,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       },
     },
     {
-      title: "Status",
+      title: "Quantity",
       dataIndex: "device",
       key: "device",
       responsive: ["lg"],
@@ -387,6 +392,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     },
   ];
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const [RowKeyInfo, setRowKeyInfo] = useState(null);
 
   const customExpandIcon = (props) => {
     if (props.expanded) {
@@ -428,7 +434,13 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         ) {
           return setOpenCancelingDepositModal(false);
         }
-        return setOpenCancelingDepositModal(true);
+        if (
+          expandedRowKeys[0]?.length > 15 &&
+          response?.data?.listOfReceivers?.length > 0 &&
+          RowKeyInfo?.active
+        ) {
+          return setOpenCancelingDepositModal(true);
+        }
       };
       if (
         expandedRowKeys[0]?.length > 15 &&
@@ -455,19 +467,27 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           expandedRowKeys,
           onExpand: (expanded, record) => {
             setExpandedRowKeys(expanded ? [record.key] : []);
+            setRowKeyInfo(expanded ? record : null);
           },
           expandIcon: (props) => customExpandIcon(props),
           expandRowByClick: false,
           expandedRowRender: (record) =>
             expandedRowKeys[0] === record.key ? (
-              <ExpandedRowInTable
-                key={record.paymentIntent}
-                rowRecord={record}
-                refetching={refetchingFn}
-                setOpenCancelingDepositModal={setOpenCancelingDepositModal}
-                handleRecord={handleRecord}
-                signatureProof={signaturesProofUrl.data ? groupBy(signaturesProofUrl.data.data.signatures, "transaction_id") : []}
-              />
+                <ExpandedRowInTable
+                  key={record.paymentIntent}
+                  rowRecord={record}
+                  refetching={refetchingFn}
+                  setOpenCancelingDepositModal={setOpenCancelingDepositModal}
+                  handleRecord={handleRecord}
+                  signatureProof={
+                    signaturesProofUrl.data
+                      ? groupBy(
+                          signaturesProofUrl.data.data.signatures,
+                          "transaction_id"
+                        )
+                      : []
+                  }
+                />
             ) : (
               <Spin indicator={<Loading />} />
             ),
