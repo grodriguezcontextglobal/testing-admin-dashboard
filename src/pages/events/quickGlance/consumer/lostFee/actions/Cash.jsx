@@ -1,5 +1,4 @@
 import {
-  Button,
   FormControl,
   Grid,
   InputAdornment,
@@ -16,9 +15,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import Loading from "../../../../../../components/animation/Loading";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
@@ -154,53 +153,64 @@ const Cash = () => {
       }
     };
     const handleSubmitForm = async (data) => {
-      let cashReportProfile = {
-        attendee: customer?.email,
-        admin: user.email,
-        deviceLost: [
-          {
-            label: receiverToReplaceObject.serialNumber,
-            deviceType: receiverToReplaceObject.deviceType,
-          },
-        ],
-        amount: data.total,
-        event: event.id,
-        company: user.companyData.id,
-        typeCollection: "Cash",
-      };
-      loading();
-      await changeStatusInDeviceAssignedData();
-      const respo = await devitrakApi.post(
-        "/cash-report/create-cash-report",
-        cashReportProfile
-      );
-      if (respo) {
-        const stringDate = new Date().toString();
-        const dateSplitting = stringDate.split(" ");
-        await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
-          consumer: {
-            name: `${customer.name} ${customer.lastName}`,
-            email: customer.email,
-          },
-          device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
+      try {
+        let cashReportProfile = {
+          attendee: customer?.email,
+          admin: user.email,
+          deviceLost: [
+            {
+              label: receiverToReplaceObject.serialNumber,
+              deviceType: receiverToReplaceObject.deviceType,
+            },
+          ],
           amount: data.total,
-          event: event.eventInfoDetail.eventName,
-          company: event.company,
-          date: dateSplitting.slice(0, 4),
-          time: dateSplitting[4],
-          transaction:
-            checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
-          link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-        });
-        messageApi.destroy;
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
-        dispatch(onAddPaymentIntentSelected(""));
-        message.success("Cash transaction successfully!");
-        navigator(
-          `/events/event-attendees/${customer.uid}/transactions-details`
+          event: event.id,
+          company: user.companyData.id,
+          typeCollection: "Cash",
+          paymentIntent_charge_transaction: checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
+        };
+        loading();
+        await changeStatusInDeviceAssignedData();
+        const respo = await devitrakApi.post(
+          "/cash-report/create-cash-report",
+          cashReportProfile
         );
+        if (respo) {
+          const stringDate = new Date().toString();
+          const dateSplitting = stringDate.split(" ");
+          await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
+            consumer: {
+              name: `${customer.name} ${customer.lastName}`,
+              email: customer.email,
+            },
+            device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
+            amount: data.total,
+            event: event.eventInfoDetail.eventName,
+            company: event.company,
+            date: dateSplitting.slice(0, 4),
+            time: dateSplitting[4],
+            transaction:
+              checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
+            link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+          });
+          messageApi.destroy;
+          await clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          );
+          await clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          );
+          await clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+          );
+          dispatch(onAddPaymentIntentSelected(""));
+          message.success("Cash transaction successfully!");
+          navigator(
+            `/events/event-attendees/${customer.uid}/transactions-details`
+          );
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
     const handleBackAction = () => {
@@ -313,28 +323,17 @@ const Cash = () => {
               md={3}
               lg={2}
             >
-              <Button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                }}
-                onClick={() => handleBackAction()}
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Cancel
-                </Typography>
-              </Button>{" "}
-              <Button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                }}
-                type="submit"
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Submit
-                </Typography>
-              </Button>
+              <DangerButtonComponent
+                title="Cancel"
+                buttonType="button"
+                func={() => handleBackAction()}
+                styles={{ width: "fit-content" }}
+              />
+              <BlueButtonComponent
+                title="Submit"
+                buttonType="submit"
+                styles={{ width: "fit-content" }}
+              />
             </Grid>
           </Grid>
         </form>
