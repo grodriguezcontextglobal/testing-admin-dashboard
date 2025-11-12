@@ -1,12 +1,9 @@
 import { Backdrop, Box, Divider, Fade, Grid, Modal } from "@mui/material";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 const style = {
   position: "absolute",
   top: "50%",
@@ -57,38 +54,25 @@ const Choice = ({ openModal, setOpenModal }) => {
               style={{ width: "100%" }}
               to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/credit-card-method`}
             >
-              <button
-                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-              >
-                <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                  Credit card
-                </p>
-              </button>
+              <BlueButtonComponent
+                styles={{ width: "100%" }}
+                title="Credit card"
+              />
             </Link>
             <Divider />
             <Link
               style={{ width: "100%" }}
               to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/cash-method`}
             >
-              <button
-                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-              >
-                <p style={{ ...BlueButtonText, textTransform: "none" }}>Cash</p>
-              </button>
+              <BlueButtonComponent styles={{ width: "100%" }} title="Cash" />
             </Link>
           </Grid>
 
-          <button
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              width: "100%",
-              margin: "5px 0",
-            }}
-            onClick={() => handleClose()}
-          >
-            <p style={GrayButtonText}>Go back</p>
-          </button>
+          <GrayButtonComponent
+            styles={{ width: "100%" }}
+            title="Go back"
+            func={handleClose}
+          />
         </Box>
       </Fade>
     </Modal>
