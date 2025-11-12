@@ -107,9 +107,15 @@ const ActionsMainPage = () => {
           }
         );
         openNotificationWithIcon("Success", "Device returned.");
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)
-        await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        );
+        await clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+        );
         queryClient.invalidateQueries({
           queryKey: ["assignedDeviceListQuery"],
           exact: true,
@@ -236,7 +242,8 @@ const ActionsMainPage = () => {
             padding: 0,
           }}
         >
-          {deviceInfoSelected.activity ? (
+          {typeof deviceInfoSelected.activity === "boolean" &&
+          deviceInfoSelected.activity ? (
             <Grid
               container
               display={"flex"}
@@ -296,29 +303,31 @@ const ActionsMainPage = () => {
               </Grid>
             </Grid>
           ) : (
-            <Grid
-              style={{ display: deviceInfoSelected.activity && "none" }}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-              <Button
-                onClick={() => setModalUpdateStatus(true)}
-                style={{ ...DangerButton, outline: "none" }}
+            (console.log(deviceInfoSelected.activity),
+            (
+              <Grid
+                item
+                xs={12}
+                sm={12}
+                md={4}
+                lg={3}
               >
-                <p
-                  style={{
-                    ...DangerButtonText,
-                    textTransform: "capitalize",
-                    textAlign: "left",
-                  }}
+                <Button
+                  onClick={() => setModalUpdateStatus(true)}
+                  style={{ ...DangerButton, outline: "none" }}
                 >
-                  edit status
-                </p>
-              </Button>
-            </Grid>
+                  <p
+                    style={{
+                      ...DangerButtonText,
+                      textTransform: "capitalize",
+                      textAlign: "left",
+                    }}
+                  >
+                    edit status
+                  </p>
+                </Button>
+              </Grid>
+            ))
           )}
         </Card>
       </Grid>
