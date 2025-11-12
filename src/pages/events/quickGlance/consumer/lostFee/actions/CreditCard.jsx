@@ -1,10 +1,4 @@
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Alert } from "antd";
@@ -15,14 +9,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { LostDeviceStripeElement } from "../../../../../../components/stripe/elements/LostDeviceStripeElement";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
-import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
 const CreditCard = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [blocking, setBlocking] = useState(false);
@@ -161,18 +152,6 @@ const CreditCard = () => {
       }
     };
     const changeStatusInDeviceAssignedData = async () => {
-      // const checkIndex = verifyPaymentIntentReceiversAssignedFormat()[0]?.device.findIndex(
-      //   (item) => item.serialNumber === receiverToReplaceObject.serialNumber
-      // );
-      // const updateObject = verifyPaymentIntentReceiversAssignedFormat()[0]?.device.with(
-      //   checkIndex,
-      //   {
-      //     deviceType: receiverToReplaceObject.deviceType,
-      //     serialNumber: receiverToReplaceObject.serialNumber,
-      //     status: "Lost",
-      //   }
-      // );
-
       const assignedDeviceProfile = {
         id: verifyPaymentIntentReceiversAssignedFormat()[0].id,
         device: {
@@ -189,6 +168,7 @@ const CreditCard = () => {
         changeStatusInPool();
       }
     };
+
     const triggerStripePaymentIntent = async (data) => {
       localStorage.setItem("total", data.total);
       refTotal.current = watch("total");
@@ -220,6 +200,8 @@ const CreditCard = () => {
         event: event.id,
         company: user.companyData.id,
         typeCollection: "Credit Card",
+        paymentIntent_charge_transaction:
+          verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
       };
 
       await changeStatusInDeviceAssignedData();
@@ -236,7 +218,10 @@ const CreditCard = () => {
             email: customer.email,
           },
           device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
-          amount: refTotal.current,
+          amount:
+            refTotal.current > 0
+              ? refTotal.current
+              : Number(localStorage.getItem("total")),
           event: event.eventInfoDetail.eventName,
           company: event.company,
           date: dateSplitting.slice(0, 4),
@@ -245,6 +230,7 @@ const CreditCard = () => {
             verifyPaymentIntentReceiversAssignedFormat()[0].paymentIntent,
           link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
         });
+        localStorage.setItem("total", "");
         navigator(
           `/events/event-attendees/${customer.uid}/transactions-details`
         );
@@ -264,7 +250,6 @@ const CreditCard = () => {
       dispatchFnAfterPaymentIntentSuccessfully();
       transactionStatus = "";
       transactionPaymentIntent = "";
-      localStorage.setItem("total", "");
       refRender.current = 1;
       navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
     }
@@ -272,6 +257,14 @@ const CreditCard = () => {
     const handleBackAction = () => {
       dispatch(onAddPaymentIntentSelected(""));
       navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
+    };
+    const sty = {
+      color: "#000",
+      fontSize: "14px",
+      fontWeight: "600",
+      fontFamily: "Inter",
+      lineHeight: "20px",
+      textTransform: "none",
     };
     return (
       <>
@@ -320,36 +313,13 @@ const CreditCard = () => {
               md={12}
               lg={9}
             >
-              <p
-                style={{
-                  width: "fit-content",
-                  color: "#000",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Serial number
-              </p>
+              <p style={sty}>Serial number</p>
               <OutlinedInput
                 disabled
                 value={receiverToReplaceObject.serialNumber}
                 style={OutlinedInputStyle}
               />
-              <p
-                style={{
-                  color: "#000",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Amount
-              </p>
+              <p style={sty}>Amount</p>
               <OutlinedInput
                 disabled={blocking}
                 id="outlined-adornment-amount"
@@ -363,36 +333,24 @@ const CreditCard = () => {
               {errors?.total && (
                 <Alert message="Amount is required" type="error" />
               )}
-              <Button style={GrayButton} onClick={() => handleBackAction()}>
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Cancel
-                </Typography>
-              </Button>{" "}
-              <Button
+              <GrayButtonComponent
+                title={"Cancel"}
+                buttonType="button"
+                func={handleBackAction}
+              />
+              <BlueButtonComponent
+                title={"Add CC information"}
+                buttonType="submit"
                 disabled={clientSecret !== ""}
-                style={{
-                  ...BlueButton,
-                  backgroundColor: `${
-                    clientSecret === ""
-                      ? BlueButton.background
-                      : LightBlueButton.background
-                  }`,
-                  border: `${
-                    clientSecret === ""
-                      ? BlueButton.border
-                      : LightBlueButton.border
-                  }`,
-                }}
-                type="submit"
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Add CC information
-                </Typography>
-              </Button>
+              />
             </Grid>
           </Grid>
         </form>
-        <Grid item xs={12}>
+        <Grid
+          margin={`${(isSmallDevice || isMediumDevice) && "2dvh 0 0 0"}`}
+          item
+          xs={12}
+        >
           {clientSecret !== "" && (
             <LostDeviceStripeElement
               clientSecret={clientSecret}
