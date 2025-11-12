@@ -1,20 +1,18 @@
-import { useEffect, useState } from "react";
 import {
   PaymentElement,
-  useStripe,
   useElements,
+  useStripe,
 } from "@stripe/react-stripe-js";
-// import "./checkoutStyles.css";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 
 export const LostDeviceStripeCheckout = ({ total }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { customer } = useSelector(state => state.stripe)
+  const { customer } = useSelector((state) => state.stripe);
 
   useEffect(() => {
     if (!stripe) {
@@ -83,7 +81,9 @@ export const LostDeviceStripeCheckout = ({ total }) => {
       elements,
       confirmParams: {
         // Make sure to change this to your payment completion page
-        return_url: myUrl + `/events/event-attendees/${customer.uid}/collect-lost-fee/credit-card-method`,
+        return_url:
+          myUrl +
+          `/events/event-attendees/${customer.uid}/collect-lost-fee/credit-card-method`,
       },
     });
     // This point will only be reached if there is an immediate error when
@@ -103,20 +103,38 @@ export const LostDeviceStripeCheckout = ({ total }) => {
   return (
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
-      <button
+      <BlueButtonComponent
+        buttonType="submit"
+        title={
+          isLoading ? (
+            <div className="spinner" id="spinner"></div>
+          ) : (
+            `charge $${total}`
+          )
+        }
+        disabled={isLoading || !stripe || !elements}
+        styles={{ width: "100%", margin: "2dvh 0 0" }}
+      />
+      {/* <button
         style={{ ...BlueButton, width: "100%", margin: "2dvh 0 0" }}
         // className="btn"
         disabled={isLoading || !stripe || !elements}
         id="submit"
       >
-        <span style={{ ...BlueButtonText, margin: 'auto', textTransform: "capitalize" }}>
+        <span
+          style={{
+            ...BlueButtonText,
+            margin: "auto",
+            textTransform: "capitalize",
+          }}
+        >
           {isLoading ? (
             <div className="spinner" id="spinner"></div>
           ) : (
             `charge $${total}`
           )}
         </span>
-      </button>
+      </button> */}
       {message && <div id="payment-message">{message}</div>}
     </form>
   );
