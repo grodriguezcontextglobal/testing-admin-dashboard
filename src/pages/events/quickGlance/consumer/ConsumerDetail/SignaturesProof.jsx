@@ -40,12 +40,12 @@ const SignaturesProof = ({ data }) => {
       key: "Document",
     },
     {
-      title: "Date",
+      title: "Acceptance Date",
       dataIndex: "Date",
       key: "Date",
     },
     {
-      title: "Agree",
+      title: "Acceptance",
       dataIndex: "Agree",
       key: "Agree",
       render: (agree) => (agree ? <CheckIcon stroke="green" /> : <CloseIcon stroke="red" />),
