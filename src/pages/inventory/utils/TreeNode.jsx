@@ -14,7 +14,7 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import "../style/viewtree.css";
-import ViewIcon from "../../../components/icons/ViewIcon";
+// import ViewIcon from "../../../components/icons/ViewIcon";
 
 const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
   // ... existing code ...
@@ -279,7 +279,7 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                       <EditIcon />
                     </Button>
                 )}
-                <GrayButtonComponent styles={{ padding:'2.5px !important', borderRadius:"50% !important"}} icon={<ViewIcon />} func={() => setOpenDetails(true)} />
+                {/* <GrayButtonComponent styles={{ padding:'2.5px !important', borderRadius:"50% !important"}} icon={<ViewIcon />} func={() => setOpenDetails(true)} /> */}
               </div>
             </Typography>
           </Button>
