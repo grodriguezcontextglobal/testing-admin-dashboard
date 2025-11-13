@@ -21,10 +21,26 @@ const CardForTreeView = (props) => {
     if (isLargeDevice) return "0 0 0 2rem";
     if (isExtraLargeDevice) return "0 0 0 2rem";
     return "0 0 0 2rem";
-  }
+  };
   return (
-    <Space align="start" size={[8, 16]} wrap style={{ maxWidth: "1400px", minWidth:"320px", width:"100%", padding: renderingBreakPoints() }}>
-      <TreeView id={`${elemId}`} key={elemId} data={props.data} />
+    <Space
+      align="start"
+      size={[8, 16]}
+      wrap
+      style={{
+        maxWidth: "1400px",
+        minWidth: "320px",
+        width: "100%",
+        padding: renderingBreakPoints(),
+      }}
+    >
+      <TreeView
+        id={`${elemId}`}
+        key={elemId}
+        data={props.data}
+        setTypePerLocationInfoModal={props.setTypePerLocationInfoModal}
+        setOpenDetails={props.setOpenDetails}
+      />
     </Space>
   );
 };
