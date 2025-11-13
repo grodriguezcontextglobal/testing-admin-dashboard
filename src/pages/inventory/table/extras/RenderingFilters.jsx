@@ -35,6 +35,8 @@ const RenderingFilters = ({
   setOpenAdvanceSearchModal,
   searchedResult,
   chosen,
+  setTypePerLocationInfoModal,
+  setOpenDetails,
 }) => {
   const dictionary = {
     Permanent: "Owned",
@@ -159,7 +161,7 @@ const RenderingFilters = ({
       3: "location",
       4: "ownership",
       5: "status",
-      6:"assignedToStaffMember"
+      6: "assignedToStaffMember",
     }),
     []
   );
@@ -167,8 +169,8 @@ const RenderingFilters = ({
     const base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
     if (Array.isArray(chosen) && chosen.length > 0) {
       // Apply all filters simultaneously
-      return base.filter(item => {
-        return chosen.every(filter => {
+      return base.filter((item) => {
+        return chosen.every((filter) => {
           const key = keyMap[filter.category];
           if (!key) return true; // Skip invalid filters
           return item?.[key] === filter.value;
@@ -202,12 +204,14 @@ const RenderingFilters = ({
       locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
-  
+
     // If a specific Location was chosen, filter the hierarchy to that node
-    const locationFilter = Array.isArray(chosen) ? chosen.find(filter => filter.category === 3) : null;
+    const locationFilter = Array.isArray(chosen)
+      ? chosen.find((filter) => filter.category === 3)
+      : null;
     if (locationFilter) {
       const target = locationFilter.value;
-  
+
       const findNode = (obj, name) => {
         if (!obj || typeof obj !== "object") return null;
         for (const [key, node] of Object.entries(obj)) {
@@ -221,10 +225,10 @@ const RenderingFilters = ({
         }
         return null;
       };
-  
+
       const filteredDirect = findNode(source, target);
       if (!filteredDirect) return source;
-  
+
       // When a location is directly chosen, also apply filtered counts so totals reflect other filters
       const resolveName = (item) => {
         const loc = item?.location;
@@ -274,18 +278,18 @@ const RenderingFilters = ({
       const withCounts = filterTree(filteredDirect);
       return Object.keys(withCounts).length ? withCounts : filteredDirect;
     }
-  
+
     // If searchedResult exists with location hierarchy, prefer it
     if (searchedResult?.main_location) {
       return searchedResult.main_location;
     }
-  
+
     // If there is a chosen filter or search text, derive locations from filteredList
     const shouldFilterByItems =
       (Array.isArray(chosen) && chosen.length > 0) ||
       !!searchItem ||
       !!searchedResult;
-  
+
     if (shouldFilterByItems) {
       const resolveName = (item) => {
         const loc = item?.location;
@@ -302,17 +306,17 @@ const RenderingFilters = ({
         if (typeof loc === "object" && loc?.location) return loc.location;
         return typeof loc === "string" ? loc : null;
       };
-  
+
       const counts = new Map();
       (filteredList || []).forEach((item) => {
         const name = resolveName(item);
         if (!name) return;
         counts.set(name, (counts.get(name) || 0) + 1);
       });
-  
+
       // If no counts were found, return empty to indicate no matching locations
       if (counts.size === 0) return {};
-  
+
       const filterTree = (treeObj) => {
         if (!treeObj || typeof treeObj !== "object") return {};
         const result = {};
@@ -337,11 +341,11 @@ const RenderingFilters = ({
         }
         return result;
       };
-  
+
       const withCounts = filterTree(source);
       return Object.keys(withCounts).length ? withCounts : {};
     }
-  
+
     // No chosen option or search: return all locations
     return source;
   };
@@ -375,7 +379,7 @@ const RenderingFilters = ({
       }
       return extractedSearchedData[sectionKey] || [];
     }
-    
+
     // Priority 2: If chosen filters exist, use filtered data
     if (Array.isArray(chosen) && chosen.length > 0) {
       switch (sectionKey) {
@@ -393,7 +397,7 @@ const RenderingFilters = ({
           return [];
       }
     }
-    
+
     // Priority 3: Fallback to all data
     if (sectionKey === "location_1") {
       return locationsAndSublocationsData();
@@ -407,12 +411,12 @@ const RenderingFilters = ({
     if (sectionKey === "location_1") {
       return totalUnitsAllLocations();
     }
-    
+
     // For other sections, calculate based on current data state
     if (searchedResult) {
       return extractedSearchedData[sectionKey]?.length || 0;
     }
-    
+
     if (chosen?.value != null && chosen?.category != null) {
       switch (sectionKey) {
         case "category_name":
@@ -427,7 +431,7 @@ const RenderingFilters = ({
           return 0;
       }
     }
-    
+
     return extractedData[sectionKey]?.length || 0;
   };
 
@@ -707,7 +711,7 @@ const RenderingFilters = ({
     );
   };
 
-    return (
+  return (
     <Grid key="rendering-filter-option-container" container>
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
         return (
@@ -803,7 +807,8 @@ const RenderingFilters = ({
                             route={`/inventory/${String(
                               item.routeTitle
                             ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                              (searchItem && searchItem) || (chosen.value && chosen.value)
+                              (searchItem && searchItem) ||
+                              (chosen.value && chosen.value)
                             }`}
                             style={{
                               width: "fit-content",
@@ -836,6 +841,8 @@ const RenderingFilters = ({
                     id={`${item.key}`}
                     key={item.key}
                     data={item.data}
+                    setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+                    setOpenDetails={setOpenDetails}
                   />
                 )}{" "}
               </Grid>
