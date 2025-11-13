@@ -1,8 +1,8 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message, Modal, Table } from "antd";
-import { useState } from "react";
+import { Button, message } from "antd";
+import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,25 +10,28 @@ import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../components/icons/EditIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import "../style/viewtree.css";
-// import ViewIcon from "../../../components/icons/ViewIcon";
 
-const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
-  // ... existing code ...
-  // Removed per-node message.useMessage hook to avoid effect-triggered re-render loops
-  // const [messageApi, contextHolder] = message.useMessage();
+const TreeNode = ({
+  nodeName,
+  nodeData,
+  path,
+  onUpdateLocation,
+  setTypePerLocationInfoModal,
+  setOpenDetails,
+}) => {
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState(nodeName);
-  const [openDetails, setOpenDetails] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  if (!nodeData) return null;
+  // if (!nodeData) return null;
 
   const { total, available, children, types } = nodeData;
 
@@ -142,58 +145,92 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
     return checking;
   };
 
-  // Modal component for displaying types
-  const TypesModal = () => {
-    const closeModal = () => {
-      setOpenDetails(false);
-    };
+  // Normalize types to table rows safely (supports array/object/empty)
+  const normalizeTypesToRows = (input) => {
+    const rows = [];
+    if (!input) return rows;
 
-    // Prepare data for the table
-    const tableData = types ? types.map((type, index) => ({
-      key: index,
-      type: type,
-      index: index + 1
-    })) : [];
+    if (Array.isArray(input)) {
+      if (input.length === 0) return rows;
+      // Array of strings -> count occurrences
+      if (typeof input[0] === "string") {
+        const counts = {};
+        for (const t of input) {
+          const key = String(t ?? "").trim();
+          if (!key) continue;
+          counts[key] = (counts[key] || 0) + 1;
+        }
+        let idx = 1;
+        for (const [type, qty] of Object.entries(counts)) {
+          rows.push({
+            key: `${type}-${idx}`,
+            type,
+            qty: Number(qty) || 0,
+            index: idx,
+          });
+          idx += 1;
+        }
+      } else if (typeof input[0] === "object") {
+        // Array of objects { type, qty } or similar
+        let idx = 1;
+        for (const item of input) {
+          const type = String(item?.type ?? item?.name ?? "").trim();
+          const qty =
+            Number(item?.qty ?? item?.quantity ?? item?.count ?? 0) || 0;
+          if (!type) continue;
+          rows.push({ key: `${type}-${idx}`, type, qty, index: idx });
+          idx += 1;
+        }
+      }
+    } else if (typeof input === "object") {
+      // Map of { typeName: qty }
+      let idx = 1;
+      for (const [typeName, quantity] of Object.entries(input)) {
+        const type = String(typeName ?? "").trim();
+        const qty = Number(quantity ?? 0) || 0;
+        if (!type) continue;
+        rows.push({ key: `${type}-${idx}`, type, qty, index: idx });
+        idx += 1;
+      }
+    }
+    return rows;
+  };
+  const rows = useMemo(() => normalizeTypesToRows(types), [types]);
+  const id_key = useId();
+  const columns = [
+    {
+      title: "#",
+      dataIndex: "index",
+      key: "index",
+      width: 60,
+    },
+    {
+      title: "Item Type",
+      dataIndex: "type",
+      key: "type",
+    },
+    {
+      title: "Qty",
+      dataIndex: "qty",
+      key: "qty",
+      width: 80,
+    },
+  ];
 
-    const columns = [
-      {
-        title: "#",
-        dataIndex: "index",
-        key: "index",
-        width: 60,
-      },
-      {
-        title: "Item Type",
-        dataIndex: "type",
-        key: "type",
-      },
-    ];
+  const safeSetTypePerLocationInfoModal =
+    typeof setTypePerLocationInfoModal === "function"
+      ? setTypePerLocationInfoModal
+      : null;
 
-    return (
-      <Modal
-        open={openDetails}
-        onCancel={closeModal}
-        footer={null}
-        width={600}
-        maskClosable={false}
-        title={`Item Types in ${nodeName} (${types?.length || 0} types)`}
-        style={{ zIndex: 30 }}
-      >
-        <Table
-          columns={columns}
-          dataSource={tableData}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} of ${total} items`,
-          }}
-          scroll={{ y: 400 }}
-          size="small"
-        />
-      </Modal>
-    );
+  const clickTypeLocationInfo = () => {
+    if (safeSetTypePerLocationInfoModal) {
+      safeSetTypePerLocationInfoModal({
+        rows,
+        id_key,
+        columns,
+        nodeName,
+      });
+    }
   };
 
   return (
@@ -266,20 +303,30 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                     />
                   </>
                 ) : (
-                    <Button
-                      style={{
-                        borderRadius: "25px",
-                        width: "fit-content",
-                        aspectRatio: "1/1",
-                        marginLeft: "5px",
-                      }}
-                      onClick={handleEdit}
-                      disabled={Number(user.role) > 0}
-                    >
-                      <EditIcon />
-                    </Button>
+                  <Button
+                    style={{
+                      borderRadius: "25px",
+                      width: "fit-content",
+                      aspectRatio: "1/1",
+                      marginLeft: "5px",
+                    }}
+                    onClick={handleEdit}
+                    disabled={Number(user.role) > 0}
+                  >
+                    <EditIcon />
+                  </Button>
                 )}
-                {/* <GrayButtonComponent styles={{ padding:'2.5px !important', borderRadius:"50% !important"}} icon={<ViewIcon />} func={() => setOpenDetails(true)} /> */}
+                <GrayButtonComponent
+                  styles={{
+                    padding: "2.5px !important",
+                    borderRadius: "50% !important",
+                  }}
+                  icon={<ViewIcon />}
+                  func={() => {
+                    clickTypeLocationInfo();
+                    setOpenDetails(true);
+                  }}
+                />
               </div>
             </Typography>
           </Button>
@@ -307,13 +354,12 @@ const TreeNode = ({ nodeName, nodeData, path, onUpdateLocation }) => {
                 nodeData={childData}
                 path={[...path, childName]}
                 onUpdateLocation={onUpdateLocation}
+                setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+                setOpenDetails={setOpenDetails}
               />
             ))}
         </div>
       )}
-      
-      {/* Render the Types Modal */}
-      <TypesModal />
     </div>
   );
 };
