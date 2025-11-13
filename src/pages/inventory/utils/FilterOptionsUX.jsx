@@ -1,27 +1,29 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
-import { useMemo, useCallback, memo } from "react";
+import { useMemo, useCallback, memo, useContext } from "react";
+import { FilterOptionsContext } from "../MainPage";
 
 const FilterOptionsUX = memo(function FilterOptionsUX({
-  filterOptions = {},
-  chosen,
+  // filterOptions = {},
+  // chosen,
   setChosen,
 }) {
+  const filterOptionsValues = useContext(FilterOptionsContext)
   // Helper: current value for a specific category
   const getCurrentValue = useCallback(
     (categoryIndex) => {
-      if (!Array.isArray(chosen)) return undefined;
-      const filter = chosen.find((item) => item.category === categoryIndex);
+      if (!Array.isArray(filterOptionsValues.chosen)) return undefined;
+      const filter = filterOptionsValues.chosen.find((item) => item.category === categoryIndex);
       return filter ? filter.value : undefined;
     },
-    [chosen]
+    [filterOptionsValues.chosen]
   );
 
   // Update chosen filters (guard against redundant updates)
   const updateChosenFilters = useCallback(
     (categoryIndex, value) => {
-      if (!Array.isArray(chosen)) {
+      if (!Array.isArray(filterOptionsValues.chosen)) {
         const nextChosen =
           value == null ? [] : [{ category: categoryIndex, value }];
         setChosen(nextChosen);
@@ -29,33 +31,33 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
       }
 
       if (value == null) {
-        const newChosen = chosen.filter(
+        const newChosen = filterOptionsValues.chosen.filter(
           (item) => item.category !== categoryIndex
         );
-        if (newChosen.length === chosen.length) return; // no change
+        if (newChosen.length === filterOptionsValues.chosen.length) return; // no change
         setChosen(newChosen);
       } else {
-        const existingIndex = chosen.findIndex(
+        const existingIndex = filterOptionsValues.chosen.findIndex(
           (item) => item.category === categoryIndex
         );
         if (existingIndex >= 0) {
-          if (chosen[existingIndex].value === value) return; // no change
-          const newChosen = [...chosen];
+          if (filterOptionsValues.chosen[existingIndex].value === value) return; // no change
+          const newChosen = [...filterOptionsValues.chosen];
           newChosen[existingIndex] = { category: categoryIndex, value };
           setChosen(newChosen);
         } else {
-          setChosen([...chosen, { category: categoryIndex, value }]);
+          setChosen([...filterOptionsValues.chosen, { category: categoryIndex, value }]);
         }
       }
     },
-    [chosen, setChosen]
+    [filterOptionsValues.chosen, setChosen]
   );
 
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
     return new Array(7).fill(null).map((_, index) => {
-      const opts = Array.isArray(filterOptions[index])
-        ? filterOptions[index]
+      const opts = Array.isArray(filterOptionsValues.filterOptions[index])
+        ? filterOptionsValues.filterOptions[index]
         : [];
       return opts.map((item) => {
         return {
@@ -78,7 +80,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
         };
       });
     });
-  }, [filterOptions]);
+  }, [filterOptionsValues.filterOptions]);
 
   return (
     <div
