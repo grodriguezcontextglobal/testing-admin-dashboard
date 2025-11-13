@@ -3,6 +3,7 @@ import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Divider, Spin } from "antd";
 import {
+  createContext,
   lazy,
   Suspense,
   useCallback,
@@ -36,9 +37,11 @@ import { Title } from "../../styles/global/Title";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
 import FilterOptionsUX from "./utils/FilterOptionsUX";
+import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
-
+export const SearchItemContext = createContext();
+export const FilterOptionsContext = createContext();
 const MainPage = () => {
   const [chosenOption, setChosenOption] = useState([]);
   const [searchedResult, setSearchedResult] = useState(null);
@@ -52,6 +55,9 @@ const MainPage = () => {
     5: [],
     6: [],
   });
+  const [openDetails, setOpenDetails] = useState(false);
+  const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
+    useState(null);
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
@@ -75,13 +81,7 @@ const MainPage = () => {
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const optionsUX = useMemo(
-    () => (
-      <FilterOptionsUX
-        filterOptions={dataFilterOptions}
-        chosen={chosenOption}
-        setChosen={setChosenOption}
-      />
-    ),
+    () => <FilterOptionsUX setChosen={setChosenOption} />,
     [chosenOption, dataFilterOptions]
   );
 
@@ -93,7 +93,7 @@ const MainPage = () => {
   useEffect(() => {
     setValue("searchItem", "");
     setRenderingData(false);
-    companyHasInventoryQuery.refetch();
+    // companyHasInventoryQuery.refetch();
   }, []);
 
   useEffect(() => {
@@ -157,10 +157,12 @@ const MainPage = () => {
         reference={null}
         refreshFn={refetchingQueriesFn}
         searchedResult={searchedResult}
-        searchItem={settingParamsForSearchResult}
+        // searchItem={settingParamsForSearchResult}
         setDataFilterOptions={setDataFilterOptions}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         total={getTotalToDisplay()}
+        setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+        setOpenDetails={setOpenDetails}
       />
     ),
     2: (
@@ -192,6 +194,10 @@ const MainPage = () => {
     }
   };
 
+  const closeTypePerLocationInfoModal = () => {
+    setOpenDetails(false);
+    return setTypePerLocationInfoModal(null);
+  }
   return (
     <Suspense
       fallback={
@@ -456,13 +462,15 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Divider />
-        {/* Ensure FilterOptionsUX occupies full width (12 columns) */}
-        {/* <FilterOptionsUX
-          filterOptions={dataFilterOptions}
-          chosen={chosenOption}
-          setChosen={setChosenOption}
-        /> */}
-        {optionsUX}{" "}
+        <FilterOptionsContext.Provider
+          value={{
+            filterOptions: dataFilterOptions,
+            chosen: chosenOption,
+            setChosenOption: setChosenOption,
+          }}
+        >
+          {optionsUX}
+        </FilterOptionsContext.Provider>
         <Grid
           display={"flex"}
           justifyContent={"center"}
@@ -480,12 +488,42 @@ const MainPage = () => {
             md={12}
             lg={12}
           >
-            {renderingOption[currentTab]}
+            <SearchItemContext.Provider
+              value={{
+                chosenOption,
+                companyHasInventoryQuery,
+                companyInventoryExisting: companyHasInventoryQuery.data,
+                dataFilterOptions,
+                date: null,
+                downloadDataReport: handleFilteredDataUpdate,
+                loadingState: setIsLoadingState,
+                openAdvanceSearchModal,
+                reference: null,
+                refreshFn: refetchingQueriesFn,
+                searchedResult: searchedResult,
+                searchItem: settingParamsForSearchResult,
+                setDataFilterOptions: setDataFilterOptions,
+                setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
+                total: getTotalToDisplay(),
+              }}
+            >
+              {renderingOption[currentTab]}
+            </SearchItemContext.Provider>
           </Grid>
         </Grid>
       </Grid>
       {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
       {renderingData && <Spin indicator={<Loading />} fullscreen={true} />}
+      {openDetails && (
+        <DisplayItemTypesPerLocationModal
+          id_key={typePerLocationInfoModal.id_key}
+          openDetails={openDetails}
+          closeModal={closeTypePerLocationInfoModal}
+          nodeName={typePerLocationInfoModal.nodeName}
+          rows={typePerLocationInfoModal.rows}
+          columns={typePerLocationInfoModal.columns}
+        />
+      )}
     </Suspense>
   );
 };
