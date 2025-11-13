@@ -3,14 +3,9 @@ import TreeNode from "./TreeNode";
 import "../style/viewtree.css";
 import { Grid } from "@mui/material";
 
-const TreeView = ({ data }) => {
+const TreeView = ({ data, setTypePerLocationInfoModal, setOpenDetails }) => {
   return (
-    <Grid
-      container
-      justifyContent={"center"}
-      alignContent={"center"}
-      gap={1}
-    >
+    <Grid container justifyContent={"center"} alignContent={"center"} gap={1}>
       {Object.entries(data).map(([location, details]) => (
         <Grid
           key={location}
@@ -26,6 +21,8 @@ const TreeView = ({ data }) => {
             nodeName={location}
             nodeData={details}
             path={[location]} // start path
+            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+            setOpenDetails={setOpenDetails}
           />
         </Grid>
       ))}
