@@ -8,6 +8,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
@@ -24,25 +25,29 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import "../style/details.css";
 import { dictionary } from "../utils/dicSelectedOptions";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
+import { SearchItemContext } from "../MainPage";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
 
 const ItemTable = ({
-  searchItem,
-  date,
-  loadingState,
+  // searchItem,
+  // date,
+  // loadingState,
   // reference,
-  openAdvanceSearchModal,
+  // openAdvanceSearchModal,
   setOpenAdvanceSearchModal,
   setDataFilterOptions,
-  chosen,
+  // chosen,
   downloadDataReport,
-  total,
-  searchedResult,
-  dataFilterOptions,
-  refreshFn,
+  // total,
+  // searchedResult,
+  // dataFilterOptions,
+  // refreshFn,
+  setTypePerLocationInfoModal,
+  setOpenDetails,
 }) => {
+  const searchValues = useContext(SearchItemContext);
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
   const [chosenConditionState, setChosenConditionState] = useState(0);
@@ -217,11 +222,11 @@ const ItemTable = ({
   );
 
   // Remove redundant calls; only mark loading done when data exists
-  useEffect(() => {
-    if (baseDataset.length > 0) {
-      loadingState(false);
-    }
-  }, [baseDataset.length, loadingState]);
+  // useEffect(() => {
+  //   if (baseDataset.length > 0) {
+  //     loadingState(false);
+  //   }
+  // }, [baseDataset.length]); // removed `loadingState` to avoid loops if parent recreates the setter
 
   // Filtering helpers now use baseDataset
   const filterOptionsBasedOnProps = (props) => {
@@ -230,47 +235,17 @@ const ItemTable = ({
   };
 
   useEffect(() => {
-    if (Array.isArray(chosen) && chosen.length > 0) {
+    if (
+      Array.isArray(searchValues.chosenOption) &&
+      searchValues.chosenOption.length > 0
+    ) {
       setChosenConditionState(2); // filter-by-props
-    } else if (date) {
+    } else if (searchValues.date) {
       setChosenConditionState(3); // date filter
     } else {
       setChosenConditionState(0); // default
     }
-  }, [chosen, date]);
-
-  // const filterByProps = () => {
-  //   if (!Array.isArray(chosen) || chosen.length === 0) {
-  //     return baseDataset;
-  //   }
-
-  //   const dicSelectedOptions = {
-  //     0: "brand",
-  //     1: "item_group",
-  //     2: "serial_number",
-  //     3: "location",
-  //     4: "ownership",
-  //     5: "condition",
-  //     6: "assignedToStaffMember",
-  //   };
-
-  //   // Apply all filters simultaneously
-  //   return baseDataset.filter((item) => {
-  //     return chosen.every((filter) => {
-  //       const propertyKey = dicSelectedOptions[filter.category];
-  //       if (!propertyKey) return true; // Skip invalid filters
-  //       return item?.[propertyKey] === filter.value;
-  //     });
-  //   });
-  // };
-
-  // const searchingData = () => {
-  //   return baseDataset.filter((item) =>
-  //     JSON.stringify(item)
-  //       .toLowerCase()
-  //       .includes(String(searchItem).toLowerCase())
-  //   );
-  // };
+  }, [searchValues.chosenOption, searchValues.date]);
 
   // Date filtering: keep existing behavior using legacy transformation,
   // since the event endpoint structure is different/unknown.
@@ -280,7 +255,7 @@ const ItemTable = ({
 
   // Keep search results in state; if no term, show all
   useEffect(() => {
-    const term = String(searchItem || "")
+    const term = String(searchValues.searchItem || "")
       .trim()
       .toLowerCase();
     if (term.length === 0) {
@@ -291,7 +266,7 @@ const ItemTable = ({
       JSON.stringify(item).toLowerCase().includes(term)
     );
     setSearchResult(filtered);
-  }, [searchItem, baseDataset]);
+  }, [searchValues.searchItem, baseDataset]);
 
   // Replace options + useCallback with a stable, memoized dataset
   const dataToDisplayMemo = useMemo(() => {
@@ -310,9 +285,13 @@ const ItemTable = ({
         5: "condition",
         6: "assignedToStaffMember",
       };
-      if (!Array.isArray(chosen) || chosen.length === 0) return baseDataset;
+      if (
+        !Array.isArray(searchValues.chosenOption) ||
+        searchValues.chosenOption.length === 0
+      )
+        return baseDataset;
       return baseDataset.filter((item) =>
-        chosen.every((filter) => {
+        searchValues.chosenOption.every((filter) => {
           const propertyKey = dicSelectedOptions[filter.category];
           if (filter.category === 6) {
             return item?.[propertyKey]?.includes(filter.value);
@@ -327,7 +306,7 @@ const ItemTable = ({
   }, [
     chosenConditionState,
     filterDataByDate,
-    chosen,
+    searchValues.chosenOption,
     baseDataset,
     searchResult,
   ]);
@@ -368,15 +347,24 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid display={chosen?.at(-1)?.category === 6 && "none"} item xs={12} sm={12} md={12} lg={12}>
+        <Grid
+          display={searchValues.chosenOption?.at(-1)?.category === 6 && "none"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
           <RenderingFilters
             dataToDisplay={dataToDisplay}
-            searchItem={searchItem}
+            searchItem={searchValues.searchItem}
             user={user}
-            openAdvanceSearchModal={openAdvanceSearchModal}
+            openAdvanceSearchModal={searchValues.openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-            searchedResult={searchedResult}
-            chosen={chosen}
+            searchedResult={searchValues.searchedResult}
+            chosen={searchValues.chosenOption}
+            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+            setOpenDetails={setOpenDetails}
           />
         </Grid>
         <Grid
@@ -425,7 +413,7 @@ const ItemTable = ({
                     padding: "0 0 0 0",
                   }}
                 >
-                  <RefreshButton propsFn={refreshFn} />
+                  <RefreshButton propsFn={searchValues.refreshFn} />
                 </div>
                 <div
                   style={{
@@ -458,22 +446,23 @@ const ItemTable = ({
             </Grid>
           </div>
         </Grid>
-        {total === 0 && (!searchItem || searchItem === "") && (
-          <BannerMsg
-            props={{
-              title: "Add new item",
-              message: `Add new devices to your inventory and assign categories and groups
+        {searchValues.searchedResult?.length === 0 &&
+          (!searchValues.searchItem || searchValues.searchItem === "") && (
+            <BannerMsg
+              props={{
+                title: "Add new item",
+                message: `Add new devices to your inventory and assign categories and groups
             for easier management. Devices in your inventory can be assigned to
             staff or consumers permanently or temporarily. You can also mark
             devices with different statuses for condition and location. Include
             a device value to track deposits and fees.`,
-              link: "/inventory/new-item",
-              button: BlueButton,
-              paragraphStyle: BlueButtonText,
-              paragraphText: "Add new item",
-            }}
-          />
-        )}
+                link: "/inventory/new-item",
+                button: BlueButton,
+                paragraphStyle: BlueButtonText,
+                paragraphText: "Add new item",
+              }}
+            />
+          )}
       </Grid>
     </Suspense>
   );
