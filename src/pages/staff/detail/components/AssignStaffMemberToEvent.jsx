@@ -60,7 +60,7 @@ const AssignStaffMemberToEvent = () => {
   const handleEventInfo = async (data) => {
     const dicRole = {
       adminUser: "Administrator",
-      headsetAttendees: "Assistant",
+      headsetAttendees: "headsetAttendees",
     };
     if (
       !JSON.parse(data.event).staff[data.role].some(
