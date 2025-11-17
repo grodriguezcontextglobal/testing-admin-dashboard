@@ -133,7 +133,7 @@ const ReviewAndSubmitEvent = () => {
       adminUser:
         checkAndAddRootAdministratorAsAdminStaff()["Administrator"] ?? [],
       headsetAttendees:
-        checkAndAddRootAdministratorAsAdminStaff()["HeadsetAttendees"] ?? [],
+        checkAndAddRootAdministratorAsAdminStaff()["headsetAttendees"] ?? [],
     };
     return profileStaffList;
   };
