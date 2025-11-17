@@ -438,7 +438,7 @@ const AddNewBulkItems = () => {
     } else {
       setValue("item_group", newReference);
     }
-    if (newReference.length === 0) {
+    if (newReference?.length === 0) {
       setValue("item_group", "");
       setValue("photo", []);
       setValue("category_name", "");
