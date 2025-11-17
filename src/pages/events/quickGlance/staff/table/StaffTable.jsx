@@ -45,7 +45,7 @@ const StaffTable = ({ searching }) => {
             online: false,
             role:
               data.staff.role !== "Administrator"
-                ? "Assistant"
+                ? ("Assistant" || "headsetAttendees")
                 : data.staff.role,
             email: data.staff.email,
             phone: "000-000-0000",
