@@ -1,9 +1,8 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "antd";
-// import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { createContext, useState, useMemo } from "react";
+import { createContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
@@ -15,16 +14,17 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
-import CardForTreeView from "../../utils/CardForTreeView";
-import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
-// import { organizeInventoryBySubLocation } from "../../utils/OrganizeInventoryData";
-import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
-import AdvanceSearchModal from "./AdvanceSearchModal";
 import {
   displayTotalDevicesAndTotalAvailablePerLocation,
   extractDataForRendering,
   sortingByParameters,
 } from "../../utils/actions/functions";
+import useStaffMemberRedirection from "../../utils/actions/useStaffMemberRedirection";
+import CardForTreeView from "../../utils/CardForTreeView";
+import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
+import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
+import StaffMemberWrapper from "../../utils/staffmemberWrapper";
+import AdvanceSearchModal from "./AdvanceSearchModal";
 export const AdvanceSearchContext = createContext();
 
 const RenderingFilters = ({
@@ -72,17 +72,19 @@ const RenderingFilters = ({
   const extractedSearchedData = extractDataForRendering(searchedResult || {});
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
+  const [selectedStaffEmail, setSelectedStaffEmail] = useState(null);
+  useStaffMemberRedirection({ staff: selectedStaffEmail });
   const [companyStructure, setCompanyStructure] = useState(() => {
     if (user.companyData.structure) {
       return user.companyData.structure;
     }
-
     return {
       location_1: "Locations|Sub-locations",
       category_name: "Category",
       item_group: "Groups",
       brand: "Brands",
       ownership: "Ownership",
+      assignedToStaffMember: "Staff Members",
     };
   });
   const handleEditClick = (sectionKey) => {
@@ -165,20 +167,74 @@ const RenderingFilters = ({
     }),
     []
   );
+
   const filteredList = useMemo(() => {
     const base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
     if (Array.isArray(chosen) && chosen.length > 0) {
-      // Apply all filters simultaneously
       return base.filter((item) => {
         return chosen.every((filter) => {
           const key = keyMap[filter.category];
-          if (!key) return true; // Skip invalid filters
+          if (!key) return true;
           return item?.[key] === filter.value;
         });
       });
     }
     return base;
   }, [dataToDisplay, chosen, keyMap]);
+
+  // Normalized list for staff assignment grouping
+  const normalizedForStaff = useMemo(() => {
+    const employeesSource = user?.companyData?.employees;
+    const employeesArray = Array.isArray(employeesSource)
+      ? employeesSource
+      : employeesSource
+      ? Object.values(employeesSource)
+      : [];
+
+    const validByEmail = new Map(
+      employeesArray
+        .filter(
+          (e) => e?.user && typeof e.user === "string" && e.user.includes("@")
+        )
+        .map((e) => [e.user.trim(), e])
+    );
+
+    const toToken = (raw) => {
+      const t = String(raw || "").trim();
+      if (!t || t.toLowerCase() === "null") return null;
+
+      const segments = t
+        .split("/")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const candidateEmail = segments[1]?.includes("@")
+        ? segments[1]
+        : segments[0]?.includes("@")
+        ? segments[0]
+        : null;
+
+      if (!candidateEmail) return null;
+      const emp = validByEmail.get(candidateEmail);
+      if (!emp) return null;
+
+      const first = emp?.firstName || "";
+      const last = emp?.lastName || "";
+      if (!first || !last) return null;
+
+      return `${first} ${last} / ${candidateEmail}`;
+    };
+
+    return (filteredList || [])
+      .map((item) => {
+        const source =
+          typeof normalizeStaffAssignment === "function"
+            ? normalizeStaffAssignment(item)
+            : item.assignedToStaffMember;
+        const token = toToken(source);
+        return token ? { ...item, assignedToStaffMember: token } : null;
+      })
+      .filter(Boolean);
+  }, [filteredList, user?.companyData?.employees]);
 
   // Derived groupings from filtered or full list
   const byCategory = useMemo(
@@ -196,6 +252,14 @@ const RenderingFilters = ({
   const byOwnership = useMemo(
     () => sortingByParameters({ props: "ownership", data: filteredList }),
     [filteredList]
+  );
+  const byAssignedStaff = useMemo(
+    () =>
+      sortingByParameters({
+        props: "assignedToStaffMember",
+        data: normalizedForStaff,
+      }),
+    [normalizedForStaff]
   );
 
   const locationsAndSublocationsData = () => {
@@ -393,6 +457,8 @@ const RenderingFilters = ({
           return byBrand;
         case "ownership":
           return byOwnership;
+        case "assignedToStaffMember":
+          return byAssignedStaff;
         default:
           return [];
       }
@@ -401,6 +467,9 @@ const RenderingFilters = ({
     // Priority 3: Fallback to all data
     if (sectionKey === "location_1") {
       return locationsAndSublocationsData();
+    }
+    if (sectionKey === "assignedToStaffMember") {
+      return byAssignedStaff; // always use normalized grouping for staff
     }
     return extractedData[sectionKey] || [];
   };
@@ -427,11 +496,16 @@ const RenderingFilters = ({
           return byBrand.length;
         case "ownership":
           return byOwnership.length;
+        case "assignedToStaffMember":
+          return byAssignedStaff.length;
         default:
           return 0;
       }
     }
 
+    if (sectionKey === "assignedToStaffMember") {
+      return byAssignedStaff.length;
+    }
     return extractedData[sectionKey]?.length || 0;
   };
 
@@ -478,13 +552,7 @@ const RenderingFilters = ({
       tree: true,
       identifierRender: 1,
       show: true,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
+      columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
       key: "category_name",
@@ -528,13 +596,7 @@ const RenderingFilters = ({
       tree: false,
       identifierRender: 0,
       show: true,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
+      columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
       key: "item_group",
@@ -578,13 +640,7 @@ const RenderingFilters = ({
       tree: false,
       identifierRender: 0,
       show: true,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
+      columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
       key: "brand",
@@ -626,13 +682,7 @@ const RenderingFilters = ({
       tree: false,
       identifierRender: 0,
       show: true,
-      columns: [
-        {
-          title: "Name",
-          dataIndex: "name",
-          key: "name",
-        },
-      ],
+      columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
       key: "ownership",
@@ -676,11 +726,68 @@ const RenderingFilters = ({
       tree: false,
       identifierRender: 0,
       show: true,
+      columns: [{ title: "Name", dataIndex: "name", key: "name" }],
+    },
+    {
+      key: "assignedToStaffMember",
+      title: (
+        <>
+          {editingSection === "assignedToStaffMember" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <OutlinedInput
+                value={sectionName}
+                onChange={(e) => setSectionName(e.target.value)}
+                style={{ ...OutlinedInputStyle, width: "200px" }}
+              />
+              <Button onClick={() => handleNameUpdate("assignedToStaffMember")}>
+                Save
+              </Button>
+              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+            </div>
+          ) : (
+            <>
+              {companyStructure["assignedToStaffMember"] ??
+                "Staff Members with assigned devices"}
+              &nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("assignedToStaffMember")}
+                disabled={Number(user.role) > 0}
+              >
+                <EditIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
+      data: getDataForSection("assignedToStaffMember"),
+      totalUnits: getTotalUnitsForSection("assignedToStaffMember"),
+      open: true,
+      routeTitle: "staff",
+      renderMoreOptions: false,
+      tree: false,
+      identifierRender: 0,
+      show: true,
       columns: [
         {
           title: "Name",
           dataIndex: "name",
           key: "name",
+          render: (text) => {
+            if (!text || typeof text !== "string") return "";
+            const parts = text
+              .split("/")
+              .map((p) => p.trim())
+              .filter(Boolean);
+            if (parts.length >= 2) {
+              return `${parts[0]} / ${parts[1]}`;
+            }
+            return text;
+          },
         },
       ],
     },
@@ -863,13 +970,19 @@ const RenderingFilters = ({
                 md={12}
                 lg={12}
               >
-                {!item.tree && (
-                  <RenderingMoreThanTreeviewElements
-                    item={item}
-                    dictionary={dictionary}
-                    searchItem={searchItem}
-                  />
-                )}{" "}
+                {!item.tree &&
+                  (item.key === "assignedToStaffMember" ? (
+                    <StaffMemberWrapper
+                      item={item}
+                      setSelectedStaffEmail={setSelectedStaffEmail}
+                    />
+                  ) : (
+                    <RenderingMoreThanTreeviewElements
+                      item={item}
+                      dictionary={dictionary}
+                      searchItem={searchItem}
+                    />
+                  ))}{" "}
               </Grid>
             </details>
           </Grid>
@@ -910,4 +1023,25 @@ export default RenderingFilters;
 RenderingFilters.propType = {
   user: PropTypes.object,
   dataToDisplay: PropTypes.array,
+};
+
+const extractStaffToken = (raw) => {
+  if (!raw || typeof raw !== "string") return null;
+  // Split by '/', trim, drop empty parts
+  const parts = raw
+    .split("/")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  // Expect at least name and email; ignore trailing date or extras
+  if (parts.length >= 2) {
+    const name = parts[0];
+    const email = parts[1];
+    return `${name} / ${email}`;
+  }
+  return null;
+};
+
+const normalizeStaffAssignment = (item) => {
+  const value = item?.assignedToStaffMember || item?.usage;
+  return extractStaffToken(value);
 };
