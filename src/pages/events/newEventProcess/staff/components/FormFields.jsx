@@ -8,24 +8,25 @@ import {
   Typography,
 } from "@mui/material";
 import { Card, Space } from "antd";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import { ProfileIcon } from "../../../../../components/icons/ProfileIcon";
 import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import { dicStaff } from "./dictionary";
 
 const FormFields = ({
+  // staff,
+  // subscription,
   addNewMember,
   adminStaff,
   cardBackgroundStyles,
   checkAdminSpots,
   checkAssistantsSpots,
   companyEmployees,
+  continueButton,
   currentRole, // NEW: receive current role
   handleDeleteMember,
   handleEventInfo,
@@ -34,12 +35,10 @@ const FormFields = ({
   headsetAttendeesStaff,
   isAddingNewMember,
   isEmployeeAlreadyAssigned,
-  navigate,
+  // navigate,
   onSelectEmployee,
   register,
   selectedEmployee,
-  staff,
-  subscription,
   tagStyles,
 }) => {
   return (
@@ -111,17 +110,19 @@ const FormFields = ({
               displayEmpty // NEW: show placeholder when empty
               renderValue={
                 (selected) =>
-                  selected && selected.length > 0 ? dicStaff[selected] : "Select role" // NEW: UX placeholder
+                  selected && selected.length > 0
+                    ? dicStaff[selected]
+                    : "Select role" // NEW: UX placeholder
               }
             >
               <MenuItem value="" disabled>
                 <Typography>Select role</Typography>
               </MenuItem>
-              {checkAdminSpots() === subscription?.adminUser ? null : (
-                <MenuItem value={"adminUser"}>
+              {/* {checkAdminSpots() === subscription?.adminUser ? null : ( */}
+                <MenuItem value={"Administrator"}>
                   <Typography>Administrator</Typography>
                 </MenuItem>
-              )}
+              {/* )} */}
               <MenuItem value={"headsetAttendees"}>
                 <Typography>Assistant</Typography>
               </MenuItem>
@@ -168,6 +169,15 @@ const FormFields = ({
             placeholder="Email"
             fullWidth
             disabled={!!selectedEmployee && !isAddingNewMember}
+          />
+        </Grid>
+        <Grid display={"flex"} justifyContent={"flex-end"} item xs={12} sm={12} md={12} lg={12}>
+          <LightBlueButtonComponent
+            title={"Save and add more staff"}
+            buttonType="button"
+            func={(e) => addNewMember(e)}
+            styles={{ width: "50%", margin: "0.5rem 0" }}
+            icon={<RectangleBluePlusIcon />}
           />
         </Grid>
       </Grid>
@@ -301,19 +311,12 @@ const FormFields = ({
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-start",
+          justifyContent: "flex-end",
           gap: "1rem",
           margin: "1rem 0",
         }}
       >
-        <LightBlueButtonComponent
-          title={"Save and add more staff"}
-          buttonType="button"
-          func={(e) => addNewMember(e)}
-          styles={{ width: "50%" }}
-          icon={<RectangleBluePlusIcon />}
-        />
-        <BlueButtonComponent
+        {/* <BlueButtonComponent
           title={
             staff?.adminUser.length > 0
               ? "Save changes to continue"
@@ -322,12 +325,12 @@ const FormFields = ({
           buttonType="submit"
           styles={{ width: "50%" }}
           icon={<WhiteCirclePlusIcon />}
-        />
+        /> */}
         <GrayButtonComponent
           title="Continue"
           buttonType="button"
-          styles={{ width: "50%" }}
-          func={() => navigate("/create-event-page/document-detail")}
+          styles={{ width: "100%" }}
+          func={continueButton}
         />
       </div>
     </form>

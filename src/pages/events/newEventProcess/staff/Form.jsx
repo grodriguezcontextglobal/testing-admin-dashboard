@@ -100,7 +100,7 @@ const Form = () => {
             firstName: selectedEmployee.firstName,
             lastName: selectedEmployee.lastName,
             email: selectedEmployee.user || "", // schema email
-            role: watch("role") || "HeadsetAttendees",
+            role: watch("role") || "HeadsetAttendees" || "headsetAttendees",
           }
         : {
             firstName: watch("firstName"),
@@ -234,6 +234,14 @@ const Form = () => {
     }
   };
 
+  const continueButton = async () => {
+    const format = {
+      adminUser: adminStaff,
+      headsetAttendees: headsetAttendeesStaff,
+    };
+    dispatch(onAddEventStaff(format));
+    return navigate("/create-event-page/document-detail");
+  };
   const tagStyles = {
     ...CenteringGrid,
     borderRadius: "8px",
@@ -288,8 +296,9 @@ const Form = () => {
           isAddingNewMember={isAddingNewMember}
           onSelectEmployee={onSelectEmployee}
           isEmployeeAlreadyAssigned={isEmployeeAlreadyAssigned}
-          currentRole={watch("role")}  // NEW: bind current role to child
+          currentRole={watch("role")} // NEW: bind current role to child
           navigate={navigate}
+          continueButton={continueButton}
         />
       </Grid>
     </Grid>
