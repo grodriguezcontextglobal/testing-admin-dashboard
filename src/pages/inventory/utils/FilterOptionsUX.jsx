@@ -13,11 +13,11 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
   // Helper: current value for a specific category
   const getCurrentValue = useCallback(
     (categoryIndex) => {
-      if (!Array.isArray(filterOptionsValues.chosen)) return undefined;
-      const filter = filterOptionsValues.chosen.find((item) => item.category === categoryIndex);
+      if (!Array.isArray(filterOptionsValues?.chosen)) return undefined;
+      const filter = filterOptionsValues?.chosen?.find((item) => item.category === categoryIndex);
       return filter ? filter.value : undefined;
     },
-    [filterOptionsValues.chosen]
+    [filterOptionsValues?.chosen]
   );
 
   // Update chosen filters (guard against redundant updates)
