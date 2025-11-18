@@ -114,16 +114,6 @@ const MainBody = ({
               removeItemSelected={removeItemSelected}
             />
           </Grid>
-          {/* other services component */}
-          {eventInfoDetail.merchant && (
-            <Services
-              handleExtraService={handleExtraService}
-              extraServiceAdded={extraServiceAdded}
-              removeServiceAdded={removeServiceAdded}
-              checkFilledFields={filledFields}
-              setValue={setValue}
-            />
-          )}
         </>
       )}{" "}
       <InputLabel
@@ -140,7 +130,7 @@ const MainBody = ({
           style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
           color="var(--gray600)"
         >
-          Generate a new inventory for company
+          Add new inventory for company
         </Typography>
       </InputLabel>
       <Typography
@@ -180,6 +170,16 @@ const MainBody = ({
           setSelectedItem={setSelectedItem}
           setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
           eventInfoDetail={eventInfoDetail}
+        />
+      )}
+      {/* other services component */}
+      {eventInfoDetail.merchant && (
+        <Services
+          handleExtraService={handleExtraService}
+          extraServiceAdded={extraServiceAdded}
+          removeServiceAdded={removeServiceAdded}
+          checkFilledFields={filledFields}
+          setValue={setValue}
         />
       )}
       <Grid
