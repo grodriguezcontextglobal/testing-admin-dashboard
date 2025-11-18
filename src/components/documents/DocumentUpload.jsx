@@ -128,10 +128,10 @@ const DocumentUpload = ({activeTab, refetch}) => {
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <Form.Item label="Trigger Action" name="trigger_action">
+            <Form.Item label="Uses for" name="trigger_action">
               <Select>
-                <Select.Option value="onboarding">Onboarding</Select.Option>
-                <Select.Option value="annual">Annual</Select.Option>
+                <Select.Option value="onboarding">Staff</Select.Option>
+                {/* <Select.Option value="annual">Annual</Select.Option> */}
                 <Select.Option value="event">Event</Select.Option>
               </Select>
             </Form.Item>
