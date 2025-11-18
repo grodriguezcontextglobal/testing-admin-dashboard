@@ -266,19 +266,20 @@ const ReviewAndSubmitEvent = () => {
         container
       >
         {contextHolder}
-        <Grid
+        {/* <Grid
           display={"flex"}
           flexDirection={"column"}
           justifyContent={"flex-start"}
           alignItems={"stretch"}
+          border={"0.1px solid #000"}
           className={`${loadingStatus ? "blur-container" : ""}`}
-          gap={2}
+          // gap={2}
           item
           xs={12}
           sm={12}
           md={12}
           lg={12}
-        >
+        > */}
           <InputLabel style={{ width: "100%" }}>
             <Typography
               textTransform={"none"}
@@ -290,7 +291,7 @@ const ReviewAndSubmitEvent = () => {
               }}
               alignSelf={"stretch"}
             >
-              Review all the information below
+              Review all the event information below
             </Typography>
           </InputLabel>
           <Event />
@@ -317,7 +318,7 @@ const ReviewAndSubmitEvent = () => {
             }}
           />
           {loadingStatus && <Spin indicator={<Loading />} fullscreen />}
-        </Grid>
+        {/* </Grid> */}
         {loadingStatus && (
           <ModalCreatingEventInProgress openEndingEventModal={loadingStatus} />
         )}
