@@ -1,6 +1,7 @@
+import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Select, Table, Tabs, Tooltip } from "antd";
+import { message, Table, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,29 +9,33 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import DocumentUpload from "../../../../components/documents/DocumentUpload";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
 
 const FormDocuments = () => {
   // eslint-disable-next-line no-unused-vars
-  const { eventInfoDetail } = useSelector(
-    (state) => state.event
-  );
-  // console.log(eventSettingUpProcess);
+  const { eventInfoDetail } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
-  const [activeTab, setActiveTab] = useState(1);
-  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  // const [activeTab, setActiveTab] = useState(1);
+  // const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [dataToDisplay, setDataToDisplay] = useState(
     eventInfoDetail.legal_documents_list || []
   );
+  const [activeTab, setActiveTab] = useState("1");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // Fetch available documents
-  const { data: availableDocuments, isLoading: loadingAvailable } = useQuery({
+  const {
+    data: availableDocuments,
+    isLoading: loadingAvailable,
+    refetch,
+  } = useQuery({
     queryKey: ["available-documents"],
     queryFn: () =>
       devitrakApi.get(`/document/?company_id=${user.companyData.id}`),
+    enabled: !!user.companyData.id,
   });
 
   // Initialize dataToDisplay with existing documents from store
@@ -40,41 +45,16 @@ const FormDocuments = () => {
     }
   }, [eventInfoDetail.legal_documents_list]);
 
+  // Helper: docs not yet assigned
+  const unassignedDocs =
+    availableDocuments?.data?.documents?.filter(
+      (doc) => !dataToDisplay.some((assigned) => assigned.id === doc._id)
+    ) || [];
+
   const handleRemoveDocument = (documentId) => {
     const updatedList = dataToDisplay.filter((doc) => doc.id !== documentId);
     setDataToDisplay(updatedList);
     message.success("Document removed successfully");
-  };
-
-  const handleAssignDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      message.warning("Please select at least one document");
-      return;
-    }
-
-    // Get full document objects for selected IDs
-    const newDocuments = selectedDocuments.map((_id) => {
-      const doc = availableDocuments.data.documents.find((d) => d._id === _id);
-      return {
-        id: doc._id,
-        title: doc.title,
-        view_url: doc.document_url,
-      };
-    });
-
-    // Combine existing and new documents, avoiding duplicates
-    const updatedList = [
-      ...dataToDisplay,
-      ...newDocuments.filter(
-        (newDoc) =>
-          !dataToDisplay.some((existingDoc) => existingDoc.id === newDoc.id)
-      ),
-    ];
-
-    setDataToDisplay(updatedList);
-    setSelectedDocuments([]); // Clear selection after assignment
-    setActiveTab(0); // Switch to assigned documents tab
-    message.success(`${newDocuments.length} document(s) assigned successfully`);
   };
 
   const downloadDocument = async (id) => {
@@ -93,17 +73,115 @@ const FormDocuments = () => {
     }
   };
 
+  // Drag-and-drop item: available document
+  const DraggableDocument = ({ doc }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } =
+      useDraggable({
+        id: doc._id,
+      });
+
+    const style = {
+      transform: transform
+        ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+        : undefined,
+      background: isDragging ? "#e0f2fe" : "#f9fafb",
+      border: "1px solid #e5e7eb",
+      borderRadius: "6px",
+      padding: "10px",
+      cursor: "grab",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...listeners}
+        {...attributes}
+        title="Drag to assign"
+      >
+        <span style={{ marginRight: "8px" }}>{doc.title}</span>
+        <span style={{ fontSize: "12px", color: "#6b7280" }}>{doc._id}</span>
+      </div>
+    );
+  };
+
+  // Drop zone: assigned list
+  const AssignedDropZone = ({ children }) => {
+    const { isOver, setNodeRef } = useDroppable({
+      id: "assigned-dropzone",
+    });
+    return (
+      <Box
+        ref={setNodeRef}
+        sx={{
+          border: `2px dashed ${isOver ? "#2563eb" : "#cbd5e1"}`,
+          backgroundColor: isOver ? "#eff6ff" : "#fafafa",
+          transition: "all 160ms ease",
+          borderRadius: "8px",
+          padding: "12px",
+          minHeight: "260px",
+        }}
+      >
+        {children}
+      </Box>
+    );
+  };
+
+  // Handle drop to assign
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || over.id !== "assigned-dropzone") return;
+
+    const droppedId = active.id;
+    const doc = availableDocuments?.data?.documents?.find(
+      (d) => d._id === droppedId
+    );
+    if (!doc) {
+      message.error("Document not found");
+      return;
+    }
+    const alreadyAssigned = dataToDisplay.some((d) => d.id === doc._id);
+    if (alreadyAssigned) {
+      message.info("Document already assigned");
+      return;
+    }
+    const newDoc = {
+      id: doc._id,
+      title: doc.title,
+      view_url: doc.document_url,
+    };
+    setDataToDisplay((prev) => [...prev, newDoc]);
+    message.success(`"${doc.title}" assigned successfully`);
+  };
+
   const assignedColumns = [
-    {
-      title: "Document ID",
-      dataIndex: "id",
-      key: "id",
-    },
     {
       title: "Document Name",
       dataIndex: "title",
       key: "title",
+      width: "100%",
     },
+    {
+      title: "Document ID",
+      dataIndex: "id",
+      key: "id",
+      render: (id) => (
+        <span
+          style={{
+            width: "100%",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+          }}
+        >
+          {id}
+        </span>
+      ),
+    },
+
     {
       title: "Actions",
       key: "actions",
@@ -123,28 +201,6 @@ const FormDocuments = () => {
       ),
     },
   ];
-
-  const items = [
-    {
-      label: "Add Documents",
-      key: "1",
-    },
-    {
-      label: "Added Documents",
-      key: "0",
-    },
-  ];
-
-  // Filter out already assigned documents from the select options
-  const availableOptions =
-    availableDocuments?.data?.documents
-      ?.filter(
-        (doc) => !dataToDisplay.some((assigned) => assigned.id === doc._id)
-      )
-      ?.map((doc) => ({
-        label: doc.title,
-        value: doc._id,
-      })) || [];
 
   const nextStep = () => {
     // Update the store with all assigned documents
@@ -186,59 +242,82 @@ const FormDocuments = () => {
       </div>
     );
   };
-  
+
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-        <Tabs
-          activeKey={activeTab.toString()}
-          onChange={(key) => {
-            setActiveTab(Number(key));
+      <Tooltip title="Drag a document from the left and drop it into the right panel to assign it to this event.">
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>
+          Available documents (drag) → Assigned/added documents (drop):{" "}
+          <QuestionIcon />
+        </Typography>
+      </Tooltip>
+      <DndContext onDragEnd={handleDragEnd}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 2,
+            alignItems: "start",
           }}
-          items={items}
-        />
-      </Box>
-
-      {activeTab === 0 ? (
-        // Assigned Documents Tab
-        <Box>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Assigned Documents ({dataToDisplay.length})
-          </Typography>
-          <Table
-            columns={assignedColumns}
-            dataSource={dataToDisplay || []}
-            rowKey="id"
-            pagination={false}
-          />
-          {uxNavigation()}
-        </Box>
-      ) : (
-        <Box>
-          <Tooltip title="All documents assigned to this event are related to device assignment policies, event policies, and privacy policies that help the company be released from liability. All documents must be uploaded to the company's document library before they can be assigned to an event.">
-            <Typography variant="subtitle1" sx={{ mb: 2 }}>
-              Select documents to assign to this event: <QuestionIcon />
+        >
+          {/* Available documents (draggable list) */}
+          <Box
+            sx={{
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              padding: "12px",
+              minHeight: "260px",
+              backgroundColor: "#fff",
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Available documents ({unassignedDocs.length})
             </Typography>
-          </Tooltip>
-          <Select
-            mode="multiple"
-            style={{ width: "100%", marginBottom: "1rem" }}
-            placeholder="Select documents to assign"
-            value={selectedDocuments}
-            onChange={setSelectedDocuments}
-            loading={loadingAvailable}
-            options={availableOptions}
-          />
-          <BlueButtonComponent
-            title={`Assign Selected Documents (${selectedDocuments.length})`}
-            styles={{ width: "100%", marginBottom: "1rem" }}
-            func={handleAssignDocuments}
-            loadingState={false}
-            disabled={selectedDocuments.length === 0}
-          />
-          {uxNavigation()}
+            <Box sx={{ display: "grid", gap: 1 }}>
+              {loadingAvailable ? (
+                <Typography>Loading...</Typography>
+              ) : unassignedDocs.length === 0 ? (
+                <Typography>No documents available</Typography>
+              ) : (
+                unassignedDocs.map((doc) => (
+                  <DraggableDocument key={doc._id} doc={doc} />
+                ))
+              )}
+            </Box>
+          </Box>
+
+          {/* Drop zone + assigned preview */}
+          <AssignedDropZone>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Drop here to assign ({dataToDisplay.length})
+            </Typography>
+            <Table
+              size="small"
+              columns={assignedColumns}
+              dataSource={dataToDisplay || []}
+              rowKey="id"
+              pagination={false}
+            />
+          </AssignedDropZone>
         </Box>
+      </DndContext>
+      {activeTab === "1" ? (
+        <BlueButtonComponent
+          title="Create new Document"
+          func={() => setActiveTab("2")}
+          styles={{ width: "100%", margin: "1rem 0" }}
+        />
+      ) : (
+        <GrayButtonComponent
+          title="Back to assigned documents"
+          func={() => setActiveTab("1")}
+          styles={{ width: "100%", margin: "1rem 0" }}
+        />
+      )}{" "}
+      {activeTab === "2" && (
+        <DocumentUpload activeTab={setActiveTab} refetch={refetch} />
       )}
+      {uxNavigation()}
     </Box>
   );
 };
