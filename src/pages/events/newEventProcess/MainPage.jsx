@@ -102,7 +102,7 @@ const MainPage = () => {
             display={"flex"}
             justifyContent={"flex-start"}
             alignItems={"center"}
-            gap={"10px"}
+            gap={"20px"}
             item
             xs={12}
             sm={12}
