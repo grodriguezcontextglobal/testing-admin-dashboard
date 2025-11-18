@@ -71,11 +71,11 @@ const PhoneNumberContact = ({
           }}
         >
           <BlueButtonComponent
-            title={isMobile ? "Add" : "Add phone number"}
+            title={isMobile ? "Add" : "Click and Add phone number"}
             buttonType="button"
             func={() => addingPhoneNumber()}
             disabled={contactPhoneNumber === ""}
-            styles={{ width: "fit-content" }}
+            styles={{ width: "100%" }}
             icon={<WhiteCirclePlusIcon />}
           />
         </div>
