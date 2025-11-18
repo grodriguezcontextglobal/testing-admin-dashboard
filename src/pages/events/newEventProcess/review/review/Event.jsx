@@ -78,7 +78,7 @@ const Event = () => {
           }}
         >
           <BlueButtonComponent
-          title={`Document`}
+          title={`View`}
           func={() => downloadDocument(record.id)}
           loadingState={false}
           />{" "}
