@@ -1,20 +1,18 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Modal, Table } from "antd";
+import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import Loading from "../../../../../../../components/animation/Loading";
+import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
 import { DangerButton } from "../../../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
 import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
-import { groupBy } from "lodash";
-import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
@@ -48,9 +46,9 @@ const ModalAddingDeviceFromSearchbar = () => {
     const controller = new AbortController();
     // findingAssignedInPaymentIntentQuery.refetch();
     const grouping = groupBy(stripeTransactionsSavedQuery, "paymentIntent");
-    if(grouping[paymentIntentSelected]){
+    if (grouping[paymentIntentSelected]) {
       setTransactionInformation(grouping[paymentIntentSelected]?.[0]);
-    }else {
+    } else {
       setTransactionInformation(null);
     }
     return () => {
@@ -285,8 +283,22 @@ const ModalAddingDeviceFromSearchbar = () => {
             md={12}
             lg={12}
           >
-            <BlueButtonComponent title={"Done"} />
-            <Button
+            <BlueButtonComponent
+              title={"Assigned and Save"}
+              func={() => closeModal()}
+              style={{
+                display:
+                  foundTransactionAndDevicesAssigned()?.length ===
+                  paymentIntentDetailSelected?.device
+                    ? "flex"
+                    : "none",
+              }}
+            />
+            <BlueButtonComponent
+              title={"Continue later"}
+              func={() => closeModal()}
+            />
+            {/* <Button
               onClick={() => closeModal()}
               style={{
                 ...BlueButton,
@@ -298,8 +310,8 @@ const ModalAddingDeviceFromSearchbar = () => {
               }}
             >
               <p style={BlueButtonText}>Done</p>
-            </Button>
-            <Button
+            </Button> */}
+            {/* <Button
               onClick={() => closeModal()}
               style={{
                 ...BlueButton,
@@ -311,7 +323,7 @@ const ModalAddingDeviceFromSearchbar = () => {
               }}
             >
               <p style={BlueButtonText}>Continue later</p>
-            </Button>
+            </Button> */}
           </Grid>
           <Grid item xs={12}>
             {checkDevicesInTransaction().length > 0 && (
