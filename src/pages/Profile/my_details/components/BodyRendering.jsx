@@ -218,6 +218,7 @@ const BodyRendering = ({
                     style={{
                       width: "100%",
                       height: "100%",
+                      aspectRatio: "1/1",
                       objectFit: "cover",
                       objectPosition: "center",
                       borderRadius: "50%",
