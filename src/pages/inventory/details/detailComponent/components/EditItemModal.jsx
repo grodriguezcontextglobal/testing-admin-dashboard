@@ -154,6 +154,7 @@ const EditItemModal = ({
         supplier_info: data.supplier
           ? dicSuppliers.find(([key]) => key === data.supplier)[1]
           : null,
+          enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       };
       const respNewItem = await devitrakApi.post(
         "/db_item/edit-item",
@@ -289,7 +290,7 @@ const EditItemModal = ({
     if (dataFound.length > 0) {
       Object.entries(dataFound[0]).forEach(([key, value]) => {
         if (key === "enableAssignFeature") {
-          let valueToSet = value > 0 ? "Enabled" : "Disabled";
+          let valueToSet = value > 0 ? "YES" : "NO";
           return setValue(key, `${valueToSet}`);
         }
         if (key === "container") {
