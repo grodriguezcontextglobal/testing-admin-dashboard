@@ -20,7 +20,11 @@ export const renderFields = ({
       placeholder: "e.g. Electronic",
       label: "Category reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("category_name"),
       htmlOption: 0,
@@ -28,12 +32,17 @@ export const renderFields = ({
       tooltipMessage: "This is the category of the reference item.",
       displayField: false,
     },
-{
+    {
       name: "reference_item_group",
-      placeholder: "Type the name of the item for retrieving the reference item.",
+      placeholder:
+        "Type the name of the item for retrieving the reference item.",
       label: "Item name reference",
       htmlElement: "",
-      style: {...OutlinedInputStyle, textDecoration:"underline", fontWeight:700},
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
       required: false,
       options: retrieveItemOptions("item_group"),
       htmlOption: 0,
@@ -190,7 +199,8 @@ export const renderFields = ({
       options: ["Typing", "Scanning"],
       htmlOption: 0,
       tooltip: true,
-      tooltipMessage: "Typing option: typing one by one if format is alphanumeric, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
+      tooltipMessage:
+        "Typing option: typing one by one if format is alphanumeric, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
       displayField: true,
     },
     {
@@ -205,6 +215,20 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: rangeFormat,
+    },
+    {
+      name: "quantity",
+      placeholder: "e.g. 300",
+      label: "Quantity",
+      htmlElement: "Quantity",
+      style: OutlinedInputStyle,
+      required: true,
+      options: [],
+      htmlOption: 0,
+      tooltip: false,
+      tooltipMessage:
+        "This is the quantity from starting serial number and ending serial number.",
+      displayField: true,
     },
     {
       name: "min_serial_number",
@@ -231,20 +255,6 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: addSerialNumberField,
-    },
-    {
-      name: "quantity",
-      placeholder: "e.g. 300",
-      label: "Quantity",
-      htmlElement: "Quantity",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: false,
-      tooltipMessage:
-        "This is the quantity from starting serial number and ending serial number.",
-      displayField: true,
     },
     {
       name: "ownership",
@@ -292,7 +302,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: ["Enabled", "Disabled"],
+      options: ["YES", "NO"],
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
@@ -322,7 +332,7 @@ export const renderFields = ({
       htmlOption: 6,
       tooltip: false,
       tooltipMessage: null,
-      displayField: displayPreviewImage
+      displayField: displayPreviewImage,
     },
     {
       name: "descript_item",
@@ -350,7 +360,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: false,
-    }
+    },
   ];
 
   fields.forEach((_, index) => {
