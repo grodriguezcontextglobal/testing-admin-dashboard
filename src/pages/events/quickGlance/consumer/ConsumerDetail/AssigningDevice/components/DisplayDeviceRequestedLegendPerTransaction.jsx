@@ -89,10 +89,10 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
         }}
       >
         <h4 style={{ margin: 0 }}>Requested Devices</h4>
-        <small style={{ color: "#667085" }}>
-          Requested: {totalRequested} • Assigned: {totalAssigned} • Remaining:{" "}
+        <span style={{ color: "#667085", fontWeight: 500 }}>
+          Total Qty Requested: {totalRequested} • Assigned: {totalAssigned} • Remaining:{" "}
           {totalRemaining}
-        </small>
+        </span>
       </div>
 
       {rows.length === 0 ? (
@@ -128,7 +128,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                   }}
                   title="Requested"
                 >
-                  Req: {requested}
+                  Required: {requested}
                 </span>
                 <span
                   style={{
@@ -141,7 +141,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                   }}
                   title="Assigned"
                 >
-                  Asg: {assigned}
+                  Assigned: {assigned}
                 </span>
                 <span
                   style={{
@@ -154,7 +154,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                   }}
                   title="Remaining"
                 >
-                  Rem: {remaining}
+                  Remaining: {remaining}
                 </span>
               </div>
             </li>
