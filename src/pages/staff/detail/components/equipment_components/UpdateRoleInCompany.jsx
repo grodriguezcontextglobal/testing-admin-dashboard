@@ -76,7 +76,13 @@ const UpdateRoleInCompany = () => {
     { label: "Staff event assistant", value: 4 },
   ];
 
-  const optionsBasedOnCurrentRolePermission = options.filter((option) => Number(option.value) >= Number(user.role))
+  const optionsBasedOnCurrentRolePermission = options.filter((option) => {
+    const currentUserRole = Number(user.role);
+    const optionRoleValue = Number(option.value);
+    if (currentUserRole === 0) return true; // Root admin can assign all roles
+    if (currentUserRole === 1) return optionRoleValue >= 2; // Admin can assign roles 2 and up
+    return false; // Other roles cannot assign
+  });
   return (
     <>
       {contextHolder}
