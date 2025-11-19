@@ -75,8 +75,8 @@ const UpdateRoleInCompany = () => {
     { label: "Support", value: 3 },
     { label: "Staff event assistant", value: 4 },
   ];
-  // const options = [{ label: "Administrator", value: "Administrator" }, { label: "Approver", value: "Approver" }, { label: "Editor", value: "Editor" },]
 
+  const optionsBasedOnCurrentRolePermission = options.filter((option) => Number(option.value) >= Number(user.role))
   return (
     <>
       {contextHolder}
@@ -109,7 +109,7 @@ const UpdateRoleInCompany = () => {
                   onChange={(e) => setNewRole(e.target.value)}
                 >
                   <MenuItem value="">None</MenuItem>
-                  {options.map((option) => (
+                  {optionsBasedOnCurrentRolePermission.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       <Typography>{option.label}</Typography>
                     </MenuItem>
