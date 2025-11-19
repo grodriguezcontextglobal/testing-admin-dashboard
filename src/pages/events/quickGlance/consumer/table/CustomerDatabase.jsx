@@ -75,7 +75,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
   const response = attendeesAndTransactionsEventQuery?.data?.data?.data;
   const dicStatus = {
     0: "No devices",
-    1: "Devices pending",
+    1: "Devices pending to return",
     2: "Devices in use",
     3: "Devices returned",
   };
@@ -84,7 +84,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     {
       title: "Consumer",
       dataIndex: "user",
-      width: "30%",
+      width: "20%",
       responsive: ["md", "lg"],
       sorter: {
         compare: (a, b) => ("" + a.user).localeCompare(b.user),
@@ -189,8 +189,9 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       sorter: {
         compare: (a, b) => ("" + a.email).localeCompare(b.email),
       },
+      width: "20%",
       render: (email) => (
-        <p style={{ ...Subtitle, textWrap: "balance" }}>{email}</p>
+        <p style={{ ...Subtitle, textWrap: "ellipsis", overflow: "hidden" }}>{email}</p>
       ),
     },
     {
