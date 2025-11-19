@@ -164,37 +164,58 @@ const HeaderStaffDetail = () => {
           container
         >
           <Grid container flexDirection={"column"}>
-            <Grid item xs={12} sm={12} md={6} lg={6}>
-              <Typography
-                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-              >
-                Staff
-              </Typography>
-            </Grid>
             <Grid
               sx={{
                 justifyContent: {
                   xs: "flex-start",
                   sm: "flex-start",
-                  md: "flex-end",
-                  lg: "flex-end",
+                  md: "space-between",
+                  lg: "space-between",
+                },
+                display: "flex",
+                flexDirection: {
+                  xs: "column",
+                  sm: "column",
+                  md: "row",
+                  lg: "row",
                 },
               }}
-              display={Number(user.role) < 2 ? "flex" : "none"}
-              alignItems={"center"}
-              gap={1}
               item
               xs={12}
               sm={12}
-              md={6}
-              lg={6}
+              md={12}
+              lg={12}
             >
-              {" "}
-              <BlueButtonComponent
-                title={"Add new staff"}
-                func={() => setModalState(true)}
-                icon={<WhiteCirclePlusIcon />}
-              />
+              <Typography
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+              >
+                Staff
+              </Typography>
+              <Grid
+                sx={{
+                  justifyContent: {
+                    xs: "flex-start",
+                    sm: "flex-start",
+                    md: "flex-end",
+                    lg: "flex-end",
+                  },
+                  display:Number(user.role) < 2 ? "flex" : "none",
+                  gap:1,
+                  alignItems:"center"
+                }}
+                item
+                xs={12}
+                sm={12}
+                md={6}
+                lg={6}
+              >
+                {" "}
+                <BlueButtonComponent
+                  title={"Add new staff"}
+                  func={() => setModalState(true)}
+                  icon={<WhiteCirclePlusIcon />}
+                />
+              </Grid>
             </Grid>
             <Breadcrumb
               style={{ margin: "15px 0px 7.5px" }}
