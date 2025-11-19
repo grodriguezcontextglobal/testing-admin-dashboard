@@ -303,31 +303,22 @@ const ActionsMainPage = () => {
               </Grid>
             </Grid>
           ) : (
-            (console.log(deviceInfoSelected.activity),
-            (
-              <Grid
-                item
-                xs={12}
-                sm={12}
-                md={4}
-                lg={3}
+            <Grid item xs={12} sm={12} md={4} lg={3}>
+              <Button
+                onClick={() => setModalUpdateStatus(true)}
+                style={{ ...DangerButton, outline: "none" }}
               >
-                <Button
-                  onClick={() => setModalUpdateStatus(true)}
-                  style={{ ...DangerButton, outline: "none" }}
+                <p
+                  style={{
+                    ...DangerButtonText,
+                    textTransform: "capitalize",
+                    textAlign: "left",
+                  }}
                 >
-                  <p
-                    style={{
-                      ...DangerButtonText,
-                      textTransform: "capitalize",
-                      textAlign: "left",
-                    }}
-                  >
-                    edit status
-                  </p>
-                </Button>
-              </Grid>
-            ))
+                  edit status
+                </p>
+              </Button>
+            </Grid>
           )}
         </Card>
       </Grid>
