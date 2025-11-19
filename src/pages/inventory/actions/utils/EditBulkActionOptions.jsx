@@ -47,7 +47,7 @@ export const bulkItemUpdateAlphanumeric = async ({
     container: String(data.container).includes("Yes"),
     containerSpotLimit: data.containerSpotLimit,
     display_item: 1,
-    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url,
     originalTemplate: originalTemplate,
     supplier_info: data.supplier
@@ -114,7 +114,7 @@ export const bulkItemUpdateSequential = async ({
     container: String(data.container).includes("Yes"),
     containerSpotLimit: data.containerSpotLimit,
     display_item: 1,
-    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
     supplier_info: data.supplier
@@ -175,7 +175,7 @@ export const updateAllItemsBasedOnParameters = async ({
     container: String(data.container).includes("Yes"),
     containerSpotLimit: data.containerSpotLimit,
     display_item: 1,
-    enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+    enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
     originalTemplate: originalTemplate,
     supplier_info: data.supplier
