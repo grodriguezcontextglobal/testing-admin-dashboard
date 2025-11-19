@@ -27,7 +27,7 @@ const CustomerInformationSection = () => {
     1: {
       backgroundColor: "#FFF4ED",
       color: "#B93815",
-      text: "Devices pending",
+      text: "Devices pending to return",
       description: "Devices in use but also some returned",
     },
     2: {
