@@ -139,7 +139,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
             >
               {props.startingNumber === null && props.endingNumber === null && (
                 <BlueButtonComponent
-                  title={"Allocate serial number range for this device type"}
+                  title={"Allocate device type to event"}
                   func={() => handleOpenModal()}
                   styles={{
                     display:
