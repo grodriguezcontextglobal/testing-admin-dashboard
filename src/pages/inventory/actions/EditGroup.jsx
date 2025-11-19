@@ -524,7 +524,7 @@ const EditGroup = () => {
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (key === "enableAssignFeature") {
-            let valueToSet = value > 0 ? "Enabled" : "Disabled";
+            let valueToSet = value > 0 ? "YES" : "NO";
             return setValue(key, `${valueToSet}`);
           }
           if (key === "container") {
