@@ -1,9 +1,12 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, notification } from "antd";
+import { Modal, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import { onAddDeviceToDisplayInQuickGlance } from "../../../../../../store/slices/devicesHandleSlice";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -13,11 +16,7 @@ import {
   onAddPaymentIntentSelected,
 } from "../../../../../../store/slices/stripeSlice";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 const menuOptions = [
   "Operational",
@@ -63,6 +62,16 @@ const UpdateStatus = ({ openUpdateStatusModal, setOpenUpdateStatusModal }) => {
       queryKey: ["assginedDeviceList"],
       exact: true,
     });
+    dispatch(
+      onAddDeviceToDisplayInQuickGlance({
+        ...deviceInfoSelected,
+        entireData: {
+          ...deviceInfoSelected.entireData,
+          status: data.reason,
+        },
+        status: data.reason,
+      })
+    );
     openNotificationWithIcon("Success", "Device status updated successfully.");
     return closeModal();
   };
@@ -118,29 +127,35 @@ const UpdateStatus = ({ openUpdateStatusModal, setOpenUpdateStatusModal }) => {
                 )}
               </label>
             </Grid>
-            {watch("reason") !== "" && (
-              <Grid display={"flex"} alignItems={"center"} gap={2} container>
-                <Button
-                  disabled={watch("reason") !== ""}
-                  onClick={closeModal}
-                  style={{ ...GrayButton, width: "100%" }}
-                >
-                  <Typography textTransform={"none"} style={GrayButtonText}>
-                    Cancel
-                  </Typography>
-                </Button>
-
-                <Button
+            <Grid
+              sx={{
+                display: "flex",
+                flex: {
+                  xs: "column",
+                  sm: "row",
+                  md: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                },
+              }}
+              container
+            >
+              {watch("reason") !== "" ? (
+                <BlueButtonComponent
+                  title={"Save"}
+                  buttonType="submit"
+                  styles={{ width: "100%" }}
                   disabled={watch("reason") === ""}
-                  htmlType="submit"
-                  style={{ ...BlueButton, width: "100%" }}
-                >
-                  <Typography textTransform={"none"} style={BlueButtonText}>
-                    Save
-                  </Typography>
-                </Button>
-              </Grid>
-            )}{" "}
+                />
+              ) : (
+                <GrayButtonComponent
+                  disabled={watch("reason") !== ""}
+                  func={closeModal}
+                  title={"Cancel"}
+                  styles={{ width: "100%" }}
+                />
+              )}
+            </Grid>
           </Grid>
         </form>
       </Modal>
