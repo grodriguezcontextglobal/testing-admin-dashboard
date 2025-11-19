@@ -163,36 +163,46 @@ const HeaderStaffDetail = () => {
           }}
           container
         >
-          <Grid item xs={12} sm={12} md={6} lg={6}>
-            <Typography
-              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+          <Grid container flexDirection={"column"}>
+            <Grid item xs={12} sm={12} md={6} lg={6}>
+              <Typography
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+              >
+                Staff
+              </Typography>
+            </Grid>
+            <Grid
+              sx={{
+                justifyContent: {
+                  xs: "flex-start",
+                  sm: "flex-start",
+                  md: "flex-end",
+                  lg: "flex-end",
+                },
+              }}
+              display={Number(user.role) < 2 ? "flex" : "none"}
+              alignItems={"center"}
+              gap={1}
+              item
+              xs={12}
+              sm={12}
+              md={6}
+              lg={6}
             >
-              Staff
-            </Typography>
+              {" "}
+              <BlueButtonComponent
+                title={"Add new staff"}
+                func={() => setModalState(true)}
+                icon={<WhiteCirclePlusIcon />}
+              />
+            </Grid>
+            <Breadcrumb
+              style={{ margin: "15px 0px 7.5px" }}
+              separator=">"
+              items={breadcrumbItems}
+            />
           </Grid>
-          <Grid
-            sx={{
-              justifyContent: {
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "flex-end",
-                lg: "flex-end",
-              },
-            }}
-            display={Number(user.role) < 2 ? "flex" : "none"}
-            alignItems={"center"}
-            gap={1}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            {" "}
-            <BlueButtonComponent title={"Add new staff"} func={() => setModalState(true)} icon={<WhiteCirclePlusIcon />} />
-          </Grid>
-          <Breadcrumb style={{margin:"15px 0px 7.5px"}} separator=">" items={breadcrumbItems} />
-          <Divider style={{margin:"0 0 15px"}} />
+          <Divider style={{ margin: "0 0 15px" }} />
           <Grid
             sx={{
               display: "flex",
@@ -360,7 +370,11 @@ const HeaderStaffDetail = () => {
               >
                 {Number(user.role) < 2 && (
                   <div
-                    style={{ background: "transparent", cursor: "default", padding:"12px 0" }}
+                    style={{
+                      background: "transparent",
+                      cursor: "default",
+                      padding: "12px 0",
+                    }}
                   >
                     <p
                       style={{
