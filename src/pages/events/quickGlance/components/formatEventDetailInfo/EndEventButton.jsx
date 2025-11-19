@@ -283,7 +283,7 @@ const EndEventButton = () => {
 
     setOpenEndingEventModal(false);
     // return window.location.reload();
-    return alert("Event is closed. Inventory is updated!");
+    return alert("Event inventory has been moved back to Company Inventory");
   };
 
   const findItemsInPoolEvent = () => {
@@ -527,7 +527,7 @@ const EndEventButton = () => {
         dispatch(onAddEventData({ ...event, active: false }));
         return openNotificationWithIcon(
           "success",
-          "Event is closed. Inventory is updated!"
+          "Event inventory has been moved back to Company Inventory"
         );
       }
     } catch (error) {
