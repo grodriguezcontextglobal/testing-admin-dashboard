@@ -450,13 +450,17 @@ const SingleItemForm = ({
         })}
       </Grid>
       <Divider />
-      <BlueButtonComponent
-        title={"Add more information"}
-        func={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
-        styles={{ width: "100%" }}
-        buttonType="button"
-      />
+      <Tooltip title="This information will be applied to all serial numbers created for this device.">
+        <div style={{ width: "100%" }}>
+          <BlueButtonComponent
+            title={"Add more information"}
+            func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+            icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
+            styles={{ width: "100%" }}
+            buttonType="button"
+          />
+        </div>
+      </Tooltip>
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
