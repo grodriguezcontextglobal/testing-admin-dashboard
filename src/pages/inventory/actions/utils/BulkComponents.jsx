@@ -44,7 +44,7 @@ export const renderingOptionsButtons = ({
   watch,
   setOpenScanningModal,
   setOpenScannedItemView,
-  manuallyAddingSerialNumbers,
+  // manuallyAddingSerialNumbers,
   addingSubLocation,
   setAddSerialNumberField,
   label,
@@ -59,20 +59,11 @@ export const renderingOptionsButtons = ({
           margin: "10px 0 0",
         }}
       />
-      // <Button
-      //   style={{
-      //     display: "flex",
-      //     margin: "10px 0 0",
-      //   }}
-      //   onClick={() => addingSubLocation(watch("sub_location"))}
-      // >
-      //   Add sub location
-      // </Button>
     );
   }
   if (
     label === "Starting Serial number" &&
-    watch("format_range_serial_number") === "Alphanumeric"
+    watch("format_range_serial_number") === "Custom format"
   ) {
     return (
       <BlueButtonComponent
@@ -83,28 +74,19 @@ export const renderingOptionsButtons = ({
           margin: "10px 0 0",
         }}
       />
-
-      // <Button
-      //   style={{
-      //     display: "flex",
-      //     margin: "10px 0 0",
-      //   }}
-      //   onClick={() => setAddSerialNumberField(true)}
-      // >
-      //   Add serial number
-      // </Button>
     );
   }
   if (
-    label === "Scanning all serial numbers here" ||
-    label === "Typing all serial numbers here"
+    label === "All scanned serial numbers are displayed here." ||
+    label === "All typed serial numbers are displayed here."
   ) {
     const redirectOptions = () => {
       if (watch("feed_serial_number") === "Scanning") {
         return setOpenScanningModal(true);
       }
       if (watch("feed_serial_number") === "Typing") {
-        return manuallyAddingSerialNumbers();
+        // return manuallyAddingSerialNumbers();
+        return setOpenScanningModal(true);
       }
     };
 
@@ -112,45 +94,26 @@ export const renderingOptionsButtons = ({
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          gap: "10px",
+          margin: "10px 0 0",
+          gap:2
         }}
       >
         <BlueButtonComponent
-          title={watch("feed_serial_number") === "Scanning"
-            ? "Click for scanning"
-            : "Add serial number"}
+          title={
+            watch("feed_serial_number") === "Scanning"
+              ? "Click for scanning"
+              : "Click for typing"
+          }
           func={() => redirectOptions()}
         />
-        {/* <Button
-          style={{
-            display: "flex",
-            margin: "10px 0 0",
-          }}
-          onClick={() => redirectOptions()}
-        >
-          {watch("feed_serial_number") === "Scanning"
-            ? "Click for scanning"
-            : "Add serial number"}
-        </Button> */}
         <BlueButtonComponent
-          title={watch("feed_serial_number") === "Scanning"
-            ? "View scanned serial numbers"
-            : "View inserted serial numbers"}
+          title={
+            watch("feed_serial_number") === "Scanning"
+              ? "View scanned serial numbers"
+              : "View inserted serial numbers"
+          }
           func={() => setOpenScannedItemView(true)}
         />
-        {/* <Button
-          style={{
-            display: "flex",
-            margin: "10px 0 0",
-          }}
-          onClick={() => setOpenScannedItemView(true)}
-        >
-          {watch("feed_serial_number") === "Scanning"
-            ? "View scanned serial numbers"
-            : "View inserted serial numbers"}
-        </Button> */}
       </div>
     );
   }
@@ -410,7 +373,7 @@ export const gripingFields = (props) => {
 
 export const renderingResultUX = ({ name, value }) => {
   if (name === "enableAssignFeature") {
-    return value === 0 ? "Disabled" : "Enabled";
+    return value === 0 ? "NO" : "YES";
   }
   if (name === "container") {
     return value === 0
