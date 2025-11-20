@@ -86,7 +86,6 @@ const BulkItemForm = ({
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
-        {/* style={styleDivParent} */}
         {renderFields({
           retrieveItemOptions,
           OutlinedInputStyle,
@@ -140,7 +139,8 @@ const BulkItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong>{" "}
+                        {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
@@ -193,7 +193,8 @@ const BulkItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong>{" "}
+                        {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                     <div
@@ -297,7 +298,8 @@ const BulkItemForm = ({
                         }).styling
                       }
                     >
-                      {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                      {item.label} <strong>*</strong>{" "}
+                      {item.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>
                 </InputLabel>
@@ -350,6 +352,12 @@ const BulkItemForm = ({
                             })}
                             placeholder={item.placeholder}
                             allowClear
+                            disabled={
+                              item.label ===
+                                "All typed serial numbers are displayed here." ||
+                              item.label ===
+                                "All scanned serial numbers are displayed here."
+                            }
                           />
                           {renderingErrorMessage(errors[item.name])}
                           {renderingOptionsButtons({
@@ -466,13 +474,17 @@ const BulkItemForm = ({
         })}
       </Grid>
       <Divider />
-      <BlueButtonComponent
-      title={"Add more information"}
-      func={() => setMoreInfoDisplay(!moreInfoDisplay)}
-      icon={<WhiteCirclePlusIcon stroke="var(--basewhite)"/>}
-      styles={{ width: "100%" }}
-      buttonType="button"
-      />
+      <Tooltip title="This information will be applied to all serial numbers created for this device.">
+        <div style={{ width: "100%" }}>
+          <BlueButtonComponent
+            title={"Add more information"}
+            func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+            icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
+            styles={{ width: "100%" }}
+            buttonType="button"
+          />
+        </div>
+      </Tooltip>
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -495,13 +507,13 @@ const BulkItemForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-          <GrayButtonComponent
-          title={"Go back"}
-          func={() => null}
-          // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
-          styles={{ width: "100%" }}
-          buttonType="reset"
-          />
+            <GrayButtonComponent
+              title={"Go back"}
+              func={() => null}
+              // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
+              styles={{ width: "100%" }}
+              buttonType="reset"
+            />
           </Link>
         </div>
         <div
