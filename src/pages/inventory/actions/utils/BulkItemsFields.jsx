@@ -183,7 +183,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: ["Alphanumeric", "Sequential number"],
+      options: ["Custom format", "Sequential number"],
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -200,7 +200,7 @@ export const renderFields = ({
       htmlOption: 0,
       tooltip: true,
       tooltipMessage:
-        "Typing option: typing one by one if format is alphanumeric, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
+        "Typing option: typing one by one if format is custom, typing starting/ending serial number if format is sequential number. Scanning option: scanning multiple serial numbers.",
       displayField: true,
     },
     {
