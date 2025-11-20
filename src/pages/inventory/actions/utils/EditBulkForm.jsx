@@ -143,7 +143,8 @@ const EditBulkForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                        {item.label} <strong>*</strong>{" "}
+                        {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
@@ -328,12 +329,16 @@ const EditBulkForm = ({
                           <Grid item xs={12} sm={12} md={12} lg={12}>
                             <AutoComplete
                               disabled={
-                                (item.name === "format_range_serial_number" ||
+                                ((item.name === "format_range_serial_number" ||
                                   item.name === "feed_serial_number") &&
-                                updateAllItems
+                                  updateAllItems) ||
+                                item.label ===
+                                  "All typed serial numbers are displayed here." ||
+                                item.label ===
+                                  "All scanned serial numbers are displayed here."
                               }
                               aria-required={item.required}
-                              className="custom-autocomplete" // Add a custom className here
+                              className="custom-autocomplete"
                               variant="outlined"
                               style={{
                                 ...AntSelectorStyle,
@@ -343,6 +348,10 @@ const EditBulkForm = ({
                                 fontFamily: "Inter",
                                 fontSize: "14px",
                                 width: "100%",
+                                display:
+                                  item.name === "serial_numbers_list"
+                                    ? "none"
+                                    : "block",
                               }}
                               value={value}
                               onChange={(value) => onChange(value)}
@@ -354,11 +363,6 @@ const EditBulkForm = ({
                                 }
                               })}
                               placeholder={item.placeholder}
-                              //   filterOption={(inputValue, option) =>
-                              //     option.value
-                              //       .toUpperCase()
-                              //       .indexOf(inputValue.toUpperCase()) !== -1
-                              //   }
                               allowClear
                             />
                             {renderingErrorMessage(item.label)}
@@ -492,7 +496,17 @@ const EditBulkForm = ({
         })}
       </Grid>
       <Divider />
-      <BlueButtonComponent title={"Add more information"} func={() => setMoreInfoDisplay(!moreInfoDisplay)} icon={<WhiteCirclePlusIcon stroke="var(--basewhite)"/>} styles={{ width: "100%" }} buttonType="button" />
+      <Tooltip title="This information will be applied to all serial numbers created for this device.">
+        <div style={{ width: "100%" }}>
+          <BlueButtonComponent
+            title={"Add more information"}
+            func={() => setMoreInfoDisplay(!moreInfoDisplay)}
+            icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
+            styles={{ width: "100%" }}
+            buttonType="button"
+          />
+        </div>
+      </Tooltip>
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -515,29 +529,13 @@ const EditBulkForm = ({
           }}
         >
           <Link to="/inventory" style={{ width: "100%" }}>
-          <GrayButtonComponent title={"Go back"} func={() => null} buttonType="reset" styles={{ width: "100%" }} titleStyles={{ textTransform: "none" }} />
-            
-          
-            
-            {/* <Button
-              htmlType="reset"
-              disabled={loadingStatus}
-              style={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-            >
-              <p
-                style={{
-                  ...GrayButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                Go back
-              </p>
-            </Button> */}
+            <GrayButtonComponent
+              title={"Go back"}
+              func={() => null}
+              buttonType="reset"
+              styles={{ width: "100%" }}
+              titleStyles={{ textTransform: "none" }}
+            />
           </Link>
         </div>
         <div
