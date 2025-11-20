@@ -1,11 +1,10 @@
 import { Chip, OutlinedInput, Typography } from "@mui/material";
-import { Button, Modal, Space } from "antd";
+import { Modal, Space } from "antd";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import { useRef } from "react";
 
 const ScanningModal = ({
   openScanningModal,
@@ -19,6 +18,7 @@ const ScanningModal = ({
     setOpenScanningModal(false);
   };
   const handleAddDevices = (data) => {
+    if(data.serialNumber.length < 1) return;
     const result = [...scannedSerialNumbers, data.serialNumber];
     setValue("serialNumber", "");
     return setScannedSerialNumbers(result);
@@ -43,7 +43,7 @@ const ScanningModal = ({
           style={{ ...Subtitle, textWrap: "balance" }}
           padding={"1rem 0"}
         >
-          Scanning all serial numbers here
+          Scanning/typing all serial numbers here
         </Typography>
         <Typography
           textTransform={"none"}
@@ -62,9 +62,7 @@ const ScanningModal = ({
       onOk={() => closeModal()}
       onCancel={() => closeModal()}
       footer={[
-        <Button key="done_button" style={{ ...BlueButton, width: "100%" }} onClick={closeModal}>
-          <p style={BlueButtonText}>Done</p>
-        </Button>,
+        <BlueButtonComponent key="done_button" title="Done" buttonType="button" styles={{ width: "100%" }} func={closeModal} />,
       ]}
       centered
       maskClosable={false}
@@ -83,14 +81,12 @@ const ScanningModal = ({
         <OutlinedInput
           autoFocus={true}
           ref={ref}
-          {...register("serialNumber")}
+          {...register("serialNumber", { minLength: 1, required: true })}
           style={OutlinedInputStyle}
-          placeholder="Scan serial number to check in."
+          placeholder="Scan/type serial number to check in."
           fullWidth
         />
-        <Button style={{ ...BlueButton, width: "100%" }} htmlType="submit">
-          <p style={BlueButtonText}>Add</p>
-        </Button>
+        <BlueButtonComponent title="Add" buttonType="submit" styles={{ width: "fit-content" }} />
       </form>
       <div
         style={{
