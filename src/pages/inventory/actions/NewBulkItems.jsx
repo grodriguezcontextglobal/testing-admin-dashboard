@@ -241,7 +241,7 @@ const AddNewBulkItems = () => {
   };
 
   const qtyDiff = useCallback(() => {
-    if (watch("format_range_serial_number") === "Alphanumeric")
+    if (watch("format_range_serial_number") === "Custom format")
       return setValue("quantity", scannedSerialNumbers.length);
     if (watch("format_range_serial_number") === "Sequential number")
       return setValue(
@@ -500,7 +500,7 @@ const AddNewBulkItems = () => {
   }, [watch("cost")]);
 
   useEffect(() => {
-    if (watch("format_range_serial_number") === "Alphanumeric") {
+    if (watch("format_range_serial_number") === "Custom format") {
       setRangeFormat(true);
       setAddSerialNumberField(false);
     }
@@ -518,16 +518,16 @@ const AddNewBulkItems = () => {
 
   useEffect(() => {
     if (
-      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("format_range_serial_number") === "Custom format" &&
       watch("feed_serial_number") === "Typing"
     ) {
-      setLabeling("Typing all serial numbers here");
+      setLabeling("All typed serial numbers are displayed here.");
     }
     if (
-      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("format_range_serial_number") === "Custom format" &&
       watch("feed_serial_number") === "Scanning"
     ) {
-      setLabeling("Scanning all serial numbers here");
+      setLabeling("All scanned serial numbers are displayed here.");
     }
   }, [watch("feed_serial_number")]);
 
