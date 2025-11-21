@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { Button, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Table, Typography } from "antd";
 import { PropTypes } from "prop-types";
@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import dicRole from "../../components/general/dicRole";
-import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
-import CenteringGrid from "../../styles/global/CenteringGrid";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
+import RefreshButton from "../../components/utils/UX/RefreshButton";
+import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import "../../styles/global/ant-table.css";
+import CenteringGrid from "../../styles/global/CenteringGrid";
 const MainAdminSettingPage = ({
   searchAdmin,
   modalState,
@@ -394,41 +395,7 @@ const MainAdminSettingPage = ({
           item
           xs={12}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-              padding: "0 0 0 0",
-            }}
-          >
-            <Button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                outline: "none",
-                backgroundColor: "transparent",
-              }}
-              onClick={() => {
-                companiesEmployees.refetch();
-              }}
-            >
-              <p
-                style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
-                  padding: "0px",
-                }}
-              >
-                <Icon icon="jam:refresh" /> Refresh
-              </p>
-            </Button>
-          </div>
+          <RefreshButton propsFn={() => companiesEmployees.refetch()} />
         </Grid>
         <Table
           style={{ width: "100%", cursor: "pointer" }}
