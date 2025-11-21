@@ -876,7 +876,12 @@ const RenderingFilters = ({
                       textAlign: "left",
                     }}
                   >
-                    | Total <strong>{item.totalUnits}</strong> units
+                    | Total <strong>{item.totalUnits}</strong>{" "}
+                    {index === optionsToRenderInDetailsHtmlTags.length-1
+                      ? item.totalUnits > 1
+                        ? "members"
+                        : "member"
+                      : "units"}
                   </span>{" "}
                   &nbsp;{" "}
                   {item.buttonFn &&
