@@ -261,7 +261,7 @@ const LegalDocumentModal = ({
   };
 
   return (
-    <div key={profile._id} style={{ width: "100%" }} id="legal-document-modal">
+    <div key={profile._id ?? profile.uid} style={{ width: "100%" }} id="legal-document-modal">
       {/* Show folder status indicator */}
       {documentsToUse.source === "folders" && (
         <Box sx={{ mb: 2, p: 2, bgcolor: "#e3f2fd", borderRadius: 1 }}>
