@@ -171,7 +171,9 @@ export const CreateNewConsumer = ({
         alert("Please enter a phone number");
         return setLoading(false);
       }
-      const newEventToAddConsumer = JSON.parse(eventAssignedTo);
+      const newEventToAddConsumer = eventAssignedTo
+        ? JSON.parse(eventAssignedTo)
+        : null;
       const newUserProfile = {
         name: data.firstName,
         lastName: data.lastName,
@@ -180,9 +182,13 @@ export const CreateNewConsumer = ({
         privacyPolicy: true,
         category: "Regular",
         provider: [user.company],
-        eventSelected: [newEventToAddConsumer.eventInfoDetail.eventName],
+        eventSelected: newEventToAddConsumer
+          ? [newEventToAddConsumer.eventInfoDetail.eventName]
+          : [],
         company_providers: [user.companyData.id],
-        event_providers: [newEventToAddConsumer.id],
+        event_providers: newEventToAddConsumer
+          ? [newEventToAddConsumer.id]
+          : [],
         groupName: [],
       };
       const newUser = await devitrakApi.post("/auth/new", newUserProfile);
@@ -217,56 +223,71 @@ export const CreateNewConsumer = ({
   };
 
   const updateExistingUserInRecord = async (data) => {
-    const newEventToAddConsumer = JSON.parse(eventAssignedTo);
-    const { event_providers, company_providers, eventSelected, provider, id } =
-      data.consumersList.at(-1);
-    if (
-      event_providers.some((element) => element === newEventToAddConsumer.id)
-    ) {
-      alert(
-        `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
-      );
-      setLoading(false);
-      return redirectingStaffBasedOnConsumerEventPage(
-        data.consumersList.at(-1)
-      );
-    } else {
-      const updateConsumerProfile = {
-        id: id,
-        eventSelected: zeroDuplications([
-          ...eventSelected,
-          newEventToAddConsumer.eventInfoDetail.eventName,
-        ]),
-        provider: zeroDuplications([...provider, user.company]),
-        company_providers: zeroDuplications([
-          ...company_providers,
-          user.companyData.id,
-        ]),
-        event_providers: zeroDuplications([
-          ...data.consumersList.at(-1).event_providers,
-          newEventToAddConsumer.id,
-        ]),
-        phoneNumber: contactPhoneNumber,
-      };
-      const updatingUserInfoQuery = await devitrakApi.patch(
-        `/auth/${id}`,
-        updateConsumerProfile
-      );
-      if (updatingUserInfoQuery.data) {
-        queryClient.invalidateQueries({
-          queryKey: ["listOfConsumers"],
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["consumersList"],
-          exact: true,
-        });
-        openNotificationWithIcon("Success", "New consumer added");
+    try {
+      const newEventToAddConsumer = eventAssignedTo
+        ? JSON.parse(eventAssignedTo)
+        : null;
+      const {
+        event_providers,
+        company_providers,
+        eventSelected,
+        provider,
+        id,
+      } = data.consumersList.at(-1);
+      if (
+        newEventToAddConsumer &&
+        event_providers.some((element) => element === newEventToAddConsumer.id)
+      ) {
+        alert(
+          `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
+        );
         setLoading(false);
         return redirectingStaffBasedOnConsumerEventPage(
           data.consumersList.at(-1)
         );
+      } else {
+        const updateConsumerProfile = {
+          id: id,
+          eventSelected: zeroDuplications([
+            ...eventSelected,
+            newEventToAddConsumer &&
+              newEventToAddConsumer.eventInfoDetail.eventName,
+          ]),
+          provider: zeroDuplications([...provider, user.company]),
+          company_providers: zeroDuplications([
+            ...company_providers,
+            user.companyData.id,
+          ]),
+          event_providers: zeroDuplications([
+            ...data.consumersList.at(-1).event_providers,
+            newEventToAddConsumer && newEventToAddConsumer.id,
+          ]),
+          phoneNumber: contactPhoneNumber,
+        };
+        const updatingUserInfoQuery = await devitrakApi.patch(
+          `/auth/${id}`,
+          updateConsumerProfile
+        );
+        if (updatingUserInfoQuery.data) {
+          queryClient.invalidateQueries({
+            queryKey: ["listOfConsumers"],
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["consumersList"],
+            exact: true,
+          });
+          openNotificationWithIcon("Success", "New consumer added");
+          setLoading(false);
+          return redirectingStaffBasedOnConsumerEventPage(
+            data.consumersList.at(-1)
+          );
+        }
       }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -401,6 +422,9 @@ export const CreateNewConsumer = ({
                   <p style={labelStyle}>{event?.eventInfoDetail?.eventName}</p>
                 </MenuItem>
               ))}
+              <MenuItem value={null}>
+                <em>No event</em>
+              </MenuItem>
             </Select>
 
             <OutlinedInput
