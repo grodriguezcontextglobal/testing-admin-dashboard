@@ -168,8 +168,11 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     const active = eventsPerAdmin?.active.map((item) => item.id) ?? [];
     const completed = eventsPerAdmin?.completed.map((item) => item.id) ?? [];
     const adminPermitted = [...active, ...completed];
-    if(!eventInfoCompanyQuery?.data?.data?.list) return [];
-    const eventCompanyData = groupBy(eventInfoCompanyQuery?.data?.data?.list, "id");
+    if (!eventInfoCompanyQuery?.data?.data?.list) return [];
+    const eventCompanyData = groupBy(
+      eventInfoCompanyQuery?.data?.data?.list,
+      "id"
+    );
     const checked = new Map();
     if (adminPermitted?.length > 0) {
       for (let event of record.event_providers) {
@@ -315,7 +318,8 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       responsive: ["md", "lg"],
       render: (entireData) => {
         const data =
-          renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ?? [];
+          renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ??
+          [];
         return (
           <>
             <Chip
@@ -326,7 +330,9 @@ export default function TablesConsumers({ searching, data, getCounting }) {
                 border: "1px solid var(--Indigo-700, #004EEB)",
               }}
               label={renderingStyleInChip(
-                data?.at(-1)?.eventInfoDetail?.eventName
+                data?.length > 1
+                  ? data?.at(-1)?.eventInfoDetail?.eventName
+                  : "No event assigned"
               )}
             />
             {data?.length > 1 && (
