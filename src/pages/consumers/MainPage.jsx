@@ -1,23 +1,21 @@
 /* eslint-disable no-unused-vars */
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Spin } from "antd";
 import { useCallback, useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Loading from "../../components/animation/Loading";
+import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import BannerMsg from "../../components/utils/BannerMsg";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import "../../styles/global/OutlineInput.css";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import ConsumerHeader from "./components/ConsumerHeader";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [counting, setCounting] = useState(null);
@@ -32,15 +30,16 @@ const MainPage = () => {
         `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
       ),
     enabled: !!user.companyData.id,
+    staleTime: 5 * 60 * 1000,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    allConsumersBasedOnEventsPerCompany.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   allConsumersBasedOnEventsPerCompany.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   const componentLocator = useId();
 
@@ -49,7 +48,7 @@ const MainPage = () => {
       const result = new Map();
       if (Array.isArray(props)) {
         for (let data of props) {
-          data.currentActivity.map((item) => {
+          data.currentActivity?.map((item) => {
             if (!result.has(item.device.status)) {
               result.set(item.device.status, [item.device]);
             } else {
