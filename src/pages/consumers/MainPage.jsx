@@ -180,14 +180,18 @@ const MainPage = () => {
           />
         </Grid>
         <Grid item xs={12}>
-          <TablesConsumers
-            key={componentLocator}
-            getCounting={counting}
-            searching={searching}
-            getActiveAndInactiveCount={renderActiveAndInactiveCount}
-            data={consumersList}
-            statePage={null}
-          />
+          {allConsumersBasedOnEventsPerCompany.isLoading ? (
+            <Loading />
+          ) : (
+            <TablesConsumers
+              key={componentLocator}
+              getCounting={counting}
+              searching={searching}
+              getActiveAndInactiveCount={renderActiveAndInactiveCount}
+              data={consumersList}
+              statePage={null}
+            />
+          )}
         </Grid>
       </Grid>
       <Grid
