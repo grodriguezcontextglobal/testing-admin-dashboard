@@ -322,27 +322,40 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           [];
         return (
           <>
-            <Chip
-              style={{
-                background: "var(--Indigo-50, #EEF4FF)",
-                position: "relative",
-                zIndex: 2, // ensure this chip overlays the next
-                border: "1px solid var(--Indigo-700, #004EEB)",
-              }}
-              label={renderingStyleInChip(
-                data?.length > 1
-                  ? data?.at(-1)?.eventInfoDetail?.eventName
-                  : "No event assigned"
-              )}
-            />
-            {data?.length > 1 && (
+            {data.length > 0 ? (
+              <>
+                {" "}
+                <Chip
+                  style={{
+                    background: "var(--Indigo-50, #EEF4FF)",
+                    position: "relative",
+                    zIndex: 2, // ensure this chip overlays the next
+                    border: "1px solid var(--Indigo-700, #004EEB)",
+                  }}
+                  label={renderingStyleInChip(
+                    data?.at(-1)?.eventInfoDetail?.eventName
+                  )}
+                />
+                {data?.length > 1 && (
+                  <Chip
+                    label={renderingRowStyling(`+${Number(data?.length) - 1}`)}
+                    style={{
+                      marginLeft: -13, // pull under the first chip
+                      position: "relative",
+                      zIndex: 1, // sits behind the first chip
+                    }}
+                  />
+                )}
+              </>
+            ) : (
               <Chip
-                label={renderingRowStyling(`+${Number(data?.length) - 1}`)}
                 style={{
-                  marginLeft: -13, // pull under the first chip
+                  background: "var(--Indigo-50, #EEF4FF)",
                   position: "relative",
-                  zIndex: 1, // sits behind the first chip
+                  zIndex: 2, // ensure this chip overlays the next
+                  border: "1px solid var(--Indigo-700, #004EEB)",
                 }}
+                label={renderingStyleInChip("No event assigned")}
               />
             )}
           </>
