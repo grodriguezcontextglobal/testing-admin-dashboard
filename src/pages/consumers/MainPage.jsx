@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spin } from "antd";
 import { useCallback, useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -23,6 +23,7 @@ const MainPage = () => {
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const searching = watch("searchEvent");
+  const queryClient = useQueryClient();
   const allConsumersBasedOnEventsPerCompany = useQuery({
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
     queryFn: () =>
@@ -169,7 +170,13 @@ const MainPage = () => {
             </div>
           </p>
           <RefreshButton
-            propsFn={allConsumersBasedOnEventsPerCompany.refetch}
+            propsFn={() => {
+              // Invalidate and refetch to bypass staleTime and pull fresh data
+              queryClient.invalidateQueries({
+                queryKey: ["allConsumersBasedOnEventsPerCompany"],
+              });
+              allConsumersBasedOnEventsPerCompany.refetch();
+            }}
           />
         </Grid>
         <Grid item xs={12}>
