@@ -20,12 +20,11 @@ const ModalAssignDeviceToConsumer = ({ assignDevice, setAssignDevice }) => {
         email: customer.email,
       }),
     enabled: !!customer.email,
-    staleTime: 5 * 60 * 100,
   });
+
   const closeModal = () => {
     return setAssignDevice(false);
   };
-
   const bodyModal = () => {
     return (
       <Grid
