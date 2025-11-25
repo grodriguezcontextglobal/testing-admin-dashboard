@@ -423,7 +423,7 @@ export const CreateNewConsumer = ({
                 </MenuItem>
               ))}
               <MenuItem value={null}>
-                <em>No event</em>
+                <p style={labelStyle}>No event</p>
               </MenuItem>
             </Select>
 
