@@ -356,6 +356,12 @@ export const transactionDeviceAdded = ({
 }) => {
   try {
     const createTransaction = async () => {
+            const eventName = `${customer.name} ${customer.lastName} / ${
+        customer.email
+      } / ${new Date().toLocaleDateString()} / Lease / ${
+          customer.id ?? customer.uid
+        }`;
+
       const id = nanoid(12);
       const max = 918273645;
       const transactionGenerated = "pi_" + id;
@@ -365,9 +371,7 @@ export const transactionDeviceAdded = ({
         clientSecret: 1 + customer.uid + Math.floor(Math.random() * max),
         device: Number(qty),
         user: customer.uid,
-        eventSelected: `${verificationInfo.eventSelected} / ${
-          customer.id ?? customer.uid
-        }`,
+        eventSelected: eventName,
         provider: user.company,
         company: user.companyData.id,
         type: "lease",
@@ -395,9 +399,7 @@ export const transactionDeviceAdded = ({
           },
           consumerInfo: customer,
           provider: user.company,
-          eventSelected: `${verificationInfo.eventSelected} / ${
-            customer.id ?? customer.uid
-          }`,
+          eventSelected: eventName,
           event_id: verificationInfo.noSql.eventId,
           date: new Date(),
           company: user.companyData.id,
@@ -415,9 +417,7 @@ export const transactionDeviceAdded = ({
             deviceFormat,
             customer.email,
             true,
-            `${customer.name} ${customer.lastName} / ${customer.email} / ${
-              customer.id ?? customer.uid
-            }`,
+            eventName,
             user.company,
             new Date().getTime(),
             user.companyData.id,
