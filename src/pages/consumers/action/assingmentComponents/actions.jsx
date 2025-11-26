@@ -358,7 +358,7 @@ export const transactionDeviceAdded = ({
     const createTransaction = async () => {
             const eventName = `${customer.name} ${customer.lastName} / ${
         customer.email
-      } / ${new Date().toLocaleDateString()} / Lease / ${
+      } / ${new Date().toLocaleString()} / Lease / ${
           customer.id ?? customer.uid
         }`;
 
