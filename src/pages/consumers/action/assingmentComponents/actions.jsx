@@ -29,6 +29,7 @@ export const createNewLease = ({
   deviceInfo,
   user,
   consumerInfoSqlDb,
+  verification_id,
 }) => {
   try {
     const createLease = async () => {
@@ -46,6 +47,7 @@ export const createNewLease = ({
               consumerInfoSqlDb.consumer_id.consumer_id ??
               consumerInfoSqlDb.consumer_id,
             device_id: data.item_id,
+            verification_id: verification_id,
           }
         );
         newLeaseIds.push(newLease.insertId);
@@ -356,11 +358,11 @@ export const transactionDeviceAdded = ({
 }) => {
   try {
     const createTransaction = async () => {
-            const eventName = `${customer.name} ${customer.lastName} / ${
+      const eventName = `${customer.name} ${customer.lastName} / ${
         customer.email
       } / ${new Date().toLocaleString()} / Lease / ${
-          customer.id ?? customer.uid
-        }`;
+        customer.id ?? customer.uid
+      }`;
 
       const id = nanoid(12);
       const max = 918273645;
