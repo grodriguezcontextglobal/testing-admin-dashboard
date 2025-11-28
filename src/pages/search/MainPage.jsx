@@ -30,7 +30,6 @@ const SearchMainPage = () => {
       ),
     refetchOnWindowFocus: false,
   });
-console.log(generalSearch?.data?.data);
   const styleSection = {
     display: "flex",
     justifyContent: "flex-start",
