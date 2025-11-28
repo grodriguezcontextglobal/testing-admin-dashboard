@@ -32,6 +32,7 @@ import Choice from "../components/markedLostOption/Choice";
 import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
 import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
+// import { ExpandedRowRender } from "./DocumentsTableSection";
 import FooterExpandedRow from "./FooterExpandedRow";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -106,13 +107,14 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       const query = assignedDevicesQuery.data.data.listOfReceivers;
       const dataForTable = new Set();
       for (let data of query) {
+        const renderingCost =
+          matchingEventInventoryForValueItems(data?.device?.deviceType) ??
+          rowRecord.eventInfo[0].device[0].deviceValue;
         dataForTable.add({
           key: data._id,
           serial_number: data?.device?.serialNumber,
           type: data?.device?.deviceType,
-          deviceValue: matchingEventInventoryForValueItems(
-            data?.device?.deviceType
-          ),
+          deviceValue: renderingCost,
           status: data?.device?.status,
           timeStamp: data?.timeStamp,
           entireData: data,
@@ -170,9 +172,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         });
         await refetchingQueries();
         if (props.new_status !== undefined) {
-          if(props.new_status === "Lost"){
+          if (props.new_status === "Lost") {
             lost();
-          }else{
+          } else {
             returned();
           }
         } else {
@@ -220,6 +222,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         company_id: user.sqlInfo.company_id,
         device_id: sqlItemInfo.data.items[0].item_id,
         subscription_current_in_use: 1,
+        
       }
     );
     if (
@@ -493,7 +496,11 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           rowHoverable={false}
         />
       )}
-
+      {/* {rowRecord.type === "lease" && (
+        <>
+        <ExpandedRowRender record={{ ...rowRecord,  data:dataRendering()}} />
+        </>
+      )} */}
       <FooterExpandedRow
         displayTernary={displayTernary}
         handleReturnSingleDevice={handleReturnItemInTransaction}
