@@ -30,7 +30,7 @@ const SearchMainPage = () => {
       ),
     refetchOnWindowFocus: false,
   });
-
+console.log(generalSearch?.data?.data);
   const styleSection = {
     display: "flex",
     justifyContent: "flex-start",
@@ -50,12 +50,15 @@ const SearchMainPage = () => {
   const searching_device = useId();
   const searching_events = useId();
   const searching_transaction = useId();
+  // Counts to control visibility based on actual results
+  const consumersCount =
+    generalSearch?.data?.data?.consumer?.consumers?.length ?? 0;
+  const staffCount = generalSearch?.data?.data?.staff?.length ?? 0;
+  const devicesCount =
+    generalSearch?.data?.data?.devicePool?.devicePool?.length ?? 0;
+  const eventsCount = generalSearch?.data?.data?.event?.results?.length ?? 0;
   const sum = () => {
-    const consumers = generalSearch?.data?.data?.consumer?.consumers.length ?? 0;
-    const staff = generalSearch?.data?.data?.staff?.length ?? 0;
-    const devices = generalSearch?.data?.data?.devicePool?.devicePool?.length ?? 0;
-    const events = generalSearch?.data?.data?.event?.results?.length ?? 0;
-    return consumers + staff + devices + events;
+    return consumersCount + staffCount + devicesCount + eventsCount;
   };
   return (
     <Grid
@@ -79,7 +82,8 @@ const SearchMainPage = () => {
           width: "100%",
         }}
       >
-        {(filterOptions["View All"] === 1 || filterOptions.Consumers === 1) && (
+        {(filterOptions["View All"] === 1 || filterOptions.Consumers === 1) &&
+          consumersCount > 0 && (
           <section style={styleSection}>
             <SearchConsumerRef
               id={searching_consumer}
@@ -88,7 +92,8 @@ const SearchMainPage = () => {
             />
           </section>
         )}
-        {(filterOptions["View All"] === 1 || filterOptions.Staff === 1) && (
+        {(filterOptions["View All"] === 1 || filterOptions.Staff === 1) &&
+          staffCount > 0 && (
           <section style={styleSection}>
             <SearchStaffRef
               id={searching_staff}
@@ -97,8 +102,9 @@ const SearchMainPage = () => {
             />
           </section>
         )}
-        {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) && (
-          <section style={styleSection}>
+        {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) &&
+          devicesCount > 0 && (
+          <section style={{ ...styleSection, display: Array.isArray(generalSearch.data.data.devicePool.devicePool) && generalSearch.data.data.devicePool.devicePool.some((item) => item.activity) ? "flex" : "none" }}>
             <SearchDeviceRef
               id={searching_device}
               searchParams={searchParams}
@@ -109,7 +115,8 @@ const SearchMainPage = () => {
             />
           </section>
         )}
-        {(filterOptions["View All"] === 1 || filterOptions.Events === 1) && (
+        {(filterOptions["View All"] === 1 || filterOptions.Events === 1) &&
+          eventsCount > 0 && (
           <section style={styleSection}>
             <SearchEventsRef
               id={searching_events}
@@ -119,7 +126,7 @@ const SearchMainPage = () => {
           </section>
         )}
         {filterOptions["View All"] === 1 && (
-          <section style={styleSection}>
+          <section style={{ ...styleSection, display: "none" }}>
             <SearchTransaction
               id={searching_transaction}
               searchParams={searchParams}
