@@ -53,8 +53,11 @@ const SearchMainPage = () => {
   const consumersCount =
     generalSearch?.data?.data?.consumer?.consumers?.length ?? 0;
   const staffCount = generalSearch?.data?.data?.staff?.length ?? 0;
-  const devicesCount =
-    generalSearch?.data?.data?.devicePool?.devicePool?.length ?? 0;
+  const activeDevices =
+    (generalSearch?.data?.data?.devicePool?.devicePool ?? []).filter(
+      (item) => item?.activity === true
+    );
+  const devicesCount = activeDevices.length;
   const eventsCount = generalSearch?.data?.data?.event?.results?.length ?? 0;
   const sum = () => {
     return consumersCount + staffCount + devicesCount + eventsCount;
@@ -103,12 +106,12 @@ const SearchMainPage = () => {
         )}
         {(filterOptions["View All"] === 1 || filterOptions.Devices === 1) &&
           devicesCount > 0 && (
-          <section style={{ ...styleSection, display: Array.isArray(generalSearch.data.data.devicePool.devicePool) && generalSearch.data.data.devicePool.devicePool.some((item) => item.activity) ? "flex" : "none" }}>
+          <section style={styleSection}>
             <SearchDeviceRef
               id={searching_device}
               searchParams={searchParams}
               data={{
-                pool: generalSearch?.data?.data?.devicePool?.devicePool,
+                pool: activeDevices,
                 device: generalSearch?.data?.data?.deviceTransaction,
               }}
             />
