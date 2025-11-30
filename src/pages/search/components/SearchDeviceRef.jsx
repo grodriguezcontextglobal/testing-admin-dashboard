@@ -26,7 +26,9 @@ import ReleaseDeposit from "./ReleaseDeposit";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 const SearchDeviceRef = ({ searchParams, data }) => {
   const location = useLocation();
-  const [foundDeviceData, setFoundDeviceData] = useState(() => data.pool ?? []);
+  const [foundDeviceData, setFoundDeviceData] = useState(() =>
+    (data.pool ?? []).filter((d) => d?.activity === true)
+  );
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
@@ -39,7 +41,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
     const controller = new AbortController();
     const addingResult = new Set();
     if (data.pool) {
-      for (let item of data.pool) {
+      for (let item of data.pool.filter((i) => i?.activity === true)) {
         addingResult.add({
           serialNumber: item.device,
           type: item.type,
