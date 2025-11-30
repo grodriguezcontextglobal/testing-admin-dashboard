@@ -45,6 +45,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModalReleasingDeposit, setOpenModalReleasingDeposit] =
     useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [consumerSQLInfo, setConsumerSQLInfo] = useState(null);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const assignedDevicesQuery = useQuery({
@@ -125,10 +126,22 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
     return [];
   };
-
+  const checkConsumerInfoSQLTable = async () => {
+    const responseConsumerInfo = await devitrakApi.post(
+      "/db_consumer/consulting-consumer",
+      {
+        email: customer.email,
+      }
+    );
+    return setConsumerSQLInfo(responseConsumerInfo.data.consumer);
+  };
   useEffect(() => {
     dataRendering();
   }, [assignedDevicesQuery.data, rowRecord.key]);
+
+  useEffect(() => {
+    checkConsumerInfoSQLTable();
+  }, []);
 
   const handleReturnItemInTransaction = async (props) => {
     try {
@@ -141,11 +154,15 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           "device.deviceType": props.type,
         }
       );
+      const eventIDInfoFound = props.entireData
+        ? props.entireData.event_id
+        : props.eventInfo[0].event_id;
+      const eventIdFound = eventIDInfoFound;
       const eventInfoInTransaction = await devitrakApi.post(
         "/event/event-list",
         {
           company: user.companyData.company_name,
-          _id: props.entireData.event_id,
+          _id: eventIdFound,
         }
       );
       if (responseDeviceInfoInTransaction.data.listOfReceivers.length > 0) {
@@ -184,6 +201,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       }
       return setActionInProgress(false);
     } catch (error) {
+      console.log(error);
       setActionInProgress(false);
       return message.error(error.message);
     }
@@ -202,42 +220,44 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   };
 
   const handleReturnItemFromLeaseTransaction = async (props) => {
-    setOpenReturnDeviceStaffModal(true);
-    const sqlItemInfo = await devitrakApi.post("/db_item/consulting-item", {
-      serial_number: props.serial_number,
-      item_group: props.type,
-      company_id: user.sqlInfo.company_id,
-    });
-
-    const sqlConsumerInfo = await devitrakApi.post(
-      "/db_consumer/consulting-consumer",
-      {
-        email: customer.email,
-      }
-    );
-    const sqlConsumerLeaseInfo = await devitrakApi.post(
-      "/db_lease/consulting-consumer-lease",
-      {
-        consumer_member_id: sqlConsumerInfo.data.consumer[0].consumer_id,
+    try {
+      setOpenReturnDeviceStaffModal(true);
+      const sqlItemInfo = await devitrakApi.post("/db_item/consulting-item", {
+        serial_number: props.serial_number,
+        item_group: props.type,
         company_id: user.sqlInfo.company_id,
-        device_id: sqlItemInfo.data.items[0].item_id,
-        subscription_current_in_use: 1,
-        
+      });
+      const sqlConsumerInfo = await devitrakApi.post(
+        "/db_consumer/consulting-consumer",
+        {
+          email: customer.email,
+        }
+      );
+      const sqlConsumerLeaseInfo = await devitrakApi.post(
+        "/db_lease/consulting-consumer-lease",
+        {
+          consumer_member_id: sqlConsumerInfo.data.consumer[0].consumer_id,
+          company_id: user.sqlInfo.company_id,
+          device_id: sqlItemInfo.data.items[0].item_id,
+          subscription_current_in_use: 1,
+        }
+      );
+      if (
+        sqlItemInfo.data.ok &&
+        sqlConsumerInfo.data.ok &&
+        sqlConsumerLeaseInfo.data.ok
+      ) {
+        const template = {
+          ...sqlConsumerInfo.data.consumer[0],
+          ...sqlConsumerLeaseInfo.data.lease[0],
+          ...sqlItemInfo.data.items[0],
+          item_id_info: sqlItemInfo.data.items[0],
+          rowRecord: rowRecord,
+        };
+        return setInfoNeededToBeRenderedInTable(template);
       }
-    );
-    if (
-      sqlItemInfo.data.ok &&
-      sqlConsumerInfo.data.ok &&
-      sqlConsumerLeaseInfo.data.ok
-    ) {
-      const template = {
-        ...sqlConsumerInfo.data.consumer[0],
-        ...sqlConsumerLeaseInfo.data.lease[0],
-        ...sqlItemInfo.data.items[0],
-        item_id_info: sqlItemInfo.data.items[0],
-        rowRecord: rowRecord,
-      };
-      return setInfoNeededToBeRenderedInTable(template);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -531,6 +551,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           setOpenReturnDeviceStaffModal={setOpenReturnDeviceStaffModal}
           deviceInfo={infoNeededToBeRenderedInTable}
           returnFunction={handleReturnItemInTransaction}
+          returnLeaseFunction={handleReturnItemFromLeaseTransaction}
+          transactionInfo={{ ...rowRecord, sqlInfo: consumerSQLInfo.at(-1) }}
         />
       )}
 
