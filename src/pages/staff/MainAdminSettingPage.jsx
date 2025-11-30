@@ -14,6 +14,7 @@ import RefreshButton from "../../components/utils/UX/RefreshButton";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import "../../styles/global/ant-table.css";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import DownLoadReportButton from "./components/DownLoadReportButton";
 const MainAdminSettingPage = ({
   searchAdmin,
   modalState,
@@ -396,6 +397,7 @@ const MainAdminSettingPage = ({
           xs={12}
         >
           <RefreshButton propsFn={() => companiesEmployees.refetch()} />
+            <DownLoadReportButton />
         </Grid>
         <Table
           style={{ width: "100%", cursor: "pointer" }}
