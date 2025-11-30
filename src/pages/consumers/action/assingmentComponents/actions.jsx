@@ -58,14 +58,17 @@ export const createNewLease = ({
     console.log(error);
   }
 };
-export const createEvent = ({ template, customer, user, newEventInfo }) => {
+export const createEvent = ({ template, customer, user, newEventInfo, timeReferenceForEventName }) => {
   try {
     const createEventSQL = async () => {
       try {
+      const eventName = `${customer.name} ${customer.lastName} / ${
+        customer.email
+      } / ${timeReferenceForEventName} / Lease / ${
+        customer.id ?? customer.uid
+      }`;
         const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-          event_name: `${customer.name} ${customer.lastName} / ${
-            customer.email
-          } / ${new Date().toLocaleDateString()}`,
+          event_name: eventName,
           venue_name: `${customer.name} ${customer.lastName} / ${
             customer.email
           } / ${new Date().toLocaleDateString()}`,
@@ -98,10 +101,16 @@ export const createDeviceRecordInNoSQLDatabase = ({
   addContracts,
   verificationInfo,
   stampTime,
+  timeReferenceForEventName
 }) => {
   try {
     const db = deviceInfo;
     let items = [];
+      const eventName = `${customer.name} ${customer.lastName} / ${
+        customer.email
+      } / ${timeReferenceForEventName} / Lease / ${
+        customer.id ?? customer.uid
+      }`;
     const createDevicePoolEvent = async () => {
       for (let index = 0; index < db.length; index++) {
         const deviceTemplate = {
@@ -109,9 +118,7 @@ export const createDeviceRecordInNoSQLDatabase = ({
           status: "Operational",
           activity: true,
           comment: "No comment",
-          eventSelected: `${customer.name} ${customer.lastName} / ${
-            customer.email
-          } / ${new Date().toLocaleDateString()}`,
+          eventSelected: eventName,
           provider: user.company,
           type: db[index].item_group,
           company: user.companyData.id,
@@ -183,12 +190,15 @@ export const createEventNoSQL = ({
   contractList,
   addContracts,
   stampTime,
+  timeReferenceForEventName,
 }) => {
   try {
     const createEventNoSQL = async () => {
       const eventName = `${customer.name} ${customer.lastName} / ${
         customer.email
-      } / ${new Date().toLocaleDateString()} / Lease`;
+      } / ${timeReferenceForEventName} / Lease / ${
+        customer.id ?? customer.uid
+      }`;
       const leasedTime = new Date();
       leasedTime.setFullYear(leasedTime.getFullYear() + 2);
       const eventLink = eventName.replace(/ /g, "%20");
@@ -355,12 +365,13 @@ export const transactionDeviceAdded = ({
   customer,
   verificationInfo,
   user,
+  timeReferenceForEventName
 }) => {
   try {
     const createTransaction = async () => {
       const eventName = `${customer.name} ${customer.lastName} / ${
         customer.email
-      } / ${new Date().toLocaleString()} / Lease / ${
+      } / ${timeReferenceForEventName} / Lease / ${
         customer.id ?? customer.uid
       }`;
 
