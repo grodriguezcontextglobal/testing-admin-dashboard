@@ -12,6 +12,7 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { formatDate } from "../../inventory/utils/dateFormat";
+import LeaseEndedEmailNotification from "./notification/LeaseEndedEmailNotification";
 
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 const ModalReturnItem = ({
@@ -21,6 +22,7 @@ const ModalReturnItem = ({
   returnFunction,
 }) => {
   const { user } = useSelector((state) => state.admin);
+  const { customer } = useSelector((state) => state.customer);
   const { register, handleSubmit, watch } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
@@ -135,6 +137,17 @@ const ModalReturnItem = ({
             new_status: false,
           };
           await returnFunction({ ...template });
+          await LeaseEndedEmailNotification({
+            company: user.companyData.name,
+            admin_email: user.email,
+            customer: customer,
+            devicesList: [
+              {
+                serial_number: deviceInfo.item_id_info.serial_number,
+                type: deviceInfo.item_id_info.item_group,
+              },
+            ],
+          });
           queryClient.invalidateQueries({
             queryKey: ["assignedDevicesByTransaction"],
             exact: true,
