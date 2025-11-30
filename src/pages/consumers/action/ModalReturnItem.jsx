@@ -57,7 +57,8 @@ const ModalReturnItem = ({
         staff_admin_id: deviceInfo.staff_admin_id,
         company_id: deviceInfo.company_id,
         subscription_current_in_use: 0,
-        consumer_member_id: deviceInfo.consumer_member_id,
+        consumer_member_id:
+          deviceInfo.consumer_member_id ?? deviceInfo.consumer_id,
         device_id: deviceInfo.item_id_info.item_id,
         active: 0,
       }
@@ -65,27 +66,45 @@ const ModalReturnItem = ({
     if (response.data && response.data.ok) {
       await devitrakApi.post("/db_lease/delete-consumer-lease-info", {
         company_id: deviceInfo.company_id,
-        consumer_member_id: deviceInfo.consumer_member_id,
+        consumer_member_id:
+          deviceInfo.consumer_member_id ?? deviceInfo.consumer_id,
         device_id: deviceInfo.item_id_info.item_id,
       });
-      const eventInfoForRemovingRow = await devitrakApi.post(
-        "/db_record/checking",
-        {
-          item_id: deviceInfo.device_id,
-          company_assigned_event_id: deviceInfo.company_id,
-        }
-      );
-
-      if (eventInfoForRemovingRow.data) {
-        await devitrakApi.post("/db_record/removing-row-item-event-record", {
-          item_id: deviceInfo.device_id,
-          event_id: eventInfoForRemovingRow.data.result[0].event_id,
-        });
-        return closingEventAndReturningDevice();
-      }
+      // const eventInfoForRemovingRow = await devitrakApi.post(
+      //   "/db_record/checking",
+      //   {
+      //     item_id: deviceInfo.device_id,
+      //     company_assigned_event_id: deviceInfo.company_id,
+      //   }
+      // );
+      // console.log(eventInfoForRemovingRow?.data);
+      // if (eventInfoForRemovingRow.data) {
+      //   const x = await devitrakApi.post(
+      //     "/db_record/removing-row-item-event-record",
+      //     {
+      //       item_id: deviceInfo.device_id,
+      //       event_id: eventInfoForRemovingRow.data.result.at(-1).event_id,
+      //     }
+      //   );
+      //   console.log(x);
+      //   return closingEventAndReturningDevice();
+      // }
+      return closingEventAndReturningDevice();
     }
   };
 
+  // const findEventInfoSQLTable = async (props) => {
+  //   const query = `select * from lease_customer_info where consumer_member_id = ? and device_id = ?;`;
+  //   const values = [transactionInfo.consumer_member_id, props];
+  //   const x = await devitrakApi.post(
+  //     "/db_company/inventory-based-on-submitted-parameters",
+  //     {
+  //       query: query,
+  //       values: values,
+  //     }
+  //   );
+  //   return x.data.result;
+  // };
   const closingEventAndReturningDevice = async () => {
     try {
       const checkEventByDevice = await devitrakApi.post(
@@ -105,9 +124,17 @@ const ModalReturnItem = ({
             activity: false,
           }
         );
-
         if (deviceUpdate.data.ok) {
-          await returnFunction(deviceInfo.rowRecord);
+          const template = {
+            rowRecord: deviceInfo.rowRecord.paymentIntent,
+            serial_number: deviceInfo.item_id_info.serial_number,
+            type: deviceInfo.item_id_info.item_group,
+            eventInfo: [
+              { event_id: deviceInfo.rowRecord.eventInfo.at(-1).event_id },
+            ],
+            new_status: false,
+          };
+          await returnFunction({ ...template });
           queryClient.invalidateQueries({
             queryKey: ["assignedDevicesByTransaction"],
             exact: true,
