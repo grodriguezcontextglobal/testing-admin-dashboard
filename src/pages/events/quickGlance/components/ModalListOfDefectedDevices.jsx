@@ -1,5 +1,9 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Modal, Table } from "antd";
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
+import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { onAddDeviceToDisplayInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
 
 const ModalListOfDefectedDevices = ({
   defectedDeviceList,
@@ -9,7 +13,7 @@ const ModalListOfDefectedDevices = ({
   const closeModal = () => {
     return setDefectedDeviceList(false);
   };
-
+const dispatch = useDispatch();
   const dataToRender = () => {
     const result = new Map();
     for (let item of data) {
@@ -52,11 +56,74 @@ const ModalListOfDefectedDevices = ({
         dataIndex: "comment",
         key: "comment",
       },
+      {
+        title: "",
+        dataIndex: "action",
+        key: "action",
+        render: (_, y) => {
+          /**
+           * {
+    "company": [
+        "Item1",
+        "Invoxia, Inc."
+    ],
+    "activity": false,
+    "status": "Damaged",
+    "serialNumber": "986953",
+    "user": false,
+    "entireData": {
+        "eventSelected": "TEST_DOCUMENTS",
+        "device": "986953",
+        "type": "Item1",
+        "status": "Damaged",
+        "activity": false,
+        "comment": "No comment",
+        "provider": "Invoxia, Inc.",
+        "company": "684c09f3c88882452719934a",
+        "contract_type": "event",
+        "id": "68c061570002153f1e5840c8"
+    }
+}
+           */
+          const template = {
+            activity: y.activity,
+            company: [y.type, y.provider],
+            serialNumber: y.device,
+            user: y.activity,
+            entireData: {
+              eventSelected: y.eventSelected,
+              device: y.device,
+              type: y.type,
+              status: y.status,
+              activity: y.activity,
+              comment: y.comment,
+              provider: y.provider,
+              company: y.company,
+              contract_type: y.contract_type,
+              id: y.id,
+            },
+          };
+          return (
+            <Link to="/device-quick-glance">
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  outline: "none",
+                  margin: 0,
+                  padding: 0,
+                }}
+                onClick={()=> dispatch(onAddDeviceToDisplayInQuickGlance({ ...template}))}
+              >
+                <RightNarrowInCircle />
+              </button>
+            </Link>
+          );
+        },
+      },
     ];
 
-    return (
-      <Table columns={columns} dataSource={record.report} />
-    );
+    return <Table columns={columns} dataSource={record.report} />;
   };
 
   const columns = [
