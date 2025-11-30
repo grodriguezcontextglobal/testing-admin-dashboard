@@ -76,6 +76,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             eventInfo: value,
             extra_data: transactionData ?? [],
             timestamp: value[0].created_at,
+            cost: value[0].device[0].deviceValue,
           },
         ]);
       } else {
@@ -96,6 +97,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             eventInfo: value,
             extra_data: transactionData ?? [],
             timestamp: value[0].created_at,
+            cost: value[0].device[0].deviceValue,
           },
         ]);
       }
