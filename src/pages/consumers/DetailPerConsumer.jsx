@@ -1,11 +1,6 @@
 // import StripeTransactionHistoryByUser from '../Attendees/tables/StripeTransactionHistoryByUser';
 import { Icon } from "@iconify/react";
-import {
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography
-} from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useForm } from "react-hook-form";
@@ -52,9 +47,8 @@ const DetailPerConsumer = () => {
         active: { $in: [true, false] },
       }),
     // refetchOnMount: false,
-    enabled:!!user.companyData.id && !!customer.email,
+    enabled: !!user.companyData.id && !!customer.email,
   });
-
   // useEffect(() => {
   //   const controller = new AbortController();
   //   transactionsConsumerQuery.refetch();
@@ -226,7 +220,11 @@ const DetailPerConsumer = () => {
               md={4}
               lg={4}
             >
-              <BlueButtonComponent title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} func={() => setCreateUserButton(true)} />
+              <BlueButtonComponent
+                title={"Add new consumer"}
+                icon={<WhiteCirclePlusIcon />}
+                func={() => setCreateUserButton(true)}
+              />
             </Grid>
           </Grid>
           <Grid
@@ -410,14 +408,12 @@ const DetailPerConsumer = () => {
             </Grid>
           </Grid>
         </Grid>
-        {
-          createUserButton && (
-            <CreateNewConsumer
-              createUserButton={createUserButton}
-              setCreateUserButton={setCreateUserButton}
-            />
-          )
-        }
+        {createUserButton && (
+          <CreateNewConsumer
+            createUserButton={createUserButton}
+            setCreateUserButton={setCreateUserButton}
+          />
+        )}
       </>
     );
   }
