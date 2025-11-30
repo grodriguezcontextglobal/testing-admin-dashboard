@@ -60,6 +60,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   // const dateToUse = useMemo(() => formatDate(new Date()), []);
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
+  const timeReferenceForEventName = useMemo(() => new Date().toLocaleString(), []);
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
@@ -169,6 +170,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         consumerInfoSqlDb,
         newEventInfo,
         customer,
+        timeReferenceForEventName,
       });
       const deviceInfo = props.selectedData; //*array of existing devices in sql db
       if (newEventInfo.insertId && deviceInfo.length > 0) {
@@ -190,6 +192,8 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           deviceInfo,
           user,
           consumerInfoSqlDb,
+          verification_id: verificationInfo._id,
+          timeReferenceForEventName
         }); 
         await createEventNoSQL({
           template: props.template,
@@ -201,6 +205,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           contractList,
           addContracts,
           stampTime,
+          timeReferenceForEventName
         });
         await addDeviceToEvent({
           item_group: deviceInfo[0].item_group,
@@ -210,6 +215,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           selectedList: deviceInfo,
           newEventInfo,
           queryClient,
+          timeReferenceForEventName
         });
         
         await transactionDeviceAdded({
@@ -221,6 +227,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           customer,
           verificationInfo,
           user,
+          timeReferenceForEventName
         });
         openNotificationWithIcon("Equipment assigned to consumer.");
         return closeModal();
