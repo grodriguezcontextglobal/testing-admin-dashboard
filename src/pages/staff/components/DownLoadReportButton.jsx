@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { DownloadIcon } from "../../../components/icons/DownloadIcon";
+import { XLSXIcon } from "../../../components/icons/XLSXIcon";
 
 const DownLoadReportButton = () => {
   const { user } = useSelector((state) => state.admin);
@@ -158,7 +158,7 @@ const DownLoadReportButton = () => {
           padding: "0px",
         }}
       >
-        <DownloadIcon />&nbsp;
+        <XLSXIcon />&nbsp;
         Download Report
       </p>
     </Button>
