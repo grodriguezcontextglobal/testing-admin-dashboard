@@ -106,7 +106,7 @@ const DownLoadReportButton = () => {
           Warehouse: item.location ?? "",
           Category_Name: item.category_name ?? "",
           Cost: item.cost ?? "",
-          Subscription_Begins_Date:
+          Assignment_Begins_Date:
             new Date(lease.subscription_initial_date).toLocaleString() ?? "",
         };
       });
