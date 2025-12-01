@@ -1,14 +1,13 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Modal } from "antd";
+import { Modal } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import renderingTitle from "../../../../../components/general/renderingTitle";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
@@ -178,19 +177,7 @@ const ModalReturnDeviceFromStaff = ({
               gap={2}
               container
             >
-              <Button
-                disabled={watch("reason") === ""}
-                htmlType="submit"
-                style={{ ...BlueButton, width: "100%" }}
-                loading={isLoading}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={{ ...BlueButtonText, ...CenteringGrid }}
-                >
-                  Save
-                </Typography>
-              </Button>
+              <BlueButtonComponent title={"Return and Save"} loadingState={isLoading} disabled={watch("reason") === "" || isLoading} buttonType="submit" />
             </Grid>
           )}{" "}
         </Grid>
