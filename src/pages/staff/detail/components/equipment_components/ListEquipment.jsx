@@ -15,6 +15,7 @@ import "../../../../../styles/global/ant-select.css";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
 function ListEquipment() {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -31,13 +32,13 @@ function ListEquipment() {
         email: profile.email,
       }),
     enabled: !!user.uid,
-    staleTime: 60 * 60,
+    staleTime: 3 * 60 * 100,
   });
   const listImagePerItemQuery = useQuery({
     queryKey: ["imagePerItemList"],
     queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
     enabled: !!user.uid,
-    staleTime: 60 * 60,
+    staleTime: 3 * 60 * 100,
   });
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInventoryCheckingQuery"],
@@ -46,7 +47,7 @@ function ListEquipment() {
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!user.uid,
-    staleTime: 60 * 60,
+    staleTime: 3 * 60 * 100,
   });
   const navigate = useNavigate();
   const [canSeeSignedColumns, setCanSeeSignedColumns] = useState(false);
@@ -307,7 +308,7 @@ function ListEquipment() {
     );
     const verificationId = record.verification_id;
     const docs =
-    (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
+      (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
     const data = docs.map((doc) => {
       return {
         key: doc.key,
@@ -337,7 +338,7 @@ function ListEquipment() {
         title: "Date/Time",
         dataIndex: "date",
         key: "date",
-        render: (date) => date ? new Date(date).toLocaleString() : "No sign",
+        render: (date) => (date ? new Date(date).toLocaleString() : "No sign"),
       },
       {
         title: "Actions",
@@ -414,8 +415,24 @@ function ListEquipment() {
     listImagePerItemQuery.data &&
     staffMemberQuery.data
   ) {
+    const handleRefresh = () => {
+      itemsInInventoryQuery.refetch();
+      listImagePerItemQuery.refetch();
+      staffMemberQuery.refetch();
+      return fetchLeasePerStaffMember();
+    }
     return (
       <div style={{ width: "100%" }} key={location.key}>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <RefreshButton propsFn={handleRefresh} />{" "}
+        </div>
         <Table
           style={{ width: "100%" }}
           columns={columns}
