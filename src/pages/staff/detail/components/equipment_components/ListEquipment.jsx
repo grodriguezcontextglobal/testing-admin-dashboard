@@ -90,7 +90,7 @@ function ListEquipment() {
     return () => {
       controller.abort();
     };
-  }, [staffMemberQuery.data]);
+  }, [staffMemberQuery.data, profile._id]);
 
   // Build per-verification document list and overall status
   const [verificationDetailsMap, setVerificationDetailsMap] = useState({});
