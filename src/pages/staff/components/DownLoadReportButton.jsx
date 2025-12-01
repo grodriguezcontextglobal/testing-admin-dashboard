@@ -1,9 +1,10 @@
+import { Button } from "antd";
 import { groupBy } from "lodash";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../api/devitrakApi";
-import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { utils, writeFile } from "xlsx";
+import { devitrakApi } from "../../../api/devitrakApi";
+import { DownloadIcon } from "../../../components/icons/DownloadIcon";
 
 const DownLoadReportButton = () => {
   const { user } = useSelector((state) => state.admin);
@@ -105,7 +106,8 @@ const DownLoadReportButton = () => {
           Warehouse: item.location ?? "",
           Category_Name: item.category_name ?? "",
           Cost: item.cost ?? "",
-          Subscription_Begins_Date: new Date(lease.subscription_initial_date).toLocaleString() ?? "",
+          Subscription_Begins_Date:
+            new Date(lease.subscription_initial_date).toLocaleString() ?? "",
         };
       });
 
@@ -132,11 +134,34 @@ const DownLoadReportButton = () => {
     await exportToXLSX(dataset);
   };
   return (
-    <BlueButtonComponent
-      title={"Download Report"}
-      func={handleDownloadReport}
-      loadingState={isLoadingState}
-    />
+    <Button
+      style={{
+        display: "flex",
+        alignItems: "center",
+        borderTop: "transparent",
+        borderLeft: "transparent",
+        borderBottom: "transparent",
+        borderRadius: "8px 8px 0 0",
+      }}
+      onClick={handleDownloadReport}
+      loading={isLoadingState}
+    >
+      <p
+        style={{
+          textTransform: "none",
+          textAlign: "left",
+          fontWeight: 500,
+          fontSize: "12px",
+          fontFamily: "Inter",
+          lineHeight: "28px",
+          color: "var(--blue-dark-700, #004EEB)",
+          padding: "0px",
+        }}
+      >
+        <DownloadIcon />&nbsp;
+        Download Report
+      </p>
+    </Button>
   );
 };
 
