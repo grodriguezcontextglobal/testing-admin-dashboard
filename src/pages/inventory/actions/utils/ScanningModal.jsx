@@ -50,7 +50,7 @@ const ScanningModal = ({
           style={{ ...Subtitle, textWrap: "balance" }}
           padding={"1rem 0"}
         >
-          Total scanned: {scannedSerialNumbers.length}
+          Total scanned/typed: {scannedSerialNumbers.length}
         </Typography>
       </div>
     );
