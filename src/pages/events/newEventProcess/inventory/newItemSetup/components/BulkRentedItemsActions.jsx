@@ -26,7 +26,7 @@ const updateExistingItemQuantity = (
         Number(updatedItems[itemIndex].quantity) + Number(additionalQuantity),
       isItSetAsContainerForEvent: false,
     };
-    setSelectedItem([ ...updatedItems]);
+    setSelectedItem([...updatedItems]);
     dispatch(onAddDeviceSetup(updatedItems));
     return true;
   }
@@ -129,7 +129,7 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
       isItInContainer: JSON.stringify([]),
       containerId: JSON.stringify([]),
       display_item: 1,
-      enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+      enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
       existing: true,
       consumerUses: false,
@@ -251,7 +251,7 @@ export const bulkItemInsertSequentialWithEventCheck = async ({
       isItInContainer: 0,
       containerId: JSON.stringify([]),
       display_item: 1,
-      enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+      enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
       existing: true,
       consumerUses: false,
@@ -366,7 +366,7 @@ export const bulkItemInsertAlphanumeric = async ({
       isItInContainer: JSON.stringify([]),
       containerId: JSON.stringify([]),
       display_item: 1,
-      enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+      enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
       existing: true,
       consumerUses: false,
@@ -444,7 +444,7 @@ export const bulkItemInsertSequential = async ({
       isItInContainer: 0,
       containerId: JSON.stringify([]),
       display_item: 1,
-      enableAssignFeature: data.enableAssignFeature === "Enabled" ? 1 : 0,
+      enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
       existing: true,
       consumerUses: false,
