@@ -324,6 +324,7 @@ const BulkRentedItems = ({
                             })}
                             placeholder={item.placeholder}
                             allowClear
+                            disabled={item.name === "serial_number_list"}
                           />
                           {renderingOptionsButtons({
                             watch,
