@@ -43,7 +43,7 @@ export const renderingOptionsButtons = ({
   watch,
   setOpenScanningModal,
   setOpenScannedItemView,
-  manuallyAddingSerialNumbers,
+  // manuallyAddingSerialNumbers,
   addingSubLocation,
   setAddSerialNumberField,
   label,
@@ -63,7 +63,7 @@ export const renderingOptionsButtons = ({
   }
   if (
     label === "Starting Serial number" &&
-    watch("format_range_serial_number") === "Alphanumeric"
+    watch("format_range_serial_number") === "Custom serial number"
   ) {
     return (
       <Button
@@ -78,15 +78,16 @@ export const renderingOptionsButtons = ({
     );
   }
   if (
-    label === "Scanning all serial numbers here" ||
-    label === "Typing all serial numbers here"
+    label === "Scanned serial number will be displayed here." ||
+    label === "Typed serial number will be displayed here."
   ) {
     const redirectOptions = () => {
       if (watch("feed_serial_number") === "Scanning") {
         return setOpenScanningModal(true);
       }
       if (watch("feed_serial_number") === "Typing") {
-        return manuallyAddingSerialNumbers();
+        return setOpenScanningModal(true);
+        //manuallyAddingSerialNumbers();
       }
     };
 
