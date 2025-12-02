@@ -299,7 +299,7 @@ const EditGroup = () => {
           subLocationsSubmitted,
           originalTemplate: refTemplateToUpdate.current,
           sequencialNumbericUpdateItemMutation,
-          dicSuppliers
+          dicSuppliers,
         });
       }
       return setLoadingStatus(false);
@@ -692,6 +692,18 @@ const EditGroup = () => {
       setValue("quantity", 0);
     }
   }, [updateAllItems]);
+
+  useEffect(() => {
+    setValue("location", watch("tax_location"));
+  }, [watch("tax_location")]);
+
+  useEffect(() => {
+    if (watch("location") !== watch("tax_location")) {
+      alert(
+        "Location and Tax Location are not the same. Are you sure you want to continue?"
+      );
+    }
+  }, [watch("location")]);
 
   return (
     <Grid
