@@ -40,7 +40,6 @@ const MainBody = ({
   staff,
   triggerAddingAdminStaff,
 }) => {
-  console.log(eventInfoDetail);
   return (
     <Grid
       container
