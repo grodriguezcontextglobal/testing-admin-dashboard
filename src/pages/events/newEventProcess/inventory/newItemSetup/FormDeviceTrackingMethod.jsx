@@ -64,7 +64,9 @@ const FormDeviceTrackingMethod = ({
   const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
   const [openScanningModal, setOpenScanningModal] = useState(false);
   const [openScannedItemView, setOpenScannedItemView] = useState(false);
-  const [labeling, setLabeling] = useState("Scanning all serial numbers here");
+  const [labeling, setLabeling] = useState(
+    "Scanned serial number will be displayed here."
+  );
   const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
@@ -253,7 +255,7 @@ const FormDeviceTrackingMethod = ({
   };
 
   const qtyDiff = useCallback(() => {
-    if (watch("format_range_serial_number") === "Alphanumeric")
+    if (watch("format_range_serial_number") === "Custom serial number")
       return setValue("quantity", scannedSerialNumbers.length);
     if (watch("format_range_serial_number") === "Sequential number")
       return setValue(
@@ -518,7 +520,7 @@ const FormDeviceTrackingMethod = ({
   }, [watch("cost")]);
 
   useEffect(() => {
-    if (watch("format_range_serial_number") === "Alphanumeric") {
+    if (watch("format_range_serial_number") === "Custom serial number") {
       setRangeFormat(true);
       setAddSerialNumberField(false);
     }
@@ -536,16 +538,16 @@ const FormDeviceTrackingMethod = ({
 
   useEffect(() => {
     if (
-      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("format_range_serial_number") === "Custom serial number" &&
       watch("feed_serial_number") === "Typing"
     ) {
-      setLabeling("Typing all serial numbers here");
+      setLabeling("Typed serial number will be displayed here.");
     }
     if (
-      watch("format_range_serial_number") === "Alphanumeric" &&
+      watch("format_range_serial_number") === "Custom serial number" &&
       watch("feed_serial_number") === "Scanning"
     ) {
-      setLabeling("Scanning all serial numbers here");
+      setLabeling("Scanned serial number will be displayed here.");
     }
   }, [watch("feed_serial_number")]);
 
@@ -583,6 +585,18 @@ const FormDeviceTrackingMethod = ({
   useEffect(() => {
     setValue("serial_number_list", scannedSerialNumbers.join(", "));
   }, [scannedSerialNumbers.length]);
+
+  useEffect(() => {
+    setValue("location", watch("tax_location"));
+  }, [watch("tax_location")]);
+
+  useEffect(() => {
+    if (watch("location") !== watch("tax_location")) {
+      alert(
+        "Location and Tax Location are not the same. Are you sure you want to continue?"
+      );
+    }
+  }, [watch("location")]);
 
   return (
     <Grid
