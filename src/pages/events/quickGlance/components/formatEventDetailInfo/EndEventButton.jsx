@@ -259,7 +259,8 @@ const EndEventButton = () => {
         )
       );
     } catch (error) {
-      if (error.message.includes("exceeds 40MB limit")) { // Updated error message
+      if (error.message.includes("exceeds 40MB limit")) {
+        // Updated error message
         // Process employees in batches if the payload is too large
         const batchSize = calculateOptimalBatchSize(employeesCompany[0] || {});
 
@@ -525,10 +526,11 @@ const EndEventButton = () => {
 
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
-        return openNotificationWithIcon(
-          "success",
-          "Event inventory has been moved back to Company Inventory"
-        );
+        // return openNotificationWithIcon(
+        //   "success",
+        //   "Event inventory has been moved back to Company Inventory"
+        // );
+        return;
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.message}`);
@@ -560,7 +562,8 @@ const EndEventButton = () => {
           )
         );
       } catch (error) {
-        if (error.message.includes("exceeds 90MB limit")) { // Updated error message
+        if (error.message.includes("exceeds 90MB limit")) {
+          // Updated error message
           // Process records in batches
           const processRecordBatch = async (batch) => {
             return await makeRequestWithRetry(() =>
