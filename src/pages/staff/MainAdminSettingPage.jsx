@@ -30,7 +30,7 @@ const MainAdminSettingPage = ({
       devitrakApi.post("/company/search-company", {
         _id: user.companyData.id,
       }),
-    refetchOnMount: false,
+    enabled: !!user.companyData.id && user.companyData.id !== "",
   });
 
   const eventQuery = useQuery({
@@ -41,7 +41,7 @@ const MainAdminSettingPage = ({
         type: "event",
         active: true,
       }),
-    refetchOnMount: false,
+    enabled:!!user.company
   });
 
   useEffect(() => {
