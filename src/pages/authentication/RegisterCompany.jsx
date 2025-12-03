@@ -1,8 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import {
-  notification
-} from "antd";
+import { notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -58,7 +56,7 @@ const RegisterCompany = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
-  const [triggerModal, setTriggerModal] = useState(true);
+  const [triggerModal, setTriggerModal] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -72,23 +70,15 @@ const RegisterCompany = () => {
       key: `${type}`,
     });
   };
+
   const industryListQuery = useQuery({
     queryKey: ["companyInfoList"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
     refetchOnMount: false,
   });
-  const checkUserInfo = useQuery({
-    queryKey: ["checkUserInfoQuery"],
-    queryFn: () =>
-      devitrakApi.post("/staff/admin-users", {
-        email: user.email,
-      }),
-    refetchOnMount: false,
-  });
   useEffect(() => {
     const controller = new AbortController();
     industryListQuery.refetch();
-    checkUserInfo.refetch();
     return () => {
       controller.abort();
     };
@@ -136,7 +126,7 @@ const RegisterCompany = () => {
     if (industryListQuery.data) {
       const industryData = industryListQuery.data.data.industry;
       for (let data of industryData) {
-        result.add(data.industry);
+        result.add(data);
       }
     }
     return Array.from(result);
