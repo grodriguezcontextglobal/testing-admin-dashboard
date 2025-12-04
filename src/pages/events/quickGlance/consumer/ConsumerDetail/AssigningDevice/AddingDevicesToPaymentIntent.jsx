@@ -17,12 +17,12 @@ import {
 } from "../../../../../../api/devitrakApi";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
+import { checkArray } from "../../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
-import { checkArray } from "../../../../../../components/utils/checkArray";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
 function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
@@ -321,6 +321,55 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     });
   };
 
+  const renderingEmailNotificationForDeviceAssignment = async () => {
+    const checkingAllTransactions = await devitrakApi.post(
+      "/receiver/receiver-assigned",
+      {
+        paymentIntent: record.paymentIntent,
+      }
+    );
+    if (
+      checkingAllTransactions?.data?.receiver.every(
+        (item) => item.device.status
+      ) &&
+      checkingAllTransactions?.data?.receiver?.length ===
+        record.device[0].deviceNeeded
+    ) {
+      const response = await devitrakApi.post(
+        "/nodemailer/device-report-per-transaction",
+        {
+          consumer: {
+            email: customer.email,
+            firstName: customer.name,
+            lastName: customer.lastName,
+          },
+          devices: [
+            ...checkingAllTransactions.data.receiver.map((item) => {
+              return {
+                device: {
+                  serialNumber: item.device.serialNumber,
+                  deviceType: item.device.deviceType,
+                  status: item.device.status ? "Assigned" : item.device.status,
+                },
+                paymentIntent: record.paymentIntent,
+              };
+            }),
+          ],
+          event: event.eventInfoDetail.eventName,
+          transaction: record.paymentIntent,
+          company: user.companyData.id,
+          link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+          admin: user.email,
+        }
+      );
+      if (response.data.ok) {
+        return message.success(
+          `Device report was sent successfully to ${customer.email}`
+        );
+      }
+    }
+  };
+  
   const handleDevicesAssignedToPaymentIntentInEvent = async (data) => {
     setSubmittedAction(true);
 
@@ -457,6 +506,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
           );
           setValue("serialNumber", "");
           await assignItemEmailNotification(template.render());
+          await renderingEmailNotificationForDeviceAssignment();
           setSubmittedAction(false);
         }
       }
