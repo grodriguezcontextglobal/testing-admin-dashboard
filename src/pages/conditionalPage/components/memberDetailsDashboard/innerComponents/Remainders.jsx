@@ -27,7 +27,7 @@ const Remainders = () => {
 
   useEffect(() => {
     if (memberInfoRetrieveQuery?.data?.data?.members) {
-      setMembersData(memberInfoRetrieveQuery?.data?.data?.members);
+      setMembersData(memberInfoRetrieveQuery?.data?.data?.members?.at(-1));
     }
   }, [memberInfoRetrieveQuery.data]);
   const { TextArea } = Input;
