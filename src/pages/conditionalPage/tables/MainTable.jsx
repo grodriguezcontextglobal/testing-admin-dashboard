@@ -151,7 +151,7 @@ const MainTable = () => {
         item
         xs={12}
       >
-        <RefreshButton propsFn={() => null} />
+        <RefreshButton propsFn={() => membersDataQuery.refetch()} />
         {/* <DownLoadReportButton /> */}
       </Grid>
       {membersDataQuery.isLoading ? (
