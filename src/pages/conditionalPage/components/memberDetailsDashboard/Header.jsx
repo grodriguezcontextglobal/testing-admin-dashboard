@@ -12,6 +12,7 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 // import { data } from "../../mock/mockData";
 
 const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
+  const detailMemberInfo = memberInfo?.at(-1);
   const { user } = useSelector((state) => state.admin);
   const c = {
     isLoading: false,
@@ -62,7 +63,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
               color: "var(--gray-900)",
             }}
           >
-            {memberInfo?.first_name}, {memberInfo?.last_name}
+            {detailMemberInfo?.first_name}, {detailMemberInfo?.last_name}
           </p>
         ),
       },
@@ -206,11 +207,11 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
             >
               {" "}
               <Avatar
-                src={memberInfo?.image_url}
+                src={detailMemberInfo?.image_url}
                 style={{ width: "5rem", height: "5rem" }}
               >
-                {!memberInfo?.image_url &&
-                  `${memberInfo?.first_name?.at(0)} ${memberInfo?.last_name?.at(
+                {!detailMemberInfo?.image_url &&
+                  `${detailMemberInfo?.first_name?.at(0)} ${detailMemberInfo?.last_name?.at(
                     0
                   )}`}
               </Avatar>
@@ -219,7 +220,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
               {[
                 { title: "name", id: 0 },
                 {
-                  title: `${memberInfo?.first_name} ${memberInfo?.last_name}`,
+                  title: `${detailMemberInfo?.first_name} ${detailMemberInfo?.last_name}`,
                   id: 1,
                 },
                 // { title: dicRole[profile?.role], id: 2 },
@@ -289,8 +290,8 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
                 paddingTop: "8px",
               }}
             >
-              {memberInfo?.phone_number
-                ? memberInfo?.phone_number
+              {detailMemberInfo?.phone_number
+                ? detailMemberInfo?.phone_number
                 : "+1-000-000-0000"}
             </Typography>
             <Typography
@@ -307,7 +308,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
                 textTransform: "none",
               }}
             >
-              {memberInfo?.email}
+              {detailMemberInfo?.email}
             </Typography>
           </Grid>
         </Grid>{" "}
