@@ -7,18 +7,29 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { data } from "../../../mock/mockData";
+// import { data } from "../../../mock/mockData";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 const Remainders = () => {
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
-  const [memberInfo, setMemberInfo] = useState(null);
+  const slug = location.pathname.split("/").filter(Boolean).at(-2);
+  const [membersData, setMembersData] = useState(null);
+  const memberInfoRetrieveQuery = useQuery({
+    queryKey: ["memberInfoRetrieveQuery"],
+    queryFn: () =>
+      devitrakApi.post("/db_member/consulting-member", {
+        member_id: Number(slug),
+      }),
+    enabled: !!slug,
+  });
+
   useEffect(() => {
-    const indicator = location.pathname.split("/")[2];
-    const member = data.find((item) => item.member_id === parseInt(indicator));
-    setMemberInfo(member);
-  }, []);
+    if (memberInfoRetrieveQuery?.data?.data?.members) {
+      setMembersData(memberInfoRetrieveQuery?.data?.data?.members);
+    }
+  }, [memberInfoRetrieveQuery.data]);
   const { TextArea } = Input;
   const { register, handleSubmit, setValue } = useForm();
   const [message, setMessage] = useState("");
@@ -34,7 +45,7 @@ const Remainders = () => {
   };
   const handleSubmitEmailNotification = async (data) => {
     const emailNotificationProfile = {
-      consumer: memberInfo.email,
+      consumer: membersData?.email,
       subject: data.subject,
       message: message,
       eventSelected: event.eventInfoDetail.eventName,
@@ -72,7 +83,7 @@ const Remainders = () => {
         md={10}
         lg={10}
       >
-        <p style={Subtitle}>This email will be sent to {memberInfo?.email}.</p>
+        <p style={Subtitle}>This email will be sent to {membersData?.email}.</p>
       </Grid>
       <Grid
         display={"flex"}
