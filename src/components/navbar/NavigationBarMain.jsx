@@ -42,6 +42,7 @@ import UpperBanner from "../general/UpperBanner";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import "./style/style.css";
+import ConditionalButton from "./component/ConditionalButton";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
@@ -93,6 +94,13 @@ const navItems = [
     permission: [0, 1, 2, 3, 4],
     mobile: true,
     desktop: false,
+  },
+  {
+    title: 0,
+    route: 0,
+    permission: [0, 1, 2, 3, 4],
+    mobile: false,
+    desktop: true,
   },
 ];
 
@@ -309,12 +317,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             padding: {
               xs: "0 20px",
               sm: "0 20px",
-              md:0,
-              lg:0,
+              md: 0,
+              lg: 0,
             },
             display: "flex",
-            justifyContent:"flex-start",
-            alignItems:"center",
+            justifyContent: "flex-start",
+            alignItems: "center",
           }}
           item
           xs={12}
@@ -336,20 +344,25 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               borderRadius: "50%",
             }}
           >
-            <Icon icon="material-symbols:menu" width={30} height={30} color="#fff" />
+            <Icon
+              icon="material-symbols:menu"
+              width={30}
+              height={30}
+              color="#fff"
+            />
           </Badge>
           <Box
             sx={{
               display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
               justifyContent: "flex-start",
               alignItems: "center",
-              padding:0,
+              padding: 0,
             }}
           >
             <NavLink
               key={"devitrakName"}
               to={`${Number(user.role) === 4 ? "/events" : "/"}`}
-              style={{ margin: "0 16px 0 0", width: "fit-content", padding:0 }}
+              style={{ margin: "0 16px 0 0", width: "fit-content", padding: 0 }}
             >
               <DevitrakLogo />
               <DevitrakName />{" "}
@@ -361,31 +374,41 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                   (element) => element === Number(user.role) && item.desktop
                 )
               ) {
-                return (
-                  <NavLink
-                    key={item.title}
-                    to={`${item.route}`}
-                    preventScrollReset
-                  >
-                    <div className="content-main-navbar-updated">
-                      <article
-                        className={
-                          location.pathname === `${item.route}`
-                            ? "nav-item-base-main-navbar-updated"
-                            : "nav-item-base-1-main-navbar-updated"
-                        }
-                      >
-                        <div className="content-2-main-navbar-updated">
-                          <div className="text-1-main-navbar-updated text-mdsemibold">
-                            <p style={{ textTransform: "capitalize" }}>
-                              {item.title}
-                            </p>
+                if (item.route === 0) {
+                  return (
+                    <ConditionalButton
+                      key={item.title}
+                      item={item}
+                      user={user}
+                    />
+                  );
+                } else {
+                  return (
+                    <NavLink
+                      key={item.title}
+                      to={`${item.route}`}
+                      preventScrollReset
+                    >
+                      <div className="content-main-navbar-updated">
+                        <article
+                          className={
+                            location.pathname === `${item.route}`
+                              ? "nav-item-base-main-navbar-updated"
+                              : "nav-item-base-1-main-navbar-updated"
+                          }
+                        >
+                          <div className="content-2-main-navbar-updated">
+                            <div className="text-1-main-navbar-updated text-mdsemibold">
+                              <p style={{ textTransform: "capitalize" }}>
+                                {item.title}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </article>
-                    </div>
-                  </NavLink>
-                );
+                        </article>
+                      </div>
+                    </NavLink>
+                  );
+                }
               }
             })}
           </Box>
@@ -493,7 +516,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
       </div>
       {/* </Toolbar>
       </AppBar> */}
-      <nav style={{width:"100%"}}>
+      <nav style={{ width: "100%" }}>
         <Drawer
           container={container}
           variant="temporary"
@@ -507,10 +530,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             "& .MuiDrawer-paper": {
               GridSizing: "border-box",
               width: drawerWidth,
-              padding:{
-                sx:"0 20px",
-                sm:"0 20px",
-              }
+              padding: {
+                sx: "0 20px",
+                sm: "0 20px",
+              },
             },
           }}
         >
