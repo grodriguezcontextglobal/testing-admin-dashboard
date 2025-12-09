@@ -1,7 +1,4 @@
-import {
-  useMediaQuery,
-  useTheme
-} from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect, useState } from "react";
@@ -34,6 +31,7 @@ const Body = () => {
     zipCode: user.companyData.address.postal_code,
     website: user.companyData.website,
     email: user.companyData.main_email,
+    industry: user.companyData.industry,
     employees: user.companyData.employees,
     companyLogo: user.companyData.company_logo,
   };
@@ -49,7 +47,7 @@ const Body = () => {
       };
     });
   }
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, control } = useForm({
     defaultValues: {
       companyName: user.companyData.company_name,
       mainPhoneNumber: user.companyData.phone.main,
@@ -59,6 +57,7 @@ const Body = () => {
       state: user.companyData.address.state,
       zipCode: user.companyData.address.postal_code,
       website: user.companyData.website,
+      industry: user.companyData.industry,
       email: user.companyData.main_email,
       employees: user.companyData.employees,
     },
@@ -76,6 +75,12 @@ const Body = () => {
       );
     }
   };
+
+  const industryListOptions = useQuery({
+    queryKey: ["existingRegisteredIndustryOptions"],
+    queryFn: () => devitrakApi.post("/db_company/industry"),
+    refetchOnMount: false,
+  });
 
   const features = [
     {
@@ -132,6 +137,14 @@ const Body = () => {
       logo: false,
       name: "website",
     },
+    {
+      title: "Industry",
+      id: 5,
+      object: false,
+      array: false,
+      logo: false,
+      name: "industry",
+    },
   ];
 
   const eventsCompany = useQuery({
@@ -145,25 +158,40 @@ const Body = () => {
   useEffect(() => {
     const controller = new AbortController();
     eventsCompany.refetch();
+    industryListOptions.refetch();
     return () => {
       controller.abort();
     };
   }, []);
 
+  const [industryOptionStored, setIndustryOptionStored] = useState([]);
+
+  useEffect(() => {
+    if (industryListOptions.data) {
+      setIndustryOptionStored(industryListOptions.data.data.industry);
+    }
+  }, [industryListOptions.data]);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  if (eventsCompany.data) {
+  if (eventsCompany.data && industryListOptions.data) {
     const updatingAllEventsRelatedCompany = async (props) => {
       const eventsData = eventsCompany?.data?.data?.list;
-      if (eventsData.length > 0) {
-        for (let data of eventsData) {
-          await devitrakApi.patch(`/event/edit-event/${data.id}`, {
-            ...data,
-            company: props,
-          });
-        }
-      }
+      await devitrakApi.patch("/event/update-events", {
+        ids: [...eventsData.map((item) => item.id)],
+        newValues: {
+          company: props,
+        },
+      });
+      // if (eventsData.length > 0) {
+      //   for (let data of eventsData) {
+      //     await devitrakApi.patch(`/event/edit-event/${data.id}`, {
+      //       ...data,
+      //       company: props,
+      //     });
+      //   }
+      // }
     };
 
     const handleUpdatePersonalInfo = async (data) => {
@@ -215,6 +243,7 @@ const Body = () => {
                 postal_code: data.zipCode,
               },
               website: data.website,
+              industry: data.industry,
               main_email: data.email,
             }
           );
@@ -226,10 +255,13 @@ const Body = () => {
               state_address: data.state,
               zip_address: data.zipCode,
               phone_number: data.mainPhoneNumber,
+              industry: data.industry,
               email_company: data.email,
               company_id: user.sqlInfo.company_id,
             });
-            await updatingAllEventsRelatedCompany(data.companyName);
+            if (data.companyName !== user.companyData.company_name) {
+              await updatingAllEventsRelatedCompany(data.companyName);
+            }
             setLoading(false);
             openNotificationWithIcon("Information updated", 3);
             dispatch(onLogout());
@@ -282,6 +314,8 @@ const Body = () => {
           removingCompanyLogo={removingCompanyLogo}
           register={register}
           CardSearchStaffFound={CardSearchStaffFound}
+          control={control}
+          industryListOptions={industryOptionStored}
         />
       </>
     );
