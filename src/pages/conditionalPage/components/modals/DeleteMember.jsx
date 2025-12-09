@@ -4,7 +4,6 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { data as mockMembers } from "../../mock/mockData";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { useSelector } from "react-redux";
@@ -12,7 +11,7 @@ import { useSelector } from "react-redux";
 const DeleteMember = ({
   openModal,
   setOpenModal,
-  members = mockMembers,
+  members = [],
   onDelete,
 }) => {
   const queryClient = useQueryClient();
