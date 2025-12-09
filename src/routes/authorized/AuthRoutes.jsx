@@ -186,7 +186,28 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
 const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
 const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
+const ConditionalMainPage = lazy(() =>
+  import("../../pages/conditionalPage/MainPage")
+);
 
+const MemberDetailsMainPage = lazy(() =>
+  import("../../pages/conditionalPage/components/memberDetailsDashboard/MainPage")
+);
+const DetailMemberInfo = lazy(() =>
+  import("../../pages/conditionalPage/tables/DetailMemberInfo")
+);
+
+const UpdateMemberInformation = lazy(() =>
+  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/UpdateMemberInformation")
+)
+
+const Remainders = lazy(() =>
+  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Remainders")
+)
+
+const AssignmentDeviceMembers = lazy(() =>
+  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent")
+)
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -397,6 +418,16 @@ const AuthRoutes = () => {
               <Route path="posts/post-edit/:id" element={<EditPost />} />
               <Route path="posts/post/:id" element={<DisplayArticle />} />
               <Route path="login" element={<RedirectionPage />} />
+              <Route path="members" element={<ConditionalMainPage />} />
+              <Route path="/member/:id" element={<MemberDetailsMainPage />}>
+                <Route key={"/member/:id/main"} path="main" element={<DetailMemberInfo />} />
+                <Route key={"/member/:id/update-member-information"} path="update-member-information" element={<UpdateMemberInformation />} />
+                <Route key={"/member/:id/reminders"} path="reminders" element={<Remainders />} />
+              <Route key={"/member/:id/assignment"} path="assignment" element={<AssignmentDeviceMembers
+               />} />
+              </Route>
+
+              <Route path="patiences" element={<ConditionalMainPage />} />
               <Route
                 path="register/company-setup"
                 element={<RedirectionPage />}
