@@ -6,24 +6,28 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Avatar, Divider, Space } from "antd";
+import { AutoComplete, Avatar, Divider, Space } from "antd";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import Header from "../../components/Header";
+import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
+import { Controller } from "react-hook-form";
 
 const BodyForm = ({
-  handleUpdatePersonalInfo,
+  CardSearchStaffFound,
+  checkIfOriginalDataHasChange,
+  control,
+  features,
   handleSubmit,
+  handleUpdatePersonalInfo,
+  industryListOptions,
   isMobile,
   loading,
-  features,
-  user,
-  checkIfOriginalDataHasChange,
-  removingCompanyLogo,
   register,
-  CardSearchStaffFound,
+  removingCompanyLogo,
+  user,
 }) => {
   return (
     <form
@@ -118,11 +122,47 @@ const BodyForm = ({
                   lg={8}
                 >
                   {checkIfOriginalDataHasChange(item.name)}
-                  <OutlinedInput
-                    style={{ ...OutlinedInputStyle }}
-                    fullWidth
-                    {...register(`${item.name}`)}
-                  />
+                  {item.name !== "industry" ? (
+                    <OutlinedInput
+                      style={{ ...OutlinedInputStyle }}
+                      fullWidth
+                      {...register(`${item.name}`)}
+                    />
+                  ) : (
+                    <Controller
+                      control={control}
+                      name={item.name}
+                      render={({ field: { value, onChange } }) => (
+                        <AutoComplete
+                          className="custom-autocomplete"
+                          style={{
+                            ...AntSelectorStyle,
+                            border: "solid 0.3px var(--gray600)",
+                            fontFamily: "Inter",
+                            fontSize: "14px",
+                            width: "100%",
+                          }}
+                          value={value}
+                          onChange={(val) => onChange(val)}
+                          options={industryListOptions?.map((opt) => ({
+                            value: String(opt),
+                            label: (
+                              <span style={{ textTransform: "capitalize" }}>
+                                {opt}
+                              </span>
+                            ),
+                          }))}
+                          placeholder="Type your industry area"
+                          filterOption={(inputValue, option) =>
+                            String(option?.value)
+                              .toLowerCase()
+                              .includes(String(inputValue).toLowerCase())
+                          }
+                          allowClear
+                        />
+                      )}
+                    />
+                  )}
                 </Grid>
                 <Divider />
               </>
