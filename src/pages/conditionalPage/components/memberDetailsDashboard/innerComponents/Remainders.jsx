@@ -7,13 +7,16 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { useNavigate } from "react-router-dom";
 // import { data } from "../../../mock/mockData";
 
 const Remainders = () => {
   const { user } = useSelector((state) => state.admin);
-  const { memberInfo } = useSelector(state => state.member)
+  const { memberInfo } = useSelector((state) => state.member);
   const { TextArea } = Input;
-  const { register, handleSubmit, setValue } = useForm();
+  const { register, handleSubmit, reset } = useForm({
+    defaultValues: { subject: "", message: "" },
+  });
   const [message, setMessage] = useState("");
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
@@ -25,13 +28,14 @@ const Remainders = () => {
   const onChange = (e) => {
     return setMessage(e.target.value);
   };
+  const navigate = useNavigate()
   const handleSubmitEmailNotification = async (data) => {
     const emailNotificationProfile = {
       consumer: memberInfo?.email,
       subject: data.subject,
       message: message,
       eventSelected: "",
-      company: user,
+      company: user.companyData.company_name,
     };
     const resp = await devitrakApi.post(
       "/nodemailer/single-email-notification",
@@ -39,9 +43,10 @@ const Remainders = () => {
     );
     if (resp.data.ok) {
       openNotificationWithIcon("Success", "Email sent!", "Email was sent");
-      setValue("subject", "");
-      setValue("message", "");
-      return null;
+      // Reset form fields and local state to original defaults
+      reset();
+      setMessage("");
+      return navigate(`/member/${memberInfo?.member_id}/main`);
     }
   };
   return (
