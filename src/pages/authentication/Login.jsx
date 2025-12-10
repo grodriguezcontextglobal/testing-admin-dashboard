@@ -54,6 +54,7 @@ const Login = () => {
   const [openMultipleCompanies, setOpenMultipleCompanies] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [forceLogin, setForceLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState("email"); // "email" or "password"
   const [userEmail, setUserEmail] = useState("");
   const dispatch = useDispatch();
@@ -243,6 +244,7 @@ const Login = () => {
           email: loginData.email,
           password: loginData.password,
           rememberMe,
+          forceLogin: forceLogin,
         }),
         devitrakApi.post("/company/search-company", {
           "employees.user": loginData.email,
@@ -294,6 +296,8 @@ const Login = () => {
             return "You have entered an invalid username or password";
           case "Incorrect password":
             return "You have entered an invalid username or password";
+          case "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session.":
+            return forceEndActiveSession(error.response?.data?.msg);
           default:
             return error.response?.data?.msg;
         }
@@ -357,6 +361,64 @@ const Login = () => {
     } else if (isExtraLargeDevice) {
       return "30vw";
     }
+  };
+
+  const forceEndActiveSession = () => {
+    return (
+      <div style={{ width: "100%", margin: "auto", flexDirection: "column" }}>
+        <Typography style={{ width: "100%" }}>Active session already exists for this account. If this is you, please re submit password and click Force Login button to end the previous session.</Typography>
+        <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
+          <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
+            <FormLabel style={{ marginBottom: "0.9rem" }}>Password</FormLabel>
+            <OutlinedInput
+              required
+              {...register("password", { required: true, minLength: 6 })}
+              style={{
+                ...OutlinedInputStyle,
+                marginTop: "6px",
+              }}
+              placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+              type={showPassword ? "text" : "password"}
+              fullWidth
+              endAdornment={
+                <InputAdornment position="end">
+                  <button
+                    type="button"
+                    style={{
+                      padding: 0,
+                      backgroundColor: "transparent",
+                      outline: "none",
+                      margin: 0,
+                      width: "fit-content",
+                      aspectRatio: "1",
+                      borderRadius: "50%",
+                    }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <VisibleIcon fill={"var(--blue-dark-600)"} />
+                    ) : (
+                      <HidenIcon stroke={"var(--blue-dark-600)"} />
+                    )}
+                  </button>
+                </InputAdornment>
+              }
+            />
+          </Grid>
+
+          <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+            <BlueButtonComponent
+              disabled={false}
+              loadingState={isLoading}
+              buttonType="submit"
+              title="Force login"
+              styles={{ flex: "1" }}
+              func={()=> setForceLogin(true)}
+            />
+          </div>
+        </form>
+      </div>
+    );
   };
 
   return (
@@ -454,8 +516,8 @@ const Login = () => {
                     Email
                   </FormLabel>
                   <OutlinedInput
-                    required
-                    {...register("email", { required: true, minLength: 10 })}
+                    required={!forceLogin}
+                    {...register("email", { required: !forceLogin, minLength: 10 })}
                     type="email"
                     style={{
                       ...OutlinedInputStyle,
@@ -492,8 +554,8 @@ const Login = () => {
                     Password
                   </FormLabel>
                   <OutlinedInput
-                    required
-                    {...register("password", { required: true, minLength: 6 })}
+                    required={!forceLogin}
+                    {...register("password", { required: !forceLogin, minLength: 6 })}
                     style={{
                       ...OutlinedInputStyle,
                       marginTop: "6px",
