@@ -76,6 +76,15 @@ export default class ImageUploaderFormat {
         this.companyID
       }|created_at:${new Date().getTime()}|updated_at:${new Date().getTime()}`,
     };
-
+  }
+  member_image_profile() {
+    return {
+      imageFile: this.file,
+      imageID: this.UID,
+      tags: [this.UID, this.companyID],
+      context: `member_sql_id:${this.postID}|company_sql_id:${
+        this.companyID
+      }|created_at:${new Date().getTime()}|updated_at:${new Date().getTime()}`,
+    };
   }
 }
