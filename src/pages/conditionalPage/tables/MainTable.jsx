@@ -6,9 +6,10 @@ import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCirc
 import { NavLink } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Loading from "../../../components/animation/Loading";
+import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 const MainTable = () => {
   const styling = {
     fontSize: "12px",
@@ -21,7 +22,8 @@ const MainTable = () => {
     justifyContent: "flex-start",
     color: "var(--gray-600, #475467)",
   };
-
+  const dispatch = useDispatch();
+  const [membersData, setMembersData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const membersDataQuery = useQuery({
     queryKey: ["membersInfoQuery"],
@@ -31,15 +33,11 @@ const MainTable = () => {
       }),
     enabled: !!user?.sqlInfo?.company_id,
   });
-
-  const [membersData, setMembersData] = useState([]);
-
   useEffect(() => {
     if (membersDataQuery?.data?.data?.members.length) {
       setMembersData(membersDataQuery?.data?.data?.members);
     }
   }, [membersDataQuery?.data?.data]);
-
   const columns = [
     {
       title: "Name",
@@ -50,7 +48,7 @@ const MainTable = () => {
       },
       render: (_, record) => {
         const initials = String(
-          record?.first_name + " " + record?.last_name
+          record?.first_name[0] + " " + record?.last_name[0]
         ).split(" ");
         return (
           <span
@@ -62,8 +60,8 @@ const MainTable = () => {
               alignSelf: "flex-start",
             }}
           >
-            <Avatar src={record?.image_url}>
-              {!record?.image_url && initials.map((initial) => initial[0])}
+            <Avatar src={record?.image_url} size={"large"}>
+              {!record?.image_url && initials}
             </Avatar>
             &nbsp;
             <div
@@ -128,16 +126,16 @@ const MainTable = () => {
       width: "5%",
       render: (_, record) => {
         return (
-          <>
-            <NavLink to={`/member/${record?.member_id}/main`}>
+            <NavLink
+              onClick={() => dispatch(onAddMemberInfo(record))}
+              to={`/member/${record?.member_id}/main`}
+            >
               <RightNarrowInCircle />
             </NavLink>
-          </>
         );
       },
     },
   ];
-
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
       <Grid
