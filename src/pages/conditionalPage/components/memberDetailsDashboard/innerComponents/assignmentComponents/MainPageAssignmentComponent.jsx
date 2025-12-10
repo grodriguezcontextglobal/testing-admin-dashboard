@@ -1,7 +1,7 @@
-const MainPageAssignmentComponent = () => {
-  return (
-    <div>MainPageAssignmentComponent</div>
-  )
-}
+import AssignmentDevicesToMember from "./assignment/AssignmentDevicesToMember";
 
-export default MainPageAssignmentComponent
+const MainPageAssignmentComponent = () => {
+  return <AssignmentDevicesToMember />;
+};
+
+export default MainPageAssignmentComponent;
