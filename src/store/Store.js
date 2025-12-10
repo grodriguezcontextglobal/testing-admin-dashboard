@@ -26,6 +26,7 @@ import articleSlide from "./slices/articleSlide";
 import searchBarResultSlice from "./slices/searchBarResultSlice";
 import staffDetailSlide from "./slices/staffDetailSlide";
 import staffActivitySlice from "./slices/staffActivitySlice";
+import memberSlice from "./slices/memberSlice";
 
 const persistConfig = {
   key: "root",
@@ -44,7 +45,8 @@ const reducers = combineReducers({
   article: articleSlide,
   searchResult: searchBarResultSlice,
   staffDetail: staffDetailSlide,
-  staffActivity: staffActivitySlice
+  staffActivity: staffActivitySlice,
+  member: memberSlice,
 });
 
 const persistedReducers = persistReducer(persistConfig, reducers);
