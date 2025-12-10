@@ -1,7 +1,8 @@
+import MainPageAssignmentComponent from "./assignmentComponents/MainPageAssignmentComponent"
 
 const Assignment = () => {
   return (
-    <div>Assignment</div>
+    <MainPageAssignmentComponent />
   )
 }
 
