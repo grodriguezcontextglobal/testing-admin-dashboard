@@ -1,6 +1,6 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { Input, notification } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -8,28 +8,10 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 // import { data } from "../../../mock/mockData";
-import { useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 
 const Remainders = () => {
   const { user } = useSelector((state) => state.admin);
-  const location = useLocation();
-  const slug = location.pathname.split("/").filter(Boolean).at(-2);
-  const [membersData, setMembersData] = useState(null);
-  const memberInfoRetrieveQuery = useQuery({
-    queryKey: ["memberInfoRetrieveQuery"],
-    queryFn: () =>
-      devitrakApi.post("/db_member/consulting-member", {
-        member_id: Number(slug),
-      }),
-    enabled: !!slug,
-  });
-
-  useEffect(() => {
-    if (memberInfoRetrieveQuery?.data?.data?.members) {
-      setMembersData(memberInfoRetrieveQuery?.data?.data?.members?.at(-1));
-    }
-  }, [memberInfoRetrieveQuery.data]);
+  const { memberInfo } = useSelector(state => state.member)
   const { TextArea } = Input;
   const { register, handleSubmit, setValue } = useForm();
   const [message, setMessage] = useState("");
@@ -45,10 +27,10 @@ const Remainders = () => {
   };
   const handleSubmitEmailNotification = async (data) => {
     const emailNotificationProfile = {
-      consumer: membersData?.email,
+      consumer: memberInfo?.email,
       subject: data.subject,
       message: message,
-      eventSelected: event.eventInfoDetail.eventName,
+      eventSelected: "",
       company: user,
     };
     const resp = await devitrakApi.post(
@@ -83,7 +65,7 @@ const Remainders = () => {
         md={10}
         lg={10}
       >
-        <p style={Subtitle}>This email will be sent to {membersData?.email}.</p>
+        <p style={Subtitle}>This email will be sent to {memberInfo?.email}.</p>
       </Grid>
       <Grid
         display={"flex"}
