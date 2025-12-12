@@ -1,14 +1,14 @@
 import { Grid, Typography } from "@mui/material";
 import { Avatar, Divider } from "antd";
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import { useSelector } from "react-redux";
+import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 // import { data } from "../../mock/mockData";
 
 const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
@@ -166,7 +166,6 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
                 md={6}
                 lg={6}
               >
-                {" "}
                 <BlueButtonComponent
                   title={"Add new member"}
                   //   func={() => setModalState(true)}
