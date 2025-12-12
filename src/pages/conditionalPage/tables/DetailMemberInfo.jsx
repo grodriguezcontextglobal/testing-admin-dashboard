@@ -1,14 +1,21 @@
 import { Grid } from "@mui/material";
 import { Table } from "antd";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { columns } from "./detailTableComponents/columns";
 import "../../../styles/global/ant-table.css";
+import { useState } from "react";
+import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 const DetailMemberInfo = () => {
   const { memberInfo } = useSelector((state) => state.member);
   const { user } = useSelector((state) => state.admin);
+  const [editing, setEditing] = useState([]);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [storedRecord, setStoredRecord] = useState(null);
   const memberId = memberInfo?.member_id;
   const devicesAssignedActive = useQuery({
     queryKey: ["devicesAssignedActive"],
@@ -18,7 +25,16 @@ const DetailMemberInfo = () => {
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!memberId && !!user.sqlInfo.company_id,
+    staleTime: Infinity,
   });
+  const queryClient = useQueryClient();
+  const bodyModal = (
+    <ReturnOptions
+      storedRecord={storedRecord}
+      setStoredRecord={setStoredRecord}
+      modalHandler={setChecked}
+    />
+  );
   return (
     <Grid
       style={{
@@ -64,7 +80,17 @@ const DetailMemberInfo = () => {
           sticky
           size="large"
           rowKey="device_id"
-          columns={columns()}
+          columns={columns({
+            editing,
+            setEditing,
+            updateInfo,
+            setUpdateInfo,
+            queryClient,
+            checked,
+            setChecked,
+            storedRecord,
+            setStoredRecord,
+          })}
           style={{ width: "100%" }}
           dataSource={devicesAssignedActive?.data?.data?.rows || []}
           pagination={{
@@ -73,6 +99,13 @@ const DetailMemberInfo = () => {
           className="table-ant-customized"
         />
       </Grid>
+      {checked && (
+        <ModalUX
+          openDialog={checked}
+          closeModal={() => setChecked(false)}
+          body={bodyModal}
+        />
+      )}
     </Grid>
   );
 };
