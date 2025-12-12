@@ -22,10 +22,10 @@ import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { SearchItemContext } from "../MainPage";
 import "../style/details.css";
 import { dictionary } from "../utils/dicSelectedOptions";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
-import { SearchItemContext } from "../MainPage";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -110,7 +110,7 @@ const ItemTable = ({
 
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data?.result;
+  const renderedListItems = listItemsQuery?.data?.data?.result;  
   // const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
@@ -221,13 +221,6 @@ const ItemTable = ({
     [refactoredDataset, legacyDataset]
   );
 
-  // Remove redundant calls; only mark loading done when data exists
-  // useEffect(() => {
-  //   if (baseDataset.length > 0) {
-  //     loadingState(false);
-  //   }
-  // }, [baseDataset.length]); // removed `loadingState` to avoid loops if parent recreates the setter
-
   // Filtering helpers now use baseDataset
   const filterOptionsBasedOnProps = (props) => {
     const sortingByProps = groupBy(baseDataset, props);
@@ -327,6 +320,7 @@ const ItemTable = ({
       4: filterOptionsBasedOnProps("ownership"),
       5: filterOptionsBasedOnProps("status"),
       6: [
+        // Match normalized format: "First Last / email"
         ...user.companyData.employees.map(
           (employee) =>
             `${employee.firstName} ${employee.lastName} / ${employee.user}`
