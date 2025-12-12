@@ -401,6 +401,12 @@ const AssignmentDevicesToMember = () => {
         "Equipment assigned to staff member.",
         ""
       );
+      queryClient.invalidateQueries({
+        queryKey: ["devicesAssignedActive"],
+        exact: true,
+        refetchType: "active",
+        refetchActive: true,
+      });
       setLoadingStatus(false);
       return navigate(`/member/${memberInfo?.member_id}/main`);
     }
