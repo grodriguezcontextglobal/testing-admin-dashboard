@@ -13,7 +13,6 @@ import CustomerHeader from "./UI/header";
 const ConsumerConfirmationPayment = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const { customer } = useSelector((state) => state.customer);
-  console.log(customer);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const payment_intent = new URLSearchParams(window.location.search).get(

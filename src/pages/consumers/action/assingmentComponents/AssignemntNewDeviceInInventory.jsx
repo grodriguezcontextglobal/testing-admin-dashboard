@@ -85,7 +85,6 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   ]);
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
-  console.log(profile);
   const {
     register,
     handleSubmit,
