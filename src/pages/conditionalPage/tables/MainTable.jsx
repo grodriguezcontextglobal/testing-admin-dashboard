@@ -1,26 +1,31 @@
 import { Grid } from "@mui/material";
-import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import { Avatar, Table, Typography } from "antd";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 // import { data } from "../mock/mockData";
-import { NavLink } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { NavLink } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
+import { Subtitle } from "../../../styles/global/Subtitle";
 const MainTable = () => {
-  const styling = {
-    fontSize: "12px",
-    fontFamily: "Inter",
-    fontStyle: "normal",
-    fontWeight: 400,
-    lineHeight: "18px",
-    textAlign: "left",
-    textTransform: "capitalize",
+  const styleCellColumns = {
     justifyContent: "flex-start",
-    color: "var(--gray-600, #475467)",
+    ...Subtitle,
+    // color: "var(--gray900, #101828)",
+    // fontSize: "14px",
+    // fontFamily: "Inter",
+    // lineHeight: "20px",
+    // fontWeight: 500,
+    position: "absolute",
+    top: 15,
+    left: 0,
+  };
+  const tableStyle = {
+    position: "absolute !important",
   };
   const dispatch = useDispatch();
   const [membersData, setMembersData] = useState([]);
@@ -74,11 +79,7 @@ const MainTable = () => {
               <Typography
                 style={{
                   justifyContent: "flex-start",
-                  color: "var(--gray900, #101828)",
-                  fontSize: "14px",
-                  fontFamily: "Inter",
-                  lineHeight: "20px",
-                  fontWeight: 500,
+                  ...Subtitle,
                 }}
               >
                 {record?.first_name + " " + record?.last_name}
@@ -92,22 +93,50 @@ const MainTable = () => {
       title: "Email address",
       dataIndex: "email",
       responsive: ["lg"],
+      width: "20%",
       sorter: {
         compare: (a, b) => ("" + a.email).localeCompare(b.email),
+      },
+      render: (email) => {
+        return (
+          <span
+            key={email}
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignSelf: "flex-start",
+              height: "100%",
+            }}
+          >
+            <Typography style={styleCellColumns}>{email}</Typography>
+          </span>
+        );
       },
     },
     {
       title: "Phone number",
       dataIndex: "phone",
       responsive: ["lg"],
+      width: "15%",
       sorter: {
         compare: (a, b) => ("" + a.phone).localeCompare(b.phone),
       },
       render: (_, record) => {
         return (
-          <Typography style={styling}>
-            {record?.phone_number ? record.phone_number : "+1-000-000-0000"}
-          </Typography>
+          <span
+            key={`${record?.phone_number}`}
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignSelf: "flex-start",
+            }}
+          >
+            <Typography style={styleCellColumns}>
+              {record?.phone_number}
+            </Typography>
+          </span>
         );
       },
     },
@@ -118,6 +147,21 @@ const MainTable = () => {
       sorter: {
         compare: (a, b) => ("" + a.address).localeCompare(b.address),
       },
+      render: (address) => {
+        return (
+          <span
+            key={address}
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignSelf: "flex-start",
+            }}
+          >
+            <Typography style={styleCellColumns}>{address}</Typography>
+          </span>
+        );
+      },
     },
     {
       title: "",
@@ -126,12 +170,14 @@ const MainTable = () => {
       width: "5%",
       render: (_, record) => {
         return (
+          <span style={styleCellColumns}>
             <NavLink
               onClick={() => dispatch(onAddMemberInfo(record))}
               to={`/member/${record?.member_id}/main`}
             >
               <RightNarrowInCircle />
             </NavLink>
+          </span>
         );
       },
     },
@@ -156,7 +202,7 @@ const MainTable = () => {
         <Loading />
       ) : (
         <Table
-          style={{ width: "100%", cursor: "pointer" }}
+          style={{ width: "100%", cursor: "pointer", ...tableStyle }}
           dataSource={membersData}
           columns={columns}
           rowClassName="editable-row"
