@@ -21,7 +21,7 @@ const insertDeviceIntoEventTableRecord = ({ data, event, deviceTitle }) => {
   const updateWarehouseItemsValue = () =>
     paramsFetched({
       query: `UPDATE item_inv SET warehouse = ? WHERE item_id in (${placeholders})`,
-      values: [1, ...data.map((item) => item.item_id)],
+      values: [0, ...data.map((item) => item.item_id)],
     });
   const createNoSQLDeviceInPoolEvent = async () => {
     const deviceList = JSON.stringify(data.map((item) => item.serial_number));
