@@ -1,4 +1,79 @@
-import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import { useState } from "react";
+import { Typography, useMediaQuery, useTheme } from "@mui/material";
+import { NavLink } from "react-router-dom";
+import { Divider } from "antd";
+import Sequential from "./addingItemsMethod/Sequential";
+import ImportingXlsx from "./addingItemsMethod/ImportingXlsx";
+
+const CustomizedSwitch = ({ state, handler }) => {
+  const tabOptions = [
+    {
+      label: "Sequential Range",
+      route: true,
+      permission: [0, 1, 2, 3, 4],
+    },
+    {
+      label: "Import file (.xlsx)",
+      route: false,
+      permission: [0, 1, 2, 3, 4],
+    },
+  ];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  return (
+    <nav
+      style={{
+        display: "flex",
+        gap: isMobile ? "8px" : "16px",
+        minWidth: "min-content",
+        padding: isMobile ? "8px 0" : "0",
+      }}
+    >
+      {tabOptions.map((option) => {
+        return (
+          <NavLink
+            key={option.label}
+            style={({ state }) => ({
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: isMobile ? "4px 8px" : "1px 4px 11px",
+              gap: "8px",
+              borderBottom:
+                state === option.route
+                  ? "1px solid #004EEB"
+                  : "rgba(0, 0, 0, 0.88)",
+              whiteSpace: "nowrap",
+            })}
+          >
+            <button
+              onClick={() => handler(!state)}
+              style={{
+                width: "100%",
+                outline: "none",
+                border: "none",
+                backgroundColor: "transparent",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: () => (state === option.route ? "#004EEB" : "#667085"),
+                  fontFamily: "Inter",
+                  fontSize: { xs: "12px", sm: "14px" },
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                }}
+              >
+                {option.label}
+              </Typography>
+            </button>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+};
 
 const ItemForm = ({
   addingDeviceFromLocations,
@@ -29,186 +104,88 @@ const ItemForm = ({
   valueItemSelected,
   deviceTitle,
   watch,
+  closeModal,
 }) => {
+  const [checked, setChecked] = useState(true);
   return (
-    <form
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        textAlign: "left",
-        padding: 0,
-      }}
-      onSubmit={handleSubmit(addingDeviceFromLocations)}
-    >
-      {/* <Typography style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-          Enter serial number range for <strong>{deviceTitle}</strong> to assign
-          to this event.
-        </Typography> */}
-      <div style={{ margin: "0px auto 1rem", width: "100%" }}>
-        <label style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-          Select location from where items will be added and enabled to this event&apos;s inventory.
-        </label>
-        <Select
-          className="custom-autocomplete"
-          showSearch
-          placeholder="Search item to add to inventory."
-          optionFilterProp="children"
-          style={{ ...AntSelectorStyle, width: "100%" }}
+    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          margin: "0 0 -1.5rem",
+        }}
+      >
+        <CustomizedSwitch state={checked} handler={setChecked} />
+      </div>
+      <Divider />
+      {checked ? (
+        <Sequential
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          listOfLocations={listOfLocations}
           onChange={onChange}
-          options={selectOptions}
-          loading={itemQuery.isLoading}
-          virtual={true} // Enable virtual scrolling for better performance
-          filterOption={(input, option) => {
-            return option.key.toLowerCase().includes(input.toLowerCase());
-          }}
-          getPopupContainer={(triggerNode) => triggerNode.parentNode}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+          deviceTitle={deviceTitle}
+          watch={watch}
+          closeModal={closeModal}
         />
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          textAlign: "left",
-          gap: "10px",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "left",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
-        >
-          <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-            >
-              <Tooltip title="The items will be added to inventory event from the serial number input and will continue in the order of the available serial numbers in the inventory until the quantity is reached.">
-                Custom serial number of {deviceTitle}
-                <QuestionIcon />
-              </Tooltip>
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            required
-            disabled={blockingButton}
-            {...register("serial_number", { required: true })}
-            style={OutlinedInputStyle}
-            placeholder="e.g. 154580"
-            endAdornment={
-              <InputAdornment position="end">
-                <Tooltip title="The check icon means the serial number does exist in company's inventory. The x icon means the serial number does not exist in company's inventory.">
-                  <span>
-                    {checkIfSerialNumberExists() ? (
-                      <CheckIcon />
-                    ) : (
-                      <BorderedCloseIcon />
-                    )}
-                  </span>
-                </Tooltip>
-              </InputAdornment>
-            }
-          />
-        </div>
-        <div
-          style={{
-            textAlign: "left",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
-        >
-          <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              style={{ ...Subtitle, fontWeight: 500, textWrap: "pretty" }}
-            >
-              Qty added from {valueItemSelected?.location}
-            </Typography>
-          </InputLabel>
-          <OutlinedInput
-            required
-            {...register("quantity", { required: true })}
-            style={OutlinedInputStyle}
-            placeholder="e.g. 150"
-            inputProps={{ min: 1 }}
-            type="number" // Better input type for quantities
-          />
-        </div>
-      </div>
-      <span style={{ width: "100%", textAlign: "right" }}>
-        <p style={Subtitle}>
-          Custom serial number stars: {valueItemSelected?.start} and ends:{" "}
-          {valueItemSelected?.end}
-        </p>
-      </span>
-
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          margin: "0.5rem 0",
-          gap: "5px",
-        }}
-      >
-        <Space size={[8, 16]} wrap>
-          {listOfLocations.map((item, index) => (
-            <Chip
-              key={`${item.startingNumber}-${index}`}
-              label={`${item.location || "Unknown"} - ${item.quantity}`}
-              onDelete={() => removeItem(index)}
-            />
-          ))}
-        </Space>
-      </div>
-      <div
-        style={{
-          textAlign: "left",
-          width: "100%",
-          margin: "0.5rem 0",
-        }}
-      >
-        <InputLabel style={{ marginBottom: "3px", width: "100%" }}>
-          <Typography
-            textTransform={"none"}
-            textAlign={"left"}
-            style={{
-              ...Subtitle,
-              color: "transparent",
-              fontWeight: 500,
-              textWrap: "pretty",
-            }}
-          >
-            Qty of devices from {valueItemSelected?.location}
-          </Typography>
-        </InputLabel>
-        {!blockingButton && (
-          <LightBlueButtonComponent
-            title={` Add qty: ${
-              watch("quantity") && watch("quantity")
-            } of ${deviceTitle} from this location: ${
-              valueItemSelected?.location
-            }.`}
-            func={addingDeviceFromLocations}
-            disabled={blockingButton || valueItemSelected.length === 0}
-            buttonType="submit"
-            icon={<RectangleBluePlusIcon />}
-            styles={{
-              display: blockingButton ? "none" : "flex",
-              width: "100%",
-              margin: "0.5rem 0",
-            }}
-          />
-        )}
-      </div>
-    </form>
+      ) : (
+        <ImportingXlsx
+          addingDeviceFromLocations={addingDeviceFromLocations}
+          AntSelectorStyle={AntSelectorStyle}
+          blockingButton={blockingButton}
+          BorderedCloseIcon={BorderedCloseIcon}
+          CheckIcon={CheckIcon}
+          checkIfSerialNumberExists={checkIfSerialNumberExists}
+          Chip={Chip}
+          handleSubmit={handleSubmit}
+          InputAdornment={InputAdornment}
+          InputLabel={InputLabel}
+          itemQuery={itemQuery}
+          listOfLocations={listOfLocations}
+          onChange={onChange}
+          OutlinedInput={OutlinedInput}
+          OutlinedInputStyle={OutlinedInputStyle}
+          QuestionIcon={QuestionIcon}
+          RectangleBluePlusIcon={RectangleBluePlusIcon}
+          register={register}
+          removeItem={removeItem}
+          Select={Select}
+          selectOptions={selectOptions}
+          Space={Space}
+          Subtitle={Subtitle}
+          Tooltip={Tooltip}
+          Typography={Typography}
+          valueItemSelected={valueItemSelected}
+          deviceTitle={deviceTitle}
+          watch={watch}
+          closeModal={closeModal}
+        />
+      )}
+    </div>
   );
 };
 
