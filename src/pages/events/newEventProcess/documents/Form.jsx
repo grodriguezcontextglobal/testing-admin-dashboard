@@ -303,7 +303,7 @@ const FormDocuments = () => {
       </DndContext>
       {activeTab === "1" ? (
         <BlueButtonComponent
-          title="Create new Document"
+          title="Add new Document"
           func={() => setActiveTab("2")}
           styles={{ width: "100%", margin: "1rem 0" }}
         />
