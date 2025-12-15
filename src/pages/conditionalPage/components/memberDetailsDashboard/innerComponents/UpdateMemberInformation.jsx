@@ -172,7 +172,7 @@ const UpdateMemberInformation = () => {
         address_city: data?.city,
         address_state: data?.state,
         address_zip: data?.zip,
-        image_url: newImageUploaded,
+        image_url: newImageUploaded ? newImageUploaded : memberInfo.image_url,
       };
       return updateMemberInfoMutation.mutate(payload);
     } catch (error) {
