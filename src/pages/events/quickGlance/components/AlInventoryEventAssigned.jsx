@@ -10,6 +10,7 @@ import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
 import HighlightedPill from "./ux/HighlightedPill";
 import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
 import { useSelector } from "react-redux";
+import ImportingXLSXFile from "./ImportingXLSXFile";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -23,10 +24,12 @@ const AllInventoryEventForCustomerOnly = ({
 }) => {
   const [displayingDocumentListContainer, setDisplayingDocumentListContainer] =
     useState(false);
+  const [importingXLSXFile, setImportingXLSXFile] = useState(false);
   const { event } = useSelector((state) => state.event);
   const inventoryEventData =
     typeof database?.receiversInventory === "string"
-      ? JSON.parse(database.receiversInventory) : database.receiversInventory;
+      ? JSON.parse(database.receiversInventory)
+      : database.receiversInventory;
 
   return (
     <>
@@ -85,6 +88,10 @@ const AllInventoryEventForCustomerOnly = ({
           }}
         >
           <GrayButtonComponent
+            title={"Import inventory (.xlsx)"}
+            func={() => setImportingXLSXFile(true)}
+          />
+          <GrayButtonComponent
             title={"Documents (legal contracts)"}
             func={() => setDisplayingDocumentListContainer(true)}
             styles={{
@@ -129,6 +136,12 @@ const AllInventoryEventForCustomerOnly = ({
         <DisplayDocumentsContainer
           openDisplayDocumentsContainer={displayingDocumentListContainer}
           setOpenDisplayDocumentsContainer={setDisplayingDocumentListContainer}
+        />
+      )}
+      {importingXLSXFile && (
+        <ImportingXLSXFile
+          openImportingXLSXFileContainer={importingXLSXFile}
+          setOpenImportingXLSXFileContainer={setImportingXLSXFile}
         />
       )}
     </>
