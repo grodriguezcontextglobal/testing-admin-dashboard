@@ -23,7 +23,7 @@ const ModalUX = ({
       maskClosable={false}
       title={title}
       style={modalStyles}
-      destroyOnClose={true}
+      destroyOnHidden={true}
     >
       {body}
     </Modal>
