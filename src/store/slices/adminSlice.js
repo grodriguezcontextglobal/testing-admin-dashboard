@@ -12,11 +12,12 @@ const adminSlice = createSlice({
       company: undefined,
       role: undefined,
       imageProfile: undefined,
-      rowImageProfile:undefined
+      rowImageProfile: undefined,
     },
     errorMessage: undefined,
     companyAccountStripe: undefined,
-    companyInfo:undefined
+    companyInfo: undefined,
+    mfaEnabled: false,
   },
   reducers: {
     onChecking: (state) => {
@@ -28,6 +29,8 @@ const adminSlice = createSlice({
       state.status = "authenticated";
       state.user = payload;
       state.errorMessage = undefined;
+      state.mfaEnabled =
+        payload.data?.mfaEnabled || payload.mfaEnabled || false;
     },
     onLogout: (state) => {
       state.status = "not-authenticated";
@@ -39,11 +42,12 @@ const adminSlice = createSlice({
         company: "",
         role: "",
         imageProfile: "",
-        rowImageProfile: undefined
+        rowImageProfile: undefined,
       };
-      state.companyAccountStripe= undefined;
-      state.companyInfo=undefined
-      },
+      state.companyAccountStripe = undefined;
+      state.companyInfo = undefined;
+      state.mfaEnabled = false;
+    },
     clearErrorMessage: (state) => {
       state.errorMessage = undefined;
     },
@@ -52,6 +56,9 @@ const adminSlice = createSlice({
     },
     onAddCompanyAccountStripe: (state, { payload }) => {
       state.companyAccountStripe = payload;
+    },
+    onUpdateMfaStatus: (state, { payload }) => {
+      state.mfaEnabled = payload;
     },
   },
 });
@@ -65,6 +72,7 @@ export const {
   onAddErrorMessage,
   clearErrorMessage,
   onAddCompanyAccountStripe,
+  onUpdateMfaStatus,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;
