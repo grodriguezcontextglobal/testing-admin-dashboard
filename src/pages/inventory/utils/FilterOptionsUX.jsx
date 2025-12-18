@@ -50,7 +50,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
         }
       }
     },
-    [filterOptionsValues.chosen, setChosen]
+    [filterOptionsValues?.chosen, setChosen]
   );
 
   // Memoize options list for each select
