@@ -57,6 +57,7 @@ const Login = () => {
   const [forceLogin, setForceLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState("email"); // "email" or "password"
   const [userEmail, setUserEmail] = useState("");
+  const [userPassword, setUserPassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -233,9 +234,15 @@ const Login = () => {
       dispatch(onChecking());
 
       // Use the collected email from the first step
+      // If we are in password step, save the password
+      if (currentStep === "password") {
+        setUserPassword(data.password);
+      }
+
       const loginData = {
         email: userEmail,
-        password: data.password,
+        password: currentStep === "password" ? data.password : userPassword,
+        mfaCode: data.mfaCode,
       };
 
       // Parallel API calls for better performance
@@ -245,6 +252,7 @@ const Login = () => {
           password: loginData.password,
           rememberMe,
           forceLogin: forceLogin,
+          mfaCode: loginData.mfaCode,
         }),
         devitrakApi.post("/company/search-company", {
           "employees.user": loginData.email,
@@ -290,6 +298,30 @@ const Login = () => {
         );
       }
     } catch (error) {
+      // Check for MFA requirement with flexible property naming and status codes
+      const responseData = error.response?.data;
+      const isMfaRequired =
+        responseData?.mfaRequired ||
+        responseData?.mfa_required ||
+        responseData?.error === "mfa_required" ||
+        responseData?.msg === "mfa_required";
+
+      if (
+        (error.response?.status === 403 || error.response?.status === 401) &&
+        isMfaRequired
+      ) {
+        if (currentStep === "mfa") {
+          openNotificationWithIcon(
+            "error",
+            responseData?.msg || "Invalid MFA Code"
+          );
+        } else {
+          setCurrentStep("mfa");
+          dispatch(clearErrorMessage());
+        }
+        return;
+      }
+
       const message = () => {
         switch (error.response?.data?.msg) {
           case "User is not found":
@@ -366,7 +398,11 @@ const Login = () => {
   const forceEndActiveSession = () => {
     return (
       <div style={{ width: "100%", margin: "auto", flexDirection: "column" }}>
-        <Typography style={{ width: "100%" }}>Active session already exists for this account. If this is you, please re submit password and click Force Login button to end the previous session.</Typography>
+        <Typography style={{ width: "100%" }}>
+          Active session already exists for this account. If this is you, please
+          re submit password and click Force Login button to end the previous
+          session.
+        </Typography>
         <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
           <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
             <FormLabel style={{ marginBottom: "0.9rem" }}>Password</FormLabel>
@@ -413,7 +449,7 @@ const Login = () => {
               buttonType="submit"
               title="Force login"
               styles={{ flex: "1" }}
-              func={()=> setForceLogin(true)}
+              func={() => setForceLogin(true)}
             />
           </div>
         </form>
@@ -517,7 +553,10 @@ const Login = () => {
                   </FormLabel>
                   <OutlinedInput
                     required={!forceLogin}
-                    {...register("email", { required: !forceLogin, minLength: 10 })}
+                    {...register("email", {
+                      required: !forceLogin,
+                      minLength: 10,
+                    })}
                     type="email"
                     style={{
                       ...OutlinedInputStyle,
@@ -555,7 +594,10 @@ const Login = () => {
                   </FormLabel>
                   <OutlinedInput
                     required={!forceLogin}
-                    {...register("password", { required: !forceLogin, minLength: 6 })}
+                    {...register("password", {
+                      required: !forceLogin,
+                      minLength: 6,
+                    })}
                     style={{
                       ...OutlinedInputStyle,
                       marginTop: "6px",
@@ -672,6 +714,59 @@ const Login = () => {
                     loadingState={isLoading}
                     buttonType="submit"
                     title="Sign in"
+                    styles={{ flex: "1" }}
+                  />
+                </div>
+              </form>
+            )}
+
+            {/* MFA Step */}
+            {currentStep === "mfa" && (
+              <form
+                onSubmit={handleSubmit(onSubmitLogin)}
+                style={{ width: formFittingTrigger() }}
+              >
+                <Grid
+                  marginY={"20px"}
+                  marginX={0}
+                  textAlign={"left"}
+                  item
+                  xs={12}
+                >
+                  <FormLabel style={{ marginBottom: "0.9rem" }}>
+                    MFA Code
+                  </FormLabel>
+                  <OutlinedInput
+                    required
+                    {...register("mfaCode", {
+                      required: true,
+                      minLength: 6,
+                      maxLength: 6,
+                    })}
+                    style={{
+                      ...OutlinedInputStyle,
+                      marginTop: "6px",
+                    }}
+                    placeholder="000000"
+                    fullWidth
+                    autoFocus
+                  />
+                </Grid>
+
+                <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+                  <LightBlueButtonComponent
+                    disabled={false}
+                    loadingState={false}
+                    buttonType="button"
+                    title="Back"
+                    func={() => setCurrentStep("password")}
+                    styles={{ flex: "1" }}
+                  />
+                  <BlueButtonComponent
+                    disabled={false}
+                    loadingState={isLoading}
+                    buttonType="submit"
+                    title="Verify"
                     styles={{ flex: "1" }}
                   />
                 </div>
