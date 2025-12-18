@@ -16,6 +16,7 @@ import EditDocument from "../../pages/Profile/Documents/EditDocument";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPolicies";
 import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
+import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -191,23 +192,31 @@ const ConditionalMainPage = lazy(() =>
 );
 
 const MemberDetailsMainPage = lazy(() =>
-  import("../../pages/conditionalPage/components/memberDetailsDashboard/MainPage")
+  import(
+    "../../pages/conditionalPage/components/memberDetailsDashboard/MainPage"
+  )
 );
 const DetailMemberInfo = lazy(() =>
   import("../../pages/conditionalPage/tables/DetailMemberInfo")
 );
 
 const UpdateMemberInformation = lazy(() =>
-  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/UpdateMemberInformation")
-)
+  import(
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/UpdateMemberInformation"
+  )
+);
 
 const Remainders = lazy(() =>
-  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Remainders")
-)
+  import(
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Remainders"
+  )
+);
 
 const AssignmentDeviceMembers = lazy(() =>
-  import("../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent")
-)
+  import(
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
+  )
+);
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -377,6 +386,7 @@ const AuthRoutes = () => {
               <Route path="/profile" element={<MainProfileSetting />}>
                 <Route path="my_details" element={<MyDetailsMainPage />} />
                 <Route path="password" element={<PasswordMainPage />} />
+                <Route path="mfa-setup" element={<MfaSetup />} />
                 <Route
                   path="notifications"
                   element={<NotificationsMainPage />}
@@ -420,11 +430,26 @@ const AuthRoutes = () => {
               <Route path="login" element={<RedirectionPage />} />
               <Route path="members" element={<ConditionalMainPage />} />
               <Route path="/member/:id" element={<MemberDetailsMainPage />}>
-                <Route key={"/member/:id/main"} path="main" element={<DetailMemberInfo />} />
-                <Route key={"/member/:id/update-member-information"} path="update-member-information" element={<UpdateMemberInformation />} />
-                <Route key={"/member/:id/reminders"} path="reminders" element={<Remainders />} />
-              <Route key={"/member/:id/assignment"} path="assignment" element={<AssignmentDeviceMembers
-               />} />
+                <Route
+                  key={"/member/:id/main"}
+                  path="main"
+                  element={<DetailMemberInfo />}
+                />
+                <Route
+                  key={"/member/:id/update-member-information"}
+                  path="update-member-information"
+                  element={<UpdateMemberInformation />}
+                />
+                <Route
+                  key={"/member/:id/reminders"}
+                  path="reminders"
+                  element={<Remainders />}
+                />
+                <Route
+                  key={"/member/:id/assignment"}
+                  path="assignment"
+                  element={<AssignmentDeviceMembers />}
+                />
               </Route>
 
               <Route path="patiences" element={<ConditionalMainPage />} />
