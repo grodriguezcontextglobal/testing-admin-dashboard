@@ -55,6 +55,11 @@ const MainProfileSettings = () => {
       route: "password",
       permission: [0, 1, 2, 3, 4],
     },
+    {
+      label: "MFA Setup",
+      route: "mfa-setup",
+      permission: [0, 1, 2, 3, 4],
+    },
     // {
     //   label: "Billing",
     //   route: "billing",
