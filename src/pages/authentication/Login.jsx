@@ -159,60 +159,64 @@ const Login = () => {
   );
 
   const loginIntoOneCompanyAccount = async ({ props }) => {
-    localStorage.setItem("admin-token", props.respo.token);
-    const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
-      `/profile/${props.respo.uid}`,
-      {
-        online: true,
-      }
-    );
-    const respoFindMemberInfo = await devitrakApi.post(
-      "/db_staff/consulting-member",
-      {
-        email: props.email,
-      }
-    );
-    const companyInfoTable = await devitrakApi.post(
-      "/db_company/consulting-company",
-      {
-        company_name: props.company_name,
-      }
-    );
-    const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-      company_id: checkArray(companyInfoTable.data.company).company_id,
-    });
-    dispatch(
-      onLogin({
-        data: {
-          ...props.respo.entire,
+    try {
+      localStorage.setItem("admin-token", props.respo.token);
+      const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
+        `/profile/${props.respo.uid}`,
+        {
+          online: true,
+        }
+      );
+      const respoFindMemberInfo = await devitrakApi.post(
+        "/db_staff/consulting-member",
+        {
+          email: props.email,
+        }
+      );
+      const companyInfoTable = await devitrakApi.post(
+        "/db_company/consulting-company",
+        {
+          company_name: props.company_name,
+        }
+      );
+      const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
+        company_id: checkArray(companyInfoTable.data.company).company_id,
+      });
+      dispatch(
+        onLogin({
+          data: {
+            ...props.respo.entire,
+            online: updatingOnlineStatusResponse.data.entire.online,
+          },
+          name: props.respo.name,
+          lastName: props.respo.lastName,
+          uid: props.respo.uid,
+          email: props.respo.email,
+          role: props.role,
+          phone: props.respo.phone,
+          company: props.company_name,
+          token: props.respo.token,
           online: updatingOnlineStatusResponse.data.entire.online,
-        },
-        name: props.respo.name,
-        lastName: props.respo.lastName,
-        uid: props.respo.uid,
-        email: props.respo.email,
+          companyData: props.company_data[0],
+          sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
+          sqlInfo: {
+            ...checkArray(companyInfoTable.data.company),
+            stripeID: checkArray(stripeSQL.data.stripe),
+          },
+          subscription: {},
+        })
+      );
+      dispatch(onAddSubscription({}));
+      dispatch(clearErrorMessage());
+      queryClient.clear();
+      openNotificationWithIcon("Success", "User logged in.");
+      await navigateUserBasedOnRole({
         role: props.role,
-        phone: props.respo.phone,
-        company: props.company_name,
-        token: props.respo.token,
-        online: updatingOnlineStatusResponse.data.entire.online,
-        companyData: props.company_data[0],
-        sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
-        sqlInfo: {
-          ...checkArray(companyInfoTable.data.company),
-          stripeID: checkArray(stripeSQL.data.stripe),
-        },
-        subscription: {},
-      })
-    );
-    dispatch(onAddSubscription({}));
-    dispatch(clearErrorMessage());
-    queryClient.clear();
-    openNotificationWithIcon("Success", "User logged in.");
-    await navigateUserBasedOnRole({
-      role: props.role,
-      email: props.email,
-    });
+        email: props.email,
+      });
+    } catch (error) {
+      console.log("loginIntoOneCompanyAccount", error);
+    }
   };
 
   const handleMulitpleCompanyLogin = async (props) => {
