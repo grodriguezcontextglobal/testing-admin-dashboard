@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import {
   devitrakApi,
-  // devitrakApiAdmin,
+  devitrakApiAdmin,
 } from "../../../../../../api/devitrakApi";
 import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
@@ -43,7 +43,7 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
   const queryClient = useQueryClient();
   const saveDevicesAssignedListInDataBasedMutation = useMutation({
     mutationFn: (template) => {
-      devitrakApi.post("/receiver/receiver-assignation", template);
+      devitrakApiAdmin.post("/receiver-assignation", template);
     },
   });
   const deviceInPoolQuery = useQuery({
@@ -388,8 +388,8 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
 
     try {
       if (checkDeviceIsAssignedInEvent()) {
-        const resp = await devitrakApi.post(
-          "/receiver/receiver-assignation",
+        const resp = await devitrakApiAdmin.post(
+          "/receiver-assignation",
           template.render()
         );
         saveAndUpdateDeviceInPool();
