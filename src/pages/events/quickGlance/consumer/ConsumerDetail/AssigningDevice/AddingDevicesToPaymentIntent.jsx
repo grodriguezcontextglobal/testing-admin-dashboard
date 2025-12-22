@@ -46,7 +46,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
   const queryClient = useQueryClient();
   const saveDevicesAssignedListInDataBasedMutation = useMutation({
     mutationFn: (template) => {
-      devitrakApiAdmin.post("/receiver-assignation", template);
+      devitrakApi.post("/receiver/receiver-assignation", template);
     },
   });
   const deviceInPoolQuery = useQuery({
