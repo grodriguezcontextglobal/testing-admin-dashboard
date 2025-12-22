@@ -150,15 +150,15 @@ const EndEventButton = () => {
     refetchOnMount: false,
   });
 
-  const itemsInPoolQuery = useQuery({
-    queryKey: ["listOfItemsInInventoryPOST"],
-    queryFn: () =>
-      devitrakApi.post("/item/list-items", {
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-      }),
-    refetchOnMount: false,
-  });
+  // const itemsInPoolQuery = useQuery({
+  //   queryKey: ["listOfItemsInInventoryPOST"],
+  //   queryFn: () =>
+  //     devitrakApi.post("/item/list-items", {
+  //       eventSelected: event.eventInfoDetail.eventName,
+  //       provider: event.company,
+  //     }),
+  //   refetchOnMount: false,
+  // });
 
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
@@ -205,7 +205,7 @@ const EndEventButton = () => {
     const controller = new AbortController();
     listOfInventoryQuery.refetch();
     listOfItemsInInventoryQuery.refetch();
-    itemsInPoolQuery.refetch();
+    // itemsInPoolQuery.refetch();
     eventInventoryQuery.refetch();
     transactionsRecordQuery.refetch();
     sqlDBCompanyStockQuery.refetch();
@@ -289,7 +289,7 @@ const EndEventButton = () => {
 
   const findItemsInPoolEvent = () => {
     const listOfItemsInPoolQuery =
-      itemsInPoolQuery?.data?.data?.receiversInventory;
+      listOfItemsInInventoryQuery?.data?.data?.receiversInventory;
     if (listOfItemsInPoolQuery?.length > 0) {
       return listOfItemsInPoolQuery;
     }
