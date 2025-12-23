@@ -55,6 +55,9 @@ const ReturnRentedItemModal = ({
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerBrand"] });
     queryClient.invalidateQueries({ queryKey: ["currentStateDevicePerBrand"] });
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
+    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], exact: true, refetchType: "active" })
+    queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], exact: true, refetchType: "active" })
+    queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], exact: true, refetchType: "active" })
     return null;
   };
   // Request size validation helper

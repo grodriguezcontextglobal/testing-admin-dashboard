@@ -95,9 +95,21 @@ const AddNewItem = () => {
     staleTime: 3 * 60 * 1000,
   });
   const invalidateQueries = () => {
-    queryClient.invalidateQueries(["ItemsInInventoryCheckingQuery"]);
-    queryClient.invalidateQueries(["listOfItemsInStock"]);
-    queryClient.invalidateQueries(["RefactoredListInventoryCompany"]);
+      queryClient.invalidateQueries({
+        queryKey: ["listOfItemsInStock"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+        exact: true,
+        refetchType: "active",
+      });
   };
   const retrieveItemOptions = (props) => {
     const result = new Set();
