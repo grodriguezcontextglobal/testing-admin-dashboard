@@ -55,9 +55,21 @@ const ReturnRentedItemModal = ({
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerBrand"] });
     queryClient.invalidateQueries({ queryKey: ["currentStateDevicePerBrand"] });
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
-    queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], exact: true, refetchType: "active" })
-    queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], exact: true, refetchType: "active" })
-    queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], exact: true, refetchType: "active" })
+    queryClient.invalidateQueries({
+      queryKey: ["listOfItemsInStock"],
+      exact: true,
+      refetchType: "active",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ItemsInInventoryCheckingQuery"],
+      exact: true,
+      refetchType: "active",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["RefactoredListInventoryCompany"],
+      exact: true,
+      refetchType: "active",
+    });
     return null;
   };
   // Request size validation helper
@@ -422,15 +434,10 @@ const ReturnRentedItemModal = ({
   // Step 2: Delete items from records with improved batching
   const deleteItemsFromRecords = async (itemIds) => {
     const batchProcessor = async (batch) => {
-      const placeholders = batch.map(() => "?").join(",");
-      const deleteQuery = `DELETE FROM item_inv WHERE item_id IN (${placeholders}) AND company_id = ?`;
-      const deleteValues = [...batch, user.sqlInfo.company_id];
-
       const payload = {
-        query: deleteQuery,
-        values: deleteValues,
+        item_ids: batch,
+        company_id: user.sqlInfo.company_id,
       };
-
       // Validate payload size
       const sizeCheck = checkRequestSize(payload);
       if (sizeCheck.isLarge) {
@@ -440,11 +447,7 @@ const ReturnRentedItemModal = ({
           )} MB`
         );
       }
-
-      return await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        payload
-      );
+      return await devitrakApi.post("/db_company/delete-bulk-items", payload);
     };
 
     return await processBatchedItems(
