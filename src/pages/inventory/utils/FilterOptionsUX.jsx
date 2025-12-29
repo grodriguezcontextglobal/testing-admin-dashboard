@@ -80,7 +80,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
         };
       });
     });
-  }, [filterOptionsValues.filterOptions]);
+  }, [filterOptionsValues?.filterOptions]);
 
   return (
     <div

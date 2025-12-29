@@ -57,6 +57,12 @@ const RenderingFilters = ({
     queryFn: () =>
       devitrakApi.post("/db_company/get-location-item-types-hierarchy", {
         company_id: user.sqlInfo.company_id,
+        role: user.companyData.employees.find(
+          (element) => element.user === user.email
+        )?.role,
+        preference: user.companyData.employees.find(
+          (element) => element.user === user.email
+        )?.preference || [],
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
@@ -877,7 +883,7 @@ const RenderingFilters = ({
                     }}
                   >
                     | Total <strong>{item.totalUnits}</strong>{" "}
-                    {index === optionsToRenderInDetailsHtmlTags.length-1
+                    {index === optionsToRenderInDetailsHtmlTags.length - 1
                       ? item.totalUnits > 1
                         ? "members"
                         : "member"
