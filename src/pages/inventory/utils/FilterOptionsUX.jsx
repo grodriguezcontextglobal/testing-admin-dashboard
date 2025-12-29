@@ -56,8 +56,8 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
     return new Array(7).fill(null).map((_, index) => {
-      const opts = Array.isArray(filterOptionsValues.filterOptions[index])
-        ? filterOptionsValues.filterOptions[index]
+      const opts = Array.isArray(filterOptionsValues?.filterOptions[index])
+        ? filterOptionsValues?.filterOptions[index]
         : [];
       return opts.map((item) => {
         return {
