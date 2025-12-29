@@ -56,7 +56,7 @@ const navItems = [
   {
     title: "inventory",
     route: "/inventory",
-    permission: [0, 1],
+    permission: [0, 1, 2],
     mobile: true,
     desktop: true,
   },
