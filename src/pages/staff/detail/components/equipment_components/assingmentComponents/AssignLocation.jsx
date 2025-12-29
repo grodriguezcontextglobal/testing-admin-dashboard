@@ -11,9 +11,10 @@ import {
   Divider,
 } from "antd";
 import { groupBy } from "lodash";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { useEffect } from "react";
+import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSlide";
 
 const { Title, Text } = Typography;
 
@@ -22,7 +23,7 @@ const AssignLocation = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-
+const dispatch = useDispatch()
   const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
     queryKey: ["inventoryForLocations", user.sqlInfo.company_id],
     queryFn: () =>
@@ -79,16 +80,26 @@ const AssignLocation = () => {
           };
 
           // Patch the company with the updated employees list
-          await devitrakApi.patch(
+          const updatingCompanyEmployeePreference = await devitrakApi.patch(
             `/company/update-company/${user.companyData.id}`,
             {
               employees: employeesList,
             }
           );
-
+          dispatch(onAddStaffProfile({
+            ...profile,
+            preference:{
+              ...updatingCompanyEmployeePreference.data.company.employees[employeeIndex].preference,
+              inventory_location: values.location,
+            },
+            companyData: updatingCompanyEmployeePreference.data.company ?? profile.companyData,
+          }))
           message.success("Locations assigned successfully.");
           // Invalidate relevant queries or trigger a reload if needed
-          queryClient.invalidateQueries({ queryKey: ["staffProfile"], exact: true });
+          queryClient.invalidateQueries({
+            queryKey: ["staffProfile"],
+            exact: true,
+          });
           // Also update Redux if necessary, but invalidating queries should trigger re-fetch if components are set up correctly.
         } else {
           message.error("Employee not found in company records.");
