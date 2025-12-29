@@ -117,6 +117,16 @@ const UpdateRoleInCompany = lazy(() =>
 const AssignStaffMemberToEvent = lazy(() =>
   import("../../pages/staff/detail/components/AssignStaffMemberToEvent")
 );
+const AssignLocation = lazy(() =>
+  import(
+    "../../pages/staff/detail/components/equipment_components/assingmentComponents/AssignLocation"
+  )
+);
+const AssignLocationManager = lazy(() =>
+  import(
+    "../../pages/staff/detail/components/equipment_components/assingmentComponents/AssignLocationManager"
+  )
+);
 const ConsumerDeviceLostFeeCash = lazy(() =>
   import("../../pages/consumers/components/markedLostOption/Cash")
 );
@@ -376,6 +386,16 @@ const AuthRoutes = () => {
                   key={"/staff/:id/assign-staff-events"}
                   path="assign-staff-events"
                   element={<AssignStaffMemberToEvent />}
+                />
+                <Route
+                  key={"/staff/:id/assign-location"}
+                  path="assign-location"
+                  element={<AssignLocation />}
+                />
+                <Route
+                  key={"/staff/:id/assign-location-manager"}
+                  path="assign-location-manager"
+                  element={<AssignLocationManager />}
                 />
                 <Route
                   key={"/staff/:id/view_actions_staff_taken"}
