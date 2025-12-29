@@ -144,8 +144,8 @@ const Sequential = ({
       </div>
       <span style={{ width: "100%", textAlign: "right" }}>
         <p style={Subtitle}>
-          Custom serial number stars: {valueItemSelected?.start} and ends:{" "}
-          {valueItemSelected?.end}
+          Custom serial number stars: {valueItemSelected?.serialNumberList?.at(0)} and ends:{" "}
+          {valueItemSelected?.serialNumberList?.at(-1)}
         </p>
       </span>
 
