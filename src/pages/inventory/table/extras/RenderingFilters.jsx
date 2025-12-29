@@ -48,6 +48,12 @@ const RenderingFilters = ({
     queryFn: () =>
       devitrakApi.post(`/db_company/company-inventory-structure`, {
         company_id: user.sqlInfo.company_id,
+        role: user.companyData.employees.find(
+          (element) => element.user === user.email
+        )?.role,
+        preference: user.companyData.employees.find(
+          (element) => element.user === user.email
+        )?.preference || [],
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
