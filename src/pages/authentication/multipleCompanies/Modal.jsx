@@ -109,6 +109,7 @@ const ModalMultipleCompanies = ({
             ...companyInfoTable.data.company.at(-1),
             stripeID: stripeSQL.data.stripe.at(-1),
           },
+          preference: dataPassed.respo.entire.preference,
         })
       );
       setIsLoading(false);
@@ -118,6 +119,7 @@ const ModalMultipleCompanies = ({
       navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
       // }
     } catch (error) {
+      console.log("loginIntoOneCompanyAccountFromMultipleCompanyRegistered",error)
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
