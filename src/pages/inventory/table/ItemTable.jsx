@@ -94,23 +94,33 @@ const ItemTable = ({
     keepPreviousData: true,
   });
 
+  // const refactoredListInventoryCompany = useQuery({
+  //   queryKey: ["RefactoredListInventoryCompany"],
+  //   queryFn: () => devitrakApi.post(`/db_company/company-inventory-with-current-warehouse-status`, {
+  //       company_id: user.sqlInfo.company_id,
+  //     }),
+  //     enabled: !!user.sqlInfo.company_id,
+  //     staleTime: 5 * 60 * 1000, // 5 minutes
+  //     keepPreviousData: true,
+  // });
+
   const refactoredListInventoryCompany = useQuery({
     queryKey: ["RefactoredListInventoryCompany"],
     queryFn: () =>
-      devitrakApi.post(
-        `/db_company/company-inventory-with-current-warehouse-status`,
-        {
-          company_id: user.sqlInfo.company_id,
-        }
-      ),
+      devitrakApi.post(`/db_item/warehouse-items`, {
+        company_id: user.sqlInfo.company_id,
+        role: user.role,
+        preference:
+          user.companyData.employees.find((item) => item.user === user.email)
+            ?.preference || user.preference,
+      }),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 5 * 60 * 1000, // 50 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
     keepPreviousData: true,
   });
-
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data?.result;  
+  const renderedListItems = listItemsQuery?.data?.data?.result;
   // const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
@@ -162,49 +172,44 @@ const ItemTable = ({
     const items = refactoredListInventoryCompany?.data?.data?.items;
     if (!Array.isArray(items) || items.length === 0) return [];
 
-    // Deduplicate rows by item_id to avoid repeated keys
     const rowMap = new Map();
-    const groupingByImage = groupBy(items, "image_url");
 
-    const processItems = (itemsChunk) => {
-      const groupingByItem = groupBy(itemsChunk, "item_group");
-      for (let [key, value] of Object.entries(groupingByItem)) {
-        const imageSource = groupingByDeviceType[key]
-          ? groupingByDeviceType[key][0].source
-          : null;
-        for (let data of value) {
-          const row = {
-            key: data.item, // stable key equals item_id
-            item_id: data.item,
-            item_group: data.item_group,
-            category_name: data.category_name,
-            brand: data.brand,
-            ownership: data.ownership,
-            main_warehouse: data.main_warehouse,
-            warehouse: data.warehouse,
-            location: data.location,
-            image_url: data.image_url || imageSource,
-            serial_number: data.serial_number,
-            enableAssignFeature: data.enableAssignFeature,
-            usage: data.usage,
-            status: data.status ?? null,
-            condition: data.status ?? null,
-            assignedToStaffMember:
-              data.usage && data.usage.length > 0 ? data.usage : null,
-          };
-
-          // Always keep the latest row for this item_id
-          rowMap.set(row.item_id, row);
+    for (const data of items) {
+      // Resolve image source: use item's image or fallback to group image
+      let imageSource = data.image_url;
+      if (!imageSource || imageSource === "") {
+        const groupImages = groupingByDeviceType[data.item_group];
+        if (groupImages && groupImages.length > 0) {
+          imageSource = groupImages[0].source;
         }
       }
-    };
 
-    // Process groups, including null/empty image_url buckets
-    if (groupingByImage[null]) processItems(groupingByImage[null]);
-    if (groupingByImage[""]) processItems(groupingByImage[""]);
-    Object.entries(groupingByImage)
-      .filter(([k]) => k !== null && k !== "")
-      .forEach(([, chunk]) => processItems(chunk));
+      // Ensure we have a valid ID. Fallback to 'id' if 'item_id' is missing.
+      const itemId = data.item_id || data.id;
+
+      if (itemId) {
+        const row = {
+          key: itemId,
+          item_id: itemId,
+          item_group: data.item_group,
+          category_name: data.category_name,
+          brand: data.brand,
+          ownership: data.ownership,
+          main_warehouse: data.main_warehouse,
+          warehouse: data.warehouse,
+          location: data.location,
+          image_url: imageSource,
+          serial_number: data.serial_number,
+          enableAssignFeature: data.enableAssignFeature,
+          usage: data.usage,
+          status: data.status ?? null,
+          condition: data.status ?? null,
+          assignedToStaffMember:
+            data.usage && data.usage.length > 0 ? data.usage : null,
+        };
+        rowMap.set(itemId, row);
+      }
+    }
 
     return Array.from(rowMap.values());
   }, [refactoredListInventoryCompany?.data?.data?.items, groupingByDeviceType]);
@@ -238,7 +243,7 @@ const ItemTable = ({
     } else {
       setChosenConditionState(0); // default
     }
-  }, [searchValues.chosenOption, searchValues.date]);
+  }, [searchValues?.chosenOption, searchValues?.date]);
 
   // Date filtering: keep existing behavior using legacy transformation,
   // since the event endpoint structure is different/unknown.
@@ -305,10 +310,10 @@ const ItemTable = ({
   ]);
 
   // Provide a stable accessor for components expecting a function
-  const dataToDisplay = useCallback(
-    () => dataToDisplayMemo,
-    [dataToDisplayMemo]
-  );
+  // const dataToDisplay = useCallback(
+  //   () => dataToDisplayMemo,
+  //   [dataToDisplayMemo]
+  // );
 
   // Update filter options and report download only when inputs change
   useEffect(() => {
@@ -350,7 +355,7 @@ const ItemTable = ({
           lg={12}
         >
           <RenderingFilters
-            dataToDisplay={dataToDisplay}
+            dataToDisplay={dataToDisplayMemo}
             searchItem={searchValues.searchItem}
             user={user}
             openAdvanceSearchModal={searchValues.openAdvanceSearchModal}
