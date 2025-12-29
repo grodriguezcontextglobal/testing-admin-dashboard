@@ -66,6 +66,8 @@ const StaffDetail = () => {
     }
   };
 
+  const iconColor = "#0040C1";
+
   const tabOptions = [
     {
       label: "Assign devices",
@@ -109,6 +111,48 @@ const StaffDetail = () => {
         />
       ),
     },
+    {
+      label: "Assign Location",
+      route: "assign-location",
+      permission: [0, 1],
+      disabled: false,
+      id: 6,
+      fn: () => null,
+      html: (
+        <LightBlueButtonComponent
+          title={"Assign Location"}
+          func={() => null}
+          icon={<RectanglePlusIcon stroke={iconColor}/>}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
+    },
+    // {
+    //   label: "Assign Location Manager",
+    //   route: "assign-location-manager",
+    //   permission: [0, 1],
+    //   disabled: false,
+    //   id: 7,
+    //   fn: () => null,
+    //   html: (
+    //     <LightBlueButtonComponent
+    //       title={"Assign Location Manager"}
+    //       func={() => null}
+    //       icon={<RectanglePlusIcon stroke={iconColor}/>}
+    //       buttonType="button"
+    //       titleStyles={{
+    //         textTransform: "none",
+    //         with: "100%",
+    //         gap: "2px",
+    //       }}
+    //     />
+    //   ),
+    // },
     {
       label: "Update contact info",
       route: "update-contact-info",
