@@ -203,6 +203,7 @@ const Login = () => {
             ...checkArray(companyInfoTable.data.company),
             stripeID: checkArray(stripeSQL.data.stripe),
           },
+          preference: props.respo.entire.preference,
           subscription: {},
         })
       );
