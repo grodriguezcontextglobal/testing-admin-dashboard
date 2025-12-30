@@ -1,13 +1,15 @@
-import { message } from "antd";
-import { useCallback, useMemo, useState } from "react";
+import { message, Button, Tooltip } from "antd";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { read, utils } from "xlsx";
+import { read, utils, writeFile } from "xlsx";
+import { DownloadOutlined } from "@ant-design/icons";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import insertDeviceIntoEventTableRecord from "./actions/useInsertDeviceIntoEventTableRecord";
 import updateItemWarehouseStatus from "./actions/useUpdateItemWarehouseStatus";
 import insertItemsIntoInventoryEvent from "./actions/useInsertItemsIntoInventoryEvent";
 import checkGlobalForUpdateEventInventory from "./actions/checkGlobalForUpdateEventInventory";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import TourModals from "../../../../../../components/UX/tours/TourModals";
 
 // Normalize header names to snake_case-like keys
 const normalizeHeader = (key) =>
@@ -75,10 +77,87 @@ const ImportingXlsx = ({
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState([]);
   const [errors, setErrors] = useState([]);
-  const [loadingState, setLoadingState] = useState(false)
+  const [loadingState, setLoadingState] = useState(false);
+  const [openTour, setOpenTour] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const dispatch = useDispatch();
+
+  // Refs for Tour
+  const deviceIdRef = useRef(null);
+  const serialRef = useRef(null);
+  const warehouseRef = useRef(null);
+  const assignableRef = useRef(null);
+
+  // Tour Data
+  const tourColumns = [
+    {
+      title: "Device ID (database)",
+      onHeaderCell: () => ({ ref: deviceIdRef }),
+      dataIndex: "device_id_database",
+      key: "device_id_database",
+    },
+    {
+      title: "Serial Number",
+      onHeaderCell: () => ({ ref: serialRef }),
+      dataIndex: "serial_number",
+      key: "serial_number",
+    },
+    {
+      title: "Warehouse",
+      onHeaderCell: () => ({ ref: warehouseRef }),
+      dataIndex: "warehouse",
+      key: "warehouse",
+    },
+    {
+      title: "Assignable",
+      onHeaderCell: () => ({ ref: assignableRef }),
+      dataIndex: "assignable",
+      key: "assignable",
+    },
+  ];
+
+  const tourData = [
+    {
+      device_id_database: "device_123",
+      serial_number: "SN123456",
+      warehouse: "Washington, DC",
+      assignable: "Assignable",
+    },
+  ];
+
+  const tourSteps = [
+    {
+      title: "Device ID",
+      description: "The unique ID of the device in the database.",
+      target: () => deviceIdRef.current,
+    },
+    {
+      title: "Serial Number",
+      description: "The serial number of the device.",
+      target: () => serialRef.current,
+    },
+    {
+      title: "Warehouse",
+      description: "Current location (Must not be 'In-Use').",
+      target: () => warehouseRef.current,
+    },
+    {
+      title: "Assignable",
+      description: "Must be 'Assignable' or 'Yes'.",
+      target: () => assignableRef.current,
+    },
+  ];
+
+  const handleDownloadTemplate = () => {
+    // eslint-disable-next-line no-unused-vars
+    const dataToExport = tourData.map(({ key, ...rest }) => rest);
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Template");
+    writeFile(wb, "Device_Import_Template.xlsx");
+  };
+
   // Build a map of valid serial numbers by location from itemQuery (current item_group)
   const validSerialsByLocation = useMemo(() => {
     const map = new Map();
@@ -230,9 +309,11 @@ const ImportingXlsx = ({
         );
       } catch (error) {
         return message.error(
-          `Failed to add items from '${location}': ${error?.message || String(error)}`
+          `Failed to add items from '${location}': ${
+            error?.message || String(error)
+          }`
         );
-      } finally{
+      } finally {
         setLoadingState(false);
       }
     },
@@ -259,18 +340,32 @@ const ImportingXlsx = ({
         {fileName ? (
           <div style={{ marginTop: 8, color: "#667085" }}>File: {fileName}</div>
         ) : null}
-        <GrayButtonComponent
-          func={() => {
-            setErrors([]);
-            setRows([]);
-            setFileName("");
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "flex-end",
+            width: "100%",
           }}
-          style={{ marginLeft: "auto", width: "fit-content" }}
-          title="Clear"
-        />
+        >
+          <GrayButtonComponent
+            title="View Template Guide"
+            func={() => setOpenTour(true)}
+            style={{ width: "fit-content" }}
+          />
+          <GrayButtonComponent
+            func={() => {
+              setErrors([]);
+              setRows([]);
+              setFileName("");
+            }}
+            style={{ width: "fit-content" }}
+            title="Clear"
+          />
+        </div>
       </div>
 
-      <div style={{ margin: "0 0 1rem" }}>
+      {/* <div style={{ margin: "0 0 1rem" }}>
         <div style={{ color: "#475467" }}>Required columns:</div>
         <ul style={{ margin: 4 }}>
           <li>Device ID (database)</li>
@@ -278,7 +373,7 @@ const ImportingXlsx = ({
           <li>Warehouse (must be different to &quot;In-Use&quot;)</li>
           <li>Assignable (must be equal to &quot;Assignable&quot;)</li>
         </ul>
-      </div>
+      </div> */}
 
       {errors.length ? (
         <div style={{ color: "crimson", marginBottom: 12 }}>
@@ -318,7 +413,13 @@ const ImportingXlsx = ({
                 <div style={{ fontWeight: 600 }}>{g.location}</div>
                 <div style={{ color: "#667085" }}>{g.count} items</div>
               </div>
-              <BlueButtonComponent title={"Add from this location"} buttonType="button" func={() => addGroupToSelection(g)} loading={loadingState} disabled={blockingButton} />
+              <BlueButtonComponent
+                title={"Add from this location"}
+                buttonType="button"
+                func={() => addGroupToSelection(g)}
+                loading={loadingState}
+                disabled={blockingButton}
+              />
             </div>
           ))}
         </div>
@@ -335,9 +436,34 @@ const ImportingXlsx = ({
           style={{ marginLeft: "auto", width: "fit-content" }}
           title="Done"
           disabled={blockingButton}
-          loading={loadingState}  
+          loading={loadingState}
         />
       </div>
+      {openTour && (
+        <TourModals
+          open={openTour}
+          setOpen={setOpenTour}
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Import Template Guide</span>
+              <Tooltip title="Download Template">
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadTemplate}
+                  size="small"
+                />
+              </Tooltip>
+            </div>
+          }
+          description="Ensure your Excel file follows this structure."
+          columns={tourColumns}
+          dataSource={tourData}
+          steps={tourSteps}
+          width={1000}
+        />
+      )}
     </div>
   );
 };
