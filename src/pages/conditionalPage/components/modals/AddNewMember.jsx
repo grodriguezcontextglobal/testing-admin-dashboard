@@ -1,5 +1,7 @@
 import { useMemo, useState, useRef } from "react";
-import { Divider, Typography } from "antd";
+import { Divider, Typography, Button, Tooltip } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
+import { utils, writeFile } from "xlsx";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -128,7 +130,6 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
 
   const tourData = [
     {
-      key: 1,
       first_name: "John",
       last_name: "Doe",
       email: "john.doe@example.com",
@@ -139,6 +140,15 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       zip: "10001",
     },
   ];
+
+  const handleDownloadTemplate = () => {
+    // eslint-disable-next-line no-unused-vars
+    const dataToExport = tourData.map(({ key, ...rest }) => rest);
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Template");
+    writeFile(wb, "Member_Import_Template.xlsx");
+  };
 
   const bodyUX = useMemo(() => {
     return (
@@ -215,7 +225,20 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
         <TourModals
           open={openTour}
           setOpen={setOpenTour}
-          title="Member Import Template Guide"
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Member Import Template Guide</span>
+              <Tooltip title="Download Template">
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadTemplate}
+                  size="small"
+                />
+              </Tooltip>
+            </div>
+          }
           description={
             <>
               This guide shows the expected structure for your Excel (.xlsx)
