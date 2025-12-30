@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { message, notification } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApiAdmin } from "../../../api/devitrakApi";
@@ -83,6 +83,10 @@ const MfaSetup = () => {
     }
   };
 
+  useEffect(() => {
+    !mfaEnabled && handleGenerateMfa();
+  }, [])
+  
   return (
     <Grid
       container
@@ -118,7 +122,7 @@ const MfaSetup = () => {
         </Grid>
 
         <Grid container spacing={2} alignItems="flex-start">
-          {!mfaEnabled && (
+          {/* {!mfaEnabled && (
             <Grid item xs={12}>
               <Typography sx={{ mb: 2 }}>
                 Protect your account by enabling Multi-Factor Authentication
@@ -131,7 +135,7 @@ const MfaSetup = () => {
                 loadingState={loading}
               />
             </Grid>
-          )}
+          )} */}
 
           {!mfaEnabled && (
             <Grid item xs={12} container spacing={4}>
