@@ -18,15 +18,15 @@ const normalizeHeader = (key) =>
 
 // Map various header variants to target schema keys
 const headerAliasMap = {
-  first_name: ["first_name", "firstname", "first"],
-  last_name: ["last_name", "lastname", "last"],
+  "first name": ["first_name", "firstname", "first"],
+  "last name": ["last_name", "lastname", "last"],
   email: ["email", "e_mail"],
   phone: ["phone", "phone_number", "phonenumber", "mobile"],
   address: ["address", "addr"],
-  address_street: ["address_street", "street", "addr_street", "addres_street"], // handle common typo addres_street
-  address_city: ["address_city", "city", "addr_city"],
-  address_state: ["address_state", "state", "addr_state", "province"],
-  address_zip: [
+  street: ["address_street", "street", "addr_street", "addres_street"], // handle common typo addres_street
+  city: ["address_city", "city", "addr_city"],
+  state: ["address_state", "state", "addr_state", "province"],
+  zip: [
     "address_zip",
     "zip",
     "zip_code",
@@ -53,12 +53,12 @@ const MultipleFromXLSX = ({ companyId = null }) => {
   const [importing, setImporting] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const requiredCore = useMemo(
-    () => ["first_name", "last_name", "email", "phone"],
+    () => ["first name", "last name", "email", "phone"],
     []
   );
   const optionalCombinedAddress = "address";
   const optionalAddressParts = useMemo(
-    () => ["address_street", "address_city", "address_state", "address_zip"],
+    () => ["street", "city", "state", "zip"],
     []
   );
 
@@ -100,19 +100,19 @@ const MultipleFromXLSX = ({ companyId = null }) => {
 
         // Build final schema row
         const out = {
-          first_name: normalizedRow.first_name || "",
-          last_name: normalizedRow.last_name || "",
+          first_name: normalizedRow["first name"] || "",
+          last_name: normalizedRow["last name"] || "",
           email: normalizedRow.email || "",
           phone: normalizedRow.phone || "",
           address:
             normalizedRow.address ||
             (hasParts
-              ? `${normalizedRow.address_street}, ${normalizedRow.address_city}, ${normalizedRow.address_state} ${normalizedRow.address_zip}`
+              ? `${normalizedRow.street}, ${normalizedRow.city}, ${normalizedRow.state} ${normalizedRow.zip}`
               : ""),
-          address_street: normalizedRow.address_street || "",
-          address_city: normalizedRow.address_city || "",
-          address_state: normalizedRow.address_state || "",
-          address_zip: normalizedRow.address_zip || "",
+          address_street: normalizedRow.street || "",
+          address_city: normalizedRow.city || "",
+          address_state: normalizedRow.state || "",
+          address_zip: normalizedRow.zip || "",
           company_id: user?.sqlInfo?.company_id || companyId,
         };
 
@@ -212,14 +212,9 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       </div>
 
       <div>
-        <div>Expected columns (address can be combined or split):</div>
+        <div>Mandatory columns:</div>
         <ul>
-          <li>first_name, last_name, email, phone, address (optional)</li>
-          <li>
-            first_name, last_name, email, phone, address_street (or street),
-            address_city (or city), address_state (or state), address_zip (or
-            zip / zip code)
-          </li>
+          <li>first name, last name, email, phone, street, city, state, zip</li>
         </ul>
       </div>
 
@@ -290,15 +285,15 @@ const MultipleFromXLSX = ({ companyId = null }) => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th>first_name</th>
-                  <th>last_name</th>
+                  <th>first name</th>
+                  <th>last name</th>
                   <th>email</th>
                   <th>phone</th>
                   <th>address</th>
-                  <th>address_street</th>
-                  <th>address_city</th>
-                  <th>address_state</th>
-                  <th>address_zip</th>
+                  <th>street</th>
+                  <th>city</th>
+                  <th>state</th>
+                  <th>zip</th>
                 </tr>
               </thead>
               <tbody>
