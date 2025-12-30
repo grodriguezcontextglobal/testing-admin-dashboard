@@ -1,9 +1,11 @@
-import { message } from "antd";
-import { useEffect, useMemo, useState } from "react";
-import { read, utils } from "xlsx";
+import { message, Button, Tooltip } from "antd";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { read, utils, writeFile } from "xlsx";
+import { DownloadOutlined } from "@ant-design/icons";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
+import TourModals from "../../../../components/UX/tours/TourModals";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import updateItemWarehouseStatus from "./addSerialNumberRangeToEvent/addingItemsMethod/actions/useUpdateItemWarehouseStatus";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,8 +30,23 @@ const headerAliasMap = {
     // Excel: "Device ID (database)" → device_id_database
     "device_id_database",
   ],
-  serial_number: ["serial_number", "serial", "serialnumber", "sn"],
-  warehouse: ["warehouse", "location", "site", "current_location"],
+  serial_number: [
+    "serial_number",
+    "serial",
+    "serialnumber",
+    "sn",
+    "sku", // From TourModal
+  ],
+  warehouse: [
+    "warehouse",
+    "location",
+    "site",
+    "current_location",
+    "main_warehouse", // From TourModal
+    "main_location", // From TourModal
+    "address", // From TourModal
+    "loc", // From TourModal
+  ],
   enableFeature: [
     "enable_feature",
     "enablefeature",
@@ -46,8 +63,17 @@ const headerAliasMap = {
     "itemgroupname",
     "device_name",
     "group_name",
+    "group", // From TourModal
+    "name", // From TourModal
+    "device", // From TourModal
   ],
-  category_name: ["category_name", "categoryname", "category_name"],
+  category_name: [
+    "category_name",
+    "categoryname",
+    "category", // From TourModal
+    "cat", // From TourModal
+    "division", // From TourModal
+  ],
 };
 
 const resolveKey = (normalizedKey) => {
@@ -69,12 +95,90 @@ const ImportingXLSXFile = ({
   const [errors, setErrors] = useState([]);
   const [loadingState, setLoadingState] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
+  const [openTour, setOpenTour] = useState(false);
   const [viewContext, setViewContext] = useState({
     item_group: "",
     location: "",
     items: [],
   });
   const dispatch = useDispatch();
+
+  // Refs for Tour
+  const deviceIdRef = useRef(null);
+  const serialRef = useRef(null);
+  const warehouseRef = useRef(null);
+  const itemGroupRef = useRef(null);
+
+  // Tour Data
+  const tourColumns = [
+    {
+      title: "Device ID (database)",
+      onHeaderCell: () => ({ ref: deviceIdRef }),
+      dataIndex: "device_id_database",
+      key: "device_id_database",
+    },
+    {
+      title: "Serial Number",
+      onHeaderCell: () => ({ ref: serialRef }),
+      dataIndex: "serial_number",
+      key: "serial_number",
+    },
+    {
+      title: "Warehouse",
+      onHeaderCell: () => ({ ref: warehouseRef }),
+      dataIndex: "warehouse",
+      key: "warehouse",
+    },
+    {
+      title: "Group Name",
+      onHeaderCell: () => ({ ref: itemGroupRef }),
+      dataIndex: "item_group",
+      key: "item_group",
+    },
+  ];
+
+  const tourData = [
+    {
+      key: 1,
+      device_id_database: "device_123",
+      serial_number: "SN123456",
+      warehouse: "Main Warehouse",
+      item_group: "Audio Equipment",
+    },
+  ];
+
+  const tourSteps = [
+    {
+      title: "Device ID",
+      description: "The unique ID of the device in the database.",
+      target: () => deviceIdRef.current,
+    },
+    {
+      title: "Serial Number",
+      description: "The serial number of the device.",
+      target: () => serialRef.current,
+    },
+    {
+      title: "Warehouse",
+      description: "Current location of the device.",
+      target: () => warehouseRef.current,
+    },
+    {
+      title: "Group Name",
+      description: "The category or group name for the device.",
+      target: () => itemGroupRef.current,
+    },
+  ];
+
+  const handleDownloadTemplate = () => {
+    // eslint-disable-next-line no-unused-vars
+    const dataToExport = tourData.map(({ key, ...rest }) => rest);
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Template");
+    writeFile(wb, "Event_Inventory_Import_Template.xlsx");
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -194,18 +298,32 @@ const ImportingXLSXFile = ({
               File: {fileName}
             </div>
           ) : null}
-          <GrayButtonComponent
-            func={() => {
-              setErrors([]);
-              setRows([]);
-              setFileName("");
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "flex-end",
+              width: "100%",
             }}
-            style={{ marginLeft: "auto", width: "fit-content" }}
-            title="Clear"
-          />
+          >
+            <GrayButtonComponent
+              title="View Template Guide"
+              func={() => setOpenTour(true)}
+              style={{ width: "fit-content" }}
+            />
+            <GrayButtonComponent
+              func={() => {
+                setErrors([]);
+                setRows([]);
+                setFileName("");
+              }}
+              style={{ width: "fit-content" }}
+              title="Clear"
+            />
+          </div>
         </div>
 
-        <div style={{ margin: "0 0 1rem" }}>
+        {/* <div style={{ margin: "0 0 1rem" }}>
           <div style={{ color: "#475467" }}>Required columns:</div>
           <ul style={{ margin: 4 }}>
             <li>Device ID (database)</li>
@@ -213,7 +331,7 @@ const ImportingXLSXFile = ({
             <li>Warehouse or Current Location</li>
             <li>Group Name</li>
           </ul>
-        </div>
+        </div> */}
 
         {errors.length ? (
           <div style={{ color: "crimson", marginBottom: 12 }}>
@@ -398,11 +516,11 @@ const ImportingXLSXFile = ({
               `No matching database items found for ${loc.serials.length} serials at '${loc.location}'.`
             );
             continue;
-        }
-        await insertItemsIntoInventoryEvent({
-          data: itemIdInfo,
-          event,
-        });
+          }
+          await insertItemsIntoInventoryEvent({
+            data: itemIdInfo,
+            event,
+          });
           await insertDeviceIntoEventTableRecord({
             data: itemIdInfo,
             event,
@@ -449,6 +567,31 @@ const ImportingXLSXFile = ({
         closeModal={() => setOpenViewModal(false)}
         body={renderViewModalBody()}
       />
+      {openTour && (
+        <TourModals
+          open={openTour}
+          setOpen={setOpenTour}
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Import Template Guide</span>
+              <Tooltip title="Download Template">
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadTemplate}
+                  size="small"
+                />
+              </Tooltip>
+            </div>
+          }
+          description="Ensure your Excel file follows this structure."
+          columns={tourColumns}
+          dataSource={tourData}
+          steps={tourSteps}
+          width={1000}
+        />
+      )}
     </>
   );
 };
