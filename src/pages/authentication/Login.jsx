@@ -233,6 +233,17 @@ const Login = () => {
     setCurrentStep("password");
   };
 
+  /**
+   * Handles login submission including MFA verification.
+   *
+   * Refactored MFA Error Handling:
+   * - If an error occurs during MFA verification (currentStep === 'mfa'), the component
+   *   checks if it's a standard authentication failure (e.g., "Invalid MFA Code").
+   * - In these cases, it PREVENTS the default behavior of resetting the form to the email step.
+   * - Instead, it clears the MFA input and allows the user to retry immediately.
+   * - Route navigation/reset only occurs for critical errors (e.g., session conflict) or
+   *   if the user explicitly chooses to go back.
+   */
   const onSubmitLogin = async (data) => {
     try {
       setIsLoading(true);
@@ -336,10 +347,21 @@ const Login = () => {
           case "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session.":
             return forceEndActiveSession(error.response?.data?.msg);
           default:
-            return error.response?.data?.msg;
+            return error.response?.data?.msg || "An error occurred";
         }
       };
       openNotificationWithIcon("error", message());
+
+      // If we are in MFA step and the error is not a session conflict, allow retry
+      if (
+        currentStep === "mfa" &&
+        error.response?.data?.msg !==
+          "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
+      ) {
+        setValue("mfaCode", ""); // Clear invalid code
+        return; // Stay on MFA step
+      }
+
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
 
