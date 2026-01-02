@@ -115,7 +115,7 @@ const StaffDetail = () => {
       label: "Assign Location",
       route: "assign-location",
       permission: [0, 1],
-      disabled: false,
+      disabled: user.email === profile.email,
       id: 6,
       fn: () => null,
       html: (
@@ -132,27 +132,27 @@ const StaffDetail = () => {
         />
       ),
     },
-    // {
-    //   label: "Assign Location Manager",
-    //   route: "assign-location-manager",
-    //   permission: [0, 1],
-    //   disabled: false,
-    //   id: 7,
-    //   fn: () => null,
-    //   html: (
-    //     <LightBlueButtonComponent
-    //       title={"Assign Location Manager"}
-    //       func={() => null}
-    //       icon={<RectanglePlusIcon stroke={iconColor}/>}
-    //       buttonType="button"
-    //       titleStyles={{
-    //         textTransform: "none",
-    //         with: "100%",
-    //         gap: "2px",
-    //       }}
-    //     />
-    //   ),
-    // },
+    {
+      label: "Assign Location Manager",
+      route: "assign-location-manager",
+      permission: [0, 1],
+      disabled: user.email === profile.email,
+      id: 7,
+      fn: () => null,
+      html: (
+        <LightBlueButtonComponent
+          title={"Assign Location Manager"}
+          func={() => null}
+          icon={<RectanglePlusIcon stroke={iconColor}/>}
+          buttonType="button"
+          titleStyles={{
+            textTransform: "none",
+            with: "100%",
+            gap: "2px",
+          }}
+        />
+      ),
+    },
     {
       label: "Update contact info",
       route: "update-contact-info",
@@ -178,7 +178,7 @@ const StaffDetail = () => {
       label: "Change role",
       route: "update-role-company",
       permission: [0, 1],
-      disabled: false,
+      disabled: user.email === profile.email,
       id: 3,
       fn: () => null,
       html: (
@@ -220,7 +220,7 @@ const StaffDetail = () => {
       label: `${profile.active ? "Remove" : "Grant"} access`,
       route: `/staff/${profile.adminUserInfo.id}/main`,
       permission: [0, 1, 2],
-      disabled: false,
+      disabled: user.email === profile.email,
       id: 5,
       fn: () => activeOrDesactiveStaffMemberInCompany(),
       html: (
@@ -272,7 +272,9 @@ const StaffDetail = () => {
                     option.permission.some(
                       (element) => element === Number(user.role)
                     )
-                      ? "flex"
+                      ? option.disabled
+                        ? "none"
+                        : "flex"
                       : "none"
                   }`,
                   justifyContent: "space-between",
