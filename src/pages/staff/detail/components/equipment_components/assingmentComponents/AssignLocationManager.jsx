@@ -80,6 +80,8 @@ const AssignLocationManager = () => {
         update: values.update || false,
         transfer: values.transfer || false,
         delete: values.delete || false,
+        view: values.view || false,
+        assign: values.assign || false,
       };
 
       const newAssignment = {
@@ -172,7 +174,9 @@ const AssignLocationManager = () => {
       });
 
       message.success("Location assignment removed.");
-      queryClient.invalidateQueries(["companyData", user.companyData.id]);
+      queryClient.invalidateQueries({
+        queryKey: ["companyData", user.companyData.id],
+      });
     } catch (error) {
       console.error(error);
       message.error("Failed to remove assignment.");
@@ -208,6 +212,8 @@ const AssignLocationManager = () => {
       update: Boolean(actions.update),
       transfer: Boolean(actions.transfer),
       delete: Boolean(actions.delete),
+      view: Boolean(actions.view),
+      assign: Boolean(actions.assign),
     });
   };
 
@@ -259,6 +265,16 @@ const AssignLocationManager = () => {
                 <Col span={6}>
                   <Form.Item name="delete" valuePropName="checked" noStyle>
                     <Checkbox>Delete</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="view" valuePropName="checked" noStyle>
+                    <Checkbox>View</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="assign" valuePropName="checked" noStyle>
+                    <Checkbox>Assign</Checkbox>
                   </Form.Item>
                 </Col>
               </Row>
