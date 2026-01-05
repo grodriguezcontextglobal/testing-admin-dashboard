@@ -14,25 +14,33 @@ import "../../../styles/global/ant-select.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import useSuppliers from "../utils/hooks/useSuppliers";
 import "./style.css";
 import { renderingModals, renderTitle } from "./utils/BulkComponents";
-import BulkItemForm from "./utils/BulkItemForm";
-import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
-import NewSupplier from "./utils/suppliers/NewSupplier";
-import validatingInputFields from "./utils/validatingInputFields";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import {
   bulkItemInsertAlphanumeric,
   bulkItemInsertSequential,
   storeAndGenerateImageUrl,
 } from "./utils/bulkItemActionsOptions";
+import BulkItemForm from "./utils/BulkItemForm";
+import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
+import NewSupplier from "./utils/suppliers/NewSupplier";
+import usePermittedLocations from "./utils/usePermittedLocations";
+import validatingInputFields from "./utils/validatingInputFields";
+
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewBulkItems = () => {
+  const {
+    data: companyLocations,
+    isLoading: isLoadingLocations,
+    isAllowed: isLocationSetupAllowed,
+    permittedLocations: allowedCreateLocations,
+  } = usePermittedLocations("create");
   const {
     supplierList,
     supplierModal,
@@ -67,6 +75,21 @@ const AddNewBulkItems = () => {
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
   const { user } = useSelector((state) => state.admin);
+
+  useEffect(() => {
+    // If null, it means ALL allowed (admin/owner).
+    if (
+      allowedCreateLocations !== null &&
+      allowedCreateLocations.length === 0
+    ) {
+      notification.error({
+        message: "Access Denied",
+        description:
+          "You do not have permission to create inventory in any location.",
+      });
+    }
+  }, [allowedCreateLocations]);
+
   const {
     register,
     handleSubmit,
@@ -167,16 +190,8 @@ const AddNewBulkItems = () => {
   };
 
   const renderLocationOptions = () => {
-    if (itemsInInventoryQuery.data) {
-      const locations = groupBy(
-        itemsInInventoryQuery.data.data.items,
-        "location"
-      );
-      const result = new Set();
-      for (let data of Object.keys(locations)) {
-        result.add({ value: data });
-      }
-      return Array.from(result);
+    if (companyLocations) {
+      return companyLocations.map((location) => ({ value: location }));
     }
     return [];
   };
@@ -193,6 +208,35 @@ const AddNewBulkItems = () => {
   };
 
   const savingNewItem = async (data) => {
+    // Permission Check
+    if (allowedCreateLocations !== null) {
+      const isAllowed = allowedCreateLocations.some((allowed) =>
+        String(data.location)
+          .toLowerCase()
+          .includes(String(allowed).toLowerCase())
+      );
+
+      if (!isAllowed) {
+        return openNotificationWithIcon(
+          "Access Denied: You do not have permission to create items in this location."
+        );
+      }
+
+      if (data.tax_location) {
+        const isTaxLocationAllowed = allowedCreateLocations.some((allowed) =>
+          String(data.tax_location)
+            .toLowerCase()
+            .includes(String(allowed).toLowerCase())
+        );
+
+        if (!isTaxLocationAllowed) {
+          return openNotificationWithIcon(
+            "Access Denied: You do not have permission to use this tax location."
+          );
+        }
+      }
+    }
+
     validatingInputFields({
       data,
       openNotificationWithIcon,
@@ -429,6 +473,10 @@ const AddNewBulkItems = () => {
           if (key === "enableAssignFeature" || key === "container") {
             return;
           }
+          if (key === "location") {
+            setValue("location", renderLocationOptions()?.at(0)?.value);
+            return setValue("tax_location", renderLocationOptions()?.at(0)?.value);
+          }
           setValue(key, value);
           setValue("quantity", 0);
           const grouping = groupBy(
@@ -653,7 +701,9 @@ const AddNewBulkItems = () => {
         suppliersOptions={supplierList}
         valueObject={valueObject}
         watch={watch}
+        isLoadingLocations={isLoadingLocations}
         imageUrlGenerated={imageUrlGenerated}
+        isLocationSetupAllowed={isLocationSetupAllowed}
       />
       {renderingModals({
         openScanningModal,
