@@ -70,6 +70,8 @@ const EditBulkForm = ({
   valueObject,
   watch,
   suppliersOptions,
+  isLoadingLocations,
+  isLocationSetupAllowed,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -108,6 +110,8 @@ const EditBulkForm = ({
           displayPreviewImage,
           allSerialNumbersOptions,
           suppliersOptions,
+          isLoadingLocations,
+          isLocationSetupAllowed,
         }).map((item) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
