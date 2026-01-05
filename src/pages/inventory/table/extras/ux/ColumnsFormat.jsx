@@ -1,12 +1,45 @@
-import { Typography } from "@mui/material";
+import { Typography, 
+  // Space, 
+  Tooltip, 
+  // Button
+ } from "@mui/material";
 import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Avatar } from "antd";
+import { Avatar, Button as AntButton } from "antd";
 import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  SwapOutlined,
+  // PlusOutlined,
+} from "@ant-design/icons";
 
-const ColumnsFormat = ({ dictionary, navigate, cellStyle }) => {
-    const columns = [
+const ColumnsFormat = ({
+  dictionary,
+  navigate,
+  cellStyle,
+  userPreferences,
+}) => {
+  // Helper to check permissions for a specific location and action
+  const checkPermission = (locationName, action) => {
+    if (!userPreferences?.managerLocation) return false;
+
+    // Find the permission object for this location
+    // Using includes for partial matching since location names might vary slightly
+    const locationPerm = userPreferences.managerLocation.find(
+      (loc) =>
+        loc.location &&
+        String(locationName)
+          .toLowerCase()
+          .includes(String(loc.location).toLowerCase())
+    );
+
+    if (!locationPerm || !locationPerm.actions) return false;
+    return !!locationPerm.actions[action];
+  };
+
+  const columns = [
     {
       title: "Device category",
       dataIndex: "category_name",
@@ -227,25 +260,83 @@ const ColumnsFormat = ({ dictionary, navigate, cellStyle }) => {
       ),
     },
     {
-      title: "",
-      dataIndex: "item_id",
-      key: "item_id",
+      title: "Actions",
+      key: "actions",
       responsive: ["lg"],
-      render: (item_id) => (
-        <button
-          style={{
-            ...cellStyle,
-            backgroundColor: "transparent",
-            border: "none",
-          }}
-          onClick={() => navigate(`/inventory/item?id=${item_id}`)}
-        >
-          <RightNarrowInCircle />
-        </button>
-      ),
+      render: (_, record) => {
+        const locationName = record.location;
+        const canUpdate = checkPermission(locationName, "update");
+        const canDelete = checkPermission(locationName, "delete");
+        const canTransfer = checkPermission(locationName, "transfer");
+
+        return (
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            {canUpdate && (
+              <Tooltip title="Edit Item">
+                <AntButton
+                  type="text"
+                  icon={<EditOutlined style={{ color: "#1890ff" }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Edit action clicked for", record.item_id);
+                  }}
+                />
+              </Tooltip>
+            )}
+
+            {canTransfer && (
+              <Tooltip title="Transfer Item">
+                <AntButton
+                  type="text"
+                  icon={<SwapOutlined style={{ color: "#faad14" }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Transfer action clicked");
+                  }}
+                />
+              </Tooltip>
+            )}
+
+            {canDelete && (
+              <Tooltip title="Delete Item">
+                <AntButton
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Delete action clicked");
+                  }}
+                />
+              </Tooltip>
+            )}
+
+            <Tooltip title="View Details">
+              <button
+                style={{
+                  ...cellStyle,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
+              >
+                <RightNarrowInCircle />
+              </button>
+            </Tooltip>
+          </div>
+        );
+      },
     },
   ];
-return columns;
+  return columns;
 };
 
 export default ColumnsFormat;
