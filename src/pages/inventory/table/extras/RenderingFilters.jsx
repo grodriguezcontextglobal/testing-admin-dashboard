@@ -1,6 +1,6 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "antd";
+import { Button, Tag } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -27,6 +27,27 @@ import StaffMemberWrapper from "../../utils/staffmemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
 export const AdvanceSearchContext = createContext();
 
+/**
+ * RenderingFilters Component
+ *
+ * Provides filter controls and visual feedback for the inventory table.
+ *
+ * Responsibilities:
+ * - Computes filtered datasets based on user selection and search queries.
+ * - Enforces location access controls by filtering available options.
+ * - Displays active filters with visual tags and reset functionality.
+ * - Allows managers to edit section names (location, category, etc.).
+ *
+ * Props:
+ * @param {Object} user - Current user object with company data.
+ * @param {Function|Array} dataToDisplay - Source data for filtering.
+ * @param {string} searchItem - Current search string.
+ * @param {Array} chosen - Currently active filters.
+ * @param {Function} setFiltering - Setter for updating active filters.
+ * @param {Array<string>} allowedLocations - List of locations the user is permitted to view.
+ *
+ * @returns {JSX.Element} The rendered filter interface.
+ */
 const RenderingFilters = ({
   user,
   dataToDisplay,
@@ -37,6 +58,8 @@ const RenderingFilters = ({
   chosen,
   setTypePerLocationInfoModal,
   setOpenDetails,
+  allowedLocations,
+  setFiltering,
 }) => {
   const dictionary = {
     Permanent: "Owned",
@@ -51,9 +74,10 @@ const RenderingFilters = ({
         role: user.companyData.employees.find(
           (element) => element.user === user.email
         )?.role,
-        preference: user.companyData.employees.find(
-          (element) => element.user === user.email
-        )?.preference || [],
+        preference:
+          user.companyData.employees.find(
+            (element) => element.user === user.email
+          )?.preference || [],
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
@@ -66,9 +90,10 @@ const RenderingFilters = ({
         role: user.companyData.employees.find(
           (element) => element.user === user.email
         )?.role,
-        preference: user.companyData.employees.find(
-          (element) => element.user === user.email
-        )?.preference || [],
+        preference:
+          user.companyData.employees.find(
+            (element) => element.user === user.email
+          )?.preference || [],
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
@@ -181,7 +206,34 @@ const RenderingFilters = ({
   );
 
   const filteredList = useMemo(() => {
-    const base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
+    let base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
+
+    // Filter by allowed locations if restricted (not null)
+    // If allowedLocations is null, it means full access (Role 0), so skip filtering.
+    if (
+      allowedLocations !== null &&
+      Array.isArray(allowedLocations) &&
+      allowedLocations.length > 0
+    ) {
+      base = base.filter((item) => {
+        const itemLocation = item.location;
+        if (!itemLocation) return false;
+
+        return allowedLocations.some(
+          (allowed) =>
+            itemLocation === allowed ||
+            String(itemLocation).startsWith(`${allowed} /`)
+        );
+      });
+    } else if (
+      allowedLocations !== null &&
+      Array.isArray(allowedLocations) &&
+      allowedLocations.length === 0
+    ) {
+      // If empty array (and not null), user has NO access.
+      return [];
+    }
+
     if (Array.isArray(chosen) && chosen.length > 0) {
       return base.filter((item) => {
         return chosen.every((filter) => {
@@ -192,7 +244,7 @@ const RenderingFilters = ({
       });
     }
     return base;
-  }, [dataToDisplay, chosen, keyMap]);
+  }, [dataToDisplay, chosen, keyMap, allowedLocations]);
 
   // Normalized list for staff assignment grouping
   const normalizedForStaff = useMemo(() => {
@@ -275,11 +327,30 @@ const RenderingFilters = ({
   );
 
   const locationsAndSublocationsData = () => {
-    const source =
+    let source =
       locationsAndSublocationsWithTypes?.data?.data?.ok &&
       locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
+
+    // Filter source tree if allowedLocations is restricted (not null)
+    if (allowedLocations !== null && Array.isArray(allowedLocations)) {
+      if (allowedLocations.length === 0) {
+        source = {};
+      } else {
+        const restrictedSource = {};
+        Object.entries(source).forEach(([key, value]) => {
+          if (
+            allowedLocations.some(
+              (allowed) => key === allowed || key.startsWith(`${allowed} /`)
+            )
+          ) {
+            restrictedSource[key] = value;
+          }
+        });
+        source = restrictedSource;
+      }
+    }
 
     // If a specific Location was chosen, filter the hierarchy to that node
     const locationFilter = Array.isArray(chosen)
@@ -830,8 +901,63 @@ const RenderingFilters = ({
     );
   };
 
+  const handleResetFilters = () => {
+    if (setFiltering) setFiltering([]);
+  };
+
+  const handleRemoveFilter = (filterToRemove) => {
+    if (setFiltering && Array.isArray(chosen)) {
+      setFiltering(
+        chosen.filter((f) => f.category !== filterToRemove.category)
+      );
+    }
+  };
+
   return (
     <Grid key="rendering-filter-option-container" container>
+      {/* Active Filters Display */}
+      {Array.isArray(chosen) && chosen.length > 0 && (
+        <Grid
+          item
+          xs={12}
+          style={{
+            padding: "0 0 1rem 0",
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <span style={{ fontWeight: "bold", marginRight: "8px" }}>
+            Active Filters:
+          </span>
+          {chosen.map((filter, idx) => (
+            <Tag
+              key={`${filter.category}-${idx}`}
+              closable
+              onClose={() => handleRemoveFilter(filter)}
+              style={{
+                padding: "4px 10px",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ textTransform: "capitalize" }}>
+                {keyMap[filter.category]?.replace("_", " ")}
+              </span>
+              : {String(filter.value)}
+            </Tag>
+          ))}
+          <Button
+            type="link"
+            onClick={handleResetFilters}
+            style={{ marginLeft: "10px" }}
+          >
+            Clear all
+          </Button>
+        </Grid>
+      )}
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
         return (
           <Grid
