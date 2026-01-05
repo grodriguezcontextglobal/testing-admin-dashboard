@@ -9,6 +9,8 @@ export const renderFields = ({
   isRented,
   displayContainerSplotLimitField,
   suppliersOptions,
+  isLoadingLocations,
+  isLocationSetupAllowed = true,
 }) => {
   const fields = [
     {
@@ -100,7 +102,9 @@ export const renderFields = ({
     },
     {
       name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: isLoadingLocations
+        ? "Loading locations..."
+        : "e.g. 12000.54 | 95.44 | 4585",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -110,7 +114,8 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
-      displayField: true,
+      displayField: isLocationSetupAllowed,
+      disabled: isLoadingLocations,
     },
     {
       name: "container",
@@ -148,7 +153,9 @@ export const renderFields = ({
     },
     {
       name: "location",
-      placeholder: "Select a location",
+      placeholder: isLoadingLocations
+        ? "Loading locations..."
+        : "Select a location",
       label: "Main location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -157,7 +164,8 @@ export const renderFields = ({
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
-      displayField: true,
+      displayField: isLocationSetupAllowed,
+      disabled: isLoadingLocations,
     },
     {
       name: "sub_location",
