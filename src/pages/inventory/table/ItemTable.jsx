@@ -30,6 +30,29 @@ const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
 
+/**
+ * ItemTable Component
+ *
+ * Displays the filtered inventory items in a tabular format.
+ *
+ * Responsibilities:
+ * - Fetches and consolidates inventory data from multiple sources.
+ * - Filters data based on user search, active filters, and allowed locations.
+ * - Renders the table using Ant Design's Table component.
+ * - Passes permission-aware column definitions via `ColumnsFormat`.
+ * - Integrates `RenderingFilters` for advanced filtering options.
+ *
+ * Props:
+ * @param {Function} setOpenAdvanceSearchModal - Setter for modal visibility.
+ * @param {Function} setDataFilterOptions - Setter for available filter options.
+ * @param {Function} downloadDataReport - Callback for updating report data.
+ * @param {Function} setTypePerLocationInfoModal - Setter for location details modal.
+ * @param {Function} setOpenDetails - Setter for details visibility.
+ * @param {Array<string>} allowedLocations - List of locations authorized for the current user.
+ * @param {Object} userPreferences - User preferences object containing permission settings.
+ *
+ * @returns {JSX.Element} The rendered item table and filter controls.
+ */
 const ItemTable = ({
   // searchItem,
   // date,
@@ -46,6 +69,8 @@ const ItemTable = ({
   // refreshFn,
   setTypePerLocationInfoModal,
   setOpenDetails,
+  allowedLocations,
+  userPreferences,
 }) => {
   const searchValues = useContext(SearchItemContext);
   const navigate = useNavigate();
@@ -86,17 +111,17 @@ const ItemTable = ({
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
-      devitrakApi.post(
-        `/db_inventory/check-item`, {
-          company_id: user.sqlInfo.company_id,  
-          role: user.companyData.employees.find(
+      devitrakApi.post(`/db_inventory/check-item`, {
+        company_id: user.sqlInfo.company_id,
+        role:
+          user.companyData.employees.find(
             (element) => element.user === user.email
           )?.role || [],
-          preference: user.companyData.employees.find(
+        preference:
+          user.companyData.employees.find(
             (element) => element.user === user.email
           )?.preference || [],
-        }
-      ),
+      }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
@@ -229,10 +254,32 @@ const ItemTable = ({
   );
 
   // Unified dataset
-  const baseDataset = useMemo(
-    () => (refactoredDataset.length > 0 ? refactoredDataset : legacyDataset),
-    [refactoredDataset, legacyDataset]
-  );
+  const baseDataset = useMemo(() => {
+    let data = refactoredDataset.length > 0 ? refactoredDataset : legacyDataset;
+
+    // Filter by allowed locations if specified (inventory_location)
+    // If allowedLocations is null, it means Role 0 (All Access) -> Skip filtering
+    if (allowedLocations !== null && Array.isArray(allowedLocations)) {
+      if (allowedLocations.length === 0) {
+        // User has NO allowed locations -> Return empty
+        return [];
+      }
+
+      data = data.filter((item) => {
+        const itemLocation = item.location;
+        if (!itemLocation) return false;
+
+        // Exact match or partial match (e.g., "Main / Sub")
+        return allowedLocations.some(
+          (allowed) =>
+            itemLocation === allowed ||
+            String(itemLocation).startsWith(`${allowed} /`)
+        );
+      });
+    }
+
+    return data;
+  }, [refactoredDataset, legacyDataset, allowedLocations]);
 
   // Filtering helpers now use baseDataset
   const filterOptionsBasedOnProps = (props) => {
@@ -370,8 +417,10 @@ const ItemTable = ({
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
             searchedResult={searchValues.searchedResult}
             chosen={searchValues.chosenOption}
+            setFiltering={searchValues.setChosenOption}
             setTypePerLocationInfoModal={setTypePerLocationInfoModal}
             setOpenDetails={setOpenDetails}
+            allowedLocations={allowedLocations}
           />
         </Grid>
         <Grid
@@ -444,7 +493,12 @@ const ItemTable = ({
                   defaultCurrent: 1,
                 }}
                 style={{ width: "100%" }}
-                columns={ColumnsFormat({ dictionary, navigate, cellStyle })}
+                columns={ColumnsFormat({
+                  dictionary,
+                  navigate,
+                  cellStyle,
+                  userPreferences, // Pass preferences to column formatter for action buttons
+                })}
                 dataSource={dataToDisplayMemo}
                 rowKey={(record) => record.item_id || record.key}
                 className="table-ant-customized"
@@ -454,7 +508,7 @@ const ItemTable = ({
           </div>
         </Grid>
         {searchValues.searchedResult?.length === 0 &&
-          (!searchValues.searchItem || searchValues.searchItem === "") && (
+          (!searchValues?.searchItem || searchValues?.searchItem === "") && (
             <BannerMsg
               props={{
                 title: "Add new item",
