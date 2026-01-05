@@ -67,6 +67,8 @@ const BulkItemForm = ({
   suppliersOptions,
   valueObject,
   watch,
+  isLoadingLocations,
+  isLocationSetupAllowed,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -104,6 +106,8 @@ const BulkItemForm = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
+          isLoadingLocations,
+          isLocationSetupAllowed,
         }).map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
