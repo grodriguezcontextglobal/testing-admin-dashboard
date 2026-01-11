@@ -2,6 +2,7 @@ import { message } from "antd";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
 
 export const bulkItemInsertAlphanumeric = async ({
   data,
@@ -19,8 +20,15 @@ export const bulkItemInsertAlphanumeric = async ({
   setScannedSerialNumbers,
   alphaNumericInsertItemMutation,
   dicSuppliers,
+  queryClient,
 }) => {
   try {
+    await verifyAndCreateLocation({
+      locationName: data.location,
+      companyId: user.sqlInfo.company_id,
+      queryClient,
+      user,
+    });
     const template = {
       category_name: data.category_name,
       item_group: data.item_group,
@@ -48,7 +56,9 @@ export const bulkItemInsertAlphanumeric = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
-      supplier_info: data.supplier ? dicSuppliers.find(([key]) => key === data.supplier)[1] : null,
+      supplier_info: data.supplier
+        ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+        : null,
     };
     await alphaNumericInsertItemMutation.mutate(template);
     setValue("category_name", "");
@@ -124,7 +134,9 @@ export const bulkItemInsertSequential = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
-      supplier_info: data.supplier ? dicSuppliers.find(([key]) => key === data.supplier)[1] : null,
+      supplier_info: data.supplier
+        ? dicSuppliers.find(([key]) => key === data.supplier)[1]
+        : null,
     };
     await sequencialNumbericInsertItemMutation.mutate(template);
     setValue("category_name", "");

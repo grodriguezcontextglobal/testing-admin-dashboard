@@ -1,5 +1,6 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
 
 export const singleItemInserting = async ({
   data,
@@ -15,6 +16,7 @@ export const singleItemInserting = async ({
   subLocationsSubmitted,
   invalidateQueries,
   dicSuppliers,
+  queryClient,
 }) => {
   const template = {
     category_name: data.category_name,
@@ -48,6 +50,12 @@ export const singleItemInserting = async ({
       : null,
   };
   setLoadingStatus(true);
+  await verifyAndCreateLocation({
+    locationName: data.location,
+    companyId: user.sqlInfo.company_id,
+    queryClient,
+    user,
+  });
   await devitrakApi.post("/db_item/new_item", template);
   await invalidateQueries();
   setValue("category_name", "");
