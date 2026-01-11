@@ -191,6 +191,24 @@ const EditGroup = () => {
       }),
     refetchOnMount: false,
   });
+  const companyLocationsListQuery = useQuery({
+    queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .role
+          ),
+          preference:
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .preference || [],
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id && !!user.email,
+  });
 
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -205,11 +223,16 @@ const EditGroup = () => {
   };
 
   const renderLocationOptions = () => {
+    if (!companyLocationsListQuery?.data?.data?.data) {
+      return [];
+    }
+
     if (itemsInInventoryQuery.data) {
-      const locations = groupBy(
-        itemsInInventoryQuery.data.data.items,
-        "location"
-      );
+      const locations = companyLocationsListQuery?.data?.data?.data;
+      // groupBy(
+      //   itemsInInventoryQuery.data.data.items,
+      //   "location"
+      // );
       const result = new Set();
       for (let data of Object.keys(locations)) {
         result.add({ value: data });
@@ -545,14 +568,21 @@ const EditGroup = () => {
                 : "No - It is not a container";
             return setValue(key, `${valueToSet}`);
           }
-          if (key === "sub_location") {
-            setValue("sub_location", "");
-            const checkType =
-              typeof value === "string" ? JSON.parse(value) : value;
-            if (checkType.length > 0) {
-              return setSubLocationsSubmitted([...checkType]);
-            }
+          if (
+            key === "sub_location" ||
+            key === "location"
+          ) {
+            return;
           }
+
+          // if (key === "sub_location") {
+          //   setValue("sub_location", "");
+          //   const checkType =
+          //     typeof value === "string" ? JSON.parse(value) : value;
+          //   if (checkType.length > 0) {
+          //     return setSubLocationsSubmitted([...checkType]);
+          //   }
+          // }
           setValue(key, value);
           setValue("quantity", 0);
           const grouping = groupBy(
