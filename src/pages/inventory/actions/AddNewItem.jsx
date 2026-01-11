@@ -13,6 +13,8 @@ import "../../../styles/global/ant-select.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { DangerButton } from "../../../styles/global/DangerButton";
+import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/OutlineInput.css";
 import "../../../styles/global/reactInput.css";
@@ -27,8 +29,7 @@ import { singleItemInserting } from "./utils/singleItemIserting";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
   const {
@@ -94,22 +95,42 @@ const AddNewItem = () => {
     refetchOnMount: false,
     staleTime: 3 * 60 * 1000,
   });
+
+  const companyLocationsListQuery = useQuery({
+    queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .role
+          ),
+          preference:
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .preference || [],
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id && !!user.email,
+  });
+
   const invalidateQueries = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
+    queryClient.invalidateQueries({
+      queryKey: ["listOfItemsInStock"],
+      exact: true,
+      refetchType: "active",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ItemsInInventoryCheckingQuery"],
+      exact: true,
+      refetchType: "active",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["RefactoredListInventoryCompany"],
+      exact: true,
+      refetchType: "active",
+    });
   };
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -123,11 +144,16 @@ const AddNewItem = () => {
     return Array.from(result);
   };
   const renderLocationOptions = () => {
+    if (!companyLocationsListQuery?.data?.data?.data) {
+      return [];
+    }
+    
     if (itemsInInventoryQuery.data) {
-      const locations = groupBy(
-        itemsInInventoryQuery.data.data.items,
-        "location"
-      );
+      const locations = companyLocationsListQuery?.data?.data?.data
+      // groupBy(
+      //   itemsInInventoryQuery.data.data.items,
+      //   "location"
+      // );
       const result = new Set();
       for (let data of Object.keys(locations)) {
         result.add({ value: data });
@@ -136,6 +162,7 @@ const AddNewItem = () => {
     }
     return [];
   };
+
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
@@ -359,17 +386,17 @@ const AddNewItem = () => {
       );
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "enableAssignFeature" || key === "container") {
+          if (key === "enableAssignFeature" || key === "container" || key === "sub_location" || key === "location") {
             return;
           }
-          if (key === "sub_location") {
-            setValue("sub_location", "");
-            const checkType =
-              typeof value === "string" ? JSON.parse(value) : value;
-            if (checkType.length > 0) {
-              return setSubLocationsSubmitted([...checkType]);
-            }
-          }
+          // if (key === "sub_location") {
+          //   setValue("sub_location", "");
+          //   const checkType =
+          //     typeof value === "string" ? JSON.parse(value) : value;
+          //   if (checkType.length > 0) {
+          //     return setSubLocationsSubmitted([...checkType]);
+          //   }
+          // }
           if (key === "serial_number") return;
           setValue(key, value);
           setValue("quantity", 0);
