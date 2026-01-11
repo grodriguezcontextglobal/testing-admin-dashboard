@@ -31,7 +31,7 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
       }}
       container
     >
-              {canCreate && (
+              {canCreate && Number(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role) === 0 && (
                 <BlueButtonComponent
                   title={"Create Location"}
                   styles={{ with: "100%" }}

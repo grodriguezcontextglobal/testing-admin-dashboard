@@ -107,22 +107,22 @@ const HeaderInventaryComponent = ({
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
         )} */}
-        {canCreate && (
-          <BlueButtonComponent
-            title={"Create Location"}
-            styles={{ with: "100%" }}
-            icon={
-              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-            }
-            buttonType="button"
-            titleStyles={{
-              textTransform: "none",
-              with: "100%",
-              gap: "2px",
-            }}
-            func={() => setOpenCreateLocationModal(true)}
-          />
-        )}
+              {canCreate && Number(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role) === 0 && (
+                <BlueButtonComponent
+                  title={"Create Location"}
+                  styles={{ with: "100%" }}
+                  icon={
+                    <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+                  }
+                  buttonType="button"
+                  titleStyles={{
+                    textTransform: "none",
+                    with: "100%",
+                    gap: "2px",
+                  }}
+                  func={() => setOpenCreateLocationModal(true)}
+                />
+              )}
 
         {canUpdate && (
           <Link to="/inventory/edit-group">
