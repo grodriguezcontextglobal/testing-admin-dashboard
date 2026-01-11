@@ -9,8 +9,8 @@ import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIc
 import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import { XLSXIcon } from "../../../components/icons/XLSXIcon";
+// import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+// import { XLSXIcon } from "../../../components/icons/XLSXIcon";
 import { useMemo } from "react";
 
 /**
@@ -31,12 +31,18 @@ import { useMemo } from "react";
 const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
-  setAddInventoryFromXLSXFileModal,
+  // setAddInventoryFromXLSXFileModal,
+  setOpenCreateLocationModal,
 }) => {
   // Check permissions
   const { canCreate, canUpdate } = useMemo(() => {
     // Role 0 Bypass: Admin/Owner has full access
-    if (user?.role === 0 || user?.role === "0") {
+    if (
+      user?.companyData?.employees?.find((emp) => emp.user === user.email)
+        ?.role === 0 ||
+      user?.companyData?.employees?.find((emp) => emp.user === user.email)
+        ?.role === "0"
+    ) {
       return { canCreate: true, canUpdate: true };
     }
 
@@ -81,7 +87,7 @@ const HeaderInventaryComponent = ({
         md={8}
         lg={8}
       >
-        {canCreate && (
+        {/* {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
             styles={{ with: "100%" }}
@@ -99,6 +105,22 @@ const HeaderInventaryComponent = ({
               gap: "2px",
             }}
             func={() => setAddInventoryFromXLSXFileModal(true)}
+          />
+        )} */}
+        {canCreate && (
+          <BlueButtonComponent
+            title={"Create Location"}
+            styles={{ with: "100%" }}
+            icon={
+              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+            }
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+              gap: "2px",
+            }}
+            func={() => setOpenCreateLocationModal(true)}
           />
         )}
 
@@ -182,6 +204,7 @@ HeaderInventaryComponent.propTypes = {
   }).isRequired,
   TextFontSize30LineHeight38: PropTypes.object,
   setAddInventoryFromXLSXFileModal: PropTypes.func,
+  setOpenCreateLocationModal: PropTypes.func,
 };
 
 export default HeaderInventaryComponent;
