@@ -308,7 +308,7 @@ const ItemTable = ({
 
   // Keep search results in state; if no term, show all
   useEffect(() => {
-    const term = String(searchValues.searchItem || "")
+    const term = String(searchValues?.searchItem || "")
       .trim()
       .toLowerCase();
     if (term.length === 0) {
@@ -319,7 +319,7 @@ const ItemTable = ({
       JSON.stringify(item).toLowerCase().includes(term)
     );
     setSearchResult(filtered);
-  }, [searchValues.searchItem, baseDataset]);
+  }, [searchValues?.searchItem, baseDataset]);
 
   // Replace options + useCallback with a stable, memoized dataset
   const dataToDisplayMemo = useMemo(() => {
@@ -411,7 +411,7 @@ const ItemTable = ({
         >
           <RenderingFilters
             dataToDisplay={dataToDisplayMemo}
-            searchItem={searchValues.searchItem}
+            searchItem={searchValues?.searchItem}
             user={user}
             openAdvanceSearchModal={searchValues.openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
