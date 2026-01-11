@@ -13,7 +13,6 @@ import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSi
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import ScanningMethod from "./ScanningMethod";
 import ScanningModal from "./ScanningModal";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 export const renderTitle = () => {
   return (
@@ -34,8 +33,7 @@ export const renderTitle = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Item information may be updated, including the category, brand, cost,
-          tax location, container, container spot limit, and ownership status.
+          Item information may be updated, including the category, brand, cost, tax location, container, container spot limit, and ownership status.
         </Typography>
       </InputLabel>
     </>
@@ -67,7 +65,7 @@ export const renderingOptionsButtons = ({
   }
   if (
     label === "Starting Serial number" &&
-    watch("format_range_serial_number") === "Custom format"
+    watch("format_range_serial_number") === "Alphanumeric"
   ) {
     return (
       <Button
@@ -82,8 +80,8 @@ export const renderingOptionsButtons = ({
     );
   }
   if (
-    label === "All typed serial numbers are displayed here." ||
-    label === "All scanned serial numbers are displayed here."
+    label === "Scanning all serial numbers here" ||
+    label === "Typing all serial numbers here"
   ) {
     const redirectOptions = () => {
       if (watch("feed_serial_number") === "Scanning") {
@@ -103,39 +101,7 @@ export const renderingOptionsButtons = ({
           gap: "10px",
         }}
       >
-        <BlueButtonComponent
-          func={() => redirectOptions()}
-          title={
-            watch("feed_serial_number") === "Scanning"
-              ? "Click for scanning"
-              : "Click for typing"
-          }
-          style={{
-            display: "flex",
-            margin: "10px 0 0",
-          }}
-        />
-        <BlueButtonComponent
-          func={() => setOpenScannedItemView(true)}
-          title={
-            watch("feed_serial_number") === "Scanning"
-              ? "View scanned serial numbers"
-              : "View inserted serial numbers"
-          }
-          style={{
-            display: "flex",
-            margin: "10px 0 0",
-          }}
-        />
-        <BlueButtonComponent
-          func={() => setUpdateAllItems(true)}
-          title={"Update all items"}
-          style={{
-            display: "flex",
-            margin: "10px 0 0",
-          }}
-        />
-        {/* <Button
+        <Button
           style={{
             display: "flex",
             margin: "10px 0 0",
@@ -145,8 +111,8 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "Click for scanning"
             : "Add serial number"}
-        </Button> */}
-        {/* <Button
+        </Button>
+        <Button
           style={{
             display: "flex",
             margin: "10px 0 0",
@@ -156,8 +122,8 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "View scanned serial numbers"
             : "View inserted serial numbers"}
-        </Button> */}
-        {/* <Button
+        </Button>
+        <Button
           style={{
             display: "flex",
             margin: "10px 0 0",
@@ -165,7 +131,7 @@ export const renderingOptionsButtons = ({
           onClick={() => setUpdateAllItems(true)}
         >
           Update all items{" "}
-        </Button> */}
+        </Button>
       </div>
     );
   }
@@ -524,7 +490,7 @@ export const renderingOptionsForSubLocations = ({
 
 export const renderingResultUX = ({ name, value }) => {
   if (name === "enableAssignFeature") {
-    return value === 0 ? "NO" : "YES";
+    return value === 0 ? "Disabled" : "Enabled";
   }
   if (name === "container") {
     return value === 0
