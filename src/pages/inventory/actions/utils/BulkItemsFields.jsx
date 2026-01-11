@@ -13,9 +13,14 @@ export const renderFields = ({
   retrieveItemOptions,
   subLocationsOptions,
   suppliersOptions,
-  isLoadingLocations,
-  isLocationSetupAllowed = true,
+  // isLoadingLocations,
+  // isLocationSetupAllowed,
 }) => {
+  const normalizeOptions = (opts) => {
+    if (!Array.isArray(opts)) return [];
+    return opts.map((opt) => (typeof opt === "string" ? { value: opt } : opt));
+  };
+
   const fields = [
     {
       name: "reference_category_name",
@@ -28,7 +33,7 @@ export const renderFields = ({
         fontWeight: 700,
       },
       required: false,
-      options: retrieveItemOptions("category_name"),
+      options: normalizeOptions(retrieveItemOptions("category_name")),
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "This is the category of the reference item.",
@@ -46,7 +51,7 @@ export const renderFields = ({
         fontWeight: 700,
       },
       required: false,
-      options: retrieveItemOptions("item_group"),
+      options: normalizeOptions(retrieveItemOptions("item_group")),
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "This is the item group of the reference item.",
@@ -59,7 +64,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("item_group"),
+      options: normalizeOptions(retrieveItemOptions("item_group")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -72,7 +77,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("category_name"),
+      options: normalizeOptions(retrieveItemOptions("category_name")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -85,7 +90,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("brand"),
+      options: normalizeOptions(retrieveItemOptions("brand")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -98,7 +103,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: retrieveItemOptions("cost"),
+      options: normalizeOptions(retrieveItemOptions("cost")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -106,20 +111,17 @@ export const renderFields = ({
     },
     {
       name: "tax_location",
-      placeholder: isLoadingLocations
-        ? "Loading locations..."
-        : "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "e.g. 12000.54 | 95.44 | 4585",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: renderLocationOptions(),
+      options: renderLocationOptions("tax_location"),
       htmlOption: 2,
       tooltip: true,
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
-      displayField: isLocationSetupAllowed,
-      disabled: isLoadingLocations,
+      displayField: true,
     },
     {
       name: "container",
@@ -157,9 +159,7 @@ export const renderFields = ({
     },
     {
       name: "location",
-      placeholder: isLoadingLocations
-        ? "Loading locations..."
-        : "Select a location",
+      placeholder: "Select a location",
       label: "Main location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -168,8 +168,7 @@ export const renderFields = ({
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
-      displayField: isLocationSetupAllowed,
-      disabled: isLoadingLocations,
+      displayField: true,
     },
     {
       name: "sub_location",
@@ -191,7 +190,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: ["Custom format", "Sequential number"],
+      options: normalizeOptions(["Custom format", "Sequential number"]),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
@@ -204,7 +203,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: ["Typing", "Scanning"],
+      options: normalizeOptions(["Typing", "Scanning"]),
       htmlOption: 0,
       tooltip: true,
       tooltipMessage:
