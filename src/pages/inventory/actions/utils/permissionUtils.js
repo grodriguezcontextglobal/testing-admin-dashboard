@@ -4,6 +4,82 @@
  */
 
 /**
+ * @typedef {Object} PermissionObject
+ * @property {boolean} hasFullAccess - True if user has Role 0 (Admin/Owner).
+ * @property {string[]|null} permittedLocations - Array of location names the user has access to, or null for full access.
+ * @property {string|null} managerLocation - The specific location assigned to manager (if applicable).
+ * @property {string} [error] - Error message if validation fails.
+ */
+
+/**
+ * Retrieves the comprehensive permission object for a user.
+ * @param {Object} user - The user object.
+ * @param {Object} [companyData] - Optional company data (defaults to user.companyData).
+ * @returns {PermissionObject}
+ */
+export const getUserPermissions = (user, companyData) => {
+  const targetCompanyData = companyData || user?.companyData;
+
+  if (!user || !user.email || !targetCompanyData) {
+    return {
+      hasFullAccess: false,
+      permittedLocations: [],
+      managerLocation: null,
+      error: "Invalid user or company data",
+    };
+  }
+
+  const employee = targetCompanyData.employees?.find(
+    (emp) => emp.user === user.email
+  );
+
+  if (!employee) {
+    return {
+      hasFullAccess: false,
+      permittedLocations: [],
+      managerLocation: null,
+      error: "User not found in company employees",
+    };
+  }
+
+  const role = employee.role;
+
+  // Role 0: Admin/Owner - Full Access
+  // SPECIAL PERMISSION CHECK: Bypasses all location-based restrictions
+  // Returns permittedLocations as null to indicate "ALL" (no filtering required)
+  if (role === 0 || role === "0") {
+    return {
+      hasFullAccess: true,
+      permittedLocations: null, // null explicitly indicates unrestricted access
+      managerLocation: null,
+    };
+  }
+
+  // Role 1+: Restricted Access
+  const preferences = employee.preference;
+  if (!preferences || !preferences.managerLocation) {
+    return {
+      hasFullAccess: false,
+      permittedLocations: [],
+      managerLocation: null,
+    };
+  }
+
+  // Extract location names
+  const permittedLocations = preferences.managerLocation.map(
+    (loc) => loc.location
+  );
+
+  return {
+    hasFullAccess: false,
+    permittedLocations,
+    // Assuming the first location is the primary "managerLocation"
+    managerLocation:
+      permittedLocations.length > 0 ? permittedLocations[0] : null,
+  };
+};
+
+/**
  * Checks if a user has permission for a specific action in a specific location.
  * @param {Object} user - The user object containing companyData and employees list.
  * @param {string} action - The action to check ('create', 'update', 'delete').
@@ -11,32 +87,26 @@
  * @returns {Object} - { allowed: boolean, reason: string }
  */
 export const checkPermission = (user, action, location) => {
-  if (!user || !user.email || !user.companyData) {
-    return { allowed: false, reason: "Invalid user data." };
+  const permissions = getUserPermissions(user);
+
+  if (permissions.error) {
+    return { allowed: false, reason: permissions.error };
   }
 
-  // Role 0 Bypass: Admin/Owner has full access
-  if (user.role === 0 || user.role === "0") {
+  if (permissions.hasFullAccess) {
     return { allowed: true, reason: "Admin access bypass." };
   }
 
+  // Granular check for Role 1
   const employee = user.companyData.employees.find(
     (emp) => emp.user === user.email
   );
-  if (!employee) {
-    return { allowed: false, reason: "User not found in company employees." };
-  }
 
-  const preferences = employee.preference;
-  if (!preferences || !preferences.managerLocation) {
+  if (!employee?.preference?.managerLocation) {
     return { allowed: false, reason: "No location permissions assigned." };
   }
 
-  // Normalize location check (case-insensitive if needed, but assuming exact match for now)
-  // Also handling potential sub-locations if passed as "Main / Sub" - usually permissions are on Main location
-  // But based on previous context, we might match partially.
-  // For now, strict matching against the list.
-  const locationPermission = preferences.managerLocation.find(
+  const locationPermission = employee.preference.managerLocation.find(
     (loc) => loc.location === location
   );
 
@@ -49,9 +119,8 @@ export const checkPermission = (user, action, location) => {
   }
 
   const reason = `Permission '${action}' denied for location: ${location}`;
-  // Log permission denial for debugging/auditing
   console.warn(
-    `[Permission Denied] User: ${user.email}, Role: ${user.role}, ${reason}`
+    `[Permission Denied] User: ${user.email}, Role: ${employee.role}, ${reason}`
   );
 
   return {
@@ -64,43 +133,40 @@ export const checkPermission = (user, action, location) => {
  * Retrieves a list of locations where the user has the specified permission.
  * @param {Object} user - The user object.
  * @param {string} action - The action to filter by ('create', 'update', 'delete').
- * @returns {Array<string>} - Array of permitted location names.
+ * @returns {Array<string>|null} - Array of permitted location names or null for all.
  */
 export const getPermittedLocations = (user, action) => {
-  if (!user || !user.email || !user.companyData) return [];
+  const permissions = getUserPermissions(user);
 
-  // Role 0 Bypass: Admin/Owner has access to ALL locations.
-  // Returning null signifies "All Locations" to the consumer.
-  if (user.role === 0 || user.role === "0") {
-    return null;
-  }
+  if (permissions.error) return [];
+  if (permissions.hasFullAccess) return null;
 
   const employee = user.companyData.employees.find(
     (emp) => emp.user === user.email
   );
-  if (!employee || !employee.preference || !employee.preference.managerLocation)
-    return [];
+
+  if (!employee?.preference?.managerLocation) return [];
 
   return employee.preference.managerLocation
-    .filter((loc) => loc.actions && loc.actions[action])
+    .filter((loc) => {
+      if (!loc.actions) return false;
+      if (Array.isArray(loc.actions)) {
+        return loc.actions.includes(action);
+      }
+      return loc.actions[action];
+    })
     .map((loc) => loc.location);
 };
 
 /**
  * Verifies if the conditions for location setup are met.
- * Conditions:
- * 1. A manager is properly assigned to the location.
- * 2. The location has actions configured and available.
- *
  * @param {Object} user - The user object.
- * @param {string} action - The action required ('create' or 'update').
+ * @param {string} action - The action required.
  * @returns {Object} - { isAllowed: boolean, permittedLocations: Array<string>|null }
  */
 export const verifyLocationSetupConditions = (user, action) => {
   const permittedLocations = getPermittedLocations(user, action);
 
-  // If permittedLocations is null (Admin) or has entries (Role 1 with permissions),
-  // then at least one location satisfies the conditions.
   const isAllowed =
     permittedLocations === null || permittedLocations.length > 0;
 
