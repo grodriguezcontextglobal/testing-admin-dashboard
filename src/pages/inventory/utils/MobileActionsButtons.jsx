@@ -9,7 +9,7 @@ import PropTypes from "prop-types";
 import { useMemo } from "react";
 import { getPermittedLocations } from "../actions/utils/permissionUtils";
 
-const MobileActionsButtons = ({ user }) => {
+const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
   // Check permissions
   const { canCreate, canUpdate } = useMemo(() => {
     const createLocations = getPermittedLocations(user, "create");
@@ -31,6 +31,23 @@ const MobileActionsButtons = ({ user }) => {
       }}
       container
     >
+              {canCreate && (
+                <BlueButtonComponent
+                  title={"Create Location"}
+                  styles={{ with: "100%" }}
+                  icon={
+                    <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+                  }
+                  buttonType="button"
+                  titleStyles={{
+                    textTransform: "none",
+                    with: "100%",
+                    gap: "2px",
+                  }}
+                  func={() => setOpenCreateLocationModal(true)}
+                />
+              )}
+      
       {canUpdate && (
         <Grid item xs={12} sm={12}>
           <Link style={{ width: "100%" }} to="/inventory/edit-group">
