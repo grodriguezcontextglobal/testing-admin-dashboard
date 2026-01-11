@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Divider, Spin } from "antd";
+import { Button, Divider, Spin, Tabs } from "antd";
 import {
   createContext,
   lazy,
@@ -14,16 +14,9 @@ import {
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
-import { EditIcon } from "../../components/icons/EditIcon";
-import { RectangleBluePlusIcon } from "../../components/icons/RectangleBluePlusIcon";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
-import LightBlueButtonComponent from "../../components/UX/buttons/LigthBlueButton";
 import "../../styles/global/ant-select.css";
 import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
@@ -34,14 +27,37 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
+import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import DownloadingXlslFile from "./actions/DownloadXlsx";
-import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
-import FilterOptionsUX from "./utils/FilterOptionsUX";
 import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
+import FilterOptionsUX from "./utils/FilterOptionsUX";
+import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
+import MobileActionsButtons from "./utils/MobileActionsButtons";
+import LocationsList from "./utils/LocationsList";
+import CreateLocationModal from "./utils/CreateLocationModal";
+import { devitrakApi } from "../../api/devitrakApi";
+
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
 export const FilterOptionsContext = createContext();
+/**
+ * MainPage Component
+ *
+ * The main container for the inventory management interface.
+ *
+ * Responsibilities:
+ * - Fetches initial inventory data and user preferences.
+ * - Manages state for search, filtering, and modal visibility.
+ * - Determines user access permissions based on company data and preferences.
+ * - Renders the header, filter options, and the main item table or empty state.
+ *
+ * Permission Logic:
+ * - Uses `user.companyData.employees[].preference` to determine allowed inventory locations.
+ * - Passes `allowedInventoryLocations` to child components for data filtering.
+ *
+ * @returns {JSX.Element} The rendered inventory page.
+ */
 const MainPage = () => {
   const [chosenOption, setChosenOption] = useState([]);
   const [searchedResult, setSearchedResult] = useState(null);
@@ -58,15 +74,40 @@ const MainPage = () => {
   const [openDetails, setOpenDetails] = useState(false);
   const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
     useState(null);
+  const [addInventoryFromXLSXFileModal, setAddInventoryFromXLSXFileModal] =
+    useState(false);
+  const [openCreateLocationModal, setOpenCreateLocationModal] = useState(false);
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
+  const [activeView, setActiveView] = useState("1");
   const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchItem: "...",
     },
   });
+
+  // Extract user preferences for inventory location filtering
+  const userPreferences = useMemo(() => {
+    return user?.companyData?.employees?.find((emp) => emp.user === user.email)
+      ?.preference;
+  }, [user]);
+
+  const allowedInventoryLocations = useMemo(() => {
+    // Role 0 Bypass: Admin/Owner has full access (return null to indicate no filter)
+    if (
+      user?.companyData.employees.find((e) => e.user === user.email).role ===
+        0 ||
+      user?.companyData.employees.find((e) => e.user === user.email).role ===
+        "0"
+    ) {
+      return null;
+    }
+    // For other roles, return assigned locations or empty array if none
+    return userPreferences?.inventory_location || [];
+  }, [userPreferences, user]);
+
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
     queryFn: () =>
@@ -76,6 +117,16 @@ const MainPage = () => {
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const locationsQuery = useQuery({
+    queryKey: ["locations", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.get(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`
+      ),
+    enabled: !!user.sqlInfo.company_id,
+  });
+
   const queryClient = useQueryClient();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
@@ -163,6 +214,8 @@ const MainPage = () => {
         total={getTotalToDisplay()}
         setTypePerLocationInfoModal={setTypePerLocationInfoModal}
         setOpenDetails={setOpenDetails}
+        allowedLocations={allowedInventoryLocations}
+        userPreferences={userPreferences}
       />
     ),
     2: (
@@ -197,7 +250,7 @@ const MainPage = () => {
   const closeTypePerLocationInfoModal = () => {
     setOpenDetails(false);
     return setTypePerLocationInfoModal(null);
-  }
+  };
   return (
     <Suspense
       fallback={
@@ -219,84 +272,10 @@ const MainPage = () => {
         <HeaderInventaryComponent
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+          setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
+          setOpenCreateLocationModal={setOpenCreateLocationModal}
         />
-        <Grid
-          gap={1}
-          sx={{
-            display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
-            marginTop: "10px",
-          }}
-          container
-        >
-          <Grid item xs={12} sm={12}>
-            {" "}
-            <Link style={{ width: "100%" }} to="/inventory/edit-group">
-              <LightBlueButtonComponent
-                title={"Update a group of items"}
-                func={() => null}
-                icon={
-                  <EditIcon
-                    stroke={"var(--blue-dark--800)"}
-                    width={21}
-                    height={18}
-                    hoverStroke={"var(--basewhite)"}
-                  />
-                }
-                buttonType="button"
-                titleStyles={{
-                  textTransform: "none",
-                  with: "100%",
-                  gap: "2px",
-                }}
-              />
-            </Link>
-          </Grid>
-          <Grid item xs={12} sm={12}>
-            {" "}
-            <Link style={{ width: "100%" }} to="/inventory/new-bulk-items">
-              <BlueButtonComponent
-                title={"Add a group of items"}
-                func={() => null}
-                icon={
-                  <WhiteCirclePlusIcon
-                    hoverStroke={"var(--blue-dark--800)"}
-                    width={21}
-                    height={18}
-                  />
-                }
-                buttonType="button"
-                titleStyles={{
-                  textTransform: "none",
-                  with: "100%",
-                  gap: "2px",
-                }}
-              />
-            </Link>
-          </Grid>
-          <Grid item xs={12} sm={12}>
-            {" "}
-            <Link style={{ width: "100%" }} to="/inventory/new-item">
-              <LightBlueButtonComponent
-                title={"Add one item"}
-                func={() => null}
-                icon={
-                  <RectangleBluePlusIcon
-                    stroke={"var(--blue-dark--800)"}
-                    width={21}
-                    height={18}
-                    hoverStroke={"var(--basewhite)"}
-                  />
-                }
-                buttonType="button"
-                titleStyles={{
-                  textTransform: "none",
-                  with: "100%",
-                  gap: "2px",
-                }}
-              />
-            </Link>
-          </Grid>
-        </Grid>
+        <MobileActionsButtons user={user} />
         <Divider />
         <Grid
           display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
@@ -435,6 +414,7 @@ const MainPage = () => {
                 title={"Reload"}
                 func={() => {
                   refetchingQueriesFn();
+                  locationsQuery.refetch();
                 }}
                 styles={{
                   width: "100%",
@@ -491,6 +471,7 @@ const MainPage = () => {
             <SearchItemContext.Provider
               value={{
                 chosenOption,
+                setChosenOption,
                 companyHasInventoryQuery,
                 companyInventoryExisting: companyHasInventoryQuery.data,
                 dataFilterOptions,
@@ -505,8 +486,32 @@ const MainPage = () => {
                 setDataFilterOptions: setDataFilterOptions,
                 setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
                 total: getTotalToDisplay(),
+                allowedLocations: allowedInventoryLocations,
+                userPreferences: userPreferences,
               }}
             >
+              {/* <Tabs
+                defaultActiveKey="1"
+                activeKey={activeView}
+                onChange={setActiveView}
+                style={{ width: "100%" }}
+                items={[
+                  {
+                    key: "1",
+                    label: "Inventory Items",
+                    children: renderingOption[currentTab],
+                  },
+                  {
+                    key: "2",
+                    label: "Locations",
+                    children: (
+                      <LocationsList
+                        locations={locationsQuery.data?.data?.result || []}
+                      />
+                    ),
+                  },
+                ]}
+              /> */}
               {renderingOption[currentTab]}
             </SearchItemContext.Provider>
           </Grid>
@@ -522,6 +527,20 @@ const MainPage = () => {
           nodeName={typePerLocationInfoModal.nodeName}
           rows={typePerLocationInfoModal.rows}
           columns={typePerLocationInfoModal.columns}
+        />
+      )}
+      {addInventoryFromXLSXFileModal && (
+        <AddInventoryFromXLSXFile
+          openModal={addInventoryFromXLSXFileModal}
+          closeModal={setAddInventoryFromXLSXFileModal}
+        />
+      )}
+      {openCreateLocationModal && (
+        <CreateLocationModal
+          openModal={openCreateLocationModal}
+          setOpenModal={setOpenCreateLocationModal}
+          refetch={locationsQuery.refetch}
+          user={user}
         />
       )}
     </Suspense>
