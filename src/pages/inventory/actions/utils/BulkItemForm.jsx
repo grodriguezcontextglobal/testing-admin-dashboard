@@ -67,8 +67,8 @@ const BulkItemForm = ({
   suppliersOptions,
   valueObject,
   watch,
-  isLoadingLocations,
-  isLocationSetupAllowed,
+  // isLoadingLocations,
+  // isLocationSetupAllowed,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -106,8 +106,6 @@ const BulkItemForm = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
-          isLoadingLocations,
-          isLocationSetupAllowed,
         }).map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
@@ -347,13 +345,9 @@ const BulkItemForm = ({
                             }}
                             value={value}
                             onChange={(value) => onChange(value)}
-                            options={item?.options?.map((x) => {
-                              if (item.htmlOption === 0) {
-                                return { value: x };
-                              } else {
-                                return { value: x.value };
-                              }
-                            })}
+                            options={item.options?.map((x) =>
+                              typeof x === "string" ? { value: x } : x
+                            )}
                             placeholder={item.placeholder}
                             allowClear
                             disabled={
