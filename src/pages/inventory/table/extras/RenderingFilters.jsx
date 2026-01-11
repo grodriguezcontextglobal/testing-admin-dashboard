@@ -85,11 +85,11 @@ const RenderingFilters = ({
   const locationsAndSublocationsWithTypes = useQuery({
     queryKey: ["locationsAndSublocationsWithTypes"],
     queryFn: () =>
-      devitrakApi.post("/db_company/get-location-item-types-hierarchy", {
+      devitrakApi.post(`/db_location/companies/${user.sqlInfo.company_id}/locations`, {
         company_id: user.sqlInfo.company_id,
-        role: user.companyData.employees.find(
+        role: Number(user.companyData.employees.find(
           (element) => element.user === user.email
-        )?.role,
+        )?.role),
         preference:
           user.companyData.employees.find(
             (element) => element.user === user.email
