@@ -1,12 +1,15 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Tag } from "antd";
+import { Button, message, Switch, Tag } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
@@ -85,16 +88,21 @@ const RenderingFilters = ({
   const locationsAndSublocationsWithTypes = useQuery({
     queryKey: ["locationsAndSublocationsWithTypes"],
     queryFn: () =>
-      devitrakApi.post(`/db_location/companies/${user.sqlInfo.company_id}/locations`, {
-        company_id: user.sqlInfo.company_id,
-        role: Number(user.companyData.employees.find(
-          (element) => element.user === user.email
-        )?.role),
-        preference:
-          user.companyData.employees.find(
-            (element) => element.user === user.email
-          )?.preference || [],
-      }),
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(
+            user.companyData.employees.find(
+              (element) => element.user === user.email
+            )?.role
+          ),
+          preference:
+            user.companyData.employees.find(
+              (element) => element.user === user.email
+            )?.preference || [],
+        }
+      ),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
   });
@@ -124,6 +132,66 @@ const RenderingFilters = ({
       assignedToStaffMember: "Staff Members",
     };
   });
+
+  const [selectedLocations, setSelectedLocations] = useState(new Set());
+  const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleSelectLocation = (locationId) => {
+    setSelectedLocations((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(locationId)) {
+        newSet.delete(locationId);
+      } else {
+        newSet.add(locationId);
+      }
+      return newSet;
+    });
+  };
+  const [
+    openSelectedLocationForDeletingModal,
+    setOpenSelectedLocationForDeletingModal,
+  ] = useState(false);
+  const handleDeleteSelectedLocations = () => {
+    if (selectedLocations.size === 0) return;
+    return setOpenSelectedLocationForDeletingModal(true);
+  };
+  const deletingSelectedLocations = async () => {
+    setIsDeleting(true);
+    try {
+      // Convert Set to Array for iteration
+      const idsToDelete = Array.from(selectedLocations);
+
+      // Execute deletions
+      // Using Promise.all for parallel execution, or sequential if dependency needed.
+      // Assuming independent deletions.
+      await Promise.all(
+        idsToDelete.map((id) =>
+          devitrakApi.post(`/db_location/locations/${id}`)
+        )
+      );
+
+      message.success("Selected locations deleted successfully.");
+
+      // Clear selection
+      setSelectedLocations(new Set());
+      setOpenSelectedLocationForDeletingModal(false);
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries("structuredCompanyInventory");
+      queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
+      await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
+
+      // Refetch
+      await locationsAndSublocationsWithTypes.refetch();
+    } catch (error) {
+      console.error("Error deleting locations:", error);
+      message.error("Failed to delete some locations. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleEditClick = (sectionKey) => {
     setEditingSection(sectionKey);
     setSectionName(companyStructure[sectionKey]);
@@ -326,7 +394,7 @@ const RenderingFilters = ({
     [normalizedForStaff]
   );
 
-  const locationsAndSublocationsData = () => {
+  const baseLocationsAndSublocationsData = () => {
     let source =
       locationsAndSublocationsWithTypes?.data?.data?.ok &&
       locationsAndSublocationsWithTypes?.data?.data?.data
@@ -497,6 +565,33 @@ const RenderingFilters = ({
     return source;
   };
 
+  const locationsAndSublocationsData = () => {
+    const data = baseLocationsAndSublocationsData();
+    if (showOnlyEmpty) {
+      const filterForEmpty = (treeObj) => {
+        if (!treeObj || typeof treeObj !== "object") return {};
+        const result = {};
+        for (const [name, node] of Object.entries(treeObj)) {
+          const filteredChildren =
+            node?.children && typeof node.children === "object"
+              ? filterForEmpty(node.children)
+              : {};
+          const hasEmptyChildren = Object.keys(filteredChildren).length > 0;
+          // Keep if total is 0 OR has children that are kept (which means they have 0)
+          if (node.total === 0 || hasEmptyChildren) {
+            result[name] = {
+              ...node,
+              children: filteredChildren,
+            };
+          }
+        }
+        return result;
+      };
+      return filterForEmpty(data);
+    }
+    return data;
+  };
+
   const totalUnitsAllLocations = () => {
     // Sum totals from the currently displayed location tree for consistency
     const tree = locationsAndSublocationsData();
@@ -610,7 +705,14 @@ const RenderingFilters = ({
               <Button onClick={() => setEditingSection(null)}>Cancel</Button>
             </div>
           ) : (
-            <>
+            <div
+              style={{
+                width: "fit-content",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
               {companyStructure["location_1"]}&nbsp;{" "}
               <Button
                 style={{
@@ -623,7 +725,33 @@ const RenderingFilters = ({
               >
                 <EditIcon />
               </Button>
-            </>
+              {selectedLocations.size > 0 && (
+                <DangerButtonComponent
+                  func={handleDeleteSelectedLocations}
+                  style={{ margin: "0 1.5rem" }}
+                  loading={isDeleting}
+                  title={`Delete Selected (${selectedLocations.size})`}
+                />
+              )}
+              <div
+                style={{
+                  marginLeft: "20px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span style={{ fontSize: "14px", fontWeight: "normal" }}>
+                  Empty Only
+                </span>
+                <Switch
+                  size="small"
+                  checked={showOnlyEmpty}
+                  onChange={(checked) => setShowOnlyEmpty(checked)}
+                />
+              </div>
+            </div>
           )}
         </>
       ),
@@ -636,6 +764,8 @@ const RenderingFilters = ({
       identifierRender: 1,
       show: true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
+      selectedLocations: selectedLocations,
+      onSelectLocation: handleSelectLocation,
     },
     {
       key: "category_name",
@@ -1093,6 +1223,8 @@ const RenderingFilters = ({
                     data={item.data}
                     setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                     setOpenDetails={setOpenDetails}
+                    selectedLocations={item.selectedLocations}
+                    onSelectLocation={item.onSelectLocation}
                   />
                 )}{" "}
               </Grid>
@@ -1159,6 +1291,39 @@ const RenderingFilters = ({
         </AdvanceSearchContext.Provider>
       )}
       {/* </> */}
+      {openSelectedLocationForDeletingModal && (
+        <ModalUX
+          title="Delete Selected Locations"
+          body={`Are you sure you want to delete ${selectedLocations.size} selected location(s)? This action cannot be undone.`}
+          openDialog={openSelectedLocationForDeletingModal}
+          footer={[
+            <div
+              key="footer-deleting-locations-modal"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <GrayButtonComponent
+                key={"cancel-button-deleting-locations-modal"}
+                title={"Cancel"}
+                func={() => {
+                  setSelectedLocations(new Set());
+                  setOpenSelectedLocationForDeletingModal(false);
+                }}
+              />
+              <DangerButtonComponent
+                key={"accepting-button-deleting-locations-modal"}
+                func={deletingSelectedLocations}
+                loadingState={isDeleting}
+                title={"Delete"}
+              />
+            </div>,
+          ]}
+        />
+      )}
     </Grid>
   );
 };
