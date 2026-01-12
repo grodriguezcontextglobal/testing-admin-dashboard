@@ -15,7 +15,7 @@ import {
   Typography,
   message,
 } from "antd";
-import { groupBy } from "lodash";
+// import { groupBy } from "lodash";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -44,18 +44,39 @@ const AssignLocationManager = () => {
   });
 
   // 2. Fetch Inventory Locations (for options)
-  const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-    queryKey: ["inventoryForLocations", user.sqlInfo.company_id],
+  // const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
+  //   queryKey: ["inventoryForLocations", user.sqlInfo.company_id],
+  //   queryFn: () =>
+  //     devitrakApi.post("/db_item/consulting-item", {
+  //       company_id: user.sqlInfo.company_id,
+  //     }),
+  //   enabled: !!user.sqlInfo.company_id,
+  // });
+
+  const { data: listOfLocations, isLoading: isLoadingInventory } = useQuery({
+    queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
-    enabled: !!user.sqlInfo.company_id,
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .role
+          ),
+          preference:
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .preference || [],
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
-  const locations = inventoryData?.data?.items
-    ? Object.keys(groupBy(inventoryData.data.items, "location"))
-    : [];
+  const locations = listOfLocations?.data?.data ? Object.keys(listOfLocations.data.data) : [];
+
+  // const locations = inventoryData?.data?.items
+  //   ? Object.keys(groupBy(inventoryData.data.items, "location"))
+  //   : [];
 
   const options = locations.map((loc) => ({ label: loc, value: loc }));
 
