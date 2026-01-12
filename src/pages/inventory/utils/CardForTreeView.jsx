@@ -40,6 +40,8 @@ const CardForTreeView = (props) => {
         data={props.data}
         setTypePerLocationInfoModal={props.setTypePerLocationInfoModal}
         setOpenDetails={props.setOpenDetails}
+        selectedLocations={props.selectedLocations}
+        onSelectLocation={props.onSelectLocation}
       />
     </Space>
   );
