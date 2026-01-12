@@ -27,7 +27,7 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
-import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
+// import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 // import DownloadingXlslFile from "./actions/DownloadXlsx";
 import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
 import FilterOptionsUX from "./utils/FilterOptionsUX";
@@ -529,12 +529,12 @@ const MainPage = () => {
           columns={typePerLocationInfoModal.columns}
         />
       )}
-      {addInventoryFromXLSXFileModal && (
+      {/* {addInventoryFromXLSXFileModal && (
         <AddInventoryFromXLSXFile
           openModal={addInventoryFromXLSXFileModal}
           closeModal={setAddInventoryFromXLSXFileModal}
         />
-      )}
+      )} */}
       {openCreateLocationModal && (
         <CreateLocationModal
           openModal={openCreateLocationModal}
