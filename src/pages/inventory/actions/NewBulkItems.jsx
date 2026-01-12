@@ -189,9 +189,9 @@ const AddNewBulkItems = () => {
     if (!companyLocationsListQuery?.data?.data?.data) {
       return [];
     }
-    
+
     if (itemsInInventoryQuery.data) {
-      const locations = companyLocationsListQuery?.data?.data?.data
+      const locations = companyLocationsListQuery?.data?.data?.data;
       // groupBy(
       //   itemsInInventoryQuery.data.data.items,
       //   "location"
@@ -248,6 +248,7 @@ const AddNewBulkItems = () => {
           setScannedSerialNumbers,
           alphaNumericInsertItemMutation,
           dicSuppliers,
+          queryClient,
         });
       } else {
         await bulkItemInsertSequential({
@@ -264,6 +265,7 @@ const AddNewBulkItems = () => {
           subLocationsSubmitted,
           sequencialNumbericInsertItemMutation,
           dicSuppliers,
+          queryClient,
         });
       }
       return setLoadingStatus(false);
@@ -450,7 +452,12 @@ const AddNewBulkItems = () => {
       );
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "enableAssignFeature" || key === "container" || key === "sub_location" || key === "location") {
+          if (
+            key === "enableAssignFeature" ||
+            key === "container" ||
+            key === "sub_location" ||
+            key === "location"
+          ) {
             return;
           }
           setValue(key, value);
