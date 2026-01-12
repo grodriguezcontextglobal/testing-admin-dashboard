@@ -225,6 +225,7 @@ const AddNewItem = () => {
         subLocationsSubmitted,
         invalidateQueries,
         dicSuppliers,
+        queryClient,
       });
       return setLoadingStatus(false);
     } catch (error) {
