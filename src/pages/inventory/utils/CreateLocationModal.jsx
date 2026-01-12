@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Input, message, Select, Typography } from "antd";
+import { Input, message, Typography } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { devitrakApi } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -7,7 +7,6 @@ import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
 const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
@@ -19,7 +18,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
       return await devitrakApi.post("/db_location/locations", {
         company_id: user.sqlInfo.company_id,
         location_name: data.location_name,
-        manager_id: data.manager_id || null, // Optional
+        manager_id: null, // Optional
         address_details: data.address_details || "", // Optional
       });
     },
@@ -64,14 +63,6 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
     });
   };
 
-  const employees = user?.companyData?.employees || [];
-  const managerOptions = employees.map((emp) => {
-    return {
-      value: emp.user, // Using email as ID based on common pattern in this app, or use userId if preferred
-      label: `${emp.firstName} ${emp.lastName} (${emp.user})`,
-    };
-  });
-
   const modalBody = () => {
     return (
       <form
@@ -107,25 +98,6 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
           />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-          <label style={{ fontWeight: 600 }}>Manager (Optional)</label>
-          <Controller
-            name="manager_id"
-            control={control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                className="custom-autocomplete"
-                showSearch
-                optionFilterProp="children"
-                style={{ ...AntSelectorStyle, width: "100%" }}
-                placeholder="Select a manager (optional)"
-                options={managerOptions}
-                allowClear
-              />
-            )}
-          />
-        </div>
         <div
           style={{ display: "flex", justifyContent: "felx-start", gap: "10px" }}
         >
