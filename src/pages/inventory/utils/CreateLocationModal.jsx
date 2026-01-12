@@ -8,6 +8,7 @@ import ModalUX from "../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 
 const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
   const { control, handleSubmit, reset } = useForm();
@@ -27,7 +28,10 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
       queryClient.invalidateQueries({
         queryKey: ["ItemsInInventoryCheckingQuery"],
       });
-      queryClient.invalidateQueries({ queryKey: ["companyHasInventoryQuery"] });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries("structuredCompanyInventory");
+      queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
+      clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
       reset();
       setOpenModal(false);
     },
