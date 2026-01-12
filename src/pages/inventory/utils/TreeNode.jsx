@@ -1,7 +1,8 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message } from "antd";
+import { Button, message, Checkbox } from "antd";
+import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,8 @@ const TreeNode = ({
   onUpdateLocation,
   setTypePerLocationInfoModal,
   setOpenDetails,
+  selectedLocations,
+  onSelectLocation,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +37,8 @@ const TreeNode = ({
   // if (!nodeData) return null;
 
   const { total, available, children, types } = nodeData;
+  const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
+  const isSelectable = total === 0;
 
   const toggleOpen = () => {
     if (children) setIsOpen(!isOpen);
@@ -234,7 +239,18 @@ const TreeNode = ({
   };
 
   return (
-    <div key={nodeName} className="tree-card">
+    <div
+      key={nodeName}
+      className="tree-card"
+      style={{
+        backgroundColor: selectedLocations?.has(nodeId)
+          ? "rgba(24, 144, 255, 0.1)"
+          : "transparent",
+        transition: "background-color 0.3s",
+        borderRadius: "4px",
+        // opacity: isSelectable ? 1 : 0.6,
+      }}
+    >
       {/* Removed contextHolder to avoid hooking per-node message portals */}
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
@@ -264,6 +280,17 @@ const TreeNode = ({
               className="tree-title"
             >
               {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
+              {Number(user.role) === 0 && nodeId && onSelectLocation && (
+                <span onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedLocations?.has(nodeId)}
+                    onChange={() => onSelectLocation(nodeId)}
+                    style={{ margin: "0 8px" }}
+                    disabled={!isSelectable}
+                    aria-disabled={!isSelectable}
+                  />
+                </span>
+              )}
               <span>
                 {isEditing ? (
                   <input
@@ -356,6 +383,8 @@ const TreeNode = ({
                 onUpdateLocation={onUpdateLocation}
                 setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                 setOpenDetails={setOpenDetails}
+                selectedLocations={selectedLocations}
+                onSelectLocation={onSelectLocation}
               />
             ))}
         </div>
@@ -365,3 +394,22 @@ const TreeNode = ({
 };
 
 export default TreeNode;
+
+TreeNode.propTypes = {
+  nodeName: PropTypes.string.isRequired,
+  nodeData: PropTypes.shape({
+    total: PropTypes.number,
+    available: PropTypes.number,
+    children: PropTypes.object,
+    types: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+    location_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
+  path: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onUpdateLocation: PropTypes.func,
+  setTypePerLocationInfoModal: PropTypes.func,
+  setOpenDetails: PropTypes.func,
+  selectedLocations: PropTypes.instanceOf(Set),
+  onSelectLocation: PropTypes.func,
+};
