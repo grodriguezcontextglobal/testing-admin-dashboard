@@ -2,18 +2,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
-  Form,
-  Select,
-  Typography,
-  message,
-  Tag,
-  Space,
   Divider,
+  Form,
+  message,
+  Select,
+  Space,
+  Tag,
+  Typography,
 } from "antd";
-import { groupBy } from "lodash";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import { useEffect } from "react";
 import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSlide";
 
 const { Title, Text } = Typography;
@@ -27,15 +26,23 @@ const dispatch = useDispatch()
   const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
     queryKey: ["inventoryForLocations", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
-    enabled: !!user.sqlInfo.company_id,
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .role
+          ),
+          preference:
+            user.companyData.employees.find((emp) => emp.user === user.email)
+              .preference || [],
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
-  const locations = inventoryData?.data?.items
-    ? Object.keys(groupBy(inventoryData.data.items, "location"))
-    : [];
+  const locations = inventoryData?.data?.data ? Object.keys(inventoryData.data.data) : [];
 
   const options = locations.map((loc) => ({ label: loc, value: loc }));
 
