@@ -28,12 +28,12 @@ import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../styles/global/Title";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
-import DownloadingXlslFile from "./actions/DownloadXlsx";
+// import DownloadingXlslFile from "./actions/DownloadXlsx";
 import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
 import FilterOptionsUX from "./utils/FilterOptionsUX";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
 import MobileActionsButtons from "./utils/MobileActionsButtons";
-import LocationsList from "./utils/LocationsList";
+// import LocationsList from "./utils/LocationsList";
 import CreateLocationModal from "./utils/CreateLocationModal";
 import { devitrakApi } from "../../api/devitrakApi";
 
@@ -427,7 +427,7 @@ const MainPage = () => {
               />
             </Grid>
 
-            <Grid
+            {/* <Grid
               item
               sx={{
                 display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
@@ -438,7 +438,7 @@ const MainPage = () => {
               <Button style={{ ...OutlinedInputStyle, width: "100%" }}>
                 <DownloadingXlslFile props={downloadDataReport} />
               </Button>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
         <Divider />
