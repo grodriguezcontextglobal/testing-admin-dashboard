@@ -289,11 +289,11 @@ const ItemTable = ({
 
   useEffect(() => {
     if (
-      Array.isArray(searchValues.chosenOption) &&
-      searchValues.chosenOption.length > 0
+      Array.isArray(searchValues?.chosenOption) &&
+      searchValues?.chosenOption.length > 0
     ) {
       setChosenConditionState(2); // filter-by-props
-    } else if (searchValues.date) {
+    } else if (searchValues?.date) {
       setChosenConditionState(3); // date filter
     } else {
       setChosenConditionState(0); // default
@@ -339,12 +339,12 @@ const ItemTable = ({
         6: "assignedToStaffMember",
       };
       if (
-        !Array.isArray(searchValues.chosenOption) ||
-        searchValues.chosenOption.length === 0
+        !Array.isArray(searchValues?.chosenOption) ||
+        searchValues?.chosenOption.length === 0
       )
         return baseDataset;
       return baseDataset.filter((item) =>
-        searchValues.chosenOption.every((filter) => {
+        searchValues?.chosenOption.every((filter) => {
           const propertyKey = dicSelectedOptions[filter.category];
           if (filter.category === 6) {
             return item?.[propertyKey]?.includes(filter.value);
@@ -359,7 +359,7 @@ const ItemTable = ({
   }, [
     chosenConditionState,
     filterDataByDate,
-    searchValues.chosenOption,
+    searchValues?.chosenOption,
     baseDataset,
     searchResult,
   ]);
@@ -402,7 +402,7 @@ const ItemTable = ({
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
         <Grid
-          display={searchValues.chosenOption?.at(-1)?.category === 6 && "none"}
+          display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
           item
           xs={12}
           sm={12}
@@ -413,11 +413,11 @@ const ItemTable = ({
             dataToDisplay={dataToDisplayMemo}
             searchItem={searchValues?.searchItem}
             user={user}
-            openAdvanceSearchModal={searchValues.openAdvanceSearchModal}
+            openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-            searchedResult={searchValues.searchedResult}
-            chosen={searchValues.chosenOption}
-            setFiltering={searchValues.setChosenOption}
+            searchedResult={searchValues?.searchedResult}
+            chosen={searchValues?.chosenOption}
+            setFiltering={searchValues?.setChosenOption}
             setTypePerLocationInfoModal={setTypePerLocationInfoModal}
             setOpenDetails={setOpenDetails}
             allowedLocations={allowedLocations}
@@ -469,7 +469,7 @@ const ItemTable = ({
                     padding: "0 0 0 0",
                   }}
                 >
-                  <RefreshButton propsFn={searchValues.refreshFn} />
+                  <RefreshButton propsFn={searchValues?.refreshFn} />
                 </div>
                 <div
                   style={{
@@ -507,7 +507,7 @@ const ItemTable = ({
             </Grid>
           </div>
         </Grid>
-        {searchValues.searchedResult?.length === 0 &&
+        {searchValues?.searchedResult?.length === 0 &&
           (!searchValues?.searchItem || searchValues?.searchItem === "") && (
             <BannerMsg
               props={{
