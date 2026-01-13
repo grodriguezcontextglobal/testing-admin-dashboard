@@ -1,57 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
 import { Table } from "antd";
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import "../../../../styles/global/ant-table.css";
-import { useNavigate } from "react-router-dom";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
-  const [device, setDevice] = useState([]);
   const navigate = useNavigate();
   const consumersQuery = useQuery({
     queryKey: ["consumersPerCompanyQuery"],
     queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id
+      devitrakApi.post(`/db_company/company-inventory-structure`, {
+        company_id: user.sqlInfo.company_id,
+        role: user.companyData.employees.find(
+          (element) => element.user === user.email
+        )?.role,
+        preference:
+          user.companyData.employees.find(
+            (element) => element.user === user.email
+          )?.preference || [],
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
   });
 
-  const dataFetched = consumersQuery?.data?.data?.items;
-  const sortingDataFetched = () => {
-    const result = {};
-    if (dataFetched) {
-      for (let data of dataFetched) {
-        if (!result[data.category_name]) {
-          result[data.category_name] = 1;
-        } else {
-          result[data.category_name]++;
-        }
-      }
-      return setDevice(result);
-    }
-  };
-  useEffect(() => {
-    const controller = new AbortController();
-    consumersQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-  useEffect(() => {
-    const controller = new AbortController();
-    sortingDataFetched();
-    return () => {
-      controller.abort();
-    };
-  }, [consumersQuery.data]);
-
+  const dataFetched =
+    consumersQuery?.data?.data?.groupedData?.category_name || [];
   if (consumersQuery.data) {
     const formattingData = () => {
       const result = new Set();
-      for (let [key, value] of Object.entries(device)) {
-        result.add({ key: key, category: key, total: value });
+      for (let key of Object.keys(dataFetched)) {
+        result.add({ key: key, category: key, total: dataFetched[key]?.total });
       }
       const final = Array.from(result);
       return final;
