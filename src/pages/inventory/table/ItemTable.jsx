@@ -26,6 +26,7 @@ import { SearchItemContext } from "../MainPage";
 import "../style/details.css";
 import { dictionary } from "../utils/dicSelectedOptions";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
+// import { filterDataByRoleAndPreference } from "../utils/accessControlUtils";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -118,9 +119,8 @@ const ItemTable = ({
             (element) => element.user === user.email
           )?.role || [],
         preference:
-          user.companyData.employees.find(
-            (element) => element.user === user.email
-          )?.preference || [],
+          user.companyData.employees.find((item) => item.user === user.email)
+            ?.preference?.managerLocation?.map((item) => item.location) || user.preference,
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 50 minutes
@@ -145,7 +145,7 @@ const ItemTable = ({
         role: user.role,
         preference:
           user.companyData.employees.find((item) => item.user === user.email)
-            ?.preference || user.preference,
+            ?.preference?.managerLocation?.map((item) => item.location) || user.preference,
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -257,19 +257,19 @@ const ItemTable = ({
   const baseDataset = useMemo(() => {
     let data = refactoredDataset.length > 0 ? refactoredDataset : legacyDataset;
 
-    // Filter by allowed locations if specified (inventory_location)
-    // If allowedLocations is null, it means Role 0 (All Access) -> Skip filtering
+    // Apply Role-Based and Preference-Based Filtering
+    // This replaces/augments the previous allowedLocations logic with a more robust utility
+    // data = filterDataByRoleAndPreference(data, user);
+
+    // Legacy allowedLocations prop support (optional, if still needed by parent components)
+    // We keep this to ensure backward compatibility if allowedLocations is passed explicitly for other reasons
     if (allowedLocations !== null && Array.isArray(allowedLocations)) {
       if (allowedLocations.length === 0) {
-        // User has NO allowed locations -> Return empty
         return [];
       }
-
       data = data.filter((item) => {
         const itemLocation = item.location;
         if (!itemLocation) return false;
-
-        // Exact match or partial match (e.g., "Main / Sub")
         return allowedLocations.some(
           (allowed) =>
             itemLocation === allowed ||
@@ -279,7 +279,7 @@ const ItemTable = ({
     }
 
     return data;
-  }, [refactoredDataset, legacyDataset, allowedLocations]);
+  }, [refactoredDataset, legacyDataset, allowedLocations, user]);
 
   // Filtering helpers now use baseDataset
   const filterOptionsBasedOnProps = (props) => {
