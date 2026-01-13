@@ -243,9 +243,9 @@ const AssignLocationManager = () => {
       style={{ maxWidth: 800, margin: "20px auto" }}
       loading={isLoadingCompany}
     >
-      <Title level={4}>Assign Location Manager</Title>
+      <Title level={4}>Assign Location/Permissions</Title>
       <Typography.Paragraph>
-        Assign this staff member as a manager for specific locations and define
+        Assign this staff member for specific locations and define
         permissions.
       </Typography.Paragraph>
       <Form form={form} onFinish={onFinish} layout="vertical">
@@ -305,7 +305,7 @@ const AssignLocationManager = () => {
         <Form.Item>
           <Space>
             <Button type="primary" htmlType="submit" loading={loadingUpdate}>
-              {editingLocation ? "Update Assignment" : "Assign Manager"}
+              {editingLocation ? "Update Assignment" : "Assign Location/Permissions"}
             </Button>
             {editingLocation && (
               <Button
@@ -323,7 +323,7 @@ const AssignLocationManager = () => {
 
       <Divider />
 
-      <Title level={5}>Managed Locations</Title>
+      <Title level={5}>Assigned Locations</Title>
       <List
         loading={isLoadingCompany || loadingUpdate}
         bordered
@@ -357,6 +357,8 @@ const AssignLocationManager = () => {
                   {item.actions.update && <Tag color="blue">Update</Tag>}
                   {item.actions.transfer && <Tag color="orange">Transfer</Tag>}
                   {item.actions.delete && <Tag color="red">Delete</Tag>}
+                  {item.actions.view && <Tag color="gray">View</Tag>}
+                  {item.actions.assign && <Tag color="orange">Assign</Tag>}
                   {!Object.values(item.actions).some(Boolean) && (
                     <Tag>Read Only</Tag>
                   )}
