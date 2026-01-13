@@ -6,8 +6,10 @@ import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
 import { useState } from "react";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import { useSelector } from "react-redux";
 
 const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
+  const { user } = useSelector((state) => state.admin);
   const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
     useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState(null);
@@ -27,6 +29,17 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
     setSelectedSupplierId(props);
     return setValue("searchDevice", props);
   };
+
+  const checkingStaffRole = () => {
+    if (
+      user?.companyData?.employees?.find((item) => item.user === user.email)
+        ?.role === "0"
+    ) {
+      return true;
+    }
+    return false;
+  };
+  
   return (
     <div
       style={{
@@ -51,6 +64,7 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
       <BlueButtonComponent
         title={"Return item to Renter"}
         func={() => setReturnRentedItemsToRenter(true)}
+        style={{ display: checkingStaffRole() ? "flex" : "none" }}
       />
       {returnRentedItemsToRenter && (
         <ReturnRentedItemModal
