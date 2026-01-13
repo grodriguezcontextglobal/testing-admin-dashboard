@@ -111,29 +111,29 @@ const StaffDetail = () => {
         />
       ),
     },
+    // {
+    //   label: "Assign Location",
+    //   route: "assign-location",
+    //   permission: [0, 1],
+    //   disabled: user.email === profile.email,
+    //   id: 6,
+    //   fn: () => null,
+    //   html: (
+    //     <LightBlueButtonComponent
+    //       title={"Assign Location"}
+    //       func={() => null}
+    //       icon={<RectanglePlusIcon stroke={iconColor}/>}
+    //       buttonType="button"
+    //       titleStyles={{
+    //         textTransform: "none",
+    //         with: "100%",
+    //         gap: "2px",
+    //       }}
+    //     />
+    //   ),
+    // },
     {
-      label: "Assign Location",
-      route: "assign-location",
-      permission: [0, 1],
-      disabled: user.email === profile.email,
-      id: 6,
-      fn: () => null,
-      html: (
-        <LightBlueButtonComponent
-          title={"Assign Location"}
-          func={() => null}
-          icon={<RectanglePlusIcon stroke={iconColor}/>}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Assign Location Manager",
+      label: "Assign Location/Permission",
       route: "assign-location-manager",
       permission: [0, 1],
       disabled: user.email === profile.email,
@@ -141,7 +141,7 @@ const StaffDetail = () => {
       fn: () => null,
       html: (
         <LightBlueButtonComponent
-          title={"Assign Location Manager"}
+          title={"Assign Location/Permission"}
           func={() => null}
           icon={<RectanglePlusIcon stroke={iconColor}/>}
           buttonType="button"
