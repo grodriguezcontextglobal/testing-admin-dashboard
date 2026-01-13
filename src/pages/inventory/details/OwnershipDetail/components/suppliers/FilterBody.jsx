@@ -31,15 +31,12 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
   };
 
   const checkingStaffRole = () => {
-    if (
+    return (
       user?.companyData?.employees?.find((item) => item.user === user.email)
         ?.role === "0"
-    ) {
-      return true;
-    }
-    return false;
+    );
   };
-  
+
   return (
     <div
       style={{
@@ -61,11 +58,12 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
         allowClear
         placeholder="Select a supplier to display related data"
       />
-      <BlueButtonComponent
-        title={"Return item to Renter"}
-        func={() => setReturnRentedItemsToRenter(true)}
-        style={{ display: checkingStaffRole() ? "flex" : "none" }}
-      />
+      {checkingStaffRole() && (
+        <BlueButtonComponent
+          title={"Return item to Renter"}
+          func={() => setReturnRentedItemsToRenter(true)}
+        />
+      )}
       {returnRentedItemsToRenter && (
         <ReturnRentedItemModal
           open={returnRentedItemsToRenter}
