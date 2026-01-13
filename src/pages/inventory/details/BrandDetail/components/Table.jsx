@@ -14,6 +14,7 @@ import {
   dataStructuringFormat,
   dataToDisplay,
 } from "../../utils/dataStructuringFormat";
+import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
 
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 
@@ -83,7 +84,11 @@ const TableItemBrand = ({
   const derivedData = useMemo(() => {
     const imageSource = listImagePerItemQuery?.data?.data?.item;
     const groupingByDeviceType = groupBy(imageSource, "item_group");
-    const renderedListItems = listItemsQuery?.data?.data?.result;
+    let renderedListItems = listItemsQuery?.data?.data?.result;
+
+    if (renderedListItems) {
+      renderedListItems = filterDataByRoleAndPreference(renderedListItems, user);
+    }
     
     return {
       imageSource,
@@ -92,7 +97,8 @@ const TableItemBrand = ({
     };
   }, [
     listImagePerItemQuery?.data?.data?.item,
-    listItemsQuery?.data?.data?.result
+    listItemsQuery?.data?.data?.result,
+    user
   ]);
 
   // Memoize structured data to prevent unnecessary processing

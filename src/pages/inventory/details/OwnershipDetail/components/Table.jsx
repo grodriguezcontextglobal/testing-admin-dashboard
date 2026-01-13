@@ -15,6 +15,7 @@ import {
 } from "../../utils/dataStructuringFormat";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
+import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
 
 const TableItemOwnership = ({
   searchItem,
@@ -25,12 +26,12 @@ const TableItemOwnership = ({
   const ownership = location.search.split("&");
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  
+
   // State to track filtered data count for dynamic pagination
   const [filteredDataCount, setFilteredDataCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   const listItemsQuery = useQuery({
     queryKey: [
       "currentStateDevicePerGroupName",
@@ -67,7 +68,12 @@ const TableItemOwnership = ({
     return groupBy(imageSource, "item_group");
   }, [imageSource]);
 
-  const renderedListItems = listItemsQuery?.data?.data?.result;
+  let renderedListItems = listItemsQuery?.data?.data?.result;
+
+  if (renderedListItems) {
+    renderedListItems = filterDataByRoleAndPreference(renderedListItems, user);
+  }
+
   const [structuredDataRendering, setStructuredDataRendering] = useState([]);
 
   // Fix: Memoize the structured data to prevent unnecessary re-calculations
@@ -127,9 +133,9 @@ const TableItemOwnership = ({
     // Update pagination state
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
-    
+
     // Update filtered data count when filters are applied
-    if (extra.action === 'filter') {
+    if (extra.action === "filter") {
       setFilteredDataCount(extra.currentDataSource.length);
       // Reset to first page when filtering
       setCurrentPage(1);
@@ -215,7 +221,7 @@ const TableItemOwnership = ({
               pageSize: pageSize,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) => 
+              showTotal: (total, range) =>
                 `${range[0]}-${range[1]} of ${total} items`,
             }}
             style={{ width: "100%" }}
@@ -232,7 +238,7 @@ const TableItemOwnership = ({
                 ["xs", "sm", "md", "lg"],
                 ["xs", "sm", "md", "lg"],
               ],
-              data: dataRenderingMemo
+              data: dataRenderingMemo,
             })}
             dataSource={dataRenderingMemo}
             className="table-ant-customized"

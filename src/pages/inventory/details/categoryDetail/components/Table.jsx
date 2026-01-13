@@ -12,6 +12,7 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
 import { dataStructuringFormat, dataToDisplay } from "../../utils/dataStructuringFormat";
+import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
 
 const TableDeviceCategory = ({ searchItem = '', referenceData, isLoadingComponent }) => {
   const location = useLocation();
@@ -81,7 +82,11 @@ const TableDeviceCategory = ({ searchItem = '', referenceData, isLoadingComponen
   const derivedData = useMemo(() => {
     const imageSource = listImagePerItemQuery?.data?.data?.item;
     const groupingByDeviceType = groupBy(imageSource, "item_group");
-    const renderedListItems = listItemsQuery?.data?.data?.result;
+    let renderedListItems = listItemsQuery?.data?.data?.result;
+
+    if (renderedListItems) {
+      renderedListItems = filterDataByRoleAndPreference(renderedListItems, user);
+    }
     
     return {
       imageSource,
@@ -90,7 +95,8 @@ const TableDeviceCategory = ({ searchItem = '', referenceData, isLoadingComponen
     };
   }, [
     listImagePerItemQuery?.data?.data?.item,
-    listItemsQuery?.data?.data?.result
+    listItemsQuery?.data?.data?.result,
+    user
   ]);
 
   // Memoize structured data to prevent unnecessary processing
