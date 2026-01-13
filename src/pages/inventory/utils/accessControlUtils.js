@@ -72,7 +72,6 @@ export const filterDataByRoleAndPreference = (data, user) => {
 
   // Filter logic
   return data?.filter((item) => {
-    console.log(item);
     // Check company_id matches current user's company
     // Note: We perform a safe check. If item.company_id is missing, we assume it's valid if it came from the company-scoped API.
     // But if it is present, it MUST match.
