@@ -40,16 +40,16 @@ const Form = () => {
   const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { role, locationsManagePermission } = useStaffRoleAndLocations();
+  const { role, locationsCreatePermission } = useStaffRoleAndLocations();
   const bodyFetchRequest = () => {
-    if (role === "0") {
+    if (role === "0" || role === 0) {
       return {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
       };
     }
-    if (locationsManagePermission?.length === 0)
+    if (locationsCreatePermission?.length === 0)
       return alert(
         "You are not assigned to any location. Please contact root admin."
       );
@@ -57,7 +57,7 @@ const Form = () => {
       company_id: user.sqlInfo.company_id,
       warehouse: 1,
       enableAssignFeature: 1,
-      location: locationsManagePermission,
+      location: locationsCreatePermission,
     };
   };
   const itemQuery = useQuery({
@@ -67,7 +67,7 @@ const Form = () => {
         "/db_event/retrieve-item-group-quantity-with-format",
         bodyFetchRequest()
       ),
-    enabled: !!user.sqlInfo.company_id && locationsManagePermission?.length > 0,
+    enabled: !!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 1000, // 1 minute cache
   });
 
