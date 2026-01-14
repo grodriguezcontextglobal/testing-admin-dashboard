@@ -3,8 +3,8 @@ import { Spin, Table } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import "../../../../styles/global/ant-table.css";
 import Loading from "../../../../components/animation/Loading";
+import "../../../../styles/global/ant-table.css";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 
 const TableLocations = () => {
@@ -18,8 +18,7 @@ const TableLocations = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: Number(role)
-          ,
+          role: Number(role),
           preference:
             user.companyData.employees.find(
               (element) => element.user === user.email
@@ -58,7 +57,6 @@ const TableLocations = () => {
       }
       return Array.from(result);
     };
-    renderingDataByLocation();
     return (
       <Table
         columns={column}
