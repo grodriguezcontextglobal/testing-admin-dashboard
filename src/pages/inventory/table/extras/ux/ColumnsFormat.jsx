@@ -1,43 +1,37 @@
-import { Typography, 
+import { Icon } from "@iconify/react/dist/iconify.js";
+import {
   // Space, 
-  Tooltip, 
-  // Button
- } from "@mui/material";
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { Avatar } from "antd";
+import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Avatar, Button as AntButton } from "antd";
-import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
-import {
-  EditOutlined,
-  DeleteOutlined,
-  SwapOutlined,
-  // PlusOutlined,
-} from "@ant-design/icons";
 
 const ColumnsFormat = ({
   dictionary,
   navigate,
   cellStyle,
-  userPreferences,
+  // userPreferences,
 }) => {
   // Helper to check permissions for a specific location and action
-  const checkPermission = (locationName, action) => {
-    if (!userPreferences?.managerLocation) return false;
+  // const checkPermission = (locationName, action) => {
+  //   if (!userPreferences?.managerLocation) return false;
 
-    // Find the permission object for this location
-    // Using includes for partial matching since location names might vary slightly
-    const locationPerm = userPreferences.managerLocation.find(
-      (loc) =>
-        loc.location &&
-        String(locationName)
-          .toLowerCase()
-          .includes(String(loc.location).toLowerCase())
-    );
+  //   // Find the permission object for this location
+  //   // Using includes for partial matching since location names might vary slightly
+  //   const locationPerm = userPreferences.managerLocation.find(
+  //     (loc) =>
+  //       loc.location &&
+  //       String(locationName)
+  //         .toLowerCase()
+  //         .includes(String(loc.location).toLowerCase())
+  //   );
 
-    if (!locationPerm || !locationPerm.actions) return false;
-    return !!locationPerm.actions[action];
-  };
+  //   if (!locationPerm || !locationPerm.actions) return false;
+  //   return !!locationPerm.actions[action];
+  // };
 
   const columns = [
     {
@@ -264,10 +258,10 @@ const ColumnsFormat = ({
       key: "actions",
       responsive: ["lg"],
       render: (_, record) => {
-        const locationName = record.location;
-        const canUpdate = checkPermission(locationName, "update");
-        const canDelete = checkPermission(locationName, "delete");
-        const canTransfer = checkPermission(locationName, "transfer");
+        // const locationName = record.location;
+        // const canUpdate = checkPermission(locationName, "update");
+        // const canDelete = checkPermission(locationName, "delete");
+        // const canTransfer = checkPermission(locationName, "transfer");
 
         return (
           <div
@@ -278,7 +272,7 @@ const ColumnsFormat = ({
               justifyContent: "flex-end",
             }}
           >
-            {canUpdate && (
+            {/* {canUpdate && (
               <Tooltip title="Edit Item">
                 <AntButton
                   type="text"
@@ -316,7 +310,7 @@ const ColumnsFormat = ({
                   }}
                 />
               </Tooltip>
-            )}
+            )} */}
 
             <Tooltip title="View Details">
               <button
