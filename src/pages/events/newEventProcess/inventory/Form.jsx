@@ -16,6 +16,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "../../../../styles/global/ant-select.css";
 import MainBody from "./components/MainBody";
+import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -39,15 +40,34 @@ const Form = () => {
   const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const itemQuery = useQuery({
-    queryKey: ["companyInventorySectionQuery", user.sqlInfo.company_id],
-    queryFn: () =>
-      devitrakApi.post("/db_event/retrieve-item-group-quantity-with-format", {
+  const { role, locationsManagePermission } = useStaffRoleAndLocations();
+  const bodyFetchRequest = () => {
+    if (role === "0") {
+      return {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
-      }),
-    enabled: !!user.sqlInfo.company_id,
+      };
+    }
+    if (locationsManagePermission?.length === 0)
+      return alert(
+        "You are not assigned to any location. Please contact root admin."
+      );
+    return {
+      company_id: user.sqlInfo.company_id,
+      warehouse: 1,
+      enableAssignFeature: 1,
+      location: locationsManagePermission,
+    };
+  };
+  const itemQuery = useQuery({
+    queryKey: ["companyInventorySectionQuery", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.post(
+        "/db_event/retrieve-item-group-quantity-with-format",
+        bodyFetchRequest()
+      ),
+    enabled: !!user.sqlInfo.company_id && locationsManagePermission?.length > 0,
     staleTime: 1 * 60 * 1000, // 1 minute cache
   });
 
@@ -269,13 +289,12 @@ const Form = () => {
     return result;
   }, [itemQuery.data]);
 
-
   useEffect(() => {
-    if(deviceSetup.length > 0 ) {
-      setSelectedItem(deviceSetup)
+    if (deviceSetup.length > 0) {
+      setSelectedItem(deviceSetup);
     }
-  }, [deviceSetup, selectedItem])
-  
+  }, [deviceSetup, selectedItem]);
+
   return (
     <Suspense
       fallback={
