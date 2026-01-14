@@ -17,7 +17,7 @@ export const useStaffRoleAndLocations = () => {
       ?.preference?.managerLocation?.filter((loc) => !loc?.actions?.assign)
       ?.map((loc) => loc.location) || [];
 
-  const locationsManagePermission =
+  const locationsCreatePermission =
     user.companyData.employees
       .find((emp) => emp.user === user.email)
       ?.preference?.managerLocation?.filter((loc) => !loc?.actions?.create)
@@ -40,20 +40,11 @@ export const useStaffRoleAndLocations = () => {
       .find((emp) => emp.user === user.email)
       ?.preference?.managerLocation?.filter((loc) => !loc?.actions?.transfer)
       ?.map((loc) => loc.location) || [];
-  console.log({
-    role,
-    locationsViewPermission,
-    locationsAssignPermission,
-    locationsManagePermission,
-    locationsDeletePermission,
-    locationsUpdatePermission,
-    transferPermission,
-  });
   return {
     role,
     locationsViewPermission,
     locationsAssignPermission,
-    locationsManagePermission,
+    locationsCreatePermission,
     locationsDeletePermission,
     locationsUpdatePermission,
     transferPermission,
