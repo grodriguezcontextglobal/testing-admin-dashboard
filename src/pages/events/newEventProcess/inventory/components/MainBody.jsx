@@ -12,6 +12,7 @@ import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
+import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
 
 const MainBody = ({
   AddingEventCreated,
@@ -40,6 +41,7 @@ const MainBody = ({
   staff,
   triggerAddingAdminStaff,
 }) => {
+  const { locationsManagePermission } = useStaffRoleAndLocations();
   return (
     <Grid
       container
@@ -149,19 +151,21 @@ const MainBody = ({
         the Inventory page, add the new owned inventory there, and then assign
         it to this event.
       </Typography>
-      <LightBlueButtonComponent
-        title={
-          displayFormToCreateCategory
-            ? "Close form for new inventory"
-            : "Add new category or group"
-        }
-        buttonType="button"
-        func={() =>
-          setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-        }
-        styles={{ width: "100%", margin: "1rem auto" }}
-        icon={displayFormToCreateCategory ? null : <RectangleBluePlusIcon />}
-      />
+      {locationsManagePermission.length > 0 && (
+        <LightBlueButtonComponent
+          title={
+            displayFormToCreateCategory
+              ? "Close form for new inventory"
+              : "Add new category or group"
+          }
+          buttonType="button"
+          func={() =>
+            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+          }
+          styles={{ width: "100%", margin: "1rem auto" }}
+          icon={displayFormToCreateCategory ? null : <RectangleBluePlusIcon />}
+        />
+      )}
       {displayFormToCreateCategory && (
         <FormDeviceTrackingMethod
           // existingData={optionsToRenderInSelector()}
