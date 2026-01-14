@@ -25,7 +25,7 @@ const TableCategories = () => {
   });
 
   const dataFetched =
-    consumersQuery?.data?.data?.groupedData?.category_name || [];
+    consumersQuery?.data?.data?.groupedData?.category_name || {};
   if (consumersQuery.data) {
     const formattingData = () => {
       const result = new Set();
