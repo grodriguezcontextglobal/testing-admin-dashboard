@@ -41,7 +41,7 @@ const MainBody = ({
   staff,
   triggerAddingAdminStaff,
 }) => {
-  const { locationsManagePermission } = useStaffRoleAndLocations();
+  const { locationsCreatePermission } = useStaffRoleAndLocations();
   return (
     <Grid
       container
@@ -151,7 +151,7 @@ const MainBody = ({
         the Inventory page, add the new owned inventory there, and then assign
         it to this event.
       </Typography>
-      {locationsManagePermission.length > 0 && (
+      {locationsCreatePermission.length > 0 && (
         <LightBlueButtonComponent
           title={
             displayFormToCreateCategory
