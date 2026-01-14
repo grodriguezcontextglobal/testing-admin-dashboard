@@ -10,13 +10,7 @@ import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLoc
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const {
-    role,
-    locationsViewPermission,
-    locationsCreatePermission,
-    locationsUpdatePermission,
-    locationsAssignPermission,
-  } = useStaffRoleAndLocations();
+  const { role } = useStaffRoleAndLocations();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -24,15 +18,12 @@ const TableLocations = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: Number(role),
-          preference: {
-            inventory_location: [
-              ...locationsViewPermission,
-              ...locationsCreatePermission,
-              ...locationsUpdatePermission,
-              ...locationsAssignPermission,
-            ],
-          },
+          role: Number(role)
+          ,
+          preference:
+            user.companyData.employees.find(
+              (element) => element.user === user.email
+            )?.preference || [],
         }
       ),
     enabled: !!user.sqlInfo.company_id,
@@ -48,6 +39,7 @@ const TableLocations = () => {
   // }, [user.company]);
 
   if (itemsInInventoryQuery.data) {
+    console.log(itemsInInventoryQuery.data.data);
     const column = [
       {
         title: "Location",
@@ -60,7 +52,7 @@ const TableLocations = () => {
     ];
 
     const renderingDataByLocation = () => {
-      const locations = itemsInInventoryQuery?.data?.data?.data || {};
+      const locations = itemsInInventoryQuery?.data?.data?.data;
       const result = new Set();
       for (let [key] of Object.entries(locations)) {
         result.add({ key: key, total: locations[key]?.total });
