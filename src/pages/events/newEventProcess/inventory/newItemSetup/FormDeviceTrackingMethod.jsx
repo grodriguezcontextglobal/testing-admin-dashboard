@@ -119,19 +119,27 @@ const FormDeviceTrackingMethod = ({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
     onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+      });
+      queryClient.refetchQueries({ queryKey: ["listOfItemsInStock"] });
       queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["listOfItemsInStock"]);
-      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+      queryClient.refetchQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+      });
     },
   });
   const sequencialNumbericInsertItemMutation = useMutation({
     mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
     onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+      });
+      queryClient.refetchQueries({ queryKey: ["listOfItemsInStock"] });
       queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["listOfItemsInStock"]);
-      queryClient.refetchQueries(["ItemsInInventoryCheckingQuery"]);
-      queryClient.refetchQueries(["RefactoredListInventoryCompany"]);
+      queryClient.refetchQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+      });
     },
   });
   const retrieveItemOptions = (props) => {
