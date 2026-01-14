@@ -136,7 +136,6 @@ const RenderingFilters = ({
   const [selectedLocations, setSelectedLocations] = useState(new Set());
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const handleSelectLocation = (locationId) => {
     setSelectedLocations((prev) => {
       const newSet = new Set(prev);
@@ -274,7 +273,7 @@ const RenderingFilters = ({
   );
 
   const filteredList = useMemo(() => {
-    let base = typeof dataToDisplay === "function" ? dataToDisplay() : [];
+    let base = typeof dataToDisplay === "function" ? dataToDisplay : [];
 
     // Filter by allowed locations if restricted (not null)
     // If allowedLocations is null, it means full access (Role 0), so skip filtering.
@@ -1042,6 +1041,7 @@ const RenderingFilters = ({
       );
     }
   };
+// console.log(typeof dataToDisplay)
 
   return (
     <Grid key="rendering-filter-option-container" container>
@@ -1268,19 +1268,19 @@ const RenderingFilters = ({
           value={{
             location: displayTotalDevicesAndTotalAvailablePerLocation({
               props: "location",
-              data: dataToDisplay(),
+              data: dataToDisplay,
             }),
             category: sortingByParameters({
               props: "category_name",
-              data: dataToDisplay(),
+              data: dataToDisplay,
             }),
             group: sortingByParameters({
               props: "item_group",
-              data: dataToDisplay(),
+              data: dataToDisplay,
             }),
             brand: sortingByParameters({
               props: "brand",
-              data: dataToDisplay(),
+              data: dataToDisplay,
             }),
           }}
         >
