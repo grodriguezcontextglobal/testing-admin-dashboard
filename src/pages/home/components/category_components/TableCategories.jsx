@@ -1,32 +1,43 @@
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
+import { Spin, Table } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import "../../../../styles/global/ant-table.css";
+import Loading from "../../../../components/animation/Loading";
+import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
+  const {
+    role,
+    locationsViewPermission,
+    locationsCreatePermission,
+    locationsUpdatePermission,
+    locationsAssignPermission,
+  } = useStaffRoleAndLocations();
   const navigate = useNavigate();
   const consumersQuery = useQuery({
     queryKey: ["consumersPerCompanyQuery"],
     queryFn: () =>
       devitrakApi.post(`/db_company/company-inventory-structure`, {
         company_id: user.sqlInfo.company_id,
-        role: user.companyData.employees.find(
-          (element) => element.user === user.email
-        )?.role,
-        preference:
-          user.companyData.employees.find(
-            (element) => element.user === user.email
-          )?.preference || [],
+        role: role,
+        preference: {
+          inventory_location: [
+            ...locationsViewPermission,
+            ...locationsCreatePermission,
+            ...locationsUpdatePermission,
+            ...locationsAssignPermission,
+          ],
+        },
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
   });
 
-  const dataFetched =
-    consumersQuery?.data?.data?.groupedData?.category_name || {};
   if (consumersQuery.data) {
+    const dataFetched =
+      consumersQuery?.data?.data?.groupedData?.category_name || {};
     const formattingData = () => {
       const result = new Set();
       for (let key of Object.keys(dataFetched)) {
@@ -63,6 +74,7 @@ const TableCategories = () => {
       />
     );
   }
+  return <Spin indicator={<Loading />} />;
 };
 
 export default TableCategories;
