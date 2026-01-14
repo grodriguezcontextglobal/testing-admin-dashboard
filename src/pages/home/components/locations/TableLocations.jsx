@@ -51,7 +51,7 @@ const TableLocations = () => {
     ];
 
     const renderingDataByLocation = () => {
-      const locations = itemsInInventoryQuery?.data?.data?.data;
+      const locations = itemsInInventoryQuery?.data?.data?.data || {};
       const result = new Set();
       for (let [key] of Object.entries(locations)) {
         result.add({ key: key, total: locations[key]?.total });
