@@ -39,7 +39,6 @@ const TableLocations = () => {
   // }, [user.company]);
 
   if (itemsInInventoryQuery.data) {
-    console.log(itemsInInventoryQuery.data.data);
     const column = [
       {
         title: "Location",
