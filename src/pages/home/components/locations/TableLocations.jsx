@@ -10,7 +10,7 @@ import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLoc
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const { role } = useStaffRoleAndLocations();
+  const { isAdmin, role, employee } = useStaffRoleAndLocations();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -18,11 +18,8 @@ const TableLocations = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: Number(role),
-          preference:
-            user.companyData.employees.find(
-              (element) => element.user === user.email
-            )?.preference || [],
+          role: isAdmin ? "0" : role,
+          preference: employee?.preference,
         }
       ),
     enabled: !!user.sqlInfo.company_id,
