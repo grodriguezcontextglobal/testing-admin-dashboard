@@ -1,15 +1,15 @@
 import { Select } from "antd";
+import { useState } from "react";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import { useStaffRoleAndLocations } from "../../../../../../utils/checkStaffRoleAndLocations";
 import useSuppliersCompanyFetch from "./hook/useSuppliersCompanyFetch";
-import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
-import { useState } from "react";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
-import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import { useSelector } from "react-redux";
+import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
 
 const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
-  const { user } = useSelector((state) => state.admin);
+  const { role } = useStaffRoleAndLocations();
   const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
     useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState(null);
@@ -31,10 +31,7 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
   };
 
   const checkingStaffRole = () => {
-    return (
-      user?.companyData?.employees?.find((item) => item.user === user.email)
-        ?.role === "0"
-    );
+    return role === "0";
   };
 
   return (
