@@ -1,26 +1,22 @@
 import { Grid } from "@mui/material";
-import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-import { EditIcon } from "../../../components/icons/EditIcon";
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import { EditIcon } from "../../../components/icons/EditIcon";
 import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
-import PropTypes from "prop-types";
-import { useMemo } from "react";
-import { getPermittedLocations } from "../actions/utils/permissionUtils";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 
 const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
   // Check permissions
-  const { canCreate, canUpdate } = useMemo(() => {
-    const createLocations = getPermittedLocations(user, "create");
-    const updateLocations = getPermittedLocations(user, "update");
+  const {
+    isAdmin,locationsCreatePermission, locationsUpdatePermission
+  } = useStaffRoleAndLocations();
+  // Check permissions
+  const canCreate = isAdmin ? isAdmin : locationsCreatePermission.length > 0
+  const canUpdate = isAdmin ? isAdmin : locationsUpdatePermission.length > 0
 
-    // If getPermittedLocations returns null (Role 0) or a non-empty array, access is allowed.
-    const canCreate = createLocations === null || createLocations.length > 0;
-    const canUpdate = updateLocations === null || updateLocations.length > 0;
-
-    return { canCreate, canUpdate };
-  }, [user]);
 
   return (
     <Grid
