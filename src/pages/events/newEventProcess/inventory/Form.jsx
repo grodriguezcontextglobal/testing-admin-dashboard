@@ -15,8 +15,8 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "../../../../styles/global/ant-select.css";
-import MainBody from "./components/MainBody";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
+import MainBody from "./components/MainBody";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -40,7 +40,7 @@ const Form = () => {
   const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { role, locationsCreatePermission } = useStaffRoleAndLocations();
+  const { role, locationsAssignPermission } = useStaffRoleAndLocations();
   const bodyFetchRequest = () => {
     if (role === "0" || role === 0) {
       return {
@@ -49,15 +49,11 @@ const Form = () => {
         enableAssignFeature: 1,
       };
     }
-    if (locationsCreatePermission?.length === 0)
-      return alert(
-        "You are not assigned to any location. Please contact root admin."
-      );
     return {
       company_id: user.sqlInfo.company_id,
       warehouse: 1,
       enableAssignFeature: 1,
-      location: locationsCreatePermission,
+      location: locationsAssignPermission,
     };
   };
   const itemQuery = useQuery({
@@ -67,7 +63,10 @@ const Form = () => {
         "/db_event/retrieve-item-group-quantity-with-format",
         bodyFetchRequest()
       ),
-    enabled: !!user.sqlInfo.company_id,
+    enabled:
+      role === "0" || role === 0
+        ? !!user.sqlInfo.company_id
+        : !!user.sqlInfo.company_id && locationsAssignPermission?.length === 0,
     staleTime: 1 * 60 * 1000, // 1 minute cache
   });
 
