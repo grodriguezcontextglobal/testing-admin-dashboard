@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Divider, Spin, Tabs } from "antd";
+import { Divider, Spin } from "antd";
 import {
   createContext,
   lazy,
@@ -34,8 +34,8 @@ import FilterOptionsUX from "./utils/FilterOptionsUX";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
 import MobileActionsButtons from "./utils/MobileActionsButtons";
 // import LocationsList from "./utils/LocationsList";
-import CreateLocationModal from "./utils/CreateLocationModal";
 import { devitrakApi } from "../../api/devitrakApi";
+import CreateLocationModal from "./utils/CreateLocationModal";
 
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
