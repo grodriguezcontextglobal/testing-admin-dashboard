@@ -1,5 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { Select } from "antd";
+import { Drawer, Select } from "antd";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
@@ -8,11 +8,12 @@ import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
 import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
-import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
+import { useState } from "react";
 
 const MainBody = ({
   AddingEventCreated,
@@ -41,7 +42,11 @@ const MainBody = ({
   staff,
   triggerAddingAdminStaff,
 }) => {
-  const { locationsCreatePermission } = useStaffRoleAndLocations();
+  const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
+    useStaffRoleAndLocations();
+  const [openDrawer, setOpenDrawer] = useState(
+    locationsAssignPermission.length === 0
+  );
   return (
     <Grid
       container
@@ -92,7 +97,32 @@ const MainBody = ({
               style={{ ...AntSelectorStyle, width: "100%" }}
               onChange={onChange}
               options={selectOptions}
+              disabled={!isAdmin && locationsAssignPermission.length === 0}
             />
+            {!isAdmin && locationsAssignPermission.length === 0 && (
+              <Drawer
+                title="Staff Permission"
+                placement="top"
+                onClose={() => setOpenDrawer(false)}
+                open={openDrawer}
+                closable
+                key={"message-triggered"}
+                maskClosable={false}
+                styles={{
+                  height: "25vh !important",
+                }}
+              >
+                <Typography
+                  style={{
+                    ...TextFontSize20LineHeight30,
+                    fontWeight: 600,
+                    color: "var(--gray600)",
+                  }}
+                >
+                  You do not have permission to assign inventory to events.
+                </Typography>
+              </Drawer>
+            )}
             {eventInfoDetail.merchant ? (
               <MerchantService
                 assignAllDevices={assignAllDevices}
