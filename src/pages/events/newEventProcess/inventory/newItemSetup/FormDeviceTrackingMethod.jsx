@@ -28,6 +28,7 @@ import { renderingModals } from "./components/BulkRentedItemsComponents";
 import { storeAndGenerateImageUrl } from "./components/storeAndGenerateImageUrl";
 import validatingInputFields from "./components/validatingFields";
 import "./style.css";
+import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
 
 const options = [{ value: "Rent" }];
 
@@ -73,6 +74,7 @@ const FormDeviceTrackingMethod = ({
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
   const { user } = useSelector((state) => state.admin);
+  const { role, employee } = useStaffRoleAndLocations();
   const {
     register,
     handleSubmit,
@@ -115,6 +117,21 @@ const FormDeviceTrackingMethod = ({
       }),
     refetchOnMount: false,
   });
+
+  const companyLocationsListQuery = useQuery({
+    queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.post(
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
+        {
+          company_id: user.sqlInfo.company_id,
+          role: Number(role),
+          preference: employee.preference,
+        }
+      ),
+    enabled: !!user.sqlInfo.company_id && !!user.email,
+  });
+
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
@@ -155,11 +172,16 @@ const FormDeviceTrackingMethod = ({
   };
 
   const renderLocationOptions = () => {
+    if (!companyLocationsListQuery?.data?.data?.data) {
+      return [];
+    }
+
     if (itemsInInventoryQuery.data) {
-      const locations = groupBy(
-        itemsInInventoryQuery.data.data.items,
-        "location"
-      );
+      const locations = companyLocationsListQuery?.data?.data?.data;
+      // groupBy(
+      //   itemsInInventoryQuery.data.data.items,
+      //   "location"
+      // );
       const result = new Set();
       for (let data of Object.keys(locations)) {
         result.add({ value: data });
