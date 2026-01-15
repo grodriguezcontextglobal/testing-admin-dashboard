@@ -1,17 +1,16 @@
 import {
   Grid,
-  // Tooltip
 } from "@mui/material";
-import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 import { EditIcon } from "../../../components/icons/EditIcon";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
-import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 // import { XLSXIcon } from "../../../components/icons/XLSXIcon";
-import { useMemo } from "react";
+import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 
 /**
  * HeaderInventaryComponent
@@ -34,29 +33,12 @@ const HeaderInventaryComponent = ({
   // setAddInventoryFromXLSXFileModal,
   setOpenCreateLocationModal,
 }) => {
+  const {
+    isAdmin,locationsCreatePermission, locationsUpdatePermission
+  } = useStaffRoleAndLocations();
   // Check permissions
-  const { canCreate, canUpdate } = useMemo(() => {
-    // Role 0 Bypass: Admin/Owner has full access
-    if (
-      user?.companyData?.employees?.find((emp) => emp.user === user.email)
-        ?.role === 0 ||
-      user?.companyData?.employees?.find((emp) => emp.user === user.email)
-        ?.role === "0"
-    ) {
-      return { canCreate: true, canUpdate: true };
-    }
-
-    const preferences = user?.companyData?.employees?.find(
-      (emp) => emp.user === user.email
-    )?.preference;
-    const managerLocation = preferences?.managerLocation || [];
-
-    // Check if user has create/update permission in ANY location
-    const canCreate = managerLocation.some((loc) => loc.actions?.create);
-    const canUpdate = managerLocation.some((loc) => loc.actions?.update);
-
-    return { canCreate, canUpdate };
-  }, [user]);
+  const canCreate = isAdmin ? isAdmin : locationsCreatePermission.length > 0
+  const canUpdate = isAdmin ? isAdmin : locationsUpdatePermission.length > 0
 
   return (
     <Grid
@@ -107,22 +89,22 @@ const HeaderInventaryComponent = ({
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
         )} */}
-              {canCreate && Number(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role) === 0 && (
-                <BlueButtonComponent
-                  title={"Create Location"}
-                  styles={{ with: "100%" }}
-                  icon={
-                    <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-                  }
-                  buttonType="button"
-                  titleStyles={{
-                    textTransform: "none",
-                    with: "100%",
-                    gap: "2px",
-                  }}
-                  func={() => setOpenCreateLocationModal(true)}
-                />
-              )}
+        {isAdmin && (
+          <BlueButtonComponent
+            title={"Create Location"}
+            styles={{ with: "100%" }}
+            icon={
+              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+            }
+            buttonType="button"
+            titleStyles={{
+              textTransform: "none",
+              with: "100%",
+              gap: "2px",
+            }}
+            func={() => setOpenCreateLocationModal(true)}
+          />
+        )}
 
         {canUpdate && (
           <Link to="/inventory/edit-group">
