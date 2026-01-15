@@ -8,27 +8,16 @@ import Loading from "../../../../components/animation/Loading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
-  const {
-    role,
-    locationsViewPermission,
-    locationsCreatePermission,
-    locationsUpdatePermission,
-    locationsAssignPermission,
-  } = useStaffRoleAndLocations();
+  const { isAdmin, role, locationsViewPermission } = useStaffRoleAndLocations();
   const navigate = useNavigate();
   const consumersQuery = useQuery({
     queryKey: ["consumersPerCompanyQuery"],
     queryFn: () =>
       devitrakApi.post(`/db_company/company-inventory-structure`, {
         company_id: user.sqlInfo.company_id,
-        role: role,
+        role: isAdmin ? "0" : role,
         preference: {
-          inventory_location: [
-            ...locationsViewPermission,
-            ...locationsCreatePermission,
-            ...locationsUpdatePermission,
-            ...locationsAssignPermission,
-          ],
+          inventory_location: isAdmin ? [] : locationsViewPermission,
         },
       }),
     enabled: !!user.sqlInfo.company_id,
