@@ -22,6 +22,7 @@ const headerAliasMap = {
   "last name": ["last_name", "lastname", "last"],
   email: ["email", "e_mail"],
   phone: ["phone", "phone_number", "phonenumber", "mobile"],
+  "external id": ["external_id", "external id", "id"],
   address: ["address", "addr"],
   street: ["address_street", "street", "addr_street", "addres_street"], // handle common typo addres_street
   city: ["address_city", "city", "addr_city"],
@@ -104,6 +105,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           last_name: normalizedRow["last name"] || "",
           email: normalizedRow.email || "",
           phone: normalizedRow.phone || "",
+          external_id: String(normalizedRow["external id"] || ""),
           address:
             normalizedRow.address ||
             (hasParts
@@ -214,7 +216,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       <div>
         <div>Mandatory columns:</div>
         <ul>
-          <li>first name, last name, email, phone, street, city, state, zip</li>
+          <li>first name, last name, email, phone</li>
         </ul>
       </div>
 
@@ -289,6 +291,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
                   <th>last name</th>
                   <th>email</th>
                   <th>phone</th>
+                  <th>External ID</th>
                   <th>address</th>
                   <th>street</th>
                   <th>city</th>
@@ -307,6 +310,9 @@ const MultipleFromXLSX = ({ companyId = null }) => {
                     </td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.email}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.phone}</td>
+                    <td style={{ borderTop: "1px solid #ddd" }}>
+                      {r.external_id}
+                    </td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.address}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>
                       {r.address_street}
