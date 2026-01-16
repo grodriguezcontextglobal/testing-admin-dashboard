@@ -87,42 +87,46 @@ const Single = ({ closingModal }) => {
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>First Name</span>
+          <span style={{ fontWeight: "bold" }}>First Name <span style={{ color: "red" }}>*</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.first_name}
             onChange={update("first_name")}
+            aria-required="true"
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>Last Name</span>
+          <span style={{ fontWeight: "bold" }}>Last Name <span style={{ color: "red" }}>*</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.last_name}
             onChange={update("last_name")}
+            aria-required="true"
           />
         </label>
 
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>Email</span>
+          <span style={{ fontWeight: "bold" }}>Email <span style={{ color: "red" }}>*</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             type="email"
             value={form.email}
             onChange={update("email")}
+            aria-required="true"
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>Phone</span>
+          <span style={{ fontWeight: "bold" }}>Phone <span style={{ color: "red" }}>*</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.phone}
             onChange={update("phone")}
+            aria-required="true"
           />
         </label>
 
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>Street</span>
+          <span>Street <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.address_street}
@@ -130,7 +134,7 @@ const Single = ({ closingModal }) => {
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>City</span>
+          <span>City <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.address_city}
@@ -139,7 +143,7 @@ const Single = ({ closingModal }) => {
         </label>
 
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>State</span>
+          <span>State <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.address_state}
@@ -147,7 +151,7 @@ const Single = ({ closingModal }) => {
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>Zip</span>
+          <span>Zip <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span></span>
           <OutlinedInput
             style={OutlinedInputStyle}
             value={form.address_zip}
