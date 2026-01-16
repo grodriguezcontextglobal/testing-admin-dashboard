@@ -21,6 +21,8 @@ const MainPage = () => {
   const location = useLocation();
   const slug = location.pathname.split("/").filter(Boolean).at(-2);
   const titleParams = String(slug || "").replace(/-/g, " ");
+  const groupNameReference = location.state?.referencing || "";
+  const groupNameParams = String(groupNameReference || "").replace(/-/g, " ");
   const [membersData, setMembersData] = useState(null);
   const memberInfoRetrieveQuery = useQuery({
     queryKey: ["memberInfoRetrieveQuery"],
@@ -190,7 +192,7 @@ const MainPage = () => {
   ];
   return (
     <>
-      <MemberInfoHeader title={titleParams} memberInfo={membersData} />
+      <MemberInfoHeader title={titleParams} memberInfo={membersData} groupName={groupNameParams} />
       <Divider />
       <nav style={{ display: "flex", width: "100%", gap: "24px", marginY: 3 }}>
         <Grid
