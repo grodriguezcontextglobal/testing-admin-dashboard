@@ -18,7 +18,7 @@ import DeleteMember from "./components/modals/DeleteMember";
 
 const MainPage = () => {
   const location = useLocation();
-  const slug = location.pathname.split("/").filter(Boolean).at(-1);
+  const slug = location.state?.referencing || "";
   const titleParams = String(slug || "").replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false)
   const [removingMember, setRemovingMember] = useState(false)
@@ -143,7 +143,7 @@ const MainPage = () => {
           {loadingStatus ? (
             <Loading />
           ) : (
-            <MainTable />
+            <MainTable state={titleParams} />
           )}
         </Grid>
       </Grid>
