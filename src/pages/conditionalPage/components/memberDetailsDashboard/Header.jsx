@@ -210,37 +210,44 @@ const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
                 style={{ width: "5rem", height: "5rem" }}
               >
                 {!detailMemberInfo?.image_url &&
-                  `${detailMemberInfo?.first_name?.at(0)} ${detailMemberInfo?.last_name?.at(
+                  `${detailMemberInfo?.first_name?.at(
                     0
-                  )}`}
+                  )} ${detailMemberInfo?.last_name?.at(0)}`}
               </Avatar>
             </Grid>
             <Grid sx={styleGrid} item xs={12} sm={12} md={9} lg={9}>
               {[
                 { title: "name", id: 0 },
                 {
-                  title: `${detailMemberInfo?.first_name} ${detailMemberInfo?.last_name}`,
+                  title: `${detailMemberInfo?.first_name} ${
+                    detailMemberInfo?.last_name ?? ""
+                  }`,
                   id: 1,
                 },
-                // { title: dicRole[profile?.role], id: 2 },
-              ].map((item) => (
-                <Typography
-                  key={item.id}
-                  sx={{
-                    ...renderingOptions(item.id),
-                    textAlign: {
-                      xs: "center",
-                      sm: "center",
-                      md: "left",
-                      lg: "left",
-                    },
-                    width: "100%",
-                    margin: item.id === 2 ? "0 auto 20px" : "auto",
-                  }}
-                >
-                  {item.title}
-                </Typography>
-              ))}
+                detailMemberInfo?.external_id && {
+                  title: `External ID: ${detailMemberInfo.external_id}`,
+                  id: 2,
+                },
+              ]
+                .filter(Boolean)
+                .map((item) => (
+                  <Typography
+                    key={item.id}
+                    sx={{
+                      ...renderingOptions(item.id),
+                      textAlign: {
+                        xs: "center",
+                        sm: "center",
+                        md: "left",
+                        lg: "left",
+                      },
+                      width: "100%",
+                      margin: item.id === 2 ? "0 auto 20px" : "auto",
+                    }}
+                  >
+                    {item.title}
+                  </Typography>
+                ))}
             </Grid>
           </Grid>
           <Grid
