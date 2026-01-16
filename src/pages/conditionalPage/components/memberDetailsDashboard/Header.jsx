@@ -11,7 +11,7 @@ import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlu
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 // import { data } from "../../mock/mockData";
 
-const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
+const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
   const detailMemberInfo = memberInfo?.at(-1);
   const { user } = useSelector((state) => state.admin);
   const c = {
@@ -30,7 +30,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
     const breadcrumbItems = [
       {
         title: (
-          <Link to="/members">
+          <Link to="/members" state={{ referencing: groupName }}>
             <button
               style={{
                 backgroundColor: "transparent",
@@ -48,7 +48,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo }) => {
                   color: "var(--blue-dark-600)",
                 }}
               >
-                All members
+                All {groupName}
               </p>
             </button>
           </Link>
