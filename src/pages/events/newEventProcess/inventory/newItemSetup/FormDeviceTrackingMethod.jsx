@@ -194,7 +194,7 @@ const FormDeviceTrackingMethod = ({
   const retrieveItemDataSelected = () => {
     const result = new Map();
     if (itemsInInventoryQuery.data) {
-      const industryData = itemsInInventoryQuery.data.data.items;
+      const industryData = itemsInInventoryQuery?.data?.data?.items;
       for (let data of industryData) {
         result.set(data.item_group, data);
       }
