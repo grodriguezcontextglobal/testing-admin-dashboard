@@ -20,6 +20,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
+  const idRef = useRef(null);
   const streetRef = useRef(null);
   const cityRef = useRef(null);
   const stateRef = useRef(null);
@@ -56,6 +57,13 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       width: 150,
     },
     {
+      title: "ID",
+      onHeaderCell: () => ({ ref: idRef }),
+      dataIndex: "id",
+      key: "id",
+      width: 150,
+    },
+    {
       title: "Street",
       onHeaderCell: () => ({ ref: streetRef }),
       dataIndex: "street",
@@ -87,42 +95,47 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
 
   const tourSteps = [
     {
-      title: "First name",
+      title: "First name (mandatory)",
       description: "Enter the member's first and last name.",
       target: () => firstNameRef.current,
     },
     {
-      title: "Last name",
+      title: "Last name (mandatory)",
       description: "Enter the member's last name.",
       target: () => lastNameRef.current,
     },
     {
-      title: "Email",
+      title: "Email (mandatory)",
       description: "Enter the member's email address.",
       target: () => emailRef.current,
     },
     {
-      title: "Phone Number",
+      title: "Phone Number (mandatory)",
       description: "Enter the member's phone number.",
       target: () => phoneRef.current,
     },
     {
-      title: "Street",
+      title: "External ID (optional)",
+      description: "Enter the member's ID number if exists.",
+      target: () => idRef.current,  
+    },
+    {
+      title: "Street (optional)",
       description: "Enter the member's street address.",
       target: () => streetRef.current,
     },
     {
-      title: "City",
+      title: "City (optional)",
       description: "Enter the member's city.",
       target: () => cityRef.current,
     },
     {
-      title: "State",
+      title: "State (optional)",
       description: "Enter the member's state.",
       target: () => stateRef.current,
     },
     {
-      title: "Zip Code",
+      title: "Zip Code (optional)",
       description: "Enter the member's zip code.",
       target: () => zipRef.current,
     },
@@ -134,6 +147,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       last_name: "Doe",
       email: "john.doe@example.com",
       phone: "555-0123",
+      id:"123456 or ED_123456",
       street: "123 Main St",
       city: "New York",
       state: "NY",
