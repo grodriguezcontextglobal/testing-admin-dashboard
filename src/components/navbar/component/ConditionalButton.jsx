@@ -1,46 +1,47 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import industries from "./industriesList.json";
 
 const ConditionalButton = ({ user }) => {
   const [conditionalInfo, setConditionalInfo] = useState({
     title: null,
     route: null,
   });
+
   useEffect(() => {
-    switch (String(user.companyData.industry).toLowerCase()) {
-      case "software":
-        return setConditionalInfo({
-          title: "Software",
-          route: `members`,
-        });
-      case "education":
-        return setConditionalInfo({
-          title: "Students",
-          route: `/members`,
-        });
-      case "professional services":
-        return setConditionalInfo({
-          title: "Professional Service",
-          route: `/members`,
-        });
-      case "healthcare and social assistance":
-        return setConditionalInfo({
-          title: "Patiences",
-          route: `/members`,
-        });
-      default:
-        return setConditionalInfo({
-          title: null,
-          route: null,
-        });
+    if (!user?.companyData?.industry) {
+      setConditionalInfo({
+        title: null,
+        route: null,
+      });
+      return;
     }
-  }, []);
+
+    const industry = String(user.companyData.industry);
+    if (industries[industry]) {
+      const representative = industries[industry][0];
+      setConditionalInfo({
+        title: representative,
+        route: `/members`,
+        state: {
+          referencing: representative.toLowerCase(),
+        },
+      });
+    } else {
+      console.warn(`Industry "${industry}" not found in industries list`);
+      setConditionalInfo({
+        title: null,
+        route: null,
+      });
+    }
+  }, [user?.companyData?.industry]);
 
   return (
     <NavLink
       key={conditionalInfo.title}
       to={`${conditionalInfo.route}`}
       style={{ display: conditionalInfo.title ? "block" : "none" }}
+      state={conditionalInfo.state}
       preventScrollReset
     >
       <div className="content-main-navbar-updated">
