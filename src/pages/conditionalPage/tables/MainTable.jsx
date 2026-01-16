@@ -11,7 +11,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
-const MainTable = () => {
+const MainTable = ({state}) => {
   const styleCellColumns = {
     justifyContent: "flex-start",
     ...Subtitle,
@@ -174,6 +174,7 @@ const MainTable = () => {
             <NavLink
               onClick={() => dispatch(onAddMemberInfo(record))}
               to={`/member/${record?.member_id}/main`}
+              state={{ referencing: state }}
             >
               <RightNarrowInCircle />
             </NavLink>
