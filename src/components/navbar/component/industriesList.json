@@ -11,7 +11,7 @@
   "Healthcare and Social Assistance": ["Patients", "Caregivers", "Doctors", "Nurses", "Therapists", "Social Workers", "Hospital Administrators", "Families"],
   "Hospitality": ["Guests", "Travelers", "Tourists", "Hotel Staff", "Restaurant Patrons", "Event Planners", "Concierges"],
   "Information Technology": ["IT Professionals", "System Administrators", "Network Engineers", "End-users", "Developers", "Tech Support", "CIOs"],
-  "Language Services Provider": ["Translators", "Interpreters", "Linguists", "Clients", "Localization Managers", "Global Businesses"],
+  "Language Services Provider": ["Interpreters", "Translators", "Linguists", "Clients", "Localization Managers", "Global Businesses"],
   "Manufacturing": ["Factory Workers", "Production Managers", "Engineers", "Supply Chain Managers", "Distributors", "Consumers"],
   "Pharmaceuticals": ["Patients", "Doctors", "Pharmacists", "Researchers", "Sales Representatives", "Regulatory Bodies"],
   "Professional Services": ["Clients", "Consultants", "Lawyers", "Accountants", "Architects", "Business Owners"],
