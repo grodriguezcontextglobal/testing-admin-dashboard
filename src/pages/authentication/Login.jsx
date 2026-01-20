@@ -72,7 +72,7 @@ const Login = () => {
         duration: 3000,
       });
     },
-    [api]
+    [api],
   );
 
   const dataPassed = useRef(null);
@@ -83,28 +83,28 @@ const Login = () => {
       {
         zip_address: props.eventInfoDetail.address.split(" ").at(-1),
         event_name: props.eventInfoDetail.eventName,
-      }
+      },
     );
     if (sqpFetchInfo.data.ok) {
       dispatch(onSelectEvent(props.eventInfoDetail.eventName));
       dispatch(onSelectCompany(props.company));
       dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) })
+        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
       );
       dispatch(onAddSubscription(props.subscription));
       dispatch(
         onAddQRCodeLink(
           props.qrCodeLink ??
             `https://app.devitrak.net/?event=${encodeURI(
-              props.eventInfoDetail.eventName
-            )}&company=${encodeURI(props.company)}`
-        )
+              props.eventInfoDetail.eventName,
+            )}&company=${encodeURI(props.company)}`,
+        ),
       );
       dispatch(
         onAddListEventPermitPerAdmin({
           active: [{ ...props }],
           completed: [],
-        })
+        }),
       );
       return navigate("/events/event-quickglance");
     }
@@ -116,15 +116,15 @@ const Login = () => {
       onAddQRCodeLink(
         props.qrCodeLink ??
           `https://app.devitrak.net/?event=${encodeURI(
-            props.eventInfoDetail.eventName
-          )}&company=${encodeURI(props.company)}`
-      )
+            props.eventInfoDetail.eventName,
+          )}&company=${encodeURI(props.company)}`,
+      ),
     );
     dispatch(
       onAddListEventPermitPerAdmin({
         active: [{ ...props }],
         completed: [],
-      })
+      }),
     );
 
     return navigate("/events/event-quickglance");
@@ -146,7 +146,7 @@ const Login = () => {
 
           openNotificationWithIcon(
             "error",
-            "Event is ended. Please contact event administrator."
+            "Event is ended. Please contact event administrator.",
           );
         } catch (error) {
           openNotificationWithIcon("error", "Failed to fetch event data.");
@@ -155,7 +155,7 @@ const Login = () => {
         navigate("/");
       }
     },
-    [navigate, addingEventState, openNotificationWithIcon]
+    [navigate, addingEventState, openNotificationWithIcon],
   );
 
   const loginIntoOneCompanyAccount = async ({ props }) => {
@@ -165,19 +165,19 @@ const Login = () => {
         `/profile/${props.respo.uid}`,
         {
           online: true,
-        }
+        },
       );
       const respoFindMemberInfo = await devitrakApi.post(
         "/db_staff/consulting-member",
         {
           email: props.email,
-        }
+        },
       );
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
           company_name: props.company_name,
-        }
+        },
       );
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: checkArray(companyInfoTable.data.company).company_id,
@@ -205,7 +205,7 @@ const Login = () => {
           },
           preference: props.respo.entire.preference,
           subscription: {},
-        })
+        }),
       );
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
@@ -286,7 +286,7 @@ const Login = () => {
 
       const activeCompanies = await processCompanyData(
         loginData.email,
-        companyResponse.data.company
+        companyResponse.data.company,
       );
 
       if (activeCompanies.length > 1) {
@@ -310,7 +310,7 @@ const Login = () => {
       } else {
         openNotificationWithIcon(
           "error",
-          "No active company assignments found."
+          "No active company assignments found.",
         );
       }
     } catch (error) {
@@ -329,7 +329,7 @@ const Login = () => {
         if (currentStep === "mfa") {
           openNotificationWithIcon(
             "error",
-            responseData?.msg || "Invalid MFA Code"
+            responseData?.msg || "Invalid MFA Code",
           );
         } else {
           setCurrentStep("mfa");
@@ -379,7 +379,7 @@ const Login = () => {
   const processCompanyData = useCallback(async (email, companies) => {
     const activeCompanies = companies.reduce((acc, item) => {
       const userInfo = item.employees.find(
-        (element) => element.user === email && element.active
+        (element) => element.user === email && element.active,
       );
       if (userInfo) {
         acc.push({
@@ -404,13 +404,13 @@ const Login = () => {
 
   const isSmallDevice = useMediaQuery("only screen and (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width: 769px) and (max-width:992px)"
+    "only screen and (min-width: 769px) and (max-width:992px)",
   );
   const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
+    "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
   const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
+    "only screen and (min-width : 1201px)",
   );
   const formFittingTrigger = () => {
     if (isSmallDevice || isMediumDevice) {
@@ -476,7 +476,15 @@ const Login = () => {
               buttonType="submit"
               title="Force login"
               styles={{ flex: "1" }}
-              func={() => setForceLogin(true)}
+              func={() => {
+                setForceLogin(true);
+                setTimeout(() => {
+                  openNotificationWithIcon(
+                    "success",
+                    "Force login success. Close all pop up to continue and log in with the regular login process.",
+                  );
+                }, 900);
+              }}
             />
           </div>
         </form>
