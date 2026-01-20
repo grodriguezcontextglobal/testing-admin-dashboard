@@ -63,10 +63,7 @@ const Form = () => {
         "/db_event/retrieve-item-group-quantity-with-format",
         bodyFetchRequest()
       ),
-    enabled:
-      role === "0" || role === 0
-        ? !!user.sqlInfo.company_id
-        : !!user.sqlInfo.company_id && locationsAssignPermission?.length === 0,
+    enabled:!!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 1000, // 1 minute cache
   });
 
