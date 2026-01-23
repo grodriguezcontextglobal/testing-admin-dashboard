@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react";
 import {
   Badge,
   Box,
@@ -9,7 +8,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  OutlinedInput,
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -38,11 +36,13 @@ import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 import { LogoutIcon } from "../icons/LogoutIcon";
 // import { ProfileIcon } from "../icons/ProfileIcon";
-import UpperBanner from "../general/UpperBanner";
+import Input from "../UX/inputs/Input";
+import MenuIcon from "../icons/MenuIcon";
+import { TrashIcon } from "../icons/TashIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
-import "./style/style.css";
 import ConditionalButton from "./component/ConditionalButton";
+import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
@@ -159,12 +159,18 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
   const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
+    "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
-
+  const transparentStyle = {
+    outline: "none",
+    backgroundColor: "transparent",
+    margin: 0,
+    padding: 0,
+    border: "none",
+  };
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Divider />
@@ -293,16 +299,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         margin: "auto",
       }}
     >
-      <UpperBanner />
-      {/* <AppBar
-        style={{
-          backgroundColor: "var(--blue700)",
-          width: "100%",
-          zIndex: 30,
-        }}
-        component="nav"
-      >
-        <Toolbar> */}
       <div
         id="grid-container-inside"
         style={{
@@ -344,12 +340,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               borderRadius: "50%",
             }}
           >
-            <Icon
-              icon="material-symbols:menu"
-              width={30}
-              height={30}
-              color="#fff"
-            />
+            <MenuIcon stroke="#fff" />
           </Badge>
           <Box
             sx={{
@@ -371,7 +362,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             {navItems.map((item) => {
               if (
                 item.permission.some(
-                  (element) => element === Number(user.role) && item.desktop
+                  (element) => element === Number(user.role) && item.desktop,
                 )
               ) {
                 if (item.route === 0) {
@@ -433,7 +424,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             method="get"
             action="/search-result-page?search="
           >
-            <OutlinedInput
+            <Input
               placeholder="Search"
               required
               style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
@@ -442,18 +433,17 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               value={searchValue}
               endAdornment={
                 <InputAdornment position="end">
-                  <Icon
-                    cursor={"pointer"}
-                    icon="ic:baseline-delete-forever"
-                    color="#1e73be"
-                    width="25"
-                    height="25"
-                    opacity={`${String(searchValue)?.length > 0 ? 1 : 0}`}
-                    display={`${
-                      String(searchValue)?.length > 0 ? "auto" : "none"
-                    }`}
+                  <button
+                    style={{
+                      ...transparentStyle,
+                      display:
+                        String(searchValue)?.length > 0 ? "flex" : "none",
+                      opacity: String(searchValue)?.length > 0 ? 1 : 0,
+                    }}
                     onClick={() => handleResetSearchValue()}
-                  />
+                  >
+                    <TrashIcon fill="var(--blue700)" />
+                  </button>
                 </InputAdornment>
               }
               fullWidth
