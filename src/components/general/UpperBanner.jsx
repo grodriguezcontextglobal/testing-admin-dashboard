@@ -11,9 +11,10 @@ const UpperBanner = forwardRef(function UpperBanner() {
       showIcon={false}
       style={{
         backgroundColor: "var(--blue-dark--800)",
-        color:"#var(--gray300)",
+        color:"#var(--basewhite)",
         fontFamily:"Inter, serif-sans",
-        fontWeight:400
+        fontWeight:400,
+        height:"1.5rem"
       }}
     />
   );
