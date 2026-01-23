@@ -94,15 +94,7 @@ const navItems = [
     permission: [0, 1, 2, 3, 4],
     mobile: true,
     desktop: false,
-  },
-  {
-    title: 0,
-    route: 0,
-    permission: [0, 1, 2, 3, 4],
-    mobile: false,
-    desktop: true,
-  },
-];
+  }];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
