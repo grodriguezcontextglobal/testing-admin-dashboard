@@ -8,7 +8,7 @@ const TableHeader = ({ title, leftCta, rightCta }) => {
       display={"flex"}
       justifyContent={"space-between"}
       alignItems={"center"}
-      marginBottom={-1}
+      marginBottom={-1.25}
       paddingBottom={-1}
       // padding={"1rem"}
       item
