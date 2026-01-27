@@ -16,6 +16,7 @@ import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHe
 import ConsumerHeader from "./components/ConsumerHeader";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
+import TableHeader from "../../components/UX/TableHeader";
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [counting, setCounting] = useState(null);
@@ -28,7 +29,7 @@ const MainPage = () => {
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
     queryFn: () =>
       devitrakApi.get(
-        `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
+        `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`,
       ),
     enabled: !!user.companyData.id,
     staleTime: 5 * 60 * 1000,
@@ -78,13 +79,13 @@ const MainPage = () => {
       }
       return returnValues;
     },
-    [allConsumersBasedOnEventsPerCompany.data]
+    [allConsumersBasedOnEventsPerCompany.data],
   );
 
   useEffect(() => {
     if (allConsumersBasedOnEventsPerCompany.data) {
       setCounting(
-        allConsumersBasedOnEventsPerCompany.data.data.result.totalConsumers
+        allConsumersBasedOnEventsPerCompany.data.data.result.totalConsumers,
       );
       setConsumersList(allConsumersBasedOnEventsPerCompany.data.data);
     } else {
@@ -119,66 +120,62 @@ const MainPage = () => {
         gap={1}
         container
       >
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          alignItems={"center"}
-          justifyContent={"space-between"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-        >
-          <p
-            style={{
-              ...TextFontsize18LineHeight28,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              color: "var(--gray-900, #101828)",
-              padding: "24px",
-              textTransform: "none",
-              textAlign: "left",
-            }}
-          >
-            {" "}
-            Consumers&nbsp;
-            <div
+        <TableHeader
+          leftCta={
+            <p
               style={{
-                borderRadius: "16px",
-                background: "var(--blue-dark-50, #EFF4FF)",
-                mixBlendMode: "multiply",
-                width: "fit-content",
-                height: "fit-content",
+                ...TextFontsize18LineHeight28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                color: "var(--gray-900, #101828)",
+                padding: "12px",
+                textTransform: "none",
+                textAlign: "left",
               }}
             >
-              <p
+              {" "}
+              Consumers&nbsp;
+              <div
                 style={{
-                  textTransform: "none",
-                  textAlign: "left",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  fontFamily: "Inter",
-                  lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
-                  padding: "0px 8px",
+                  borderRadius: "16px",
+                  background: "var(--blue-dark-50, #EFF4FF)",
+                  mixBlendMode: "multiply",
+                  width: "fit-content",
+                  height: "fit-content",
                 }}
               >
-                {counting} total
-              </p>
+                <p
+                  style={{
+                    textTransform: "none",
+                    textAlign: "left",
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    fontFamily: "Inter",
+                    lineHeight: "28px",
+                    color: "var(--blue-dark-700, #004EEB)",
+                    padding: "0px 8px",
+                  }}
+                >
+                  {counting} total
+                </p>
+              </div>
+            </p>
+          }
+          rightCta={
+            <div style={{ margin:"0 1rem -1rem 0"}}>
+              <RefreshButton
+                propsFn={() => {
+                  // Invalidate and refetch to bypass staleTime and pull fresh data
+                  queryClient.invalidateQueries({
+                    queryKey: ["allConsumersBasedOnEventsPerCompany"],
+                  });
+                  allConsumersBasedOnEventsPerCompany.refetch();
+                }}
+              />
             </div>
-          </p>
-          <RefreshButton
-            propsFn={() => {
-              // Invalidate and refetch to bypass staleTime and pull fresh data
-              queryClient.invalidateQueries({
-                queryKey: ["allConsumersBasedOnEventsPerCompany"],
-              });
-              allConsumersBasedOnEventsPerCompany.refetch();
-            }}
-          />
-        </Grid>
+          }
+        />
         <Grid item xs={12}>
           {allConsumersBasedOnEventsPerCompany.isLoading ? (
             <Loading />
