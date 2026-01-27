@@ -89,12 +89,20 @@ const navItems = [
     desktop: true,
   },
   {
+    title: 0,
+    route: 0,
+    permission: [0, 1, 2, 3, 4],
+    mobile: false,
+    desktop: true,
+  },
+  {
     title: "profile",
     route: "/profile/my_details",
     permission: [0, 1, 2, 3, 4],
     mobile: true,
     desktop: false,
-  }];
+  },
+];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
@@ -105,7 +113,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
   const [searchValue, setSearchValue] = useState("");
-  const [rowId, setRowId] = useState(null);
+  // const [rowId, setRowId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const logout = async () => {
@@ -183,62 +191,36 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           <DevitrakLogo />
           <DevitrakName />{" "}
         </NavLink>
-        {navItems.map((item) => (
-          <ListItem key={`${item.title}-${item.route}`} disablePadding>
-            <ListItemButton
-              onMouseEnter={() => setRowId(item.route)}
-              onMouseLeave={() => setRowId(null)}
-              sx={{
-                textAlign: "center",
-                backgroundColor:
-                  location.pathname === `${item.route}`
-                    ? "transparent"
-                    : "var(--blue700)",
-              }}
-            >
-              <NavLink
-                key={item.title}
-                to={`${item.route}`}
-                style={{
-                  margin: "0 3px 0 0",
-                  width: "100%",
-                }}
-              >
-                <div className="content-main-navbar-updated">
-                  <article
-                    style={{
-                      backgroundColor:
-                        rowId === item.route
-                          ? "var(--whitebase)"
-                          : "var(--blue700)",
-                    }}
-                    className={
-                      location.pathname === `${item.route}`
-                        ? "nav-item-base-main-navbar-updated"
-                        : "nav-item-base-1-main-navbar-updated"
-                    }
-                  >
-                    <div className="content-2-main-navbar-updated">
-                      <div className="text-1-main-navbar-updated text-mdsemibold">
-                        <p
-                          style={{
-                            textTransform: "capitalize",
-                            color:
-                              rowId === item.route
-                                ? "var(--blue700)"
-                                : "var(--whitebase)",
-                          }}
-                        >
-                          {item.title}
-                        </p>
+        {navItems.map((item) => {
+          if (item.route === 0) {
+            return <ConditionalButton key={item.title} user={user} />;
+          } else {
+            return (
+              <ListItem key={item.title} disablePadding>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.route}
+                  sx={{
+                    textAlign: "center",
+                    backgroundColor: "var(--blue700)",
+                  }}
+                >
+                  <div className="content-main-navbar-updated">
+                    <article className={"nav-item-base-main-navbar-updated"}>
+                      <div className="content-2-main-navbar-updated">
+                        <div className="text-1-main-navbar-updated text-mdsemibold">
+                          <p style={{ textTransform: "capitalize" }}>
+                            {item.title}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                </div>
-              </NavLink>
-            </ListItemButton>
-          </ListItem>
-        ))}
+                    </article>
+                  </div>
+                </ListItemButton>
+              </ListItem>
+            );
+          }
+        })}
         <ListItem key={`log-out`} disablePadding>
           <ListItemButton
             onClick={() => logout()}
