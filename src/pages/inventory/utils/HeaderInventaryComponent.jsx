@@ -3,9 +3,9 @@ import {
 } from "@mui/material";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { EditIcon } from "../../../components/icons/EditIcon";
-import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
+// import { EditIcon } from "../../../components/icons/EditIcon";
+// import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
+// import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -93,9 +93,9 @@ const HeaderInventaryComponent = ({
           <BlueButtonComponent
             title={"Create Location"}
             styles={{ with: "100%" }}
-            icon={
-              <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-            }
+            // icon={
+            //   <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+            // }
             buttonType="button"
             titleStyles={{
               textTransform: "none",
@@ -111,13 +111,13 @@ const HeaderInventaryComponent = ({
             <LightBlueButtonComponent
               title={"Update a group of items"}
               styles={{ with: "100%" }}
-              icon={
-                <EditIcon
-                  stroke={"var(--blue-dark--800)"}
-                  width={"20"}
-                  height={"18"}
-                />
-              }
+              // icon={
+              //   <EditIcon
+              //     stroke={"var(--blue-dark--800)"}
+              //     width={"20"}
+              //     height={"18"}
+              //   />
+              // }
               buttonType="button"
               titleStyles={{
                 textTransform: "none",
@@ -135,11 +135,11 @@ const HeaderInventaryComponent = ({
               <BlueButtonComponent
                 title={"Add a group of items"}
                 styles={{ with: "100%" }}
-                icon={
-                  <WhiteCirclePlusIcon
-                    style={{ height: "21px", margin: "auto" }}
-                  />
-                }
+                // icon={
+                //   <WhiteCirclePlusIcon
+                //     style={{ height: "21px", margin: "auto" }}
+                //   />
+                // }
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
@@ -153,7 +153,7 @@ const HeaderInventaryComponent = ({
               <LightBlueButtonComponent
                 title={"Add one item"}
                 styles={{ with: "100%" }}
-                icon={<RectangleBluePlusIcon />}
+                // icon={<RectangleBluePlusIcon />}
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
