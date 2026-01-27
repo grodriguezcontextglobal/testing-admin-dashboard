@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
+import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { DownNarrow } from "../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
+
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -54,12 +53,15 @@ const TransactionTableRefactoring = () => {
   const leasePerConsumer = async () => {
     if (consumerInfoSqlQuery.data) {
       const consumerInfo = consumerInfoSqlQuery?.data?.data.consumer[0];
-      const response = await devitrakApi
-        .post("/db_lease/consulting-consumer-lease", {
+      const response = await devitrakApi.post(
+        "/db_lease/consulting-consumer-lease",
+        {
           consumer_member_id: consumerInfo.consumer_id,
           company_id: user.sqlInfo.company_id,
-        })
-      if (response.data.ok) return setSqlLeasePerConsumer([...response.data.lease]);
+        },
+      );
+      if (response.data.ok)
+        return setSqlLeasePerConsumer([...response.data.lease]);
     }
   };
   useEffect(() => {
@@ -338,32 +340,15 @@ const TransactionTableRefactoring = () => {
   ];
 
   return (
-    <Table
+    <ExpandableTable
       columns={columns}
+      dataSource={responsedData}
       expandable={{
         expandIconColumnIndex: 5,
-        expandIcon: (record) => {
-          return record.expanded ? (
-            <div style={{ width: "100%", textAlign: "right" }}>
-              <UpNarrowIcon />
-            </div>
-          ) : (
-            <div style={{ width: "100%", textAlign: "right" }}>
-              <DownNarrow />
-            </div>
-          );
-        },
-        expandRowByClick: true,
         expandedRowRender: (record) => (
           <ExpandedRow rowRecord={record} refetching={refetchingQueries} />
         ),
       }}
-      dataSource={responsedData}
-      className="table-ant-customized"
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      style={{ cursor: "pointer" }}
     />
   );
 };
