@@ -29,7 +29,7 @@ const BannerNotificationTemplate = ({
             : "var(--basewhite)",
       }}
       styles={{
-        body: { ...CenteringGrid, padding: '0px 0px 5px 0px' },
+        body: { ...CenteringGrid, padding: "0px 0px 5px 0px" },
       }}
       // bodyStyle={{ ...CenteringGrid, padding: 0 }}
     >
@@ -45,9 +45,7 @@ const BannerNotificationTemplate = ({
               padding: "15px 5px 10px 0",
               alignSelf: "flex-start",
             }}
-          >
-            <InformationIcon />
-          </div>
+          ></div>
           <Grid item xs={12} sm={12} md={10} lg={10}>
             <div
               style={{
@@ -66,6 +64,16 @@ const BannerNotificationTemplate = ({
                   textWrap: "pretty",
                 }}
               >
+                <span
+                  style={{
+                    marginRight: "5px",
+                    fontSize: "18px",
+                    alignSelf: "baseline",
+                  }}
+                >
+                  <InformationIcon />
+                </span>
+                &nbsp;
                 {title}
               </Typography>
               <Typography
@@ -113,7 +121,7 @@ const BannerNotificationTemplate = ({
           md={10}
           lg={10}
         >
-          <div
+          {/* <div
             onClick={() => setNotificationStatus(false)}
             style={{
               color: "var(--blue700)",
@@ -123,15 +131,26 @@ const BannerNotificationTemplate = ({
               alignItems: "center",
               justifyContent: "center",
             }}
-          >
-            <BorderedCloseIcon />
-          </div>
-          &nbsp;
+          ></div>
+          &nbsp; */}
           <Typography
             onClick={() => setNotificationStatus(false)}
-            style={{ color: "var(--blue700)" }}
+            style={{ color: "var(--blue700)", alignContent: "baseline" }}
           >
-            Dismiss the notification
+            <button
+              key={"button-dismiss"}
+              id="button-dismiss"
+              className="transparentButton"
+            >
+              <BorderedCloseIcon
+                fill="var(--blue700)"
+                style={{
+                  alignSelf: "baseline",
+                  height: "15px",
+                }}
+              />
+            </button>
+            &nbsp; Dismiss the notification
           </Typography>
         </Grid>
       </Grid>
