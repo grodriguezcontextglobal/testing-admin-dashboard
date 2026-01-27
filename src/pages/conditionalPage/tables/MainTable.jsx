@@ -1,7 +1,8 @@
 import { Grid } from "@mui/material";
-import { Avatar, Table, Typography } from "antd";
+import { Avatar, Typography } from "antd";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
+import TableHeader from "../../../components/UX/TableHeader";
 // import { data } from "../mock/mockData";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -9,9 +10,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
-const MainTable = ({state}) => {
+const MainTable = ({ state }) => {
   const styleCellColumns = {
     justifyContent: "flex-start",
     ...Subtitle,
@@ -53,7 +55,7 @@ const MainTable = ({state}) => {
       },
       render: (_, record) => {
         const initials = String(
-          record?.first_name[0] + " " + record?.last_name[0]
+          record?.first_name[0] + " " + record?.last_name[0],
         ).split(" ");
         return (
           <span
@@ -185,29 +187,17 @@ const MainTable = ({state}) => {
   ];
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
-      <Grid
-        border={"1px solid var(--gray-200, #eaecf0)"}
-        borderRadius={"12px 12px 0 0"}
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        marginBottom={-1}
-        paddingBottom={-1}
-        item
-        xs={12}
-      >
-        <RefreshButton propsFn={() => membersDataQuery.refetch()} />
-        {/* <DownLoadReportButton /> */}
-      </Grid>
+      <TableHeader
+        leftCta={<RefreshButton propsFn={() => membersDataQuery.refetch()} />}
+      />
       {membersDataQuery.isLoading ? (
         <Loading />
       ) : (
-        <Table
+        <BaseTable
           style={{ width: "100%", cursor: "pointer", ...tableStyle }}
           dataSource={membersData}
           columns={columns}
           rowClassName="editable-row"
-          className="table-ant-customized"
         />
       )}{" "}
     </Grid>
