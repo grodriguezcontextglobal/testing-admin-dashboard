@@ -4,8 +4,8 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-const CardRendered = lazy(() =>
-  import("../../events/quickGlance/components/CardRendered")
+const ReusableCard = lazy(() =>
+  import("../../../components/UX/cards/ReusableCard")
 );
 const TotalConsumer = () => {
   const { user } = useSelector((state) => state.admin);
@@ -28,7 +28,7 @@ const TotalConsumer = () => {
         }}
         onClick={() => navigate(`/staff`)}
       >
-        <CardRendered
+        <ReusableCard
           props={user.companyData.employees.length}
           title={"Total staff members"}
         />
