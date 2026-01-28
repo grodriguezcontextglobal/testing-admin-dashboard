@@ -1,4 +1,4 @@
-import { Chip, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Card, message, Popconfirm, Space } from "antd";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
+import Chip from "../../../../../components/UX/Chip/Chip";
 import ContainerContent from "./ContainerContent";
 const ExtraInformation = ({ dataFound, containerInfo }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -19,7 +20,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
   const handleContainerItemsRemoval = async () => {
     try {
       const response = await devitrakApi.delete(
-        `/db_inventory/container/${containerInfo.item_id}`
+        `/db_inventory/container/${containerInfo.item_id}`,
       );
       if (response.data) message.success("Case was successfully emptied");
       queryClient.invalidateQueries({
@@ -38,7 +39,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
   const fetchContainerItems = async () => {
     try {
       const response = await devitrakApi.get(
-        `/db_inventory/container-items/${dataFound[0]?.item_id}`
+        `/db_inventory/container-items/${dataFound[0]?.item_id}`,
       );
       if (response.data) {
         setTrigger(trigger + 1);
@@ -140,6 +141,8 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
                   key={item.item_id}
                   label={item.serial_number}
                   style={Subtitle}
+                  variant="filled"
+                  color="default"
                 />
               ))}
             </Space>
