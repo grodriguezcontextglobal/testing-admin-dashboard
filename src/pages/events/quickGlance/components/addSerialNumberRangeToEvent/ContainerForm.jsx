@@ -1,8 +1,8 @@
-import { Chip } from "@mui/material";
 import { message, Select, Space } from "antd";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import Chip from "../../../../../components/UX/Chip/Chip";
 const ContainerForm = ({
   AntSelectorStyle,
   blockingButton,
@@ -59,14 +59,14 @@ const ContainerForm = ({
         key: location,
         label: location,
         serialNumbers: Array.from(serials),
-      })
+      }),
     );
   }, []);
   const handleItemSelection = (selectedSerialNumbers) => {
     // Handle item removal
     if (selectedSerialNumbers.length < itemToContent.length) {
       const newItemToContent = itemToContent.filter((item) =>
-        selectedSerialNumbers.includes(item)
+        selectedSerialNumbers.includes(item),
       );
       return setItemToContent(newItemToContent);
     }
@@ -74,7 +74,7 @@ const ContainerForm = ({
     // Handle item addition
     const newItems = selectedSerialNumbers
       .filter(
-        (serialNumber) => !itemToContent.some((item) => item === serialNumber)
+        (serialNumber) => !itemToContent.some((item) => item === serialNumber),
       )
       .map((serialNumber) => {
         const selectedItem = itemQuery.data.data.items[
@@ -89,7 +89,7 @@ const ContainerForm = ({
     // Check container limit
     if (updatedItemToContent.length > eventInvInfo.quantity) {
       message.warning(
-        `This container has a limit of ${eventInvInfo.quantity} items. Please remove some items before adding more.`
+        `This container has a limit of ${eventInvInfo.quantity} items. Please remove some items before adding more.`,
       );
       return;
     }
@@ -100,7 +100,7 @@ const ContainerForm = ({
   const renderSearchResults = () => {
     const locationOptions = renderLocationBasedOptions(selectOptions);
     const selectedLocationData = locationOptions.find(
-      (opt) => opt.key === selectedLocation
+      (opt) => opt.key === selectedLocation,
     );
     const serialNumbers = selectedLocationData?.serialNumbers || [];
     return (
@@ -239,6 +239,8 @@ const ContainerForm = ({
                     item.serialNumberList.length
                   }`}
                   onDelete={() => removeItem(index)}
+                  variant="filled"
+                  color="default"
                 />
               ))}
           </Space>
