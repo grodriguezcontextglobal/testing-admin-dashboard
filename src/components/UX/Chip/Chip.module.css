@@ -1,0 +1,198 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+/* Sizes */
+.small {
+  height: 24px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.medium {
+  height: 32px;
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+.large {
+  height: 40px;
+  font-size: 16px;
+  padding: 0 16px;
+}
+
+/* Variants & Colors (Using underscore for BEM-like mapping in CSS Modules) */
+
+/* Filled Variants */
+.filled_default {
+  background-color: var(--gray-100, #f2f4f7);
+  color: var(--gray-700, #344054);
+}
+
+.filled_primary {
+  background-color: var(--Primary-50, #f9f5ff);
+  color: var(--Primary-700, #6941c6);
+}
+
+.filled_secondary {
+  background-color: var(--gray-100, #f2f4f7);
+  color: var(--gray-700, #344054);
+}
+
+.filled_success {
+  background-color: var(--Success-50, #ecfdf3);
+  color: var(--success-700, #027a48);
+}
+
+.filled_warning {
+  background-color: var(--Warning-50, #fffaeb);
+  color: var(--Warning-700, #b54708);
+}
+
+.filled_error {
+  background-color: var(--Error-50, #fef3f2);
+  color: var(--Error-700, #b42318);
+}
+
+.filled_info {
+  background-color: var(--Blue-50, #eff8ff);
+  color: var(--Blue-700, #175cd3);
+}
+
+.filled_indigo {
+  background-color: var(--Indigo-50, #eef4ff);
+  color: var(--Indigo-700, #3538cd);
+}
+
+/* Outlined Variants */
+.outlined_default {
+  background-color: transparent;
+  border-color: var(--gray-300, #d0d5dd);
+  color: var(--gray-700, #344054);
+}
+
+.outlined_primary {
+  background-color: transparent;
+  border-color: var(--Primary-600, #7f56d9);
+  color: var(--Primary-700, #6941c6);
+}
+
+.outlined_success {
+  background-color: transparent;
+  border-color: var(--Success-600, #039855);
+  color: var(--success-700, #027a48);
+}
+
+.outlined_warning {
+  background-color: transparent;
+  border-color: var(--Warning-600, #dc6803);
+  color: var(--Warning-700, #b54708);
+}
+
+.outlined_error {
+  background-color: transparent;
+  border-color: var(--Error-600, #d92d20);
+  color: var(--Error-700, #b42318);
+}
+
+.outlined_info {
+  background-color: transparent;
+  border-color: var(--Blue-600, #1570ef);
+  color: var(--Blue-700, #175cd3);
+}
+
+.outlined_indigo {
+  background-color: transparent;
+  border-color: var(--Indigo-700, #3538cd);
+  color: var(--Indigo-700, #3538cd);
+}
+
+/* Specific Style from BulkComponents (White bg, gray border) */
+.outlined_clean {
+  background-color: var(--basewhite, #ffffff);
+  border-color: var(--gray-900, #101828);
+  color: var(--gray-900, #101828);
+}
+
+/* Ghost Variant (No background, no border) */
+.ghost_default,
+.ghost_primary,
+.ghost_success,
+.ghost_warning,
+.ghost_error,
+.ghost_info,
+.ghost_indigo {
+  background-color: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+}
+.ghost_default {
+  color: var(--gray-700, #344054);
+}
+.ghost_primary {
+  color: var(--Primary-700, #6941c6);
+}
+.ghost_error {
+  color: var(--Error-700, #b42318);
+}
+
+/* Interactive States */
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  filter: brightness(0.95);
+}
+
+.clickable:active {
+  filter: brightness(0.9);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Elements */
+.icon {
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+  font-size: inherit;
+}
+
+.deleteIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  padding: 2px;
+}
+
+.deleteIcon:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+}
