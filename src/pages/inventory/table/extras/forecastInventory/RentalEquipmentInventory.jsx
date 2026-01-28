@@ -1,12 +1,21 @@
-import { CardContent, Chip, Grid, Stack, Typography } from "@mui/material";
-import { RentedInventoryTable } from "../ux/forecastInventory/RentedInventoryTable";
+import { Grid, Stack } from "@mui/material";
+import Chip from "../../../../../components/UX/Chip/Chip";
+import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 
-const RentalEquipmentInventory = ({ rentalAnalysis }) => { //RentedInventoryTable
+const columns = [
+  { title: "Category", dataIndex: "category_name", key: "category_name" },
+  { title: "Item", dataIndex: "item_group", key: "item_group" },
+  { title: "Serial", dataIndex: "serial_number", key: "serial_number" },
+  { title: "Location", dataIndex: "location", key: "location" },
+];
+
+const RentalEquipmentInventory = ({ rentalAnalysis }) => {
   return (
-    <CardContent>
-      <Typography variant="h6" gutterBottom>
-        Rental Equipment Inventory
-      </Typography>
+    <ReusableCardWithHeaderAndFooter
+      style={{ width: "-webkit-fill-available" }}
+      title="Rental Equipment Inventory"
+    >
       {rentalAnalysis?.summary && (
         <Stack direction="row" spacing={2} mb={2} useFlexGap flexWrap="wrap">
           <Chip
@@ -27,42 +36,48 @@ const RentalEquipmentInventory = ({ rentalAnalysis }) => { //RentedInventoryTabl
           />
         </Stack>
       )}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Typography variant="subtitle2">
-            Returned Before search Period
-          </Typography>
-          <RentedInventoryTable
-            type={2}
-            rows={rentalAnalysis?.before_period ?? []}
-            emptyText="—"
-            collapsible={true}
-          />
+      <Grid container spacing={1} alignItems="flex-start">
+        <Grid item xs={12} md={4} lg={4}>
+          <ReusableCardWithHeaderAndFooter
+            id="returned-before-search-period"
+            title={`Returned Before search Period (${rentalAnalysis?.before_period?.length ?? 0})`}
+          >
+            <BaseTable
+              columns={columns}
+              dataSource={rentalAnalysis?.before_period ?? []}
+              locale={{ emptyText: "—" }}
+              enablePagination={true}
+            />
+          </ReusableCardWithHeaderAndFooter>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography variant="subtitle2">
-            Returning Within search Period
-          </Typography>
-          <RentedInventoryTable
-            type={2}
-            rows={rentalAnalysis?.within_period ?? []}
-            emptyText="—"
-            collapsible={true}
-          />
+        <Grid item xs={12} md={4} lg={4}>
+          <ReusableCardWithHeaderAndFooter
+            id="returning-within-search-period"
+            title={`Returning Within search Period (${rentalAnalysis?.within_period?.length ?? 0})`}
+          >
+            <BaseTable
+              columns={columns}
+              dataSource={rentalAnalysis?.within_period ?? []}
+              enablePagination={true}
+              locale={{ emptyText: "—" }}
+            />
+          </ReusableCardWithHeaderAndFooter>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography variant="subtitle2">
-            Returning After search Period
-          </Typography>
-          <RentedInventoryTable
-            type={2}
-            rows={rentalAnalysis?.after_period ?? []}
-            emptyText="—"
-            collapsible={true}
-          />
+        <Grid item xs={12} md={4} lg={4}>
+          <ReusableCardWithHeaderAndFooter
+            id="returning-after-search-period"
+            title={`Returning After search Period (${rentalAnalysis?.after_period?.length ?? 0})`}
+          >
+            <BaseTable
+              columns={columns}
+              dataSource={rentalAnalysis?.after_period ?? []}
+              enablePagination={true}
+              locale={{ emptyText: "—" }}
+            />
+          </ReusableCardWithHeaderAndFooter>
         </Grid>
       </Grid>
-    </CardContent>
+    </ReusableCardWithHeaderAndFooter>
   );
 };
 
