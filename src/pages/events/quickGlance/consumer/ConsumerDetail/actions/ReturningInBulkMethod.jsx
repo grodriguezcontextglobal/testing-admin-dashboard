@@ -1,4 +1,4 @@
-import { Chip, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { message, Modal, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const ReturningInBulkMethod = ({
@@ -51,7 +52,7 @@ const ReturningInBulkMethod = ({
     };
     await devitrakApi.patch(
       `/receiver/update-bulk-items-in-transaction`,
-      template
+      template,
     );
     queryClient.invalidateQueries("assginedDeviceList", { exact: true });
   };
@@ -98,9 +99,15 @@ const ReturningInBulkMethod = ({
       await emailNotification();
       openNotificationWithIcon("Success", "All devices returned!");
       message.success("All devices returned!");
-      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`)
-      await clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`)  
-      await clearCacheMemory(`eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`)
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`,
+      );
+      await clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`,
+      );
       setSelectedItems([]);
       return closeModal();
     } catch (error) {
@@ -136,10 +143,17 @@ const ReturningInBulkMethod = ({
               key={item.id}
               label={item.serialNumber}
               onDelete={() => removeItemFromSelectedItems(index)}
+              variant="filled"
+              variantColor="blue"
             />
           ))}
         </Space>
-        <BlueButtonComponent loadingState={loadingStatus} buttonType="submit" title={"Confirm return"} func={(e) => handleReturnDevices(e)} />
+        <BlueButtonComponent
+          loadingState={loadingStatus}
+          buttonType="submit"
+          title={"Confirm return"}
+          func={(e) => handleReturnDevices(e)}
+        />
         {/* <Button
           style={{ ...BlueButton, width: "100%" }}
           loading={loadingStatus}
