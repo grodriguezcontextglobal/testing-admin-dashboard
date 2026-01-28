@@ -1,6 +1,7 @@
-import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
 import DatePicker from "react-datepicker";
+import Chip from "../../../../components/UX/Chip/Chip";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
@@ -33,7 +34,8 @@ export const renderTitle = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Item information may be updated, including the category, brand, cost, tax location, container, container spot limit, and ownership status.
+          Item information may be updated, including the category, brand, cost,
+          tax location, container, container spot limit, and ownership status.
         </Typography>
       </InputLabel>
     </>
@@ -247,18 +249,13 @@ export const renderingMoreInfoSubmitted = ({
           moreInfo.map((item, index) => (
             <Chip
               style={{
-                backgroundColor: "var(--basewhite)",
-                padding: "2.5px 5px",
                 margin: "0 1px",
-                border: "solid 0.1px var(--gray900)",
-                borderRadius: "8px",
               }}
               key={`${item.keyObject}-${item.valueObject}`}
               label={`${item.keyObject}:${item.valueObject}`}
               onDelete={() => handleDeleteMoreInfo(index)}
-            >
-              {item.keyObject}:{item.valueObject}
-            </Chip>
+              variant="outlined"
+            />
           ))}
       </div>
     </>
