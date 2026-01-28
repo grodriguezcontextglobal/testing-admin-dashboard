@@ -13,11 +13,6 @@ import {
   onLogin,
   onLogout,
 } from "../../store/slices/adminSlice";
-import { AntSelectorStyle } from "../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import consultingCompanyInSqDb from "./actions/consultingCompanyInSqDb";
 import consultingUserMemberInSqlDb from "./actions/consultingUserMemberInSqlDb";
@@ -34,13 +29,13 @@ import CompanyRegistration from "./ux/CompanyRegistration";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width: 769px) and (max-width:992px)"
+    "only screen and (min-width: 769px) and (max-width:992px)",
   );
   const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
+    "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
   const isExtraLargeDevice = useMediaQuery(
-    "only screen abd (min-width: 1201px)"
+    "only screen abd (min-width: 1201px)",
   );
   const adjustingFormWidth = (arg1, arg2, arg3, arg4) => {
     if (isSmallDevice) return arg1; //"90vw";
@@ -108,14 +103,14 @@ const RegisterCompany = () => {
   const matchCompany = useCallback(() => {
     const foundCompany = companies()?.find(
       (company) =>
-        String(company).toLowerCase() === String(companyValue).toLowerCase()
+        String(company).toLowerCase() === String(companyValue).toLowerCase(),
     );
     if (foundCompany) {
       openNotificationWithIcon(
         "error",
         "Company exists!",
         "Company already exists in our records.",
-        0
+        0,
       );
       return true;
     }
@@ -157,13 +152,13 @@ const RegisterCompany = () => {
     let base64 = "";
     if (locationList.length < 1) {
       return alert(
-        "Please provide at least one location. Go to locations field, type a location where your inventory will be located and then click button Add, then you can proceed to complete the registration process."
+        "Please provide at least one location. Go to locations field, type a location where your inventory will be located and then click button Add, then you can proceed to complete the registration process.",
       );
     } else {
       if (data.photo.length > 0 && data.photo[0].size > 1048576) {
         setLoadingStatus(false);
         return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
+          "Image is bigger than allow. Please resize the image or select a new one.",
         );
       } else if (data.photo.length > 0) {
         setLoadingStatus(true);
@@ -175,7 +170,7 @@ const RegisterCompany = () => {
           "info",
           "Processing",
           "We're processing your request",
-          0
+          0,
         );
         if (user.existing) {
           await createStripeAccount({ companyValue, user, ref });
@@ -208,13 +203,13 @@ const RegisterCompany = () => {
               companyData: { ...ref.current.companyData },
               sqlMemberInfo: { ...ref.current.sqlMemberInfo },
               sqlInfo: { ...ref.current.sqlInfo },
-            })
+            }),
           );
           openNotificationWithIcon(
             "success",
             "Account created.",
             "Your new account was created. Please log in.",
-            3
+            3,
           );
           return navigate("/register/connected-account");
         } else {
@@ -247,7 +242,7 @@ const RegisterCompany = () => {
               companyData: { ...ref.current.companyData },
               sqlMemberInfo: { ...ref.current.sqlMemberInfo },
               sqlInfo: { ...ref.current.sqlInfo },
-            })
+            }),
           );
           queryClient.clear();
           setLoadingStatus(false);
@@ -256,7 +251,7 @@ const RegisterCompany = () => {
             "success",
             "Account created.",
             "Your new account was created. Please log in.",
-            3
+            3,
           );
           return navigate("/register/connected-account");
         }
@@ -267,7 +262,7 @@ const RegisterCompany = () => {
           "error",
           "Action failed",
           `Please try again later. ${error}`,
-          3
+          3,
         );
         dispatch(onAddErrorMessage(error));
         setLoadingStatus(false);
@@ -307,12 +302,7 @@ const RegisterCompany = () => {
         handleDeleteLocation={handleDeleteLocation}
         matchCompany={matchCompany}
         retrieveIndustryOptions={retrieveIndustryOptions}
-        OutlinedInputStyle={OutlinedInputStyle}
         register={register}
-        AntSelectorStyle={AntSelectorStyle}
-        BlueButton={BlueButton}
-        CenteringGrid={CenteringGrid}
-        BlueButtonText={BlueButtonText}
         Subtitle={Subtitle}
         dispatch={dispatch}
         onLogout={onLogout}
