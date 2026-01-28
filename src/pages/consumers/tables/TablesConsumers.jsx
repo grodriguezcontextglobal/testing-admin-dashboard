@@ -1,20 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Chip } from "@mui/material";
-import { Avatar, Spin, Table } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { Avatar, Spin } from "antd";
+import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { devitrakApi } from "../../../api/devitrakApi";
+import Chip from "../../../components/UX/Chip/Chip";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import Loading from "../../../components/animation/Loading";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { useQuery } from "@tanstack/react-query";
-import { devitrakApi } from "../../../api/devitrakApi";
-import { groupBy } from "lodash";
 
 export default function TablesConsumers({ searching, data, getCounting }) {
   const { user } = useSelector((state) => state.admin);
@@ -71,7 +71,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       const check = responseData?.filter((item) =>
         JSON.stringify(item)
           .toLowerCase()
-          .includes(String(searching).toLowerCase())
+          .includes(String(searching).toLowerCase()),
       );
       return check;
     }
@@ -137,31 +137,31 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     fontWeight: 500,
   };
 
-  const renderingRowStyle = {
-    ...TextFontsize18LineHeight28,
-    fontSize: "12px",
-    lineHeight: "18px",
-    color: "var(--Indigo-700, #3538CD)",
-    alignSelf: "stretch",
-    fontWeight: 400,
-  };
+  // const renderingRowStyle = {
+  //   ...TextFontsize18LineHeight28,
+  //   fontSize: "12px",
+  //   lineHeight: "18px",
+  //   color: "var(--Indigo-700, #3538CD)",
+  //   alignSelf: "stretch",
+  //   fontWeight: 400,
+  // };
 
-  const renderingStyleInChip = (props) => {
-    return <p style={renderingRowStyle}>{props}</p>;
-  };
+  // const renderingStyleInChip = (props) => {
+  //   return <p style={renderingRowStyle}>{props}</p>;
+  // };
 
   const renderingRowStyling = (props) => {
     return <p style={renderingStyle}>{props}</p>;
   };
 
-  const cellStyle = {
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  };
+  // const cellStyle = {
+  //   display: "flex",
+  //   justifyContent: "flex-start",
+  //   alignItems: "center",
+  // };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
   const renderingEventsPermittedForAdminBasedOnAdminAssignment = (record) => {
@@ -171,7 +171,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     if (!eventInfoCompanyQuery?.data?.data?.list) return [];
     const eventCompanyData = groupBy(
       eventInfoCompanyQuery?.data?.data?.list,
-      "id"
+      "id",
     );
     const checked = new Map();
     if (adminPermitted?.length > 0) {
@@ -243,43 +243,17 @@ export default function TablesConsumers({ searching, data, getCounting }) {
         compare: (a, b) => a.currentConsumerActive - b.currentConsumerActive,
       },
       render: (currentConsumerActive) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              currentConsumerActive === 0
-                ? // !currentConsumerActive
-                  "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
-        >
-          <p
-            style={{
-              ...Subtitle,
-              color: `${
-                currentConsumerActive === 0
-                  ? // !currentConsumerActive
-                    "var(--blue-700, #175CD3)"
-                  : "var(--success-700, #027A48)"
-              }`,
-              textTransform: "capitalize",
-            }}
-          >
+        <Chip
+          label={currentConsumerActive === 0 ? "Inactive" : "Active"}
+          color={currentConsumerActive === 0 ? "info" : "success"}
+          icon={
             <Icon
               icon="tabler:point-filled"
               rotate={3}
-              color={`${currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}`} //!currentConsumerActive ? "#2E90FA" : "#12B76A"}`}
+              color={currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}
             />
-            {currentConsumerActive === 0 ? "Inactive" : "Active"}
-          </p>
-        </span>
+          }
+        />
       ),
     },
     {
@@ -326,19 +300,17 @@ export default function TablesConsumers({ searching, data, getCounting }) {
               <>
                 {" "}
                 <Chip
+                  color="indigo"
+                  variant="outlined"
                   style={{
-                    background: "var(--Indigo-50, #EEF4FF)",
                     position: "relative",
                     zIndex: 2, // ensure this chip overlays the next
-                    border: "1px solid var(--Indigo-700, #004EEB)",
                   }}
-                  label={renderingStyleInChip(
-                    data?.at(-1)?.eventInfoDetail?.eventName
-                  )}
+                  label={data?.at(-1)?.eventInfoDetail?.eventName}
                 />
                 {data?.length > 1 && (
                   <Chip
-                    label={renderingRowStyling(`+${Number(data?.length) - 1}`)}
+                    label={`+${Number(data?.length) - 1}`}
                     style={{
                       marginLeft: -13, // pull under the first chip
                       position: "relative",
@@ -349,13 +321,13 @@ export default function TablesConsumers({ searching, data, getCounting }) {
               </>
             ) : (
               <Chip
+                color="indigo"
+                variant="outlined"
                 style={{
-                  background: "var(--Indigo-50, #EEF4FF)",
                   position: "relative",
                   zIndex: 2, // ensure this chip overlays the next
-                  border: "1px solid var(--Indigo-700, #004EEB)",
                 }}
-                label={renderingStyleInChip("No event assigned")}
+                label="No event assigned"
               />
             )}
           </>
@@ -367,7 +339,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
   return (
     <>
       {!isLoading ? (
-        <Table
+        <BaseTable
           sticky
           size="large"
           columns={columns}
