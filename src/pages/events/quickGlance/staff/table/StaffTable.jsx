@@ -1,11 +1,11 @@
 import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Table } from "antd";
+import { Avatar } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import "../../../../../styles/global/ant-table.css";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,7 @@ const StaffTable = ({ searching }) => {
             online: false,
             role:
               data.staff.role !== "Administrator"
-                ? ("Assistant" || "headsetAttendees")
+                ? "Assistant" || "headsetAttendees"
                 : data.staff.role,
             email: data.staff.email,
             phone: "000-000-0000",
@@ -53,7 +53,7 @@ const StaffTable = ({ searching }) => {
           });
         } else {
           const onlineStatus = await devitrakApi.get(
-            `/admin/check-online-status/${data.staff.email}`
+            `/admin/check-online-status/${data.staff.email}`,
           );
           result.add({
             id: data.admin_id,
@@ -87,7 +87,7 @@ const StaffTable = ({ searching }) => {
       const responding = [...staff].filter((staff) =>
         JSON.stringify(staff)
           .toLowerCase()
-          .includes(String(searching).toLowerCase())
+          .includes(String(searching).toLowerCase()),
       );
       return responding;
     }
@@ -204,18 +204,14 @@ const StaffTable = ({ searching }) => {
       const staffMemberStructure = new StaffMemberStructure(
         user.companyData,
         infoFound.data.adminUsers[0],
-        record.role
+        record.role,
       );
       dispatch(onAddStaffProfile(staffMemberStructure.fromStaffPage()));
       return navigate(`/staff/${record.id}/main`);
     }
   };
   return (
-    <Table
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      className="table-ant-customized"
+    <BaseTable
       columns={columns}
       dataSource={dataToRender()}
       onRow={(record) => {
