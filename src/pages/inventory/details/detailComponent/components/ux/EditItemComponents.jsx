@@ -1,6 +1,6 @@
 import { Button, Divider } from "antd";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
@@ -8,6 +8,7 @@ import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import DatePicker from "react-datepicker";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 
 export const renderingOptionsButtons = ({
   label,
@@ -105,19 +106,12 @@ export const renderingMoreInfoSubmitted = ({
         {moreInfo.length > 0 &&
           moreInfo.map((item, index) => (
             <Chip
-              style={{
-                backgroundColor: "var(--basewhite)",
-                padding: "2.5px 5px",
-                margin: "0 1px",
-                border: "solid 0.1px var(--gray900)",
-                borderRadius: "8px",
-              }}
               key={`${item.keyObject}-${item.valueObject}`}
               label={`${item.keyObject}:${item.valueObject}`}
               onDelete={() => handleDeleteMoreInfo(index)}
-            >
-              {item.keyObject}:{item.valueObject}
-            </Chip>
+              variant="outlined"
+              color="default"
+            />
           ))}
       </div>
     </>
