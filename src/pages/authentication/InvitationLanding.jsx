@@ -1,11 +1,5 @@
 /* eslint-disable react/prop-types */
-import {
-  FormLabel,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { FormLabel, Grid, InputAdornment, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { message, Progress } from "antd";
@@ -15,11 +9,12 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import Input from "../../components/UX/inputs/Input";
 import FooterComponent from "../../components/general/FooterComponent";
 import HidenIcon from "../../components/icons/HidenIcon";
 import VisibleIcon from "../../components/icons/VisibleIcon";
 import { onLogin } from "../../store/slices/adminSlice";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
@@ -68,7 +63,7 @@ const InvitationLanding = () => {
   // Media queries
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
   // Hooks
@@ -80,7 +75,7 @@ const InvitationLanding = () => {
   // API queries
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
-    queryFn: () => devitrakApi.post("/staff/admin-users", { email: email }),
+    queryFn: () => devitrakApi.post("/staff/__staff-search", { email: email }),
     enabled: !!email,
     staleTime: 60 * 60,
   });
@@ -237,12 +232,12 @@ const InvitationLanding = () => {
             role: role,
           },
         ],
-      }
+      },
     );
 
     if (resp.data.ok) {
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
-        (element) => element.user === email
+        (element) => element.user === email,
       );
       const employeesInCompany = [...hostCompanyInfo.employees];
       employeesInCompany[findInvitedStaff] = {
@@ -281,7 +276,7 @@ const InvitationLanding = () => {
 
     const resp = await devitrakApi.post(
       "/admin/new_admin_user",
-      templateNewUser
+      templateNewUser,
     );
 
     if (resp.data.ok) {
@@ -290,10 +285,10 @@ const InvitationLanding = () => {
         {
           staff_id: resp.data.uid,
           email: email,
-        }
+        },
       );
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
-        (element) => element.user === email
+        (element) => element.user === email,
       );
       const employeesInCompany = [...hostCompanyInfo.employees];
       employeesInCompany[findInvitedStaff] = {
@@ -324,7 +319,7 @@ const InvitationLanding = () => {
       await checkStaffInSQLDatabase();
       warning(
         "success",
-        "Process completed successfully. Please go to log in to log in into your account."
+        "Process completed successfully. Please go to log in to log in into your account.",
       );
       return navigate("/login", { replace: true });
     } catch (error) {
@@ -460,20 +455,17 @@ const InvitationLanding = () => {
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
                     Email
                   </FormLabel>
-                  <OutlinedInput
+                  <Input
                     disabled
                     value={email}
-                    style={OutlinedInputStyle}
                     placeholder="Enter your email"
                     type="email"
                     fullWidth
                   />
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    <Typography style={Subtitle}>
-                      You need to enter a password to complete registration
-                      process with the company invitation.
-                    </Typography>
-                  </FormLabel>
+                  <Typography style={{ ...Subtitle, marginTop: "0.5rem" }}>
+                    You need to enter a password to complete registration
+                    process with the company invitation.
+                  </Typography>
                 </Grid>
 
                 <Grid
@@ -484,11 +476,10 @@ const InvitationLanding = () => {
                   xs={12}
                 >
                   <FormLabel style={{ marginBottom: "0.5rem" }}>Name</FormLabel>
-                  <OutlinedInput
+                  <Input
                     disabled
                     type="text"
                     value={firstName}
-                    style={OutlinedInputStyle}
                     placeholder="Enter your name"
                     fullWidth
                   />
@@ -504,11 +495,10 @@ const InvitationLanding = () => {
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
                     Last name
                   </FormLabel>
-                  <OutlinedInput
+                  <Input
                     disabled
                     type="text"
                     value={lastName}
-                    style={OutlinedInputStyle}
                     placeholder="Enter your last name"
                     fullWidth
                   />
@@ -531,11 +521,10 @@ const InvitationLanding = () => {
                     alignItems={"center"}
                     justifyContent={"space-between"}
                   >
-                    <OutlinedInput
+                    <Input
                       disabled
                       type="text"
                       value={hostCompanyInfo?.company_name || ""}
-                      style={OutlinedInputStyle}
                       placeholder="Company name"
                       fullWidth
                     />
@@ -556,7 +545,7 @@ const InvitationLanding = () => {
                       <span style={{ fontWeight: 800 }}>*</span>
                     )}
                   </FormLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={
                       loadingStatus ||
                       checkIfUserExistsInOtherCompany() !== null
@@ -576,16 +565,10 @@ const InvitationLanding = () => {
                               message:
                                 "Password must contain uppercase, lowercase, and number",
                             },
-                          }
+                          },
                     )}
-                    style={{
-                      ...OutlinedInputStyle,
-                      border:
-                        !checkIfUserExistsInOtherCompany() &&
-                        watch("password") === ""
-                          ? "0.5px solid #ff4d4f"
-                          : undefined,
-                    }}
+                    error={!!errors.password}
+                    helperText={errors.password?.message}
                     placeholder="Enter a strong password"
                     required={!checkIfUserExistsInOtherCompany()}
                     type={showPassword ? "text" : "password"}
@@ -666,18 +649,6 @@ const InvitationLanding = () => {
                       </div>
                     </div>
                   )}
-                  {/* Password validation error */}
-                  {errors.password && (
-                    <Typography
-                      style={{
-                        fontSize: "12px",
-                        color: "#ff4d4f",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.password.message}
-                    </Typography>
-                  )}
                 </Grid>
 
                 <Grid
@@ -694,7 +665,7 @@ const InvitationLanding = () => {
                       <span style={{ fontWeight: 800 }}>*</span>
                     )}
                   </FormLabel>
-                  <OutlinedInput
+                  <Input
                     required={!checkIfUserExistsInOtherCompany()}
                     disabled={
                       loadingStatus ||
@@ -709,17 +680,16 @@ const InvitationLanding = () => {
                             validate: (value) =>
                               value === watchPassword ||
                               "Passwords do not match",
-                          }
+                          },
                     )}
-                    style={{
-                      ...OutlinedInputStyle,
-                      borderColor:
-                        !checkIfUserExistsInOtherCompany() &&
-                        ((!passwordMatch && watchPassword2) ||
-                          watch("password2") === "")
-                          ? "#ff4d4f"
-                          : undefined,
-                    }}
+                    error={
+                      !checkIfUserExistsInOtherCompany() &&
+                      ((!passwordMatch && watchPassword2) || !!errors.password2)
+                    }
+                    helperText={
+                      !checkIfUserExistsInOtherCompany() &&
+                      errors.password2?.message
+                    }
                     placeholder="Confirm your password"
                     type={showConfirmPassword ? "text" : "password"}
                     fullWidth
@@ -785,18 +755,6 @@ const InvitationLanding = () => {
                       </Typography>
                     </div>
                   )}
-                  {/* Confirm password validation error */}
-                  {!checkIfUserExistsInOtherCompany() && errors.password2 && (
-                    <Typography
-                      style={{
-                        fontSize: "12px",
-                        color: "#ff4d4f",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.password2.message}
-                    </Typography>
-                  )}
                 </Grid>
 
                 <Grid
@@ -845,7 +803,7 @@ const InvitationLanding = () => {
                               password: "",
                               company: "",
                               role: "",
-                            })
+                            }),
                           )
                         }
                         style={{
