@@ -1,14 +1,13 @@
-import { Card, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { Alert, Divider as DivAnt } from "antd";
-import { DailyAnalysisChart } from "./chart";
-import { KPI } from "./KPI";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import { EditIcon } from "../../../../../components/icons/EditIcon";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import AdvanceSearchModal from "../AdvanceSearchModal";
+import { DailyAnalysisChart } from "./chart";
+import EventInSearchWindow from "./EventInSearchWindow";
+import { KPI } from "./KPI";
 import ProjectionPerLocation from "./ProjectionPerLocation";
 import RentalEquipmentInventory from "./RentalEquipmentInventory";
-import EventInSearchWindow from "./EventInSearchWindow";
 
 const UX = ({
   allItems,
@@ -62,7 +61,7 @@ const UX = ({
             func={handleUpdatePeriodOnly}
             buttonType="button"
             titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
-            icon={<EditIcon stroke="#fff" hoverStroke="#1890ff" />}
+            // icon={<EditIcon stroke="#fff" hoverStroke="#1890ff" />}
           />
         </div>
       </Grid>
@@ -110,13 +109,11 @@ const UX = ({
       <DivAnt />
       {/* Rental Analysis Buckets */}
       {rentedInventory.total_items > 0 && (
-        <Grid item xs={12}>
-          <Card variant="outlined">
+        <Grid id="rental-equipment-inventory" item xs={12}>
             <RentalEquipmentInventory
               rentalAnalysis={rentalAnalysis}
               // RentedInventoryTable={RentedInventoryTable}
             />
-          </Card>
         </Grid>
       )}{" "}
       <DivAnt />
