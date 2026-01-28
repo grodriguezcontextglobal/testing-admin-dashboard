@@ -69,18 +69,6 @@ const ConsumerDetailInfoCntact = () => {
               >
                 {customer.email}
               </Typography>
-              <Typography
-                textAlign={"left"}
-                style={{
-                  ...TextFontSize20LineHeight30,
-                  color: "var(--gray600)",
-                  fontWeight: 400,
-                  textWrap: "pretty",
-                }}
-              >
-                Group <RightNarrowInCircle />
-                {" "}
-              </Typography>
             </Typography>
           </Grid>
         </Grid>
@@ -90,3 +78,5 @@ const ConsumerDetailInfoCntact = () => {
 };
 
 export default ConsumerDetailInfoCntact;
+
+
