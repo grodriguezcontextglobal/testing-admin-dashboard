@@ -1,6 +1,5 @@
-import { Chip } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Space, Spin, Table, message } from "antd";
+import { Space, Spin, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -34,6 +33,7 @@ import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 // import { ExpandedRowRender } from "./DocumentsTableSection";
 import FooterExpandedRow from "./FooterExpandedRow";
+import Chip from "../../../components/UX/Chip/Chip";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -131,7 +131,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       "/db_consumer/consulting-consumer",
       {
         email: customer.email,
-      }
+      },
     );
     return setConsumerSQLInfo(responseConsumerInfo.data.consumer);
   };
@@ -152,7 +152,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           paymentIntent: rowRecord.paymentIntent,
           "device.serialNumber": props.serial_number,
           "device.deviceType": props.type,
-        }
+        },
       );
       const eventIDInfoFound = props.entireData
         ? props.entireData.event_id
@@ -163,11 +163,11 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         {
           company: user.companyData.company_name,
           _id: eventIdFound,
-        }
+        },
       );
       if (responseDeviceInfoInTransaction.data.listOfReceivers.length > 0) {
         const dataAsProps = checkArray(
-          responseDeviceInfoInTransaction.data.listOfReceivers
+          responseDeviceInfoInTransaction.data.listOfReceivers,
         );
         await handleReturnSingleDevice({
           user,
@@ -231,7 +231,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         "/db_consumer/consulting-consumer",
         {
           email: customer.email,
-        }
+        },
       );
       const sqlConsumerLeaseInfo = await devitrakApi.post(
         "/db_lease/consulting-consumer-lease",
@@ -240,7 +240,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           company_id: user.sqlInfo.company_id,
           device_id: sqlItemInfo.data.items[0].item_id,
           subscription_current_in_use: 1,
-        }
+        },
       );
       if (
         sqlItemInfo.data.ok &&
@@ -294,7 +294,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     const selectedDeviceInfo = () => {
       const data = dataRendering();
       const result = data.filter((element) =>
-        selectedRowKeys.includes(element.key)
+        selectedRowKeys.includes(element.key),
       );
       return setSelectedRows(result);
     };
@@ -325,7 +325,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     const foundDeviceToChargeLostFee = receiversList?.filter(
       (element) =>
         element.device.serialNumber === props.serial_number &&
-        element.device.status === "Lost"
+        element.device.status === "Lost",
     );
     dispatch(onAddEventData(checkArray(responseEvent.data?.list)));
     dispatch(onAddEventInfoDetail(rowRecord.eventSelected));
@@ -336,12 +336,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         serialNumber: props.serial_number,
         deviceType: props.type,
         status: props.status,
-      })
+      }),
     );
     dispatch(
       onAddDevicesAssignedInPaymentIntent(
-        checkArray(foundDeviceToChargeLostFee)
-      )
+        checkArray(foundDeviceToChargeLostFee),
+      ),
     );
     dispatch(onAddPaymentIntentSelected(rowRecord.paymentIntent));
     dispatch(
@@ -349,7 +349,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         serialNumber: props.serial_number,
         deviceType: props.type,
         status: props.status,
-      })
+      }),
     );
   };
 
@@ -383,60 +383,31 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       width: "fit-content",
       responsive: ["xs", "sm", "md", "lg"],
       render: (status) => (
-        <Badge
-          style={{
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            borderRadius: "16px",
-            background: renderingTernary(
-              status,
-              "string",
-              "#ffb5b5",
-              "var(--Primary-50, #F9F5FF)",
-              "var(--Success-50, #ECFDF3)"
-            ),
-            mixBlendMode: "multiply",
-          }}
-        >
-          <Chip
-            style={{
-              backgroundColor: renderingTernary(
-                status,
-                "string",
-                "#ffb5b5",
-                "var(--Success-50, #ECFDF3)",
-                "var(--Primary-50, #F9F5FF)"
-              ),
-            }}
-            label={
-              <p
-                style={{
-                  color: renderingTernary(
-                    status,
-                    "string",
-                    "#f71212",
-                    "var(--success-700, #027A48)",
-                    "var(--Primary-700, #6941C6)"
-                  ),
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  fontStyle: "normal",
-                  fontWeight: 500,
-                  lineHeight: "18px",
-                }}
-              >
-                {renderingTernary(
-                  status,
-                  "string",
-                  status,
-                  "Active",
-                  "Returned"
-                )}
-              </p>
-            }
-          />
-        </Badge>
+        <Chip
+          variant="filled"
+          color={renderingTernary(
+            status,
+            "string",
+            "error",
+            "success",
+            "primary",
+          )}
+          label={
+            <p
+              style={{
+                color: "inherit",
+                fontFamily: "Inter",
+                fontSize: "12px",
+                fontStyle: "normal",
+                fontWeight: 500,
+                lineHeight: "18px",
+                margin: 0,
+              }}
+            >
+              {renderingTernary(status, "string", status, "Active", "Returned")}
+            </p>
+          }
+        />
       ),
     },
     {
