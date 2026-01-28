@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import Chip from "../../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Loading from "../../../../components/animation/Loading";
 import dicRole from "../../../../components/general/dicRole";
 import { PointFilled } from "../../../../components/icons/PointFilled";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
@@ -199,9 +199,9 @@ const HeaderStaffDetail = () => {
                     md: "flex-end",
                     lg: "flex-end",
                   },
-                  display:Number(user.role) < 2 ? "flex" : "none",
-                  gap:1,
-                  alignItems:"center"
+                  display: Number(user.role) < 2 ? "flex" : "none",
+                  gap: 1,
+                  alignItems: "center",
                 }}
                 item
                 xs={12}
@@ -397,37 +397,17 @@ const HeaderStaffDetail = () => {
                       padding: "12px 0",
                     }}
                   >
-                    <p
-                      style={{
-                        ...BlueButtonText,
-                        fontWeight: 400,
-                        width: "fit-content",
-                        margin: "auto",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                        borderRadius: "12px",
-                        padding: "1px 5px",
-                        backgroundColor: `${
-                          !profile.status
-                            ? "var(--blue-50, #EFF8FF)"
-                            : "var(--success-50, #ECFDF3)"
-                        }`,
-                        color: `${
-                          !profile.status
-                            ? "var(--blue-700, #175CD3)"
-                            : "var(--success-700, #027A48)"
-                        }`,
-                        textTransform: "none",
-                      }}
-                    >
-                      {profile.status ? (
-                        <PointFilled style={{ color: "#12b76a" }} />
-                      ) : (
-                        <PointFilled style={{ color: "#D0D5DD" }} />
-                      )}
-                      {profile.status ? "Active" : "Inactive"}
-                    </p>
+                    <Chip
+                      label={profile.status ? "Active" : "Inactive"}
+                      color={profile.status ? "success" : "info"}
+                      icon={
+                        profile.status ? (
+                          <PointFilled style={{ color: "#12b76a" }} />
+                        ) : (
+                          <PointFilled style={{ color: "#D0D5DD" }} />
+                        )
+                      }
+                    />
                   </div>
                 )}
               </Grid>
@@ -449,35 +429,18 @@ const HeaderStaffDetail = () => {
                   alignItems: "flex-start",
                 }}
               >
-                <span
-                  style={{
-                    borderRadius: "16px",
-                    justifyContent: "flex-start",
-                    display: "flex",
-                    padding: "2px 8px",
-                    alignItems: "center",
-                    mixBlendMode: "multiply",
-                    background: "var(--orange-dark-50, #FFF4ED)",
-                    width: "fit-content",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: "12px",
-                      fontFamily: "Inter",
-                      fontStyle: "normal",
-                      fontWeight: 500,
-                      lineHeight: "18px",
-                      textAlign: "left",
-                      textTransform: "capitalize",
-                      color: `${
-                        filterActiveEventsPerStaffMember().length > 0
-                          ? "var(--primary-700, #6941C6)"
-                          : "var(--orange-700, #B93815)"
-                      }`,
-                    }}
-                  >
+                <Chip
+                  color={
+                    filterActiveEventsPerStaffMember().length > 0
+                      ? "primary"
+                      : "warning"
+                  }
+                  label={
+                    filterActiveEventsPerStaffMember().length > 0
+                      ? filterActiveEventsPerStaffMember().at(-1).eventName
+                      : "No active event"
+                  }
+                  icon={
                     <Icon
                       icon="tabler:point-filled"
                       rotate={3}
@@ -487,12 +450,9 @@ const HeaderStaffDetail = () => {
                           : "#EF6820"
                       }
                     />
-                    {filterActiveEventsPerStaffMember().length > 0
-                      ? filterActiveEventsPerStaffMember().at(-1).eventName
-                      : "No active event"}
-                    {/* */}
-                  </p>
-                </span>
+                  }
+                  style={{ marginBottom: "5px" }}
+                />
               </Grid>
             </Grid>
           </Grid>
