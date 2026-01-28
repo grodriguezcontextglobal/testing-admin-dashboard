@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, Table } from "antd";
+import { Divider } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { PropTypes } from "prop-types";
 import {
@@ -18,7 +18,6 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
-import "../../../styles/global/ant-table.css";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -26,6 +25,9 @@ import { SearchItemContext } from "../MainPage";
 import "../style/details.css";
 import { dictionary } from "../utils/dicSelectedOptions";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
+import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+import BaseTable from "../../../components/UX/tables/BaseTable";
+import TableHeader from "../../../components/UX/TableHeader";
 // import { filterDataByRoleAndPreference } from "../utils/accessControlUtils";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
@@ -78,7 +80,7 @@ const ItemTable = ({
   const { user } = useSelector((state) => state.admin);
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchResult, setSearchResult] = useState([]);
-
+  const { role, employee } = useStaffRoleAndLocations();
   // Shared cell style for table cells
   const cellStyle = useMemo(
     () => ({
@@ -87,13 +89,13 @@ const ItemTable = ({
       gap: "8px",
       width: "100%",
     }),
-    []
+    [],
   );
   const listItemsQuery = useQuery({
     queryKey: ["listOfItemsInStock"],
     queryFn: () =>
       devitrakApi.get(
-        `/db_company/current-inventory/${user.sqlInfo.company_id}`
+        `/db_company/current-inventory/${user.sqlInfo.company_id}`,
       ),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 50 minutes
@@ -114,13 +116,8 @@ const ItemTable = ({
     queryFn: () =>
       devitrakApi.post(`/db_inventory/check-item`, {
         company_id: user.sqlInfo.company_id,
-        role:
-          user.companyData.employees.find(
-            (element) => element.user === user.email
-          )?.role || [],
-        preference:
-          user.companyData.employees.find((item) => item.user === user.email)
-            ?.preference?.managerLocation?.map((item) => item.location) || user.preference,
+        role: Number(role),
+        preference: employee.preference,
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 50 minutes
@@ -144,8 +141,10 @@ const ItemTable = ({
         company_id: user.sqlInfo.company_id,
         role: user.role,
         preference:
-          user.companyData.employees.find((item) => item.user === user.email)
-            ?.preference?.managerLocation?.map((item) => item.location) || user.preference,
+          user.companyData.employees
+            .find((item) => item.user === user.email)
+            ?.preference?.managerLocation?.map((item) => item.location) ||
+          user.preference,
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -160,7 +159,7 @@ const ItemTable = ({
       const resultFormatToDisplay = new Map();
       const groupingBySerialNumber = groupBy(
         itemsInInventoryQuery?.data?.data?.items,
-        "serial_number"
+        "serial_number",
       );
       if (props?.length > 0) {
         for (let data of props) {
@@ -194,10 +193,10 @@ const ItemTable = ({
       return orderBy(
         Array.from(resultFormatToDisplay.values()),
         ["serial_number"],
-        ["asc"]
+        ["asc"],
       );
     },
-    [renderedListItems, itemsInInventoryQuery]
+    [renderedListItems, itemsInInventoryQuery],
   );
 
   // Prefer refactored inventory dataset; fallback to legacy format
@@ -250,7 +249,7 @@ const ItemTable = ({
   // Legacy join-based dataset (existing function retained)
   const legacyDataset = useMemo(
     () => getDataStructuringFormat(renderedListItems),
-    [renderedListItems, itemsInInventoryQuery?.data?.data?.items]
+    [renderedListItems, itemsInInventoryQuery?.data?.data?.items],
   );
 
   // Unified dataset
@@ -273,7 +272,7 @@ const ItemTable = ({
         return allowedLocations.some(
           (allowed) =>
             itemLocation === allowed ||
-            String(itemLocation).startsWith(`${allowed} /`)
+            String(itemLocation).startsWith(`${allowed} /`),
         );
       });
     }
@@ -316,7 +315,7 @@ const ItemTable = ({
       return;
     }
     const filtered = baseDataset.filter((item) =>
-      JSON.stringify(item).toLowerCase().includes(term)
+      JSON.stringify(item).toLowerCase().includes(term),
     );
     setSearchResult(filtered);
   }, [searchValues?.searchItem, baseDataset]);
@@ -351,7 +350,7 @@ const ItemTable = ({
           }
           if (!propertyKey) return true;
           return item?.[propertyKey] === filter.value;
-        })
+        }),
       );
     }
     // default branch reflects search or all
@@ -383,7 +382,7 @@ const ItemTable = ({
         // Match normalized format: "First Last / email"
         ...user.companyData.employees.map(
           (employee) =>
-            `${employee.firstName} ${employee.lastName} / ${employee.user}`
+            `${employee.firstName} ${employee.lastName} / ${employee.user}`,
         ),
       ],
     });
@@ -449,42 +448,11 @@ const ItemTable = ({
           >
             <Divider />
             <Grid container>
-              <Grid
-                border={"1px solid var(--gray-200, #eaecf0)"}
-                borderRadius={"12px 12px 0 0"}
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                marginBottom={-1}
-                paddingBottom={-1}
-                item
-                md={12}
-                lg={12}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginRight: "5px",
-                    padding: "0 0 0 0",
-                  }}
-                >
-                  <RefreshButton propsFn={searchValues?.refreshFn} />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    padding: "0 0 0 0",
-                  }}
-                >
-                  {/* Use stable memoized dataset */}
-                  <DownloadingXlslFile props={dataToDisplayMemo} />
-                </div>{" "}
-              </Grid>
-
-              <Table
+              <TableHeader
+                leftCta={<RefreshButton propsFn={searchValues?.refreshFn} />}
+                rightCta={<DownloadingXlslFile props={dataToDisplayMemo} />}
+              />
+              <BaseTable
                 pagination={{
                   position: ["bottomCenter"],
                   pageSizeOptions: [10, 20, 30, 50, 100],
@@ -501,7 +469,6 @@ const ItemTable = ({
                 })}
                 dataSource={dataToDisplayMemo}
                 rowKey={(record) => record.item_id || record.key}
-                className="table-ant-customized"
               />
               <Divider />
             </Grid>
