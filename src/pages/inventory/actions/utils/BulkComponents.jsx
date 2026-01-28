@@ -1,4 +1,5 @@
-import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { InputLabel, OutlinedInput, Typography } from "@mui/material";
+import Chip from "../../../../components/UX/Chip/Chip";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { Button, Divider } from "antd";
@@ -95,7 +96,7 @@ export const renderingOptionsButtons = ({
         style={{
           display: "flex",
           margin: "10px 0 0",
-          gap:2
+          gap: 2,
         }}
       >
         <BlueButtonComponent
@@ -195,19 +196,12 @@ export const renderingMoreInfoSubmitted = ({
         {moreInfo.length > 0 &&
           moreInfo.map((item, index) => (
             <Chip
-              style={{
-                backgroundColor: "var(--basewhite)",
-                padding: "2.5px 5px",
-                margin: "0 1px",
-                border: "solid 0.1px var(--gray900)",
-                borderRadius: "8px",
-              }}
+              variant="outlined"
+              color="default"
               key={`${item.keyObject}-${item.valueObject}`}
               label={`${item.keyObject}:${item.valueObject}`}
               onDelete={() => handleDeleteMoreInfo(index)}
-            >
-              {item.keyObject}:{item.valueObject}
-            </Chip>
+            />
           ))}
       </div>
     </>
