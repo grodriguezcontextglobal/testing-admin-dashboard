@@ -1,6 +1,8 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { Subtitle } from "../../../styles/global/Subtitle";
 
 const ReusableCardWithHeaderAndFooter = ({
   title = "",
@@ -13,10 +15,10 @@ const ReusableCardWithHeaderAndFooter = ({
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
   );
-  const { subtitle, textFontSize30LineHeight38 } = style;
   return (
     <Card
       style={{
+        ...style,
         borderRadius: "12px",
         border: "1px solid var(--gray-200, #EAECF0)",
         background: "var(--base-white, #FFF)",
@@ -41,7 +43,7 @@ const ReusableCardWithHeaderAndFooter = ({
         >
           <Typography
             textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-            style={{ ...subtitle, textWrap: "nowrap" }}
+            style={{ ...Subtitle, textWrap: "nowrap" }}
           >
             {title}
           </Typography>
@@ -55,12 +57,16 @@ const ReusableCardWithHeaderAndFooter = ({
           item
           xs={12}
         >
-          <Typography
-            paddingTop={"8px"}
-            style={{ ...textFontSize30LineHeight38 }}
-          >
-            {children}
-          </Typography>
+          {typeof children === "string" || typeof children === "number" ? (
+            <Typography
+              paddingTop={"8px"}
+              style={{ ...TextFontSize30LineHeight38 }}
+            >
+              {children}
+            </Typography>
+          ) : (
+            <div style={{ paddingTop: "8px", width: "100%" }}>{children}</div>
+          )}
         </Grid>
       </Grid>
     </Card>
