@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Spin, Table } from "antd";
+import { Spin } from "antd";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import "../../../../styles/global/ant-table.css";
+
 import Loading from "../../../../components/animation/Loading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const TableCategories = () => {
@@ -47,11 +48,9 @@ const TableCategories = () => {
       },
     ];
     return (
-      <Table
+      <BaseTable
         dataSource={formattingData()}
         columns={column}
-        className="table-ant-customized"
-        ///inventory/category_name?
         onRow={(record) => {
           return {
             onClick: () => {
@@ -59,7 +58,6 @@ const TableCategories = () => {
             },
           };
         }}
-        style={{ cursor: "pointer" }}
       />
     );
   }
