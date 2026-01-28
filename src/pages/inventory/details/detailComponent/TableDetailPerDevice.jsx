@@ -1,17 +1,17 @@
-import { Table } from "antd";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { onAddStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import {
   onAddEventData,
   onAddQRCodeLink,
   onSelectCompany,
   onSelectEvent,
 } from "../../../../store/slices/eventSlice";
+import { onAddStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
 import "../../../../styles/global/ant-table.css";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 const TableDetailPerDevice = ({ dataFound }) => {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -57,22 +57,22 @@ const TableDetailPerDevice = ({ dataFound }) => {
       {
         zip_address: props.eventInfoDetail.address.split(" ").at(-1),
         event_name: props.eventInfoDetail.eventName,
-      }
+      },
     );
     if (sqpFetchInfo.data.ok) {
       dispatch(onSelectEvent(props.eventInfoDetail.eventName));
       dispatch(onSelectCompany(props.company));
       dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) })
+        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
       );
       dispatch(onAddSubscription(props.subscription));
       dispatch(
         onAddQRCodeLink(
           props.qrCodeLink ??
             `https://app.devitrak.net/?event=${encodeURI(
-              props.eventInfoDetail.eventName
-            )}&company=${encodeURI(props.company)}`
-        )
+              props.eventInfoDetail.eventName,
+            )}&company=${encodeURI(props.company)}`,
+        ),
       );
       return navigate("/events/event-quickglance");
     }
@@ -82,20 +82,20 @@ const TableDetailPerDevice = ({ dataFound }) => {
       return alert("You're not assigned as staff to this event.");
     if (
       eventsPerAdmin.active.some(
-        (element) => element.eventInfoDetail.eventName === event_name
+        (element) => element.eventInfoDetail.eventName === event_name,
       )
     ) {
       const eventInfo = eventsPerAdmin.active.find(
-        (element) => element.eventInfoDetail.eventName === event_name
+        (element) => element.eventInfoDetail.eventName === event_name,
       );
       return storeEvntInfoFound(eventInfo);
     } else if (
       eventsPerAdmin.completed.some(
-        (element) => element.eventInfoDetail.eventName === event_name
+        (element) => element.eventInfoDetail.eventName === event_name,
       )
     ) {
       const eventInfo = eventsPerAdmin.completed.find(
-        (element) => element.eventInfoDetail.eventName === event_name
+        (element) => element.eventInfoDetail.eventName === event_name,
       );
       return storeEvntInfoFound(eventInfo);
     } else return alert("You're not assigned as staff to this event.");
@@ -113,7 +113,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
       if (individual.data && companyInfo.data) {
         const employeesInCompanyInfo =
           await companyInfo.data.company[0].employees.find(
-            (element) => element.user === individual.data.adminUsers[0].email
+            (element) => element.user === individual.data.adminUsers[0].email,
           );
         return handleDetailStaff({
           ...employeesInCompanyInfo,
@@ -129,7 +129,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
       });
       if (individual.data) {
         const employeesInCompanyInfo = await user.companyData.employees.find(
-          (element) => element.user === individual.data.adminUsers[0].email
+          (element) => element.user === individual.data.adminUsers[0].email,
         );
 
         return handleDetailStaff({
@@ -177,9 +177,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
           <button
             onClick={() =>
               record.warehouse === 1
-                ? navigate(
-                    `/inventory/location?${record.location}&search=`
-                  )
+                ? navigate(`/inventory/location?${record.location}&search=`)
                 : navigateFn(event_name)
             }
             style={{
@@ -283,16 +281,12 @@ const TableDetailPerDevice = ({ dataFound }) => {
     },
   ];
   return (
-    <Table
+    <BaseTable
       sticky
       size="large"
       columns={columns}
       dataSource={sortingAssignedDeviceTrack()}
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      className="table-ant-customized"
-      // style={{ cursor: 'pointer' }}
+      enablePagination
     />
   );
 };
