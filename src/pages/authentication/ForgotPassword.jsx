@@ -3,19 +3,19 @@ import {
   FormControl,
   FormLabel,
   Grid,
-  OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, notification } from "antd";
+import { notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { devitrakApi } from "../../api/devitrakApi";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import Input from "../../components/UX/inputs/Input";
 import ModalUX from "../../components/UX/modal/ModalUX";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 // import axios from "axios";
 
 const schema = yup.object().shape({
@@ -39,7 +39,7 @@ const ForgotPassword = ({ open, close }) => {
   });
   const listAdminUsers = useQuery({
     queryKey: ["listOfAdminUsers"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
+    queryFn: () => devitrakApi.get("/staff/__staff-search"),
   });
 
   const [api, contextHolder] = notification.useNotification();
@@ -51,7 +51,7 @@ const ForgotPassword = ({ open, close }) => {
   const findStaff = useCallback(() => {
     const groupByEmail = groupBy(
       listAdminUsers?.data?.data?.adminUsers,
-      "email"
+      "email",
     );
 
     return groupByEmail[watch("email")];
@@ -78,7 +78,7 @@ const ForgotPassword = ({ open, close }) => {
               email: data.email,
               company: adminUserInfoRef.current.at(-1).company,
             },
-          }
+          },
         );
         if (checkingEmail.data.ok) {
           openNotificationWithIcon("Success", `Email sent to ${data.email}`);
@@ -170,10 +170,9 @@ const ForgotPassword = ({ open, close }) => {
                     Email
                   </Typography>
                 </FormLabel>
-                <OutlinedInput
+                <Input
                   {...register("email")}
                   type="email"
-                  style={OutlinedInputStyle}
                   placeholder="Enter your email"
                 />
                 {errors && (
@@ -194,31 +193,12 @@ const ForgotPassword = ({ open, close }) => {
               </FormControl>
             </Grid>
             <Grid marginX={"auto"} paddingX={"9px"} marginY={3} item xs={10}>
-              <Button
-                style={{
-                  width: "100%",
-                  borderRadius: "8px",
-                  border: "1px solid var(--blue-dark-600, #155EEF)",
-                  background: "var(--blue-dark-600, #155EEF)",
-                  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                }}
-                loading={loading}
-                htmlType="submit"
-              >
-                <Typography
-                  style={{
-                    color: "var(--base-white, #FFF)",
-                    textAlign: "center",
-                    fontFamily: "Inter",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    lineHeight: "24px",
-                  }}
-                  id="transition-modal-title"
-                >
-                  Reset password
-                </Typography>
-              </Button>
+              <BlueButtonComponent
+                loadingState={loading}
+                buttonType="submit"
+                title="Reset password"
+                styles={{ width: "100%" }}
+              />
             </Grid>
           </form>
         </Grid>
