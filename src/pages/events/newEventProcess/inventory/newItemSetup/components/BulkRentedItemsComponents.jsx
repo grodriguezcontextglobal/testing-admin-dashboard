@@ -1,7 +1,8 @@
-import { Chip, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
 import DatePicker from "react-datepicker";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
@@ -203,6 +204,8 @@ export const renderingMoreInfoSubmitted = ({
         {moreInfo.length > 0 &&
           moreInfo.map((item, index) => (
             <Chip
+              variant="outlined"
+              color="gray"
               style={{
                 backgroundColor: "var(--basewhite)",
                 padding: "2.5px 5px",
@@ -213,9 +216,7 @@ export const renderingMoreInfoSubmitted = ({
               key={`${item.keyObject}-${item.valueObject}`}
               label={`${item.keyObject}:${item.valueObject}`}
               onDelete={() => handleDeleteMoreInfo(index)}
-            >
-              {item.keyObject}:{item.valueObject}
-            </Chip>
+            />
           ))}
       </div>
     </>
