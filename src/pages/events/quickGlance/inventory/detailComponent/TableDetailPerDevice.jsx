@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -239,7 +239,7 @@ const TableDetailPerDevice = ({ searching }) => {
   ];
 
   return (
-    <Table
+    <BaseTable
       sticky
       size="large"
       columns={columns}
