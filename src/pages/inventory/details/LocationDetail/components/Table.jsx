@@ -1,13 +1,14 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Table } from "antd";
+import { Table } from "antd";
 import { groupBy, uniqueId } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import TableHeader from "../../../../../components/UX/TableHeader";
 import Loading from "../../../../../components/animation/Loading";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
 
@@ -198,65 +199,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-1}
-          paddingBottom={-1}
-          item
-          xs={12}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-              padding: "0 0 0 0",
-            }}
-          >
-            <Button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                borderTop: "transparent",
-                borderLeft: "transparent",
-                borderBottom: "transparent",
-                borderRadius: "8px 8px 0 0",
-              }}
-              onClick={() => {
-                listImagePerItemQuery.refetch();
-                listItemsQuery.refetch();
-                itemsInInventoryQuery.refetch();
-              }}
-            >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={500}
-                fontSize={"12px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-700, #004EEB)"}
-                padding={"0px"}
-              >
-                <Icon icon="jam:refresh" /> Refresh
-              </Typography>
-            </Button>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-              padding: "0 0 0 0",
-            }}
-          >
-            <DownloadingXlslFile props={dataToDisplay()} />
-          </div>
-        </Grid>
+        <TableHeader leftCta={<RefreshButton propsFn={() => {
+          listImagePerItemQuery.refetch();
+          listItemsQuery.refetch();
+          itemsInInventoryQuery.refetch();
+        }} />} rightCta={<DownloadingXlslFile props={dataToDisplay()} />}/>
         <Table
           pagination={{
             position: ["bottomCenter"],
