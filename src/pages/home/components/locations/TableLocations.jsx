@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Spin, Table } from "antd";
+import { Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
-import "../../../../styles/global/ant-table.css";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);
@@ -26,14 +27,6 @@ const TableLocations = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   itemsInInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [user.company]);
-
   if (itemsInInventoryQuery.data) {
     const column = [
       {
@@ -44,6 +37,20 @@ const TableLocations = () => {
         title: "Total units",
         dataIndex: "total",
       },
+            {
+        title: "",
+        render: (text, record) => (
+          <button className="transparentButton"
+            type="primary"
+            onClick={() => {
+              navigate(`/inventory/location?${record.key}&search=`);
+            }}
+          >
+            <RightNarrowInCircle />
+          </button>
+        ),
+      },
+
     ];
 
     const renderingDataByLocation = () => {
@@ -55,18 +62,19 @@ const TableLocations = () => {
       return Array.from(result);
     };
     return (
-      <Table
+      <BaseTable
         columns={column}
         dataSource={renderingDataByLocation()}
-        className="table-ant-customized"
-        onRow={(record) => {
-          return {
-            onClick: () => {
-              navigate(`/inventory/location?${record.key}&search=`);
-            },
-          };
-        }}
-        style={{ cursor: "pointer" }}
+        enablePagination={false}
+        // className="table-ant-customized"
+        // onRow={(record) => {
+        //   return {
+        //     onClick: () => {
+        //       navigate(`/inventory/location?${record.key}&search=`);
+        //     },
+        //   };
+        // }}
+        // style={{ cursor: "pointer" }}
       />
     );
   }
