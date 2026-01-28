@@ -42,6 +42,7 @@ import VisibleIcon from "../../components/icons/VisibleIcon";
 import HidenIcon from "../../components/icons/HidenIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../components/UX/buttons/LigthBlueButton";
+import Input from "../../components/UX/inputs/Input";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -432,17 +433,12 @@ const Login = () => {
         </Typography>
         <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
           <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
-            <FormLabel style={{ marginBottom: "0.9rem" }}>Password</FormLabel>
-            <OutlinedInput
+            <Input
               required
               {...register("password", { required: true, minLength: 6 })}
-              style={{
-                ...OutlinedInputStyle,
-                marginTop: "6px",
-              }}
               placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
               type={showPassword ? "text" : "password"}
-              fullWidth
+              label="Password"
               endAdornment={
                 <InputAdornment position="end">
                   <button
@@ -586,17 +582,13 @@ const Login = () => {
                   <FormLabel style={{ marginBottom: "0.9rem" }}>
                     Email
                   </FormLabel>
-                  <OutlinedInput
+                  <Input
                     required={!forceLogin}
                     {...register("email", {
                       required: !forceLogin,
                       minLength: 10,
                     })}
                     type="email"
-                    style={{
-                      ...OutlinedInputStyle,
-                      marginTop: "6px",
-                    }}
                     placeholder="Enter your email"
                     fullWidth
                   />
