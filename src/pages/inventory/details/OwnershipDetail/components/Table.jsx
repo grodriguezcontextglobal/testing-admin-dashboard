@@ -1,21 +1,22 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Table } from "antd";
+import { Table } from "antd";
 import { groupBy } from "lodash";
-import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import TableHeader from "../../../../../components/UX/TableHeader";
+import Loading from "../../../../../components/animation/Loading";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
+import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
 import {
   dataStructuringFormat,
   dataToDisplay,
 } from "../../utils/dataStructuringFormat";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import Loading from "../../../../../components/animation/Loading";
-import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
 
 const TableItemOwnership = ({
   searchItem,
@@ -81,7 +82,7 @@ const TableItemOwnership = ({
     return dataStructuringFormat(
       renderedListItems,
       groupingByDeviceType,
-      itemsInInventoryQuery
+      itemsInInventoryQuery,
     );
   }, [renderedListItems, groupingByDeviceType, itemsInInventoryQuery?.data]);
 
@@ -151,7 +152,7 @@ const TableItemOwnership = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid
+        {/* <Grid
           border={"1px solid var(--gray-200, #eaecf0)"}
           borderRadius={"12px 12px 0 0"}
           display={"flex"}
@@ -209,41 +210,56 @@ const TableItemOwnership = ({
           >
             <DownloadingXlslFile props={dataRenderingMemo} />
           </div>
-        </Grid>
+        </Grid> */}
         {isLoadingComponent && <Loading />}
         {!isLoadingComponent && (
-          <Table
-            pagination={{
-              position: ["bottomCenter"],
-              pageSizeOptions: [10, 20, 30, 50, 100],
-              total: filteredDataCount,
-              current: currentPage,
-              pageSize: pageSize,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
-            style={{ width: "100%" }}
-            columns={columnsTableMain({
-              groupingByDeviceType,
-              navigate,
-              responsive: [
-                ["lg"],
-                ["lg"],
-                ["xs", "sm", "md", "lg"],
-                ["md", "lg"],
-                ["md", "lg"],
-                ["md", "lg"],
-                ["xs", "sm", "md", "lg"],
-                ["xs", "sm", "md", "lg"],
-              ],
-              data: dataRenderingMemo,
-            })}
-            dataSource={dataRenderingMemo}
-            className="table-ant-customized"
-            onChange={handleTableChange}
-          />
+          <>
+            <TableHeader
+              leftCta={
+                <RefreshButton
+                  propsFn={() => {
+                    listImagePerItemQuery.refetch();
+                    listItemsQuery.refetch();
+                    itemsInInventoryQuery.refetch();
+                  }}
+                />
+              }
+              rightCta={<DownloadingXlslFile props={dataRenderingMemo} />}
+            />
+
+            <Table
+              pagination={{
+                position: ["bottomCenter"],
+                pageSizeOptions: [10, 20, 30, 50, 100],
+                total: filteredDataCount,
+                current: currentPage,
+                pageSize: pageSize,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`,
+              }}
+              style={{ width: "100%" }}
+              columns={columnsTableMain({
+                groupingByDeviceType,
+                navigate,
+                responsive: [
+                  ["lg"],
+                  ["lg"],
+                  ["xs", "sm", "md", "lg"],
+                  ["md", "lg"],
+                  ["md", "lg"],
+                  ["md", "lg"],
+                  ["xs", "sm", "md", "lg"],
+                  ["xs", "sm", "md", "lg"],
+                ],
+                data: dataRenderingMemo,
+              })}
+              dataSource={dataRenderingMemo}
+              className="table-ant-customized"
+              onChange={handleTableChange}
+            />
+          </>
         )}
       </Grid>
     </Suspense>
