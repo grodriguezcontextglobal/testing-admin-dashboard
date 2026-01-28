@@ -2,7 +2,6 @@ import { Drawer, message, Space, Table } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 // Import PDF documents
-import { OutlinedInput } from "@mui/material";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,7 +9,7 @@ import document1 from "../../../assets/pdf/document_1.pdf";
 import document2 from "../../../assets/pdf/document_2.pdf";
 import document3 from "../../../assets/pdf/document_3.pdf";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import Input from "../../../components/UX/inputs/Input";
 
 const policyDocuments = [
   {
@@ -44,7 +43,7 @@ const DevitrakTermsAndConditions = ({
   staffMember = null,
   action = null,
   setAcceptanceTermsAndPoliciesResult,
-  staffEmail
+  staffEmail,
 }) => {
   const location = useLocation();
   const [name, setName] = useState("");
@@ -68,7 +67,7 @@ const DevitrakTermsAndConditions = ({
           setOpen,
           setIsLoading,
           setAcceptanceTermsAndPoliciesResult,
-          staffEmail
+          staffEmail,
         });
       } else if (action) {
         await action();
@@ -149,9 +148,8 @@ const DevitrakTermsAndConditions = ({
             }}
             onSubmit={handleFormSubmit}
           >
-            <OutlinedInput
+            <Input
               placeholder="Enter your full name"
-              style={OutlinedInputStyle}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -190,7 +188,7 @@ export const agreedAgreement = async ({
   staffEmail,
   setOpen,
   setIsLoading,
-  setAcceptanceTermsAndPoliciesResult
+  setAcceptanceTermsAndPoliciesResult,
 }) => {
   try {
     setIsLoading(true);
@@ -204,16 +202,19 @@ export const agreedAgreement = async ({
             documentName: item.title,
           })),
         ],
-        email: staffEmail
-      }
+        email: staffEmail,
+      },
     );
     if (acceptanceTermsAndPolicies.data.ok) {
       message.success("Agreement submitted successfully.");
-      setAcceptanceTermsAndPoliciesResult(acceptanceTermsAndPolicies.data)
+      setAcceptanceTermsAndPoliciesResult(acceptanceTermsAndPolicies.data);
       return setOpen(false);
     }
   } catch (error) {
-    message.error("Error submitting agreement:", (error?.message || error?.msg) || error);
+    message.error(
+      "Error submitting agreement:",
+      error?.message || error?.msg || error,
+    );
     throw error; // Re-throw to be handled by the form submission
   } finally {
     setIsLoading(false);
