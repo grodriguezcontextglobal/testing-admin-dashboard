@@ -1,5 +1,4 @@
-import { Chip } from "@mui/material";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, Badge, Table } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
@@ -7,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import Chip from "../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
@@ -20,7 +20,6 @@ import {
 } from "../../../store/slices/eventSlice";
 import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import "../../../styles/global/ant-table.css";
@@ -30,7 +29,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
-    {}
+    {},
   );
   const [responseData, setResponseData] = useState([]);
   const queryClient = useQueryClient();
@@ -71,7 +70,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                   (acc, { device }) =>
                     acc +
                     (device?.status === false || device?.status === "Lost"),
-                  0
+                  0,
                 ),
             eventInfo: value,
             extra_data: transactionData ?? [],
@@ -92,7 +91,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                   (acc, { device }) =>
                     acc +
                     (device?.status === false || device?.status === "Lost"),
-                  0
+                  0,
                 ),
             eventInfo: value,
             extra_data: transactionData ?? [],
@@ -115,8 +114,8 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
 
   const refetchingAfterReturnDeviceInRow = async () => {
-    await queryClient.invalidateQueries(['transactionsList']);
-    await queryClient.invalidateQueries(['receiverList']);
+    await queryClient.invalidateQueries(["transactionsList"]);
+    await queryClient.invalidateQueries(["receiverList"]);
     return fetchingDataPerAllowed();
   };
 
@@ -128,7 +127,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         "eventInfoDetail.eventName": record.eventSelected[0],
       });
       dispatch(
-        onSelectEvent(eventListQuery.data.list[0].eventInfoDetail.eventName)
+        onSelectEvent(eventListQuery.data.list[0].eventInfoDetail.eventName),
       );
       dispatch(onSelectCompany(eventListQuery.data.list[0].company));
       dispatch(onAddEventData(eventListQuery.data.list[0]));
@@ -137,10 +136,10 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       navigate(
         `/events/event-attendees/${
           customer.uid ?? customer.id
-        }/transactions-details`
+        }/transactions-details`,
       );
     } catch (error) {
-      console.error('Error fetching event details:', error);
+      console.error("Error fetching event details:", error);
     }
   };
 
@@ -293,7 +292,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           <div
             style={{
               display: renderingOptionsBasedOnPaymentIntentStatus(
-                record.paymentIntent
+                record.paymentIntent,
               ),
               justifyContent: "flex-end",
               alignItems: "center",
@@ -315,7 +314,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               title={"Release"}
               func={() => null}
             />
-            
+
             <button
               style={{ background: "transparent", outline: "none" }}
               onClick={() => moreDetailFn(record)}
@@ -331,31 +330,20 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
   const customExpandIcon = (props) => {
-    const buttonStyle = (color) => {
-      return {
-        backgroundColor: color,
-      };
-    };
     return (
-      <p
+      <div
         onClick={(e) => {
           props.onExpand(props.record, e);
         }}
         key={props.expanded}
         style={{ ...Subtitle, cursor: "pointer" }}
       >
-        <Badge
-          style={buttonStyle(
-            props.expanded ? "var(--gray100)" : "var(--success50)"
-          )}
-        >
+        <Badge>
           <Chip
+            variant="filled"
+            color={props.expanded ? "default" : "success"}
             style={{
-              ...CenteringGrid,
               width: "100%",
-              backgroundColor: `${
-                props.expanded ? "var(--gray100)" : "var(--success50)"
-              }`,
             }}
             label={
               <div
@@ -363,14 +351,14 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  width: "100%",
                 }}
               >
                 <p
                   style={{
                     ...Subtitle,
-                    color: props.expanded
-                      ? "var(--gray700)"
-                      : "var(--success700)",
+                    margin: 0,
+                    color: "inherit",
                   }}
                 >
                   {props.expanded ? "Close" : "Open"}
@@ -380,7 +368,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             }
           />
         </Badge>
-      </p>
+      </div>
     );
   };
 
