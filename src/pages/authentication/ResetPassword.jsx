@@ -41,18 +41,18 @@ const ResetPassword = () => {
   };
   const adminStaffQuery = useQuery({
     queryKey: ["staffMember"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
+    queryFn: () => devitrakApi.get("/staff/__staff-search"),
   });
 
   if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
   if (adminStaffQuery.data) {
     const stampTime = new URLSearchParams(window.location.search).get(
-      "stamp-time"
+      "stamp-time",
     );
     const timeRef = new Date();
     const groupAdminPerEmail = groupBy(
       adminStaffQuery.data.data.adminUsers,
-      "id"
+      "id",
     );
     const adminUid = new URLSearchParams(window.location.search).get("uid");
     const foundAdminStaffData = groupAdminPerEmail[adminUid];
@@ -67,7 +67,7 @@ const ResetPassword = () => {
         openNotificationWithIcon(
           "success",
           "Password updated.",
-          "Please log in with your new password. You will be redirected to login page in a moment."
+          "Please log in with your new password. You will be redirected to login page in a moment.",
         );
         setTimeout(() => {
           navigate("/login");
