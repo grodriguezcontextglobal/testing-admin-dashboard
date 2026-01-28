@@ -1,5 +1,5 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import { Modal, Table } from "antd";
+import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -13,7 +13,7 @@ const ModalListOfDefectedDevices = ({
   const closeModal = () => {
     return setDefectedDeviceList(false);
   };
-const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const dataToRender = () => {
     const result = new Map();
     for (let item of data) {
@@ -113,7 +113,9 @@ const dispatch = useDispatch();
                   margin: 0,
                   padding: 0,
                 }}
-                onClick={()=> dispatch(onAddDeviceToDisplayInQuickGlance({ ...template}))}
+                onClick={() =>
+                  dispatch(onAddDeviceToDisplayInQuickGlance({ ...template }))
+                }
               >
                 <RightNarrowInCircle />
               </button>
@@ -148,29 +150,10 @@ const dispatch = useDispatch();
       title="List of Defected Devices"
       style={{ zIndex: 30 }}
     >
-      <Table
+      <ExpandableTable
         columns={columns}
         dataSource={dataToRender()}
         expandable={{
-          expandIcon: (record) => {
-            if (record.expanded) {
-              return (
-                <Icon
-                  icon="mdi:arrow-collapse"
-                  width={20}
-                  color="var(--gray300)"
-                />
-              );
-            } else {
-              return (
-                <Icon
-                  icon="mdi:arrow-expand"
-                  width={20}
-                  color="var(--gray300)"
-                />
-              );
-            }
-          },
           expandRowByClick: true,
           expandedRowRender: (record) => internalRow(record),
         }}
