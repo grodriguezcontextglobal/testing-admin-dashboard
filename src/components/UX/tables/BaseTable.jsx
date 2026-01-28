@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import "../../../styles/global/ant-table.css";
 
 const StyledTable = styled(Table)({
-  width: "100%",
+  width: "-webkit-fill-available",
   boxShadow:
     "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
 });
