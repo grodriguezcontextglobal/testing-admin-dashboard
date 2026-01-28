@@ -1,6 +1,5 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
 import { groupBy } from "lodash";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -8,22 +7,31 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
+import TableHeader from "../../../../../components/UX/TableHeader";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
-import columnsTableMain from "../../../utils/ColumnsTableMain";
-import { dataStructuringFormat, dataToDisplay } from "../../utils/dataStructuringFormat";
 import { filterDataByRoleAndPreference } from "../../../utils/accessControlUtils";
+import columnsTableMain from "../../../utils/ColumnsTableMain";
+import {
+  dataStructuringFormat,
+  dataToDisplay,
+} from "../../utils/dataStructuringFormat";
 
-const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) => {
+const TableItemGroup = ({
+  searchItem = "",
+  referenceData,
+  isLoadingComponent,
+}) => {
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  
+
   // Consolidated pagination state
   const [paginationState, setPaginationState] = useState({
     current: 1,
     pageSize: 10,
-    filteredCount: 0
+    filteredCount: 0,
   });
 
   // Memoize category name extraction to prevent recalculation
@@ -33,18 +41,21 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
   }, [location.search]);
 
   // Memoize query keys to prevent unnecessary re-renders
-  const queryKeys = useMemo(() => ({
-    items: ["currentStateDevicePerGroupItem", groupItem],
-    images: ["deviceImagePerGroupItem", groupItem],
-    inventory: ["deviceInInventoryPerGroupItem", groupItem]
-  }), [groupItem]);
+  const queryKeys = useMemo(
+    () => ({
+      items: ["currentStateDevicePerGroupItem", groupItem],
+      images: ["deviceImagePerGroupItem", groupItem],
+      inventory: ["deviceInInventoryPerGroupItem", groupItem],
+    }),
+    [groupItem],
+  );
 
   const listItemsQuery = useQuery({
     queryKey: queryKeys.items,
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: 'select * from item_inv where item_group = ? and company_id = ?',
-        values: [groupItem, user.sqlInfo.company_id]
+        query: "select * from item_inv where item_group = ? and company_id = ?",
+        values: [groupItem, user.sqlInfo.company_id],
       }),
     enabled: !!user.sqlInfo?.company_id && !!groupItem,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -55,9 +66,9 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
   const listImagePerItemQuery = useQuery({
     queryKey: queryKeys.images,
     queryFn: () =>
-      devitrakApi.post("/image/images", { 
-        company: user.companyData.id, 
-        category: groupItem 
+      devitrakApi.post("/image/images", {
+        company: user.companyData.id,
+        category: groupItem,
       }),
     enabled: !!user.companyData?.id && !!groupItem,
     staleTime: 10 * 60 * 1000, // 10 minutes - images change less frequently
@@ -85,18 +96,21 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
     let renderedListItems = listItemsQuery?.data?.data?.result;
 
     if (renderedListItems) {
-      renderedListItems = filterDataByRoleAndPreference(renderedListItems, user);
+      renderedListItems = filterDataByRoleAndPreference(
+        renderedListItems,
+        user,
+      );
     }
-    
+
     return {
       imageSource,
       groupingByDeviceType,
-      renderedListItems
+      renderedListItems,
     };
   }, [
     listImagePerItemQuery?.data?.data?.item,
     listItemsQuery?.data?.data?.result,
-    user
+    user,
   ]);
 
   // Memoize structured data to prevent unnecessary processing
@@ -104,31 +118,32 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
     if (!derivedData.renderedListItems || !derivedData.groupingByDeviceType) {
       return [];
     }
-    
+
     return dataStructuringFormat(
       derivedData.renderedListItems,
       derivedData.groupingByDeviceType,
-      itemsInInventoryQuery
+      itemsInInventoryQuery,
     );
   }, [
     derivedData.renderedListItems,
     derivedData.groupingByDeviceType,
-    itemsInInventoryQuery?.data
+    itemsInInventoryQuery?.data,
   ]);
 
   // Memoize calculations to prevent recalculation on every render
   const calculations = useMemo(() => {
-    const totalValue = structuredDataRendering.reduce((sum, item) => 
-      sum + Number(item.cost || 0), 0
+    const totalValue = structuredDataRendering.reduce(
+      (sum, item) => sum + Number(item.cost || 0),
+      0,
     );
-    
+
     const itemList = groupBy(derivedData.renderedListItems, "warehouse");
     const totalAvailable = itemList[1]?.length || 0;
-    
+
     return {
       totalDevices: structuredDataRendering.length,
       totalValue,
-      totalAvailable
+      totalAvailable,
     };
   }, [structuredDataRendering, derivedData.renderedListItems]);
 
@@ -146,10 +161,10 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
   // Update filtered count when data changes - Fix infinite loop
   useEffect(() => {
     if (dataRenderingMemo.length !== paginationState.filteredCount) {
-      setPaginationState(prev => ({
+      setPaginationState((prev) => ({
         ...prev,
         filteredCount: dataRenderingMemo.length,
-        current: 1 // Reset to first page when data changes
+        current: 1, // Reset to first page when data changes
       }));
     }
   }, [dataRenderingMemo.length]); // Remove filteredDataCount from dependencies
@@ -162,47 +177,56 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
   }, [listImagePerItemQuery, listItemsQuery, itemsInInventoryQuery]);
 
   // Optimized table change handler
-  const handleTableChange = useCallback((pagination, filters, sorter, extra) => {
-    setPaginationState(prev => ({
-      ...prev,
-      current: extra.action === 'filter' ? 1 : pagination.current,
-      pageSize: pagination.pageSize,
-      filteredCount: extra.action === 'filter' ? 
-        extra.currentDataSource.length : prev.filteredCount
-    }));
-  }, []);
+  const handleTableChange = useCallback(
+    (pagination, filters, sorter, extra) => {
+      setPaginationState((prev) => ({
+        ...prev,
+        current: extra.action === "filter" ? 1 : pagination.current,
+        pageSize: pagination.pageSize,
+        filteredCount:
+          extra.action === "filter"
+            ? extra.currentDataSource.length
+            : prev.filteredCount,
+      }));
+    },
+    [],
+  );
 
   // Memoize table columns to prevent recreation
-  const tableColumns = useMemo(() => 
-    columnsTableMain({
-      groupingByDeviceType: derivedData.groupingByDeviceType,
-      navigate,
-      responsive: [
-        ["lg"],
-        ["lg"],
-        ["xs", "sm", "md", "lg"],
-        ["md", "lg"],
-        ["md", "lg"],
-        ["md", "lg"],
-        ["xs", "sm", "md", "lg"],
-        ["xs", "sm", "md", "lg"],
-      ],
-      data: dataRenderingMemo
-    }), [derivedData.groupingByDeviceType, navigate, dataRenderingMemo]
+  const tableColumns = useMemo(
+    () =>
+      columnsTableMain({
+        groupingByDeviceType: derivedData.groupingByDeviceType,
+        navigate,
+        responsive: [
+          ["lg"],
+          ["lg"],
+          ["xs", "sm", "md", "lg"],
+          ["md", "lg"],
+          ["md", "lg"],
+          ["md", "lg"],
+          ["xs", "sm", "md", "lg"],
+          ["xs", "sm", "md", "lg"],
+        ],
+        data: dataRenderingMemo,
+      }),
+    [derivedData.groupingByDeviceType, navigate, dataRenderingMemo],
   );
 
   // Memoize pagination config
-  const paginationConfig = useMemo(() => ({
-    position: ["bottomCenter"],
-    pageSizeOptions: [10, 20, 30, 50, 100],
-    total: paginationState.filteredCount,
-    current: paginationState.current,
-    pageSize: paginationState.pageSize,
-    showSizeChanger: true,
-    showQuickJumper: true,
-    showTotal: (total, range) => 
-      `${range[0]}-${range[1]} of ${total} items`,
-  }), [paginationState]);
+  const paginationConfig = useMemo(
+    () => ({
+      position: ["bottomCenter"],
+      pageSizeOptions: [10, 20, 30, 50, 100],
+      total: paginationState.filteredCount,
+      current: paginationState.current,
+      pageSize: paginationState.pageSize,
+      showSizeChanger: true,
+      showQuickJumper: true,
+      showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+    }),
+    [paginationState],
+  );
 
   // const containerStyle = useMemo(() => ({
   //   display: "flex",
@@ -229,7 +253,7 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid
+        {/* <Grid
           border={"1px solid var(--gray-200, #eaecf0)"}
           borderRadius={"12px 12px 0 0"}
           display={"flex"}
@@ -265,7 +289,7 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
               >
                 <Icon icon="jam:refresh" /> Refresh
               </Typography>
-            </Button> */}
+            </Button> 
           </div>
           <div
             style={{
@@ -277,18 +301,27 @@ const TableItemGroup = ({ searchItem = '', referenceData, isLoadingComponent }) 
           >
             <DownloadingXlslFile props={dataRenderingMemo} />
           </div>
-        </Grid>
+        </Grid> */}
         {isLoadingComponent && <Loading />}
         {!isLoadingComponent && (
-          <Table
-            pagination={paginationConfig}
-            style={{ width: "100%" }}
-            columns={tableColumns}
-            dataSource={dataRenderingMemo}
-            className="table-ant-customized"
-            onChange={handleTableChange}
-            loading={listItemsQuery.isLoading || listImagePerItemQuery.isLoading || itemsInInventoryQuery.isLoading}
-          />
+          <>
+            <TableHeader
+              leftCta={<RefreshButton propsFn={handleRefresh} />}
+              rightCta={<DownloadingXlslFile props={dataRenderingMemo} />}
+            />
+
+            <BaseTable
+              pagination={paginationConfig}
+              columns={tableColumns}
+              dataSource={dataRenderingMemo}
+              onChange={handleTableChange}
+              loading={
+                listItemsQuery.isLoading ||
+                listImagePerItemQuery.isLoading ||
+                itemsInInventoryQuery.isLoading
+              }
+            />
+          </>
         )}
       </Grid>
     </Suspense>
