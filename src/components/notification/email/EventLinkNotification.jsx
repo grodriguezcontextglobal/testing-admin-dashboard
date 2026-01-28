@@ -1,4 +1,4 @@
-import { Chip, Grid, OutlinedInput, Typography } from "@mui/material";
+import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { Button, notification, Space } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,7 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
+import Chip from "../../UX/Chip/Chip";
 import ModalUX from "../../UX/modal/ModalUX";
 
 const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
@@ -61,7 +62,7 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
     };
     const resp = await devitrakApi.post(
       "/nodemailer/send-consumer-app-instructions",
-      emailNotificationProfile
+      emailNotificationProfile,
     );
     if (resp) {
       openNotificationWithIcon("Success", "Email sent!", "Link of this event!");
@@ -163,6 +164,8 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
                 key={email}
                 label={email}
                 onDelete={() => handleDelete(email)}
+                variant="filled"
+                variantColor="blue"
               />
             ))}
           </Space>
