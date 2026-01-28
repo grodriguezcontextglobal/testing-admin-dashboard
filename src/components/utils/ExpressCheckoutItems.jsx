@@ -1,4 +1,4 @@
-import { Chip, OutlinedInput } from "@mui/material";
+import { OutlinedInput } from "@mui/material";
 import { Button, message, notification, Popconfirm, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import ModalUX from "../UX/modal/ModalUX";
+import Chip from "../UX/Chip/Chip";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
