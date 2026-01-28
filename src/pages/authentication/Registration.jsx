@@ -1,17 +1,13 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { FormLabel, Grid, OutlinedInput, TextField } from "@mui/material";
+import { FormLabel, Grid, TextField } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Button, notification } from "antd";
+import { Avatar, notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import FooterComponent from "../../components/general/FooterComponent";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
 import { onLogin } from "../../store/slices/adminSlice";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -19,6 +15,8 @@ import { useCallback, useEffect, useState } from "react";
 import { isValidEmail } from "../../components/utils/IsValidEmail";
 import { checkArray } from "../../components/utils/checkArray";
 import { UploadImagePlaceholder } from "../../components/icons/UpdateImagePlaceholder";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import Input from "../../components/UX/inputs/Input";
 // import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
@@ -45,13 +43,13 @@ const Registration = () => {
 
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width: 769px) and (max-width:992px)"
+    "only screen and (min-width: 769px) and (max-width:992px)",
   );
   const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
+    "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
   const isExtraLargeDevice = useMediaQuery(
-    "only screen abd (min-width: 1201px)"
+    "only screen abd (min-width: 1201px)",
   );
 
   const adjustingFormWidth = (arg1, arg2, arg3, arg4) => {
@@ -61,17 +59,20 @@ const Registration = () => {
     if (isExtraLargeDevice) return arg4; //"50vw";
   };
   const [userExists, setUserExists] = useState([]);
-  const checkExistingUser = useCallback(async () => {
-    if (isValidEmail(watch("email"))) {
-      const response = await devitrakApi.post(`/staff/admin-users`, {
-        email: watch("email"),
-      });
-      if (response.data) {
-        const result = [...response.data.adminUsers];
-        return setUserExists(result);
+  const checkExistingUser = useCallback(
+    async () => {
+      if (isValidEmail(watch("email"))) {
+        const response = await devitrakApi.post(`/staff/__staff-search`, {
+          email: watch("email"),
+        });
+        if (response.data) {
+          const result = [...response.data.adminUsers];
+          return setUserExists(result);
+        }
       }
-    }
-  }, isValidEmail(watch("email")));
+    },
+    isValidEmail(watch("email")),
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -93,7 +94,7 @@ const Registration = () => {
       return openNotificationWithIcon(
         "success",
         "Email already exists in our record.",
-        "Please proceed to set up a company account."
+        "Please proceed to set up a company account.",
       );
     }
     return () => {
@@ -106,19 +107,19 @@ const Registration = () => {
       return openNotificationWithIcon(
         "error",
         "Action denied.",
-        "Password must match."
+        "Password must match.",
       );
     if (data.email !== data.email_confirmation)
       return openNotificationWithIcon(
         "error",
         "Action denied.",
-        "Emails must match."
+        "Emails must match.",
       );
     if (userExists.length > 0) {
       openNotificationWithIcon(
         "success",
         "Email already exists in our record.",
-        "Please proceed to set up a company account."
+        "Please proceed to set up a company account.",
       );
       const userData = checkArray(userExists);
       const newAdminUserTemplate = {
@@ -175,7 +176,7 @@ const Registration = () => {
       openNotificationWithIcon(
         "error",
         "Action was not accepted. Please try again later.",
-        `${error.response}`
+        `${error.response}`,
       );
     }
   };
@@ -260,10 +261,9 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Email <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 required={userExists.length < 1}
                 {...register("email")}
-                style={OutlinedInputStyle}
                 placeholder="Enter your email"
                 type="email"
                 fullWidth
@@ -273,11 +273,10 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Confirm email <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
                 {...register("email_confirmation")}
-                style={OutlinedInputStyle}
                 placeholder="Repeat your email"
                 type="email_confirmation"
                 fullWidth
@@ -287,11 +286,10 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Password <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
                 {...register("password")}
-                style={OutlinedInputStyle}
                 placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                 type="password"
                 fullWidth
@@ -301,13 +299,13 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Repeat password <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
                 {...register("password2")}
                 // value={password2}
                 // onChange={(e) => setPassword2(e.target.value)}
-                style={OutlinedInputStyle}
+
                 placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                 type="password"
                 fullWidth
@@ -317,16 +315,13 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 First name <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
                 {...register("firstName")}
                 type="text"
                 // value={firstName}
                 // onChange={(e) => setFirstName(e.target.value)}
-                style={{
-                  ...OutlinedInputStyle,
-                }}
                 placeholder="Enter your name"
                 fullWidth
               />
@@ -335,14 +330,11 @@ const Registration = () => {
               <FormLabel style={{ marginBottom: "0.5rem" }}>
                 Last name <span style={{ fontWeight: 800 }}>*</span>
               </FormLabel>
-              <OutlinedInput
+              <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
                 {...register("lastName")}
                 type="text"
-                style={{
-                  ...OutlinedInputStyle,
-                }}
                 placeholder="Enter your last name"
                 fullWidth
               />
@@ -515,12 +507,11 @@ const Registration = () => {
               item
               xs={12}
             >
-              <Button
-                htmlType="submit"
-                style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-              >
-                <p style={BlueButtonText}>Set up new company</p>
-              </Button>
+              <BlueButtonComponent
+                buttonType="submit"
+                title="Set up new company"
+                styles={{ width: "100%" }}
+              />
             </Grid>
           </form>
           <Grid item xs={12} justifyContent={"center"} alignItems={"center"}>
@@ -544,7 +535,7 @@ const Registration = () => {
                         password: "",
                         company: "",
                         role: "",
-                      })
+                      }),
                     )
                   }
                   style={{
