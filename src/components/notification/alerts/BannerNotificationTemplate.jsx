@@ -150,7 +150,7 @@ const BannerNotificationTemplate = ({
                 }}
               />
             </button>
-            &nbsp; Dismiss the notification
+            &nbsp; <span style={{ height:"fit-content", alignSelf:"flex-start" }}>Dismiss the notification</span>
           </Typography>
         </Grid>
       </Grid>
