@@ -1,18 +1,24 @@
-import { Grid } from "@mui/material";
-import { lazy, Suspense } from "react";
+import { Grid, Typography } from "@mui/material";
+import { lazy, Suspense, useState } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Spin } from "antd";
-const CategoryInventory = lazy(() =>
-  import("../components/CategoriesInventory")
+import { Drawer, Spin } from "antd";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+const CategoryInventory = lazy(
+  () => import("../components/CategoriesInventory"),
 );
 const Graphic = lazy(() => import("../components/Graphic"));
 const TotalConsumer = lazy(() => import("../components/TotalConsumer"));
 const TotalDevice = lazy(() => import("../components/TotalDeviceValue"));
-const TableLocations = lazy(() =>
-  import("../components/locations/TableLocations")
+const TableLocations = lazy(
+  () => import("../components/locations/TableLocations"),
 );
 const MainPage = () => {
+  const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
+  const [openDrawer, setOpenDrawer] = useState(
+    isAdmin ? false : locationsViewPermission.length === 0,
+  );
   return (
     <Grid container spacing={1}>
       <Suspense
@@ -22,21 +28,31 @@ const MainPage = () => {
           </div>
         }
       >
-        <Grid
-          // textAlign={"right"}
-          // display={"flex"}
-          // justifyContent={"flex-start"}
-          // alignItems={"center"}
-          // gap={1}
-          // item
-          // xs={12}
-          // sm={12}
-          // md={12}
-          // lg={12}
-          container
-
-          gap={2}
-        >
+        {!isAdmin && locationsViewPermission.length === 0 && (
+          <Drawer
+            title="Staff Permission"
+            placement="top"
+            onClose={() => setOpenDrawer(false)}
+            open={openDrawer}
+            closable
+            key={"message-triggered"}
+            maskClosable={false}
+            styles={{
+              height: "25vh !important",
+            }}
+          >
+            <Typography
+              style={{
+                ...TextFontSize20LineHeight30,
+                fontWeight: 600,
+                color: "var(--gray600)",
+              }}
+            >
+              You do not have permission to assign inventory to events.
+            </Typography>
+          </Drawer>
+        )}
+        <Grid container gap={2}>
           <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
             <Graphic />
           </Grid>
