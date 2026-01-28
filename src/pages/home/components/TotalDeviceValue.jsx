@@ -4,8 +4,9 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-const CardRendered = lazy(() =>
-  import("../../events/quickGlance/components/CardRendered")
+const ReusableCard = lazy(() =>
+  import("../../../components/UX/cards/ReusableCard")
+    // "../../../components/UX/cards/ReusableCard")
 );
 const TotalDevice = () => {
   const { user } = useSelector((state) => state.admin);
@@ -49,7 +50,7 @@ const TotalDevice = () => {
         </div>
       }
     >
-      <CardRendered props={device} title={"Total device value"} />
+      <ReusableCard props={device} title={"Total device value"} />
     </Suspense>
   );
 };
