@@ -1,14 +1,14 @@
 import { Grid } from "@mui/material";
-import { Table } from "antd";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { columns } from "./detailTableComponents/columns";
-import "../../../styles/global/ant-table.css";
-import { useState } from "react";
-import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
 import ModalUX from "../../../components/UX/modal/ModalUX";
+import "../../../styles/global/ant-table.css";
+import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
+import { columns } from "./detailTableComponents/columns";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 const DetailMemberInfo = () => {
   const { memberInfo } = useSelector((state) => state.member);
   const { user } = useSelector((state) => state.admin);
@@ -76,7 +76,7 @@ const DetailMemberInfo = () => {
         item
         xs={12}
       >
-        <Table
+        <BaseTable
           sticky
           size="large"
           rowKey="device_id"
@@ -93,10 +93,7 @@ const DetailMemberInfo = () => {
           })}
           style={{ width: "100%" }}
           dataSource={devicesAssignedActive?.data?.data?.rows || []}
-          pagination={{
-            position: ["bottomCenter"],
-          }}
-          className="table-ant-customized"
+          enablePagination={true}
         />
       </Grid>
       {checked && (
