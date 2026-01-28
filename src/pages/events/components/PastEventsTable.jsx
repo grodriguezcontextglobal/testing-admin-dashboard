@@ -1,5 +1,6 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Table } from "antd";
+import { Avatar } from "antd";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -13,7 +14,7 @@ import {
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
-import "../../../styles/global/ant-table.css";
+
 const PastEventsTable = ({ events }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,22 +25,22 @@ const PastEventsTable = ({ events }) => {
       {
         zip_address: props.eventInfoDetail.address.split(" ").at(-1),
         event_name: props.eventInfoDetail.eventName,
-      }
+      },
     );
     if (sqpFetchInfo.data.ok) {
       dispatch(onSelectEvent(props.eventInfoDetail.eventName));
       dispatch(onSelectCompany(props.company));
       dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) })
+        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
       );
       dispatch(onAddSubscription(props.subscription));
       dispatch(
         onAddQRCodeLink(
           props.qrCodeLink ??
             `https://app.devitrak.net/?event=${encodeURI(
-              props.eventInfoDetail.eventName
-            )}&company=${encodeURI(props.company)}`
-        )
+              props.eventInfoDetail.eventName,
+            )}&company=${encodeURI(props.company)}`,
+        ),
       );
       return navigate("/events/event-quickglance");
     }
@@ -51,9 +52,9 @@ const PastEventsTable = ({ events }) => {
       onAddQRCodeLink(
         props.qrCodeLink ??
           `https://app.devitrak.net/?event=${encodeURI(
-            props.eventInfoDetail.eventName
-          )}&company=${encodeURI(props.company)}`
-      )
+            props.eventInfoDetail.eventName,
+          )}&company=${encodeURI(props.company)}`,
+      ),
     );
     dispatch(onAddExtraServiceListSetup(props.extraServiceListSetup));
     dispatch(onAddExtraServiceNeeded(props.extraServiceNeeded));
@@ -65,7 +66,10 @@ const PastEventsTable = ({ events }) => {
     const result = new Set();
     const resultActive = new Set();
     const currentDate = new Date();
-    const activeEvents = events.filter((element) => element.active && currentDate > element.eventInfoDetail.dateEnd);
+    const activeEvents = events.filter(
+      (element) =>
+        element.active && currentDate > element.eventInfoDetail.dateEnd,
+    );
     for (let data of activeEvents) {
       resultActive.add({ key: data.id, ...data });
     }
@@ -83,7 +87,7 @@ const PastEventsTable = ({ events }) => {
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
   const column = [
@@ -94,7 +98,7 @@ const PastEventsTable = ({ events }) => {
       sorter: {
         compare: (a, b) =>
           ("" + a.eventInfoDetail.eventName).localeCompare(
-            b.eventInfoDetail.eventName
+            b.eventInfoDetail.eventName,
           ),
       },
       render: (eventInfoDetail) => (
@@ -151,7 +155,7 @@ const PastEventsTable = ({ events }) => {
       sorter: {
         compare: (a, b) =>
           ("" + a.eventInfoDetail.dateBegin).localeCompare(
-            b.eventInfoDetail.dateBegin
+            b.eventInfoDetail.dateBegin,
           ),
       },
       responsive: ["md", "lg"],
@@ -174,7 +178,7 @@ const PastEventsTable = ({ events }) => {
       sorter: {
         compare: (a, b) =>
           ("" + a.eventInfoDetail.dateBegin).localeCompare(
-            b.eventInfoDetail.dateBegin
+            b.eventInfoDetail.dateBegin,
           ),
       },
       responsive: ["md", "lg"],
@@ -197,12 +201,7 @@ const PastEventsTable = ({ events }) => {
     },
   ];
   return (
-    <Table
-      className="table-ant-customized"
-      style={{
-        width: "100%",
-        cursor: "pointer",
-      }}
+    <BaseTable
       columns={column}
       dataSource={sortData()}
       onRow={(record) => {
