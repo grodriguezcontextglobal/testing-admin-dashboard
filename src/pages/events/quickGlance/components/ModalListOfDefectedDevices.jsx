@@ -1,9 +1,10 @@
-import { Modal, Table } from "antd";
-import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
+import { Modal } from "antd";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
+import ExpandableTable from "../../../../components/UX/tables/ExpandableTable";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 
 const ModalListOfDefectedDevices = ({
   defectedDeviceList,
@@ -125,7 +126,7 @@ const ModalListOfDefectedDevices = ({
       },
     ];
 
-    return <Table columns={columns} dataSource={record.report} />;
+    return <ExpandableTable columns={columns} dataSource={record.report} />;
   };
 
   const columns = [
@@ -150,7 +151,7 @@ const ModalListOfDefectedDevices = ({
       title="List of Defected Devices"
       style={{ zIndex: 30 }}
     >
-      <ExpandableTable
+      <BaseTable
         columns={columns}
         dataSource={dataToRender()}
         expandable={{
