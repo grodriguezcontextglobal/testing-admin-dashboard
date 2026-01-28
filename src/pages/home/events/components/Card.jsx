@@ -1,132 +1,148 @@
-import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
-import { Tooltip } from "antd";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { Avatar, Tooltip } from "antd";
+import ReusableCardWithFooter from "../../../../components/UX/cards/ReusableCardWithFooter";
+import { CardStyle } from "../../../../styles/global/CardStyle";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import renderingStatusUIComponent from "../../../events/components/renderingStatusUIComponent";
+import WeekdayDifference from "../../../events/utils/DateDifference";
+import displayMonth from "../../../events/quickGlance/components/formatEventDetailInfo/displayMonth";
+import convertMilitaryToRegularTime from "../../../events/utils/militaryTimeTransform";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { useState } from "react";
 
 const Card = ({ props, checkStatus, checkActiveEvent, quickGlance }) => {
-  return (
-    <Card
-      id="card-event-status"
-      key={`card-event-status-pending-active-upcoming-${props.id}`}
-      style={{
-        maxHeight: "20rem",
-        borderRadius: "12px",
-        border: "1px solid var(--gray-200, #EAECF0)",
-        background: "var(--base-white, #FFF)",
-        boxShadow:
-          "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-      }}
-      actions={[
+  const cardStyle = {
+    ...CardStyle,
+    border: "1px solid var(--gray-200)",
+    boxShadow:
+      "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+    background: "var(--basewhite)",
+  };
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+  const isMediumDevice = useMediaQuery(
+    "only screen and (min-width : 769px) and (max-width : 992px)",
+  );
+  const substractingDateBeginInfo = () => {
+    const date = new Date(`${props.eventInfoDetail.dateBegin}`)
+      .toString()
+      .split(" ");
+    return date;
+  };
+  const substractingDateEndInfo = () => {
+    const date = new Date(`${props.eventInfoDetail.dateEnd}`)
+      .toString()
+      .split(" ");
+    return date;
+  };
+  // eslint-disable-next-line no-unused-vars
+  const [weekdayCount, setWeekdayCount] = useState(null);
+
+  const handleWeekdayCountCalculated = (count) => {
+    return setWeekdayCount(count);
+  };
+
+  const cardActions = [
+    renderingStatusUIComponent({ props, quickGlance, checkActiveEvent }),
+  ];
+  const children = () => {
+    return (
+      <>
         <Grid
-          key={`grid-card-home-action-footer-${props.id}`}
-          item
-          xs={12}
           display={"flex"}
-          justifyContent={"flex-end"}
+          justifyContent={"flex-start"}
           alignItems={"center"}
-          textAlign={"right"}
+          marginX={"auto"}
+          marginTop={1}
+          container
         >
           <Grid
             display={"flex"}
             justifyContent={"flex-start"}
             alignItems={"center"}
             item
-            xs={6}
-            // padding={"0 0 0 18px"}
-            sx={{
-              padding: {
-                xs: 0,
-                sm: 0,
-                md: "0 0 0 18px",
-                lg: "0 0 0 18px",
-              },
-            }}
-          >
-            {checkActiveEvent(event?.active) ? (
-              <Icon
-                icon="tabler:point-filled"
-                color="#12b76a"
-                width={20}
-                height={20}
-                padding={0}
-              />
-            ) : (
-              <Icon
-                icon="tabler:point-filled"
-                color="#D0D5DD"
-                width={20}
-                height={20}
-                padding={0}
-              />
-            )}{" "}
-            {checkStatus(
-              props.eventInfoDetail.dateBegin,
-              props.eventInfoDetail.dateEnd,
-              props.active
-            )}
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            item
-            xs={6}
-            // padding={"0 0 0 18px"}
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+            padding={"18px 0"}
           >
             <Typography
-              fontFamily={"Inter"}
-              fontSize={"14px"}
-              fontStyle={"normal"}
-              fontWeight={600}
-              lineHeight={"20px"}
-              color="#004EEB"
-              padding={"16px 24px"}
-              style={CenteringGrid}
-              onClick={() => quickGlance(event)}
+              textTransform={"none"}
+              style={{
+                ...TextFontSize30LineHeight38,
+                textAlign: "left",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+                textWrap: "pretty",
+              }}
             >
-              View quick glance &nbsp;
-              <Icon icon="tabler:arrow-narrow-right" width={25} height={25} />
+              <div
+                style={{
+                  alignSelf: "stretch",
+                  width: "15%",
+                  display: `${(isSmallDevice || isMediumDevice) && "none"}`,
+                }}
+              >
+                <Avatar
+                  src={
+                    props.eventInfoDetail.logo ??
+                    props.eventInfoDetail.eventName
+                  }
+                  size={70}
+                ></Avatar>
+              </div>
+              <div style={{ width: "85%" }}>
+                <Tooltip title={`${props.eventInfoDetail.eventName}`}>
+                  {" "}
+                  {props.eventInfoDetail.eventName}
+                </Tooltip>
+                <br />
+                <div
+                  style={{
+                    ...Subtitle,
+                    fontWeight: 500,
+                    textTransform: "none",
+                    margin: "0.3rem 0 0 0",
+                  }}
+                >
+                  {displayMonth(props.eventInfoDetail.dateBegin)}{" "}
+                  {substractingDateBeginInfo()[2]}-
+                  {substractingDateEndInfo()[2]} &nbsp;
+                  {convertMilitaryToRegularTime(
+                    new Date(`${props.eventInfoDetail.dateBegin}`).toString(),
+                  )}
+                  -
+                  {convertMilitaryToRegularTime(
+                    new Date(`${props.eventInfoDetail.dateEnd}`).toString(),
+                  )}
+                  &nbsp; ({substractingDateBeginInfo()[4]}-
+                  {substractingDateEndInfo()[4]})
+                </div>
+              </div>
             </Typography>
           </Grid>
-        </Grid>,
-      ]}
-    >
-      <Grid
-        display={"flex"}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        marginX={"auto"}
-        marginTop={1}
-        container
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-          padding={"18px 0 9px 18px"}
-        >
-          <Typography
-            textTransform={"none"}
-            color="var(--gray-900, #101828)"
-            lineHeight={"24px"}
-            textAlign={"left"}
-            fontWeight={600}
-            fontFamily={"Inter"}
-            fontSize={"20px"}
-            noWrap={true}
-          >
-            <Tooltip title={`${props.eventInfoDetail.eventName}`}>
-              {props.eventInfoDetail.eventName}
-            </Tooltip>
-          </Typography>
         </Grid>
-      </Grid>
-    </Card>
+        {
+          <WeekdayDifference
+            dateBegin={`${props.eventInfoDetail.dateBegin}`}
+            onWeekdayCountCalculated={handleWeekdayCountCalculated}
+          />
+        }
+      </>
+    );
+  };
+  return (
+    <ReusableCardWithFooter
+      id="card-event-status"
+      key={`card-event-status-pending-active-upcoming-${props.eventInfoDetail.dateEnd}`}
+      actions={cardActions}
+      style={cardStyle}
+    >
+      {children()}
+    </ReusableCardWithFooter>
   );
 };
 
