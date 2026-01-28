@@ -1,8 +1,9 @@
-import { Chip, OutlinedInput, Typography } from "@mui/material";
+import { OutlinedInput, Typography } from "@mui/material";
 import { Modal, Space } from "antd";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import Chip from "../../../../components/UX/Chip/Chip";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 

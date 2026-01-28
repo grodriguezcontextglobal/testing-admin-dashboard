@@ -1,5 +1,5 @@
-import { Chip } from "@mui/material";
 import { Modal, Space } from "antd";
+import Chip from "../../../../components/UX/Chip/Chip";
 
 const ScanningMethod = ({ openScannedItemView, setOpenScannedItemView , scannedDevice, setScannedDevice }) => {
 
