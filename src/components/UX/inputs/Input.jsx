@@ -102,7 +102,7 @@ const Input = forwardRef(({
             />
             
             {helperText && (
-                <FormHelperText error={error}>
+                <FormHelperText error={error} id={`${id || name}-helper-text`}>
                     {helperText}
                 </FormHelperText>
             )}
