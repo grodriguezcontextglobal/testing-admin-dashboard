@@ -1,10 +1,11 @@
-import { Box, Chip } from "@mui/material";
+import { Box } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 // import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import Chip from "../../../../components/UX/Chip/Chip";
 import {
   onAddAdvanceSearch,
   onAddSearchParameters,
@@ -23,7 +24,7 @@ import {
 import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
 const AdvanceSearchResultPage = () => {
   const { advanceSearch, searchParameters } = useSelector(
-    (state) => state.searchResult
+    (state) => state.searchResult,
   );
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -69,7 +70,7 @@ const AdvanceSearchResultPage = () => {
             .split(" ")
             .at(-1),
           event_name: selectedEventInfo.eventInfoDetail.eventName,
-        }
+        },
       );
 
       // Dispatch Redux actions to store event information
@@ -81,7 +82,7 @@ const AdvanceSearchResultPage = () => {
           onAddEventData({
             ...selectedEventInfo,
             sql: sqpFetchInfo.data.events.at(-1),
-          })
+          }),
         );
       } else {
         dispatch(onAddEventData(selectedEventInfo));
@@ -92,12 +93,12 @@ const AdvanceSearchResultPage = () => {
         onAddQRCodeLink(
           selectedEventInfo.qrCodeLink ??
             `https://app.devitrak.net/?event=${encodeURI(
-              selectedEventInfo.eventInfoDetail.eventName
-            )}&company=${encodeURI(selectedEventInfo.company)}`
-        )
+              selectedEventInfo.eventInfoDetail.eventName,
+            )}&company=${encodeURI(selectedEventInfo.company)}`,
+        ),
       );
       dispatch(
-        onAddExtraServiceListSetup(selectedEventInfo.extraServiceListSetup)
+        onAddExtraServiceListSetup(selectedEventInfo.extraServiceListSetup),
       );
       dispatch(onAddExtraServiceNeeded(selectedEventInfo.extraServiceNeeded));
 
@@ -123,13 +124,13 @@ const AdvanceSearchResultPage = () => {
       ...new Set(inventory.map((item) => item.category_name)),
     ].map((key) => ({ key }));
     const groups = [...new Set(inventory.map((item) => item.item_group))].map(
-      (key) => ({ key })
+      (key) => ({ key }),
     );
     const brands = [...new Set(inventory.map((item) => item.brand))].map(
-      (key) => ({ key })
+      (key) => ({ key }),
     );
     const locations = [...new Set(inventory.map((item) => item.location))].map(
-      (key) => ({ key })
+      (key) => ({ key }),
     );
 
     return {
@@ -239,7 +240,7 @@ const AdvanceSearchResultPage = () => {
   const eventDeviceColumns = [
     { key: "category", title: "Category", dataIndex: "category" },
     { key: "group", title: "Item", dataIndex: "group" },
-    { key: "count", title: "Device Count", dataIndex: "count" },
+    { key: "count", title: "Device Count", dataIndex: "count", width:"10%" },
     {
       key: "events_count",
       title: "Events",
@@ -289,32 +290,36 @@ const AdvanceSearchResultPage = () => {
         if (eventInventory?.raw_events) {
           // Find the event that matches the current row's event_id
           const matchingEvent = eventInventory.raw_events.find(
-            event => event._id === row.event_id
+            (event) => event._id === row.event_id,
           );
-          
+
           if (matchingEvent && matchingEvent.deviceSetup) {
             // Iterate through deviceSetup array to sum quantities for matching devices
             matchingEvent.deviceSetup.forEach((device) => {
               // Check if device matches search parameters
-              const matchesCategory = !searchParameters?.category?.length || 
+              const matchesCategory =
+                !searchParameters?.category?.length ||
                 searchParameters.category.includes(device.category);
-              const matchesGroup = !searchParameters?.group?.length || 
+              const matchesGroup =
+                !searchParameters?.group?.length ||
                 searchParameters.group.includes(device.group);
-              // Note: brand matching would need to be added if brand info is available in deviceSetup
-              
+              const matchesBrand =
+                !searchParameters?.brand?.length ||
+                searchParameters.brand.includes(device.brand);
+
               // If device matches search criteria, add its quantity
-              if (matchesCategory && matchesGroup) {
+              if (matchesCategory && matchesGroup && matchesBrand) {
                 totalQuantity += device.quantity || 0;
               }
             });
           }
         }
-        
+
         return (
-          <Chip 
-            size="small" 
-            color={totalQuantity > 0 ? "primary" : "default"} 
-            label={totalQuantity} 
+          <Chip
+            size="small"
+            color={totalQuantity > 0 ? "primary" : "default"}
+            label={totalQuantity}
           />
         );
       },
@@ -323,10 +328,19 @@ const AdvanceSearchResultPage = () => {
       key: "",
       title: "Go to event",
       width: "5%",
-      align:"right",
+      align: "right",
       render: (row) => {
         return (
-          <button style={{outline: "none", backgroundColor: "transparent", margin:0, padding:0, border:"none"}} onClick={() => navigateToEvent(row)}>
+          <button
+            style={{
+              outline: "none",
+              backgroundColor: "transparent",
+              margin: 0,
+              padding: 0,
+              border: "none",
+            }}
+            onClick={() => navigateToEvent(row)}
+          >
             <RightNarrowInCircle />
           </button>
         );
