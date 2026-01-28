@@ -1,4 +1,4 @@
-import { Chip, OutlinedInput, Typography } from "@mui/material";
+import { OutlinedInput, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, message, Modal, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
