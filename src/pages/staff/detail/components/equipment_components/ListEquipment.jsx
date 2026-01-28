@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -10,12 +9,13 @@ import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrow
 import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow.jsx";
 import { checkArray } from "../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import "../../../../../styles/global/ant-select.css";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
+import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
+import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
+import TableHeader from "../../../../../components/UX/TableHeader.jsx";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
-import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
 function ListEquipment() {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -56,7 +56,7 @@ function ListEquipment() {
   useEffect(() => {
     const controller = new AbortController();
     const role = user.companyData.employees.find(
-      (el) => el.user === user.email
+      (el) => el.user === user.email,
     )?.role;
     const isSameUser = (user?.id ?? user?.uid) === profile?.adminUserInfo?.id;
     setCanSeeSignedColumns(isSameUser);
@@ -74,7 +74,7 @@ function ListEquipment() {
         staff_member_id: staffmemberInfo.staff_id,
         company_id: user.sqlInfo.company_id,
         subscription_current_in_use: 1,
-      }
+      },
     );
     if (assignedEquipmentStaffQuery.data.ok) {
       setAssignedEquipmentList(assignedEquipmentStaffQuery.data.lease);
@@ -119,7 +119,7 @@ function ListEquipment() {
             `/document/verification/staff_member/check_signed_document`,
             {
               verificationID: verificationId,
-            }
+            },
           );
           const contractList =
             res?.data?.contract_info?.contract_list ||
@@ -151,11 +151,11 @@ function ListEquipment() {
   }, [assignedEquipmentList]);
   const groupingImage = groupBy(
     listImagePerItemQuery?.data?.data?.item,
-    "item_group"
+    "item_group",
   );
   const groupSerialNumber = groupBy(
     itemsInInventoryQuery?.data?.data?.items,
-    "item_id"
+    "item_id",
   );
   const dataSpecificItemInAssignedDevicePerStaffMember = (props) => {
     return {
@@ -253,7 +253,7 @@ function ListEquipment() {
                     setDeviceInfo({
                       ...record,
                       ...dataSpecificItemInAssignedDevicePerStaffMember(
-                        record.device_id
+                        record.device_id,
                       ),
                     });
                     setOpenReturnDeviceStaffModal(true);
@@ -266,11 +266,11 @@ function ListEquipment() {
                   }}
                   disabled={record.active === 0}
                 />
-                <GrayButtonComponent
+                {/* <GrayButtonComponent
                   title={"Mark as lost"}
                   func={() => null}
                   disabled={true}
-                />
+                /> */}
               </div>
             ),
           },
@@ -304,7 +304,7 @@ function ListEquipment() {
   const expandedRowRender = (record) => {
     const groupByVerificationId = groupBy(
       assignedEquipmentList,
-      "verification_id"
+      "verification_id",
     );
     const verificationId = record.verification_id;
     const docs =
@@ -345,15 +345,15 @@ function ListEquipment() {
         key: "actions",
         render: (_, rowDoc) => {
           const href = `/display-contracts?company_id=${encodeURIComponent(
-            user.companyData.id
+            user.companyData.id,
           )}&contract_url=${encodeURIComponent(
-            rowDoc.url
+            rowDoc.url,
           )}&staff_member_id=${encodeURIComponent(
-            profile.adminUserInfo.id
+            profile.adminUserInfo.id,
           )}&date_reference=${encodeURIComponent(
-            record.subscription_initial_date
+            record.subscription_initial_date,
           )}&ver_id=${encodeURIComponent(
-            verificationId
+            verificationId,
           )}&item_ids=${encodeURIComponent(itemIdsParam)}`;
 
           const handleView = () => {
@@ -366,7 +366,7 @@ function ListEquipment() {
                   item_ids: record.device_id,
                   company_id: user.companyData.id,
                 },
-              }
+              },
             );
           };
           return (
@@ -391,13 +391,7 @@ function ListEquipment() {
       },
     ];
     return (
-      <Table
-        columns={innerColumns}
-        dataSource={data}
-        pagination={false}
-        style={{ width: "100%" }}
-        className="table-ant-customized"
-      />
+      <BaseTable columns={innerColumns} dataSource={data} pagination={false} />
     );
   };
   if (
@@ -420,24 +414,13 @@ function ListEquipment() {
       listImagePerItemQuery.refetch();
       staffMemberQuery.refetch();
       return fetchLeasePerStaffMember();
-    }
+    };
     return (
       <div style={{ width: "100%" }} key={location.key}>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <RefreshButton propsFn={handleRefresh} />{" "}
-        </div>
-        <Table
-          style={{ width: "100%" }}
+        <TableHeader rightCta={<RefreshButton propsFn={handleRefresh} />} />
+        <ExpandableTable
           columns={columns}
           dataSource={assignedEquipmentList}
-          className="table-ant-customized"
           rowKey={getRowKey}
           expandable={{
             expandedRowRender,
