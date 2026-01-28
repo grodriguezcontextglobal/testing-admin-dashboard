@@ -1,4 +1,4 @@
-import { Chip, Grid, InputLabel, Typography } from "@mui/material";
+import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
@@ -8,6 +8,7 @@ import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCir
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
@@ -135,7 +136,7 @@ const EditItemForm = ({
                     display:
                       imageUploadedValue ||
                       String(watch("image_url")).startsWith(
-                        "https://res.cloudinary"
+                        "https://res.cloudinary",
                       )
                         ? "flex"
                         : "none",
@@ -374,22 +375,14 @@ const EditItemForm = ({
                               ...subLocationsSubmitted.map((item, index) => ({
                                 title: (
                                   <Chip
-                                    style={{
-                                      border: "none",
-                                      outline: "none",
-                                      margin: 0,
-                                      padding: 0,
-                                      backgroundColor: "transparent",
-                                      boxShadow: "none",
-                                      alignItems: "flex-start",
-                                      width: "fit-content",
-                                    }}
+                                    variant="ghost"
+                                    color="default"
                                     label={item}
                                     onDelete={() =>
                                       setSubLocationsSubmitted(
                                         subLocationsSubmitted.filter(
-                                          (_, i) => i !== index
-                                        )
+                                          (_, i) => i !== index,
+                                        ),
                                       )
                                     }
                                   />
