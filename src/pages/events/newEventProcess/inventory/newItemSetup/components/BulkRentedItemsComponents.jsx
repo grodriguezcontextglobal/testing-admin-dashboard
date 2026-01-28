@@ -11,6 +11,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/Text
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import ScanningMethod from "../../../../../inventory/actions/utils/ScanningMethod";
 import ScanningModal from "../../../../../inventory/actions/utils/ScanningModal";
+import Input from "../../../../../../components/UX/inputs/Input";
 
 // export const renderTitle = () => {
 //   return (
@@ -334,12 +335,11 @@ export const renderOptional = ({
   }
   if (props === "Quantity") {
     return (
-      <OutlinedInput
+      <Input
         readOnly
         {...register("quantity")}
         fullWidth
         style={{
-          ...OutlinedInputStyle,
           width: "100%",
           borderRadius: "8px",
         }}
@@ -348,7 +348,7 @@ export const renderOptional = ({
   }
 
   return (
-    <OutlinedInput
+    <Input
       required
       multiline
       minRows={5}
