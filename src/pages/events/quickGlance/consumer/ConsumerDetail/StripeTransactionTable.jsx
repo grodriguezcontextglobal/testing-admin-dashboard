@@ -1,6 +1,7 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Spin, Table } from "antd";
+import { Button, message, Popconfirm, Spin } from "antd";
+import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +17,7 @@ import { DangerButton } from "../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import "../../../../../styles/global/ant-table.css";
+
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
@@ -39,7 +40,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { openModalToAssignDevice } = useSelector(
-    (state) => state.devicesHandle
+    (state) => state.devicesHandle,
   );
   const dispatch = useDispatch();
   // const queryClient = useQueryClient();
@@ -49,7 +50,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       devitrakApi.get(
         `/transaction/transaction?event_id=${event.id}&company=${
           user.companyData.id
-        }&consumerInfo.id=${customer.id ?? customer.uid}`
+        }&consumerInfo.id=${customer.id ?? customer.uid}`,
       ),
     refetchOnMount: false,
   });
@@ -109,7 +110,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     if (stripeTransactionsSavedQuery) {
       if (searchValue?.length < 1) {
         return stripeTransactionsSavedQuery.filter((element) =>
-          JSON.stringify(element).includes(searchValue)
+          JSON.stringify(element).includes(searchValue),
         );
       } else {
         return [];
@@ -123,7 +124,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       const transactionFound = props.filter((element) =>
         JSON.stringify(element)
           .toLowerCase()
-          .includes(String(searchValue).toLowerCase())
+          .includes(String(searchValue).toLowerCase()),
       );
       return transactionFound;
     }
@@ -202,7 +203,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           <span style={{ ...Subtitle, textOverflow: "ellipsis" }}>
             {checkPaymentIntent[1] === "cash"
               ? `${checkPaymentIntent[1]}_${checkPaymentIntent[2]}_${String(
-                  checkPaymentIntent[4].split("**")[1]
+                  checkPaymentIntent[4].split("**")[1],
                 )}`
               : paymentIntent}
           </span>
@@ -426,7 +427,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           {
             paymentIntent: expandedRowKeys[0],
             "device.status": true,
-          }
+          },
         );
         if (
           expandedRowKeys[0]?.length > 15 &&
@@ -445,7 +446,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       if (
         expandedRowKeys[0]?.length > 15 &&
         sourceData().filter(
-          (item) => item.paymentIntent === expandedRowKeys[0]
+          (item) => item.paymentIntent === expandedRowKeys[0],
         )[0].active
       ) {
         checking();
@@ -455,14 +456,9 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
 
   return (
     <>
-      <Table
+      <ExpandableTable
         columns={columns}
         dataSource={sourceData()}
-        className="table-ant-customized"
-        pagination={{
-          position: ["bottomCenter"],
-        }}
-        style={{ cursor: "pointer" }}
         expandable={{
           expandedRowKeys,
           onExpand: (expanded, record) => {
@@ -473,21 +469,21 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           expandRowByClick: false,
           expandedRowRender: (record) =>
             expandedRowKeys[0] === record.key ? (
-                <ExpandedRowInTable
-                  key={record.paymentIntent}
-                  rowRecord={record}
-                  refetching={refetchingFn}
-                  setOpenCancelingDepositModal={setOpenCancelingDepositModal}
-                  handleRecord={handleRecord}
-                  signatureProof={
-                    signaturesProofUrl.data
-                      ? groupBy(
-                          signaturesProofUrl.data.data.signatures,
-                          "transaction_id"
-                        )
-                      : []
-                  }
-                />
+              <ExpandedRowInTable
+                key={record.paymentIntent}
+                rowRecord={record}
+                refetching={refetchingFn}
+                setOpenCancelingDepositModal={setOpenCancelingDepositModal}
+                handleRecord={handleRecord}
+                signatureProof={
+                  signaturesProofUrl.data
+                    ? groupBy(
+                        signaturesProofUrl.data.data.signatures,
+                        "transaction_id",
+                      )
+                    : []
+                }
+              />
             ) : (
               <Spin indicator={<Loading />} />
             ),
