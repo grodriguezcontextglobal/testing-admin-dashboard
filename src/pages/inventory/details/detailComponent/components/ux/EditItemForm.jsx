@@ -1,7 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
@@ -13,7 +12,6 @@ import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorSty
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../../styles/global/GrayButton";
 import { gripingFields } from "../../../../actions/utils/BulkComponents";
 import {
   addingExtraInfo,
@@ -62,6 +60,7 @@ const EditItemForm = ({
   valueObject,
   watch,
   suppliersOptions,
+  closeModal,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
@@ -444,21 +443,18 @@ const EditItemForm = ({
             width: "50%",
           }}
         >
-          <Link to="/inventory" style={{ width: "100%" }}>
-            <GrayButtonComponent
-              title={"Go back"}
-              loadingState={loadingStatus}
-              disabled={loadingStatus}
-              styles={{
-                ...GrayButton,
-                ...CenteringGrid,
-                width: "100%",
-              }}
-              icon={<WhiteCirclePlusIcon />}
-              titleStyles={{ ...CenteringGrid, textTransform: "none" }}
-              buttonType="reset"
-            />
-          </Link>
+          <GrayButtonComponent
+            func={()=> closeModal(false)}
+            title={"Go back"}
+            loadingState={loadingStatus}
+            disabled={loadingStatus}
+            styles={{
+              width: "100%",
+            }}
+            // icon={<WhiteCirclePlusIcon />}
+            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
+            buttonType="reset"
+          />
         </div>
         <div
           style={{
@@ -471,7 +467,7 @@ const EditItemForm = ({
             loadingState={loadingStatus}
             disabled={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            icon={<WhiteCirclePlusIcon />}
+            // icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
           />
