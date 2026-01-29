@@ -1,6 +1,5 @@
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Modal, notification } from "antd";
+import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -8,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
+import ReusableCard from "../../../../../components/UX/cards/ReusableCard";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -77,7 +78,7 @@ const EditItemModal = ({
         message: msg,
       });
     },
-    [api]
+    [api],
   );
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
@@ -105,7 +106,7 @@ const EditItemModal = ({
     if (itemsInInventoryQuery.data) {
       const locations = groupBy(
         itemsInInventoryQuery.data.data.items,
-        "location"
+        "location",
       );
       const result = new Set();
       for (let data of Object.keys(locations)) {
@@ -154,11 +155,11 @@ const EditItemModal = ({
         supplier_info: data.supplier
           ? dicSuppliers.find(([key]) => key === data.supplier)[1]
           : null,
-          enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
+        enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       };
       const respNewItem = await devitrakApi.post(
         "/db_item/edit-item",
-        template
+        template,
       );
       if (respNewItem.data.ok) {
         Object.keys(template).map((key) => {
@@ -192,9 +193,9 @@ const EditItemModal = ({
     () =>
       retrieveExistingSubLocationsForCompanyInventory(
         itemsInInventoryQuery?.data?.data?.items,
-        watch("location")
+        watch("location"),
       ),
-    [watch("location")]
+    [watch("location")],
   );
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
@@ -261,7 +262,7 @@ const EditItemModal = ({
         imageUploadedValue[0].size > 5242880
       ) {
         return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
+          "Image is bigger than allow. Please resize the image or select a new one.",
         );
       }
       if (!watch("category_name") || !watch("item_group")) {
@@ -304,13 +305,13 @@ const EditItemModal = ({
         setValue("quantity", 0);
         const grouping = groupBy(
           itemsInInventoryQuery?.data?.data?.items,
-          "item_group"
+          "item_group",
         );
         if (grouping[watch("item_group")]) {
           const dataToRetrieve = orderBy(
             grouping[watch("item_group")],
             "serial_number",
-            "asc"
+            "asc",
           );
           setAllSerialNumbersOptions([
             ...dataToRetrieve.map((x) => {
@@ -390,23 +391,10 @@ const EditItemModal = ({
     imageUploadedValue?.length,
     removeImage,
   ]);
-  return (
-    <Modal
-      key={dataFound[0].item_id}
-      open={openEditItemModal}
-      onCancel={() => closeModal()}
-      style={{ top: "20dv", zIndex: 30 }}
-      width={1000}
-      footer={[]}
-    >
-      <Grid
-        display={"flex"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        container
-      >
+  const modalBodyUI = () => {
+    return (
+      <ReusableCard>
         {contextHolder}
-        {renderTitle()}
         <EditItemForm
           acceptImage={acceptAndGenerateImage}
           addingSubLocation={addingSubLocation}
@@ -447,19 +435,34 @@ const EditItemModal = ({
           valueObject={valueObject}
           watch={watch}
           suppliersOptions={supplierList}
+          closeModal={setOpenEditItemModal}
         />
-        {supplierModal && (
-          <NewSupplier
-            providersList={providersList}
-            queryClient={queryClient}
-            setSupplierModal={setSupplierModal}
-            supplierModal={supplierModal}
-            user={user}
-            refetchingAfterNewSupplier={refetchingAfterNewSupplier}
-          />
-        )}
-      </Grid>
-    </Modal>
+      </ReusableCard>
+    );
+  };
+  return (
+    <>
+      <ModalUX
+      title={renderTitle()}
+        key={dataFound[0].item_id}
+        openDialog={openEditItemModal}
+        closeModal={() => closeModal()}
+        style={{ top: "20dv", zIndex: 30 }}
+        width={1000}
+        footer={[]}
+        body={modalBodyUI()}
+      />
+      {supplierModal && (
+        <NewSupplier
+          providersList={providersList}
+          queryClient={queryClient}
+          setSupplierModal={setSupplierModal}
+          supplierModal={supplierModal}
+          user={user}
+          refetchingAfterNewSupplier={refetchingAfterNewSupplier}
+        />
+      )}
+    </>
   );
 };
 
