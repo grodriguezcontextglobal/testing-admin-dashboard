@@ -1,18 +1,13 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import {
   addingExtraInfo,
   gripingFields,
@@ -23,6 +18,7 @@ import {
 } from "./BulkComponents";
 import { renderFields } from "./BulkItemsFields";
 import { styleUpdateAllItemsButton } from "./EditBulkComponents";
+import editUIComponents from "./EditUIComponents";
 
 const EditBulkForm = ({
   acceptImage,
@@ -396,10 +392,7 @@ const EditBulkForm = ({
                           </Grid>
                           <Grid
                             display={
-                              item.label === "Main location" ||
-                              item.label === "Sub location"
-                                ? "flex"
-                                : "none"
+                              item.label === "Main location" ? "flex" : "none"
                             }
                             justifyContent={"flex-start"}
                             alignItems={"center"}
@@ -490,17 +483,12 @@ const EditBulkForm = ({
         })}
       </Grid>
       <Divider />
-      <Tooltip title="This information will be applied to all serial numbers created for this device.">
-        <div style={{ width: "100%" }}>
-          <BlueButtonComponent
-            title={"Add more information"}
-            func={() => setMoreInfoDisplay(!moreInfoDisplay)}
-            icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
-            styles={{ width: "100%" }}
-            buttonType="button"
-          />
-        </div>
-      </Tooltip>
+      {editUIComponents({
+        moreInfoDisplay,
+        setMoreInfoDisplay,
+        stylingComponents,
+        loadingStatus,
+      }).addMoreInformation()}
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,
@@ -515,41 +503,12 @@ const EditBulkForm = ({
         handleDeleteMoreInfo,
       })}{" "}
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-      <div style={stylingComponents({ loadingStatus }).styleDivParent}>
-        <div
-          style={{
-            textAlign: "left",
-            width: "50%",
-          }}
-        >
-          <Link to="/inventory" style={{ width: "100%" }}>
-            <GrayButtonComponent
-              title={"Go back"}
-              func={() => null}
-              buttonType="reset"
-              styles={{ width: "100%" }}
-              titleStyles={{ textTransform: "none" }}
-            />
-          </Link>
-        </div>
-        <div
-          style={{
-            textAlign: "right",
-            width: "50%",
-          }}
-        >
-          <BlueButtonComponent
-            title={"Update group"}
-            disabled={loadingStatus}
-            loadingState={loadingStatus}
-            // func={handleSubmit}
-            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            // icon={<WhiteCirclePlusIcon />}
-            titleStyles={{ ...CenteringGrid, textTransform: "none" }}
-            buttonType="submit"
-          />
-        </div>
-      </div>
+      {editUIComponents({
+        moreInfoDisplay,
+        setMoreInfoDisplay,
+        stylingComponents,
+        loadingStatus,
+      }).submitFormButtons()}
     </form>
   );
 };
