@@ -8,7 +8,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
@@ -165,7 +164,7 @@ const MainPage = () => {
             <BlueButtonComponent
               title={"Add new group of devices"}
               func={() => navigate("/inventory/new-bulk-items")}
-              icon={<WhiteCirclePlusIcon />}
+              // icon={<WhiteCirclePlusIcon />}
               buttonType="button"
             />
           </Grid>
