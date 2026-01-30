@@ -102,10 +102,15 @@ export const bulkItemInsertSequential = async ({
   subLocationsSubmitted,
   sequencialNumbericInsertItemMutation,
   dicSuppliers,
+  queryClient
 }) => {
   try {
-    // console.log(data)
-    // console.log(dicSuppliers)
+    await verifyAndCreateLocation({
+      locationName: data.location,
+      companyId: user.sqlInfo.company_id,
+      queryClient,
+      user,
+    });
     const template = {
       category_name: data.category_name,
       item_group: data.item_group,
