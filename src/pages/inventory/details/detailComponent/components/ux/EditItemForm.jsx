@@ -463,7 +463,7 @@ const EditItemForm = ({
           }}
         >
           <BlueButtonComponent
-            title={"Update item."}
+            title={"Update item"}
             loadingState={loadingStatus}
             disabled={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
