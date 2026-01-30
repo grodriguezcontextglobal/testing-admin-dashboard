@@ -162,7 +162,7 @@ const AssignemntNewDeviceInInventory = () => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(watch("item_group"))) {
       const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("item_group")
+        watch("item_group"),
       );
       setValue("category_name", `${dataToRetrieve.category_name}`);
       setValue("cost", `${dataToRetrieve.cost}`);
@@ -339,18 +339,18 @@ const AssignemntNewDeviceInInventory = () => {
       return openNotificationWithIcon("Ownership status must be provided.");
     if (String(data.ownership).toLowerCase() === "rent" && !returningDate) {
       return openNotificationWithIcon(
-        "As ownership was set as 'Rent', returning date must be provided."
+        "As ownership was set as 'Rent', returning date must be provided.",
       );
     }
 
     if (groupingByDeviceType[data.item_group]) {
       const dataRef = groupBy(
         groupingByDeviceType[data.item_group],
-        "serial_number"
+        "serial_number",
       );
       if (dataRef[data.serial_number]?.length > 0) {
         return openNotificationWithIcon(
-          "Device serial number already exists in company records."
+          "Device serial number already exists in company records.",
         );
       }
     }
@@ -364,7 +364,7 @@ const AssignemntNewDeviceInInventory = () => {
       ) {
         setLoadingStatus(false);
         return alert(
-          "Image is bigger than allow. Please resize the image or select a new one."
+          "Image is bigger than allow. Please resize the image or select a new one.",
         );
       }
       if (imageUploadedValue?.length > 0) {
@@ -378,11 +378,11 @@ const AssignemntNewDeviceInInventory = () => {
           "",
           "",
           "",
-          ""
+          "",
         );
         const registerImage = await devitrakApi.post(
           "/cloudinary/upload-image",
-          templateImageUpload.item_uploader()
+          templateImageUpload.item_uploader(),
         );
 
         await devitrakApi.post(`/image/new_image`, {
@@ -437,7 +437,7 @@ const AssignemntNewDeviceInInventory = () => {
       if (respNewItem.data.ok) {
         retrieveDataNewAddedItem(fullTemplate);
         openNotificationWithIcon(
-          "New item was created and stored in database."
+          "New item was created and stored in database.",
         );
       }
       return setLoadingStatus(false);
@@ -791,18 +791,13 @@ const AssignemntNewDeviceInInventory = () => {
             moreInfo.map((item, index) => (
               <Chip
                 style={{
-                  backgroundColor: "var(--basewhite)",
-                  padding: "2.5px 5px",
                   margin: "0 1px",
-                  border: "solid 0.1px var(--gray900)",
-                  borderRadius: "8px",
                 }}
                 key={`${item.keyObject}-${item.valueObject}`}
                 label={`${item.keyObject}:${item.valueObject}`}
                 onDelete={() => handleDeleteMoreInfo(index)}
-              >
-                {item.keyObject}:{item.valueObject}
-              </Chip>
+                variant="outlined"
+              />
             ))}
         </div>
         <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
