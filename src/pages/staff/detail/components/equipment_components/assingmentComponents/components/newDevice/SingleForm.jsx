@@ -103,11 +103,11 @@ const SingleItemForm = ({
           displayPreviewImage,
           suppliersOptions,
         }).map((item) => {
-          if (item.displayField) {
-            if (item.htmlOption === 6 && item.name === "image_uploader") {
+          if (item?.displayField) {
+            if (item?.htmlOption === 6 && item?.name === "image_uploader") {
               return (
                 <Grid
-                  key={item.name}
+                  key={item?.name}
                   style={{
                     textAlign: "left",
                   }}
@@ -116,20 +116,20 @@ const SingleItemForm = ({
                   xs={12}
                   sm={12}
                   md={
-                    item.name === "descript_item"
+                    item?.name === "descript_item"
                       ? 12
-                      : gripingFields(item.name)
+                      : gripingFields(item?.name)
                   }
                   lg={
-                    item.name === "descript_item"
+                    item?.name === "descript_item"
                       ? 12
-                      : gripingFields(item.name)
+                      : gripingFields(item?.name)
                   }
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
                       placement="top"
-                      title={item.tooltipMessage}
+                      title={item?.tooltipMessage}
                       style={{
                         width: "100%",
                       }}
@@ -137,7 +137,7 @@ const SingleItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item?.label} {item?.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
@@ -149,12 +149,12 @@ const SingleItemForm = ({
                 </Grid>
               );
             } else if (
-              item.htmlOption === 6 &&
-              item.name === "image_uploader_preview"
+              item?.htmlOption === 6 &&
+              item?.name === "image_uploader_preview"
             ) {
               return (
                 <Grid
-                  key={item.name}
+                  key={item?.name}
                   style={{
                     textAlign: "left",
                     display: displayPreviewImage ? "flex" : "none",
@@ -164,20 +164,20 @@ const SingleItemForm = ({
                   xs={12}
                   sm={12}
                   md={
-                    item.name === "descript_item"
+                    item?.name === "descript_item"
                       ? 12
-                      : gripingFields(item.name)
+                      : gripingFields(item?.name)
                   }
                   lg={
-                    item.name === "descript_item"
+                    item?.name === "descript_item"
                       ? 12
-                      : gripingFields(item.name)
+                      : gripingFields(item?.name)
                   }
                 >
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip
                       placement="top"
-                      title={item.tooltipMessage}
+                      title={item?.tooltipMessage}
                       style={{
                         width: "100%",
                       }}
@@ -185,7 +185,7 @@ const SingleItemForm = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} {item.tooltip && <QuestionIcon />}
+                        {item?.label} {item?.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                     <div
@@ -253,7 +253,7 @@ const SingleItemForm = ({
             }
             return (
               <Grid
-                key={item.name}
+                key={item?.name}
                 style={{
                   textAlign: "left",
                 }}
@@ -262,22 +262,22 @@ const SingleItemForm = ({
                 xs={12}
                 sm={12}
                 md={
-                  item.name === "descript_item" ||
-                  item.name === "reference_item_group"
+                  item?.name === "descript_item" ||
+                  item?.name === "reference_item_group"
                     ? 12
-                    : gripingFields(item.name)
+                    : gripingFields(item?.name)
                 }
                 lg={
-                  item.name === "descript_item" ||
-                  item.name === "reference_item_group"
+                  item?.name === "descript_item" ||
+                  item?.name === "reference_item_group"
                     ? 12
-                    : gripingFields(item.name)
+                    : gripingFields(item?.name)
                 }
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
                     placement="top"
-                    title={item.tooltipMessage}
+                    title={item?.tooltipMessage}
                     style={{
                       width: "100%",
                     }}
@@ -289,19 +289,19 @@ const SingleItemForm = ({
                         }).styling
                       }
                     >
-                      {item.label} {item.tooltip && <QuestionIcon />}
+                      {item?.label} {item?.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>
                 </InputLabel>
-                {item.htmlElement.length < 1 ? (
+                {item?.htmlElement.length < 1 ? (
                   <Controller
                     control={control}
-                    name={item.name}
+                    name={item?.name}
                     rules={
-                      item.required
+                      item?.required
                         ? {
                             required: `${
-                              item.label || "This field"
+                              item?.label || "This field"
                             } is required`,
                           }
                         : {}
@@ -319,12 +319,12 @@ const SingleItemForm = ({
                       >
                         <Grid item xs={12} sm={12} md={12} lg={12}>
                           <AutoComplete
-                            aria-required={item.required}
+                            aria-required={item?.required}
                             className="custom-autocomplete" // Add a custom
                             variant="outlined"
                             style={{
                               ...AntSelectorStyle,
-                              border: errors[item.name]
+                              border: errors[item?.name]
                                 ? "1px solid red"
                                 : "solid 0.3 var(--gray600)",
                               fontFamily: "Inter",
@@ -333,29 +333,42 @@ const SingleItemForm = ({
                             }}
                             value={value}
                             onChange={(value) => onChange(value)}
-                            options={item.options.map((x) => {
-                              if (item.htmlOption === 0) {
-                                return { value: x };
-                              } else {
-                                return { value: x.value };
+                            options={item?.options.map((x) => {
+                              if (
+                                typeof x === "object" &&
+                                x !== null &&
+                                "value" in x
+                              ) {
+                                const label = x.label ?? x.value;
+                                return {
+                                  value: x.value,
+                                  label:
+                                    typeof label === "object" &&
+                                    label !== null &&
+                                    "value" in label &&
+                                    !label.$$typeof
+                                      ? label.value
+                                      : label,
+                                };
                               }
+                              return { value: x, label: x };
                             })}
-                            placeholder={item.placeholder}
+                            placeholder={item?.placeholder}
                             allowClear
                           />
-                          {renderingErrorMessage(errors[item.name])}
+                          {renderingErrorMessage(errors[item?.name])}
                           {renderingOptionsButtons({
                             watch,
                             manuallyAddingSerialNumbers,
                             addingSubLocation,
                             setAddSerialNumberField,
-                            label: item.label,
+                            label: item?.label,
                           })}
                         </Grid>
                         <Grid
                           display={
-                            item.label === "Main location" ||
-                            item.label === "Sub location"
+                            item?.label === "Main location" ||
+                            item?.label === "Sub location"
                               ? "flex"
                               : "none"
                           }
@@ -368,11 +381,11 @@ const SingleItemForm = ({
                           lg={12}
                         >
                           {
-                            renderingOptionsForSubLocations(item.label)
+                            renderingOptionsForSubLocations(item?.label)
                               .addSubLocation
                           }
                           {
-                            renderingOptionsForSubLocations(item.label)
+                            renderingOptionsForSubLocations(item?.label)
                               .removeAllSubLocations
                           }
                         </Grid>
@@ -380,7 +393,7 @@ const SingleItemForm = ({
                           <Breadcrumb
                             style={{
                               display:
-                                item.label === "Sub location" ||
+                                item?.label === "Sub location" ||
                                 displaySublocationFields.length > 0
                                   ? "flex"
                                   : "none",
@@ -433,7 +446,7 @@ const SingleItemForm = ({
                   />
                 ) : (
                   renderOptional({
-                    props: item.htmlElement,
+                    props: item?.htmlElement,
                     watch,
                     register,
                     errors,
