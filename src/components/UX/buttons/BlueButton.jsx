@@ -11,6 +11,7 @@ const BlueButtonComponent = ({
   icon = null,
   loadingState = false,
   titleStyles = {},
+  ...props
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -21,6 +22,7 @@ const BlueButtonComponent = ({
 
   return (
     <Button
+      {...props}
       disabled={disabled}
       loading={loadingState}
       htmlType={buttonType}
