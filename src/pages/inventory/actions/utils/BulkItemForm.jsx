@@ -1,5 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
@@ -233,15 +233,15 @@ const BulkItemForm = ({
                           gap: "1rem",
                         }}
                       >
-                        <Button
+                        <BlueButtonComponent
                           disabled={imageUrlGenerated}
-                          onClick={() => acceptImage()}
+                          func={() => acceptImage()}
                           style={{
-                            ...BlueButton,
                             background: imageUrlGenerated
                               ? "transparent"
                               : BlueButton.background,
                           }}
+                          icon={imageUrlGenerated ? <CheckIcon /> : null}
                         >
                           <p
                             style={{
@@ -251,12 +251,12 @@ const BulkItemForm = ({
                                 : BlueButtonText.color,
                             }}
                           >
-                            {imageUrlGenerated ? <CheckIcon /> : null}
+                            
                             {imageUrlGenerated
                               ? "Image accepted"
                               : "Accept image"}
                           </p>
-                        </Button>
+                        </BlueButtonComponent>
                       </div>
                     </div>
                   </InputLabel>
