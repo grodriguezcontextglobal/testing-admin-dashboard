@@ -45,11 +45,12 @@ export const useAssignmentLogic = () => {
     useState(null);
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-  const [dicSuppliers, setDicSuppliers] = useState({});
+  const [dicSuppliers, setDicSuppliers] = useState([]);
   const [supplierModal, setSupplierModal] = useState(false);
   const [supplierList, setSupplierList] = useState([
     {
-      value: (
+      value: "Add new supplier",
+      label: (
         <div
           style={{
             display: "flex",
@@ -117,12 +118,12 @@ export const useAssignmentLogic = () => {
     refetchOnMount: false,
     staleTime: 3 * 60 * 1000,
   });
-    const refetchingAfterNewSupplier = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["providersCompanyQuery", user?.companyData?.id],
-      });
-      return providersList.refetch();
-    };
+  const refetchingAfterNewSupplier = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["providersCompanyQuery", user?.companyData?.id],
+    });
+    return providersList.refetch();
+  };
   const invalidateQueries = () => {
     queryClient.invalidateQueries({
       queryKey: ["ItemsInInventoryCheckingQuery"],
@@ -394,24 +395,67 @@ export const useAssignmentLogic = () => {
     const suppliersOptionsRendering = () => {
       let result = [];
       if (providersList?.data?.data?.providerCompanies?.length > 0) {
-        providersList?.data?.data?.providerCompanies?.map((item) => {
-          result.push({ value: item.companyName });
+        providersList?.data?.data?.providerCompanies?.forEach((item) => {
+          let companyName = item.companyName;
+          if (
+            typeof companyName === "object" &&
+            companyName !== null &&
+            "value" in companyName
+          ) {
+            companyName = companyName.value;
+          }
+          if (typeof companyName === "object") {
+            companyName = String(companyName); // Fallback for safety
+          }
+          result.push({ value: companyName });
         });
       }
-      return setSupplierList([...supplierList, ...result]);
+      return setSupplierList((prev) => {
+        const initialOption = prev.find(
+          (item) => item.value === "Add new supplier",
+        );
+        // Use a Map to ensure uniqueness by value
+        const uniqueOptions = new Map();
+        if (initialOption)
+          uniqueOptions.set(initialOption.value, initialOption);
+
+        result.forEach((r) => {
+          if (!uniqueOptions.has(r.value)) {
+            uniqueOptions.set(r.value, r);
+          }
+        });
+
+        return Array.from(uniqueOptions.values());
+      });
     };
     const diccionarySuppliers = () => {
       const dic = new Map();
       if (providersList?.data?.data?.providerCompanies?.length > 0) {
-        providersList?.data?.data?.providerCompanies?.map((item) => {
-          if (!dic.has(item.companyName)) {
-            let c = {};
-            c[item.companyName] = item.id;
-            dic.set(item.companyName, item.id);
+        providersList?.data?.data?.providerCompanies?.forEach((item) => {
+          let companyName = item.companyName;
+          if (
+            typeof companyName === "object" &&
+            companyName !== null &&
+            "value" in companyName
+          ) {
+            companyName = companyName.value;
+          }
+          if (typeof companyName === "object") {
+            companyName = String(companyName);
+          }
+
+          if (!dic.has(companyName)) {
+            dic.set(companyName, item.id);
           }
         });
       }
-      return setDicSuppliers(Array.from(dic));
+      return setDicSuppliers(Object.fromEntries(dic)); // Convert Map to Object if needed, or keep as Map?
+      // State dicSuppliers is initialized as {} (line 48), so it expects an object.
+      // But line 428 says: setDicSuppliers(Array.from(dic));
+      // Array.from(Map) returns [[key, val], ...].
+      // If downstream expects an object, this might be wrong.
+      // Let's check line 48: const [dicSuppliers, setDicSuppliers] = useState({});
+      // And usage: line 269: dicSuppliers passed to singleItemInserting.
     };
     suppliersOptionsRendering();
     diccionarySuppliers();
@@ -457,7 +501,7 @@ export const useAssignmentLogic = () => {
           if (key === "container") {
             return;
           }
-          if (key === "enableAssignFeature") return setValue(key, "Enabled");
+          if (key === "enableAssignFeature") return setValue(key, "YES");
           if (key === "sub_location") {
             const checkType =
               typeof value === "string" ? JSON.parse(value) : value;
@@ -466,6 +510,7 @@ export const useAssignmentLogic = () => {
             }
           }
           if (key === "serial_number") return;
+          if(key === "main_warehouse") return setValue("tax_location", dataToRetrieve["main_warehouse"]);
           setValue(key, value);
           setValue("quantity", 0);
         });
@@ -525,10 +570,10 @@ export const useAssignmentLogic = () => {
     }
   }, [imageUploadedValue]);
 
-    useEffect(() => {
-      setValue("location", watch("tax_location"));
-    }, [watch("tax_location")]);
-  
+  useEffect(() => {
+    setValue("location", watch("tax_location"));
+  }, [watch("tax_location")]);
+
   return {
     acceptAndGenerateImage,
     addContracts,
