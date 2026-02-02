@@ -511,11 +511,13 @@ const AssignmentFromExistingInventory = () => {
   };
   useEffect(() => {
     const checkingSerialNumberInputted = async () => {
-      const data = JSON.parse(valueItemSelected?.data);
-      if (watch("startingNumber").length === data[0].serial_number.length) {
-        setCheckingSerialNumberInputted(
-          data.some((item) => item.serial_number === watch("startingNumber"))
-        );
+      if (valueItemSelected?.data) {
+        const data = JSON.parse(valueItemSelected.data);
+        if (watch("startingNumber").length === data[0].serial_number.length) {
+          setCheckingSerialNumberInputted(
+            data.some((item) => item.serial_number === watch("startingNumber"))
+          );
+        }
       }
     };
     checkingSerialNumberInputted();
