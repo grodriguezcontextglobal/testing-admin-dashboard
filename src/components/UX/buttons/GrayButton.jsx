@@ -11,6 +11,7 @@ const GrayButtonComponent = ({
   icon = null,
   loadingState = false,
   titleStyles = {},
+  ...props
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -20,6 +21,7 @@ const GrayButtonComponent = ({
 
   return (
     <Button
+      {...props}
       disabled={disabled}
       loading={loadingState}
       htmlType={buttonType}
