@@ -73,7 +73,6 @@ const EditGroup = () => {
     valueObject,
     watch,
   } = useLogic();
-console.log(displaySublocationFields)
   return (
     <Grid
       display={"flex"}
