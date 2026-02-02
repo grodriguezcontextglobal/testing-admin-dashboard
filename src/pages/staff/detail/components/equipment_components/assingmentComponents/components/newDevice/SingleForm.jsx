@@ -1,4 +1,4 @@
-import { Chip, Grid, InputLabel, Typography } from "@mui/material";
+import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
@@ -7,6 +7,7 @@ import { WhiteCirclePlusIcon } from "../../../../../../../../components/icons/Wh
 import ImageUploaderUX from "../../../../../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../../components/UX/buttons/GrayButton";
+import Chip from "../../../../../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
@@ -18,7 +19,7 @@ import {
   stylingComponents,
 } from "../../../../../../../inventory/actions/utils/BulkComponents";
 import "../../style.css";
-import { renderFields } from "../utils/Fields";
+import { renderFields } from "../../../../../../../inventory/actions/utils/SingleItemFields";
 
 const SingleItemForm = ({
   acceptImage,
@@ -407,21 +408,18 @@ const SingleItemForm = ({
                               ...subLocationsSubmitted.map((item, index) => ({
                                 title: (
                                   <Chip
+                                    variant="ghost"
                                     style={{
-                                      border: "none",
-                                      outline: "none",
                                       margin: 0,
                                       padding: 0,
-                                      backgroundColor: "transparent",
-                                      boxShadow: "none",
                                       alignItems: "flex-start",
                                     }}
                                     label={item}
                                     onDelete={() =>
                                       setSubLocationsSubmitted(
                                         subLocationsSubmitted.filter(
-                                          (_, i) => i !== index
-                                        )
+                                          (_, i) => i !== index,
+                                        ),
                                       )
                                     }
                                   />
