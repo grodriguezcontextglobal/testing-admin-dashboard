@@ -1,11 +1,8 @@
 /* eslint-disable no-unused-vars */
 import { useWindowScroll } from "@uidotdev/usehooks";
 import { useState } from "react";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
-import EditItemModal from "../components/EditItemModal";
-import { Button } from "antd";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import EditItemModal from "../components/EditItemModal";
 
 const EditItem = ({ dataFound, refetchingFn }) => {
   const [{ x, y }, scrollTo] = useWindowScroll();
