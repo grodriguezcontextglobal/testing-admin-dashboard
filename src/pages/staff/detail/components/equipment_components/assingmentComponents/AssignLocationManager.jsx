@@ -1,40 +1,51 @@
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Button,
-  Card,
   Checkbox,
-  Col,
-  Divider,
-  Form,
-  List,
-  Row,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  InputLabel,
+  MenuItem,
   Select,
-  Space,
-  Tag,
   Typography,
-  message,
-} from "antd";
-// import { groupBy } from "lodash";
+} from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { message } from "antd";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import ReusableCardWithHeaderAndFooter from "../../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
+import Chip from "../../../../../../components/UX/Chip/Chip";
 import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSlide";
-
-const { Title, Text } = Typography;
+import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import BaseTable from "../../../../../../components/ux/tables/BaseTable";
+import { Subtitle } from "../../../../../../styles/global/Subtitle";
 
 const AssignLocationManager = () => {
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
-  const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [editingLocation, setEditingLocation] = useState(null);
   const dispatch = useDispatch();
-  // 1. Fetch Company Data (MongoDB)
-  const { data: companyDataQuery, isLoading: isLoadingCompany } = useQuery({
+
+  const { register, handleSubmit, setValue, reset, watch } = useForm({
+    defaultValues: {
+      location: "",
+      create: false,
+      update: false,
+      transfer: false,
+      delete: false,
+      view: false,
+      assign: false,
+    },
+  });
+
+  const { data: companyDataQuery } = useQuery({
     queryKey: ["companyData", user.companyData.id, { type: "done" }],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
@@ -43,17 +54,7 @@ const AssignLocationManager = () => {
     enabled: !!user.companyData.id,
   });
 
-  // 2. Fetch Inventory Locations (for options)
-  // const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-  //   queryKey: ["inventoryForLocations", user.sqlInfo.company_id],
-  //   queryFn: () =>
-  //     devitrakApi.post("/db_item/consulting-item", {
-  //       company_id: user.sqlInfo.company_id,
-  //     }),
-  //   enabled: !!user.sqlInfo.company_id,
-  // });
-
-  const { data: listOfLocations, isLoading: isLoadingInventory } = useQuery({
+  const { data: listOfLocations } = useQuery({
     queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.post(
@@ -62,28 +63,25 @@ const AssignLocationManager = () => {
           company_id: user.sqlInfo.company_id,
           role: Number(
             user.companyData.employees.find((emp) => emp.user === user.email)
-              .role
+              .role,
           ),
           preference:
             user.companyData.employees.find((emp) => emp.user === user.email)
               .preference || [],
-        }
+        },
       ),
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
-  const locations = listOfLocations?.data?.data ? Object.keys(listOfLocations.data.data) : [];
-
-  // const locations = inventoryData?.data?.items
-  //   ? Object.keys(groupBy(inventoryData.data.items, "location"))
-  //   : [];
+  const locations = listOfLocations?.data?.data
+    ? Object.keys(listOfLocations.data.data)
+    : [];
 
   const options = locations.map((loc) => ({ label: loc, value: loc }));
 
-  // Get current employee data
   const companyInfo = companyDataQuery?.data?.company?.[0];
   const currentEmployeeIndex = companyInfo?.employees?.findIndex(
-    (e) => e.user === profile.email
+    (e) => e.user === profile.email,
   );
   const currentEmployee =
     currentEmployeeIndex > -1
@@ -92,35 +90,34 @@ const AssignLocationManager = () => {
 
   const managerLocations = currentEmployee?.preference?.managerLocation || [];
 
-  const onFinish = async (values) => {
+  const onSubmit = async (data) => {
     if (!companyInfo || !currentEmployee) return;
     setLoadingUpdate(true);
     try {
       const newPermissions = {
-        create: values.create || false,
-        update: values.update || false,
-        transfer: values.transfer || false,
-        delete: values.delete || false,
-        view: values.view || false,
-        assign: values.assign || false,
+        create: data.create || false,
+        update: data.update || false,
+        transfer: data.transfer || false,
+        delete: data.delete || false,
+        view: data.view || false,
+        assign: data.assign || false,
       };
 
       const newAssignment = {
-        location: values.location,
+        location: data.location,
         actions: newPermissions,
       };
       let updatedManagerLocations = [...managerLocations];
       const existingIndex = updatedManagerLocations.findIndex(
-        (m) => m.location === values.location
+        (m) => m.location === data.location,
       );
       if (existingIndex > -1) {
         updatedManagerLocations[existingIndex] = newAssignment;
       } else {
         updatedManagerLocations.push(newAssignment);
       }
-      // Sync with 'location' string array
       const updatedLocationStrings = updatedManagerLocations.map(
-        (m) => m.location
+        (m) => m.location,
       );
 
       const updatedEmployees = [...companyInfo.employees];
@@ -128,20 +125,20 @@ const AssignLocationManager = () => {
         ...currentEmployee,
         preference: {
           ...currentEmployee.preference,
-          inventory_location: updatedLocationStrings, // Set the array directly
+          inventory_location: updatedLocationStrings,
           managerLocation: updatedManagerLocations,
         },
       };
-      // Update company data in MongoDB
+
       const updatingCompanyEmployeePreference = await devitrakApi.patch(
         `/company/update-company/${companyInfo.id}`,
         {
           employees: updatedEmployees,
-        }
+        },
       );
 
       message.success("Location manager assigned/updated successfully.");
-      form.resetFields();
+      reset();
       setEditingLocation(null);
       queryClient.invalidateQueries({
         queryKey: ["companyData", user.companyData.id, { type: "done" }],
@@ -159,7 +156,7 @@ const AssignLocationManager = () => {
           companyData:
             updatingCompanyEmployeePreference.data.company ??
             profile.companyData,
-        })
+        }),
       );
     } catch (error) {
       console.error(error);
@@ -174,10 +171,10 @@ const AssignLocationManager = () => {
     setLoadingUpdate(true);
     try {
       const updatedManagerLocations = managerLocations.filter(
-        (m) => m.location !== locationToDelete
+        (m) => m.location !== locationToDelete,
       );
       const updatedLocationStrings = updatedManagerLocations.map(
-        (m) => m.location
+        (m) => m.location,
       );
 
       const updatedEmployees = [...companyInfo.employees];
@@ -185,7 +182,7 @@ const AssignLocationManager = () => {
         ...currentEmployee,
         preference: {
           ...currentEmployee.preference,
-          inventory_location: updatedLocationStrings, // Set the array directly
+          inventory_location: updatedLocationStrings,
           managerLocation: updatedManagerLocations,
         },
       };
@@ -206,16 +203,7 @@ const AssignLocationManager = () => {
     }
   };
 
-  /**
-   * Populates the form with the selected location's data for editing.
-   * Handles the preference schema structure:
-   * - location: string (optional)
-   * - actions: object (optional) with boolean flags
-   *
-   * @param {Object} item - The manager location object to edit
-   */
   const handleEdit = (item) => {
-    // Validate item structure
     if (!item || typeof item !== "object") {
       console.error("Invalid item passed to handleEdit");
       return;
@@ -226,149 +214,242 @@ const AssignLocationManager = () => {
 
     setEditingLocation(locationName);
 
-    // Set form values with defaults for missing fields
-    form.setFieldsValue({
-      location: locationName,
-      create: Boolean(actions.create),
-      update: Boolean(actions.update),
-      transfer: Boolean(actions.transfer),
-      delete: Boolean(actions.delete),
-      view: Boolean(actions.view),
-      assign: Boolean(actions.assign),
-    });
+    setValue("location", locationName);
+    setValue("create", Boolean(actions.create));
+    setValue("update", Boolean(actions.update));
+    setValue("transfer", Boolean(actions.transfer));
+    setValue("delete", Boolean(actions.delete));
+    setValue("view", Boolean(actions.view));
+    setValue("assign", Boolean(actions.assign));
   };
 
-  return (
-    <Card
-      style={{ maxWidth: 800, margin: "20px auto" }}
-      loading={isLoadingCompany}
-    >
-      <Title level={4}>Assign Location/Permissions</Title>
-      <Typography.Paragraph>
-        Assign this staff member for specific locations and define
-        permissions.
-      </Typography.Paragraph>
-      <Form form={form} onFinish={onFinish} layout="vertical">
-        <Row gutter={16}>
-          <Col span={24}>
-            <Form.Item
-              name="location"
-              label="Location"
-              rules={[{ required: true, message: "Please select a location" }]}
-            >
-              <Select
-                options={options}
-                loading={isLoadingInventory}
-                placeholder="Select a location"
-                showSearch
-                disabled={!!editingLocation} // Disable location change when editing
-              />
-            </Form.Item>
-          </Col>
-          <Col span={24}>
-            <Form.Item label="Permissions">
-              <Row>
-                <Col span={6}>
-                  <Form.Item name="create" valuePropName="checked" noStyle>
-                    <Checkbox>Create</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="update" valuePropName="checked" noStyle>
-                    <Checkbox>Update</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="transfer" valuePropName="checked" noStyle>
-                    <Checkbox>Transfer</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="delete" valuePropName="checked" noStyle>
-                    <Checkbox>Delete</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="view" valuePropName="checked" noStyle>
-                    <Checkbox>View</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="assign" valuePropName="checked" noStyle>
-                    <Checkbox>Assign</Checkbox>
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={loadingUpdate}>
-              {editingLocation ? "Update Assignment" : "Assign Location/Permissions"}
-            </Button>
-            {editingLocation && (
-              <Button
-                onClick={() => {
-                  setEditingLocation(null);
-                  form.resetFields();
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-          </Space>
-        </Form.Item>
-      </Form>
-
-      <Divider />
-
-      <Title level={5}>Assigned Locations</Title>
-      <List
-        loading={isLoadingCompany || loadingUpdate}
-        bordered
-        dataSource={managerLocations}
-        renderItem={(item) => (
-          <List.Item
-            actions={[
-              <GrayButtonComponent
-                key="edit"
-                title="Edit"
-                func={() => handleEdit(item)}
-                icon={<EditOutlined />}
-                buttonType="button"
-                style={{ width: "fit-content" }}
-              />,
-              <DangerButtonComponent
-                key="delete"
-                title="Remove"
-                func={() => handleDelete(item.location)}
-                icon={<DeleteOutlined />}
-                buttonType="button"
-                style={{ width: "fit-content" }}
-              />,
-            ]}
-          >
-            <List.Item.Meta
-              title={<Text strong>{item.location}</Text>}
-              description={
-                <Space wrap>
-                  {item.actions.create && <Tag color="green">Create</Tag>}
-                  {item.actions.update && <Tag color="blue">Update</Tag>}
-                  {item.actions.transfer && <Tag color="orange">Transfer</Tag>}
-                  {item.actions.delete && <Tag color="red">Delete</Tag>}
-                  {item.actions.view && <Tag color="gray">View</Tag>}
-                  {item.actions.assign && <Tag color="orange">Assign</Tag>}
-                  {!Object.values(item.actions).some(Boolean) && (
-                    <Tag>Read Only</Tag>
-                  )}
-                </Space>
-              }
+  const columns = [
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+      render: (text) => (
+        <Typography
+          style={{
+            color: "var(--gray-900, #101828)",
+            fontFamily: "Inter",
+            fontSize: "14px",
+            fontStyle: "normal",
+            fontWeight: 500,
+            lineHeight: "20px",
+          }}
+        >
+          {text}
+        </Typography>
+      ),
+    },
+    {
+      title: "Permissions",
+      key: "permissions",
+      render: (_, record) => (
+        <Grid container gap={1}>
+          {record.actions.create && (
+            <Chip label="Create" color="success" size="small" variant="ghost" />
+          )}
+          {record.actions.update && (
+            <Chip label="Update" color="info" size="small" variant="ghost" />
+          )}
+          {record.actions.transfer && (
+            <Chip
+              label="Transfer"
+              color="warning"
+              size="small"
+              variant="ghost"
             />
-          </List.Item>
-        )}
-      />
-    </Card>
+          )}
+          {record.actions.delete && (
+            <Chip label="Delete" color="error" size="small" variant="ghost" />
+          )}
+          {record.actions.view && (
+            <Chip label="View" color="default" size="small" variant="ghost" />
+          )}
+          {record.actions.assign && (
+            <Chip label="Assign" color="warning" size="small" variant="ghost" />
+          )}
+          {!Object.values(record.actions).some(Boolean) && (
+            <Chip
+              label="Read Only"
+              color="default"
+              size="small"
+              variant="ghost"
+            />
+          )}
+        </Grid>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Grid container gap={1}>
+          <GrayButtonComponent
+            title="Edit"
+            func={() => handleEdit(record)}
+            icon={<EditOutlined />}
+            buttonType="button"
+            styles={{ width: "fit-content" }}
+          />
+          <DangerButtonComponent
+            title="Remove"
+            func={() => handleDelete(record.location)}
+            icon={<DeleteOutlined />}
+            buttonType="button"
+            styles={{ width: "fit-content" }}
+          />
+        </Grid>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <ReusableCardWithHeaderAndFooter
+        title={
+          <Typography
+            variant="h6"
+            style={{
+              marginBottom: "16px",
+            }}
+          >
+            Assign Location/Permissions
+          </Typography>
+        }
+        style={{ width: "100%" }}
+        actions={[
+          <Grid
+            key="footer-actions-buttons"
+            container
+            spacing={2}
+            style={{
+              justifyContent: "flex-start",
+              gap: "24px",
+              padding: "0px 24px",
+              margin: "3dvh 0",
+            }}
+          >
+            <BlueButtonComponent
+              form="assignLocationForm"
+              buttonType="submit"
+              title={
+                editingLocation
+                  ? "Update Assignment"
+                  : "Assign Location/Permissions"
+              }
+              loadingState={loadingUpdate}
+              styles={{ width: "fit-content" }}
+            />
+            {editingLocation && (
+              <GrayButtonComponent
+                title="Cancel"
+                func={() => {
+                  setEditingLocation(null);
+                  reset();
+                }}
+                styles={{ width: "fit-content" }}
+              />
+            )}
+          </Grid>,
+        ]}
+      >
+        <Typography
+          paragraph
+          style={Subtitle}
+        >
+          Assign this staff member for specific locations and define
+          permissions.
+        </Typography>
+        <form id="assignLocationForm" onSubmit={handleSubmit(onSubmit)}>
+          <Grid container spacing={3}>
+            <Grid marginTop={3} justifyContent="flex-start" item xs={12} md={12} lg={12}>
+              <InputLabel style={{width:"100%", textAlign:"left"}} htmlFor="location">Location</InputLabel>
+              <FormControl fullWidth>
+                <Select
+                  {...register("location", { required: true })}
+                  value={watch("location")}
+                  onChange={(e) => setValue("location", e.target.value)}
+                  disabled={!!editingLocation}
+                  displayEmpty
+                  style={AntSelectorStyle}
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return (
+                        <span style={{ color: "#aaa" }}>Select a location</span>
+                      );
+                    }
+                    return selected;
+                  }}
+                >
+                  <MenuItem disabled value="">
+                    <em>Select a location</em>
+                  </MenuItem>
+                  {options.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <InputLabel>Permissions</InputLabel>
+              <Grid container spacing={1}>
+                {[
+                  "create",
+                  "update",
+                  "transfer",
+                  "delete",
+                  "view",
+                  "assign",
+                ].map((perm) => (
+                  <Grid item xs={6} sm={4} key={perm}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          {...register(perm)}
+                          checked={watch(perm)}
+                          onChange={(e) => setValue(perm, e.target.checked)}
+                        />
+                      }
+                      label={perm.charAt(0).toUpperCase() + perm.slice(1)}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          </Grid>
+        </form>
+      </ReusableCardWithHeaderAndFooter>
+      <ReusableCardWithHeaderAndFooter
+        style={{ width: "100%", margin: "3dvh 0 0" }}
+        title={
+          <Typography
+            variant="h6"
+            style={{
+              marginBottom: "16px",
+              color: "var(--gray-900, #101828)",
+              fontFamily: "Inter",
+              fontSize: "18px",
+              fontWeight: 600,
+            }}
+          >
+            Assigned Locations
+          </Typography>
+        }
+      >
+        <BaseTable
+          columns={columns}
+          dataSource={managerLocations}
+          enablePagination={true}
+          pageSize={5}
+        />
+      </ReusableCardWithHeaderAndFooter>
+    </>
   );
 };
 
