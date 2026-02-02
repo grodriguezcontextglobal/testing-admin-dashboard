@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, notification } from "antd";
+import { message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -9,12 +9,8 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import "../../../styles/global/ant-select.css";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../../../styles/global/OutlineInput.css";
 import "../../../styles/global/reactInput.css";
@@ -29,6 +25,7 @@ import { singleItemInserting } from "./utils/singleItemIserting";
 import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLocationRenderer";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
+import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
@@ -262,79 +259,52 @@ const AddNewItem = () => {
       ),
     [watch("location")]
   );
-  const renderingOptionsForSubLocations = (item) => {
+const renderingOptionsForSubLocations = (item) => {
+    if (typeof displaySublocationFields !== "boolean")
+      return {
+        addSubLocation: null,
+        addEndingSerialNumberSequence: null,
+        removeAllSubLocations: null,
+      };
     const addSublocationButton = () => {
-      return (
-        <Button
-          onClick={() => setDisplaySublocationFields(true)}
-          style={{
-            ...BlueButton,
-            ...CenteringGrid,
-            alignSelf: "stretch",
-            display:
-              item === "Main location" && !displaySublocationFields
-                ? "flex"
-                : "none",
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={BlueButtonText}>Add sub location</p>
-        </Button>
-      );
-    };
-
-    const addEndingSerialNumberSequenceButton = () => {
-      return (
-        <Button
-          onClick={() => setDisplaySublocationFields(true)}
-          style={{
-            ...BlueButton,
-            ...CenteringGrid,
-            alignSelf: "stretch",
-            display:
-              item === "Main location" && !displaySublocationFields
-                ? "flex"
-                : "none",
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={BlueButtonText}>Add sub location</p>
-        </Button>
-      );
+      if (item === "Main location" && !displaySublocationFields) {
+        return (
+          <BlueButtonComponent
+            func={() => setDisplaySublocationFields(true)}
+            title="Add sub location"
+            styles={{
+              width: "100%",
+            }}
+          />
+        );
+      }
+      return null;
     };
 
     const removeAllSubLocationsButton = () => {
-      return (
-        <Button
-          onClick={() => {
-            setDisplaySublocationFields(false);
-            setSubLocationsSubmitted([]);
-          }}
-          style={{
-            ...DangerButton,
-            ...CenteringGrid,
-            alignSelf: "stretch",
-            display:
-              item === "Main location" && displaySublocationFields
-                ? "flex"
-                : "none",
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={DangerButtonText}>Remove all sub location</p>
-        </Button>
-      );
+      if (item === "Main location" && displaySublocationFields) {
+        return (
+          <DangerButtonComponent
+            func={() => {
+              setDisplaySublocationFields(false);
+              setSubLocationsSubmitted([]);
+            }}
+            title="Remove all sub location"
+            styles={{
+              width: "100%",
+            }}
+          />
+        );
+      }
+      return null;
     };
+
     return {
       addSubLocation: addSublocationButton(),
-      addEndingSerialNumberSequence: addEndingSerialNumberSequenceButton(),
+      addEndingSerialNumberSequence: null,
       removeAllSubLocations: removeAllSubLocationsButton(),
     };
-  };
-  const addingSubLocation = (props) => {
+  };  const addingSubLocation = (props) => {
     if (String(props).length < 1) return;
     const result = [...subLocationsSubmitted, props];
     setValue("sub_location", "");
