@@ -161,7 +161,7 @@ const AssignemntNewDeviceInInventory = () => {
   useEffect(() => {
     const controller = new AbortController();
     if (retrieveItemDataSelected().has(watch("item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
+      const dataToRetrieve = retrieveItemDataSelected()?.get(
         watch("item_group"),
       );
       setValue("category_name", `${dataToRetrieve.category_name}`);
@@ -180,7 +180,7 @@ const AssignemntNewDeviceInInventory = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (String(watch("container")).includes("Yes")) {
+    if (String(watch("container"))?.includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
     } else {
       setDisplayContainerSplotLimitField(false);
