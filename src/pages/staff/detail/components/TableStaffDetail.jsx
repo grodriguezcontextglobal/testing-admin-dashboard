@@ -1,11 +1,11 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import BaseTable from "../../../../components/ux/tables/BaseTable";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import ListEquipment from "./equipment_components/ListEquipment";
@@ -167,7 +167,7 @@ const TableStaffDetail = () => {
             index++;
           } else if (
             data.staff.headsetAttendees?.some(
-              (item) => item.email === profile.email
+              (item) => item.email === profile.email,
             )
           ) {
             result.splice(index, 0, { ...data, role: "Coordinator" });
@@ -258,16 +258,10 @@ const TableStaffDetail = () => {
           item
           xs={12}
         >
-          <Table
-            sticky
-            size="large"
+          <BaseTable
+            enablePagination={true}
             columns={columns}
-            style={{ width: "100%" }}
             dataSource={dataToRenderInTable() ? dataToRenderInTable() : []}
-            pagination={{
-              position: ["bottomCenter"],
-            }}
-            className="table-ant-customized"
           />
         </Grid>
       </Grid>
