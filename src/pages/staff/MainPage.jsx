@@ -7,7 +7,6 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import Loading from "../../components/animation/Loading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
@@ -85,7 +84,7 @@ const MainPage = () => {
           <BlueButtonComponent
             title={"Add new staff"}
             func={() => setModalState(true)}
-            icon={<WhiteCirclePlusIcon />}
+            // icon={<WhiteCirclePlusIcon />}
           />
           <DangerButtonComponent
             style={{
