@@ -57,8 +57,8 @@ const AdvanceSearchModal = ({
         {periodUpdateOnly
           ? "Update Search Period"
           : existingParameters || searchParameters
-          ? "Update Search Parameters"
-          : "Forecast Inventory"}
+            ? "Update Search Parameters"
+            : "Forecast Inventory"}
       </Typography>
     );
   };
@@ -94,7 +94,7 @@ const AdvanceSearchModal = ({
       dispatch(onAddSearchParameters(searchParams));
 
       const advanceSearchResponseQuery = await devitrakApi.get(
-        `/search/advance_searching_query?category=${data.category}&group=${data.group}&brand=${data.brand}&location=${data.location}&date_start=${date_start}&date_end=${date_end}&company_id=${user.companyData.id}&company_sql_id=${user.sqlInfo.company_id}`
+        `/search/advance_searching_query?category=${data.category}&group=${data.group}&brand=${data.brand}&location=${data.location}&date_start=${date_start}&date_end=${date_end}&company_id=${user.companyData.id}&company_sql_id=${user.sqlInfo.company_id}`,
       );
       // Handle the new API response structure
       if (advanceSearchResponseQuery.data.ok) {
@@ -104,8 +104,8 @@ const AdvanceSearchModal = ({
           setIsLoadingState(false);
           dispatch(
             onAddAdvanceSearch(
-              responseData // Pass the entire response object with all new fields
-            )
+              responseData, // Pass the entire response object with all new fields
+            ),
           );
           if (periodUpdateOnly) {
             return setOpenAdvanceSearchModal(false);
@@ -124,7 +124,7 @@ const AdvanceSearchModal = ({
           error.response.data.msg ===
             "Cannot read properties of undefined (reading 'length')"
             ? "There is not available inventory for the period selected."
-            : error.response.data.msg
+            : error.response.data.msg,
         );
         return setDisplayMessage(true);
       }
@@ -137,6 +137,45 @@ const AdvanceSearchModal = ({
       return null;
     }
   };
+
+  const fieldOptions = [
+    {
+      label: "Category",
+      name: "category",
+      placeholder: "Select a category",
+      options: values.category.map((item) => ({
+        value: item.key,
+        label: item.key,
+      })),
+    },
+    {
+      label: "Device name",
+      name: "group",
+      placeholder: "Select a device",
+      options: values.group.map((item) => ({
+        value: item.key,
+        label: item.key,
+      })),
+    },
+    {
+      label: "Brand",
+      name: "brand",
+      placeholder: "Select a brand",
+      options: values.brand.map((item) => ({
+        value: item.key,
+        label: item.key,
+      })),
+    },
+    {
+      label: "Location",
+      name: "location",
+      placeholder: "Select a location",
+      options: values.location.map((item) => ({
+        value: item.key,
+        label: item.key,
+      })),
+    },
+  ];
 
   const bodyModal = () => {
     return (
@@ -157,125 +196,30 @@ const AdvanceSearchModal = ({
             </Typography>
           </div>
 
-          {/* Category Field */}
-          {!periodUpdateOnly && (
-            <div style={{ margin: "0.5rem 0 0.25rem" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                >
-                  Category
-                </Typography>
-              </InputLabel>
-              <Select
-                style={{ width: "100%" }}
-                showSearch
-                placeholder="Select a category"
-                optionFilterProp="label"
-                {...register("category")}
-                onChange={(value) => setValue("category", value)}
-                onSearch={(value) => setValue("category", value)}
-                options={[
-                  ...values.category.map((item) => ({
-                    value: item.key,
-                    label: item.key,
-                  })),
-                ]}
-                allowClear
-                disabled={periodUpdateOnly} // Disable when period-only update
-              />
-            </div>
-          )}
-
-          {/* Device Field */}
-          {!periodUpdateOnly && (
-            <div style={{ margin: "0.5rem 0 0.25rem" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                >
-                  Device name
-                </Typography>
-              </InputLabel>
-              <Select
-                style={{ width: "100%" }}
-                showSearch
-                placeholder="Select a device"
-                optionFilterProp="label"
-                {...register("group")}
-                onChange={(value) => setValue("group", value)}
-                onSearch={(value) => setValue("group", value)}
-                options={[
-                  ...values.group.map((item) => ({
-                    value: item.key,
-                    label: item.key,
-                  })),
-                ]}
-                allowClear
-                disabled={periodUpdateOnly} // Disable when period-only update
-              />
-            </div>
-          )}
-
-          {/* Brand Field */}
-          {!periodUpdateOnly && (
-            <div style={{ margin: "0.5rem 0 0.25rem" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                >
-                  Brand
-                </Typography>
-              </InputLabel>
-              <Select
-                style={{ width: "100%" }}
-                showSearch
-                placeholder="Select a brand"
-                optionFilterProp="label"
-                {...register("brand")}
-                onChange={(value) => setValue("brand", value)}
-                onSearch={(value) => setValue("brand", value)}
-                options={[
-                  ...values.brand.map((item) => ({
-                    value: item.key,
-                    label: item.key,
-                  })),
-                ]}
-                allowClear
-                disabled={periodUpdateOnly} // Disable when period-only update
-              />
-            </div>
-          )}
-
-          {/* Location Field */}
-          {!periodUpdateOnly && (
-            <div style={{ margin: "0.5rem 0 0.25rem" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                >
-                  Location
-                </Typography>
-              </InputLabel>
-              <Select
-                style={{ width: "100%" }}
-                showSearch
-                placeholder="Select a location"
-                optionFilterProp="label"
-                {...register("location")}
-                onChange={(value) => setValue("location", value)}
-                onSearch={(value) => setValue("location", value)}
-                options={[
-                  ...values.location.map((item) => ({
-                    value: item.key,
-                    label: item.key,
-                  })),
-                ]}
-                allowClear
-                disabled={periodUpdateOnly} // Disable when period-only update
-              />
-            </div>
-          )}
+          {!periodUpdateOnly &&
+            fieldOptions.map((field) => (
+              <div key={field.name} style={{ margin: "0.5rem 0 0.25rem" }}>
+                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                  <Typography
+                    style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                  >
+                    {field.label}
+                  </Typography>
+                </InputLabel>
+                <Select
+                  style={{ width: "100%" }}
+                  showSearch
+                  placeholder={field.placeholder}
+                  optionFilterProp="label"
+                  {...register(field.name)}
+                  onChange={(value) => setValue(field.name, value)}
+                  onSearch={(value) => setValue(field.name, value)}
+                  options={field.options}
+                  allowClear
+                  disabled={periodUpdateOnly}
+                />
+              </div>
+            ))}
 
           {/* Period Field - Always enabled */}
           <div style={{ margin: "0.5rem 0 0.25rem" }}>
@@ -284,11 +228,6 @@ const AdvanceSearchModal = ({
                 style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
               >
                 Period{" "}
-                {/* {periodUpdateOnly && (
-                <span style={{ color: "#1890ff" }}>
-                  (Only this field can be changed)
-                </span>
-              )} */}
               </Typography>
             </InputLabel>
             <RangePicker
@@ -303,9 +242,9 @@ const AdvanceSearchModal = ({
             title={
               periodUpdateOnly
                 ? "Update Period"
-                : existingParameters || searchParameters
-                ? "Update Search"
-                : "Search"
+                : // : existingParameters || searchParameters
+                  // ? "Update Search"
+                  "Search"
             }
             func={() => null}
             buttonType="submit"
