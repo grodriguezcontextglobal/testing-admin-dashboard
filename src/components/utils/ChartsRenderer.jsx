@@ -15,6 +15,7 @@ const ChartsRenderer = ({
   colors,
   radiusProps,
   onClick, // Add an onClick prop for custom click handling
+  innerWidth,
 }) => {
   const location = useLocation();
   const containerRef = useRef(null);
@@ -94,7 +95,10 @@ const ChartsRenderer = ({
       }
   };
   return (
-    <div ref={containerRef} style={{ width: "15rem", height: "25rem" }}>
+    <div
+      ref={containerRef}
+      style={{ width: innerWidth ? innerWidth : "15rem", height: "25rem" }}
+    >
       <ReactECharts
         option={option}
         style={{ width: "100%", height: dimensions.height }}
