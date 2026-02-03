@@ -1,6 +1,5 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar } from "antd";
-import BaseTable from "../../../components/UX/tables/BaseTable";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -14,6 +13,7 @@ import {
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
+import BaseTable from "../../../components/ux/tables/BaseTable";
 
 const PastEventsTable = ({ events }) => {
   const navigate = useNavigate();
@@ -202,6 +202,7 @@ const PastEventsTable = ({ events }) => {
   ];
   return (
     <BaseTable
+      enablePagination={true}
       columns={column}
       dataSource={sortData()}
       onRow={(record) => {
