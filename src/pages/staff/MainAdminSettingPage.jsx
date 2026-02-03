@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Table, Typography } from "antd";
+import { Avatar, Typography } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,10 +11,12 @@ import Loading from "../../components/animation/Loading";
 import dicRole from "../../components/general/dicRole";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
+import BaseTable from "../../components/ux/tables/BaseTable";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import "../../styles/global/ant-table.css";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import DownLoadReportButton from "./components/DownLoadReportButton";
+import TableHeader from "../../components/UX/TableHeader";
 const MainAdminSettingPage = ({
   searchAdmin,
   modalState,
@@ -41,7 +43,7 @@ const MainAdminSettingPage = ({
         type: "event",
         active: true,
       }),
-    enabled:!!user.company
+    enabled: !!user.company,
   });
 
   useEffect(() => {
@@ -359,7 +361,7 @@ const MainAdminSettingPage = ({
         const check = employeeListPerCompany.filter((item) =>
           JSON.stringify(item)
             .toLowerCase()
-            .includes(`${searchAdmin}`.toLowerCase())
+            .includes(`${searchAdmin}`.toLowerCase()),
         );
         return check;
       }
@@ -385,21 +387,14 @@ const MainAdminSettingPage = ({
 
     return (
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-1}
-          paddingBottom={-1}
-          item
-          xs={12}
-        >
-          <RefreshButton propsFn={() => companiesEmployees.refetch()} />
-            <DownLoadReportButton />
-        </Grid>
-        <Table
+        <TableHeader
+          leftCta={
+            <RefreshButton propsFn={() => companiesEmployees.refetch()} />
+          }
+          rightCta={<DownLoadReportButton />}
+        />
+        <BaseTable
+          enablePagination={true}
           style={{ width: "100%", cursor: "pointer" }}
           dataSource={getInfoNeededToBeRenderedInTable()}
           columns={columns}
