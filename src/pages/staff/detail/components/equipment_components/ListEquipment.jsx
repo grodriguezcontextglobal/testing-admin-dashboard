@@ -8,11 +8,11 @@ import Loading from "../../../../../components/animation/Loading";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
 import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow.jsx";
 import { checkArray } from "../../../../../components/utils/checkArray";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import BaseTable from "../../../../../components/UX/tables/BaseTable";
-import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import TableHeader from "../../../../../components/UX/TableHeader.jsx";
+import BaseTable from "../../../../../components/ux/tables/BaseTable.jsx";
+import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
@@ -391,7 +391,7 @@ function ListEquipment() {
       },
     ];
     return (
-      <BaseTable columns={innerColumns} dataSource={data} pagination={false} />
+      <BaseTable enablePagination={true} columns={innerColumns} dataSource={data} pagination={false} />
     );
   };
   if (
