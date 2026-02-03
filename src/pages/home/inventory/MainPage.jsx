@@ -1,10 +1,11 @@
-import { Grid, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
+import { Drawer, Spin } from "antd";
 import { lazy, Suspense, useState } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Drawer, Spin } from "antd";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+
 const CategoryInventory = lazy(
   () => import("../components/CategoriesInventory"),
 );
@@ -14,13 +15,38 @@ const TotalDevice = lazy(() => import("../components/TotalDeviceValue"));
 const TableLocations = lazy(
   () => import("../components/locations/TableLocations"),
 );
+
 const MainPage = () => {
   const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
   const [openDrawer, setOpenDrawer] = useState(
     isAdmin ? false : locationsViewPermission.length === 0,
   );
+
+  // const containerStyle = {
+  //   display: "grid",
+  //   gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  //   gap: "16px",
+  //   width: "100%",
+  // };
+
+  // Inline media query for 3 columns on desktop
+  const gridLayoutStyle = `
+    .main-inventory-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .main-inventory-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  `;
+
   return (
-    <Grid container spacing={1}>
+    <div style={{ width: "100%" }}>
+      <style>{gridLayoutStyle}</style>
       <Suspense
         fallback={
           <div style={CenteringGrid}>
@@ -52,70 +78,34 @@ const MainPage = () => {
             </Typography>
           </Drawer>
         )}
-        <Grid container gap={2}>
-          <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
+
+        <div className="main-inventory-grid">
+          {/* Column 1: Graphic */}
+          <div style={{ width: "100%" }}>
             <Graphic />
-          </Grid>
-          <Grid
-            alignSelf={"flex-start"}
-            style={{ margin: "-10px 0 0 0", padding: 0 }}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={4}
+          </div>
+
+          {/* Column 2: Stats & Locations */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              width: "100%",
+            }}
           >
-            <Grid
-              alignSelf={"flex-start"}
-              style={{ padding: 0 }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              {" "}
-              <TotalConsumer />
-            </Grid>
-            <Grid
-              alignSelf={"flex-start"}
-              style={{ padding: 0 }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              {" "}
-              <TotalDevice />
-            </Grid>
-            <Grid
-              alignSelf={"flex-start"}
-              style={{ padding: 0 }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              {" "}
-              <TableLocations />
-            </Grid>
-          </Grid>
-          <Grid
-            alignSelf={"flex-start"}
-            style={{ margin: "-10px 0 0 0", padding: 0 }}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={4}
-          >
+            <TotalConsumer />
+            <TotalDevice />
+            <TableLocations />
+          </div>
+
+          {/* Column 3: Category Inventory */}
+          <div style={{ width: "100%" }}>
             <CategoryInventory />
-          </Grid>
-        </Grid>
-      </Suspense>{" "}
-    </Grid>
+          </div>
+        </div>
+      </Suspense>
+    </div>
   );
 };
 
