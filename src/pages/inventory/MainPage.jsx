@@ -36,6 +36,8 @@ import MobileActionsButtons from "./utils/MobileActionsButtons";
 // import LocationsList from "./utils/LocationsList";
 import { devitrakApi } from "../../api/devitrakApi";
 import CreateLocationModal from "./utils/CreateLocationModal";
+import ButtonsSearchAndReload from "./utils/ux/ButtonsSearchAndReload";
+import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
@@ -112,7 +114,7 @@ const MainPage = () => {
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.get(
-        `/db_item/check-company-has-inventory?company_id=${user.sqlInfo.company_id}`
+        `/db_item/check-company-has-inventory?company_id=${user.sqlInfo.company_id}`,
       ),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -122,7 +124,7 @@ const MainPage = () => {
     queryKey: ["locations", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.get(
-        `/db_location/companies/${user.sqlInfo.company_id}/locations`
+        `/db_location/companies/${user.sqlInfo.company_id}/locations`,
       ),
     enabled: !!user.sqlInfo.company_id,
   });
@@ -133,12 +135,12 @@ const MainPage = () => {
 
   const optionsUX = useMemo(
     () => <FilterOptionsUX setChosen={setChosenOption} />,
-    [chosenOption, dataFilterOptions]
+    [chosenOption, dataFilterOptions],
   );
 
   const settingParamsForSearchResult = useMemo(
     () => params,
-    [params, user.sqlInfo.company_id]
+    [params, user.sqlInfo.company_id],
   );
 
   useEffect(() => {
@@ -239,7 +241,7 @@ const MainPage = () => {
       {
         searchParameter: data.searchItem,
         company_id: user.sqlInfo.company_id,
-      }
+      },
     );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
@@ -326,119 +328,21 @@ const MainPage = () => {
                   fullWidth
                   placeholder="Search device here"
                   endAdornment={
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: "5px",
-                      }}
-                    >
-                      <button
-                        style={{
-                          backgroundColor: "transparent",
-                          margin: 0,
-                          padding: 0,
-                          border: "none",
-                          boxShadow: "-moz-initial",
-                        }}
-                        type="button"
-                        onClick={() => {
-                          setValue("searchItem", "");
-                          setParams(null);
-                          setSearchedResult(null);
-                        }}
-                      >
-                        <p
-                          style={{
-                            ...GrayButtonText,
-                            ...GrayButton,
-                            width: GrayButton.width,
-                            padding: "0 12px",
-                          }}
-                        >
-                          Clear
-                        </p>
-                      </button>
-                      <button
-                        type="submit"
-                        style={{
-                          backgroundColor: "transparent",
-                          margin: 0,
-                          padding: 0,
-                          border: "none",
-                          boxShadow: "-moz-initial",
-                        }}
-                      >
-                        <p
-                          style={{
-                            ...GrayButtonText,
-                            ...GrayButton,
-                            width: GrayButton.width,
-                            padding: "0 12px",
-                          }}
-                        >
-                          Search
-                        </p>
-                      </button>
-                    </div>
+                    adornmentButtonsComponent({
+                      setValue,
+                      setParams,
+                      setSearchedResult,
+                    })
                   }
                 />
               </form>
             </Grid>
             <Divider />
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              gap={1}
-              item
-              xs={12}
-              sm={12}
-              md
-              lg
-            >
-              <GrayButtonComponent
-                title={"Forecast Inventory"}
-                func={() => {
-                  setOpenAdvanceSearchModal(true);
-                }}
-                styles={{
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-                titleStyles={{
-                  textTransform: "none",
-                }}
-              />
-              <GrayButtonComponent
-                title={"Reload"}
-                func={() => {
-                  refetchingQueriesFn();
-                  locationsQuery.refetch();
-                }}
-                styles={{
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-                titleStyles={{
-                  textTransform: "none",
-                }}
-              />
-            </Grid>
-
-            {/* <Grid
-              item
-              sx={{
-                display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
-              }}
-              xs={12}
-              sm={12}
-            >
-              <Button style={{ ...OutlinedInputStyle, width: "100%" }}>
-                <DownloadingXlslFile props={downloadDataReport} />
-              </Button>
-            </Grid> */}
+            <ButtonsSearchAndReload
+              setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+              refetchingQueriesFn={refetchingQueriesFn}
+              locationsQuery={locationsQuery}
+            />
           </Grid>
         </Grid>
         <Divider />
