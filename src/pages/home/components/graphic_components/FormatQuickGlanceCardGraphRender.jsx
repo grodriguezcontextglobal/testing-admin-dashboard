@@ -76,19 +76,6 @@ const FormatQuickGlanceCardGraphRender = ({
   ];
   const cardChildren = () => {
     return (
-      // <Grid
-      //   display={"flex"}
-      //   justifyContent={"center"}
-      //   alignItems={"center"}
-      //   container
-      // >
-      //   <Grid
-      //     display={"flex"}
-      //     justifyContent={"center"}
-      //     alignItems={"center"}
-      //     item
-      //     xs={12}
-      //   >
           <ChartsRenderer
             dataToRender={dataToRender}
             title=""
@@ -99,9 +86,8 @@ const FormatQuickGlanceCardGraphRender = ({
             legendAlign="right"
             colors={["#84ADFF", "#155EEF", "#00359E", "#fb6b6b"]}
             radiusProps={["40%", "55%"]}
+            innerWidth={'25rem'}
           />
-      //   {/* </Grid>
-      // </Grid> */}
     );
   };
   return (
