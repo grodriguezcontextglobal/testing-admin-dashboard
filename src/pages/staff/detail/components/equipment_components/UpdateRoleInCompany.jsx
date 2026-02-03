@@ -1,17 +1,19 @@
-import { Grid, MenuItem, Select, Typography } from "@mui/material";
-import { Button, Divider, Modal, message } from "antd";
-import renderingTitle from "../../../../../components/general/renderingTitle";
+import { MenuItem, Select, Typography } from "@mui/material";
+import { useMutation } from "@tanstack/react-query";
+import { Divider, message } from "antd";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useState } from "react";
-import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
+import dicRole from "../../../../../components/general/dicRole";
+import renderingTitle from "../../../../../components/general/renderingTitle";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
-import dicRole from '../../../../../components/general/dicRole'
+import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
+import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const UpdateRoleInCompany = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
@@ -28,44 +30,61 @@ const UpdateRoleInCompany = () => {
       content: "Staff role updated.",
     });
   };
-  const handleSubmitNewRole = async (e) => {
+  const {
+    mutate: updateRole,
+    isLoading,
+    isError,
+    error,
+  } = useMutation({
+    mutationFn: (data) =>
+      devitrakApi.patch(`/company/update-company/${data.id}`, data),
+    onSuccess: (result) => {
+      dispatch(
+        onAddStaffProfile({
+          ...profile,
+          role: newRole,
+          companyData: result.data.company,
+        }),
+      );
+      if (user.email === profile.user) {
+        dispatch(
+          onLogin({
+            ...user,
+            role: newRole,
+          }),
+        );
+      }
+      messaging();
+      closeModal();
+    },
+    onError: (error) => {
+      messageApi.open({
+        type: "error",
+        content:
+          error?.response?.data?.msg ||
+          "Failed to update role. Please try again.",
+      });
+    },
+  });
+
+  const handleSubmitNewRole = (e) => {
     e.preventDefault();
     const foundStaffToUpdate = profile.companyData.employees.findIndex(
-      (element) => element.user === profile.user
+      (element) => element.user === profile.user,
     );
+
     if (foundStaffToUpdate > -1) {
-      const result = profile.companyData.employees.toSpliced(
+      const updatedEmployees = profile.companyData.employees.toSpliced(
         foundStaffToUpdate,
         1,
-        { ...profile.companyData.employees[foundStaffToUpdate], role: newRole }
+        { ...profile.companyData.employees[foundStaffToUpdate], role: newRole },
       );
-      const respoUpdateRoleStaffInCompany = await devitrakApi.patch(
-        `/company/update-company/${profile.companyData.id}`,
-        {
-          employees: result,
-        }
-      );
-      if (respoUpdateRoleStaffInCompany.data) {
-        dispatch(
-          onAddStaffProfile({
-            ...profile,
-            role: newRole,
-            companyData: respoUpdateRoleStaffInCompany.data.company,
-          })
-        );
-        if (user.email === profile.user) {
-          dispatch(
-            onLogin({
-              ...user,
-              role: newRole,
-            })
-          );
-        }
-        messaging();
-        return closeModal();
-      }
+
+      updateRole({
+        id: profile.companyData.id,
+        employees: updatedEmployees,
+      });
     }
-    return null;
   };
 
   const options = [
@@ -83,21 +102,23 @@ const UpdateRoleInCompany = () => {
     if (currentUserRole === 1) return optionRoleValue >= 2; // Admin can assign roles 2 and up
     return false; // Other roles cannot assign
   });
-  return (
-    <>
-      {contextHolder}
-      <Modal
-        title={renderingTitle(
-          `Staff member: ${profile.firstName} ${profile.lastName} Current role in company: ${dicRole[profile.role]}`
-        )}
-        centered
-        open={true}
-        onCancel={() => closeModal()}
-        footer={[]}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
+
+  const bodyModal = () => {
+    const role = dicRole[profile.role]
+    return (
+      <ReusableCardWithHeaderAndFooter
+        title={`Current role in company: ${role}`}
+        actions={[
+          <BlueButtonComponent
+            form="update-role-form"
+            key="save"
+            buttonType="submit"
+            title="Save"
+            loadingState={isLoading}
+            styles={{ margin: "0 0 0 24px" }}
+          />,
+        ]}
       >
-        {/* {user.role === "Administrator" ? <form */}
         {Number(user.role) < 2 ? (
           <form
             style={{
@@ -106,54 +127,49 @@ const UpdateRoleInCompany = () => {
               width: "100%",
             }}
             onSubmit={(e) => handleSubmitNewRole(e)}
+            id="update-role-form"
           >
-            <Grid container>
-              <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-                <Select
-                  className="custom-autocomplete"
-                  style={{ ...AntSelectorStyle, width: "100%" }}
-                  onChange={(e) => setNewRole(e.target.value)}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {optionsBasedOnCurrentRolePermission.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      <Typography>{option.label}</Typography>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Grid>
-
-              <Grid
-                display={"flex"}
-                flexDirection={"row"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                gap={2}
-                container
-              >
-                <Button
-                  htmlType="submit"
-                  style={{ ...BlueButton, width: "100%" }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{ ...BlueButtonText, ...CenteringGrid }}
-                  >
-                    Save
-                  </Typography>
-                </Button>
-              </Grid>
-            </Grid>
+            <Select
+              className="custom-autocomplete"
+              style={{ ...AntSelectorStyle, width: "100%" }}
+              onChange={(e) => setNewRole(e.target.value)}
+            >
+              <MenuItem value="">None</MenuItem>
+              {optionsBasedOnCurrentRolePermission.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  <Typography>{option.label}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+            {isError && (
+              <Typography style={{ color: "red" }}>
+                {error?.response?.data?.msg ||
+                  "Failed to update role. Please try again."}
+              </Typography>
+            )}
           </form>
         ) : (
           <div>
             <Divider />
             {renderingTitle(
-              "Need permission of Administrator for this function."
+              "Need permission of Administrator for this function.",
             )}
           </div>
         )}
-      </Modal>
+      </ReusableCardWithHeaderAndFooter>
+    );
+  };
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        title={renderingTitle(
+          `Staff member: ${profile.firstName} ${profile.lastName}`,
+        )}
+        body={bodyModal()}
+        openDialog={true}
+        closeModal={() => closeModal()}
+      />
     </>
   );
 };
