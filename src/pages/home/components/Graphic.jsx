@@ -76,12 +76,12 @@ const Graphic = () => {
   const dataToMap = [dataToExport];
   return (
     <Suspense fallback={<div style={CenteringGrid}><Loading /></div>}>
-    <Grid
+    {/* <Grid
       display={"flex"}
       justifyContent={"space-between"}
       alignItems={"center"}
       margin={"-10px 0 0 0"}
-    >
+    > */}
       {dataToMap?.map((item, index) => {
         return (
           <Grid key={index} item xs={12}>
@@ -96,7 +96,7 @@ const Graphic = () => {
           </Grid>
         );
       })}
-    </Grid>
+    {/* </Grid> */}
     </Suspense>
   );
 };
