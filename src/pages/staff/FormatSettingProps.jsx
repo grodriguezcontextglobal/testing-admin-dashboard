@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
-import { Button, Grid, MenuItem, Select, Typography } from "@mui/material";
+import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Avatar,
@@ -12,6 +12,8 @@ import {
 import { useState } from "react";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../components/ux/buttons/DangerButton";
 const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { Meta } = Card;
   const { user } = useAdminStore();
@@ -133,7 +135,9 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
         <Grid gap={2} item xs={12}>
           {permissionStatus === true && (
             <>
-              <Button
+            <DangerButtonComponent title="Cancel" func={handleEditAdminPermission} style={{ width: "fit-content" }}/>
+            <BlueButtonComponent title="Save" func={updatePermission} style={{ width: "fit-content" }}/>
+              {/* <Button
                 variant="outlined"
                 color="error"
                 style={{ width: "fit-content" }}
@@ -149,7 +153,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
                 onClick={updatePermission}
               >
                 Save
-              </Button>
+              </Button> */}
             </>
           )}
         </Grid>
