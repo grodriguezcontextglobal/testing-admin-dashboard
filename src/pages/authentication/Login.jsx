@@ -1,10 +1,9 @@
 /* eslint-disable no-unused-vars */
 import {
-  FormControlLabel,
+  // FormControlLabel,
   FormLabel,
   Grid,
-  InputAdornment,
-  OutlinedInput,
+  InputAdornment
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -17,7 +16,11 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
+import HidenIcon from "../../components/icons/HidenIcon";
+import VisibleIcon from "../../components/icons/VisibleIcon";
 import { checkArray } from "../../components/utils/checkArray";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import Input from "../../components/UX/inputs/Input";
 import {
   clearErrorMessage,
   onAddErrorMessage,
@@ -35,14 +38,13 @@ import {
 import { onAddSubscription } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import "../../styles/global/OutlineInput.css";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../styles/global/Subtitle";
+import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
+import Header from "./login/Header";
+import Email from "./login/sections/Email";
+import MFA from "./login/sections/MFA";
+import Password from "./login/sections/Password";
 import "./style/authStyle.css";
-import VisibleIcon from "../../components/icons/VisibleIcon";
-import HidenIcon from "../../components/icons/HidenIcon";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import LightBlueButtonComponent from "../../components/UX/buttons/LigthBlueButton";
-import Input from "../../components/UX/inputs/Input";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -78,7 +80,7 @@ const Login = () => {
 
   const dataPassed = useRef(null);
 
-  const addingEventState = async (props) => {
+  const addingEventState = useCallback(async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
       "/db_event/events_information",
       {
@@ -129,7 +131,7 @@ const Login = () => {
     );
 
     return navigate("/events/event-quickglance");
-  };
+  }, []);
 
   const navigateUserBasedOnRole = useCallback(
     async (props) => {
@@ -536,268 +538,65 @@ const Login = () => {
             md={12}
             lg={12}
           >
-            <p
-              style={{
-                color: "var(--gray900, #101828)",
-                fontSize: "30px",
-                fontFamily: "Inter",
-                fontWeight: "600",
-                lineHeight: "38px",
-                marginBottom: "1rem",
-                width: "100%",
-              }}
-            >
-              Welcome
-            </p>
-            <p
-              style={{
-                width: "100%",
-                color: "var(--gray-500, #667085)",
-                fontSize: "16px",
-                fontFamily: "Inter",
-                lineHeight: "24px",
-              }}
-            >
-              {currentStep === "email"
-                ? "Please enter your email"
-                : `Welcome back, ${userEmail}`}
-            </p>
-
+            <Header
+              currentStep={currentStep}
+              userEmail={userEmail}
+              TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+            />
             {/* Email Step */}
             {currentStep === "email" && (
-              <form
-                onSubmit={handleSubmit(onSubmitEmail)}
-                style={{ width: formFittingTrigger() }}
-              >
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  lg={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>
-                    Email
-                  </FormLabel>
-                  <Input
-                    required={!forceLogin}
-                    {...register("email", {
-                      required: !forceLogin,
-                      minLength: 10,
-                    })}
-                    type="email"
-                    placeholder="Enter your email"
-                    fullWidth
-                  />
-                </Grid>
-                <BlueButtonComponent
-                  disabled={false}
-                  loadingState={isLoading}
-                  buttonType="submit"
-                  title="Continue"
-                  styles={{ width: "100%" }}
-                />
-              </form>
+              <Email
+                Checkbox={Checkbox}
+                handleSubmit={handleSubmit}
+                onSubmitEmail={onSubmitEmail}
+                formFittingTrigger={formFittingTrigger}
+                Grid={Grid}
+                FormLabel={FormLabel}
+                Input={Input}
+                BlueButtonComponent={BlueButtonComponent}
+                isLoading={isLoading}
+                forceLogin={forceLogin}
+                register={register}
+              />
             )}
 
             {/* Password Step */}
             {currentStep === "password" && (
-              <form
-                onSubmit={handleSubmit(onSubmitLogin)}
-                style={{ width: formFittingTrigger() }}
-              >
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>
-                    Password
-                  </FormLabel>
-                  <OutlinedInput
-                    required={!forceLogin}
-                    {...register("password", {
-                      required: !forceLogin,
-                      minLength: 6,
-                    })}
-                    style={{
-                      ...OutlinedInputStyle,
-                      marginTop: "6px",
-                    }}
-                    placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <button
-                          type="button"
-                          style={{
-                            padding: 0,
-                            backgroundColor: "transparent",
-                            outline: "none",
-                            margin: 0,
-                            width: "fit-content",
-                            aspectRatio: "1",
-                            borderRadius: "50%",
-                          }}
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <VisibleIcon fill={"var(--blue-dark-600)"} />
-                          ) : (
-                            <HidenIcon stroke={"var(--blue-dark-600)"} />
-                          )}
-                        </button>
-                      </InputAdornment>
-                    }
-                  />
-                </Grid>
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
-                  <Grid
-                    item
-                    xs={6}
-                    display={"flex"}
-                    justifyContent={"flex-start"}
-                    alignItems={"center"}
-                    style={{ padding: "0rem 0rem 0rem 0.6rem" }}
-                  >
-                    <FormControlLabel
-                      style={{
-                        color: "#var(--gray-700, #344054)",
-                        fontSize: "14px",
-                        fontFamily: "Inter",
-                        fontWeight: "500",
-                        lineHeight: "20px",
-                      }}
-                      labelPlacement="end"
-                      control={
-                        <Checkbox
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                          style={{ paddingRight: "0.5rem" }}
-                        />
-                      }
-                      label={`${" "}Remember for 30 days`}
-                    />
-                  </Grid>
-
-                  <Grid
-                    item
-                    xs={6}
-                    display={"flex"}
-                    justifyContent={"flex-end"}
-                    alignItems={"center"}
-                  >
-                    <button
-                      type="button"
-                      style={{
-                        backgroundColor: "transparent",
-                        outline: "none",
-                        margin: 0,
-                        padding: 0,
-                      }}
-                      onClick={() => setUpdatePasswordModalState(true)}
-                    >
-                      <p
-                        style={{
-                          color: "#004EEB",
-                          fontSize: "14px",
-                          fontFamily: "Inter",
-                          fontWeight: "600",
-                          lineHeight: "20px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Forgot password?
-                      </p>
-                    </button>
-                  </Grid>
-                </Grid>
-
-                <div style={{ display: "flex", gap: "12px", width: "100%" }}>
-                  <LightBlueButtonComponent
-                    disabled={false}
-                    loadingState={false}
-                    buttonType="button"
-                    title="Back"
-                    func={handleBackToEmail}
-                    styles={{ flex: "1" }}
-                  />
-                  <BlueButtonComponent
-                    disabled={false}
-                    loadingState={isLoading}
-                    buttonType="submit"
-                    title="Sign in"
-                    styles={{ flex: "1" }}
-                  />
-                </div>
-              </form>
+              <Password 
+                Checkbox={Checkbox}
+                handleSubmit={handleSubmit}
+                onSubmitLogin={onSubmitLogin}
+                formFittingTrigger={formFittingTrigger}
+                Grid={Grid}
+                FormLabel={FormLabel}
+                Input={Input}
+                BlueButtonComponent={BlueButtonComponent}
+                isLoading={isLoading}
+                forceLogin={forceLogin}
+                register={register}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+                setUpdatePasswordModalState={setUpdatePasswordModalState}
+                setRememberMe={setRememberMe}
+                handleBackToEmail={handleBackToEmail}
+              />
             )}
 
             {/* MFA Step */}
             {currentStep === "mfa" && (
-              <form
-                onSubmit={handleSubmit(onSubmitLogin)}
-                style={{ width: formFittingTrigger() }}
-              >
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>
-                    MFA Code
-                  </FormLabel>
-                  <OutlinedInput
-                    required
-                    {...register("mfaCode", {
-                      required: true,
-                      minLength: 6,
-                      maxLength: 6,
-                    })}
-                    style={{
-                      ...OutlinedInputStyle,
-                      marginTop: "6px",
-                    }}
-                    placeholder="000000"
-                    fullWidth
-                    autoFocus
-                  />
-                </Grid>
+              <MFA
+                handleSubmit={handleSubmit}
+                onSubmitLogin={onSubmitLogin}
+                formFittingTrigger={formFittingTrigger}
+                Grid={Grid}
+                FormLabel={FormLabel}
 
-                <div style={{ display: "flex", gap: "12px", width: "100%" }}>
-                  <LightBlueButtonComponent
-                    disabled={false}
-                    loadingState={false}
-                    buttonType="button"
-                    title="Back"
-                    func={() => setCurrentStep("password")}
-                    styles={{ flex: "1" }}
-                  />
-                  <BlueButtonComponent
-                    disabled={false}
-                    loadingState={isLoading}
-                    buttonType="submit"
-                    title="Verify"
-                    styles={{ flex: "1" }}
-                  />
-                </div>
-              </form>
+                Input={Input}
+                BlueButtonComponent={BlueButtonComponent}
+                isLoading={isLoading} 
+                forceLogin={forceLogin}
+                register={register}
+              />
             )}
 
             <div style={{ ...CenteringGrid, margin: ".8rem auto" }}>
@@ -820,7 +619,7 @@ const Login = () => {
             <div
               style={{
                 position: "relative",
-                bottom: "-10dvh",
+                // bottom: "-10dvh",
               }}
             >
               <FooterComponent />
