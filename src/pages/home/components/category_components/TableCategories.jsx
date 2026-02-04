@@ -51,6 +51,7 @@ const TableCategories = () => {
       <BaseTable
         dataSource={formattingData()}
         columns={column}
+        enablePagination={true}
         onRow={(record) => {
           return {
             onClick: () => {
