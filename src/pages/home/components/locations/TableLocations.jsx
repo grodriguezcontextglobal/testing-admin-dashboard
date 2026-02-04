@@ -4,9 +4,9 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
-import BaseTable from "../../../../components/UX/tables/BaseTable";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
+import BaseTable from "../../../../components/ux/tables/BaseTable";
 
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);
@@ -65,7 +65,7 @@ const TableLocations = () => {
       <BaseTable
         columns={column}
         dataSource={renderingDataByLocation()}
-        enablePagination={false}
+        enablePagination={true}
         // className="table-ant-customized"
         // onRow={(record) => {
         //   return {
