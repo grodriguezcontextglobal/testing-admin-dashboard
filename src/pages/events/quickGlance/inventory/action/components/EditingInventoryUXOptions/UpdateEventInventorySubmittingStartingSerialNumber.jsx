@@ -1,23 +1,25 @@
-import { Grid, InputLabel, OutlinedInput } from "@mui/material";
+import { Box, InputLabel } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import { valueContext } from "../../EditingForEventInventory";
 import useAddingByStartingSerialNumber from "../EditingEventInventoryActions/addingByStartingSerialNumber";
+import Input from "../../../../../../../components/UX/inputs/Input";
 
 export const UpdateEventInventorySubmittingStartingSerialNumber = ({
   handleSubmit,
   closeModal,
   loadingStatus,
   register,
-  OutlinedInputStyle,
+  // OutlinedInputStyle,
   Subtitle,
   watch,
   queryClient,
   openNotification,
   setLoadingStatus,
-UXMandatoryFieldsSign}) => {
+  UXMandatoryFieldsSign,
+}) => {
   const { user } = useSelector((state) => state.admin);
   const ctx = useContext(valueContext);
   const { valueItemSelected } = ctx || {};
@@ -59,7 +61,7 @@ UXMandatoryFieldsSign}) => {
         ];
         const res = await devitrakApi.post(
           "/db_event/inventory-based-on-submitted-parameters",
-          { query, values }
+          { query, values },
         );
         const rows = res?.data?.result || [];
         setSerialExists(rows.length > 0);
@@ -90,24 +92,22 @@ UXMandatoryFieldsSign}) => {
           openNotification,
           queryClient,
           setLoadingStatus,
-        })
+        }),
       )}
       style={{ width: "100%" }}
     >
-      {/* Option 2: starting serial + quantity (+ deposit) */}
-      <Grid
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        marginY={2}
-        gap={2}
-        item
-        xs={12}
-        sm={12}
-        md={12}
-        lg={12}
+      {/* Option 2: starting serial + quantity + deposit + button */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "repeat(4, 1fr)" },
+          gap: 2,
+          alignItems: "end",
+          width: "100%",
+          marginY: 2,
+        }}
       >
-        <Grid item xs={6} sm={6} md={6} lg={6}>
+        <Box>
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
             <p
               style={{
@@ -115,6 +115,7 @@ UXMandatoryFieldsSign}) => {
                 fontWeight: 500,
                 textTransform: "none",
                 textAlign: "left",
+                margin: 0,
               }}
             >
               Starting serial number. {UXMandatoryFieldsSign}
@@ -130,6 +131,8 @@ UXMandatoryFieldsSign}) => {
                       textAlign: "center",
                       borderRadius: "12px 12px 0 0",
                       padding: "0.5rem 0.25rem",
+                      display: "block", // Ensure it breaks to new line if needed
+                      marginTop: "4px",
                     }}
                   >
                     Not found in location
@@ -138,17 +141,17 @@ UXMandatoryFieldsSign}) => {
               ) : null}
             </p>
           </InputLabel>
-          <OutlinedInput
+          <Input
             {...register("starting")}
             style={{
-              ...OutlinedInputStyle,
               width: "100%",
             }}
             placeholder="Enter serial number."
             fullWidth
           />
-        </Grid>
-        <Grid item xs={6} sm={6} md={6} lg={6}>
+        </Box>
+
+        <Box>
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
             <p
               style={{
@@ -156,20 +159,21 @@ UXMandatoryFieldsSign}) => {
                 fontWeight: 500,
                 textTransform: "none",
                 textAlign: "left",
+                margin: 0,
               }}
             >
               Quantity {UXMandatoryFieldsSign}
             </p>
           </InputLabel>
-          <OutlinedInput
+          <Input
             {...register("quantity")}
-            style={{ ...OutlinedInputStyle, width: "100%" }}
+            style={{ width: "100%" }}
             placeholder="Enter quantity needed."
             fullWidth
           />
-        </Grid>
-        {/* New: Deposit Amount */}
-        <Grid item xs={6} sm={6} md={6} lg={6}>
+        </Box>
+
+        <Box>
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
             <p
               style={{
@@ -177,51 +181,32 @@ UXMandatoryFieldsSign}) => {
                 fontWeight: 500,
                 textTransform: "none",
                 textAlign: "left",
+                margin: 0,
               }}
             >
               Deposit Amount {UXMandatoryFieldsSign}
             </p>
           </InputLabel>
-          <OutlinedInput
+          <Input
             {...register("deposit")}
             type="number"
             inputProps={{ step: "0.01", min: "0" }}
-            style={{ ...OutlinedInputStyle, width: "100%" }}
+            style={{ width: "100%" }}
             placeholder="Enter deposit amount (optional)"
             fullWidth
           />
-        </Grid>
+        </Box>
 
-        <Grid
-          style={{ alignSelf: "baseline" }}
-          item
-          xs={6}
-          sm={6}
-          md={6}
-          lg={6}
-        >
-          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <p
-              style={{
-                ...Subtitle,
-                fontWeight: 500,
-                color: "transparent",
-                textTransform: "none",
-                textAlign: "left",
-              }}
-              color={"transparent"}
-            >
-              Quantity
-            </p>
-          </InputLabel>
+        <Box>
           <BlueButtonComponent
             title={"Add and Exit"}
             buttonType="submit"
             loadingState={loadingStatus}
             disabled={loadingStatus || !serialExists}
+            styles={{ width: "100%" }}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </form>
   );
 };
