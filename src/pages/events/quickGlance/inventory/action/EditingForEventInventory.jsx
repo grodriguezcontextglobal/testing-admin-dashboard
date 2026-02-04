@@ -1,21 +1,20 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, Divider, Select, Space, notification } from "antd";
+import { Divider, Select, Space, notification } from "antd";
 import { createContext, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import DangerButtonConfirmationComponent from "../../../../../components/UX/buttons/DangerButtonConfirmation";
+import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { CardStyle } from "../../../../../styles/global/CardStyle";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import Main from "./components/EditingINventoryUXOptions/main";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import Main from "./components/EditingInventoryUXOptions/Main";
 
 export const valueContext = createContext(null);
 
@@ -44,7 +43,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         message: msg,
       });
     },
-    [api]
+    [api],
   );
   const eventName = event.eventInfoDetail.eventName;
   const selectOptions = useMemo(() => {
@@ -52,7 +51,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     if (itemQuery.data) {
       const groupedInventory = itemQuery.data.data.groupedInventory;
       for (const [categoryName, itemGroups] of Object.entries(
-        groupedInventory
+        groupedInventory,
       )) {
         for (const [itemGroup, locations] of Object.entries(itemGroups)) {
           for (const [location, quantity] of Object.entries(locations)) {
@@ -123,7 +122,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   };
 
   const returningDevicesInStockAfterBeingRemoveFromInventoryEvent = async (
-    props
+    props,
   ) => {
     const selectedDevicesPool = await devitrakApi.post(
       "/receiver/receiver-pool-list",
@@ -131,7 +130,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         eventSelected: eventName,
         company: user.companyData.id,
         type: props.group,
-      }
+      },
     );
     if (selectedDevicesPool.data) {
       if (selectedDevicesPool.data.receiversInventory.length === 0) {
@@ -151,7 +150,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             [...devicesFetchedPool.map((item) => item.device)],
             user.sqlInfo.company_id,
           ],
-        }
+        },
       );
       const responseItem = await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
@@ -160,7 +159,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             .map((item) => `${item.device}`)
             .join(",")})`,
           values: [devicesFetchedPool[0].type, props.category],
-        }
+        },
       );
       await devitrakApi.post(
         "/db_event/inventory-based-on-submitted-parameters",
@@ -169,7 +168,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
             .map((item) => `${item.item_id}`)
             .join(",")})`,
           values: [event.sql.event_id],
-        }
+        },
       );
     }
   };
@@ -179,7 +178,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       onAddEventData({
         ...event,
         deviceSetup: props,
-      })
+      }),
     );
   };
 
@@ -191,15 +190,15 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         eventSelected: eventName,
         "device.deviceType": props.group,
         "device.status": true,
-      }
+      },
     );
     if (checkingIfInventoryIsAlreadyInUsed.data.listOfReceivers.length < 1) {
       const removing = event.deviceSetup.filter(
-        (element) => element.key !== props.key
+        (element) => element.key !== props.key,
       );
       const updatingDeviceInEventProcess = await devitrakApi.patch(
         `/event/edit-event/${event.id}`,
-        { deviceSetup: removing }
+        { deviceSetup: removing },
       );
       if (updatingDeviceInEventProcess.data) {
         await returningDevicesInStockAfterBeingRemoveFromInventoryEvent(props);
@@ -208,15 +207,15 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
           queryKey: ["listOfreceiverInPool"],
         });
         await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
         );
         await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
+          `eventSelected=${event.id}&company=${user.companyData.id}`,
         );
       }
     } else {
       return alert(
-        "Device type is already in use for consumers in event. Delete item will cause conflict in future transactions in the event."
+        "Device type is already in use for consumers in event. Delete item will cause conflict in future transactions in the event.",
       );
     }
   };
@@ -226,108 +225,110 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   };
   const bodyModal = () => {
     return (
-      <Grid container>
-        <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
-          <Grid
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray300, #D0D5DD)",
-              background: "var(--gray100, #F2F4F7)",
-              padding: "24px",
-              width: "100%",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <InputLabel
+      <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory">
+        <Grid container>
+          <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
+            <Grid
               style={{
+                borderRadius: "8px",
+                border: "1px solid var(--gray300, #D0D5DD)",
+                background: "var(--gray100, #F2F4F7)",
+                padding: "24px",
                 width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
               }}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
             >
-              <Typography
-                textTransform="none"
-                style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
+              <InputLabel
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                }}
               >
-                Select from existing company&apos;s inventory
-              </Typography>
-              <RefreshButton propsFn={handleRefresh} />
-            </InputLabel>
-            <Select
-              className="custom-autocomplete"
-              showSearch
-              placeholder="Search item to add to inventory."
-              optionFilterProp="children"
-              style={{ ...AntSelectorStyle, width: "100%" }}
-              onChange={onChange}
-              options={selectOptions}
-            />
-            {/* form to add item to event inventory */}
-            <valueContext.Provider
-              value={{
-                valueItemSelected: valueItemSelected,
-                eventInfo: event,
-              }}
-            >
-              <Main
-                assignAllDevices={assignAllDevices}
-                closeModal={closeModal}
-                handleSubmit={handleSubmit}
-                loadingStatus={loadingStatus}
-                openNotification={openNotification}
-                OutlinedInputStyle={OutlinedInputStyle}
-                queryClient={queryClient}
-                register={register}
-                setAssignAllDevices={setAssignAllDevices}
-                setLoadingStatus={setLoadingStatus}
-                Subtitle={Subtitle}
-                valueItemSelected={valueItemSelected}
-                watch={watch}
-                eventName={eventName}
+                <RefreshButton propsFn={handleRefresh} />
+              </InputLabel>
+              <Select
+                className="custom-autocomplete"
+                showSearch
+                placeholder="Search item to add to inventory."
+                optionFilterProp="children"
+                style={{ ...AntSelectorStyle, width: "100%" }}
+                onChange={onChange}
+                options={selectOptions}
               />
-            </valueContext.Provider>
-          </Grid>
-          <Divider />
-          <Grid item xs={12} sm={12} md={12} lg={12}>
-            <Space style={{ width: "100%" }} size={[8, 16]} wrap>
-              {event.deviceSetup.map((item) => {
-                return (
-                  <Card
-                    title={item.group}
-                    key={item.id}
-                    extra={[
-                      <DangerButtonConfirmationComponent
-                        key={item.id}
-                        title={"X"}
-                        confirmationTitle="Are you sure you want to remove this item from event?"
-                        func={() => handleRemoveItemFromInventoryEvent(item)}
-                      />,
-                    ]}
-                    style={{ ...CardStyle, alignSelf: "flex-start" }}
-                  >
-                    <Grid container>
-                      <Grid item xs={12} sm={12} md={12} lg={12}>
-                        <p>
-                          Qty: {item.quantity} | Serial number range:{" "}
-                          <strong>
-                            {item.startingNumber ?? ""} -{" "}
-                            {item.endingNumber ?? ""}
-                          </strong>
-                        </p>
-                      </Grid>
-                    </Grid>
-                  </Card>
-                );
-              })}
-            </Space>
+              {/* form to add item to event inventory */}
+              <valueContext.Provider
+                value={{
+                  valueItemSelected: valueItemSelected,
+                  eventInfo: event,
+                }}
+              >
+                <Main
+                  assignAllDevices={assignAllDevices}
+                  closeModal={closeModal}
+                  handleSubmit={handleSubmit}
+                  loadingStatus={loadingStatus}
+                  openNotification={openNotification}
+                  OutlinedInputStyle={OutlinedInputStyle}
+                  queryClient={queryClient}
+                  refreshButton={handleRefresh}
+                  register={register}
+                  setAssignAllDevices={setAssignAllDevices}
+                  setLoadingStatus={setLoadingStatus}
+                  Subtitle={Subtitle}
+                  valueItemSelected={valueItemSelected}
+                  watch={watch}
+                  eventName={eventName}
+                />
+              </valueContext.Provider>
+            </Grid>
+            <Divider />
+            <Grid item xs={12} sm={12} md={12} lg={12}>
+              <Space style={{ width: "100%" }} size={[8, 16]} wrap>
+                {event.deviceSetup.map((item) => {
+                  return (
+                    <ReusableCardWithHeaderAndFooter
+                      title={item.group}
+                      key={item.id}
+                      actions={[
+                        <div
+                          key={item.id}
+                          style={{
+                            width: "100%",
+                            justifyContent: "flex-end",
+                            padding: "0 24px",
+                          }}
+                        >
+                          <DangerButtonConfirmationComponent
+                            title={"Remove"}
+                            confirmationTitle="Are you sure you want to remove this item from event?"
+                            func={() =>
+                              handleRemoveItemFromInventoryEvent(item)
+                            }
+                          />{" "}
+                        </div>,
+                      ]}
+                    >
+                      <p>
+                        Qty: {item.quantity} | Serial number range:{" "}
+                        <strong>
+                          {item.startingNumber ?? ""} -{" "}
+                          {item.endingNumber ?? ""}
+                        </strong>
+                      </p>
+                    </ReusableCardWithHeaderAndFooter>
+                  );
+                })}
+              </Space>
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
+      </ReusableCardWithHeaderAndFooter>
     );
   };
 
