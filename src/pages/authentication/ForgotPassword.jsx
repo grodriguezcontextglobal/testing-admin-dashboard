@@ -1,11 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  FormControl,
-  FormLabel,
-  Grid,
-  Typography
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { FormControl, FormLabel, Grid, Typography } from "@mui/material";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
@@ -16,6 +11,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
 import ModalUX from "../../components/UX/modal/ModalUX";
+import ReusableCardWithHeaderAndFooter from "../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 // import axios from "axios";
 
 const schema = yup.object().shape({
@@ -59,39 +55,49 @@ const ForgotPassword = ({ open, close }) => {
 
   adminUserInfoRef.current = findStaff();
 
+  const sendingEmailForResetPasswordMutation = useMutation({
+    mutationFn: (data) =>
+      devitrakApi.post("/nodemailer/reset-admin-password", data),
+    onSuccess: () => {
+      setLoading(false);
+      setTimeout(() => {
+        return handleClose();
+      }, 1500);
+    },
+    onError: (error) => {
+      openNotificationWithIcon("error", error.response.data.error);
+      return setLoading(false);
+    },
+  });
   const handleSubmitEmailLink = async (data) => {
     try {
       setLoading(true);
       if (adminUserInfoRef.current) {
         const stampTime = `${new Date()}`;
-        const checkingEmail = await devitrakApi.post(
-          "/nodemailer/reset-admin-password",
-          {
-            adminUser: {
-              firstName: adminUserInfoRef.current.at(-1).name,
-              lastName: adminUserInfoRef.current.at(-1).lastName,
-            },
-            linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-              adminUserInfoRef.current.at(-1).id
-            }&stamp-time=${encodeURI(stampTime)}`,
-            contactInfo: {
-              email: data.email,
-              company: adminUserInfoRef.current.at(-1).company,
-            },
+        const bodyFetch = {
+          adminUser: {
+            firstName: adminUserInfoRef.current.at(-1).name,
+            lastName: adminUserInfoRef.current.at(-1).lastName,
           },
+          linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
+            adminUserInfoRef.current.at(-1).id
+          }&stamp-time=${encodeURI(stampTime)}`,
+          contactInfo: {
+            email: data.email,
+            company: adminUserInfoRef.current.at(-1).company,
+          },
+        };
+        await sendingEmailForResetPasswordMutation.mutateAsync(bodyFetch);
+        return openNotificationWithIcon(
+          "Success",
+          `Email sent to ${data.email}`,
         );
-        if (checkingEmail.data.ok) {
-          openNotificationWithIcon("Success", `Email sent to ${data.email}`);
-          setLoading(false);
-          setTimeout(() => {
-            return handleClose();
-          }, 1500);
-        }
       } else {
         openNotificationWithIcon("error", "Email was not found!");
         return setLoading(false);
       }
     } catch (error) {
+      console.log("error from function", error);
       openNotificationWithIcon("error", error.response.data.error);
       return setLoading(false);
     }
@@ -121,88 +127,67 @@ const ForgotPassword = ({ open, close }) => {
   };
   const body = () => {
     return (
-      <Grid container>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          alignSelf={"stretch"}
-          margin={"0 auto"}
-          item
-          xs={10}
+      <ReusableCardWithHeaderAndFooter
+        title={"Enter your email to get a link to reset your password."}
+        actions={[
+          <div key="reset-password-button" style={{width:"100%", margin:"0 0 0 24px"}}>
+            <BlueButtonComponent
+              form="reset-password-email-modal"
+              loadingState={loading}
+              buttonType="submit"
+              title="Reset password"
+            />
+          </div>,
+        ]}
+      >
+        <form
+          style={{
+            width: "100%",
+            margin:"24px 0 0 0"
+          }}
+          onSubmit={handleSubmit(handleSubmitEmailLink)}
+          id="reset-password-email-modal"
         >
-          <Typography id="transition-modal-description" sx={{ mt: 2, mb: 2 }}>
-            Enter your email to get a link to reset your password.
-          </Typography>
-        </Grid>
-        <Grid container>
-          <form
-            style={{
-              width: "100%",
-            }}
-            onSubmit={handleSubmit(handleSubmitEmailLink)}
-          >
-            <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              alignItems={"center"}
-              alignSelf={"stretch"}
-              marginY={2}
-              marginX={"auto"}
-              paddingX={"9px"}
-              item
-              xs={10}
-            >
-              <FormControl fullWidth>
-                <FormLabel>
-                  {" "}
-                  <Typography
-                    style={{
-                      color: "var(--gray-700, #344054)",
-                      textAlign: "left",
-                      fontFamily: "Inter",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      lineHeight: "20px",
-                      paddingBottom: "5px",
-                    }}
-                  >
-                    Email
-                  </Typography>
-                </FormLabel>
-                <Input
-                  {...register("email")}
-                  type="email"
-                  placeholder="Enter your email"
-                />
-                {errors && (
-                  <Typography
-                    style={{
-                      color: "red",
-                      textAlign: "left",
-                      fontFamily: "Inter",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      lineHeight: "20px",
-                      paddingBottom: "5px",
-                    }}
-                  >
-                    {errors?.email?.message}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            <Grid marginX={"auto"} paddingX={"9px"} marginY={3} item xs={10}>
-              <BlueButtonComponent
-                loadingState={loading}
-                buttonType="submit"
-                title="Reset password"
-                styles={{ width: "100%" }}
-              />
-            </Grid>
-          </form>
-        </Grid>
-      </Grid>
+          <FormControl fullWidth>
+            <FormLabel>
+              {" "}
+              <Typography
+                style={{
+                  color: "var(--gray-700, #344054)",
+                  textAlign: "left",
+                  fontFamily: "Inter",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  lineHeight: "20px",
+                  paddingBottom: "5px",
+                }}
+              >
+                Email
+              </Typography>
+            </FormLabel>
+            <Input
+              {...register("email")}
+              type="email"
+              placeholder="Enter your email"
+            />
+            {errors && (
+              <Typography
+                style={{
+                  color: "red",
+                  textAlign: "left",
+                  fontFamily: "Inter",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  lineHeight: "20px",
+                  paddingBottom: "5px",
+                }}
+              >
+                {errors?.email?.message}
+              </Typography>
+            )}
+          </FormControl>
+        </form>
+      </ReusableCardWithHeaderAndFooter>
     );
   };
 
