@@ -4,6 +4,7 @@ import { QuestionIcon } from "../../../../../../../components/icons/QuestionIcon
 import { AppSelectingFromExistingAutomatically } from "./AppSelectingFromExistingAutoimatically";
 import { UpdateEventInventoryByAddingSerialNumberOneByOne } from "./UpdateEventInventoryByAddingSerialNumberOneByOne";
 import { UpdateEventInventorySubmittingStartingSerialNumber } from "./UpdateEventInventorySubmittingStartingSerialNumber";
+import { Box } from "@mui/material";
 
 const Main = ({
   assignAllDevices,
@@ -39,28 +40,72 @@ const Main = ({
         value={mode}
         onChange={(e) => setMode(e.target.value)}
         optionType="button"
-        block
-        style={{ width: "100%", alignItems: "center" }}
+        style={{ width: "100%" }}
       >
-        <Radio.Button value="OPTION_1" style={{ alignItems: "center" }}>
-          <Tooltip title="System will add automatically available devices to event inventory.">
-            Auto&nbsp;
-            <QuestionIcon />
-          </Tooltip>
-        </Radio.Button>
-        <Radio.Button value="OPTION_2" style={{ alignItems: "center" }}>
-          <Tooltip title="System will add devices to event inventory starting from the provided serial number.">
-            Starting Serial&nbsp;
-            <QuestionIcon />
-          </Tooltip>
-        </Radio.Button>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+            gap: 2,
+            width: "100%",
+          }}
+        >
+          <Radio.Button
+            value="OPTION_1"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              width: "100%",
+              height: "auto",
+              padding: "8px 0",
+              borderRadius: "8px",
+            }}
+          >
+            <Tooltip title="System will add automatically available devices to event inventory.">
+              Auto&nbsp;
+              <QuestionIcon />
+            </Tooltip>
+          </Radio.Button>
+          <Radio.Button
+            value="OPTION_2"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              width: "100%",
+              height: "auto",
+              padding: "8px 0",
+              borderRadius: "8px",
+            }}
+          >
+            <Tooltip title="System will add devices to event inventory starting from the provided serial number.">
+              Starting Serial&nbsp;
+              <QuestionIcon />
+            </Tooltip>
+          </Radio.Button>
 
-        <Radio.Button value="OPTION_3" style={{ alignItems: "center" }}>
-          <Tooltip title="System will add devices to event inventory one-by-one.">
-            Serials One-by-One&nbsp;
-            <QuestionIcon />
-          </Tooltip>
-        </Radio.Button>
+          <Radio.Button
+            value="OPTION_3"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              width: "100%",
+              height: "auto",
+              padding: "8px 0",
+              borderRadius: "8px",
+            }}
+          >
+            <Tooltip title="System will add devices to event inventory one-by-one.">
+              Serials One-by-One&nbsp;
+              <QuestionIcon />
+            </Tooltip>
+          </Radio.Button>
+        </Box>
       </Radio.Group>
 
       <Divider style={{ margin: "8px 0" }} />
@@ -98,21 +143,24 @@ const Main = ({
             setAssignAllDevices={setAssignAllDevices}
             setLoadingStatus={setLoadingStatus}
             Subtitle={Subtitle}
+            valueItemSelected={valueItemSelected}
             watch={watch}
             UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
         )}
+
         {mode === "OPTION_3" && (
           <UpdateEventInventoryByAddingSerialNumberOneByOne
-            closeModal={closeModal}
             handleSubmit={handleSubmit}
             loadingStatus={loadingStatus}
-            openNotification={openNotification}
-            OutlinedInputStyle={OutlinedInputStyle}
-            queryClient={queryClient}
             register={register}
-            setLoadingStatus={setLoadingStatus}
+            OutlinedInputStyle={OutlinedInputStyle}
             Subtitle={Subtitle}
+            valueItemSelected={valueItemSelected}
+            closeModal={closeModal}
+            openNotification={openNotification}
+            queryClient={queryClient}
+            setLoadingStatus={setLoadingStatus}
             watch={watch}
             UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
