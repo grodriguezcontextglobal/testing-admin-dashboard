@@ -1,6 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, Select, Space, notification } from "antd";
+import { Select, Space, notification } from "antd";
 import { createContext, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,7 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Main from "./components/EditingInventoryUXOptions/Main";
+import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/renderingEventInventorySection";
 
 export const valueContext = createContext(null);
 
@@ -225,110 +226,80 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   };
   const bodyModal = () => {
     return (
-      <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory">
-        <Grid container>
-          <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
-            <Grid
-              style={{
-                borderRadius: "8px",
-                border: "1px solid var(--gray300, #D0D5DD)",
-                background: "var(--gray100, #F2F4F7)",
-                padding: "24px",
-                width: "100%",
-              }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <InputLabel
+      <div style={{ display:"grid", gap:"1rem"}}>
+        <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory">
+          <Grid container>
+            <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
+              <Grid
                 style={{
+                  borderRadius: "8px",
+                  border: "1px solid var(--gray300, #D0D5DD)",
+                  background: "var(--gray100, #F2F4F7)",
+                  padding: "24px",
                   width: "100%",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  alignItems: "center",
                 }}
+                item
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
               >
-                <RefreshButton propsFn={handleRefresh} />
-              </InputLabel>
-              <Select
-                className="custom-autocomplete"
-                showSearch
-                placeholder="Search item to add to inventory."
-                optionFilterProp="children"
-                style={{ ...AntSelectorStyle, width: "100%" }}
-                onChange={onChange}
-                options={selectOptions}
-              />
-              {/* form to add item to event inventory */}
-              <valueContext.Provider
-                value={{
-                  valueItemSelected: valueItemSelected,
-                  eventInfo: event,
-                }}
-              >
-                <Main
-                  assignAllDevices={assignAllDevices}
-                  closeModal={closeModal}
-                  handleSubmit={handleSubmit}
-                  loadingStatus={loadingStatus}
-                  openNotification={openNotification}
-                  OutlinedInputStyle={OutlinedInputStyle}
-                  queryClient={queryClient}
-                  refreshButton={handleRefresh}
-                  register={register}
-                  setAssignAllDevices={setAssignAllDevices}
-                  setLoadingStatus={setLoadingStatus}
-                  Subtitle={Subtitle}
-                  valueItemSelected={valueItemSelected}
-                  watch={watch}
-                  eventName={eventName}
+                <InputLabel
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                  }}
+                >
+                  <RefreshButton propsFn={handleRefresh} />
+                </InputLabel>
+                <Select
+                  className="custom-autocomplete"
+                  showSearch
+                  placeholder="Search item to add to inventory."
+                  optionFilterProp="children"
+                  style={{ ...AntSelectorStyle, width: "100%" }}
+                  onChange={onChange}
+                  options={selectOptions}
                 />
-              </valueContext.Provider>
-            </Grid>
-            <Divider />
-            <Grid item xs={12} sm={12} md={12} lg={12}>
-              <Space style={{ width: "100%" }} size={[8, 16]} wrap>
-                {event.deviceSetup.map((item) => {
-                  return (
-                    <ReusableCardWithHeaderAndFooter
-                      title={item.group}
-                      key={item.id}
-                      actions={[
-                        <div
-                          key={item.id}
-                          style={{
-                            width: "100%",
-                            justifyContent: "flex-end",
-                            padding: "0 24px",
-                          }}
-                        >
-                          <DangerButtonConfirmationComponent
-                            title={"Remove"}
-                            confirmationTitle="Are you sure you want to remove this item from event?"
-                            func={() =>
-                              handleRemoveItemFromInventoryEvent(item)
-                            }
-                          />{" "}
-                        </div>,
-                      ]}
-                    >
-                      <p>
-                        Qty: {item.quantity} | Serial number range:{" "}
-                        <strong>
-                          {item.startingNumber ?? ""} -{" "}
-                          {item.endingNumber ?? ""}
-                        </strong>
-                      </p>
-                    </ReusableCardWithHeaderAndFooter>
-                  );
-                })}
-              </Space>
+                {/* form to add item to event inventory */}
+                <valueContext.Provider
+                  value={{
+                    valueItemSelected: valueItemSelected,
+                    eventInfo: event,
+                  }}
+                >
+                  <Main
+                    assignAllDevices={assignAllDevices}
+                    closeModal={closeModal}
+                    handleSubmit={handleSubmit}
+                    loadingStatus={loadingStatus}
+                    openNotification={openNotification}
+                    OutlinedInputStyle={OutlinedInputStyle}
+                    queryClient={queryClient}
+                    refreshButton={handleRefresh}
+                    register={register}
+                    setAssignAllDevices={setAssignAllDevices}
+                    setLoadingStatus={setLoadingStatus}
+                    Subtitle={Subtitle}
+                    valueItemSelected={valueItemSelected}
+                    watch={watch}
+                    eventName={eventName}
+                  />
+                </valueContext.Provider>
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
-      </ReusableCardWithHeaderAndFooter>
+        </ReusableCardWithHeaderAndFooter>
+        <RenderingEventInventorySection
+          event={event}
+          Space={Space}
+          ReusableCardWithHeaderAndFooter={ReusableCardWithHeaderAndFooter}
+          DangerButtonConfirmationComponent={DangerButtonConfirmationComponent}
+          handleRemoveItemFromInventoryEvent={handleRemoveItemFromInventoryEvent}
+        />
+      </div>
     );
   };
 
