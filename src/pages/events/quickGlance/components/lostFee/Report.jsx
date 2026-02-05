@@ -1,5 +1,4 @@
 import { Grid, Typography } from "@mui/material";
-import { Table } from "antd";
 import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -8,6 +7,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import "../../../../../styles/global/ant-table.css";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import Loading from "../../../../../components/animation/Loading";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 const ReportDetailModal = lazy(() => import("./ReportDetailModal"));
 
 const Report = () => {
@@ -121,13 +121,10 @@ const Report = () => {
             </Typography>
           </Grid>
           <Grid item xs={12} sm={12} md={12} lg={12}>
-            <Table
-              className="table-ant-customized"
+            <BaseTable
               columns={columns}
               dataSource={sourceReportData()}
-              pagination={{
-                position: "bottomCenter",
-              }}
+              enablePagination={true}
             />
           </Grid>
           {openLostReportDetail && (
