@@ -1,5 +1,6 @@
-import { Modal, Table } from "antd";
+import { Modal } from "antd";
 import { useMemo } from "react";
+import BaseTable from "../../../../components/ux/tables/BaseTable";
 
 const ModalAllItemsBasedOnGroup = ({
   openModalItemList,
@@ -13,13 +14,13 @@ const ModalAllItemsBasedOnGroup = ({
   // Function to sort and filter data based on deviceTitle
   const sortedAndFilteredData = useMemo(() => {
     if (!database?.database?.receiversInventory) return [];
-    
+
     try {
       // Parse the JSON string from receiversInventory
       const inventoryData = JSON.parse(database?.database?.receiversInventory);
       // Filter data by deviceTitle (type field) and sort by device ID
       const filteredData = inventoryData
-        .filter(item => item.type === deviceTitle)
+        .filter((item) => item.type === deviceTitle)
         .sort((a, b) => {
           // Sort by device ID numerically
           const deviceA = parseInt(a.device) || 0;
@@ -32,7 +33,7 @@ const ModalAllItemsBasedOnGroup = ({
         }));
       return filteredData;
     } catch (error) {
-      console.error('Error parsing receiversInventory:', error);
+      console.error("Error parsing receiversInventory:", error);
       return [];
     }
   }, [database, deviceTitle]);
@@ -53,8 +54,8 @@ const ModalAllItemsBasedOnGroup = ({
       dataIndex: "status",
       key: "status",
       filters: [
-        { text: 'Operational', value: 'Operational' },
-        { text: 'Non-operational', value: 'Non-operational' },
+        { text: "Operational", value: "Operational" },
+        { text: "Non-operational", value: "Non-operational" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -75,20 +76,21 @@ const ModalAllItemsBasedOnGroup = ({
       title={`List of all serial numbers of ${deviceTitle} (${sortedAndFilteredData.length} items)`}
       style={{ zIndex: 30 }}
     >
-      <Table
+      <BaseTable
         columns={columns}
         dataSource={sortedAndFilteredData}
         style={{
           cursor: "pointer",
         }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} of ${total} items`,
-        }}
-        scroll={{ y: 400 }}
+        enablePagination={true}
+        // pagination={{
+        //   pageSize: 10,
+        //   showSizeChanger: true,
+        //   showQuickJumper: true,
+        //   showTotal: (total, range) =>
+        //     `${range[0]}-${range[1]} of ${total} items`,
+        // }}
+        // scroll={{ y: 400 }}
       />
     </Modal>
   );
