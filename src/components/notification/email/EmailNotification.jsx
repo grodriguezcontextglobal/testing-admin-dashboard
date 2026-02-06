@@ -1,13 +1,16 @@
-import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Input, notification } from "antd";
+import { Grid } from "@mui/material";
+import { notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
+import ReusableCardWithHeaderAndFooter from "../../UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../UX/modal/ModalUX";
-const { TextArea } = Input;
+import Input from "../../UX/inputs/Input";
+import { useMutation } from "@tanstack/react-query";
+import ReusableTextArea from "../../UX/inputs/TextArea";
 
 const EmailNotification = ({
   customizedEmailNotificationModal,
@@ -24,6 +27,26 @@ const EmailNotification = ({
     return setMessage(e.target.value);
   };
 
+  const fetchingNewEmail = useMutation({
+    mutationFn: async (data) => {
+      await devitrakApi.post(
+        "/nodemailer/massive-event-customer-notification",
+        data,
+      );
+    },
+    onSuccess: () => {
+      setValue("subject", "");
+      setValue("message", "");
+      setLoadingState(false);
+      return setTimeout(() => {
+        closeModal();
+      }, 2500);
+    },
+    onError: (error) => {
+      setLoadingState(false);
+      openNotificationWithIcon("Error", `${error}`);
+    },
+  });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (msg, dscpt) => {
     api.open({
@@ -33,17 +56,14 @@ const EmailNotification = ({
   };
   const renderTitle = () => {
     return (
-      <Typography
-        textTransform={"none"}
-        textAlign={"center"}
-        fontWeight={600}
-        fontSize={"18px"}
-        fontFamily={"Inter"}
-        lineHeight={"28px"}
-        color={"var(--gray-900, #101828)"}
+      <h3
+        style={{
+          ...TextFontsize18LineHeight28,
+          color: "var(--gray-900, #101828)",
+        }}
       >
         Email notification
-      </Typography>
+      </h3>
     );
   };
   const handleSubmitEmailNotification = async (data) => {
@@ -56,22 +76,7 @@ const EmailNotification = ({
         eventSelected: event.eventInfoDetail.eventName,
         company: event.company,
       };
-      const resp = await devitrakApi.post(
-        "/nodemailer/massive-event-customer-notification",
-        emailNotificationProfile
-      );
-      if (resp.data.ok) {
-        openNotificationWithIcon(
-          "Notification sent.",
-          `${resp.data.notification}`
-        );
-        setValue("subject", "");
-        setValue("message", "");
-        setLoadingState(false);
-        return setTimeout(() => {
-          closeModal();
-        }, 2500);
-      }
+      await fetchingNewEmail.mutateAsync(emailNotificationProfile);
     } catch (error) {
       setLoadingState(false);
       openNotificationWithIcon("Error", `${error}`);
@@ -79,94 +84,74 @@ const EmailNotification = ({
   };
   const body = () => {
     return (
-      <>
-        <Grid
-          display={"flex"}
-          alignItems={"center"}
-          justifyContent={"center"}
-          margin={"auto"}
-          container
+      <ReusableCardWithHeaderAndFooter
+        title="This email will be sent to all attendees of this event."
+        actions={[
+          <div
+            style={{
+              width: "fit-content",
+              padding: "0 24px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+            key="send-email-massive-button"
+          >
+            <BlueButtonComponent
+              form="massive-email-notification-form"
+              buttonType="submit"
+              title={"Send email"}
+              loadingState={loadingState}
+              func={null}
+            />
+          </div>
+        ]}
+      >
+        <form
+          style={{ width: "100%" }}
+          onSubmit={handleSubmit(handleSubmitEmailNotification)}
+          id="massive-email-notification-form"
         >
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"center"}
-            textAlign={"center"}
-            marginY={"1rem auto"}
-            item
-            xs={12}
-            sm={12}
-            md={10}
-            lg={10}
-          >
-            <Typography
-              textTransform={"none"}
-              textAlign={"center"}
-              fontWeight={400}
-              fontSize={"14px"}
-              fontFamily={"Inter"}
-              lineHeight={"20px"}
-              color={"var(--gray-600, #475467)"}
-            >
-              This email will be sent to all attendees of this event.
-            </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"center"}
-            margin={"auto"}
-            item
-            xs={10}
-          >
-            <form
+          <Grid marginY={"0.5rem"} item xs={12}>
+            <Input
+              required
+              placeholder="Your email's subject here."
+              fullWidth
               style={{ width: "100%" }}
-              onSubmit={handleSubmit(handleSubmitEmailNotification)}
-            >
-              <Grid marginY={"0.5rem"} item xs={12}>
-                <OutlinedInput
-                  required
-                  placeholder="Your email's subject here."
-                  fullWidth
-                  style={{ ...OutlinedInputStyle, width: "100%" }}
-                  {...register("subject")}
-                />
-              </Grid>
-              <Grid marginY={"0.5rem"} item xs={12}>
-                <TextArea
-                  required
-                  showCount
-                  maxLength={500}
-                  {...register("message")}
-                  onChange={onChange}
-                  placeholder="Write your email here."
-                  style={{
-                    height: 120,
-                    resize: "none",
-                    margin: "0 0 0.8rem",
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={12} md={12} lg={12}>
-                <BlueButtonComponent
-                  buttonType="submit"
-                  title={"Send email"}
-                  loadingState={loadingState}
-                  styles={{ width: "100%" }}
-                  func={null}
-                />
-              </Grid>
-            </form>
+              {...register("subject")}
+            />
           </Grid>
-        </Grid>
-      </>
+          <Grid marginY={"0.5rem"} item xs={12}>
+            <ReusableTextArea
+              required
+              textAreaProps={{
+                showCount: true,
+                maxLength: 500,
+              }}
+              {...register("message")}
+              onChange={onChange}
+              placeholder="Write your email here."
+              style={{
+                height: 120,
+                resize: "none",
+                margin: "0 0 0.8rem",
+              }}
+            />
+          </Grid>
+        </form>
+      </ReusableCardWithHeaderAndFooter>
     );
   };
 
   return (
     <>
       {contextHolder}
-      <ModalUX title={renderTitle()} body={body()} openDialog={customizedEmailNotificationModal} modalStyles={{ zIndex: 30 }} closeModal={closeModal} />
+      <ModalUX
+        title={renderTitle()}
+        body={body()}
+        openDialog={customizedEmailNotificationModal}
+        modalStyles={{ zIndex: 30 }}
+        closeModal={closeModal}
+      />
     </>
   );
 };
