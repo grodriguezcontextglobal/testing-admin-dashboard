@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
-import { Divider } from "antd";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,60 +10,71 @@ import { UpdateIcon } from "../../../components/icons/UpdateIcon";
 import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
 import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import GrayButtonComponent from "../../../components/ux/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
+import { updateStaffMemberInList } from "../../../utils/staffUtils";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
+
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  const activeOrDesactiveStaffMemberInCompany = async () => {
-    try {
-      const employeesInCompany = [...profile.companyData.employees];
-      const foundUserIndex = employeesInCompany.findIndex(
-        (element) => element.user === profile.email
-      );
 
-      employeesInCompany[foundUserIndex] = {
-        ...employeesInCompany[foundUserIndex],
-        active: !profile.status,
-      };
+  const updateStaffStatusMutation = useMutation({
+    mutationFn: async () => {
+      // Use reusable utility to create updated list
+      const updatedEmployeesList = updateStaffMemberInList(
+        profile.companyData.employees,
+        { user: profile.email, active: !profile.status },
+      );
       const respoCompany = await devitrakApi.patch(
         `/company/update-company/${profile.companyData.id}`,
         {
-          employees: employeesInCompany,
-        }
+          employees: updatedEmployeesList,
+        },
       );
-      if (respoCompany.data.ok) {
-        queryClient.invalidateQueries({
-          queryKey: ["listOfAdminUsers"],
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["employeesPerCompanyLis"],
-          exact: true,
-        });
 
-        queryClient.invalidateQueries({
-          queryKey: ["events"],
-          exact: true,
-        });
+      return respoCompany.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["listOfAdminUsers"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["employeesPerCompanyLis"],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["events"],
+        exact: true,
+      });
+      dispatch(
+        onAddStaffProfile({
+          ...profile,
+          active: !profile.status,
+          status: !profile.status,
+          companyData: data.company,
+        }),
+      );
+      notification.success({
+        message: "Success",
+        description: `Staff access ${!profile.status ? "granted" : "removed"} successfully.`,
+      });
+    },
+    onError: (error) => {
+      notification.error({
+        message: "Error",
+        description:
+          error?.response?.data?.msg || "Failed to update staff status.",
+      });
+    },
+  });
 
-        dispatch(
-          onAddStaffProfile({
-            ...profile,
-            active: !profile.status,
-            status: !profile.status,
-            companyData: respoCompany.data.company,
-          })
-        );
-        return;
-      }
-    } catch (error) {
-      return null;
-    }
+  const activeOrDesactiveStaffMemberInCompany = () => {
+    updateStaffStatusMutation.mutate();
   };
 
   const iconColor = "#0040C1";
@@ -111,27 +122,6 @@ const StaffDetail = () => {
         />
       ),
     },
-    // {
-    //   label: "Assign Location",
-    //   route: "assign-location",
-    //   permission: [0, 1],
-    //   disabled: user.email === profile.email,
-    //   id: 6,
-    //   fn: () => null,
-    //   html: (
-    //     <LightBlueButtonComponent
-    //       title={"Assign Location"}
-    //       func={() => null}
-    //       icon={<RectanglePlusIcon stroke={iconColor}/>}
-    //       buttonType="button"
-    //       titleStyles={{
-    //         textTransform: "none",
-    //         with: "100%",
-    //         gap: "2px",
-    //       }}
-    //     />
-    //   ),
-    // },
     {
       label: "Assign Location/Permission",
       route: "assign-location-manager",
@@ -143,7 +133,7 @@ const StaffDetail = () => {
         <LightBlueButtonComponent
           title={"Assign Location/Permission"}
           func={() => null}
-          icon={<RectanglePlusIcon stroke={iconColor}/>}
+          icon={<RectanglePlusIcon stroke={iconColor} />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -222,12 +212,13 @@ const StaffDetail = () => {
       permission: [0, 1, 2],
       disabled: user.email === profile.email,
       id: 5,
-      fn: () => activeOrDesactiveStaffMemberInCompany(),
+      fn: null,
       html: (
         <GrayButtonComponent
           title={`${profile.active ? "Remove" : "Grant"} access`}
-          func={() => null}
+          func={() => activeOrDesactiveStaffMemberInCompany()}
           icon={<UpdatePasswordIcon />}
+          loadingState={updateStaffStatusMutation.isLoading}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -238,6 +229,7 @@ const StaffDetail = () => {
       ),
     },
   ];
+
   return (
     <>
       <HeaderStaffDetail />
@@ -270,7 +262,7 @@ const StaffDetail = () => {
                 style={{
                   display: `${
                     option.permission.some(
-                      (element) => element === Number(user.role)
+                      (element) => element === Number(user.role),
                     )
                       ? option.disabled
                         ? "none"
