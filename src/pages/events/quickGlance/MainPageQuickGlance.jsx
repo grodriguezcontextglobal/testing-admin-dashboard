@@ -91,14 +91,18 @@ const MainPageQuickGlance = () => {
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.get(
-        `/receiver/receiver-pool-list?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`
+      devitrakApi.post(
+        `/receiver/receiver-pool-list`,
+        // ?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`, 
+        {
+          eventSelected: event?.eventInfoDetail?.eventName,
+          company: user.companyData.id,
+        }
       ),
-    refetchOnMount: false,
+    // refetchOnMount: false,
     enabled: !!user.companyData.id,
-    staleTime: 10 * 60 * 60,
+    // staleTime: 10 * 60 * 60,
   });
-
   if (
     eventAttendeesQuery.isLoading ||
     receiversPoolQuery.isLoading ||
