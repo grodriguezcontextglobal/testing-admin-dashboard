@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
 import { groupBy, orderBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -90,6 +90,53 @@ const EditItemModal = ({
     staleTime: 2 * 60 * 1000,
   });
 
+  const editingItemMutation = useMutation({
+    mutationFn: (data) =>
+      devitrakApi.post("/db_item/edit-item", {
+        ...data,
+        company_id: user.sqlInfo.company_id,
+      }),
+    onSuccess: () => {
+      const template = {
+        item_id: "",
+        category_name: "",
+        item_group: "",
+        cost: "",
+        brand: "",
+        descript_item: "",
+        ownership: "",
+        serial_number: "",
+        warehouse: "",
+        main_warehouse: "",
+        update_at: "",
+        company: "",
+        location: "",
+        sub_location: "",
+        current_location: "",
+        extra_serial_number: "",
+        return_date: "",
+        container: "",
+        containerSpotLimit: "",
+        image_url: "",
+        status: "",
+        supplier_info: "",
+        enableAssignFeature: "",
+      };
+
+      Object.keys(template).map((key) => {
+        setValue(key, "");
+      });
+
+      message.success("Item was successfully updated.");
+      setLoadingStatus(false);
+      refetchingFn();
+      return closeModal();
+    },
+    onError: (error) => {
+      openNotificationWithIcon(`${error.message}`);
+      setLoadingStatus(false);
+    }
+  });
   const retrieveItemOptions = (props) => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {
@@ -138,7 +185,7 @@ const EditItemModal = ({
         descript_item: data.descript_item,
         ownership: data.ownership,
         serial_number: data.serial_number,
-        warehouse: true,
+        warehouse: data.warehouse,
         main_warehouse: data.tax_location,
         update_at: formatDate(new Date()),
         company: user.company,
@@ -157,21 +204,10 @@ const EditItemModal = ({
           : null,
         enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       };
-      const respNewItem = await devitrakApi.post(
-        "/db_item/edit-item",
-        template,
-      );
-      if (respNewItem.data.ok) {
-        Object.keys(template).map((key) => {
-          setValue(key, "");
-        });
-      }
-      message.success("Item was successfully updated.");
-      refetchingFn();
-      setLoadingStatus(false);
-      return closeModal();
+      return await editingItemMutation.mutateAsync(template);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
+    } finally {
       setLoadingStatus(false);
     }
   };
@@ -443,7 +479,7 @@ const EditItemModal = ({
   return (
     <>
       <ModalUX
-      title={renderTitle()}
+        title={renderTitle()}
         key={dataFound[0].item_id}
         openDialog={openEditItemModal}
         closeModal={() => closeModal()}
