@@ -13,13 +13,15 @@ import { DangerButtonText } from "../../../../../../../styles/global/DangerButto
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
 import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
+import { useDeviceStatus } from "../hooks/useDeviceStatus";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
     useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
-  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  const { unassignDevice, isUnassigning } = useDeviceStatus(event, user);
+
   const dispatch = useDispatch();
   const findingAssignedInPaymentIntentQuery = useQuery({
     queryKey: ["assignedDeviceInPaymentIntent"],
@@ -35,7 +37,7 @@ const ModalAddingDeviceFromSearchbar = () => {
       devitrakApi.get(
         `/transaction/transaction?event_id=${event.id}&company=${
           user.companyData.id
-        }&consumerInfo.id=${customer.id ?? customer.uid}`
+        }&consumerInfo.id=${customer.id ?? customer.uid}`,
       ),
     refetchOnMount: false,
   });
@@ -57,7 +59,7 @@ const ModalAddingDeviceFromSearchbar = () => {
   }, [findingAssignedInPaymentIntentQuery.data]);
 
   const { openModalToAssignDevice } = useSelector(
-    (state) => state.devicesHandle
+    (state) => state.devicesHandle,
   );
   const refetchingFn = () => {
     return findingAssignedInPaymentIntentQuery.refetch();
@@ -84,33 +86,14 @@ const ModalAddingDeviceFromSearchbar = () => {
 
     const removeDeviceFromTransaction = async (props) => {
       try {
-        setIsLoadingStatus(true);
-        const response = await devitrakApi.delete(
-          `/receiver/remove-transaction/${props.key}`
-        );
-        if (response.data.ok) {
-          const deviceInPool = await devitrakApi.post(
-            "/receiver/receiver-pool-list",
-            {
-              activity: true,
-              eventSelected: event.eventInfoDetail.eventName,
-              company: user.companyData.id,
-              device: props.serialNumber,
-              type: props.deviceType,
-            }
-          );
-          // console.log(deviceInPool.data.receiversInventory[0])
-          await devitrakApi.patch(
-            `/receiver/receivers-pool-update/${deviceInPool.data.receiversInventory[0].id}`,
-            { activity: false }
-          );
-          await refetchingFn();
-          setIsLoadingStatus(false);
-          return message.success("Device removed from transaction");
-        }
+        await unassignDevice({
+          assignmentId: props.key,
+          serialNumber: props.serialNumber,
+          deviceType: props.deviceType,
+        });
+        return message.success("Device removed from transaction");
       } catch (error) {
-        setIsLoadingStatus(false);
-        return message.error("Something went wrong, please try again later.");
+        // Error handling is managed by the hook (notification)
       }
     };
 
@@ -196,11 +179,11 @@ const ModalAddingDeviceFromSearchbar = () => {
         width: "10%",
         render: (record) => (
           <Button
-            loading={isLoadingStatus}
+            loading={isUnassigning}
             style={DangerButton}
             onClick={() => removeDeviceFromTransaction(record)}
           >
-            {isLoadingStatus ? <Loading /> : <p style={DangerButtonText}>X</p>}
+            {isUnassigning ? <Loading /> : <p style={DangerButtonText}>X</p>}
           </Button>
         ),
       },
