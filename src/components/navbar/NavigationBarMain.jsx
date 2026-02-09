@@ -4,10 +4,9 @@ import {
   Divider,
   Drawer,
   Grid,
-  InputAdornment,
   List,
   ListItem,
-  ListItemButton,
+  ListItemButton
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import pkg from "prop-types";
@@ -164,13 +163,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const isLargeDevice = useMediaQuery(
     "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
-  const transparentStyle = {
-    outline: "none",
-    backgroundColor: "transparent",
-    margin: 0,
-    padding: 0,
-    border: "none",
-  };
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Divider />
@@ -405,21 +397,22 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               onChange={(e) => onChange(e)}
               name={"searchValue"}
               value={searchValue}
-              endAdornment={
-                <InputAdornment position="end">
-                  <button
-                    style={{
-                      ...transparentStyle,
-                      display:
-                        String(searchValue)?.length > 0 ? "flex" : "none",
-                      opacity: String(searchValue)?.length > 0 ? 1 : 0,
-                    }}
-                    onClick={() => handleResetSearchValue()}
-                  >
-                    <TrashIcon fill="var(--blue700)" />
-                  </button>
-                </InputAdornment>
-              }
+              // endAdornment={
+              //   <InputAdornment position="end">
+              //     <button
+              //       style={{
+              //         ...transparentStyle,
+              //         display:
+              //           String(searchValue)?.length > 0 ? "flex" : "none",
+              //         opacity: String(searchValue)?.length > 0 ? 1 : 0,
+              //       }}
+
+              //       onClick={() => handleResetSearchValue()}
+              //     >
+              //       <TrashIcon fill="var(--blue700)" />
+              //     </button>
+              //   </InputAdornment>
+              // }
               fullWidth
             />
           </form>
@@ -446,6 +439,35 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                       }}
                     >
                       <img src={MagnifyIcon} alt="search-icon" />
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </button>
+          <button
+            style={{
+              outline: "none",
+              border: "transparent",
+              margin: 0,
+              padding: 0,
+              backgroundColor: "transparent",
+              display: searchValue?.length === 0 ? "none" : "flex",
+            }}
+            key={"item.title"}
+            onClick={() => handleResetSearchValue()}
+          >
+            <div className="content-main-navbar-updated">
+              <article className={"nav-item-base-1-main-navbar-updated"}>
+                <div className="content-2-main-navbar-updated">
+                  <div className="text-1-main-navbar-updated text-mdsemibold">
+                    <p
+                      style={{
+                        textTransform: "capitalize",
+                        fontSize: "25px",
+                      }}
+                    >
+                      <TrashIcon />
                     </p>
                   </div>
                 </div>
