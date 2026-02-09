@@ -1,7 +1,7 @@
 import { Space } from "antd";
 import DangerButtonConfirmationComponent from "../../../../../../components/UX/buttons/DangerButtonConfirmation";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
+import DangerButtonComponent from "../../../../../../components/ux/buttons/DangerButton";
 
 const ExpandedTableButtons = ({
   record,
