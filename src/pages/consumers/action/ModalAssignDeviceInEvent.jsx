@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Grid, InputAdornment } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Select, Spin, Tooltip } from "antd";
+import { Avatar, Select, Spin, Tooltip } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -10,13 +10,11 @@ import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { StripeCheckoutElementFromConsumerPage } from "../../../components/stripe/elements/StripeCheckoutElementFromConsumerPage";
 import ModalUX from "../../../components/UX/modal/ModalUX";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import Input from "../../../components/UX/inputs/Input";
 import { onAddTransactionInfo } from "../../../store/slices/customerSlice";
 import "../../../styles/global/ant-select.css";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import CashDeposit from "./transaction/CashDeposit";
@@ -65,7 +63,7 @@ const ModalAssignDeviceInEvent = ({
       (item) =>
         item.company_id === user.companyData.id &&
         item.active &&
-        item.type === "event"
+        item.type === "event",
     ) ?? [];
 
   const renderingInventoryOptionsBasedOnSelectedEvent = useCallback(() => {
@@ -77,7 +75,7 @@ const ModalAssignDeviceInEvent = ({
       try {
         if (eventInventory.deviceSetup.length > 0) {
           const inventoryForConsumerUseOnly = eventInventory.deviceSetup.filter(
-            (item) => item.consumerUses
+            (item) => item.consumerUses,
           );
           return inventoryForConsumerUseOnly;
         }
@@ -118,11 +116,11 @@ const ModalAssignDeviceInEvent = ({
         : eventSelected;
 
     [...customer.data.event_providers, eventInfo.id].forEach((item) =>
-      eventsIdList.add(item)
+      eventsIdList.add(item),
     );
 
     [...customer.data.company_providers, user.companyData.id].forEach((item) =>
-      companyIdList.add(item)
+      companyIdList.add(item),
     );
 
     [
@@ -131,7 +129,7 @@ const ModalAssignDeviceInEvent = ({
     ].forEach((item) => eventNamesList.add(item));
 
     [...customer.data.provider, eventInfo.company].forEach((item) =>
-      companyNameList.add(item)
+      companyNameList.add(item),
     );
     const updateConsumerInfo = {
       event_providers: [...Array.from(eventsIdList)],
@@ -155,7 +153,7 @@ const ModalAssignDeviceInEvent = ({
             company: user.companyData.id,
             device: serialNumber,
             activity: false,
-          }
+          },
         );
         if (
           checkAvailability.data.ok &&
@@ -171,7 +169,7 @@ const ModalAssignDeviceInEvent = ({
         };
         const response = await devitrakApi.post(
           "/stripe/create-payment-intent-customized",
-          transactionInfo
+          transactionInfo,
         );
         if (response) {
           setIsLoadingState(false);
@@ -195,10 +193,10 @@ const ModalAssignDeviceInEvent = ({
               refetching: refetching,
               clientSecret: response.data.paymentIntentCustomized.client_secret,
               paymentInfo: response.data.paymentIntentCustomized,
-            })
+            }),
           );
           return setClientSecret(
-            response.data.paymentIntentCustomized.client_secret
+            response.data.paymentIntentCustomized.client_secret,
           );
         }
       } else if (typeOfTransaction === "Cash-Deposit") {
@@ -370,7 +368,7 @@ const ModalAssignDeviceInEvent = ({
                         {item}
                       </p>
                     ),
-                  })
+                  }),
                 ),
               ]}
             />
@@ -416,7 +414,7 @@ const ModalAssignDeviceInEvent = ({
                         {item.group}
                       </p>
                     ),
-                  })
+                  }),
                 ),
               ]}
             />
@@ -437,11 +435,11 @@ const ModalAssignDeviceInEvent = ({
                 Serial number to assign <QuestionIcon />:
               </p>
             </Tooltip>
-            <OutlinedInput
+            <Input
               disabled={blockFields}
-              style={OutlinedInputStyle}
               type="text"
               name="serialNumber"
+              value={serialNumber}
               onChange={(event) => setSerialNumber(event.target.value)}
               placeholder="e.g. 0150235"
             />
@@ -460,11 +458,11 @@ const ModalAssignDeviceInEvent = ({
             >
               Quantity of devices to assign in transaction:
             </p>
-            <OutlinedInput
+            <Input
               disabled={blockFields}
-              style={OutlinedInputStyle}
               name="qty"
               type="text"
+              value={qty}
               onChange={(event) => setQty(event.target.value)}
               fullWidth
               placeholder="e.g. 20"
@@ -482,10 +480,9 @@ const ModalAssignDeviceInEvent = ({
             >
               Authorized amount for transaction ($):
             </p>
-            <OutlinedInput
+            <Input
               disabled={blockFields}
               style={{
-                ...OutlinedInputStyle,
                 display: typeOfTransaction === "No-Deposit" ? "none" : "flex",
               }}
               onChange={(event) => setAuthorizedAmount(event.target.value)}
@@ -493,6 +490,7 @@ const ModalAssignDeviceInEvent = ({
               placeholder="e.g. 200"
               name="authorizedAmount"
               type="text"
+              value={authorizedAmount}
               startAdornment={
                 <InputAdornment position="start">
                   <Icon
@@ -514,26 +512,24 @@ const ModalAssignDeviceInEvent = ({
             gap: "10px",
           }}
         >
-          <Button
-            loading={isLoadingState}
-            onClick={() => {
+          <GrayButtonComponent
+            loadingState={isLoadingState}
+            func={() => {
               closeModal();
             }}
-            style={{ ...GrayButton, width: "100%", margin: "20px 0px" }}
-          >
-            <p style={GrayButtonText}>Cancel</p>
-          </Button>
-          <Button
-            loading={isLoadingState}
-            onClick={(e) => handleSubmitInformation(e)}
-            style={{ ...BlueButton, width: "100%", margin: "20px 0px" }}
-          >
-            <p style={BlueButtonText}>
-              {typeOfTransaction !== "Authorized-Deposit"
+            styles={{ width: "100%", margin: "20px 0px" }}
+            title="Cancel"
+          />
+          <BlueButtonComponent
+            loadingState={isLoadingState}
+            func={(e) => handleSubmitInformation(e)}
+            styles={{ width: "100%", margin: "20px 0px" }}
+            title={
+              typeOfTransaction !== "Authorized-Deposit"
                 ? "Create transaction"
-                : "Credit card information"}
-            </p>
-          </Button>
+                : "Credit card information"
+            }
+          />
         </div>
         {isLoadingState && <Spin indicator={<Loading />} fullscreen />}
         {clientSecret !== "" && (
