@@ -1,18 +1,19 @@
 import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
-import { Space, Table, Tooltip } from "antd";
+import { Space, Tooltip } from "antd";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
+import BaseTable from "../../../../../components/ux/tables/BaseTable";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import "../../../../../styles/global/ant-table.css";
-import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
   const dataFormat = checkTypeFetchResponse(
     eventInventoryData.dataToRenderInComponent
   );
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const columns = [
     {
       title: "Device type",
@@ -292,24 +293,25 @@ const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
     return resultIntoArray;
   };
   return (
-    <Table
+    <BaseTable
       sticky
       size="large"
       columns={columns}
       dataSource={getInfoNeededToBeRenderedInTable()}
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      className="table-ant-customized"
-      style={{ cursor: "pointer" }}
-      onRow={(record) => {
-        return {
-          onClick: () => {
-            dispatch(onAddDeviceToDisplayInQuickGlance(record));
-            navigate("/device-quick-glance");
-          },
-        };
-      }}
+      enablePagination={true}
+      // pagination={{
+      //   position: ["bottomCenter"],
+      // }}
+      // className="table-ant-customized"
+      // style={{ cursor: "pointer" }}
+      // onRow={(record) => {
+      //   return {
+      //     onClick: () => {
+      //       dispatch(onAddDeviceToDisplayInQuickGlance(record));
+      //       navigate("/device-quick-glance");
+      //     },
+      //   };
+      // }}
     />
   );
   // }
