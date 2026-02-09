@@ -8,6 +8,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Title } from "../../../../styles/global/Title";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import DeviceDatabase from "./table/DeviceDatabase";
+import TableHeader from "../../../../components/UX/TableHeader";
 
 const DevicesInformationSection = (dataToRenderInComponent) => {
   const { register, watch } = useForm();
@@ -21,8 +22,13 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
     await clearCacheMemory(
       `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
     );
-
-    return queryClient.invalidateQueries({ queryKey: "deviceInPoolList" });
+    await clearCacheMemory(
+      `eventSelected=${event.id}&company=${user.companyData.companyName}`
+    );
+    await clearCacheMemory(
+      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.companyName}`
+    );
+    return queryClient.invalidateQueries({ queryKey: "deviceInPoolList", exact: true, refetchPage: true });
   };
   return (
     <>
@@ -76,27 +82,7 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
         gap={1}
         container
       >
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-            }}
-          >
-            <RefreshButton propsFn={handleRefreshingData} />
-          </div>
-        </Grid>
+        <TableHeader leftCta={<RefreshButton propsFn={handleRefreshingData} />} />
         <Grid item xs={12}>
           <DeviceDatabase
             searchDevice={watch("searchDevice")}
