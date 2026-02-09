@@ -1,24 +1,20 @@
-import {
-  Typography,
-  Grid,
-  FormControl,
-  FormLabel,
-  OutlinedInput,
-  Button,
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
-import { useRef, useCallback, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { FormControl, FormLabel, Typography } from "@mui/material";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { devitrakApi } from "../../../../../api/devitrakApi";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import * as yup from "yup";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
+import Input from "../../../../../components/UX/inputs/Input";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const schema = yup.object().shape({
   email: yup
@@ -38,10 +34,9 @@ const ForgetPasswordLinkFromStaffPage = () => {
     queryKey: ["listOfAdminUsers"],
     queryFn: () =>
       devitrakApi.post("/staff/admin-users", {
-        company: user.company,
+        company: user.companyData.companyName,
       }),
-    // enabled: false,
-    refetchOnMount: false,
+    enabled: !!user.companyData.companyName,
   });
 
   useEffect(() => {
@@ -64,7 +59,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
   const findStaff = useCallback(() => {
     const groupByEmail = groupBy(
       listAdminUsers?.data?.data?.adminUsers,
-      "email"
+      "email",
     );
 
     return groupByEmail[watch("email")];
@@ -72,10 +67,26 @@ const ForgetPasswordLinkFromStaffPage = () => {
 
   adminUserInfoRef.current = findStaff();
 
+  const sendingResetPasswordLink = useMutation({
+    mutationFn: (data) =>
+      devitrakApi.post("/nodemailer/reset-admin-password", data),
+    onSuccess: (resp) => {
+      if (resp.data.ok) {
+        openNotificationWithIcon("Success", "Email was sent to email address.");
+        handleClose();
+      }
+    },
+    onError: (error) => {
+      console.log(error);
+      openNotificationWithIcon("error", error.message);
+    },
+  });
   const handleSubmitEmailLink = async (data) => {
+    console.log(data)
+    console.log(adminUserInfoRef.current)
     if (adminUserInfoRef.current) {
       const stampTime = `${new Date()}`;
-      const resp = await devitrakApi.post("/nodemailer/reset-admin-password", {
+      sendingResetPasswordLink.mutateAsync({
         adminUser: {
           firstName: adminUserInfoRef.current.at(-1).name,
           lastName: adminUserInfoRef.current.at(-1).lastName,
@@ -89,12 +100,6 @@ const ForgetPasswordLinkFromStaffPage = () => {
         },
         company_logo: user.companyData.company_logo,
       });
-      if (resp.data.ok) {
-        openNotificationWithIcon("Success", "Email was sent to email address.");
-        handleClose();
-      }
-    } else {
-      openNotificationWithIcon("error", "Email was not found!");
     }
   };
   const handleClose = () => {
@@ -120,10 +125,69 @@ const ForgetPasswordLinkFromStaffPage = () => {
       </Typography>
     );
   };
+
+  const modalBody = () => {
+    return (
+      <ReusableCardWithHeaderAndFooter
+        title="Reset Password"
+        actions={[
+          <div
+            key="reset-password"
+            style={{ width: "100%", padding: "0 24px" }}
+          >
+            <BlueButtonComponent
+              title="Reset password"
+              buttonType="submit"
+              form="form-reset-password-link"
+            />
+          </div>,
+        ]}
+      >
+        {" "}
+        <form
+          style={{
+            width: "100%",
+          }}
+          onSubmit={handleSubmit(handleSubmitEmailLink)}
+          id="form-reset-password-link"
+        >
+          <FormControl fullWidth>
+            <FormLabel>
+              <p style={{ margin: "5px 0", padding: "5px 0", ...Subtitle }}>
+                Enter your email to get a link to reset your password.
+              </p>
+              <Typography
+                style={{
+                  ...Subtitle,
+                  textAlign: "left",
+                  margin: "1rem 0 0",
+                  paddingBottom: "5px",
+                }}
+              >
+                Email
+              </Typography>
+            </FormLabel>
+            <Input
+              {...register("email")}
+              required
+              type="email"
+              placeholder="Enter your email"
+            />
+          </FormControl>
+        </form>
+      </ReusableCardWithHeaderAndFooter>
+    );
+  };
   return (
     <>
       {contextHolder}
-      <Modal
+      <ModalUX
+        title={renderTitle()}
+        body={modalBody()}
+        openDialog={true}
+        closeModal={() => handleClose()}
+      />
+      {/* <Modal
         title={renderTitle()}
         width={1000}
         open={true}
@@ -148,77 +212,9 @@ const ForgetPasswordLinkFromStaffPage = () => {
               Enter your email to get a link to reset your password.
             </Typography>
           </Grid>
-          <Grid container>
-            <form
-              style={{
-                width: "100%",
-              }}
-              onSubmit={handleSubmit(handleSubmitEmailLink)}
-            >
-              <Grid
-                display={"flex"}
-                flexDirection={"column"}
-                alignItems={"center"}
-                alignSelf={"stretch"}
-                marginY={2}
-                marginX={"auto"}
-                paddingX={"9px"}
-                item
-                xs={10}
-              >
-                <FormControl fullWidth>
-                  <FormLabel>
-                    {" "}
-                    <Typography
-                      style={{
-                        ...Subtitle,
-                        textAlign: "left",
-                        paddingBottom: "5px",
-                      }}
-                    >
-                      Email
-                    </Typography>
-                  </FormLabel>
-                  <OutlinedInput
-                    {...register("email")}
-                    required
-                    type="email"
-                    style={OutlinedInputStyle}
-                    placeholder="Enter your email"
-                  />
-                </FormControl>
-              </Grid>
-              <Grid marginX={"auto"} paddingX={"9px"} marginY={3} item xs={10}>
-                <Button
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    border: "1px solid var(--blue-dark-600, #155EEF)",
-                    background: "var(--blue-dark-600, #155EEF)",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                  }}
-                  variant="contained"
-                  type="submit"
-                >
-                  <Typography
-                    style={{
-                      color: "var(--base-white, #FFF)",
-                      textAlign: "center",
-                      fontFamily: "Inter",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      lineHeight: "24px",
-                    }}
-                    id="transition-modal-title"
-                  >
-                    Reset password
-                  </Typography>
-                </Button>
-              </Grid>
-            </form>
-          </Grid>
+          <Grid container></Grid>
         </Grid>
-      </Modal>
+      </Modal> */}
     </>
   );
 };
