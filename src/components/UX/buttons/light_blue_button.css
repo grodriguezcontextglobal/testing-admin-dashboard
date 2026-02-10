@@ -1,0 +1,44 @@
+/* Keep your existing .customized__lightBlueButton styles */
+
+.customized__lightBlueButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.customized__lightBlueButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Size system (spacing/height only) */
+.customized__lightBlueButton--sm {
+  height: 32px;
+  padding: 0 12px;
+}
+
+.customized__lightBlueButton--md {
+  height: 40px;
+  padding: 0 14px;
+}
+
+.customized__lightBlueButton--lg {
+  height: 44px;
+  padding: 0 16px;
+}
+
+.customized__lightBlueButton--xl {
+  height: 48px;
+  padding: 0 18px;
+}
+
+/* Ensure text aligns + no default margins */
+.customized__lightBlueButtonText {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
