@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { useState } from "react";
+// import { useState } from "react";
 import "./styles.css";
 
 const LightBlueButtonComponent = ({
@@ -8,16 +8,11 @@ const LightBlueButtonComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const iconWithHover =
-    icon && typeof icon.type === "function"
-      ? { ...icon, props: { ...icon.props, isHovered, hoverStroke: "#fff" } }
-      : icon;
+  // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Button
@@ -28,11 +23,10 @@ const LightBlueButtonComponent = ({
       style={{ ...styles }}
       solid={true}
       className="customized__lightBlueButton"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <p className="customized__lightBlueButtonText" style={{ ...titleStyles }}>
-        {iconWithHover && iconWithHover} {title}
+        {/* {icon && icon}  */}
+        {title}
       </p>
     </Button>
   );

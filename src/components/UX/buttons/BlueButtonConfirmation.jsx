@@ -1,5 +1,5 @@
 import { Button, Popconfirm } from "antd";
-import { useState } from "react";
+// import { useState } from "react";
 import "./styles.css";
 
 const BlueButtonConfirmationComponent = ({
@@ -8,17 +8,12 @@ const BlueButtonConfirmationComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
   confirmationTitle = "Are you sure?",
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Clone the icon with hover props if it exists
-  const iconWithHover = icon && typeof icon === 'object' && icon.type ? 
-    { ...icon, props: { ...icon.props, isHovered, hoverStroke: "#155eef" } } : 
-    icon;
+  // // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Popconfirm title={confirmationTitle} onConfirm={func}>
@@ -28,11 +23,10 @@ const BlueButtonConfirmationComponent = ({
         htmlType={buttonType}
         style={{ ...styles }}
         className="customized__blueButton"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <p className="customized__blueButtonText" style={{ ...titleStyles }}>
-          {iconWithHover && iconWithHover} {title}
+          {/* {icon && icon}  */}
+          {title}
         </p>
       </Button>
     </Popconfirm>

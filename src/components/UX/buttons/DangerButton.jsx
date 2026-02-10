@@ -1,6 +1,6 @@
 import { Button } from "antd";
-import { useState } from "react";
-import "./styles.css"
+// import { useState } from "react";
+import "./styles.css";
 
 const DangerButtonComponent = ({
   disabled = false,
@@ -8,17 +8,12 @@ const DangerButtonComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
   ...props
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Clone the icon with hover props if it exists
-  const iconWithHover = icon && typeof icon === 'object' && icon.type ? 
-    { ...icon, props: { ...icon.props, isHovered, hoverStroke: "var(--danger-action)" } } : 
-    icon;
+  // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Button
@@ -29,11 +24,10 @@ const DangerButtonComponent = ({
       onClick={func}
       style={{ ...styles }}
       className="customized__dangerButton"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <p className="customized__dangerButtonText" style={{ ...titleStyles }}>
-        {iconWithHover && iconWithHover} {title}
+        {/* {icon && icon}  */}
+        {title}
       </p>
     </Button>
   );

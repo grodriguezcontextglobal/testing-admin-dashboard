@@ -1,5 +1,5 @@
 import { Button, Popconfirm } from "antd";
-import { useState } from "react";
+// import { useState } from "react";
 import "./styles.css";
 
 const GrayButtonConfirmationComponent = ({
@@ -8,16 +8,12 @@ const GrayButtonConfirmationComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
   confirmationTitle = "Are you sure?",
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke: "var(--basewhite)" } }
-    : icon;
+  // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Popconfirm title={confirmationTitle} onConfirm={func}>
@@ -27,11 +23,10 @@ const GrayButtonConfirmationComponent = ({
         htmlType={buttonType}
         style={{ ...styles }}
         className="customized__grayButton"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <p className="customized__grayButtonText" style={{ ...titleStyles }}>
-          {iconWithHover && iconWithHover} {title}
+          {/* {icon && icon}  */}
+          {title}
         </p>
       </Button>
     </Popconfirm>

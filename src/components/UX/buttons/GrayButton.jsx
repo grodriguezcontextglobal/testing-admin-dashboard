@@ -1,6 +1,6 @@
 import { Button } from "antd";
-import { useState } from "react";
-import "./styles.css"
+// import { useState } from "react";
+import "./styles.css";
 
 const GrayButtonComponent = ({
   disabled = false,
@@ -8,16 +8,12 @@ const GrayButtonComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
   ...props
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke:"var(--basewhite)" } }
-    : icon;
+  // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Button
@@ -28,11 +24,10 @@ const GrayButtonComponent = ({
       onClick={func}
       style={{ ...styles }}
       className="customized__grayButton"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <p className="customized__grayButtonText" style={{ ...titleStyles }}>
-        {iconWithHover && iconWithHover} {title}
+        {/* {icon && icon}  */}
+        {title}
       </p>
     </Button>
   );

@@ -1,5 +1,5 @@
 import { Button, Popconfirm } from "antd";
-import { useState } from "react";
+// import { useState } from "react";
 import "./styles.css";
 
 const DangerButtonConfirmationComponent = ({
@@ -8,17 +8,13 @@ const DangerButtonConfirmationComponent = ({
   styles = {},
   buttonType = "button",
   func = null,
-  icon = null,
+  // icon = null,
   loadingState = false,
   titleStyles = {},
   confirmationTitle = "Are you sure?",
-  hoverStroke = "#dc2626",
+  // hoverStroke = "#dc2626",
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const iconWithHover = icon && typeof icon.type === 'function' 
-    ? { ...icon, props: { ...icon.props, isHovered, hoverStroke } }
-    : icon;
+  // // const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Popconfirm title={confirmationTitle} onConfirm={func}>
@@ -28,11 +24,10 @@ const DangerButtonConfirmationComponent = ({
         htmlType={buttonType}
         style={{ ...styles }}
         className="customized__dangerButton"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <p className="customized__dangerButtonText" style={{ ...titleStyles }}>
-          {iconWithHover && iconWithHover} {title}
+          {/* {icon && icon}  */}
+          {title}
         </p>
       </Button>
     </Popconfirm>
