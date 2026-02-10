@@ -4,11 +4,11 @@ import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { ChangeRoleStaffIcon } from "../../../components/icons/ChangeRoleStaffIcon";
+// import { ChangeRoleStaffIcon } from "../../../components/icons/ChangeRoleStaffIcon";
 import { RectanglePlusIcon } from "../../../components/icons/RectanglePlusIcon";
-import { UpdateIcon } from "../../../components/icons/UpdateIcon";
-import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
-import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
+// import { UpdateIcon } from "../../../components/icons/UpdateIcon";
+// import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
+// import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/ux/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
@@ -77,7 +77,7 @@ const StaffDetail = () => {
     updateStaffStatusMutation.mutate();
   };
 
-  const iconColor = "#0040C1";
+  // const iconColor = "#0040C1";
 
   const tabOptions = [
     {
@@ -112,7 +112,7 @@ const StaffDetail = () => {
         <LightBlueButtonComponent
           title={"Assign user to event"}
           func={() => null}
-          icon={<WhiteCalendarIcon />}
+          // icon={<WhiteCalendarIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -133,7 +133,7 @@ const StaffDetail = () => {
         <LightBlueButtonComponent
           title={"Assign Location/Permission"}
           func={() => null}
-          icon={<RectanglePlusIcon stroke={iconColor} />}
+          // icon={<RectanglePlusIcon stroke={iconColor} />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -154,7 +154,7 @@ const StaffDetail = () => {
         <GrayButtonComponent
           title={"Update contact info"}
           func={() => null}
-          icon={<UpdateIcon />}
+          // icon={<UpdateIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -175,7 +175,7 @@ const StaffDetail = () => {
         <GrayButtonComponent
           title={"Change role"}
           func={() => null}
-          icon={<ChangeRoleStaffIcon />}
+          // icon={<ChangeRoleStaffIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -196,7 +196,7 @@ const StaffDetail = () => {
         <GrayButtonComponent
           title={"Send password reset email"}
           func={() => null}
-          icon={<UpdatePasswordIcon />}
+          // icon={<UpdatePasswordIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -217,8 +217,8 @@ const StaffDetail = () => {
         <GrayButtonComponent
           title={`${profile.active ? "Remove" : "Grant"} access`}
           func={() => activeOrDesactiveStaffMemberInCompany()}
-          icon={<UpdatePasswordIcon />}
-          loadingState={updateStaffStatusMutation.isLoading}
+          // icon={<UpdatePasswordIcon />}
+          loadingState={updateStaffStatusMutation.isPending}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
