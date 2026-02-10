@@ -1,0 +1,44 @@
+/* Keep your existing .customized__blueButton and .customized__blueButtonText styles */
+
+.customized__blueButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* UntitledUI-like spacing */
+  width: 100%;
+}
+
+.customized__blueButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Size system (only spacing/height/font-size; background stays from your base class) */
+.customized__blueButton--sm {
+  height: 32px;
+  padding: 0 12px;
+}
+
+.customized__blueButton--md {
+  height: 40px;
+  padding: 0 14px;
+}
+
+.customized__blueButton--lg {
+  height: 44px;
+  padding: 0 16px;
+}
+
+.customized__blueButton--xl {
+  height: 48px;
+  padding: 0 18px;
+}
+
+/* Optional: make the inner <p> not mess with alignment if you still have it elsewhere */
+.customized__blueButtonText {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}

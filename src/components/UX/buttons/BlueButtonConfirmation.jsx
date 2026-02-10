@@ -1,6 +1,7 @@
-import { Button, Popconfirm } from "antd";
+import { Popconfirm } from "antd";
 // import { useState } from "react";
 import "./styles.css";
+import BlueButtonComponent from "./BlueButton";
 
 const BlueButtonConfirmationComponent = ({
   disabled = false,
@@ -17,18 +18,14 @@ const BlueButtonConfirmationComponent = ({
 
   return (
     <Popconfirm title={confirmationTitle} onConfirm={func}>
-      <Button
+      <BlueButtonComponent
         disabled={disabled}
-        loading={loadingState}
-        htmlType={buttonType}
-        style={{ ...styles }}
-        className="customized__blueButton"
-      >
-        <p className="customized__blueButtonText" style={{ ...titleStyles }}>
-          {/* {icon && icon}  */}
-          {title}
-        </p>
-      </Button>
+        loadingState={loadingState}
+        buttonType={buttonType}
+        styles={styles}
+        title={title}
+        titleStyles={titleStyles}
+      />
     </Popconfirm>
   );
 };
