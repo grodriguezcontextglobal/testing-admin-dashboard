@@ -1,0 +1,271 @@
+/* UntitledUI-ish tokens (tweak to match your global CSS vars if you have them) */
+:root {
+  --ud-bg: #fff;
+  --ud-border: rgba(16, 24, 40, 0.12);
+  --ud-shadow:
+    0 12px 24px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.08);
+  --ud-text: #101828;
+  --ud-muted: #475467;
+  --ud-hover: rgba(16, 24, 40, 0.04);
+  --ud-focus: rgba(46, 144, 250, 0.35);
+  --ud-radius: 12px;
+  --ud-radius-sm: 10px;
+
+  /* Variant colors */
+  --ud-primary: #155eef;
+  --ud-primary-hover: #175cd3;
+  --ud-text-on-primary: #ffffff;
+}
+
+.ud-root {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Trigger */
+.ud-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--ud-border);
+  background: var(--ud-bg);
+  color: var(--ud-text);
+  cursor: pointer;
+  height: 40px; /* Default md size */
+  padding: 0 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  outline: none;
+  user-select: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.ud-trigger:focus-visible {
+  box-shadow:
+    0 0 0 4px var(--ud-focus),
+    0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+.ud-trigger.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.ud-trigger--sm {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.ud-trigger--sm .ud-trigger-label {
+  font-size: 13px;
+}
+
+.ud-trigger--md {
+  height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.ud-trigger--lg {
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+.ud-trigger--lg .ud-trigger-label {
+  font-size: 16px;
+}
+
+/* Variants */
+.ud-trigger--variant-default {
+  background: var(--ud-bg);
+  border: 1px solid var(--ud-border);
+  color: var(--ud-text);
+}
+
+.ud-trigger--variant-outline {
+  background: transparent;
+  border: 1px solid var(--ud-border);
+  color: var(--ud-text);
+}
+.ud-trigger--variant-outline:hover {
+  background: var(--ud-hover);
+}
+
+.ud-trigger--variant-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.ud-trigger--variant-ghost:hover {
+  background: var(--ud-hover);
+}
+
+.ud-trigger--variant-primary {
+  background: var(--ud-primary);
+  border: 1px solid var(--ud-primary);
+  color: var(--ud-text-on-primary);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+.ud-trigger--variant-primary:hover {
+  background: var(--ud-primary-hover);
+  border-color: var(--ud-primary-hover);
+}
+.ud-trigger--variant-primary .ud-chevron,
+.ud-trigger--variant-primary .ud-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Content styles */
+.ud-trigger--button .ud-trigger-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ud-chevron {
+  display: inline-flex;
+  color: var(--ud-muted);
+  transition: transform 160ms ease;
+  flex-shrink: 0;
+}
+.ud-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.ud-trigger--icon {
+  width: 40px; /* Default for md */
+  padding: 0;
+}
+.ud-trigger--sm.ud-trigger--icon {
+  width: 32px;
+}
+.ud-trigger--lg.ud-trigger--icon {
+  width: 48px;
+}
+
+.ud-icon {
+  display: inline-flex;
+  color: var(--ud-muted);
+}
+
+.ud-trigger--avatar {
+  width: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  padding: 2px; /* Ring space */
+}
+.ud-trigger--avatar:focus-visible {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--ud-focus);
+}
+
+.ud-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+/* Menu / Popover */
+.ud-menu {
+  position: fixed; /* aligns with getBoundingClientRect; no portal needed */
+  z-index: 9999;
+  background: var(--ud-bg);
+  border: 1px solid var(--ud-border);
+  border-radius: var(--ud-radius);
+  box-shadow: var(--ud-shadow);
+  padding: 6px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ud-menu.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Menu Items */
+.ud-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--ud-radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--ud-text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: background 0.15s ease;
+  outline: none;
+}
+
+.ud-item:hover,
+.ud-item:focus-visible {
+  background: var(--ud-hover);
+}
+
+.ud-item.is-selected {
+  background: var(--ud-hover);
+  font-weight: 500;
+}
+
+.ud-item.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ud-item-icon {
+  display: inline-flex;
+  margin-right: 8px;
+  color: var(--ud-muted);
+}
+
+.ud-item-label {
+  flex: 1;
+}
+
+.ud-item-addon {
+  font-size: 12px;
+  color: var(--ud-muted);
+  margin-left: 8px;
+}
+
+/* Section & Separator */
+.ud-separator {
+  height: 1px;
+  background: var(--ud-border);
+  margin: 4px 0;
+}
+
+.ud-section-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ud-muted);
+  padding: 8px 10px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
