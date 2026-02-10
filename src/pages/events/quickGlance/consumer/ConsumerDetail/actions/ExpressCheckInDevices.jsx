@@ -1,16 +1,15 @@
-import { OutlinedInput, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message, Modal, notification, Space } from "antd";
+import { message, Modal, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import Chip from "../../../../../../components/UX/Chip/Chip";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
-import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import Input from "../../../../../../components/UX/inputs/Input";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 const ExpressCheckInDevices = ({
@@ -172,15 +171,12 @@ const ExpressCheckInDevices = ({
         }}
         onSubmit={handleSubmit(handleAddDevices)}
       >
-        <OutlinedInput
+        <Input
           {...register("serialNumber")}
-          style={OutlinedInputStyle}
           placeholder="Scan serial number to check in."
           fullWidth
         />
-        <Button style={{ ...BlueButton, width: "100%" }} htmlType="submit">
-          <p style={BlueButtonText}>Add</p>
-        </Button>
+        <BlueButtonComponent style={{ width: "100%" }} buttonType="submit" title="Add" />
       </form>
       <div
         style={{
