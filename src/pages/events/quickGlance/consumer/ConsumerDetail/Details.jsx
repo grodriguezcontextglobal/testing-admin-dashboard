@@ -1,11 +1,9 @@
 import { Grid } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Button, Card, Dropdown } from "antd";
+import { Card, Dropdown } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import { EmailIcon } from "../../../../../components/icons/EmailIcon";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
@@ -14,9 +12,6 @@ import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import FreeTransaction from "./actions/transactions/FreeTransaction";
 import ServicesTransaction from "./actions/transactions/ServicesTransaction";
 import ConsumerDetails from "./details/ConsumerDetails";
-import Vertical3Dots from "../../../../../components/icons/Vertical3Dots";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 
 const items = [
   {
@@ -131,7 +126,7 @@ const FormatAttendeeDetailInfo = () => {
               styles={{ width: "100%" }}
               buttonType="button"
               title={"Create a new free transaction"}
-              icon={<WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />}
+              // icon={<WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />}
             />
             {event?.eventInfoDetail?.merchant && (
               <Dropdown
@@ -144,21 +139,23 @@ const FormatAttendeeDetailInfo = () => {
                 arrow
                 trigger={["click"]}
               >
-                <Button
-                  htmlType="button"
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                    borderRadius: "6px",
-                    height: "fit-content",
-                    padding:"8px 12px",
-                  }}
-                >
-                  <p style={{ ...BlueButtonText, alignItems: "center" }}>
+                <BlueButtonComponent
+                  buttonType="button"
+                  disabled={!event.active}
+                  title={"Create a new paid transaction"}
+                  // style={{
+                  //   ...BlueButton,
+                  //   width: "100%",
+                  //   borderRadius: "6px",
+                  //   height: "fit-content",
+                  //   padding:"8px 12px",
+                  // }}
+                />
+                  {/* <p style={{ ...BlueButtonText, alignItems: "center" }}>
                     <WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />
                     &nbsp; Create a new paid transaction
                   </p>
-                </Button>
+                </BlueButtonComponent> */}
               </Dropdown>
             )}
             {event?.extraServicesNeeded && (
@@ -166,14 +163,14 @@ const FormatAttendeeDetailInfo = () => {
                 disabled={!event.active}
                 func={() => setExtraServiceNeeded(true)}
                 title="Services"
-                icon={
-                  <Vertical3Dots
-                    stroke="#fff"
-                    hoverStroke="#155EEF"
-                    width="20"
-                    height="18"
-                  />
-                }
+                // icon={
+                //   <Vertical3Dots
+                //     stroke="#fff"
+                //     hoverStroke="#155EEF"
+                //     width="20"
+                //     height="18"
+                //   />
+                // }
               />
             )}
             <BlueButtonComponent
@@ -182,13 +179,13 @@ const FormatAttendeeDetailInfo = () => {
               title="Email notification"
               buttonType="button"
               styles={{ width: "100%" }}
-              icon={
-                <EmailIcon
-                  style={{ marginRight: "0.25rem", alignSelf: "baseline" }}
-                  width="20"
-                  height="18"
-                />
-              }
+              // icon={
+              //   <EmailIcon
+              //     style={{ marginRight: "0.25rem", alignSelf: "baseline" }}
+              //     width="20"
+              //     height="18"
+              //   />
+              // }
             />
           </Grid>
         </Card>
