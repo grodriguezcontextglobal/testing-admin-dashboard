@@ -233,7 +233,7 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <GrayButtonComponent
-                  icon={!item.disableStatus && item.icon}
+                  // icon={!item.disableStatus && item.icon}
                   disabled={item.disableStatus}
                   func={() => item.fn()}
                   title={item.text}
