@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
@@ -233,7 +232,7 @@ const MainPage = () => {
                       )
                     )
                   }
-                  icon={<WhiteCirclePlusIcon />}
+                  // icon={<WhiteCirclePlusIcon />}
                   styles={{ width: "100%" }}
                 />
               </Link>
@@ -270,7 +269,7 @@ const MainPage = () => {
                       )
                     )
                   }
-                  icon={<WhiteCirclePlusIcon />}
+                  // icon={<WhiteCirclePlusIcon />}
                   styles={{ width: "100%" }}
                 />
               </Link>
