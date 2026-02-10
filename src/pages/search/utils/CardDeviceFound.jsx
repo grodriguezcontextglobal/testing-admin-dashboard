@@ -1,11 +1,8 @@
-import { Button, Card, Divider, Popconfirm } from "antd";
 import { PropTypes } from "prop-types";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
+import ReusableCardWithHeaderAndFooter from "../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import { Subtitle } from "../../../styles/global/Subtitle";
 const CardDeviceFound = ({
   props,
@@ -36,27 +33,25 @@ const CardDeviceFound = ({
     textWrap: "pretty",
   };
   return (
-    <Card
+    <ReusableCardWithHeaderAndFooter
+      title={<p style={{ ...subtitleCardStyle, fontWeight: 600, fontSize:"20px" }}>{props?.type}</p>}
       key={props.data?._id}
-      style={{
-        borderRadius: "12px",
-        border: "1px solid #D0D5DD",
-        background: "#FFF",
-        boxShadow: "0px 2px 4px 0px rgba(0, 0, 0, 0.05)",
-        display: props?.data?.contract_type === "lease" ? "none" : "flex",
-        padding: "5px",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "20px",
-        width:"100%",
-        aspectRatio: "1/1",
-      }}
-      styles={{
-        body: {
-          padding: "5px 20px 20px 20px",
-          width: "100%",
-        },
-      }}
+      actions={[
+        <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", margin:"0 24px", gap:3 }} key={props.data?._id}>
+          <BlueButtonComponent
+            title="Details"
+            func={() => fn(props)}
+            buttonType="button"
+            loadingState={loadingStatus}
+          />
+          <DangerButtonConfirmationComponent
+            loadingState={returnLoading}
+            func={() => returnFn(props)}
+            title="Return device"
+            confirmationTitle="Are you sure to return this device?"
+          />
+        </div>,
+      ]}
     >
       <div style={{ width: "100%", textAlign: "left" }}>
         {props.image ? (
@@ -69,23 +64,8 @@ const CardDeviceFound = ({
           <GeneralDeviceIcon dimensions={{ width: "150px", height: "auto" }} />
         )}
       </div>
-      <div
-        style={{
-          width: "100%",
-          textAlign: "left",
-          color: "var(--Gray-900, #101828)",
-          fontFamily: "Inter",
-          fontSize: "18px",
-          fontStyle: " normal",
-          fontWeight: 600,
-          lineHeight: "28px" /* 155.556% */,
-          textWrap: "pretty",
-        }}
-      >
-        {props?.serialNumber}
-      </div>
-      <div style={subtitleCardStyle}>{props?.type}</div>
-      <div style={subtitleCardStyle}>{props?.event}</div>
+      <div style={{ ...subtitleCardStyle, fontWeight:500}}>{props?.serialNumber}</div>
+      <div style={{ ...subtitleCardStyle, fontWeight:400}}>{props?.event}</div>
       <div
         style={{
           ...subtitleCardStyle,
@@ -108,41 +88,7 @@ const CardDeviceFound = ({
           {props?.active ? "In transaction" : "In event's stock"}
         </p>
       </div>
-      <Divider style={{ margin: "5px 0 10px" }} />
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "5px",
-        }}
-      >
-        <Button
-          loading={returnLoading}
-          onClick={() => fn(props)}
-          style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
-        >
-          <p style={BlueButtonText}>Details</p>
-        </Button>
-        <Popconfirm
-          title="Are you sure to return this device?"
-          onConfirm={() => returnFn(props)}
-        >
-          <Button
-            loading={loadingStatus}
-            style={{
-              ...DangerButton,
-              ...CenteringGrid,
-              width: "100%",
-              display: props.active ? "flex" : "none",
-            }}
-          >
-            <p style={DangerButtonText}>Return</p>
-          </Button>
-        </Popconfirm>
-      </div>
-    </Card>
+    </ReusableCardWithHeaderAndFooter>
   );
 };
 
