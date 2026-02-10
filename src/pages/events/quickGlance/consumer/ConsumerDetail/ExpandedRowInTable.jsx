@@ -23,11 +23,11 @@ import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import SignaturesProof from "./SignaturesProof";
-import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
 import { ReplaceDevice } from "./actions/ReplaceDevice";
-import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpandedTableButtons from "./ux/ExpandedTableButtons";
 import DisplayDeviceRequestedLegendPerTransaction from "./AssigningDevice/components/DisplayDeviceRequestedLegendPerTransaction";
+import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
+import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
@@ -647,7 +647,7 @@ const ExpandedRowInTable = ({
               title={`Return all items of this transaction`}
               styles={{ gap: "5px" }}
               buttonType="button"
-              func={() => handleAllItemsReturn(true)}
+              func={() => handleAllItemsReturn()}
               confirmationTitle="Are you sure you want to return all items of this transaction?"
             />
             <BlueButtonComponent
