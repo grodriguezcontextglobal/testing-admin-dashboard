@@ -1,9 +1,10 @@
 import { Grid } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Card, Dropdown } from "antd";
+import { Card } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import UXDropdown from "../../../../../components/UX/dropdown/DropDownComponent";
 import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
@@ -13,14 +14,14 @@ import FreeTransaction from "./actions/transactions/FreeTransaction";
 import ServicesTransaction from "./actions/transactions/ServicesTransaction";
 import ConsumerDetails from "./details/ConsumerDetails";
 
-const items = [
+const options = [
   {
     label: "Authorization",
-    key: "0",
+    value: "0",
   },
   {
     label: "Cash",
-    key: "2",
+    value: "2",
   },
 ];
 
@@ -41,7 +42,8 @@ const FormatAttendeeDetailInfo = () => {
   const handleDeviceForFree = () => {
     setCreateTransactionForNoRegularUser(true);
   };
-  const onClick = ({ key }) => {
+  const handleSelect = (option) => {
+    const key = option.value;
     if (key === "0") {
       return setCreateTransactionPaid(true);
     } else if (key === "1") {
@@ -54,7 +56,7 @@ const FormatAttendeeDetailInfo = () => {
   };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
   return (
     <Grid
@@ -129,48 +131,28 @@ const FormatAttendeeDetailInfo = () => {
               // icon={<WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />}
             />
             {event?.eventInfoDetail?.merchant && (
-              <Dropdown
-                // disabled={!event.active}
-                menu={{
-                  items,
-                  onClick,
-                }}
-                placement="bottomLeft"
-                arrow
-                trigger={["click"]}
-              >
-                <BlueButtonComponent
-                  buttonType="button"
-                  disabled={!event.active}
-                  title={"Create a new paid transaction"}
-                  // style={{
-                  //   ...BlueButton,
-                  //   width: "100%",
-                  //   borderRadius: "6px",
-                  //   height: "fit-content",
-                  //   padding:"8px 12px",
-                  // }}
-                />
-                  {/* <p style={{ ...BlueButtonText, alignItems: "center" }}>
-                    <WhiteCirclePlusIcon hoverStroke="#155EEF" stroke="#fff" />
-                    &nbsp; Create a new paid transaction
-                  </p>
-                </BlueButtonComponent> */}
-              </Dropdown>
+              <UXDropdown
+                options={options}
+                onSelect={handleSelect}
+                placement="bottom-end"
+                renderTrigger={({ onClick, ref }) => (
+                  <div ref={ref} style={{ display: "inline-block" }}>
+                    <BlueButtonComponent
+                      buttonType="button"
+                      disabled={!event.active}
+                      title={"Create a new paid transaction"}
+                      func={onClick}
+                      size="lg"
+                    />
+                  </div>
+                )}
+              />
             )}
             {event?.extraServicesNeeded && (
               <BlueButtonComponent
                 disabled={!event.active}
                 func={() => setExtraServiceNeeded(true)}
                 title="Services"
-                // icon={
-                //   <Vertical3Dots
-                //     stroke="#fff"
-                //     hoverStroke="#155EEF"
-                //     width="20"
-                //     height="18"
-                //   />
-                // }
               />
             )}
             <BlueButtonComponent
@@ -179,13 +161,6 @@ const FormatAttendeeDetailInfo = () => {
               title="Email notification"
               buttonType="button"
               styles={{ width: "100%" }}
-              // icon={
-              //   <EmailIcon
-              //     style={{ marginRight: "0.25rem", alignSelf: "baseline" }}
-              //     width="20"
-              //     height="18"
-              //   />
-              // }
             />
           </Grid>
         </Card>
