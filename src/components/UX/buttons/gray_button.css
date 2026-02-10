@@ -1,0 +1,44 @@
+/* Keep your existing .customized__grayButton styles */
+
+.customized__grayButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.customized__grayButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Size system (spacing/height only) */
+.customized__grayButton--sm {
+  height: 32px;
+  padding: 0 12px;
+}
+
+.customized__grayButton--md {
+  height: 40px;
+  padding: 0 14px;
+}
+
+.customized__grayButton--lg {
+  height: 44px;
+  padding: 0 16px;
+}
+
+.customized__grayButton--xl {
+  height: 48px;
+  padding: 0 18px;
+}
+
+/* Ensure text aligns + no default margins */
+.customized__grayButtonText {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
