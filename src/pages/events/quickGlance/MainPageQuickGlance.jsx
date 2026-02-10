@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { checkArray } from "../../../components/utils/checkArray";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
@@ -19,7 +18,6 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 // import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
@@ -384,7 +382,7 @@ const MainPageQuickGlance = () => {
               // /event/new_subscription
               <Link to="/create-event-page/event-detail">
                 <BlueButtonComponent
-                  icon={<WhitePlusIcon />}
+                  // icon={<WhitePlusIcon />}
                   title={"Add new event"}
                   func={null}
                   styles={{ alignSelf: "stretch" }}
@@ -394,7 +392,7 @@ const MainPageQuickGlance = () => {
             <BlueButtonComponent
               func={() => setCreateUserButton(true)}
               title={"Add new consumer"}
-              icon={<WhiteCirclePlusIcon />}
+              // icon={<WhiteCirclePlusIcon />}
             />
           </Grid>
         </Grid>
