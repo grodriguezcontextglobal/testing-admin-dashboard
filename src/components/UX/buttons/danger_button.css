@@ -1,0 +1,44 @@
+/* Keep your existing .customized__dangerButton styles */
+
+.customized__dangerButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.customized__dangerButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Size system (only spacing/height; background stays from your base class) */
+.customized__dangerButton--sm {
+  height: 32px;
+  padding: 0 12px;
+}
+
+.customized__dangerButton--md {
+  height: 40px;
+  padding: 0 14px;
+}
+
+.customized__dangerButton--lg {
+  height: 44px;
+  padding: 0 16px;
+}
+
+.customized__dangerButton--xl {
+  height: 48px;
+  padding: 0 18px;
+}
+
+/* Ensure text is aligned + no default margins if you previously used <p> */
+.customized__dangerButtonText {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
