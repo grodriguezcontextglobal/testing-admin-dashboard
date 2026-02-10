@@ -1,17 +1,15 @@
 import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { onResetDeviceInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
 // import CreateDevice from "../modal/CreateDevice";
-import { useMediaQuery } from "@uidotdev/usehooks";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../../../styles/global/Title";
 import ActionsMainPage from "./action/MainPage";
 import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
@@ -25,17 +23,6 @@ const DeviceDetail = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
-
   return (
     <>
       <Grid
@@ -56,92 +43,20 @@ const DeviceDetail = () => {
           }}
           container
         >
-          <Grid
-            textAlign={"right"}
-            display={`${(isLargeDevice || isExtraLargeDevice) && "none"}`}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <Button
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
-                display: user.role === "4" && "none",
-              }}
-              onClick={() => navigate("/inventory/new-bulk-items")}
-            >
-              <p
-                style={{
-                  ...BlueButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                <Icon
-                  icon="ic:baseline-plus"
-                  color="var(--base-white, #FFF"
-                  width={20}
-                  height={20}
-                />{" "}
-                Add new group of devices
-              </p>
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={12} md={6}>
             <Typography
               textTransform={"none"}
-              style={{
-                color: "var(--gray-900, #101828)",
-                lineHeight: "38px",
-              }}
-              textAlign={"left"}
-              fontWeight={600}
-              fontFamily={"Inter"}
-              fontSize={"30px"}
+              style={TextFontSize30LineHeight38}
             >
               Devices
             </Typography>
-          </Grid>
-          <Grid
-            textAlign={"right"}
-            display={`${(isSmallDevice || isMediumDevice) && "none"}`}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            item
-            md={6}
-          >
-            <Button
+            <BlueButtonComponent
               style={{
-                ...BlueButton,
-                ...CenteringGrid,
                 display: user.role === "4" && "none",
+                width:"fit-content"
               }}
-              onClick={() => navigate("/inventory/new-bulk-items")}
-            >
-              <p
-                style={{
-                  ...BlueButtonText,
-                  ...CenteringGrid,
-                  textTransform: "none",
-                }}
-              >
-                <Icon
-                  icon="ic:baseline-plus"
-                  color="var(--base-white, #FFF"
-                  width={20}
-                  height={20}
-                />{" "}
-                Add new group of devices
-              </p>
-            </Button>
-          </Grid>
+              func={() => navigate("/inventory/new-bulk-items")}
+              title="Add new group of devices"
+            />
         </Grid>
         <Grid
           style={{
