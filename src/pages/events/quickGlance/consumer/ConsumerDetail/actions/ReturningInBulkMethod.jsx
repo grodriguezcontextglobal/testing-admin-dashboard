@@ -150,7 +150,7 @@ const ReturningInBulkMethod = ({
         </Space>
         <BlueButtonComponent
           loadingState={loadingStatus}
-          buttonType="submit"
+          buttonType="button"
           title={"Confirm return"}
           func={(e) => handleReturnDevices(e)}
         />
