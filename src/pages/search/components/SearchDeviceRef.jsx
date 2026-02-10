@@ -1,4 +1,5 @@
 import { Grid, Typography } from "@mui/material";
+import { useMutation } from "@tanstack/react-query";
 import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,14 +21,14 @@ import {
 } from "../../../store/slices/stripeSlice";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 import ReleaseDeposit from "./ReleaseDeposit";
-import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 const SearchDeviceRef = ({ searchParams, data }) => {
   const location = useLocation();
   const [foundDeviceData, setFoundDeviceData] = useState(() =>
-    (data.pool ?? []).filter((d) => d?.activity === true)
+    (data.pool ?? []).filter((d) => d?.activity === true),
   );
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -41,7 +42,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
     const controller = new AbortController();
     const addingResult = new Set();
     if (data.pool) {
-      for (let item of data.pool.filter((i) => i?.activity === true)) {
+      for (let item of data.pool.filter((i) => i?.activity === true && i.contract_type === "event")) {
         addingResult.add({
           serialNumber: item.device,
           type: item.type,
@@ -57,16 +58,53 @@ const SearchDeviceRef = ({ searchParams, data }) => {
     return () => controller.abort();
   }, [searchParams, data.pool, location?.search]);
 
+  const returningDeviceInEventTransaction = useMutation({
+    mutationFn: async (record) => {
+      await devitrakApi.patch(
+        `/transaction/transaction-update/${record.data.id}`,
+        {
+          device: {
+            ...record.data.device,
+            status: true,
+          },
+        },
+      );
+    },
+  });
+  const returningDeviceInPool = useMutation({
+    mutationFn: async (record) => {
+      await devitrakApi.patch(
+        `/receiver/receivers-pool-update/${record.data.id}`,
+        {
+          activity: false,
+        },
+      );
+    },
+    onSuccess: (data, variables, record) => {
+      console.log(data)
+      console.log(variables)
+      console.log(record)
+      clearCacheMemory(
+        `eventSelected=${record.event ?? record.eventSelected}&company=${
+          user.companyData.id
+        }`,
+      );
+
+      setReturnLoading(false);
+      message.success("Device was successfully returned");
+    },
+  });
   const returningDevice = async (record) => {
     try {
       const transactionFound = checkArray(
         data.device.deviceTransaction.filter(
-          (item) => item.eventSelected[0] === record.event && item.device.status
-        )
+          (item) =>
+            item.eventSelected[0] === record.event && item.device.status,
+        ),
       );
       setReturnLoading(true);
       const respTransaction = await devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`
+        `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`,
       );
       if (respTransaction.data.ok) {
         let userProfile = {
@@ -91,29 +129,15 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           {
             event_name: record.event ?? record.eventSelected,
             company_assigned_event_id: user.sqlInfo.company_id,
-          }
+          },
         );
-        await devitrakApi.patch(
-          `/receiver/receiver-update/${transactionFound.id}`,
-          {
-            id: transactionFound.id,
-            device: {
-              ...transactionFound.device,
-              status: false,
-            },
-          }
-        );
-        await devitrakApi.patch(
-          `/receiver/receivers-pool-update/${record.data.id}`,
-          {
-            activity: false,
-          }
-        );
+        await returningDeviceInEventTransaction.mutateAsync(record);
+        await returningDeviceInPool.mutateAsync(record);
         if (eventInfo.data && eventInfoSqlDB.data) {
           await clearCacheMemory(
             `eventSelected=${record.event ?? record.eventSelected}&company=${
               user.companyData.id
-            }`
+            }`,
           );
           setReturnLoading(false);
           message.success("Device returned successfully");
@@ -153,17 +177,17 @@ const SearchDeviceRef = ({ searchParams, data }) => {
         {
           event_name: record.event,
           company_assigned_event_id: user.sqlInfo.company_id,
-        }
+        },
       );
       if (data.device.deviceTransaction.length > 0) {
         const transactionFound = checkArray(
           data.device.deviceTransaction.filter(
-            (item) => item.eventSelected[0] === record.event
-          )
+            (item) => item.eventSelected[0] === record.event,
+          ),
         );
 
         const respTransaction = await devitrakApi.get(
-          `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`
+          `/transaction/transaction?paymentIntent=${transactionFound.paymentIntent}`,
         );
 
         if (respTransaction.data.ok) {
@@ -181,10 +205,10 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           if (eventInfo.data && eventInfoSqlDB.data) {
             setReturnLoading(false);
             await clearCacheMemory(
-              `eventSelected=${record.event}&company=${user.companyData.id}`
+              `eventSelected=${record.event}&company=${user.companyData.id}`,
             );
             await clearCacheMemory(
-              `eventSelected=${record.event}&company=${user.companyData.id}`
+              `eventSelected=${record.event}&company=${user.companyData.id}`,
             );
             afterActionTakenCollectStoreAndNavigate({
               paymentIntentDetailSelectedProfile,
@@ -197,10 +221,10 @@ const SearchDeviceRef = ({ searchParams, data }) => {
         }
       } else {
         await clearCacheMemory(
-          `eventSelected=${record.event}&company=${user.companyData.id}`
+          `eventSelected=${record.event}&company=${user.companyData.id}`,
         );
         await clearCacheMemory(
-          `eventSelected=${record.event}&company=${user.companyData.id}`
+          `eventSelected=${record.event}&company=${user.companyData.id}`,
         );
         setReturnLoading(false);
         return afterActionTakenCollectStoreAndNavigate({
@@ -237,25 +261,27 @@ const SearchDeviceRef = ({ searchParams, data }) => {
       serialNumber: record.serialNumber,
       status: eventInventoryQuery.activity,
     };
+    console.log("SEARCH PAGE - formatDeviceSection", formatDeviceSection);
+    console.log("SEARCH PAGE - record", record);
     dispatch(
-      onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile)
+      onAddPaymentIntentDetailSelected(paymentIntentDetailSelectedProfile),
     );
     dispatch(
       onAddEventData({
         ...checkArray(eventInfo),
         sql: eventInfoSqlDB,
-      })
+      }),
     );
     dispatch(onSelectEvent(record.event ?? record.eventSelected));
     dispatch(onSelectCompany(record.data.provider[0] ?? record.provider));
     dispatch(onAddCustomer(paymentIntentDetailSelectedProfile.consumerInfo));
     dispatch(
-      onAddCustomerInfo(paymentIntentDetailSelectedProfile.consumerInfo)
+      onAddCustomerInfo(paymentIntentDetailSelectedProfile.consumerInfo),
     );
     dispatch(
       onAddPaymentIntentSelected(
-        paymentIntentDetailSelectedProfile.paymentIntent
-      )
+        paymentIntentDetailSelectedProfile.paymentIntent,
+      ),
     );
     dispatch(onAddDeviceToDisplayInQuickGlance(formatDeviceSection));
     setLoadingStatus(false);
