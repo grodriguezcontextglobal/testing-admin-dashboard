@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import { PlusIcon } from "../../../components/icons/PlusIcon";
 import { WhitePlusIcon } from "../../../components/icons/WhitePlusIcon";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { checkArray } from "../../../components/utils/checkArray";
@@ -32,10 +31,10 @@ import GraphicInventoryEventActivity from "./components/GraphicInventoryEventAct
 // import InventoryEventValue from "./components/InventoryEventValue";
 import Report from "./components/lostFee/Report";
 import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
+import HighlightedPill from "./components/ux/HighlightedPill";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import StaffMainPage from "./staff/StaffMainPage";
-import HighlightedPill from "./components/ux/HighlightedPill";
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -325,7 +324,7 @@ const MainPageQuickGlance = () => {
             // /event/new_subscription
             <Link to="/create-event-page/event-detail">
               <BlueButtonComponent
-                icon={<WhitePlusIcon />}
+                // icon={<WhitePlusIcon />}
                 title={"Add new event"}
                 func={null}
                 styles={{ width: "100%", margin: "0rem auto 1rem" }}
@@ -340,7 +339,7 @@ const MainPageQuickGlance = () => {
               width: "100%",
             }}
             title={"Add new consumer"}
-            icon={<PlusIcon />}
+            // icon={<PlusIcon />}
           />
         </Grid>
         <Grid
