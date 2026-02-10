@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Button } from "antd";
 import "./danger_button.css";
-
+import "./styles.css"
 /**
  * UntitledUI-like API (without changing your danger background)
  * - size: sm | md | lg | xl

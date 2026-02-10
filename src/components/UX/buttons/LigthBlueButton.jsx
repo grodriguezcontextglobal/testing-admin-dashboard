@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { Button } from "antd";
 import "./light_blue_button.css";
-
+import "./styles.css"
 /**
  * UntitledUI-like API (without changing your light-blue background)
  * - size: sm | md | lg | xl

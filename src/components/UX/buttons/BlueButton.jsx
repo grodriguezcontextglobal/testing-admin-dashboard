@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Button } from "antd";
 import "./blue_button.css";
+import "./styles.css"
 
 /**
  * UntitledUI-like API (without changing your blue background)
