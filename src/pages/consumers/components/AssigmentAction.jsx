@@ -1,14 +1,11 @@
 import { Typography } from "@mui/material";
-import { Button, Dropdown } from "antd";
 import { useState } from "react";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import UXDropdown from "../../../components/UX/dropdown/DropDownComponent";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ModalAssignDeviceInEvent from "../action/ModalAssignDeviceInEvent";
 import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";
-
 const AssigmentAction = ({ refetching }) => {
   const [assignDevice, setAssignDevice] = useState(false);
   const [assignDeviceEvent, setAssignDeviceEvent] = useState(false);
@@ -45,22 +42,23 @@ const AssigmentAction = ({ refetching }) => {
 
   return (
     <>
-      <Dropdown
-        menu={{
-          items,
-        }}
-        trigger={["click"]}
-      >
-        <Button
-          htmlType="button"
-          style={{ ...BlueButton, width: "100%", margin: "0 0 12.5px 0" }}
-        >
-          <p style={{ ...BlueButtonText, alignItems: "center" }}>
-              <WhiteCirclePlusIcon width="18px" height="18px" />
-            &nbsp; Create new transaction
-          </p>
-        </Button>
-      </Dropdown>
+      <UXDropdown
+        options={items}
+        // onSelect={handleSelect}
+        placement="top-end"
+        variant="ghost" //"outline" // | "ghost" | "primary""
+        renderTrigger={({ onClick, ref }) => (
+          <div ref={ref} style={{ display: "inline-block", width: "100%" }}>
+            <BlueButtonComponent
+              buttonType="button"
+              title={"Create a new transaction"}
+              func={onClick}
+              size="lg"
+            />
+          </div>
+        )}
+        style={{ width: "100%" }}
+      />
       {assignDevice && (
         <ModalAssignDeviceToConsumer
           assignDevice={assignDevice}
