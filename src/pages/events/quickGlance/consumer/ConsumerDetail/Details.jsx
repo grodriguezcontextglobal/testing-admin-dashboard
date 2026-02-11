@@ -134,7 +134,8 @@ const FormatAttendeeDetailInfo = () => {
               <UXDropdown
                 options={options}
                 onSelect={handleSelect}
-                placement="bottom-end"
+                placement="top-end"
+                variant="primary"//"outline" // | "ghost" | "primary""
                 renderTrigger={({ onClick, ref }) => (
                   <div ref={ref} style={{ display: "inline-block" }}>
                     <BlueButtonComponent
