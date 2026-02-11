@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, Badge, Table } from "antd";
+import { Avatar, Badge } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
@@ -7,8 +7,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Chip from "../../../components/UX/Chip/Chip";
+import TableHeader from "../../../components/UX/TableHeader";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
@@ -412,36 +414,26 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       );
     });
   };
-
+  const headerTitleStyle = {
+    ...TextFontSize20LineHeight30,
+    fontWeight: 500,
+    color: "#000",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    padding: "24px 12px",
+  };
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          margin: "2rem auto -0.5rem",
-          padding: "15px 24px",
-          border: "1px solid var(--gray-200, #eaecf0)",
-          borderRadius: "12px 12px 0 0",
-          background: "var(--gray-50, #F9F9F9)",
-        }}
-      >
-        <p
-          style={{
-            ...TextFontSize20LineHeight30,
-            fontWeight: 500,
-            color: "#000",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          Transactions
-        </p>
-        <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
-      </div>
-      <Table
+      <TableHeader
+        leftCta={<p style={headerTitleStyle}>Transactions</p>}
+        rightCta={
+          <span style={{ marginBottom:"-25px" }}>
+            <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
+          </span>
+        }
+      />
+      <ExpandableTable
         key={customerFormat.id}
         id={customerFormat.id}
         columns={columns}
@@ -463,9 +455,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         expandIconColumnIndex={columns.length - 1}
         dataSource={finalDataToDisplayIncludeSearchFN()}
         className="table-ant-customized"
-        pagination={{
-          position: ["bottomCenter"],
-        }}
+        enablePagination={true}
       />
     </div>
   );
