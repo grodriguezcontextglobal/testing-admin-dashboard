@@ -21,7 +21,6 @@ import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import AssigmentAction from "./components/AssigmentAction";
 import NotesRendering from "./components/NotesCard";
 import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
@@ -222,7 +221,7 @@ const DetailPerConsumer = () => {
             >
               <BlueButtonComponent
                 title={"Add new consumer"}
-                icon={<WhiteCirclePlusIcon />}
+                // icon={<WhiteCirclePlusIcon />}
                 func={() => setCreateUserButton(true)}
               />
             </Grid>
