@@ -26,11 +26,20 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
       </h3>
     );
   };
+  const errorList = [
+    "Failed to fetch dynamically imported module:",
+    "NetworkError when attempting to fetch resource.",
+    "NetworkError",
+    "TypeError: Failed to fetch",
+    "TypeError: Network request failed",
+    "MIME type 'text/html' is not executable, and strict MIME type checking is enabled",
+    "Failed to load resource: net::ERR_FAILED",
+  ]
   if (
-    String(error.message).includes(
-      "Failed to fetch dynamically imported module:"
-    )
+    String(error.message).includes(string=>errorList.includes(string))
   ) {
+    //insert message to be displayed in screen to inform user that the App had been updated and he/she needs to refresh the page  
+    alert("The App had been updated. Please refresh the page to enjoy the latest features/layout for user experience.");
     return window.location.reload({
       force: true,
     });
