@@ -52,7 +52,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           user.companyData.id
         }&consumerInfo.id=${customer.id ?? customer.uid}`,
       ),
-    refetchOnMount: false,
+    enabled: !!customer.id || !!customer.uid,
   });
 
   const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
