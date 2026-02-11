@@ -341,8 +341,8 @@ const DetailPerConsumer = () => {
               alignSelf={"flex-start"}
               item
               xs={12}
-              md={8}
-              lg={8}
+              md={10}
+              lg={10}
             >
               <OutlinedInput
                 {...register("searchEvent")}
