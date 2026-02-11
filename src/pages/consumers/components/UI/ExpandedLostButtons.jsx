@@ -1,6 +1,6 @@
 import { InputAdornment, OutlinedInput, Tooltip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Popconfirm } from "antd";
+import { Button } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -9,19 +9,21 @@ import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { checkArray } from "../../../../components/utils/checkArray";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { DangerButton } from "../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
+// import { DangerButton } from "../../../../styles/global/DangerButton";
+// import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
+import { useSelector } from "react-redux";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
 import { GrayButton } from "../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import sendRefundReceiptEmail from "../../utils/sendRefundReceiptEmail";
-import { useSelector } from "react-redux";
 
 const ExpandedLostButton = ({
   record,
   handleFoundSingleDevice,
   handleLostSingleDevice,
-  Lost,
+  // Lost,
   refetchingQueries,
 }) => {
   const { user } = useSelector((state) => state.admin);
@@ -158,7 +160,8 @@ const ExpandedLostButton = ({
         key={record.serial_number}
         style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}
       >
-        <Button
+        <DangerButtonComponent disabled={checkingExistingData()} func={() => handleLostSingleDevice(record)} title={checkingExistingData() ? "Charged" : "Charge customer"} />
+        {/* <Button
           disabled={checkingExistingData()}
           onClick={() => handleLostSingleDevice(record)}
           style={{
@@ -166,17 +169,29 @@ const ExpandedLostButton = ({
             alignItems: "center",
           }}
         >
-          <img src={Lost} alt="Lost" />
+         <img src={Lost} alt="Lost" /> 
           <p
             style={{
               ...DangerButtonText,
               alignSelf: "center",
             }}
           >
-            {checkingExistingData() ? "Charged" : "Charge customer"}
+            
           </p>
-        </Button>
-        <Popconfirm
+        </Button> */}
+        <GrayButtonConfirmationComponent title={
+            checkingExistingData()
+              ? "Are you sure that you want to refund?"
+              : "Are you sure that you want to mark as found?"
+          } 
+          func={() =>
+            checkingExistingData()
+              ? handleRefund(record)
+              : handleFoundSingleDevice(propsUpdateSingleDevice)
+          }
+          loadingState={isLoadingState}
+          />
+        {/* <Popconfirm
           title={
             checkingExistingData()
               ? "Are you sure that you want to refund?"
@@ -187,6 +202,7 @@ const ExpandedLostButton = ({
               ? handleRefund(record)
               : handleFoundSingleDevice(propsUpdateSingleDevice)
           }
+          okText={checkingExistingData() ? "Refund" : "Mark as found"}  
         >
           <Button
             loading={isLoadingState}
@@ -207,7 +223,7 @@ const ExpandedLostButton = ({
               {checkingExistingData() ? "Refund" : "Mark as found"}
             </p>
           </Button>
-        </Popconfirm>
+        </Popconfirm> */}
       </div>
       {openPartialRefundModal && (
         <form
