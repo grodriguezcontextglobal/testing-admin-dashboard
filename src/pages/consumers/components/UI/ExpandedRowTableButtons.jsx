@@ -6,8 +6,8 @@ const ExpandedRowTableButtons = ({
   handleReturnItemInTransaction,
   handleLostSingleDevice,
   handleReturnItemFromLeaseTransaction,
-  ReverseRightArrow,
-  LostIcon,
+  // ReverseRightArrow,
+  // LostIcon,
 }) => {
   const propsLostSingleDevice = {
     ...record,
@@ -18,7 +18,7 @@ const ExpandedRowTableButtons = ({
     <div style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}>
       <BlueButtonComponent
         disabled={!record.status}
-        icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+        // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
         title={
           record.transactionData.type === "lease"
             ? "Mark as ended lease"
@@ -30,7 +30,7 @@ const ExpandedRowTableButtons = ({
             : handleReturnItemInTransaction(record)
         }
       />
-      <GrayButtonComponent disabled={!record.status} title={"Mark as lost"} func={() => handleLostSingleDevice(propsLostSingleDevice)} icon={<img src={LostIcon} alt="LostIcon" />} />
+      <GrayButtonComponent disabled={!record.status} title={"Mark as lost"} func={() => handleLostSingleDevice(propsLostSingleDevice)} />
     </div>
   );
 };
