@@ -91,7 +91,7 @@ const GrayButtonConfirmationComponent = ({
       onOpenChange={onOpenChange}
     >
       {/* Wrap in span so Popconfirm has a stable trigger element */}
-      <span style={{ display: "inline-flex" }}>
+      <span style={{ display: "inline-flex", width: "100%" }}>
         <GrayButtonComponent
           disabled={false}
           loadingState={resolvedLoading}

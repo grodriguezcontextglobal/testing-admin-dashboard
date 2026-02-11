@@ -93,7 +93,7 @@ const DangerButtonConfirmationComponent = ({
     >
       {/* Keep Popconfirm trigger as a non-disabled element.
           If AntD wraps a disabled button, it won't trigger. We already gate disabled/loading above. */}
-      <span style={{ display: "inline-flex" }}>
+      <span style={{ display: "inline-flex", width: "100%" }}>
         <DangerButtonComponent
           disabled={false}
           loadingState={resolvedLoading}

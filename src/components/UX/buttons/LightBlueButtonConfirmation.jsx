@@ -90,7 +90,7 @@ const LightBlueButtonConfirmationComponent = ({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <span style={{ display: "inline-flex" }}>
+      <span style={{ display: "inline-flex", width: "100%" }}>
         <LightBlueButtonComponent
           disabled={false}
           loadingState={resolvedLoading}
