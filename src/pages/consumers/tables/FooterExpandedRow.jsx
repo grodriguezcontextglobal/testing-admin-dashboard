@@ -1,22 +1,23 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { message, Spin, Table } from "antd";
+import { message, Spin } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
-import Lost from "../../../components/icons/credit-card-x.svg";
-import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
-import PaymentIcon from "../../../components/icons/paymentIcon";
-import ScanIcon from "../../../components/icons/scan.svg";
-import Report from "../../../components/icons/table.svg";
-import WithdrawIcon from "../../../components/icons/WithdrawIcon";
+// import Lost from "../../../components/icons/credit-card-x.svg";
+// import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
+// import PaymentIcon from "../../../components/icons/paymentIcon";
+// import ScanIcon from "../../../components/icons/scan.svg";
+// import Report from "../../../components/icons/table.svg";
+// import WithdrawIcon from "../../../components/icons/WithdrawIcon";
 import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
 import { checkArray } from "../../../components/utils/checkArray";
 import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
 import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../components/UX/buttons/GrayButtonConfirmation";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import {
   onAddEventData,
   onAddEventInfoDetail,
@@ -29,7 +30,7 @@ import {
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
+// import { Subtitle } from "../../../styles/global/Subtitle";
 import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
 const FooterExpandedRow = ({
@@ -150,7 +151,7 @@ const FooterExpandedRow = ({
     });
     const receiversList = groupBy(
       assignedItemsPerTransactionData,
-      "device.status"
+      "device.status",
     )["Lost"];
     dispatch(onAddEventData(checkArray(responseEvent.data?.list)));
     dispatch(onAddEventInfoDetail(props[0].entireData.eventSelected[0]));
@@ -163,18 +164,18 @@ const FooterExpandedRow = ({
           deviceType: item.device.deviceType,
           status: item.device.status,
         })),
-      ])
+      ]),
     );
     dispatch(onAddDevicesAssignedInPaymentIntent(receiversList));
     dispatch(
-      onAddPaymentIntentSelected(props[0].transactionData.paymentIntent)
+      onAddPaymentIntentSelected(props[0].transactionData.paymentIntent),
     );
     return setOpenChargeAllLostDevicesModal(true);
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
   const footerColumn = [
@@ -195,18 +196,21 @@ const FooterExpandedRow = ({
             func={() => returningAllItemsAtOnce(selectedItemsToMarkAsReturned)}
             title="Mark selected as returned"
             confirmationTitle="Are you sure?"
-            icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            styles={{ width: "100%" }}
+            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
           <GrayButtonComponent
             func={() => setExpressCheckoutModal(true)}
             title="Scan-in devices"
-            icon={<img src={ScanIcon} alt="ScanIcon" />}
+            styles={{ width: "100%" }}
+            // icon={<img src={ScanIcon} alt="ScanIcon" />}
           />
           <GrayButtonConfirmationComponent
             title={"Mark all as returned"}
             confirmationTitle="Are you sure?"
             func={() => returningAllItemsAtOnce(transactionDeviceData)}
-            icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            styles={{ width: "100%" }}
+            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
         </div>
       ),
@@ -225,17 +229,17 @@ const FooterExpandedRow = ({
           <GrayButtonComponent
             func={() => sendEmailDeviceReport()}
             title="Send report to client"
-            icon={<img src={Report} alt="Report" />}
+            // icon={<img src={Report} alt="Report" />}
           />
           <GrayButtonComponent
             func={() => setOpenModalCapturingDeposit(true)}
             title="Capture deposit"
-            icon={<PaymentIcon />}
+            // icon={<PaymentIcon />}
           />
           <GrayButtonComponent
             func={() => setOpenModalReleasingDeposit(true)}
             title="Release deposit"
-            icon={<WithdrawIcon />}
+            // icon={<WithdrawIcon />}
           />
         </div>
       ),
@@ -263,9 +267,11 @@ const FooterExpandedRow = ({
           }
         };
         return (
-          <p style={{ ...Subtitle }}>
-            ${Number(retrieveAmount()).toLocaleString()} total
-          </p>
+          <GrayButtonComponent
+            styles={{ width: "100%" }}
+            disabled={true}
+            title={`$${Number(retrieveAmount()).toLocaleString()} total`}
+          />
         );
       },
     },
@@ -278,26 +284,42 @@ const FooterExpandedRow = ({
         const groupingByStatus = groupBy(transactionDeviceData, "status");
         const lostNumber = groupingByStatus["lost"] || groupingByStatus["Lost"];
         return (
-          <ul style={{ ...Subtitle }}>
-            <li style={{ ...Subtitle }}>
-              {groupingByStatus[true]
-                ? Number(groupingByStatus[true].length)
-                : 0}{" "}
-              Active
-            </li>
-            <li style={{ ...Subtitle }}>
-              {groupingByStatus[false]
-                ? Number(groupingByStatus[false].length)
-                : 0}{" "}
-              Returned
-            </li>
-            <li style={{ ...Subtitle }}>
-              {groupingByStatus["lost"] || groupingByStatus["Lost"]
-                ? Number(lostNumber.length)
-                : 0}{" "}
-              Lost
-            </li>
-          </ul>
+          <div
+            style={{
+              ...CenteringGrid,
+              flexDirection: "column",
+              width: "100%",
+              gap: "5px",
+            }}
+          >
+            <GrayButtonComponent
+              disabled={true}
+              title={`${
+                groupingByStatus[true]
+                  ? Number(groupingByStatus[true].length)
+                  : 0
+              } 
+              Active`}
+            />
+            <GrayButtonComponent
+              disabled={true}
+              title={`${
+                groupingByStatus[false]
+                  ? Number(groupingByStatus[false].length)
+                  : 0
+              } 
+              Returned`}
+            />
+            <GrayButtonComponent
+              disabled={true}
+              title={`${
+                groupingByStatus["lost"] || groupingByStatus["Lost"]
+                  ? Number(lostNumber.length)
+                  : 0
+              } 
+              Lost`}
+            />
+          </div>
         );
       },
     },
@@ -313,25 +335,17 @@ const FooterExpandedRow = ({
               ...CenteringGrid,
               flexDirection: "column",
               width: "100%",
-              gap: "20px",
+              gap: "5px",
             }}
           >
             <GrayButtonConfirmationComponent
+              styles={{ width: "100%" }}
               title={"Charge for all lost"}
               confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
               func={() => lostFeeChargeCustomer(lostItemsList)}
-              icon={<img src={Lost} alt="Lost" />}
+              // icon={<img src={Lost} alt="Lost" />}
             />
-            <p
-              style={{
-                ...Subtitle,
-                ...CenteringGrid,
-                fontWeight: 500,
-                color: "var(--gray700)",
-              }}
-            >
-              {dataToBeRendered()}
-            </p>
+            <GrayButtonComponent disabled={true} title={dataToBeRendered()} />
           </div>
         );
       },
@@ -361,39 +375,39 @@ const FooterExpandedRow = ({
               }
               title="Mark selected as returned"
               confirmationTitle="Are you sure?"
-              icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+              // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
             />
             <GrayButtonComponent
               func={() => setExpressCheckoutModal(true)}
               title="Scan-in devices"
-              icon={<img src={ScanIcon} alt="ScanIcon" />}
+              // icon={<img src={ScanIcon} alt="ScanIcon" />}
             />
             <GrayButtonConfirmationComponent
               title={"Mark all as returned"}
               confirmationTitle="Are you sure?"
               func={() => returningAllItemsAtOnce(transactionDeviceData)}
-              icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+              // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
             />
             <GrayButtonComponent
               func={() => sendEmailDeviceReport()}
               title="Send report to client"
-              icon={<img src={Report} alt="Report" />}
+              // icon={<img src={Report} alt="Report" />}
             />
             <GrayButtonComponent
               func={() => setOpenModalCapturingDeposit(true)}
               title="Capture deposit"
-              icon={<PaymentIcon />}
+              // icon={<PaymentIcon />}
             />
             <GrayButtonComponent
               func={() => setOpenModalReleasingDeposit(true)}
               title="Release deposit"
-              icon={<WithdrawIcon />}
+              // icon={<WithdrawIcon />}
             />
             <GrayButtonConfirmationComponent
               title={"Charge for all lost"}
               confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
               func={() => lostFeeChargeCustomer(lostItemsList)}
-              icon={<img src={Lost} alt="Lost" />}
+              // icon={<img src={Lost} alt="Lost" />}
             />
           </div>
         );
@@ -409,7 +423,7 @@ const FooterExpandedRow = ({
         company: user.companyData.id,
         eventSelected: formattedData[0]?.entireData?.eventSelected[0],
         paymentIntent: dataRendering?.paymentIntent,
-      }
+      },
     );
     return setTransactionDeviceData([
       // Keep the full receiver object to preserve the _id field
@@ -418,7 +432,7 @@ const FooterExpandedRow = ({
           ...item.device,
           key: item._id ?? item.id,
           _id: item._id ?? item.id, // Preserve the receiver ID
-          receiverId: item._id ??item.id,
+          receiverId: item._id ?? item.id,
         };
       }),
     ]);
@@ -434,7 +448,7 @@ const FooterExpandedRow = ({
       if (
         selectedItems.some(
           (c) =>
-            c.serial_number === item.serialNumber && c.type === item.deviceType
+            c.serial_number === item.serialNumber && c.type === item.deviceType,
         )
       ) {
         result.add(item);
@@ -445,7 +459,7 @@ const FooterExpandedRow = ({
 
   return (
     <>
-      <Table
+      <BaseTable
         showHeader={false}
         columns={
           isSmallDevice || isMediumDevice
