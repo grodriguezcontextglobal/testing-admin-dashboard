@@ -11,7 +11,6 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Loading from "../../../../components/animation/Loading";
 import dicRole from "../../../../components/general/dicRole";
 import { PointFilled } from "../../../../components/icons/PointFilled";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
@@ -213,7 +212,7 @@ const HeaderStaffDetail = () => {
                 <BlueButtonComponent
                   title={"Add new staff"}
                   func={() => setModalState(true)}
-                  icon={<WhiteCirclePlusIcon />}
+                  // icon={<WhiteCirclePlusIcon />}
                 />
               </Grid>
             </Grid>
