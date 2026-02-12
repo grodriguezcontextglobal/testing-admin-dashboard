@@ -9,7 +9,6 @@ import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 import { checkArray } from "../../../components/utils/checkArray";
 import { renderingTernary } from "../../../components/utils/renderingTernary";
 import handleReturnSingleDevice from "../../../components/utils/ReturnSingleItemInTransaction";
-import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import {
   onAddEventData,
   onAddEventInfoDetail,
@@ -32,8 +31,10 @@ import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
 import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 // import { ExpandedRowRender } from "./DocumentsTableSection";
-import FooterExpandedRow from "./FooterExpandedRow";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import Chip from "../../../components/UX/Chip/Chip";
+import TableHeader from "../../../components/UX/TableHeader";
+import FooterExpandedRow from "./FooterExpandedRow";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -455,23 +456,18 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   return (
     <div style={{ gap: "10px" }}>
       {contextHolder}
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          padding: "0 2rem 0 0",
-        }}
-      >
-        <BlueButtonComponent title={"Reload"} func={refetchingQueries} />
-      </div>
+      <TableHeader
+        rightCta={
+          <RefreshButton propsFn={refetchingQueries} />
+        }
+      />
       {rowRecord.device > 0 && (
         <Table
           id={rowRecord.key}
           key={rowRecord.key}
           columns={columns}
           dataSource={dataRendering()}
+          enablePagination={true}
           pagination={{
             defaultPageSize: 10,
             position: ["bottomCenter"],
