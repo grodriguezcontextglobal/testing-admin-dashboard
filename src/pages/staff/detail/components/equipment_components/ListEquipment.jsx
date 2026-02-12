@@ -1,21 +1,155 @@
-import { useQuery } from "@tanstack/react-query";
+import { Spin, Table } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
 import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow.jsx";
-import { checkArray } from "../../../../../components/utils/checkArray";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import TableHeader from "../../../../../components/UX/TableHeader.jsx";
-import BaseTable from "../../../../../components/ux/tables/BaseTable.jsx";
-import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
+import { useStaffEquipmentData } from "./useStaffEquipmentData";
+
+const VerificationDetailsTable = ({
+  verificationId,
+  user,
+  profile,
+  navigate,
+  record,
+  queryResult,
+  assignedEquipmentList,
+}) => {
+  if (queryResult?.isLoading) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <Spin tip="Loading verification documents..." />
+      </div>
+    );
+  }
+
+  if (queryResult?.isError) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center", color: "red" }}>
+        Error loading documents.
+      </div>
+    );
+  }
+
+  const docs = queryResult?.data?.docs || [];
+
+  const groupByVerificationId = groupBy(
+    assignedEquipmentList,
+    "verification_id",
+  );
+  const itemIdsParam =
+    groupByVerificationId[verificationId] &&
+    groupByVerificationId[verificationId].length > 0
+      ? groupByVerificationId[verificationId]
+          .map((id) => encodeURIComponent(id.device_id))
+          .join(",")
+      : "";
+
+  const renderStatusBadge = (isSigned) => (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        borderRadius: "12px",
+        fontSize: "12px",
+        lineHeight: 1.6,
+        fontWeight: 600,
+        color: isSigned ? "#155724" : "#8a2a2a",
+        background: isSigned ? "#d4edda" : "#f8d7da",
+        border: `1px solid ${isSigned ? "#c3e6cb" : "#f5c6cb"}`,
+      }}
+    >
+      {isSigned ? "Signed" : "Pending"}
+    </span>
+  );
+
+  const canSeeSignedColumns =
+    (user?.id ?? user?.uid) === profile?.adminUserInfo?.id;
+  const role = user.companyData.employees.find(
+    (el) => el.user === user.email,
+  )?.role;
+  const canSeeSignedColumnsBasedOnRole = [0, 1].includes(Number(role));
+
+  const innerColumns = [
+    { title: "Document Name", dataIndex: "title", key: "title" },
+    {
+      title: "Signed",
+      dataIndex: "signed",
+      key: "signed",
+      render: (signed) => renderStatusBadge(!!signed),
+    },
+    {
+      title: "Date/Time",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => (date ? new Date(date).toLocaleString() : "No sign"),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, rowDoc) => {
+        const href = `/display-contracts?company_id=${encodeURIComponent(
+          user.companyData.id,
+        )}&contract_url=${encodeURIComponent(
+          rowDoc.url,
+        )}&staff_member_id=${encodeURIComponent(
+          profile.adminUserInfo.id,
+        )}&date_reference=${encodeURIComponent(
+          record.subscription_initial_date,
+        )}&ver_id=${encodeURIComponent(
+          verificationId,
+        )}&item_ids=${encodeURIComponent(itemIdsParam)}`;
+
+        const handleView = () => {
+          return navigate(
+            `/staff/${profile.adminUserInfo.id}/view_actions_staff_taken`,
+            {
+              state: {
+                contract_url: rowDoc.url,
+                verificationId: verificationId,
+                item_ids: record.device_id,
+                company_id: user.companyData.id,
+              },
+            },
+          );
+        };
+        return (
+          <>
+            {canSeeSignedColumns ? (
+              <BlueButtonComponent
+                title={rowDoc.signed ? "View" : "View & Sign"}
+                func={() => navigate(href)}
+              />
+            ) : (
+              canSeeSignedColumnsBasedOnRole &&
+              rowDoc.signed && (
+                <BlueButtonComponent title={"View"} func={() => handleView()} />
+              )
+            )}
+          </>
+        );
+      },
+    },
+  ];
+
+  return (
+    <Table
+      columns={innerColumns}
+      dataSource={docs}
+      pagination={false}
+      style={{ width: "100%" }}
+      className="table-ant-customized"
+    />
+  );
+};
+
 function ListEquipment() {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
     useState(false);
@@ -24,32 +158,34 @@ function ListEquipment() {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
-  const [assignedEquipmentList, setAssignedEquipmentList] = useState([]);
-  const staffMemberQuery = useQuery({
-    queryKey: ["staffMemberInfo"],
-    queryFn: () =>
-      devitrakApi.post("/db_staff/consulting-member", {
-        email: profile.email,
-      }),
-    enabled: !!user.uid,
-    staleTime: 3 * 60 * 100,
-  });
-  const listImagePerItemQuery = useQuery({
-    queryKey: ["imagePerItemList"],
-    queryFn: () => devitrakApi.post("/image/images", { company: user.company }),
-    enabled: !!user.uid,
-    staleTime: 3 * 60 * 100,
-  });
-  const itemsInInventoryQuery = useQuery({
-    queryKey: ["ItemsInventoryCheckingQuery"],
-    queryFn: () =>
-      devitrakApi.post("/db_item/consulting-item", {
-        company_id: user.sqlInfo.company_id,
-      }),
-    enabled: !!user.uid,
-    staleTime: 3 * 60 * 100,
-  });
   const navigate = useNavigate();
+
+  // Use the new custom hook
+  const {
+    staffMemberQuery,
+    listImagePerItemQuery,
+    itemsInInventoryQuery,
+    leaseQuery,
+    verificationQueries,
+  } = useStaffEquipmentData(profile, user);
+
+  // Use data from leaseQuery instead of local state
+  const assignedEquipmentList = leaseQuery.data || [];
+
+  // Create a map for easy lookup of verification details
+  const verificationMap = useMemo(() => {
+    const map = {};
+    if (assignedEquipmentList.length > 0 && verificationQueries.length > 0) {
+      assignedEquipmentList.forEach((item, index) => {
+        // verificationQueries order matches assignedEquipmentList
+        if (verificationQueries[index]) {
+          map[item.verification_id] = verificationQueries[index];
+        }
+      });
+    }
+    return map;
+  }, [assignedEquipmentList, verificationQueries]);
+
   const [canSeeSignedColumns, setCanSeeSignedColumns] = useState(false);
   const [canSeeSignedColumnsBasedOnRole, setCanSeeSignedColumnsBasedOnRole] =
     useState(false);
@@ -66,97 +202,18 @@ function ListEquipment() {
     };
   }, []);
 
-  const fetchLeasePerStaffMember = async (staffMember) => {
-    const staffmemberInfo = await checkArray(staffMember?.data?.member);
-    const assignedEquipmentStaffQuery = await devitrakApi.post(
-      "/db_lease/consulting-lease",
-      {
-        staff_member_id: staffmemberInfo.staff_id,
-        company_id: user.sqlInfo.company_id,
-        subscription_current_in_use: 1,
-      },
-    );
-    if (assignedEquipmentStaffQuery.data.ok) {
-      setAssignedEquipmentList(assignedEquipmentStaffQuery.data.lease);
-    }
-    return assignedEquipmentList;
-  };
-  useEffect(() => {
-    const controller = new AbortController();
-    const staffMember = staffMemberQuery?.data;
-    if (staffMember) {
-      fetchLeasePerStaffMember(staffMember);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [staffMemberQuery.data, profile._id]);
-
-  // Build per-verification document list and overall status
-  const [verificationDetailsMap, setVerificationDetailsMap] = useState({});
-  useEffect(() => {
-    const deriveTitleFromUrl = (url) => {
-      try {
-        const last = url?.split("/")?.pop() || "";
-        return decodeURIComponent(last);
-      } catch {
-        return url || "Document";
-      }
-    };
-
-    const run = async () => {
-      if (!assignedEquipmentList?.length) return;
-
-      const map = {};
-      for (const row of assignedEquipmentList) {
-        const verificationId = row.verification_id;
-        if (!verificationId) continue;
-
-        let docs = [];
-        try {
-          // Prefer fetching the verification document to read its contract_list
-          const res = await devitrakApi.post(
-            `/document/verification/staff_member/check_signed_document`,
-            {
-              verificationID: verificationId,
-            },
-          );
-          const contractList =
-            res?.data?.contract_info?.contract_list ||
-            res?.data?.verification?.contract_list ||
-            res?.data?.data?.contract_list ||
-            [];
-
-          if (Array.isArray(contractList) && contractList.length > 0) {
-            docs = contractList.map((c) => ({
-              key: c._id || c.document_url,
-              title: deriveTitleFromUrl(c.document_url),
-              url: c.document_url,
-              signed: !!c.signature,
-              date: c?.date,
-            }));
-          }
-        } catch (e) {
-          // If the fetch by verification_id fails or returns no data, leave docs empty
-        }
-
-        const allSigned = docs.length > 0 && docs.every((d) => d.signed);
-        map[verificationId] = { docs, allSigned };
-      }
-
-      setVerificationDetailsMap(map);
-    };
-
-    run();
-  }, [assignedEquipmentList]);
-  const groupingImage = groupBy(
-    listImagePerItemQuery?.data?.data?.item,
-    "item_group",
+  // Memoize groupingImage
+  const groupingImage = useMemo(
+    () => groupBy(listImagePerItemQuery?.data?.data?.item, "item_group"),
+    [listImagePerItemQuery?.data?.data?.item],
   );
-  const groupSerialNumber = groupBy(
-    itemsInInventoryQuery?.data?.data?.items,
-    "item_id",
+
+  // Memoize groupSerialNumber
+  const groupSerialNumber = useMemo(
+    () => groupBy(itemsInInventoryQuery?.data?.data?.items, "item_id"),
+    [itemsInInventoryQuery?.data?.data?.items],
   );
+
   const dataSpecificItemInAssignedDevicePerStaffMember = (props) => {
     return {
       devicePhoto:
@@ -165,6 +222,25 @@ function ListEquipment() {
       item_id_info: groupSerialNumber[props]?.at(-1),
     };
   };
+
+  const renderStatusBadge = (isSigned) => (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        borderRadius: "12px",
+        fontSize: "12px",
+        lineHeight: 1.6,
+        fontWeight: 600,
+        color: isSigned ? "#155724" : "#8a2a2a",
+        background: isSigned ? "#d4edda" : "#f8d7da",
+        border: `1px solid ${isSigned ? "#c3e6cb" : "#f5c6cb"}`,
+      }}
+    >
+      {isSigned ? "Signed" : "Pending"}
+    </span>
+  );
+
   const columns = [
     {
       title: "Device name",
@@ -224,9 +300,10 @@ function ListEquipment() {
             key: "contract_status",
             render: (_, record) => {
               const verificationId = record.verification_id;
-              const allSigned =
-                verificationId &&
-                verificationDetailsMap[verificationId]?.allSigned;
+              const queryResult = verificationMap[verificationId];
+              const allSigned = queryResult?.data?.allSigned;
+
+              if (queryResult?.isLoading) return <Spin size="small" />;
               return renderStatusBadge(!!allSigned);
             },
           },
@@ -278,122 +355,28 @@ function ListEquipment() {
       : []),
   ];
 
-  // Single expanded row control (moved here to avoid conditional hook call)
+  // Single expanded row control
   const getRowKey = (record) =>
     `${record.device_id}-${record.subscription_initial_date}`;
 
-  const renderStatusBadge = (isSigned) => (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "12px",
-        fontSize: "12px",
-        lineHeight: 1.6,
-        fontWeight: 600,
-        color: isSigned ? "#155724" : "#8a2a2a",
-        background: isSigned ? "#d4edda" : "#f8d7da",
-        border: `1px solid ${isSigned ? "#c3e6cb" : "#f5c6cb"}`,
-      }}
-    >
-      {isSigned ? "Signed" : "Pending"}
-    </span>
-  );
-
   // New: Expanded row with document links and per-document status
   const expandedRowRender = (record) => {
-    const groupByVerificationId = groupBy(
-      assignedEquipmentList,
-      "verification_id",
-    );
     const verificationId = record.verification_id;
-    const docs =
-      (verificationId && verificationDetailsMap[verificationId]?.docs) || [];
-    const data = docs.map((doc) => {
-      return {
-        key: doc.key,
-        title: doc.title,
-        url: doc.url,
-        date: doc.date,
-        signed: !!doc.signed,
-      };
-    });
+    const queryResult = verificationMap[verificationId];
 
-    const itemIdsParam =
-      groupByVerificationId[verificationId] &&
-      groupByVerificationId[verificationId].length > 0
-        ? groupByVerificationId[verificationId]
-            .map((id) => encodeURIComponent(id.device_id))
-            .join(",")
-        : "";
-    const innerColumns = [
-      { title: "Document Name", dataIndex: "title", key: "title" },
-      {
-        title: "Signed",
-        dataIndex: "signed",
-        key: "signed",
-        render: (signed) => renderStatusBadge(!!signed),
-      },
-      {
-        title: "Date/Time",
-        dataIndex: "date",
-        key: "date",
-        render: (date) => (date ? new Date(date).toLocaleString() : "No sign"),
-      },
-      {
-        title: "Actions",
-        key: "actions",
-        render: (_, rowDoc) => {
-          const href = `/display-contracts?company_id=${encodeURIComponent(
-            user.companyData.id,
-          )}&contract_url=${encodeURIComponent(
-            rowDoc.url,
-          )}&staff_member_id=${encodeURIComponent(
-            profile.adminUserInfo.id,
-          )}&date_reference=${encodeURIComponent(
-            record.subscription_initial_date,
-          )}&ver_id=${encodeURIComponent(
-            verificationId,
-          )}&item_ids=${encodeURIComponent(itemIdsParam)}`;
-
-          const handleView = () => {
-            return navigate(
-              `/staff/${profile.adminUserInfo.id}/view_actions_staff_taken`,
-              {
-                state: {
-                  contract_url: rowDoc.url,
-                  verificationId: verificationId,
-                  item_ids: record.device_id,
-                  company_id: user.companyData.id,
-                },
-              },
-            );
-          };
-          return (
-            <>
-              {canSeeSignedColumns ? (
-                <BlueButtonComponent
-                  title={rowDoc.signed ? "View" : "View & Sign"}
-                  func={() => navigate(href)}
-                />
-              ) : (
-                canSeeSignedColumnsBasedOnRole &&
-                rowDoc.signed && (
-                  <BlueButtonComponent
-                    title={"View"}
-                    func={() => handleView()}
-                  />
-                )
-              )}
-            </>
-          );
-        },
-      },
-    ];
     return (
-      <BaseTable enablePagination={true} columns={innerColumns} dataSource={data} pagination={false} />
+      <VerificationDetailsTable
+        verificationId={verificationId}
+        user={user}
+        profile={profile}
+        navigate={navigate}
+        record={record}
+        queryResult={queryResult}
+        assignedEquipmentList={assignedEquipmentList}
+      />
     );
   };
+
   if (
     itemsInInventoryQuery.isLoading ||
     listImagePerItemQuery.isLoading ||
@@ -413,14 +396,26 @@ function ListEquipment() {
       itemsInInventoryQuery.refetch();
       listImagePerItemQuery.refetch();
       staffMemberQuery.refetch();
-      return fetchLeasePerStaffMember();
+      leaseQuery.refetch();
+      // verificationQueries are dependent on leaseQuery, so they will auto-update or use their own staleTime
     };
     return (
       <div style={{ width: "100%" }} key={location.key}>
-        <TableHeader rightCta={<RefreshButton propsFn={handleRefresh} />} />
-        <ExpandableTable
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <RefreshButton propsFn={handleRefresh} />{" "}
+        </div>
+        <Table
+          style={{ width: "100%" }}
           columns={columns}
           dataSource={assignedEquipmentList}
+          className="table-ant-customized"
           rowKey={getRowKey}
           expandable={{
             expandedRowRender,
