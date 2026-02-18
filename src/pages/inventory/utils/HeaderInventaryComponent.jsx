@@ -149,7 +149,7 @@ const HeaderInventaryComponent = ({
                 func={() => null}
               />
             </Link>
-            <Link to="/inventory/new-item">
+            {/* <Link to="/inventory/new-item">
               <LightBlueButtonComponent
                 title={"Add one item"}
                 styles={{ with: "100%" }}
@@ -162,7 +162,7 @@ const HeaderInventaryComponent = ({
                 }}
                 func={() => null}
               />
-            </Link>
+            </Link> */}
           </>
         )}
       </Grid>
