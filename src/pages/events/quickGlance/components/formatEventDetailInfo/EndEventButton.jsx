@@ -12,8 +12,8 @@ import BlueButtonConfirmationComponent from "../../../../../components/UX/button
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 
-const ModalToDisplayFunctionInProgress = lazy(() =>
-  import("./endEvent/ModalToDisplayFunctionInProgress")
+const ModalToDisplayFunctionInProgress = lazy(
+  () => import("./endEvent/ModalToDisplayFunctionInProgress"),
 );
 
 const EndEventButton = () => {
@@ -31,7 +31,7 @@ const EndEventButton = () => {
 
     if (size > maxSize) {
       throw new Error(
-        `Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 90MB limit`
+        `Request size (${(size / 1024 / 1024).toFixed(2)}MB) exceeds 90MB limit`,
       );
     }
 
@@ -40,7 +40,7 @@ const EndEventButton = () => {
 
   const calculateOptimalBatchSize = (
     sampleItem,
-    maxSizeBytes = 90 * 1024 * 1024 // Updated to 90MB
+    maxSizeBytes = 90 * 1024 * 1024, // Updated to 90MB
   ) => {
     if (!sampleItem) return 450; // Increased default batch size from 200 to 450
 
@@ -57,7 +57,7 @@ const EndEventButton = () => {
         if (error.response?.status === 413) {
           if (attempt === maxRetries) {
             throw new Error(
-              "Request too large after retries. Please contact support."
+              "Request too large after retries. Please contact support.",
             );
           }
           // Wait before retry with exponential backoff
@@ -73,7 +73,7 @@ const EndEventButton = () => {
     items,
     initialBatchSize = 450, // Increased from 200 to 450
     processingFunction,
-    progressCallback
+    progressCallback,
   ) => {
     if (!items || items.length === 0) return [];
 
@@ -95,10 +95,10 @@ const EndEventButton = () => {
         try {
           checkRequestSize(currentBatch);
           const batchResult = await makeRequestWithRetry(() =>
-            processingFunction(currentBatch)
+            processingFunction(currentBatch),
           );
           results.push(
-            ...(Array.isArray(batchResult) ? batchResult : [batchResult])
+            ...(Array.isArray(batchResult) ? batchResult : [batchResult]),
           );
 
           // Update progress if callback provided
@@ -117,14 +117,14 @@ const EndEventButton = () => {
             // Reduce batch size and try again
             currentBatchSize = Math.floor(currentBatchSize / 2);
             console.warn(
-              `Reducing batch size to ${currentBatchSize} due to size limit`
+              `Reducing batch size to ${currentBatchSize} due to size limit`,
             );
             continue;
           }
 
           console.error(
             `Error processing batch ${Math.floor(i / batchSize) + 1}:`,
-            error
+            error,
           );
           throw error;
         }
@@ -164,7 +164,7 @@ const EndEventButton = () => {
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
       devitrakApi.get(
-        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       ),
     refetchOnMount: false,
   });
@@ -231,7 +231,7 @@ const EndEventButton = () => {
 
     for (let data of employeesEvent) {
       const checkRole = employeesCompany.findIndex(
-        (element) => element.user === data.email
+        (element) => element.user === data.email,
       );
       if (
         Number(employeesCompany[checkRole].role) > 3 &&
@@ -255,8 +255,8 @@ const EndEventButton = () => {
       await makeRequestWithRetry(() =>
         devitrakApi.patch(
           `/company/update-company/${user.companyData.id}`,
-          requestData
-        )
+          requestData,
+        ),
       );
     } catch (error) {
       if (error.message.includes("exceeds 40MB limit")) {
@@ -273,8 +273,8 @@ const EndEventButton = () => {
                 employees: batch,
                 batchUpdate: true,
                 batchIndex: Math.floor(i / batchSize),
-              }
-            )
+              },
+            ),
           );
         }
       } else {
@@ -302,8 +302,8 @@ const EndEventButton = () => {
       step: "Processing device status updates...",
     }));
 
-    const listOfDevicesInEvent = await eventInventoryQuery?.data?.data
-      ?.receiversInventory;
+    const listOfDevicesInEvent =
+      await eventInventoryQuery?.data?.data?.receiversInventory;
     const dataToIterate = checkTypeFetchResponse(listOfDevicesInEvent);
     const groupingDevicesFromNoSQL = groupBy(dataToIterate, "device");
     const allInventoryOfEvent = sqlDBInventoryEventQuery?.data?.data?.result;
@@ -324,7 +324,7 @@ const EndEventButton = () => {
     // Process device status updates with dynamic inventory batching
     const processDeviceStatusBatch = async (
       deviceBatch,
-      inventoryBatchStart = 0
+      inventoryBatchStart = 0,
     ) => {
       const batchGrouping = {};
       deviceBatch.forEach(([key, value]) => {
@@ -334,7 +334,7 @@ const EndEventButton = () => {
       // Get the appropriate inventory slice for this batch
       const inventorySlice = inventoryEntries.slice(
         inventoryBatchStart,
-        inventoryBatchStart + inventoryBatchSize
+        inventoryBatchStart + inventoryBatchSize,
       );
 
       return await makeRequestWithRetry(() =>
@@ -343,13 +343,13 @@ const EndEventButton = () => {
           allInventoryOfEvent: JSON.stringify(inventorySlice),
           eventId: eventId,
           update_at: update_at,
-        })
+        }),
       );
     };
 
     const processReturningItemBatch = async (
       deviceBatch,
-      inventoryBatchStart = 0
+      inventoryBatchStart = 0,
     ) => {
       const batchGrouping = {};
       deviceBatch.forEach(([key, value]) => {
@@ -359,7 +359,7 @@ const EndEventButton = () => {
       // Get the appropriate inventory slice for this batch
       const inventorySlice = inventoryEntries.slice(
         inventoryBatchStart,
-        inventoryBatchStart + inventoryBatchSize
+        inventoryBatchStart + inventoryBatchSize,
       );
 
       return await makeRequestWithRetry(() =>
@@ -368,7 +368,7 @@ const EndEventButton = () => {
           allInventoryOfEvent: JSON.stringify(inventorySlice),
           companyId: companyId,
           update_at: update_at,
-        })
+        }),
       );
     };
 
@@ -402,7 +402,7 @@ const EndEventButton = () => {
           `Error processing device status batch ${
             Math.floor(i / deviceBatchSize) + 1
           }:`,
-          error
+          error,
         );
         throw error;
       }
@@ -439,7 +439,7 @@ const EndEventButton = () => {
           `Error processing returning item batch ${
             Math.floor(i / deviceBatchSize) + 1
           }:`,
-          error
+          error,
         );
         throw error;
       }
@@ -448,14 +448,14 @@ const EndEventButton = () => {
 
   const groupingItemsByCompany = groupBy(
     listOfItemsInInventoryQuery?.data?.data?.listOfItems,
-    "company"
+    "company",
   );
 
   const itemsPerCompany = () => {
     if (groupingItemsByCompany[user.company]) {
       const groupingByGroup = groupBy(
         groupingItemsByCompany[user.company],
-        "group"
+        "group",
       );
       return groupingByGroup;
     }
@@ -521,7 +521,7 @@ const EndEventButton = () => {
       checkRequestSize(requestData);
 
       const resp = await makeRequestWithRetry(() =>
-        devitrakApi.patch(`/event/edit-event/${event.id}`, requestData)
+        devitrakApi.patch(`/event/edit-event/${event.id}`, requestData),
       );
 
       if (resp.data.ok) {
@@ -558,8 +558,8 @@ const EndEventButton = () => {
         await makeRequestWithRetry(() =>
           devitrakApi.post(
             "/db_record/inserting-record-refactored",
-            requestData
-          )
+            requestData,
+          ),
         );
       } catch (error) {
         if (error.message.includes("exceeds 90MB limit")) {
@@ -571,7 +571,7 @@ const EndEventButton = () => {
                 groupingInventoryByGroupName,
                 dataToStoreAsRecord: batch,
                 event: eventName,
-              })
+              }),
             );
           };
 
@@ -580,7 +580,7 @@ const EndEventButton = () => {
             calculateOptimalBatchSize(dataToStoreAsRecord?.[0]),
             processRecordBatch,
             (current, total) =>
-              setProgress((prev) => ({ ...prev, current, total }))
+              setProgress((prev) => ({ ...prev, current, total })),
           );
         } else {
           throw error;
@@ -611,7 +611,7 @@ const EndEventButton = () => {
     checkRequestSize(requestData);
 
     const updatingTransactionDocuments = await makeRequestWithRetry(() =>
-      devitrakApi.post("/transaction/update-multiple-documents", requestData)
+      devitrakApi.post("/transaction/update-multiple-documents", requestData),
     );
 
     if (updatingTransactionDocuments.data.ok) {
@@ -632,8 +632,8 @@ const EndEventButton = () => {
           const result = await makeRequestWithRetry(() =>
             devitrakApi.patch(
               `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
-              { quantity: newQty }
-            )
+              { quantity: newQty },
+            ),
           );
           results.push(result);
         }
@@ -645,7 +645,7 @@ const EndEventButton = () => {
       items,
       calculateOptimalBatchSize(items[0]),
       processItemBatch,
-      (current, total) => setProgress((prev) => ({ ...prev, current, total }))
+      (current, total) => setProgress((prev) => ({ ...prev, current, total })),
     );
   };
 
@@ -682,7 +682,7 @@ const EndEventButton = () => {
     } catch (error) {
       openNotificationWithIcon(
         "error",
-        `Event closure failed: ${error.message}`
+        `Event closure failed: ${error.message}`,
       );
       setOpenEndingEventModal(false);
     }
@@ -721,6 +721,7 @@ const EndEventButton = () => {
               func={updatingItemInDB}
               confirmationTitle="Are you sure? This action can not be reversed."
               styles={{ width: "100%" }}
+              size="lg"
             />
           </Grid>
         )}
