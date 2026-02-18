@@ -48,7 +48,7 @@ export const bulkItemInsertAlphanumeric = async ({
       extra_serial_number: JSON.stringify(moreInfo),
       company_id: user.sqlInfo.company_id,
       return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
-      returnedRentedInfo: JSON.stringify([]),
+      returnedRentedInfo: data.ownership === "Rent" ? "" : "",
       container: String(data.container).includes("Yes"),
       containerSpotLimit: data.containerSpotLimit,
       isItInContainer: JSON.stringify([]),
