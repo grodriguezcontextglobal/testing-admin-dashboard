@@ -8,7 +8,11 @@ import { renderingModals, renderTitle } from "./utils/BulkComponents";
 import BulkItemForm from "./utils/BulkItemForm";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import useBulkActionLogic from "./add/useBulkActionLogic";
-const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
+const options = [
+  { value: "Permanent" },
+  { value: "Rent" },
+  { value: "Resale" },
+];
 const AddNewBulkItems = () => {
   const {
     supplierList,
@@ -32,6 +36,11 @@ const AddNewBulkItems = () => {
     displaySublocationFields,
     subLocationsSubmitted,
     setSubLocationsSubmitted,
+    subLocationInputs,
+    setSubLocationInputs,
+    handleAddSubLocationInput,
+    handleRemoveSubLocationInput,
+    handleSubLocationInputChange,
     allSerialNumbersOptions,
     addSerialNumberField,
     setAddSerialNumberField,
@@ -64,6 +73,7 @@ const AddNewBulkItems = () => {
     manuallyAddingSerialNumbers,
     acceptAndGenerateImage,
     user,
+    setMoreInfo,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -115,10 +125,19 @@ const AddNewBulkItems = () => {
         setValueObject={setValueObject}
         subLocationsOptions={subLocationsOptions}
         subLocationsSubmitted={subLocationsSubmitted}
+        subLocationInputs={subLocationInputs}
+        setSubLocationInputs={setSubLocationInputs}
+        handleAddSubLocationInput={handleAddSubLocationInput}
+        handleRemoveSubLocationInput={handleRemoveSubLocationInput}
+        handleSubLocationInputChange={handleSubLocationInputChange}
         suppliersOptions={supplierList}
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
+        setMoreInfo={setMoreInfo}
+        scannedSerialNumbers={scannedSerialNumbers}
+        setScannedSerialNumbers={setScannedSerialNumbers}
+
       />
       {renderingModals({
         openScanningModal,
