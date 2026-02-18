@@ -134,7 +134,7 @@ const FormatAttendeeDetailInfo = () => {
               <UXDropdown
                 options={options}
                 onSelect={handleSelect}
-                placement="top-end"
+                placement="top-center"
                 variant="primary"//"outline" // | "ghost" | "primary""
                 renderTrigger={({ onClick, ref }) => (
                   <div ref={ref} style={{ display: "inline-block" }}>
@@ -147,6 +147,7 @@ const FormatAttendeeDetailInfo = () => {
                     />
                   </div>
                 )}
+                style={{ width: "100%" }}
               />
             )}
             {event?.extraServicesNeeded && (
