@@ -1,7 +1,7 @@
 import { Divider, Radio, Space, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { QuestionIcon } from "../../../../../../../components/icons/QuestionIcon";
-import { AppSelectingFromExistingAutomatically } from "./AppSelectingFromExistingAutoimatically";
+// import { AppSelectingFromExistingAutomatically } from "./AppSelectingFromExistingAutoimatically";
 import { UpdateEventInventoryByAddingSerialNumberOneByOne } from "./UpdateEventInventoryByAddingSerialNumberOneByOne";
 import { UpdateEventInventorySubmittingStartingSerialNumber } from "./UpdateEventInventorySubmittingStartingSerialNumber";
 import { Box } from "@mui/material";
@@ -14,7 +14,7 @@ const Main = ({
   openNotification,
   OutlinedInputStyle,
   queryClient,
-  RefreshButton,
+  // RefreshButton,
   register,
   setAssignAllDevices,
   setLoadingStatus,
@@ -22,7 +22,7 @@ const Main = ({
   valueItemSelected,
   watch,
 }) => {
-  const [mode, setMode] = useState("OPTION_1"); // OPTION_1, OPTION_2, OPTION_3
+  const [mode, setMode] = useState("OPTION_2"); // OPTION_1, OPTION_2, OPTION_3
   const UXMandatoryFieldsSign = (
     <strong style={{ color: "red", fontWeight: 600 }}>*</strong>
   );
@@ -45,12 +45,12 @@ const Main = ({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
             gap: 2,
             width: "100%",
           }}
         >
-          <Radio.Button
+          {/* <Radio.Button
             value="OPTION_1"
             style={{
               display: "flex",
@@ -67,7 +67,7 @@ const Main = ({
               Auto&nbsp;
               <QuestionIcon />
             </Tooltip>
-          </Radio.Button>
+          </Radio.Button> */}
           <Radio.Button
             value="OPTION_2"
             style={{
@@ -110,7 +110,7 @@ const Main = ({
 
       <Divider style={{ margin: "8px 0" }} />
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        {mode === "OPTION_1" && (
+        {/* {mode === "OPTION_1" && (
           <AppSelectingFromExistingAutomatically
             handleSubmit={handleSubmit}
             assignAllDevices={assignAllDevices}
@@ -128,7 +128,7 @@ const Main = ({
             openNotification={openNotification}
             UXMandatoryFieldsSign={UXMandatoryFieldsSign}
           />
-        )}
+        )} */}
 
         {mode === "OPTION_2" && (
           <UpdateEventInventorySubmittingStartingSerialNumber
