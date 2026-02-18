@@ -336,8 +336,7 @@ export const renderFields = ({
     },
     {
       name: "descript_item",
-      placeholder:
-        "Please provide a brief description of the new device to be added.",
+      placeholder:"",
       label: "Description of the device",
       htmlElement: "TextArea",
       style: OutlinedInputStyle,
@@ -345,7 +344,7 @@ export const renderFields = ({
       options: options,
       htmlOption: 4,
       tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
+      tooltipMessage: "Description for the devices.",
       displayField: true,
     },
     {
