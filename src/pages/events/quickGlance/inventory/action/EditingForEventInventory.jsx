@@ -195,7 +195,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     );
     if (checkingIfInventoryIsAlreadyInUsed.data.listOfReceivers.length < 1) {
       const removing = event.deviceSetup.filter(
-        (element) => element.key !== props.key,
+        (element) => element.category !== props.category && element.group !== props.group,
       );
       const updatingDeviceInEventProcess = await devitrakApi.patch(
         `/event/edit-event/${event.id}`,
