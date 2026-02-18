@@ -3,7 +3,6 @@ import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
@@ -22,7 +21,7 @@ import {
   stylingComponents,
 } from "./BulkRentedItemsComponents";
 
-const BulkRentedItems = ({
+ const BulkRentedItems = ({
   acceptImage,
   addingSubLocation,
   addSerialNumberField,
@@ -486,7 +485,7 @@ const BulkRentedItems = ({
             title={"Save new item"}
             loadingState={loadingStatus}
             buttonType="submit"
-            icon={<WhiteCirclePlusIcon />}
+            // icon={<WhiteCirclePlusIcon />}
             styles={{ width: "100%" }} //stylingComponents({ loadingStatus }).buttonStyleLoading}
           />
         </div>
