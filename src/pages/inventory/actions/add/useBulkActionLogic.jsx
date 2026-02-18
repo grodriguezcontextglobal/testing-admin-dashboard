@@ -206,9 +206,6 @@ const useBulkActionLogic = () => {
     }
     return result;
   };
-  console.log(scannedSerialNumbers);
-  console.log(moreInfo);
-
   const savingNewItem = async (data) => {
     validatingInputFields({
       data,
@@ -246,7 +243,7 @@ const useBulkActionLogic = () => {
           dicSuppliers,
           queryClient,
         });
-      }
+      } alert("There is not device added in list to be created/stored in company inventory.")
       // else {
       //   await bulkItemInsertSequential({
       //     data,
