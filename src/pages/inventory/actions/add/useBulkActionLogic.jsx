@@ -5,7 +5,7 @@ import { groupBy, orderBy } from "lodash";
 import { message, notification } from "antd";
 import {
   bulkItemInsertAlphanumeric,
-  bulkItemInsertSequential,
+  // bulkItemInsertSequential,
   storeAndGenerateImageUrl,
 } from "../utils/BulkItemActionsOptions";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../utils/SubLocationRenderer";
@@ -41,6 +41,9 @@ const useBulkActionLogic = () => {
     useState(false);
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
+  const [subLocationInputs, setSubLocationInputs] = useState([
+    { id: Date.now(), value: "" },
+  ]);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
   const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
   const [addSerialNumberField, setAddSerialNumberField] = useState(false);
@@ -140,26 +143,26 @@ const useBulkActionLogic = () => {
     },
   });
 
-  const sequencialNumbericInsertItemMutation = useMutation({
-    mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-    },
-  });
+  // const sequencialNumbericInsertItemMutation = useMutation({
+  //   mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["listOfItemsInStock"],
+  //       exact: true,
+  //       refetchType: "active",
+  //     });
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["ItemsInInventoryCheckingQuery"],
+  //       exact: true,
+  //       refetchType: "active",
+  //     });
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["RefactoredListInventoryCompany"],
+  //       exact: true,
+  //       refetchType: "active",
+  //     });
+  //   },
+  // });
 
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -203,6 +206,8 @@ const useBulkActionLogic = () => {
     }
     return result;
   };
+  console.log(scannedSerialNumbers);
+  console.log(moreInfo);
 
   const savingNewItem = async (data) => {
     validatingInputFields({
@@ -210,17 +215,18 @@ const useBulkActionLogic = () => {
       openNotificationWithIcon,
       returningDate,
     });
-    if (
-      scannedSerialNumbers.length === 0 &&
-      Number(data.max_serial_number) < Number(data.min_serial_number)
-    ) {
-      return openNotificationWithIcon(
-        "Max serial number must be greater than min serial number.",
-      );
-    }
+    // setScannedSerialNumbers(data.extra_serial_numbers)
+    // if (
+    //   scannedSerialNumbers.length === 0 &&
+    //   Number(data.max_serial_number) < Number(data.min_serial_number)
+    // ) {
+    //   return openNotificationWithIcon(
+    //     "Max serial number must be greater than min serial number.",
+    //   );
+    // }
     try {
       if (scannedSerialNumbers.length > 0) {
-        await bulkItemInsertAlphanumeric({
+       await bulkItemInsertAlphanumeric({
           data,
           user,
           navigate,
@@ -231,31 +237,36 @@ const useBulkActionLogic = () => {
           moreInfo,
           formatDate,
           returningDate,
-          subLocationsSubmitted,
+          subLocationsSubmitted: subLocationInputs
+            .map((item) => item.value)
+            .filter((val) => val.trim() !== ""),
           scannedSerialNumbers,
           setScannedSerialNumbers,
           alphaNumericInsertItemMutation,
           dicSuppliers,
           queryClient,
         });
-      } else {
-        await bulkItemInsertSequential({
-          data,
-          user,
-          navigate,
-          openNotificationWithIcon,
-          setLoadingStatus,
-          setValue,
-          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-          moreInfo,
-          formatDate,
-          returningDate,
-          subLocationsSubmitted,
-          sequencialNumbericInsertItemMutation,
-          dicSuppliers,
-          queryClient,
-        });
       }
+      // else {
+      //   await bulkItemInsertSequential({
+      //     data,
+      //     user,
+      //     navigate,
+      //     openNotificationWithIcon,
+      //     setLoadingStatus,
+      //     setValue,
+      //     img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+      //     moreInfo,
+      //     formatDate,
+      //     returningDate,
+      //     subLocationsSubmitted: subLocationInputs
+      //       .map((item) => item.value)
+      //       .filter((val) => val.trim() !== ""),
+      //     sequencialNumbericInsertItemMutation,
+      //     dicSuppliers,
+      //     queryClient,
+      //   });
+      // }
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
@@ -302,6 +313,29 @@ const useBulkActionLogic = () => {
       ),
     [watch("location")],
   );
+  const handleAddSubLocationInput = () => {
+    setSubLocationInputs([...subLocationInputs, { id: Date.now(), value: "" }]);
+  };
+
+  const handleRemoveSubLocationInput = (id) => {
+    if (subLocationInputs.length > 1) {
+      setSubLocationInputs(subLocationInputs.filter((item) => item.id !== id));
+    } else {
+      setSubLocationInputs([{ id: Date.now(), value: "" }]);
+      setDisplaySublocationFields(false);
+    }
+  };
+
+  const handleSubLocationInputChange = (id, value) => {
+    const newInputs = subLocationInputs.map((item) => {
+      if (item.id === id) {
+        return { ...item, value };
+      }
+      return item;
+    });
+    setSubLocationInputs(newInputs);
+  };
+
   const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
       return {
@@ -330,7 +364,7 @@ const useBulkActionLogic = () => {
           <DangerButtonComponent
             func={() => {
               setDisplaySublocationFields(false);
-              setSubLocationsSubmitted([]);
+              setSubLocationInputs([{ id: Date.now(), value: "" }]);
             }}
             title="Remove all sub location"
             styles={{
@@ -355,7 +389,6 @@ const useBulkActionLogic = () => {
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
-
   const manuallyAddingSerialNumbers = () => {
     if (String(watch("serial_number_list")).length < 1) return;
     if (scannedSerialNumbers.includes(watch("serial_number_list")))
@@ -496,15 +529,15 @@ const useBulkActionLogic = () => {
     };
   }, [watch("container")]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (!moreInfoDisplay) {
-      setMoreInfo([]);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [moreInfoDisplay]);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   if (!moreInfoDisplay) {
+  //     setMoreInfo([]);
+  //   }
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, [moreInfoDisplay]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -592,7 +625,6 @@ const useBulkActionLogic = () => {
       );
     }
   }, [watch("location")]);
-
   return {
     supplierList,
     supplierModal,
@@ -619,6 +651,11 @@ const useBulkActionLogic = () => {
     setDisplayContainerSplotLimitField,
     displaySublocationFields,
     setDisplaySublocationFields,
+    subLocationInputs,
+    setSubLocationInputs,
+    handleAddSubLocationInput,
+    handleRemoveSubLocationInput,
+    handleSubLocationInputChange,
     subLocationsSubmitted,
     setSubLocationsSubmitted,
     allSerialNumbersOptions,
@@ -660,7 +697,7 @@ const useBulkActionLogic = () => {
     addingSubLocation,
     manuallyAddingSerialNumbers,
     acceptAndGenerateImage,
-    user
+    user,
   };
 };
 
