@@ -45,7 +45,7 @@ const MainBody = ({
   const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
     useStaffRoleAndLocations();
   const [openDrawer, setOpenDrawer] = useState(
-    locationsAssignPermission.length === 0
+    locationsAssignPermission.length === 0,
   );
   return (
     <Grid
@@ -181,7 +181,13 @@ const MainBody = ({
         the Inventory page, add the new owned inventory there, and then assign
         it to this event.
       </Typography>
-      {locationsCreatePermission.length > 0 && (
+      {/* 
+        Permission Check Logic:
+        1. isAdmin (role === "0") has global permission.
+        2. locationsCreatePermission.length > 0 means the user has 'create' permission in at least one location.
+        The button is shown if either condition is true.
+      */}
+      {(isAdmin || locationsCreatePermission.length > 0) && (
         <LightBlueButtonComponent
           title={
             displayFormToCreateCategory
