@@ -3,9 +3,6 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-import { EditIcon } from "../../../components/icons/EditIcon";
-import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 
 const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
@@ -31,9 +28,9 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
                 <BlueButtonComponent
                   title={"Create Location"}
                   styles={{ with: "100%" }}
-                  icon={
-                    <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-                  }
+                  // icon={
+                  //   <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
+                  // }
                   buttonType="button"
                   titleStyles={{
                     textTransform: "none",
@@ -50,14 +47,14 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
             <LightBlueButtonComponent
               title={"Update a group of items"}
               func={() => null}
-              icon={
-                <EditIcon
-                  stroke={"var(--blue-dark--800)"}
-                  width={21}
-                  height={18}
-                  hoverStroke={"var(--basewhite)"}
-                />
-              }
+              // icon={
+              //   <EditIcon
+              //     stroke={"var(--blue-dark--800)"}
+              //     width={21}
+              //     height={18}
+              //     hoverStroke={"var(--basewhite)"}
+              //   />
+              // }
               buttonType="button"
               titleStyles={{
                 textTransform: "none",
@@ -76,13 +73,13 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
               <BlueButtonComponent
                 title={"Add a group of items"}
                 func={() => null}
-                icon={
-                  <WhiteCirclePlusIcon
-                    hoverStroke={"var(--blue-dark--800)"}
-                    width={21}
-                    height={18}
-                  />
-                }
+                // icon={
+                //   <WhiteCirclePlusIcon
+                //     hoverStroke={"var(--blue-dark--800)"}
+                //     width={21}
+                //     height={18}
+                //   />
+                // }
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
@@ -92,19 +89,19 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
               />
             </Link>
           </Grid>
-          <Grid item xs={12} sm={12}>
+          {/* <Grid item xs={12} sm={12}>
             <Link style={{ width: "100%" }} to="/inventory/new-item">
               <LightBlueButtonComponent
                 title={"Add one item"}
                 func={() => null}
-                icon={
-                  <RectangleBluePlusIcon
-                    stroke={"var(--blue-dark--800)"}
-                    width={21}
-                    height={18}
-                    hoverStroke={"var(--basewhite)"}
-                  />
-                }
+                // icon={
+                //   <RectangleBluePlusIcon
+                //     stroke={"var(--blue-dark--800)"}
+                //     width={21}
+                //     height={18}
+                //     hoverStroke={"var(--basewhite)"}
+                //   />
+                // }
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
@@ -113,7 +110,7 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
                 }}
               />
             </Link>
-          </Grid>
+          </Grid> */}
         </>
       )}
     </Grid>
