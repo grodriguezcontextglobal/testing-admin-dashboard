@@ -1,0 +1,29 @@
+.selectable-table-container {
+  width: 100%;
+}
+
+.selectable-table-customized .ant-table {
+  border-radius: 8px;
+  border: 1px solid var(--gray-200, #eaecf0);
+}
+
+.selectable-table-customized .ant-table-thead > tr > th {
+  background: var(--gray-50, #f9fafb);
+  color: var(--gray-600, #475467);
+  font-weight: 500;
+}
+
+.selectable-table-customized .ant-table-tbody > tr > td {
+  color: var(--gray-600, #475467);
+}
+
+.selectable-table-customized .ant-table-row-selected > td {
+  background-color: var(--blue-50, #eff8ff) !important;
+}
+
+/* Pagination Styling */
+.selectable-table-customized .ant-pagination {
+  padding: 16px;
+  margin: 0 !important;
+  border-top: 1px solid var(--gray-200, #eaecf0);
+}
