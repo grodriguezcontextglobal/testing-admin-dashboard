@@ -154,25 +154,6 @@ const MainPageQuickGlance = () => {
       const check = eventAttendeesParametersQuery.data.data.users;
       return check;
     };
-
-    const isNumeric = (str) => {
-      return !isNaN(str) && !isNaN(parseFloat(str));
-    };
-    const subtitleInitials = (props) => {
-      const splitting = String(props).split(" ");
-      let result = new Set();
-      for (let data of splitting) {
-        if (isNumeric(data)) {
-          result.add(data);
-        } else {
-          result.add(data[0]);
-        }
-      }
-      return Array.from(result)
-        .toLocaleString()
-        .toUpperCase()
-        .replaceAll(",", "");
-    };
     const displayElementsBasedOnRole = () => {
       if (
         event.staff.adminUser.some((element) => element.email === user.email) ||
@@ -507,17 +488,6 @@ const MainPageQuickGlance = () => {
               </div>
               <div style={{ width: "85%" }}>
                 {event?.eventInfoDetail?.eventName}
-                <br />
-                <div
-                  style={{
-                    ...Subtitle,
-                    fontWeight: 500,
-                    textTransform: "none",
-                    margin: "0.3rem 0 0 0",
-                  }}
-                >
-                  {subtitleInitials(event?.eventInfoDetail?.eventName)}
-                </div>
               </div>
             </div>
           </Grid>
