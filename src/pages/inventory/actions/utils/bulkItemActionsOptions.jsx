@@ -34,7 +34,7 @@ export const bulkItemInsertAlphanumeric = async ({
       item_group: data.item_group,
       cost: data.cost,
       brand: data.brand,
-      descript_item: data.descript_item,
+      descript_item: `${data.category_name} ${data.item_group} ${data.brand} ${data.ownership === "Rent" ? "for rent" : ""} ${data.location}`,
       ownership: data.ownership,
       list: scannedSerialNumbers,
       warehouse: true,
