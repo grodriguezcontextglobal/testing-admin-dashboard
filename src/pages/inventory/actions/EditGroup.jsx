@@ -4,13 +4,17 @@ import "../../../styles/global/ant-select.css";
 import "../../../styles/global/reactInput.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "./style.css";
-import { renderingModals } from "./utils/BulkComponents";
+// import { renderingModals } Ffrom "./utils/BulkComponents";
 import { renderTitle } from "./utils/EditBulkComponents";
 import EditBulkForm from "./utils/EditBulkForm";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import useLogic from "./edit/useLogic";
 
-const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
+const options = [
+  { value: "Permanent" },
+  { value: "Rent" },
+  { value: "Resale" },
+];
 
 const EditGroup = () => {
   const {
@@ -37,8 +41,8 @@ const EditGroup = () => {
     manuallyAddingSerialNumbers,
     moreInfo,
     moreInfoDisplay,
-    openScannedItemView,
-    openScanningModal,
+    // openScannedItemView,
+    // openScanningModal,
     providersList,
     queryClient,
     rangeFormat,
@@ -131,15 +135,9 @@ const EditGroup = () => {
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
         suppliersOptions={supplierList}
+        scannedSerialNumbers={scannedSerialNumbers}
+        setScannedSerialNumbers={setScannedSerialNumbers}
       />
-      {renderingModals({
-        openScanningModal,
-        setOpenScanningModal,
-        openScannedItemView,
-        setOpenScannedItemView,
-        scannedSerialNumbers,
-        setScannedSerialNumbers,
-      })}
       {supplierModal && (
         <NewSupplier
           providersList={providersList}
