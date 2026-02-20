@@ -303,7 +303,8 @@ const useLogic = () => {
           alphaNumericUpdateItemMutation,
           dicSuppliers,
         });
-      } else {
+      } 
+      else {
         await bulkItemUpdateSequential({
           data,
           user,
