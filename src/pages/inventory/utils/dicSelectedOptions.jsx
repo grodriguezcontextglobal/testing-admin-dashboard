@@ -11,5 +11,6 @@ export const dicSelectedOptions = {
 export const dictionary = {
   Permanent: "Owned",
   Rent: "Leased",
-  Sale: "For sale",
+  Sale: "For resale",
+  Resale: "For resale",
 };
