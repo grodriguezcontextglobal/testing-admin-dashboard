@@ -244,26 +244,6 @@ const useBulkActionLogic = () => {
           queryClient,
         });
       }
-      // else {
-      //   await bulkItemInsertSequential({
-      //     data,
-      //     user,
-      //     navigate,
-      //     openNotificationWithIcon,
-      //     setLoadingStatus,
-      //     setValue,
-      //     img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-      //     moreInfo,
-      //     formatDate,
-      //     returningDate,
-      //     subLocationsSubmitted: subLocationInputs
-      //       .map((item) => item.value)
-      //       .filter((val) => val.trim() !== ""),
-      //     sequencialNumbericInsertItemMutation,
-      //     dicSuppliers,
-      //     queryClient,
-      //   });
-      // }
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
