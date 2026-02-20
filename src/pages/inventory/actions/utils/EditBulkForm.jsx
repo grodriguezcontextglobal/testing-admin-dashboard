@@ -1,26 +1,38 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+// import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import {
-  addingExtraInfo,
+  // addingExtraInfo,
   gripingFields,
-  renderingMoreInfoSubmitted,
+  // renderingMoreInfoSubmitted,
   renderingOptionsButtons,
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { renderFields } from "./BulkItemsFields";
-import { styleUpdateAllItemsButton } from "./EditBulkComponents";
-import editUIComponents from "./EditUIComponents";
+import { renderFields } from "./EditBulkFields";
+import ButtonsForm from "./uxForm/ButtonsForm";
+import FieldsSections from "./uxForm/FieldsSections";
+import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
+// import { styleUpdateAllItemsButton } from "./EditBulkComponents";
+// import editUIComponents from "./EditUIComponents";
 
 const EditBulkForm = ({
+  // handleDeleteMoreInfo,
+  // handleMoreInfoPerDevice,
+  // keyObject,
+  // setKeyObject,
+  // setMoreInfoDisplay,
+  // setUpdateAllItems,
+  // setValueObject,
+  // updateAllItems,
+  // valueObject,
   acceptImage,
   addingSubLocation,
   addSerialNumberField,
@@ -30,13 +42,10 @@ const EditBulkForm = ({
   displayPreviewImage,
   displaySublocationFields,
   errors,
-  handleDeleteMoreInfo,
-  handleMoreInfoPerDevice,
   handleSubmit,
-  imageUrlGenerated,
   imageUploadedValue,
+  imageUrlGenerated,
   isRented,
-  keyObject,
   labeling,
   loadingStatus,
   manuallyAddingSerialNumbers,
@@ -51,22 +60,19 @@ const EditBulkForm = ({
   retrieveItemOptions,
   returningDate,
   savingNewItem,
+  scannedSerialNumbers,
   setAddSerialNumberField,
   setImageUploadedValue,
-  setKeyObject,
-  setMoreInfoDisplay,
+  setMoreInfo,
   setOpenScannedItemView,
   setOpenScanningModal,
   setReturningDate,
+  setScannedSerialNumbers,
   setSubLocationsSubmitted,
-  setUpdateAllItems,
-  setValueObject,
   subLocationsOptions,
   subLocationsSubmitted,
-  updateAllItems,
-  valueObject,
-  watch,
   suppliersOptions,
+  watch,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -84,9 +90,8 @@ const EditBulkForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(savingNewItem)} className="form">
+    <form onSubmit={handleSubmit(savingNewItem)}>
       <Grid container spacing={1}>
-        {/* style={styleDivParent} */}
         {renderFields({
           retrieveItemOptions,
           OutlinedInputStyle,
@@ -94,6 +99,7 @@ const EditBulkForm = ({
           options,
           displayContainerSplotLimitField,
           subLocationsOptions,
+          suppliersOptions,
           displaySublocationFields,
           addSerialNumberField,
           rangeFormat,
@@ -104,80 +110,33 @@ const EditBulkForm = ({
           isRented,
           displayPreviewImage,
           allSerialNumbersOptions,
-          suppliersOptions,
-        }).map((item) => {
+        }).map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
               return (
                 <Grid
                   key={item.name}
-                  style={{
-                    textAlign: "left",
-                  }}
-                  marginY={1}
                   item
                   xs={12}
                   sm={12}
-                  md={
-                    item.name === "descript_item"
-                      ? 12
-                      : gripingFields(item.name)
-                  }
-                  lg={
-                    item.name === "descript_item"
-                      ? 12
-                      : gripingFields(item.name)
-                  }
+                  md={gripingFields(item.name)}
+                  lg={gripingFields(item.name)}
                 >
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <Tooltip
-                      placement="top"
-                      title={item.tooltipMessage}
-                      style={{
-                        width: "100%",
-                      }}
-                    >
-                      <Typography
-                        style={stylingComponents({ loadingStatus }).styling}
-                      >
-                        {item.label} <strong>*</strong>{" "}
-                        {item.tooltip && <QuestionIcon />}
-                      </Typography>
-                    </Tooltip>
-                  </InputLabel>
-
-                  <ImageUploaderUX
+                  <ImageUploaderComponent
+                    item={item}
+                    gripingFields={gripingFields}
+                    stylingComponents={stylingComponents}
+                    loadingStatus={loadingStatus}
                     setImageUploadedValue={setImageUploadedValue}
+                    QuestionIcon={QuestionIcon}
                   />
-                </Grid>
-              );
-            } else if (
-              item.htmlOption === 6 &&
-              item.name === "image_uploader_preview"
-            ) {
-              return (
-                <Grid
-                  key={item.name}
-                  style={{
-                    textAlign: "left",
-                    display: displayPreviewImage ? "flex" : "none",
-                  }}
-                  marginY={1}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={
-                    item.name === "descript_item"
-                      ? 12
-                      : gripingFields(item.name)
-                  }
-                  lg={
-                    item.name === "descript_item"
-                      ? 12
-                      : gripingFields(item.name)
-                  }
-                >
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                  <InputLabel
+                    style={{
+                      marginBottom: "0.2rem",
+                      width: "100%",
+                      display: imageUploadedValue ? "block" : "none",
+                    }}
+                  >
                     <Tooltip
                       placement="top"
                       title={item.tooltipMessage}
@@ -192,19 +151,7 @@ const EditBulkForm = ({
                         {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        borderRadius: "8px",
-                        backgroundColor: "#F9F5FF",
-                        padding: "1rem",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "1rem",
-                      }}
-                    >
+                    <div>
                       <img
                         src={imageUploadedValue || ""}
                         alt="image_preview"
@@ -225,34 +172,54 @@ const EditBulkForm = ({
                           gap: "1rem",
                         }}
                       >
-                        <Button
+                        <BlueButtonComponent
                           disabled={imageUrlGenerated}
-                          onClick={() => acceptImage()}
+                          func={() => acceptImage()}
                           style={{
-                            ...BlueButton,
                             background: imageUrlGenerated
                               ? "transparent"
                               : BlueButton.background,
                           }}
-                        >
-                          <p
-                            style={{
-                              ...BlueButtonText,
-                              color: imageUrlGenerated
-                                ? "var(--gray-600, #475467)"
-                                : BlueButtonText.color,
-                            }}
-                          >
-                            {imageUrlGenerated ? <CheckIcon /> : null}
-                            {imageUrlGenerated
+                          icon={
+                            imageUrlGenerated ? (
+                              <CheckIcon stroke="#fff" />
+                            ) : null
+                          }
+                          title={
+                            imageUrlGenerated
                               ? "Image accepted"
-                              : "Accept image"}
-                          </p>
-                        </Button>
+                              : "Accept image"
+                          }
+                        />
                       </div>
                     </div>
                   </InputLabel>
                 </Grid>
+              );
+            } else if (
+              item.htmlOption === 6 &&
+              item.name === "image_uploader_preview"
+            ) {
+              return (
+                <Grid
+                  key={item.name}
+                  style={{
+                    textAlign: "left",
+                    display:
+                      imageUploadedValue ||
+                      String(watch("image_url")).startsWith(
+                        "https://res.cloudinary",
+                      )
+                        ? "flex"
+                        : "none",
+                  }}
+                  marginY={1}
+                  item
+                  xs={12}
+                  sm={12}
+                  md={gripingFields(item.name)}
+                  lg={gripingFields(item.name)}
+                ></Grid>
               );
             }
             return (
@@ -265,18 +232,8 @@ const EditBulkForm = ({
                 item
                 xs={12}
                 sm={12}
-                md={
-                  item.name === "descript_item" ||
-                  item.name === "reference_item_group"
-                    ? 12
-                    : gripingFields(item.name)
-                }
-                lg={
-                  item.name === "descript_item" ||
-                  item.name === "reference_item_group"
-                    ? 12
-                    : gripingFields(item.name)
-                }
+                md={gripingFields(item.name)}
+                lg={gripingFields(item.name)}
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
@@ -313,111 +270,43 @@ const EditBulkForm = ({
                     }
                     render={({ field: { value, onChange } }) => {
                       return (
-                        <Grid
-                          container
-                          spacing={1}
-                          style={{
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Grid item xs={12} sm={12} md={12} lg={12}>
-                            <AutoComplete
-                              disabled={
-                                ((item.name === "format_range_serial_number" ||
-                                  item.name === "feed_serial_number") &&
-                                  updateAllItems) ||
-                                item.label ===
-                                  "All typed serial numbers are displayed here." ||
-                                item.label ===
-                                  "All scanned serial numbers are displayed here."
-                              }
-                              aria-required={item.required}
-                              className="custom-autocomplete"
-                              variant="outlined"
-                              style={{
-                                ...AntSelectorStyle,
-                                border: errors[item.name]
-                                  ? "1px solid red"
-                                  : "solid 0.3 var(--gray600)",
-                                fontFamily: "Inter",
-                                fontSize: "14px",
-                                width: "100%",
-                                display:
-                                  item.name === "serial_numbers_list"
-                                    ? "none"
-                                    : "block",
-                              }}
-                              value={value}
-                              onChange={(value) => onChange(value)}
-                              options={item.options?.map((x) =>
-                                typeof x === "string" ? { value: x } : x,
-                              )}
-                              placeholder={item.placeholder}
-                              allowClear
-                            />
-                            {renderingErrorMessage(item.label)}
-                            {item.label === "Serial number range format" && (
-                              <Button
-                                style={
-                                  styleUpdateAllItemsButton(updateAllItems)
-                                    .button
-                                }
-                                onClick={() =>
-                                  setUpdateAllItems(!updateAllItems)
-                                }
-                              >
-                                <p
-                                  style={
-                                    styleUpdateAllItemsButton(updateAllItems).p
-                                  }
-                                >
-                                  {updateAllItems ? <CheckIcon /> : null}
-                                  &nbsp;Update all items
-                                </p>
-                              </Button>
-                            )}
-                            {renderingOptionsButtons({
-                              watch,
-                              setOpenScanningModal,
-                              setOpenScannedItemView,
-                              manuallyAddingSerialNumbers,
-                              addingSubLocation,
-                              setAddSerialNumberField,
-                              label: item.label,
-                              setUpdateAllItems,
-                            })}
-                          </Grid>
-                          <Grid
-                            display={
-                              item.label === "Main location" ? "flex" : "none"
+                        <>
+                          <FieldsSections
+                            Grid={Grid}
+                            item={item}
+                            AutoComplete={AutoComplete}
+                            AntSelectorStyle={AntSelectorStyle}
+                            errors={errors}
+                            renderingErrorMessage={renderingErrorMessage}
+                            renderingOptionsButtons={renderingOptionsButtons}
+                            watch={watch}
+                            setOpenScanningModal={setOpenScanningModal}
+                            setOpenScannedItemView={setOpenScannedItemView}
+                            manuallyAddingSerialNumbers={
+                              manuallyAddingSerialNumbers
                             }
-                            justifyContent={"flex-start"}
-                            alignItems={"center"}
-                            item
-                            xs={12}
-                            sm={12}
-                            md={12}
-                            lg={12}
-                          >
-                            {
-                              renderingOptionsForSubLocations(item.label)
-                                .addSubLocation
+                            addingSubLocation={addingSubLocation}
+                            setAddSerialNumberField={setAddSerialNumberField}
+                            index={index}
+                            Divider={Divider}
+                            renderingOptionsForSubLocations={
+                              renderingOptionsForSubLocations
                             }
-                            {
-                              renderingOptionsForSubLocations(item.label)
-                                .removeAllSubLocations
-                            }
-                          </Grid>
+                            Breadcrumb={Breadcrumb}
+                            displaySublocationFields={displaySublocationFields}
+                            Chip={Chip}
+                            setSubLocationsSubmitted={setSubLocationsSubmitted}
+                            subLocationsSubmitted={subLocationsSubmitted}
+                            value={value}
+                            onChange={onChange}
+                          />
                           <Grid item xs={12} sm={12} md={12} lg={12}>
                             <Breadcrumb
                               style={{
                                 display:
-                                  item.label === "Sub location" ||
-                                  displaySublocationFields.length > 0
-                                    ? "flex"
+                                  item.name === "sub_location" &&
+                                  subLocationsSubmitted.length > 0
+                                    ? "block"
                                     : "none",
                                 width: "100%",
                               }}
@@ -440,30 +329,34 @@ const EditBulkForm = ({
                                     </p>
                                   ),
                                 },
-                                ...subLocationsSubmitted.map((item, index) => ({
-                                  title: (
-                                    <Chip
-                                      variant="ghost"
-                                      style={{
-                                        margin: 0,
-                                        padding: 0,
-                                        alignItems: "flex-start",
-                                      }}
-                                      label={item}
-                                      onDelete={() =>
-                                        setSubLocationsSubmitted(
-                                          subLocationsSubmitted.filter(
-                                            (_, i) => i !== index,
-                                          ),
-                                        )
-                                      }
-                                    />
-                                  ),
-                                })),
+                                ...subLocationsSubmitted.map(
+                                  (subLocation, index) => {
+                                    return {
+                                      title: (
+                                        <Chip
+                                          variant="ghost"
+                                          style={{
+                                            margin: 0,
+                                            padding: 0,
+                                            alignItems: "flex-start",
+                                          }}
+                                          label={subLocation}
+                                          onDelete={() =>
+                                            setSubLocationsSubmitted(
+                                              subLocationsSubmitted.filter(
+                                                (_, i) => i !== index,
+                                              ),
+                                            )
+                                          }
+                                        />
+                                      ),
+                                    };
+                                  },
+                                ),
                               ]}
                             />
                           </Grid>
-                        </Grid>
+                        </>
                       );
                     }}
                   />
@@ -482,33 +375,44 @@ const EditBulkForm = ({
           }
         })}
       </Grid>
-      <Divider />
-      {editUIComponents({
-        moreInfoDisplay,
-        setMoreInfoDisplay,
-        stylingComponents,
-        loadingStatus,
-      }).addMoreInformation()}
-      {moreInfoDisplay &&
-        addingExtraInfo({
-          keyObject,
-          valueObject,
-          setKeyObject,
-          setValueObject,
-          handleMoreInfoPerDevice,
-        })}
-      {renderingMoreInfoSubmitted({
-        moreInfo,
-        moreInfoDisplay,
-        handleDeleteMoreInfo,
-      })}{" "}
+      <ButtonsForm stylingComponents={stylingComponents} loadingStatus={loadingStatus} moreInfoDisplay={moreInfoDisplay} />
+      {/* <SerialNumbersSections
+        style={{
+          ...AntSelectorStyle,
+          fontFamily: "Inter",
+          fontSize: "14px",
+          width: "100%",
+        }}
+        scannedSerialNumbers={scannedSerialNumbers}
+        setScannedSerialNumbers={setScannedSerialNumbers}
+        moreInfo={moreInfo}
+        setMoreInfo={setMoreInfo}
+      />
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-      {editUIComponents({
-        moreInfoDisplay,
-        setMoreInfoDisplay,
-        stylingComponents,
-        loadingStatus,
-      }).submitFormButtons()}
+      <div
+        style={{
+          display: "grid",
+          gridAutoColumns: "minmax(1fr, 1fr 1fr)",
+          gap: "0.5rem",
+        }}
+      >
+        <BlueButtonComponent
+          title={"Update group of items"}
+          loadingState={loadingStatus}
+          disabled={loadingStatus}
+          styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+          buttonType="submit"
+        />
+        <Link to="/inventory" style={{ width: "100%" }}>
+          <GrayButtonComponent
+            title={"Go back"}
+            func={() => null}
+            // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
+            styles={{ width: "100%" }}
+            buttonType="reset"
+          />
+        </Link>
+      </div> */}
     </form>
   );
 };
