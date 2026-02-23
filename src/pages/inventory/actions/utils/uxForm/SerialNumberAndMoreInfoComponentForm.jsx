@@ -74,10 +74,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const serialNumber = {
       [primaryKey]: innerObject,
     };
-
+    const newMoreInfo = [...moreInfo, { [primaryKey]: innerObject }];
     // Integration
     setDevices([...devices, { id: Date.now(), data: serialNumber }]);
-    setMoreInfo([...moreInfo, { [primaryKey]: innerObject }]);
+    setMoreInfo(newMoreInfo);
     const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
@@ -135,7 +135,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
           serial numbers.
         </Typography>
 
-        <Grid container >
+        <Grid container>
           <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
             <Typography
               variant="caption"
