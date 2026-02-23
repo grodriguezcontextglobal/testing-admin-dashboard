@@ -1,6 +1,10 @@
 import { useState, useCallback } from "react";
 
-const useBatchProcessor = (items, processBatch, batchSize = 500) => {
+const useBatchProcessor = (
+  items,
+  processBatch,
+  batchSize = 500,
+) => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("idle"); // idle, running, success, error
   const [error, setError] = useState(null);
