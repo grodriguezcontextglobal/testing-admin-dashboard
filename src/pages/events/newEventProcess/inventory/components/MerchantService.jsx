@@ -7,10 +7,10 @@ import {
 } from "@mui/material";
 import { Checkbox } from "antd";
 import { useForm } from "react-hook-form";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import Input from "../../../../../components/UX/inputs/Input";
 
 const MerchantService = ({
   assignAllDevices,
@@ -103,10 +103,9 @@ const MerchantService = ({
               Deposit
             </Typography>
           </InputLabel>
-          <OutlinedInput
+          <Input
             {...register("deposit", { required: true})}
             style={{
-              ...OutlinedInputStyle,
               width: "100%",
             }}
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
@@ -134,7 +133,6 @@ const MerchantService = ({
         func={() => handleSubmit(handleAddingNewItemToDeviceSetupEvent)()}
         title={"Add item"}
         styles={{width:"fit-content"}}
-        icon={<RectangleBluePlusIcon />}
         />
       </Grid>
     </form>

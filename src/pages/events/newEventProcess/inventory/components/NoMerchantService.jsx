@@ -1,9 +1,8 @@
-import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { Grid, InputLabel, Typography } from "@mui/material";
 import { Checkbox } from "antd";
 import { useForm } from "react-hook-form";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import Input from "../../../../../components/UX/inputs/Input";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const NoMerchantService = ({
@@ -68,11 +67,10 @@ const NoMerchantService = ({
               Quantity
             </Typography>
           </InputLabel>
-          <OutlinedInput
+          <Input
             disabled={assignAllDevices}
             {...register("quantity")}
             style={{
-              ...OutlinedInputStyle,
               width: "100%",
             }}
             placeholder="Enter quantity needed."
@@ -108,7 +106,6 @@ const NoMerchantService = ({
             buttonType="button"
             func={() => handleSubmit(handleAddingNewItemToDeviceSetupEvent)()}
             styles={{ width: "fit-content" }}
-            icon={<RectangleBluePlusIcon />}
           />
         </Grid>
       </Grid>
