@@ -1,12 +1,10 @@
 import { Grid, IconButton, Typography } from "@mui/material";
-// import { useMediaQuery } from "@uidotdev/usehooks";
 import { Switch, Tooltip } from "antd";
 import { lazy, Suspense, useState } from "react";
 import Loading from "../../../../components/animation/Loading";
 import ViewIcon from "../../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-// import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import ModalAllItemsBasedOnGroup from "./ModalAllItemsBasedOnGroup";
 import ReusableCardWithHeaderAndFooter from "../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
@@ -16,10 +14,6 @@ const ModalAddAndUpdateDeviceSetup = lazy(
 const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const [openModalItemList, setOpenModalItemList] = useState(false);
-  // const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  // const isMediumDevice = useMediaQuery(
-  //   "only screen and (min-width : 769px) and (max-width : 992px)"
-  // );
   const handleOpenModal = () => {
     return setOpenModalDeviceSetup(true);
   };
@@ -27,7 +21,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
   const renderingAddInventoryButton = () => {
     return (
       <>
-        {props.startingNumber === null && props.endingNumber === null && (
           <div style={{width:"-webkit-fit-content", padding:"0 24px"}}>
             <BlueButtonComponent
               key="allocate-device-type-button"
@@ -35,7 +28,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
               func={() => handleOpenModal()}
             />
           </div>
-        )}
       </>
     );
   };
@@ -106,18 +98,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
               </Tooltip>
             </div>
           </Grid>
-          {props.startingNumber === null && props.endingNumber === null && (
-            <Grid
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            ></Grid>
-          )}
         </Grid>
       </ReusableCardWithHeaderAndFooter>
       {openModalDeviceSetup && (
