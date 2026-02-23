@@ -4,7 +4,7 @@ import Chip from "../../../../../components/UX/Chip/Chip"
 const RenderingItemsAddedForStore = ({ devices, handleRemoveDevice }) => {
   return (
     <>
-        {devices.length > 0 && (
+        {devices?.length > 0 && (
             <Box sx={{ width: "100%", m: "0 0 1rem" }}>
             <Typography variant="body1" sx={{ fontWeight: 600, mb: 2, width:"100%", textAlign:"left" }}>
               {devices.length} devices entered
