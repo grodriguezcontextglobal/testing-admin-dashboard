@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Card, Space } from "antd";
-import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import { ProfileIcon } from "../../../../../components/icons/ProfileIcon";
@@ -326,7 +326,7 @@ const FormFields = ({
           styles={{ width: "50%" }}
           icon={<WhiteCirclePlusIcon />}
         /> */}
-        <GrayButtonComponent
+        <BlueButtonComponent
           title="Continue"
           buttonType="button"
           styles={{ width: "100%" }}
