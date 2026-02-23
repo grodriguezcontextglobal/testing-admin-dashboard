@@ -69,9 +69,9 @@ const dispatch = useDispatch()
     setInputError(null);
   };
 
-  const removeSubmittedSerial = (serialToRemove) => {
+  const removeSubmittedSerial = (index) => {
     setScannedSerials(
-      scannedSerials.filter((serial) => serial !== serialToRemove)
+      scannedSerials.filter((_,i) => i !== index)
     );
   };
 
