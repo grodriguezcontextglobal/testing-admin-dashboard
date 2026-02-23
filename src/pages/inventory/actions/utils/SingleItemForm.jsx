@@ -4,7 +4,6 @@ import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -84,7 +83,8 @@ const SingleItemForm = ({
     return null;
   };
   return (
-    <form onSubmit={handleSubmit(savingNewItem)} className="form">
+    <form onSubmit={handleSubmit(savingNewItem)}>
+       {/* className="form" */}
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
@@ -451,7 +451,7 @@ const SingleItemForm = ({
           <BlueButtonComponent
             title={"Add more information"}
             func={() => setMoreInfoDisplay(!moreInfoDisplay)}
-            icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
+            // icon={<WhiteCirclePlusIcon stroke="var(--basewhite)" />}
             styles={{ width: "100%" }}
             buttonType="button"
           />
@@ -471,7 +471,7 @@ const SingleItemForm = ({
         handleDeleteMoreInfo,
       })}{" "}
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-      <div style={stylingComponents({ loadingStatus }).styleDivParent}>
+      <div style={{ ...stylingComponents({ loadingStatus }).styleDivParent, margin:"1rem 0"}}>
         <div
           style={{
             textAlign: "left",
