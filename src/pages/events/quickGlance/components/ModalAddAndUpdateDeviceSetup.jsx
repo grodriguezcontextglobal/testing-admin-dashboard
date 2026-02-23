@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, Modal, Select, Space, Tooltip } from "antd";
+import { message, Select, Space, Tooltip } from "antd";
 import { sortBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -31,6 +31,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import ItemForm from "./addSerialNumberRangeToEvent/ItemForm";
 import ContainerForm from "./addSerialNumberRangeToEvent/containerForm";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -557,7 +558,6 @@ const ModalAddAndUpdateDeviceSetup = ({
 
   const handleDevicesInEvent = async () => {
     if (listOfLocations.length === 0) return;
-
     try {
       setLoading(true);
 
@@ -582,7 +582,7 @@ const ModalAddAndUpdateDeviceSetup = ({
       await clearCacheMemory(
         `eventSelected=${event.id}&company=${user.companyData.id}`
       );
-      queryClient.invalidateQueries(["listOfreceiverInPool"]);
+      queryClient.invalidateQueries({queryKey:["listOfreceiverInPool"]});
       closeModal();
     } catch (error) {
       message.error("Failed to add devices to event. Please try again.");
@@ -602,19 +602,10 @@ const ModalAddAndUpdateDeviceSetup = ({
     };
     trigger();
   }, [quantity, listOfLocations, addingDeviceFromLocations]);
-
+const bodyModal = ()=> {
   return (
-    <Modal
-      open={openModalDeviceSetup}
-      onCancel={closeModal}
-      centered
-      maskClosable={false}
-      footer={[]}
-      width={700}
-      style={{ zIndex: 30 }}
-      destroyOnClose={true} // Important for cleanup
-    >
-      {inventorySetupInfo.isItSetAsContainerForEvent ? (
+    <>
+          {inventorySetupInfo.isItSetAsContainerForEvent ? (
         <ContainerForm
           addingDeviceFromLocations={addingDeviceFromLocations}
           AntSelectorStyle={AntSelectorStyle}
@@ -705,7 +696,16 @@ const ModalAddAndUpdateDeviceSetup = ({
           }}
         />
       )}
-    </Modal>
+
+    </>
+  )
+}
+  return (
+    <ModalUX
+    body={bodyModal()}
+    openDialog={openModalDeviceSetup}
+    closeModal={closeModal}
+    width={700} />
   );
 };
 
