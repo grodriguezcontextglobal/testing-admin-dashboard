@@ -2,7 +2,7 @@ import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
 import DatePicker from "react-datepicker";
 import Chip from "../../../../components/UX/Chip/Chip";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
+// import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
@@ -12,8 +12,9 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import ScanningMethod from "./ScanningMethod";
-import ScanningModal from "./ScanningModal";
+// import ScanningMethod from "./ScanningMethod";
+// import ScanningModal from "./ScanningModal";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 export const renderTitle = () => {
   return (
@@ -54,15 +55,14 @@ export const renderingOptionsButtons = ({
 }) => {
   if (label === "Sub location") {
     return (
-      <Button
-        style={{
-          display: "flex",
-          margin: "10px 0 0",
-        }}
-        onClick={() => addingSubLocation(watch("sub_location"))}
-      >
-        Add sub location
-      </Button>
+      <BlueButtonComponent
+        // style={{
+        //   display: "flex",
+        //   margin: "10px 0 0",
+        // }}
+        func={() => addingSubLocation(watch("sub_location"))}
+        title="Add sub location"
+      />
     );
   }
   if (
@@ -70,15 +70,14 @@ export const renderingOptionsButtons = ({
     watch("format_range_serial_number") === "Alphanumeric"
   ) {
     return (
-      <Button
+      <BlueButtonComponent
         style={{
           display: "flex",
           margin: "10px 0 0",
         }}
         onClick={() => setAddSerialNumberField(true)}
-      >
-        Add serial number
-      </Button>
+        title="Add serial number"
+      />
     );
   }
   if (
@@ -172,46 +171,46 @@ export const styleUpdateAllItemsButton = (updateAllItems) => {
   };
 };
 
-export const addingExtraInfo = ({
-  keyObject,
-  valueObject,
-  setKeyObject,
-  setValueObject,
-  handleMoreInfoPerDevice,
-}) => {
-  return (
-    <div
-      style={{
-        width: "100%",
-        ...CenteringGrid,
-        justifyContent: "space-between",
-        gap: "5px",
-      }}
-    >
-      <OutlinedInput
-        style={{ ...OutlinedInputStyle, width: "100%" }}
-        placeholder="e.g IMEI"
-        name="key"
-        value={keyObject}
-        onChange={(e) => setKeyObject(e.target.value)}
-      />
-      <OutlinedInput
-        style={{ ...OutlinedInputStyle, width: "100%" }}
-        placeholder="e.g YABSDA56AKJ"
-        name="key"
-        value={valueObject}
-        onChange={(e) => setValueObject(e.target.value)}
-      />
-      <Button
-        htmlType="button"
-        onClick={() => handleMoreInfoPerDevice()}
-        style={{ ...BlueButton, ...CenteringGrid }}
-      >
-        <WhiteCirclePlusIcon />
-      </Button>
-    </div>
-  );
-};
+// export const addingExtraInfo = ({
+//   keyObject,
+//   valueObject,
+//   setKeyObject,
+//   setValueObject,
+//   handleMoreInfoPerDevice,
+// }) => {
+//   return (
+//     <div
+//       style={{
+//         width: "100%",
+//         ...CenteringGrid,
+//         justifyContent: "space-between",
+//         gap: "5px",
+//       }}
+//     >
+//       <OutlinedInput
+//         style={{ ...OutlinedInputStyle, width: "100%" }}
+//         placeholder="e.g IMEI"
+//         name="key"
+//         value={keyObject}
+//         onChange={(e) => setKeyObject(e.target.value)}
+//       />
+//       <OutlinedInput
+//         style={{ ...OutlinedInputStyle, width: "100%" }}
+//         placeholder="e.g YABSDA56AKJ"
+//         name="key"
+//         value={valueObject}
+//         onChange={(e) => setValueObject(e.target.value)}
+//       />
+//       <Button
+//         htmlType="button"
+//         onClick={() => handleMoreInfoPerDevice()}
+//         style={{ ...BlueButton, ...CenteringGrid }}
+//       >
+//         <WhiteCirclePlusIcon />
+//       </Button>
+//     </div>
+//   );
+// };
 
 export const renderingMoreInfoSubmitted = ({
   moreInfo,
@@ -262,35 +261,35 @@ export const renderingMoreInfoSubmitted = ({
   );
 };
 
-export const renderingModals = ({
-  openScanningModal,
-  setOpenScanningModal,
-  openScannedItemView,
-  setOpenScannedItemView,
-  scannedSerialNumbers,
-  setScannedSerialNumbers,
-}) => {
-  return (
-    <>
-      {openScanningModal && (
-        <ScanningModal
-          openScanningModal={openScanningModal}
-          setOpenScanningModal={setOpenScanningModal}
-          setScannedSerialNumbers={setScannedSerialNumbers}
-          scannedSerialNumbers={scannedSerialNumbers}
-        />
-      )}
-      {openScannedItemView && (
-        <ScanningMethod
-          openScannedItemView={openScannedItemView}
-          setOpenScannedItemView={setOpenScannedItemView}
-          scannedDevice={scannedSerialNumbers}
-          setScannedDevice={setScannedSerialNumbers}
-        />
-      )}
-    </>
-  );
-};
+// export const renderingModals = ({
+//   openScanningModal,
+//   setOpenScanningModal,
+//   openScannedItemView,
+//   setOpenScannedItemView,
+//   scannedSerialNumbers,
+//   setScannedSerialNumbers,
+// }) => {
+//   return (
+//     <>
+//       {openScanningModal && (
+//         <ScanningModal
+//           openScanningModal={openScanningModal}
+//           setOpenScanningModal={setOpenScanningModal}
+//           setScannedSerialNumbers={setScannedSerialNumbers}
+//           scannedSerialNumbers={scannedSerialNumbers}
+//         />
+//       )}
+//       {openScannedItemView && (
+//         <ScanningMethod
+//           openScannedItemView={openScannedItemView}
+//           setOpenScannedItemView={setOpenScannedItemView}
+//           scannedDevice={scannedSerialNumbers}
+//           setScannedDevice={setScannedSerialNumbers}
+//         />
+//       )}
+//     </>
+//   );
+// };
 
 export const stylingComponents = ({ loadingStatus }) => {
   const styling = {
