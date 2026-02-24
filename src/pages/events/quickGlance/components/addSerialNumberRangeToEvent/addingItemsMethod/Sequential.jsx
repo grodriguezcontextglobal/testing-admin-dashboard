@@ -14,7 +14,7 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
   const [inputError, setInputError] = useState(null);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
-const dispatch = useDispatch()
+  const dispatch = useDispatch()
   const finalizeProcessAndUpdateEventInventory = async() => {
       const updatedEventInventory = await devitrakApi.post("/event/update-global-state", {event_id:event.id})
       const eventRef = event
@@ -90,7 +90,6 @@ const dispatch = useDispatch()
   };
 
   useEffect(() => {
-    console.log("status === success")
     finalizeProcessAndUpdateEventInventory()
   }, [status === "success"])
   
