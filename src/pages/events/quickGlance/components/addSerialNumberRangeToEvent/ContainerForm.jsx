@@ -1,278 +1,163 @@
-import { message, Select, Space } from "antd";
-import { useCallback, useState } from "react";
-import { useSelector } from "react-redux";
+import { Alert, Divider, Progress, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
-import Chip from "../../../../../components/UX/Chip/Chip";
+import { onAddEventData } from "../../../../../store/slices/eventSlice";
+import ScannedSerialsList from "./addingItemsMethod/ScannedSerialsList";
+import SerialNumberInput from "./addingItemsMethod/SerialNumberInput";
+import useBatchProcessor from "./addingItemsMethod/hooks/useBatchProcessor";
 const ContainerForm = ({
-  AntSelectorStyle,
-  blockingButton,
   deviceTitle,
-  setListOfLocations,
-  gettingData,
-  handleSubmit,
-  itemQuery,
-  onChange,
-  RectangleBluePlusIcon,
-  selectOptions,
   Subtitle,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [itemToContent, setItemToContent] = useState([]);
-  const [finalSelection, setFinalSelection] = useState([]);
-
+  const [scannedSerials, setScannedSerials] = useState([]);
+  const [inputError, setInputError] = useState(null);
   const { event } = useSelector((state) => state.event);
-  const eventInvInfo = event.deviceSetup
-    .filter((element) => element.group === deviceTitle)
-    .at(-1);
-  const renderLocationBasedOptions = useCallback((selectedOptions) => {
-    if (!Array.isArray(selectedOptions) || selectedOptions.length === 0) {
-      return [];
-    }
+  const { user } = useSelector((state) => state.admin);
+  const dispatch = useDispatch()
+  const finalizeProcessAndUpdateEventInventory = async() => {
+      const updatedEventInventory = await devitrakApi.post("/event/update-global-state", {event_id:event.id})
+      const eventRef = event
+      dispatch(onAddEventData({
+        ...eventRef,
+        deviceSetup:updatedEventInventory.data.updatedEventInventary
+      }))
+  }
 
-    const serialNumbersByLocation = new Map();
+  const processBatch = useCallback(
+    async (batch) => {
+      const sqlTemplate = {
+        event_id: event.sql.event_id,
+        item_group: deviceTitle,
+        company_id: user.sqlInfo.company_id,
+        category_name: event.deviceSetup.find(
+          (item) => item.group === deviceTitle
+        ).category,
+        data: batch,
+        warehouse: 0,
+        eventName: event.eventInfoDetail.eventName,
+        company_id_nosql:event.company_id
+      };
 
-    selectedOptions.forEach((option) => {
-      try {
-        const valueData =
-          typeof option.value === "string"
-            ? JSON?.parse(option.value)
-            : option.valueData;
+      const noSqlTemplate = {
+        type: deviceTitle,
+        deviceList: batch,
+        company: event.company_id,
+        status:"Operational",
+        activity:false,
+        comment:"No comment",
+        eventSelected:event.eventInfoDetail.eventName,
+        provider:event.company
+      };
+      // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
+      await devitrakApi.post('/db_event/allocate-device-container-event', sqlTemplate)
+      await devitrakApi.post('/receiver/receivers-pool-bulk', noSqlTemplate)
+      await devitrakApi.post("/event/update-event-inventory-freshest-data", {event_id:event.id})
+    },
+    [event, deviceTitle, user]
+  );
 
-        const location = valueData.location || option.key;
-        const serialNumbers = valueData.serialNumberList || [];
+  const { progress, status, error, startProcessing, reset } = useBatchProcessor(
+    scannedSerials,
+    processBatch
+  );
 
-        if (!serialNumbersByLocation.has(location)) {
-          serialNumbersByLocation.set(location, new Set());
-        }
-
-        serialNumbers.forEach((serial) => {
-          serialNumbersByLocation.get(location).add(serial);
-        });
-      } catch (error) {
-        console.error("Error processing option:", error);
-      }
-    });
-    return Array.from(serialNumbersByLocation.entries()).map(
-      ([location, serials]) => ({
-        value: location,
-        key: location,
-        label: location,
-        serialNumbers: Array.from(serials),
-      }),
-    );
-  }, []);
-  const handleItemSelection = (selectedSerialNumbers) => {
-    // Handle item removal
-    if (selectedSerialNumbers.length < itemToContent.length) {
-      const newItemToContent = itemToContent.filter((item) =>
-        selectedSerialNumbers.includes(item),
-      );
-      return setItemToContent(newItemToContent);
-    }
-
-    // Handle item addition
-    const newItems = selectedSerialNumbers
-      .filter(
-        (serialNumber) => !itemToContent.some((item) => item === serialNumber),
-      )
-      .map((serialNumber) => {
-        const selectedItem = itemQuery.data.data.items[
-          selectedLocation
-        ].serialNumberList.find((item) => item === serialNumber);
-        return selectedItem ? selectedItem : null;
-      })
-      .filter(Boolean);
-
-    const updatedItemToContent = [...itemToContent, ...newItems];
-
-    // Check container limit
-    if (updatedItemToContent.length > eventInvInfo.quantity) {
-      message.warning(
-        `This container has a limit of ${eventInvInfo.quantity} items. Please remove some items before adding more.`,
-      );
+  const handleAddSerial = (serial) => {
+    if (scannedSerials.includes(serial)) {
+      setInputError(`Serial number "${serial}" has already been scanned.`);
       return;
     }
-
-    return setItemToContent(updatedItemToContent);
+    setScannedSerials((prev) => [...prev, serial]);
+    setInputError(null);
   };
 
-  const renderSearchResults = () => {
-    const locationOptions = renderLocationBasedOptions(selectOptions);
-    const selectedLocationData = locationOptions.find(
-      (opt) => opt.key === selectedLocation,
-    );
-    const serialNumbers = selectedLocationData?.serialNumbers || [];
-    return (
-      <Select
-        mode="multiple"
-        style={{ width: "100%" }}
-        placeholder="Select items"
-        loading={loading}
-        value={itemToContent.map((item) => item)}
-        onChange={handleItemSelection}
-        optionFilterProp="label"
-        optionLabelProp="label"
-        virtual={true}
-        maxTagCount={eventInvInfo.quantity}
-        maxTagPlaceholder={(omitted) => `+ ${omitted.length} more selected`}
-        showSearch
-        allowClear
-        options={serialNumbers.map((serialNumber) => ({
-          value: `${serialNumber}`,
-          label: serialNumber,
-          item: { serial_number: serialNumber, location: selectedLocation },
-        }))}
-      />
+  const removeSubmittedSerial = (index) => {
+    setScannedSerials(
+      scannedSerials.filter((_,i) => i !== index)
     );
   };
 
-  const handleLocationChange = (location) => {
-    setLoading(true);
-    setSelectedLocation(location);
-    if (onChange) {
-      setLoading(false);
-      onChange(location);
+  const handleClear = () => {
+    setScannedSerials([]);
+    setInputError(null);
+    reset();
+  };
+
+  const handleAllScannedSerialNumbers = async () => {
+    if (scannedSerials.length === 0) {
+      setInputError("Please scan serial numbers first.");
+      return;
     }
+    startProcessing();
   };
 
-  const addingDataToAssignToEventInventory = async () => {
-    setFinalSelection([
-      ...finalSelection,
-      {
-        location: selectedLocation,
-        serialNumberList: itemToContent.map((item) => item),
-      },
-    ]);
-    let currentData = [
-      ...finalSelection,
-      {
-        location: selectedLocation,
-        serialNumberList: itemToContent.map((item) => item),
-      },
-    ];
-    await handleSubmitContainerInfo(currentData);
-    return setItemToContent([]);
-  };
-
-  const removeItem = (index) => {
-    setFinalSelection((prev) => prev.filter((_, i) => i !== index));
-    return setListOfLocations((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmitContainerInfo = async (currentData) => {
-    try {
-      let info = [];
-      for (let data of currentData) {
-        let deviceInfo = [];
-        data.serialNumberList.map(async (item) => {
-          const containerInfo = await gettingData({
-            serial_number: item,
-            quantity: 1,
-            location: data.location,
-          });
-          deviceInfo.push(containerInfo.at(-1));
-        });
-        info.push({
-          location: data.location,
-          deviceInfo: deviceInfo,
-          quantity: data.serialNumberList.length,
-          startingNumber: data.serialNumberList[0],
-        });
-      }
-      return setListOfLocations(info);
-    } catch (error) {
-      return message.error("Failed to add device. Please try again.");
-    }
-  };
-
+  useEffect(() => {
+    finalizeProcessAndUpdateEventInventory()
+  }, [status === "success"])
+  
   return (
-    <form
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        textAlign: "left",
-        padding: 0,
-      }}
-      onSubmit={handleSubmit(addingDataToAssignToEventInventory)}
-    >
+    <div style={{ width: "100%" }}>
       <div style={{ margin: "0px auto 1rem", width: "100%" }}>
         <label style={{ ...Subtitle, margin: "0px auto 1rem" }}>
-          Select location from where items will be added to inventory.
+          Scan all serial numbers for {deviceTitle} and enabled to this
+          event&apos;s inventory.
         </label>
-        <Select
-          className="custom-autocomplete"
-          showSearch
-          placeholder="Search item to add to inventory."
-          optionFilterProp="children"
-          style={{ ...AntSelectorStyle, width: "100%" }}
-          onChange={handleLocationChange}
-          options={renderLocationBasedOptions(selectOptions)}
-          loading={itemQuery.isLoading}
-          virtual={true}
-          filterOption={(input, option) => {
-            return option.key.toLowerCase().includes(input.toLowerCase());
-          }}
-          getPopupContainer={(triggerNode) => triggerNode.parentNode}
+      </div>
+
+      <div style={{ margin: "1rem 0" }}>
+        <Typography.Title level={5}>Scan Serial Number of containers</Typography.Title>
+        <SerialNumberInput
+          onAdd={handleAddSerial}
+          disabled={status === "running"}
+          placeholder={`Enter serial for ${deviceTitle}`}
+        />
+        {inputError && (
+          <Alert message={inputError} type="error" showIcon style={{ marginTop: "8px" }} />
+        )}
+      </div>
+
+      <Divider />
+
+      <div>
+        <div style={{ margin:"0.5rem 0", gap:2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Typography.Title level={5}>
+          Scanned Items ({scannedSerials.length})
+        </Typography.Title>
+        <GrayButtonComponent title="Clear" func={handleClear} disabled={status === "running"} />
+        </div>
+        <ScannedSerialsList
+          serials={scannedSerials}
+          onRemove={removeSubmittedSerial}
         />
       </div>
-      <div>{renderSearchResults()}</div>
-      <div
-        style={{
-          margin: "0px auto 1rem",
-          width: "100%",
-          display: finalSelection.length > 0 ? "flex" : "none",
-        }}
-      >
-        {
-          <Space
-            style={{ margin: "1rem auto", width: "100%" }}
-            size={[8, 16]}
-            wrap
-          >
-            {finalSelection.length > 0 &&
-              finalSelection.map((item, index) => (
-                <Chip
-                  key={`${item.location}-${index}`}
-                  label={`${item.location || "Unknown"} - ${
-                    item.serialNumberList.length
-                  }`}
-                  onDelete={() => removeItem(index)}
-                  variant="filled"
-                  color="default"
-                />
-              ))}
-          </Space>
-        }
-      </div>
-      <div
-        style={{
-          textAlign: "left",
-          width: "100%",
-          margin: "0.5rem 0",
-        }}
-      >
+
+      {status !== "idle" && (
+        <div style={{ marginTop: "1rem" }}>
+          <Progress percent={progress} />
+          {status === "running" && <p>Processing...</p>}
+          {status === "success" && (
+            <Alert
+              message="All serial numbers processed successfully!"
+              type="success"
+              showIcon
+            />
+          )}
+          {status === "error" && <Alert message={error} type="error" showIcon />}
+        </div>
+      )}
+
+      <div style={{ marginTop: "2rem", width: "100%" }}>
         <LightBlueButtonComponent
-          title={`Add qty: ${itemToContent.length} from ${selectedLocation} location.`}
-          func={addingDataToAssignToEventInventory}
-          disabled={blockingButton}
-          buttonType="submit"
-          icon={<RectangleBluePlusIcon />}
-          styles={{
-            display:
-              eventInvInfo.quantity ===
-              finalSelection
-                .map((item) => item.serialNumberList.length)
-                .reduce((a, b) => a + b, 0)
-                ? "none"
-                : "flex",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
+          title="Allocate Scanned Serial Numbers"
+          func={handleAllScannedSerialNumbers}
+          disabled={scannedSerials?.length === 0 || status === "running" || status === "success"}
+          buttonType="button"
+          styles={{ width: "100%" }}
         />
       </div>
-    </form>
+    </div>
   );
 };
 
