@@ -133,8 +133,8 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
       image_url: img_url,
       existing: true,
       consumerUses: false,
-      qty: data.quantity ?? data.qty,
-      quantity: data.quantity ?? data.qty,
+      qty: scannedSerialNumbers.length,
+      quantity: scannedSerialNumbers.length,
       supplier_info: data.supplier
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
@@ -153,7 +153,7 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
         dispatch,
         onAddDeviceSetup,
         data.item_group,
-        data.quantity ?? data.qty
+        scannedSerialNumbers.length
       );
 
       if (updated) {
@@ -172,11 +172,11 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
     const eventItem = {
       ...template,
       cost: eventInfoDetail?.merchant ? data.deposit || 0 : 0,
-      quantity: data.quantity ?? data.qty,
+      quantity: scannedSerialNumbers.length,
       existing: true,
       consumerUses: false,
       company: user.company,
-      ownership: data.ownership || "Rent",
+      ownership: "Rent",
     };
 
     addNewItemToEvent(
