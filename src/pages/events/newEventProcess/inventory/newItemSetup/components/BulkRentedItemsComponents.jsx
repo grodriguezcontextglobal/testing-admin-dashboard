@@ -13,33 +13,33 @@ import ScanningMethod from "../../../../../inventory/actions/utils/ScanningMetho
 import ScanningModal from "../../../../../inventory/actions/utils/ScanningModal";
 import Input from "../../../../../../components/UX/inputs/Input";
 
-// export const renderTitle = () => {
-//   return (
-//     <>
-//       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
-//         <Typography
-//           textAlign={"left"}
-//           style={TextFontSize30LineHeight38}
-//           color={"var(--gray-600, #475467)"}
-//         >
-//           Add a group of items
-//         </Typography>
-//       </InputLabel>
-//       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
-//         <Typography
-//           textAlign={"left"}
-//           textTransform={"none"}
-//           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
-//           color={"var(--gray-600, #475467)"}
-//         >
-//           Devices serial numbers can be created by inputting a serial number
-//           base to define the category of items, and then a range from one number
-//           to another, depending on your inventory.
-//         </Typography>
-//       </InputLabel>
-//     </>
-//   );
-// };
+export const renderTitle = () => {
+  return (
+    <>
+      <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
+        <Typography
+          textAlign={"left"}
+          style={TextFontSize30LineHeight38}
+          color={"var(--gray-600, #475467)"}
+        >
+          Add a group of items
+        </Typography>
+      </InputLabel>
+      <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
+        <Typography
+          textAlign={"left"}
+          textTransform={"none"}
+          style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
+          color={"var(--gray-600, #475467)"}
+        >
+          Devices serial numbers can be created by inputting a serial number
+          base to define the category of items, and then a range from one number
+          to another, depending on your rental inventory.
+        </Typography>
+      </InputLabel>
+    </>
+  );
+};
 
 export const renderingOptionsButtons = ({
   watch,
