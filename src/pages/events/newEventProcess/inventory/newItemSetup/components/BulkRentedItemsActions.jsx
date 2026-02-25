@@ -2,12 +2,12 @@ import { message } from "antd";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 
 // Helper function to check if item already exists in event inventory
-const checkIfItemExistsInEvent = (selectedItems, itemGroup) => {
+export const checkIfItemExistsInEvent = (selectedItems, itemGroup) => {
   return selectedItems.some((element) => element.item_group === itemGroup);
 };
 
 // Helper function to update existing item quantity
-const updateExistingItemQuantity = (
+export const updateExistingItemQuantity = (
   selectedItems,
   setSelectedItem,
   dispatch,
@@ -34,7 +34,7 @@ const updateExistingItemQuantity = (
 };
 
 // Helper function to add new item to event inventory
-const addNewItemToEvent = (
+export const addNewItemToEvent = (
   selectedItems,
   setSelectedItem,
   dispatch,
@@ -46,7 +46,7 @@ const addNewItemToEvent = (
   dispatch(onAddDeviceSetup(updatedItems));
 };
 
-const finishingProcess = async ({
+export const finishingProcess = async ({
   setValue,
   openNotificationWithIcon,
   setLoadingStatus,
