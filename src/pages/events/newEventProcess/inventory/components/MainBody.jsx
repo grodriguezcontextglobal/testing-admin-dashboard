@@ -1,9 +1,9 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { Drawer, Select } from "antd";
+import { useState } from "react";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
@@ -13,7 +13,6 @@ import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
-import { useState } from "react";
 
 const MainBody = ({
   AddingEventCreated,
@@ -199,7 +198,6 @@ const MainBody = ({
             setDisplayFormToCreateCategory(!displayFormToCreateCategory)
           }
           styles={{ width: "100%", margin: "1rem auto" }}
-          icon={displayFormToCreateCategory ? null : <RectangleBluePlusIcon />}
         />
       )}
       {displayFormToCreateCategory && (
