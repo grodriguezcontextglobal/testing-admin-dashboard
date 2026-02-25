@@ -19,7 +19,7 @@ const ButtonsForm = ({ stylingComponents, loadingStatus, moreInfoDisplay, primar
             loadingState={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
             buttonType="submit"
-            disabled={loadingStatus || scannedSerialNumbers.length === 0}
+            disabled={loadingStatus || scannedSerialNumbers?.length === 0}
           />
           <Link to={backLink} style={{ width: "100%" }}>
             <GrayButtonComponent
