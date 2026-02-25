@@ -378,6 +378,7 @@ const BulkItemForm = ({
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
+        scannedSerialNumbers={scannedSerialNumbers}
       />
     </form>
   );
