@@ -1,10 +1,9 @@
-import { Link, useLocation } from "react-router-dom";
+import { Divider } from "antd";
+import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import { Divider } from "antd";
 
-const ButtonsForm = ({ stylingComponents, loadingStatus, moreInfoDisplay }) => {
-  const location = useLocation()
+const ButtonsForm = ({ stylingComponents, loadingStatus, moreInfoDisplay, primaryButtonTitle = "Save new group of items", secondaryButtonTitle = "Go back", backLink = "/inventory", scannedSerialNumbers }) => {
   return (
     <>
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
@@ -16,15 +15,15 @@ const ButtonsForm = ({ stylingComponents, loadingStatus, moreInfoDisplay }) => {
           }}
         >
           <BlueButtonComponent
-            title={location.pathname.includes("bulk") ? "Save new group of items":"Update group of items"}
+            title={primaryButtonTitle}
             loadingState={loadingStatus}
-            disabled={loadingStatus}
             styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
             buttonType="submit"
+            disabled={loadingStatus || scannedSerialNumbers.length === 0}
           />
-          <Link to="/inventory" style={{ width: "100%" }}>
+          <Link to={backLink} style={{ width: "100%" }}>
             <GrayButtonComponent
-              title={"Go back"}
+              title={secondaryButtonTitle}
               func={() => null}
               // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
               styles={{ width: "100%" }}
