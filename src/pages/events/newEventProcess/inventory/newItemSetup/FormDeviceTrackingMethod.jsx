@@ -29,47 +29,46 @@ const FormDeviceTrackingMethod = ({
   setDisplayFormToCreateCategory,
   eventInfoDetail,
 }) => {
-  
-    const alphaNumericInsertItemMutation = useMutation({
-      mutationFn: (template) =>
-        devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["listOfItemsInStock"],
-          exact: true,
-          refetchType: "active",
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["ItemsInInventoryCheckingQuery"],
-          exact: true,
-          refetchType: "active",
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["RefactoredListInventoryCompany"],
-          exact: true,
-          refetchType: "active",
-        });
-      },
-    });
-      const {
-        supplierList,
-        supplierModal,
-        providersList,
-        setSupplierModal,
-        refetchingAfterNewSupplier,
-        queryClient,
-        dicSuppliers,
-      } = useSuppliers();
-    const [loadingStatus, setLoadingStatus] = useState(false)
-  const { setValue }= useForm()
-    const [api, contextHolder] = notification.useNotification();
-    const openNotificationWithIcon = (msg) => {
-      api.open({
-        description: msg,
+  const alphaNumericInsertItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["listOfItemsInStock"],
+        exact: true,
+        refetchType: "active",
       });
-    };
-  
-const dispatch = useDispatch()  
+      queryClient.invalidateQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+        exact: true,
+        refetchType: "active",
+      });
+    },
+  });
+  const {
+    supplierList,
+    supplierModal,
+    providersList,
+    setSupplierModal,
+    refetchingAfterNewSupplier,
+    queryClient,
+    dicSuppliers,
+  } = useSuppliers();
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const { setValue } = useForm();
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (msg) => {
+    api.open({
+      description: msg,
+    });
+  };
+
+  const dispatch = useDispatch();
   const {
     acceptAndGenerateImage,
     addingSubLocation,
@@ -126,19 +125,36 @@ const dispatch = useDispatch()
     watch,
   } = useBulkActionLogic();
 
-    const savingNewItem = async (data) => {
+  const savingNewItem = async (data) => {
     try {
-const response = await bulkItemInsertAlphanumericWithEventCheck({
-  data, user, openNotificationWithIcon, setLoadingStatus, setValue, img_url:imageUrlGenerated, moreInfo, formatDate, returningDate, subLocationsSubmitted, scannedSerialNumbers, setScannedSerialNumbers, alphaNumericInsertItemMutation, dicSuppliers, selectedItems:selectedItem, setSelectedItem, dispatch, onAddDeviceSetup, eventInfoDetail,
-}
-)      
-const respNewItem = [...selectedItem, response];
-        setSelectedItem(respNewItem);
-        return setDisplayFormToCreateCategory(false)
-  } catch (error) {
-    message.error("Failed to create new item: " + error.message);
-    throw error;
-  }
+      const response = await bulkItemInsertAlphanumericWithEventCheck({
+        data,
+        user,
+        openNotificationWithIcon,
+        setLoadingStatus,
+        setValue,
+        img_url: imageUrlGenerated,
+        moreInfo,
+        formatDate,
+        returningDate,
+        subLocationsSubmitted,
+        scannedSerialNumbers,
+        setScannedSerialNumbers,
+        alphaNumericInsertItemMutation,
+        dicSuppliers,
+        selectedItems: selectedItem,
+        setSelectedItem,
+        dispatch,
+        onAddDeviceSetup,
+        eventInfoDetail,
+      });
+      const respNewItem = [...selectedItem, response];
+      setSelectedItem(respNewItem);
+      return setDisplayFormToCreateCategory(false);
+    } catch (error) {
+      message.error("Failed to create new item: " + error.message);
+      throw error;
+    }
   };
 
   return (
@@ -203,7 +219,6 @@ const respNewItem = [...selectedItem, response];
         setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
-
       />
       {supplierModal && (
         <NewSupplier
