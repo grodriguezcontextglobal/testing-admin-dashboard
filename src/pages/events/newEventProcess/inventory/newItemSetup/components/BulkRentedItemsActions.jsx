@@ -110,7 +110,7 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
       cost: data.cost,
       brand: data.brand,
       descript_item: data.descript_item,
-      ownership: data.ownership,
+      ownership: "Rent",
       list: scannedSerialNumbers,
       warehouse: true,
       main_warehouse: data.tax_location,
@@ -370,8 +370,8 @@ export const bulkItemInsertAlphanumeric = async ({
       image_url: img_url,
       existing: true,
       consumerUses: false,
-      qty: data.quantity ?? data.qty,
-      quantity: data.quantity ?? data.qty,
+      qty: scannedSerialNumbers.length,
+      quantity: scannedSerialNumbers.length,
       supplier_info: data.supplier
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
