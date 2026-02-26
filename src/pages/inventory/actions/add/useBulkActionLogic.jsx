@@ -12,7 +12,7 @@ import { retrieveExistingSubLocationsForCompanyInventory } from "../utils/SubLoc
 import validatingInputFields from "../utils/validatingInputFields";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import useSuppliers from "../../utils/hooks/useSuppliers";
@@ -58,6 +58,7 @@ const useBulkActionLogic = () => {
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
   const { user } = useSelector((state) => state.admin);
+  const locationInApp = useLocation()
   const {
     register,
     handleSubmit,
@@ -431,6 +432,9 @@ const useBulkActionLogic = () => {
             key === "location"
           ) {
             return;
+          }
+          if(locationInApp.pathname==="/create-event-page/device-detail"){
+          setValue("ownership", "Rent")
           }
           setValue(key, value);
           setValue("quantity", 0);
