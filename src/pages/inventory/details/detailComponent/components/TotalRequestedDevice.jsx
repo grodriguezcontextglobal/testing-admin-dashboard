@@ -1,12 +1,13 @@
-import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 const TotalRequestedDevice = ({ dataFound }) => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
+    "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
   return (
@@ -19,7 +20,11 @@ const TotalRequestedDevice = ({ dataFound }) => {
       sm={12}
       md={12}
     >
-      <Grid padding={`${(isSmallDevice || isMediumDevice) ? "10px 0px" : "10px 10px 10px 0"}`} item xs={12}>
+      <Grid
+        padding={`${isSmallDevice || isMediumDevice ? "10px 0px" : "10px 10px 10px 0"}`}
+        item
+        xs={12}
+      >
         <Card
           style={{
             borderRadius: "12px",
@@ -43,39 +48,10 @@ const TotalRequestedDevice = ({ dataFound }) => {
               xs={12}
             >
               <Typography
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-600, #475467)"}
+                style={Subtitle}
               >
                 Serial number
               </Typography>
-            </Grid>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Grid item xs={12}>
-                <Typography
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  textAlign={"right"}
-                  color={"var(--gray-600, #475467)"}
-                >
-                  <Icon
-                    icon="simple-line-icons:options-vertical"
-                    color="#98A2B3"
-                  />
-                </Typography>
-              </Grid>
             </Grid>
           </Grid>
           <Grid container>
@@ -87,13 +63,10 @@ const TotalRequestedDevice = ({ dataFound }) => {
               xs={12}
             >
               <Typography
-                paddingTop={"8px"}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"38px"}
-                color={"var(--gray-900, #101828)"}
+                style={{
+                  ...TextFontSize30LineHeight38,
+                  wordBreak: "break-all",
+                }}
               >
                 {dataFound[0]?.serial_number}
               </Typography>

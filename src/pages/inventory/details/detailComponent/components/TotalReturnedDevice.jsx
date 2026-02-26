@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card } from "antd";
@@ -55,25 +54,6 @@ const TotalReturnedDevice = ({ dataFound }) => {
             >
               Condition
             </Typography>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <Grid item xs={12}>
-              <Typography
-                style={{ ...TextFontSize14LineHeight20, textAlign: "right" }}
-                color={"var(--gray-600, #475467)"}
-              >
-                <Icon
-                  icon="simple-line-icons:options-vertical"
-                  color="#98A2B3"
-                />
-              </Typography>
-            </Grid>
           </Grid>
         </Grid>
         <Grid container>
