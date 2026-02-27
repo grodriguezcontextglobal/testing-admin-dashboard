@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Table, message, notification } from "antd";
+import { Space, Table, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,8 +16,6 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import "../../../../../styles/global/ant-table.css";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Choice from "../lostFee/Choice";
@@ -621,47 +619,34 @@ const ExpandedRowInTable = ({
             gap: "5px",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              width: "100%",
-              gap: "5px",
-            }}
-          >
-            <Button
-              style={{
-                ...BlueButton,
-                display: selectedItems.length > 0 ? "flex" : "none",
-                gap: "5px",
+          <Space size={[8,16]} wrap>
+            {selectedItems.length > 0 && <BlueButtonComponent
+              styles={{width:"fit-content"
               }}
-              onClick={() => setOpenReturnDeviceInBulkModal(true)}
-            >
-              <p style={BlueButtonText}>
-                Return multiple items of this transaction | Total items to
-                return: {selectedItems.length}
-              </p>
-            </Button>
-            <BlueButtonConfirmationComponent
+              func={() => setOpenReturnDeviceInBulkModal(true)}
+              title={`Return multiple items of this transaction | Total items to
+                return: ${selectedItems.length}`}
+            />}
+            {selectedItems.length === 0 && <BlueButtonConfirmationComponent
               title={`Return all items of this transaction`}
-              styles={{ gap: "5px" }}
+              styles={{ gap: "5px", display: selectedItems.length > 0 ? "none" : "block",width:"fit-content" }}
               buttonType="button"
               func={() => handleAllItemsReturn()}
               confirmationTitle="Are you sure you want to return all items of this transaction?"
-            />
+            />}
             <BlueButtonComponent
               title={"Express check-in devices"}
               func={() => setOpenReturnExpressCheckInDeviceModal(true)}
-              styles={{ gap: "5px" }}
+              styles={{ gap: "5px",width:"fit-content" }}
             />
             <BlueButtonComponent
               loadingState={isLoadingAction}
               buttonType="button"
               title={"Send device report"}
               func={() => sendEmailDeviceReport()}
+              styles={{width:"fit-content"}}
             />
-          </div>
+          </Space>
 
           <Table
             columns={columns}
