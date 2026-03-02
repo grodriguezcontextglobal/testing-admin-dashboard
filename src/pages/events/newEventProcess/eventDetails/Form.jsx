@@ -53,6 +53,12 @@ const Form = () => {
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
   const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
+  const [daysBeforeEvent, setDaysBeforeEvent] = useState(
+    eventInfoDetail.daysBeforeEvent
+  );
+  const [daysAfterEvent, setDaysAfterEvent] = useState(
+    eventInfoDetail.daysAfterEvent
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,6 +103,8 @@ const Form = () => {
       merchant: merchant,
       dateBegin: begin,
       dateEnd: end,
+      daysBeforeEvent: daysBeforeEvent,
+      daysAfterEvent: daysAfterEvent, 
     };
     const contactInfoFormat = {
       phone: numberOfPhoneNumbersPerEvent,
@@ -135,6 +143,10 @@ const Form = () => {
         setBegin={setBegin}
         end={end}
         setEnd={setEnd}
+        daysBeforeEvent={daysBeforeEvent}
+        daysAfterEvent={daysAfterEvent}
+        setDaysBeforeEvent={setDaysBeforeEvent}
+        setDaysAfterEvent={setDaysAfterEvent}
         contactPhoneNumber={contactPhoneNumber}
         setContactPhoneNumber={setContactPhoneNumber}
         numberOfPhoneNumbersPerEvent={numberOfPhoneNumbersPerEvent}
