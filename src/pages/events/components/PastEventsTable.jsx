@@ -63,26 +63,31 @@ const PastEventsTable = ({ events }) => {
   };
 
   const sortData = () => {
-    const result = new Set();
-    const resultActive = new Set();
     const currentDate = new Date();
-    const activeEvents = events.filter(
-      (element) =>
-        element.active && currentDate > element.eventInfoDetail.dateEnd,
+    // Filter for past events first. An event is considered "past" if its end date is before the current date.
+    const pastEvents = events.filter(
+      (event) => new Date(event.eventInfoDetail.dateEnd) < currentDate,
     );
-    for (let data of activeEvents) {
-      resultActive.add({ key: data.id, ...data });
-    }
-    for (let data of events) {
-      const ending = new Date(data.eventInfoDetail.dateEnd);
-      if (!data.active || currentDate > ending) {
-        result.add({ key: data.id, ...data });
+
+    // Sort the past events.
+    pastEvents.sort((a, b) => {
+      // "Past but active" events should come before "past and inactive" events.
+      if (a.active && !b.active) {
+        return -1; // a comes first
       }
-    }
-    const x = Array.from(result);
-    const y = Array.from(resultActive);
-    const final = Array.from(y).concat(Array.from(x));
-    return final;
+      if (!a.active && b.active) {
+        return 1; // b comes first
+      }
+
+      // For events with the same active status, apply secondary sorting.
+      // Sorting by start date in descending order (most recent first).
+      const dateA = new Date(a.eventInfoDetail.dateBegin);
+      const dateB = new Date(b.eventInfoDetail.dateBegin);
+      return dateB - dateA;
+    });
+
+    // Add a 'key' property to each event for the table rendering.
+    return pastEvents.map((event) => ({ ...event, key: event.id }));
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
