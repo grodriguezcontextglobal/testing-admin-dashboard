@@ -141,6 +141,10 @@ const Event = () => {
             Start: {`${formatter.format(new Date(eventInfoDetail.dateBegin))}`}
             <br />
             End: {`${formatter.format(new Date(eventInfoDetail.dateEnd))}`}
+            <br />
+            Days set before event starts: {`${eventInfoDetail.daysBeforeEvent}`}
+            <br />
+            Days set after event ends: {`${eventInfoDetail.daysAfterEvent}`}
           </h4>
         </InputLabel>
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
