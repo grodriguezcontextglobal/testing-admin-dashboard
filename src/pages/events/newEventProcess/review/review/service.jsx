@@ -64,7 +64,7 @@ const Service = () => {
             }}
           >
             ({extraServiceListSetup?.length ?? 0}{" "}
-            {extraServiceListSetup && extraServiceListSetup.length > 1 ? "services" : "service"})
+            {extraServiceListSetup && extraServiceListSetup?.length > 1 ? "services" : "service"})
           </span>
         </p>
       </InputLabel>
