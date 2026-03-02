@@ -24,6 +24,10 @@ const FormFields = ({
   setContactPhoneNumber,
   setEnd,
   setMerchant,
+  daysBeforeEvent,
+  daysAfterEvent,
+  setDaysBeforeEvent,
+  setDaysAfterEvent,
 }) => {
   return (
     <form
@@ -53,8 +57,12 @@ const FormFields = ({
         key="dateSection"
         begin={begin}
         end={end}
-        setBegin={setBegin}
+        setBegin={setBegin} 
         setEnd={setEnd}
+        daysBeforeEvent={daysBeforeEvent}
+        daysAfterEvent={daysAfterEvent}
+        setDaysBeforeEvent={setDaysBeforeEvent}
+        setDaysAfterEvent={setDaysAfterEvent}
       />
       {/* location section */}
       <LocationSection key="locationSection" register={register} errors={errors} />
