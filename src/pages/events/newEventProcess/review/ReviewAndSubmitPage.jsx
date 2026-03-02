@@ -156,7 +156,7 @@ const ReviewAndSubmitEvent = () => {
       contactInfo: contactInfo,
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       company_id: user.companyData.id,
-      legal_contract: eventInfoDetail.legal_documents_list.length > 0,
+      legal_contract: eventInfoDetail.legal_documents_list?.length > 0,
       legal_documents_list: eventInfoDetail.legal_documents_list,
     });
     if (newEventInfo.data.ok) {
