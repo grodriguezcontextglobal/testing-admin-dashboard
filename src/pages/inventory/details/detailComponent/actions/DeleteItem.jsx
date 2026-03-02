@@ -2,9 +2,6 @@
 import { useWindowScroll } from "@uidotdev/usehooks";
 import { useState } from "react";
 import DeleteItemModal from "../components/DeleteItemModal";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
-import { Button } from "antd";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 
 const DeleteItem = ({ dataFound }) => {
