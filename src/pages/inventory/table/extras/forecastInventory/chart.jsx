@@ -9,6 +9,52 @@ export const DailyAnalysisChart = ({ dailyData }) => {
     // Extract dates and sort them
     const sortedDates = dailyData.map((item) => item.date).sort();
 
+    // --- Weekend and Holiday Highlighting ---
+    const holidays = [
+      // 2026 US Holidays
+      "2026-01-01", // New Year's Day
+      "2026-01-19", // Martin Luther King, Jr. Day
+      "2026-02-16", // Presidents' Day
+      "2026-05-25", // Memorial Day
+      "2026-06-19", // Juneteenth
+      "2026-07-03", // Independence Day (Observed, as 4th is a Saturday)
+      "2026-07-04", // Independence Day
+      "2026-09-07", // Labor Day
+      "2026-10-12", // Columbus Day
+      "2026-11-11", // Veterans Day
+      "2026-11-26", // Thanksgiving Day
+      "2026-12-25", // Christmas Day
+    ];
+
+    const markAreaData = [];
+    sortedDates.forEach((dateString) => {
+      // Use UTC date to get the correct day of the week, avoiding timezone shifts.
+      const date = new Date(dateString + "T00:00:00Z");
+      const dayOfWeek = date.getUTCDay(); // 0 for Sunday, 6 for Saturday
+      const isHoliday = holidays.includes(dateString);
+
+      if (isHoliday || dayOfWeek === 0) {
+        // Sunday or Holiday
+        markAreaData.push([
+          {
+            xAxis: dateString,
+            itemStyle: { color: "rgba(255, 82, 82, 0.2)" }, // Red
+          },
+          { xAxis: dateString },
+        ]);
+      } else if (dayOfWeek === 6) {
+        // Saturday
+        markAreaData.push([
+          {
+            xAxis: dateString,
+            itemStyle: { color: "rgba(255, 255, 0, 0.4)" }, // Yellow
+          },
+          { xAxis: dateString },
+        ]);
+      }
+    });
+    // --- End of Highlighting Logic ---
+
     // Prepare series data for each metric
     const colors = [
       "#4568DC", // Total Inventory - Blue
@@ -24,6 +70,10 @@ export const DailyAnalysisChart = ({ dailyData }) => {
         itemStyle: { color: colors[0] },
         emphasis: {
           focus: "series",
+        },
+        // Add markArea to highlight weekends and holidays
+        markArea: {
+          data: markAreaData,
         },
       },
       {
@@ -132,26 +182,67 @@ export const DailyAnalysisChart = ({ dailyData }) => {
     series: chartData.series,
   };
 
+  const Legend = () => (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: "20px",
+        padding: "10px 20px",
+        fontFamily: "Inter, sans-serif",
+        fontSize: "12px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div
+          style={{
+            width: "14px",
+            height: "14px",
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+          }}
+        ></div>
+        <span>Weekdays</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div
+          style={{
+            width: "14px",
+            height: "14px",
+            backgroundColor: "rgba(255, 255, 0, 0.4)",
+          }}
+        ></div>
+        <span>Saturday</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div
+          style={{
+            width: "14px",
+            height: "14px",
+            backgroundColor: "rgba(255, 82, 82, 0.2)",
+          }}
+        ></div>
+        <span>Sunday / Holiday</span>
+      </div>
+    </div>
+  );
+
   return (
-    // <ReusableCard
-    //   cardStyle={{
-    //     display: "flex",
-    //     flexDirection: "column",
-    //     gap: "24px",
-    //     alignSelf: "stretch",
-    //     borderRadius: "8px",
-    //     border: "1px solid var(--Gray-300, #D0D5DD)",
-    //     background: "var(--Gray-100, #F2F4F7)",
-    //     width: "100%",
-    //     height: "500px",
-    //     padding: "15px", // Moved from styles.body
-    //   }}
-    // >
+    <div
+      style={{
+        border: "1px solid #D0D5DD",
+        borderRadius: "8px",
+        background: "#F2F4F7",
+        padding: "15px",
+        width:"100%"
+      }}
+    >
+      <Legend />
       <ReactECharts
         option={option}
         style={{ height: "500px", width: "100%" }}
         opts={{ renderer: "canvas" }}
       />
-    // </ReusableCard>
+    </div>
   );
 };
