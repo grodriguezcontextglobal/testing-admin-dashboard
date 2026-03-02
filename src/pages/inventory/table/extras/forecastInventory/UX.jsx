@@ -79,11 +79,13 @@ const UX = ({
       {/* Daily Analysis Chart Section */}
       {dailyAnalysis && dailyAnalysis.length > 0 && (
         <>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={12} md={12} lg={12}>
             <Typography variant="h6" gutterBottom>
               Daily Inventory Analysis
             </Typography>
-            <DailyAnalysisChart dailyData={dailyAnalysis} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <DailyAnalysisChart dailyData={dailyAnalysis} />
+            </div>
           </Grid>
           <DivAnt />
         </>
@@ -110,10 +112,10 @@ const UX = ({
       {/* Rental Analysis Buckets */}
       {rentedInventory.total_items > 0 && (
         <Grid id="rental-equipment-inventory" item xs={12}>
-            <RentalEquipmentInventory
-              rentalAnalysis={rentalAnalysis}
-              // RentedInventoryTable={RentedInventoryTable}
-            />
+          <RentalEquipmentInventory
+            rentalAnalysis={rentalAnalysis}
+            // RentedInventoryTable={RentedInventoryTable}
+          />
         </Grid>
       )}{" "}
       <DivAnt />
