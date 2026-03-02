@@ -1,37 +1,127 @@
 import ReactECharts from "echarts-for-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+
+// --- Holiday Calculation Helpers ---
+
+const formatDate = (date) => {
+  // Use UTC methods to prevent timezone shifts from affecting the date.
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getFloatingHoliday = (year, month, dayOfWeek, occurrence) => {
+  let count = 0;
+  // Start from the first day of the month in UTC.
+  const date = new Date(Date.UTC(year, month, 1));
+  while (date.getUTCMonth() === month) {
+    if (date.getUTCDay() === dayOfWeek) {
+      count++;
+      if (count === occurrence) {
+        return date;
+      }
+    }
+    date.setUTCDate(date.getUTCDate() + 1);
+  }
+  return null; // Should not be reached for valid inputs
+};
+
+const getUSHolidaysForYears = (years) => {
+  const holidays = new Set();
+  const addHoliday = (date) => holidays.add(formatDate(date));
+
+  for (const year of years) {
+    // New Year's Day
+    const newYear = new Date(Date.UTC(year, 0, 1));
+    addHoliday(newYear);
+    if (newYear.getUTCDay() === 6)
+      addHoliday(new Date(Date.UTC(year - 1, 11, 31)));
+    if (newYear.getUTCDay() === 0) addHoliday(new Date(Date.UTC(year, 0, 2)));
+
+    // MLK Day - 3rd Monday in Jan
+    addHoliday(getFloatingHoliday(year, 0, 1, 3));
+
+    // Presidents' Day - 3rd Monday in Feb
+    addHoliday(getFloatingHoliday(year, 1, 1, 3));
+
+    // Memorial Day - Last Monday in May
+    const may31 = new Date(Date.UTC(year, 4, 31));
+    const memorialDay = new Date(may31);
+    memorialDay.setUTCDate(may31.getUTCDate() - ((may31.getUTCDay() + 6) % 7));
+    addHoliday(memorialDay);
+
+    // Juneteenth
+    const juneteenth = new Date(Date.UTC(year, 5, 19));
+    addHoliday(juneteenth);
+    if (juneteenth.getUTCDay() === 6)
+      addHoliday(new Date(Date.UTC(year, 5, 18)));
+    if (juneteenth.getUTCDay() === 0)
+      addHoliday(new Date(Date.UTC(year, 5, 20)));
+
+    // Independence Day
+    const independenceDay = new Date(Date.UTC(year, 6, 4));
+    addHoliday(independenceDay);
+    if (independenceDay.getUTCDay() === 6)
+      addHoliday(new Date(Date.UTC(year, 6, 3)));
+    if (independenceDay.getUTCDay() === 0)
+      addHoliday(new Date(Date.UTC(year, 6, 5)));
+
+    // Labor Day - 1st Monday in Sep
+    addHoliday(getFloatingHoliday(year, 8, 1, 1));
+
+    // Columbus Day - 2nd Monday in Oct
+    addHoliday(getFloatingHoliday(year, 9, 1, 2));
+
+    // Veterans Day
+    const veteransDay = new Date(Date.UTC(year, 10, 11));
+    addHoliday(veteransDay);
+    if (veteransDay.getUTCDay() === 6)
+      addHoliday(new Date(Date.UTC(year, 10, 10)));
+    if (veteransDay.getUTCDay() === 0)
+      addHoliday(new Date(Date.UTC(year, 10, 12)));
+
+    // Thanksgiving Day - 4th Thursday in Nov
+    addHoliday(getFloatingHoliday(year, 10, 4, 4));
+
+    // Christmas Day
+    const christmasDay = new Date(Date.UTC(year, 11, 25));
+    addHoliday(christmasDay);
+    if (christmasDay.getUTCDay() === 6)
+      addHoliday(new Date(Date.UTC(year, 11, 24)));
+    if (christmasDay.getUTCDay() === 0)
+      addHoliday(new Date(Date.UTC(year, 11, 26)));
+  }
+  return holidays;
+};
 
 // Daily Analysis Chart Component
 export const DailyAnalysisChart = ({ dailyData }) => {
+   const chartRef = useRef(null);
+  const containerRef = useRef(null);
+
   const chartData = useMemo(() => {
-    if (!dailyData || dailyData.length === 0) return null;
+ if (!dailyData?.length) return null;
 
-    // Extract dates and sort them
-    const sortedDates = dailyData.map((item) => item.date).sort();
+    // IMPORTANT: keep series aligned with sorted dates
+    const rows = [...dailyData].sort((a, b) => a.date.localeCompare(b.date));
+    const sortedDates = rows.map((r) => r.date).sort();
 
-    // --- Weekend and Holiday Highlighting ---
-    const holidays = [
-      // 2026 US Holidays
-      "2026-01-01", // New Year's Day
-      "2026-01-19", // Martin Luther King, Jr. Day
-      "2026-02-16", // Presidents' Day
-      "2026-05-25", // Memorial Day
-      "2026-06-19", // Juneteenth
-      "2026-07-03", // Independence Day (Observed, as 4th is a Saturday)
-      "2026-07-04", // Independence Day
-      "2026-09-07", // Labor Day
-      "2026-10-12", // Columbus Day
-      "2026-11-11", // Veterans Day
-      "2026-11-26", // Thanksgiving Day
-      "2026-12-25", // Christmas Day
-    ];
+    // // Extract dates and sort them
+    // const sortedDates = dailyData.map((item) => item.date).sort();
+
+    // --- Dynamic Weekend and Holiday Highlighting ---
+    const years = new Set(
+      sortedDates.map((date) => new Date(date + "T00:00:00Z").getFullYear()),
+    );
+    const holidays = getUSHolidaysForYears(years);
 
     const markAreaData = [];
     sortedDates.forEach((dateString) => {
       // Use UTC date to get the correct day of the week, avoiding timezone shifts.
       const date = new Date(dateString + "T00:00:00Z");
       const dayOfWeek = date.getUTCDay(); // 0 for Sunday, 6 for Saturday
-      const isHoliday = holidays.includes(dateString);
+      const isHoliday = holidays.has(dateString);
 
       if (isHoliday || dayOfWeek === 0) {
         // Sunday or Holiday
@@ -66,7 +156,7 @@ export const DailyAnalysisChart = ({ dailyData }) => {
       {
         name: "Total Inventory",
         type: "bar",
-        data: dailyData.map((item) => item.total_inventory || 0),
+        data: rows.map((item) => item.total_inventory || 0),
         itemStyle: { color: colors[0] },
         emphasis: {
           focus: "series",
@@ -79,7 +169,7 @@ export const DailyAnalysisChart = ({ dailyData }) => {
       {
         name: "Total Available",
         type: "bar",
-        data: dailyData.map((item) => item.total_available || 0),
+        data: rows.map((item) => item.total_available || 0),
         itemStyle: { color: colors[1] },
         emphasis: {
           focus: "series",
@@ -88,7 +178,7 @@ export const DailyAnalysisChart = ({ dailyData }) => {
       {
         name: "Total Demand",
         type: "line",
-        data: dailyData.map((item) => item.total_demand || 0),
+        data: rows.map((item) => item.total_demand || 0),
         itemStyle: { color: colors[2] },
         lineStyle: { color: colors[2], width: 3 },
         symbol: "circle",
@@ -98,11 +188,28 @@ export const DailyAnalysisChart = ({ dailyData }) => {
         },
       },
     ];
+// setLoadingState(false)
+//     return {
+//       dates: sortedDates,
+//       series: series,
+//     };
+    return { rows, dates: sortedDates, series: series };
+  }, [dailyData]);
+ useEffect(() => {
+    if (!containerRef.current) return;
 
-    return {
-      dates: sortedDates,
-      series: series,
-    };
+    const ro = new ResizeObserver(() => {
+      const inst = chartRef.current?.getEchartsInstance?.();
+      inst?.resize();
+    });
+
+    ro.observe(containerRef.current);
+
+    // also do one resize after mount/data change
+    const inst = chartRef.current?.getEchartsInstance?.();
+    inst?.resize();
+
+    return () => ro.disconnect();
   }, [dailyData]);
 
   if (!chartData) return null;
@@ -229,20 +336,27 @@ export const DailyAnalysisChart = ({ dailyData }) => {
 
   return (
     <div
+      key={JSON.stringify(dailyData)}
       style={{
         border: "1px solid #D0D5DD",
         borderRadius: "8px",
         background: "#F2F4F7",
         padding: "15px",
-        width:"100%"
+        width: "100%",
       }}
     >
       <Legend />
-      <ReactECharts
-        option={option}
-        style={{ height: "500px", width: "100%" }}
-        opts={{ renderer: "canvas" }}
-      />
-    </div>
+{/* This wrapper is what we observe for real size changes */}
+      <div ref={containerRef} style={{ width: "100%", height: 500 }}>
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{ width: "100%", height: "100%" }}
+          notMerge
+          lazyUpdate
+          opts={{ renderer: "canvas" }} // optional, see note below
+        />
+      </div>
+    </div> 
   );
 };
