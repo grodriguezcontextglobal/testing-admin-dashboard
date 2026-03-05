@@ -379,6 +379,7 @@ const BulkItemForm = ({
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
         scannedSerialNumbers={scannedSerialNumbers}
+        primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Save and add ${scannedSerialNumbers.length} items` : `Save and add item`}
       />
     </form>
   );
