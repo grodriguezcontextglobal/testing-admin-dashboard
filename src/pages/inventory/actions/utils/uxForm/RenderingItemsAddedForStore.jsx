@@ -15,16 +15,11 @@ const RenderingItemsAddedForStore = ({ devices, handleRemoveDevice }) => {
                   <Chip
                     label={Object.keys(device.data)[0]}
                     onDelete={() => handleRemoveDevice(device.id)}
-                    sx={{
-                      backgroundColor: "rgba(40, 199, 111, 0.12)",
+                    style={{
+                      backgroundColor:"transparent",// "rgba(40, 199, 111, 0.12)",
                       color: "rgb(40, 199, 111)",
                       fontWeight: 600,
-                      "& .MuiChip-deleteIcon": {
-                        color: "rgb(40, 199, 111)",
-                        "&:hover": {
-                          color: "rgb(20, 150, 90)",
-                        },
-                      },
+                      padding:"0 0 0 8px"
                     }}
                   />
                 </Grid>
