@@ -20,7 +20,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   // State for the dynamic input fields for a single device
   const [nextId, setNextId] = useState(2);
   const [identifiers, setIdentifiers] = useState([
-    { id: 1, type: "Serial", value: "" },
+    { id: 1, type: "Serial number", value: "" },
   ]);
   // State for the list of devices added
   const [devices, setDevices] = useState([]);
@@ -36,7 +36,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   };
 
   const addIdentifier = () => {
-    setIdentifiers([...identifiers, { id: nextId, type: "Serial", value: "" }]);
+    setIdentifiers([...identifiers, { id: nextId, type: "Serial number", value: "" }]);
     setNextId(nextId + 1);
   };
 
@@ -82,7 +82,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
     setNextId(2);
-    setIdentifiers([{ id: 1, type: "Serial", value: "" }]);
+    setIdentifiers([{ id: 1, type: "Serial number", value: "" }]);
   };
 
   const removeField = (id) => {
