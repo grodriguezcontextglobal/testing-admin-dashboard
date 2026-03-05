@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import { AutoComplete, Divider } from "antd";
+import { AutoComplete, Checkbox, Divider } from "antd";
 import { useState } from "react";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -36,7 +36,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
   };
 
   const addIdentifier = () => {
-    setIdentifiers([...identifiers, { id: nextId, type: "Serial number", value: "" }]);
+    setIdentifiers([
+      ...identifiers,
+      { id: nextId, type: "Serial number", value: "" },
+    ]);
     setNextId(nextId + 1);
   };
 
@@ -53,8 +56,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
       return;
     }
 
+    const markedIndex = checkedIndex.length > 0 ? checkedIndex[0] : 0;
     // The value of the first identifier will be the key. It must exist.
-    const primaryKey = identifiers[0].value;
+    const primaryKey = identifiers[markedIndex].value;
     if (!primaryKey?.trim()) {
       alert(
         "The value of the first identifier is required and will be used as the main device identifier.",
@@ -83,6 +87,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
     // Reset the form for the next entry
     setNextId(2);
     setIdentifiers([{ id: 1, type: "Serial number", value: "" }]);
+    setCheckedIndex([]);
   };
 
   const removeField = (id) => {
@@ -113,6 +118,14 @@ const SerialNumberAndMoreInfoComponentForm = ({
     );
   };
 
+  const [checkedIndex, setCheckedIndex] = useState([]);
+  const checkedPriorityKey = (index) => {
+    if (checkedIndex.includes(index)) {
+      return setCheckedIndex(checkedIndex.filter((_, i) => i !== index));
+    } else {
+      return setCheckedIndex([index]);
+    }
+  };
   return (
     <Grid container spacing={1}>
       <div
@@ -131,8 +144,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
           color="text.secondary"
           sx={{ width: "100%", textAlign: "left", mb: 3 }}
         >
-          You can enter all the details manually or use a scanner to enter the
-          serial numbers.
+          Users can select an identifier to designate it as the primary key for
+          the submitted devices. If no identifier is explicitly selected, the
+          system will automatically use the first available identifier as the
+          primary key by default.
         </Typography>
 
         <Grid container>
@@ -157,17 +172,28 @@ const SerialNumberAndMoreInfoComponentForm = ({
             </Typography>
           </Grid>
         </Grid>
-
-        {identifiers.map((identifier) => (
+        {identifiers.map((identifier, index) => (
           <Grid
             container
             spacing={1}
             key={identifier.id}
             sx={{ margin: 0, alignItems: "center" }}
           >
-            <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
+            <Grid
+              display={"flex"}
+              margin={0}
+              item
+              xs={12}
+              sm={3}
+              md={2.5}
+              lg={1.5}
+            >
+              <Checkbox
+                checked={checkedIndex.includes(index)}
+                onChange={() => checkedPriorityKey(index)}
+              />
               <AutoComplete
-                style={{ ...style, margin: 0 }}
+                style={{ ...style, margin: "0 0 0 0.2rem" }}
                 options={options.map((item) => ({
                   label: item.label,
                   value: item.label,
