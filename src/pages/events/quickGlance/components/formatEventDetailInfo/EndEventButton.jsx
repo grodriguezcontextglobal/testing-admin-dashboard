@@ -283,8 +283,11 @@ const EndEventButton = () => {
     }
 
     setOpenEndingEventModal(false);
+    openNotificationWithIcon(
+      "success",
+      "Event ended. Inventory is now in transit and will be available after warehouse check-in.",
+    );
     // return window.location.reload();
-    return alert("Event inventory has been moved back to Company Inventory");
   };
 
   const findItemsInPoolEvent = () => {
@@ -362,7 +365,7 @@ const EndEventButton = () => {
         inventoryBatchStart + inventoryBatchSize,
       );
 
-      return await makeRequestWithRetry(() =>
+      const checking = await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
           allInventoryOfEvent: JSON.stringify(inventorySlice),
@@ -370,6 +373,8 @@ const EndEventButton = () => {
           update_at: update_at,
         }),
       );
+      console.log("checking", checking)
+      return;
     };
 
     // Process device status updates with coordinated inventory batching
@@ -516,6 +521,7 @@ const EndEventButton = () => {
       const requestData = {
         active: false,
         "staff.headsetAttendees": Array.from(result),
+        logistic_inventory_status:"in-transit"
       };
 
       checkRequestSize(requestData);
@@ -648,7 +654,6 @@ const EndEventButton = () => {
       (current, total) => setProgress((prev) => ({ ...prev, current, total })),
     );
   };
-
   const updatingItemInDB = async () => {
     setOpenEndingEventModal(true);
     setProgress({ current: 0, total: 0, step: "Starting event closure..." });
@@ -717,7 +722,7 @@ const EndEventButton = () => {
             lg={12}
           >
             <BlueButtonConfirmationComponent
-              title={"End event"}
+              title="End event"
               func={updatingItemInDB}
               confirmationTitle="Are you sure? This action can not be reversed."
               styles={{ width: "100%" }}
