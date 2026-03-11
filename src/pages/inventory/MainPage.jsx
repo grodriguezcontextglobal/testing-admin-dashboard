@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Grid, OutlinedInput, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Divider, Spin } from "antd";
 import {
@@ -16,17 +16,10 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import Loading from "../../components/animation/Loading";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
-import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import "../../styles/global/ant-select.css";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import { GrayButton } from "../../styles/global/GrayButton";
-import GrayButtonText from "../../styles/global/GrayButtonText";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import "../../styles/global/OutlineInput.css";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
-import { Title } from "../../styles/global/Title";
 // import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 // import DownloadingXlslFile from "./actions/DownloadXlsx";
 import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
@@ -35,10 +28,12 @@ import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
 import MobileActionsButtons from "./utils/MobileActionsButtons";
 // import LocationsList from "./utils/LocationsList";
 import { devitrakApi } from "../../api/devitrakApi";
+import { BlueButton } from "../../styles/global/BlueButton";
+import { BlueButtonText } from "../../styles/global/BlueButtonText";
+import CheckInDevicesFromEventsModal from "./utils/CheckInDevicesFromEventsModal";
 import CreateLocationModal from "./utils/CreateLocationModal";
-import ButtonsSearchAndReload from "./utils/ux/ButtonsSearchAndReload";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
-
+import InventorySearchBar from "./utils/ux/InventorySearchBar";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -253,6 +248,7 @@ const MainPage = () => {
     setOpenDetails(false);
     return setTypePerLocationInfoModal(null);
   };
+  const [openCheckInDevicesFromEvent, setOpenCheckInDevicesFromEvent] = useState(false)
   return (
     <Suspense
       fallback={
@@ -279,72 +275,21 @@ const MainPage = () => {
         />
         <MobileActionsButtons user={user} />
         <Divider />
-        <Grid
-          display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              margin: "0px 0px 1rem 0px",
-            }}
-          >
-            <Typography
-              sx={{
-                ...Title,
-                fontSize: "28px",
-                padding: 0,
-                textAlign: "left",
-                width: {
-                  xs: "100%",
-                  sm: "100%",
-                  md: "50%",
-                  lg: "50%",
-                },
-              }}
-            >
-              Search inventory:&nbsp;
-            </Typography>
-          </div>
-          <Grid justifyContent={"flex-start"} gap={1} container>
-            <Grid item xs={12} sm={12} md={12} lg={12}>
-              <form
-                style={{ width: "100%" }}
-                id="search-form"
-                onSubmit={handleSubmit(searchItem)}
-              >
-                <OutlinedInput
-                  {...register("searchItem")}
-                  style={OutlinedInputStyle}
-                  fullWidth
-                  placeholder="Search device here"
-                  endAdornment={
-                    adornmentButtonsComponent({
-                      setValue,
-                      setParams,
-                      setSearchedResult,
-                    })
-                  }
-                />
-              </form>
-            </Grid>
-            <Divider />
-            <ButtonsSearchAndReload
-              setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-              refetchingQueriesFn={refetchingQueriesFn}
-              locationsQuery={locationsQuery}
-            />
-          </Grid>
-        </Grid>
+
+        <InventorySearchBar
+          companyHasInventoryQuery={companyHasInventoryQuery}
+          handleSubmit={handleSubmit}
+          searchItem={searchItem}
+          register={register}
+          adornmentButtonsComponent={adornmentButtonsComponent}
+          setValue={setValue}
+          setParams={setParams}
+          setSearchedResult={setSearchedResult}
+          refetchingQueriesFn={refetchingQueriesFn}
+          locationsQuery={locationsQuery}
+          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+          setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
+          />
         <Divider />
         <FilterOptionsContext.Provider
           value={{
@@ -447,6 +392,9 @@ const MainPage = () => {
           user={user}
         />
       )}
+      {
+        openCheckInDevicesFromEvent && <CheckInDevicesFromEventsModal open={openCheckInDevicesFromEvent}  close={()=> setOpenCheckInDevicesFromEvent(false)} user={user}/>
+      }
     </Suspense>
   );
 };
