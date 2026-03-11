@@ -28,7 +28,7 @@ const SpreadSheet = () => {
     queryKey: ["transactionAndDeviceRecord"],
     queryFn: () =>
       devitrakApi.get(
-        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       ),
     refetchOnMount: false,
   });
@@ -68,7 +68,7 @@ const SpreadSheet = () => {
     queryKey: ["consumersDataQuery"],
     queryFn: () =>
       devitrakApi.get(
-        `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`
+        `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`,
       ),
     refetchOnMount: false,
   });
@@ -96,7 +96,7 @@ const SpreadSheet = () => {
       setAllTransaction(transactionPlusUserInfo.data.data.listOfReceivers);
       setItemsUsers(transactionPlusUserInfo.data.data.listOfReceivers);
       setDefectedItems(
-        transactionDeviceRecordInEvent.data.data.receiversInventory
+        transactionDeviceRecordInEvent.data.data.receiversInventory,
       );
       setAllServiceTransaction(transactionInfo.data.data.list);
       setReportCash(cashReportQuery.data.data.report);
@@ -232,7 +232,7 @@ const SpreadSheet = () => {
     //grouping consumer
     const groupingByConsumer = groupBy(
       consumersDataQuery.data.data.users,
-      "email"
+      "email",
     );
     // Convert data to worksheet format for Sheet4 (all data in detail)
     const wsDataDetail4 = [
@@ -417,6 +417,52 @@ const SpreadSheet = () => {
 
     utils.book_append_sheet(wb, wsSheet7, "All inventory of event");
 
+    // Device Summary sheet
+    const inventoryByGroup = groupBy(eventInventory, "item_group");
+    const deviceSummary = Object.keys(inventoryByGroup).map((groupName) => {
+      const totalAllocated = inventoryByGroup[groupName].length;
+      const transactionsForGroup = allTransaction.filter(
+        (t) => t.device?.deviceType === groupName,
+      );
+      const totalInUse = transactionsForGroup.filter(
+        (t) => t.device?.status,
+      ).length;
+      const totalReturned = transactionsForGroup.filter(
+        (t) => !t.device?.status,
+      ).length;
+      return {
+        typeName: groupName,
+        totalAllocated: totalAllocated,
+        totalReturned: totalReturned,
+        totalInUse: totalInUse,
+      };
+    });
+
+    const headers8 = [
+      "Type Name",
+      "Total Allocated to Event",
+      "Total Returned",
+      "Total In Use",
+    ];
+    const wsDataDetail8 = [
+      headers8,
+      ...deviceSummary.map((summary) => [
+        summary.typeName,
+        summary.totalAllocated,
+        summary.totalReturned,
+        summary.totalInUse,
+      ]),
+    ];
+    const wsSheet8 = utils.aoa_to_sheet(wsDataDetail8);
+    wsSheet8["!cols"] = [
+      { width: 30 },
+      { width: 25 },
+      { width: 20 },
+      { width: 20 },
+    ];
+    wsSheet8["!autofilter"] = { ref: "A1:D1" };
+    utils.book_append_sheet(wb, wsSheet8, "Device Summary");
+
     // Generate a random file name (you can customize this logic)
     const newFileName = `excel_${Date.now()}.xlsx`;
 
@@ -430,26 +476,26 @@ const SpreadSheet = () => {
   useEffect(() => {
     const controller = new AbortController();
     if (fileName !== "") {
+      success();
       setTimeout(() => {
         setFileName("");
       }, 3000);
     }
-    success();
     return () => {
       controller.abort();
     };
-  }, [transactionDeviceRecordInEvent.data, fileName]);
+  }, [fileName]);
 
   return (
     <div style={{ margin: "0 0 0.5rem" }}>
       <GrayButtonComponent
-      title={"Export record (xlsx format)"}
-      func={generateExcelFile}
-      styles={{ width: "100%" }}
-      titleStyles={{
-        textTransform: "none",
-        textAlign: "left",
-      }}
+        title={"Export record (xlsx format)"}
+        func={generateExcelFile}
+        styles={{ width: "100%" }}
+        titleStyles={{
+          textTransform: "none",
+          textAlign: "left",
+        }}
       />
       {/* <button
         onClick={generateExcelFile}
