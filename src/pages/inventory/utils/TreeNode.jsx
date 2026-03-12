@@ -1,7 +1,7 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message, Checkbox } from "antd";
+import { Button, message, Checkbox, Avatar } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -343,17 +343,23 @@ const TreeNode = ({
                     <EditIcon />
                   </Button>
                 )}
-                <GrayButtonComponent
+                  <Avatar onClick={() => {
+                    clickTypeLocationInfo();
+                    setOpenDetails(true);
+                  }} style={{margin:"auto", background:"#fff", borderColor:"#d9d9d9"}}><ViewIcon width="20" height="20" fill="#000000e0"/></Avatar>  
+              {/* <GrayButtonComponent
                   styles={{
                     padding: "2.5px !important",
                     borderRadius: "50% !important",
+                    width:"60px",
+                    height:"60px"
                   }}
-                  icon={<ViewIcon />}
+                  icon={<ViewIcon isHovered={false} hoverFill={"#000000e0"} />}
                   func={() => {
                     clickTypeLocationInfo();
                     setOpenDetails(true);
                   }}
-                />
+                /> */}
               </div>
             </Typography>
           </Button>
