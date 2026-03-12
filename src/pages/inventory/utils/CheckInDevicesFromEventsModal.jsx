@@ -167,7 +167,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       const template = {
         serial_numbers: [ ...comparisonResults.matchedItems.map(serial => serial)], company_id: user.sqlInfo.company_id, location:selectedLocation, sub_location:selectedSubLocations
       }
-      await devitrakApi.patch("/db_event/confirm-item-return", template);
+      await devitrakApi.post("/db_event/confirm-item-return", template);
       message.success("Devices checked in successfully!");
       close();
     } catch (error) {
