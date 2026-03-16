@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  AutoComplete,
   Button,
   Col,
   Divider,
@@ -10,7 +9,6 @@ import {
   Typography,
   Spin,
   Tree,
-  Select,
 } from "antd";
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -22,13 +20,15 @@ import useSubLocations from "../actions/utils/useSubLocations";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import Input from "../../../components/UX/inputs/Input";
-
+import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
+import Loading from "../../../components/animation/Loading";
+import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
 const { Title } = Typography;
-
 const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocationObject, setSelectedLocationObject] = useState(null);
   const [selectedSubLocations, setSelectedSubLocations] = useState([]);
-  const [, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventInventory, setEventInventory] = useState([]);
   const [scannedSerials, setScannedSerials] = useState([]);
   const [comparisonResults, setComparisonResults] = useState({
@@ -49,21 +49,20 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const { data: events = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ["finishedEvents", user.companyData.id],
     queryFn: async () => {
-      const respo = await devitrakApi.post(
-        `/event/event-list`, {
-          type:"event",
-          company_id: user.companyData.id,
-          logistic_inventory_status:"in-transit"
-        }
-      );
+      const respo = await devitrakApi.post(`/event/event-list`, {
+        type: "event",
+        company_id: user.companyData.id,
+        logistic_inventory_status: "in-transit",
+      });
       return respo.data.list.filter((event) => event.active === false);
     },
     enabled: !!user.companyData.id,
   });
 
-  const handleEventSelection = async (option) => {
-    if (!option) {
+  const handleEventSelection = async (event) => {
+    if (!event) {
       setEventInventory([]);
+      setSelectedEvent(null);
       return;
     }
     // Clear previous state on new event selection
@@ -75,7 +74,6 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       extraItems: [],
     });
 
-    const event = JSON.parse(option.key);
     setSelectedEvent(event);
     if (!event || !event.deviceSetup) {
       message.warning("Selected event has no device setup.");
@@ -148,7 +146,6 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     const matched = scanned.filter((s) => inventorySerials.includes(s));
     const missing = inventorySerials.filter((s) => !scanned.includes(s));
     const extra = scanned.filter((s) => !inventorySerials.includes(s));
-
     setComparisonResults({
       matchedItems: matched,
       missingItems: missing,
@@ -161,12 +158,15 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       message.error("Please select a check-in location.");
       return;
     }
-
-    setIsLoading(true);
     try {
       const template = {
-        serial_numbers: [ ...comparisonResults.matchedItems.map(serial => serial)], company_id: user.sqlInfo.company_id, location:selectedLocation, sub_location:selectedSubLocations
-      }
+        serial_numbers: [
+          ...comparisonResults.matchedItems.map((serial) => serial),
+        ],
+        company_id: user.sqlInfo.company_id,
+        location: selectedLocation,
+        sub_location: selectedSubLocations,
+      };
       await devitrakApi.post("/db_event/confirm-item-return", template);
       message.success("Devices checked in successfully!");
       close();
@@ -198,51 +198,48 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     <>
       <Row gutter={[16, 16]}>
         <Col span={8}>
-          <Title level={5}>Select Check-in Location</Title>
-          <AutoComplete
-            style={{ width: "100%" }}
-            options={locations.map((loc) => ({
-              value: loc.location,
-              key: loc.id,
+                  <Title level={5}>Select Location</Title>
+          {isLoadingLocations ? <Loading /> : <SelectComponent
+            items={locations.map((loc) => ({
+              label: loc.location,
+              id: loc.id,
             }))}
-            onSelect={(_value, option) => {
-              setSelectedLocation(option.key);
-              setSelectedSubLocations([]); // Reset sub-locations on new main location
+            value={selectedLocationObject}
+            onSelect={(option) => {
+              setSelectedLocation(option?.id || null);
+              setSelectedLocationObject(option);
+              setSelectedSubLocations([]);
             }}
             placeholder="Type to search locations"
-            loading={isLoadingLocations}
             disabled={!open}
-          />
+          />}
         </Col>
         <Col span={8}>
-          <Title level={5}>Select Check-in Sub-Location</Title>
-          <Select
-            mode="tags"
-            style={{ width: "100%" }}
-            options={subLocations.map((subLoc) => ({
-              value: subLoc,
-              label: subLoc,
-            }))}
+          <Title level={5}>Select/Create Sub-Location</Title>
+          {isLoadingSubLocations ? <Loading /> : <MultiSelectComponent
             onChange={setSelectedSubLocations}
+            items={subLocations.map((sub) => ({ label: sub, value: sub }))}
             placeholder="Select or create sub-locations"
-            loading={isLoadingSubLocations}
             disabled={!selectedLocation || !open}
             value={selectedSubLocations}
-          />
+          />}
         </Col>
         <Col span={8}>
-          <Title level={5}>Select Closed Event</Title>
-          <AutoComplete
-            style={{ width: "100%" }}
-            options={events.map((event) => ({
-              value: event.eventInfoDetail.eventName,
-              key: JSON.stringify(event),
+          {isLoadingEvents ?<Loading /> : <SelectComponent
+            label="Select Closed Event"
+            items={events.map((event) => ({
+              id: event.id,
+              label: event.eventInfoDetail.eventName,
+              // supportingText: `Starts: ${new Date(event.eventInfoDetail.startingDate).toLocaleDateString()}`,
+              original: event,
             }))}
-            onSelect={(_value, option) => handleEventSelection(option)}
+            value={selectedEvent}
+            onSelect={(option) =>
+              handleEventSelection(option?.original || null)
+            }
             placeholder="Type to search for closed events"
-            loading={isLoadingEvents}
             disabled={!open}
-          />
+          />}
         </Col>
       </Row>
       <Divider />
@@ -306,7 +303,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       </Row>
       <Divider />
       <BlueButtonComponent
-      title="Compare"
+        title="Compare"
         func={handleCompare}
         disabled={scannedSerials.length === 0}
       />
@@ -339,19 +336,23 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         </Row>
       ) : null}
       <Divider />
-      <div style={{ width:"100%", display:"flex", gap:1}}>
-      <GrayButtonComponent styles={{width:"100%"}} title="Cancel" func={close} />
-      <BlueButtonComponent
-      styles={{width:"100%"}}
-        func={handleCheckIn}
-        disabled={
-          // comparisonResults.missingItems.length > 0 ||
-          comparisonResults.matchedItems.length === 0
-        }
-        loadingState={isLoading}
-        title="Check-In"
+      <div style={{ width: "100%", display: "flex", gap: 1 }}>
+        <GrayButtonComponent
+          styles={{ width: "100%" }}
+          title="Cancel"
+          func={close}
         />
-        </div>
+        <BlueButtonComponent
+          styles={{ width: "100%" }}
+          func={handleCheckIn}
+          disabled={
+            // comparisonResults.missingItems.length > 0 ||
+            comparisonResults.matchedItems.length === 0
+          }
+          loadingState={isLoading}
+          title="Check-In"
+        />
+      </div>
     </>
   );
 
