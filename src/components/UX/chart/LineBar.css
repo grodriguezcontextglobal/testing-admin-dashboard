@@ -1,0 +1,33 @@
+/* LineBar.css */
+.recharts-text {
+  font-size: 12px;
+}
+
+.text-tertiary {
+  color: #4a4a4a;
+}
+
+.text-utility-gray-100 {
+  color: #e5e7eb;
+}
+
+.chart-legend {
+  transform: translateY(-2px);
+}
+
+.recharts-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.recharts-tooltip-cursor {
+  fill: rgba(209, 213, 219, 0.2);
+}
+
+.recharts-wrapper {
+  height: 300px !important;
+}
+
+.recharts-legend-wrapper {
+  top: 0px !important;
+}
