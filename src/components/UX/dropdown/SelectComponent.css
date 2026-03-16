@@ -1,0 +1,91 @@
+/* SelectComponent.css */
+.select-container {
+    position: relative;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+}
+
+.select-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #344054;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.select-input-wrapper {
+    position: relative;
+}
+
+.select-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #101828;
+    box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.select-input:focus {
+    outline: none;
+    border-color: #84ADFF;
+    box-shadow: 0 0 0 4px #D1E0FF;
+}
+
+.select-hint {
+    font-size: 14px;
+    color: #475467;
+    margin-top: 6px;
+}
+
+.select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #F2F4F7;
+    border-radius: 8px;
+    margin-top: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08);
+}
+
+.select-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.select-item:hover {
+    background-color: #F9FAFB;
+}
+
+.select-item.disabled {
+    color: #98A2B3;
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+.item-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #101828;
+}
+
+.item-supporting-text {
+    font-size: 14px;
+    color: #475467;
+}
+
+.select-item.disabled .item-label,
+.select-item.disabled .item-supporting-text {
+    color: #98A2B3;
+}
