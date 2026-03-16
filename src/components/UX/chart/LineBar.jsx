@@ -14,6 +14,79 @@ import { useMemo } from "react";
 import { getUSHolidaysForYears } from "../../../utils/dateUtils";
 import "./LineBar.css";
 
+const CustomLegend = (props) => {
+  const { payload } = props;
+  const weekendColor = "rgba(255, 255, 0, 0.4)";
+  const holidayColor = "rgba(255, 82, 82, 0.2)";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
+      {payload.map((entry, index) => (
+        <div
+          key={`item-${index}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "12px",
+            marginBottom: "4px",
+          }}
+        >
+          <span
+            style={{
+              width: "10px",
+              height: "10px",
+              backgroundColor: entry.color,
+            }}
+          ></span>
+          <span>{entry.value}</span>
+        </div>
+      ))}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          fontSize: "12px",
+          marginBottom: "4px",
+        }}
+      >
+        <span
+          style={{
+            width: "10px",
+            height: "10px",
+            backgroundColor: holidayColor,
+          }}
+        ></span>
+        <span>Sunday/Holiday</span>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          fontSize: "12px",
+        }}
+      >
+        <span
+          style={{
+            width: "10px",
+            height: "10px",
+            backgroundColor: weekendColor,
+          }}
+        ></span>
+        <span>Saturday</span>
+      </div>
+    </div>
+  );
+};
+
 export const BarChart = ({ data }) => {
   const colors = {
     total_inventory: "#2196F3",
@@ -74,7 +147,12 @@ export const BarChart = ({ data }) => {
           className="text-utility-gray-100"
         />
 
-        <Legend verticalAlign="top" align="right" layout="vertical" />
+        <Legend
+          verticalAlign="top"
+          align="right"
+          layout="vertical"
+          content={<CustomLegend />}
+        />
 
         <XAxis
           fill="currentColor"
