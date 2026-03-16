@@ -1,6 +1,4 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
-  Checkbox,
   FormControl,
   FormControlLabel,
   Grid,
@@ -10,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import { message, Checkbox } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -290,14 +288,12 @@ const AssignLocationManager = () => {
           <GrayButtonComponent
             title="Edit"
             func={() => handleEdit(record)}
-            icon={<EditOutlined />}
             buttonType="button"
             styles={{ width: "fit-content" }}
           />
           <DangerButtonComponent
             title="Remove"
             func={() => handleDelete(record.location)}
-            icon={<DeleteOutlined />}
             buttonType="button"
             styles={{ width: "fit-content" }}
           />
