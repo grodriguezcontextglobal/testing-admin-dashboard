@@ -3,7 +3,8 @@ import { Alert, Divider as DivAnt } from "antd";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import AdvanceSearchModal from "../AdvanceSearchModal";
-import { DailyAnalysisChart } from "./chart";
+// import { DailyAnalysisChart } from "./chart";
+import { BarChart } from "../../../../../components/UX/chart/LineBar";
 import EventInSearchWindow from "./EventInSearchWindow";
 import { KPI } from "./KPI";
 import ProjectionPerLocation from "./ProjectionPerLocation";
@@ -79,13 +80,19 @@ const UX = ({
       {/* Daily Analysis Chart Section */}
       {dailyAnalysis && dailyAnalysis.length > 0 && (
         <>
-          <Grid item xs={12} sm={12} md={12} lg={12}>
+          {/* <Grid item xs={12} sm={12} md={6} lg={6}>
             <Typography variant="h6" gutterBottom>
               Daily Inventory Analysis
             </Typography>
             <div style={{ flex: 1, minWidth: 0 }}>
               <DailyAnalysisChart dailyData={dailyAnalysis} />
             </div>
+          </Grid> */}
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <Typography variant="h6" gutterBottom>
+              Daily Inventory Analysis
+            </Typography>
+            <BarChart data={dailyAnalysis} />
           </Grid>
           <DivAnt />
         </>
