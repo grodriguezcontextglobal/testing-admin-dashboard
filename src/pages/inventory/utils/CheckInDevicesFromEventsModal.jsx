@@ -357,31 +357,31 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
           </Col>
           <Col span={8}>
             {renderComparisonList(
-              "Extra Items",
+              "Items do not belong to this event.",
               comparisonResults.extraItems,
               "orange",
             )}
           </Col>
         </Row>
       ) : null}
-      <Divider />
-      <div style={{ width: "100%", display: "flex", gap: 5 }}>
-        <GrayButtonComponent
-          styles={{ width: "100%" }}
-          title="Cancel"
-          func={close}
-        />
-        <BlueButtonComponent
-          styles={{ width: "100%" }}
-          func={handleCheckIn}
-          disabled={
-            // comparisonResults.missingItems.length > 0 ||
-            comparisonResults.matchedItems.length === 0
-          }
-          loadingState={isLoading}
-          title="Check-In"
-        />
-      </div>
+      {comparisonResults.matchedItems.length > 0 && (
+        <>
+          <Divider />
+          <div style={{ width: "100%", display: "flex", gap: 5 }}>
+            <GrayButtonComponent
+              styles={{ width: "100%" }}
+              title="Cancel"
+              func={close}
+            />
+            <BlueButtonComponent
+              styles={{ width: "100%" }}
+              func={handleCheckIn}
+              loadingState={isLoading}
+              title="Check-In"
+            />
+          </div>
+        </>
+      )}
     </>
   );
 
