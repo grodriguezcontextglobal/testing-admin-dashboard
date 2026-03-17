@@ -167,6 +167,9 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         company_id: user.sqlInfo.company_id,
         location: selectedLocation,
         sub_location: selectedSubLocations,
+        noSqlCompanyId: user.companyData.id,
+        noSqlEventName: selectedEvent.eventInfoDetail.eventName,
+        user_id: user.sqlMemberInfo.staff_id,
       };
       await devitrakApi.post("/db_event/confirm-item-return", template);
       message.success("Devices checked in successfully!");
