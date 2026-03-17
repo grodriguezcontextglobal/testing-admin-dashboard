@@ -31,9 +31,17 @@
 }
 
 .select-input:focus {
-    outline: none;
     border-color: #84ADFF;
-    box-shadow: 0 0 0 4px #D1E0FF;
+    box-shadow: none;
+    outline: 4px solid #D1E0FF;
+    height:100%
+}
+
+.select-input input:focus {
+  height: 100% !important;
+}
+.select-input input:focus-visible {
+  height: 100% !important;
 }
 
 .select-hint {
