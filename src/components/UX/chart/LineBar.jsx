@@ -207,7 +207,7 @@ export const BarChart = ({ data }) => {
           }}
         />
 
-        <Bar
+        {/* <Bar
           isAnimationActive={false}
           dataKey="total_inventory"
           name="Total Inventory"
@@ -215,7 +215,7 @@ export const BarChart = ({ data }) => {
           stackId="a"
           fill={colors.total_inventory}
           maxBarSize={32}
-        />
+        /> */}
         <Bar
           isAnimationActive={false}
           dataKey="total_available"
