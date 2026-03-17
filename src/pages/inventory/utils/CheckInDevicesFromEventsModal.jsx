@@ -9,6 +9,7 @@ import {
   Typography,
   Spin,
   Tree,
+  Empty,
 } from "antd";
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -198,48 +199,60 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     <>
       <Row gutter={[16, 16]}>
         <Col span={8}>
-                  <Title level={5}>Select Location</Title>
-          {isLoadingLocations ? <Loading /> : <SelectComponent
-            items={locations.map((loc) => ({
-              label: loc.location,
-              id: loc.id,
-            }))}
-            value={selectedLocationObject}
-            onSelect={(option) => {
-              setSelectedLocation(option?.id || null);
-              setSelectedLocationObject(option);
-              setSelectedSubLocations([]);
-            }}
-            placeholder="Type to search locations"
-            disabled={!open}
-          />}
+          {isLoadingLocations ? (
+            <Loading />
+          ) : (
+            <SelectComponent
+              items={locations.map((loc) => ({
+                label: loc.location,
+                id: loc.id,
+              }))}
+              value={selectedLocationObject}
+              onSelect={(option) => {
+                setSelectedLocation(option?.id || null);
+                setSelectedLocationObject(option);
+                setSelectedSubLocations([]);
+              }}
+              placeholder="Select Location"
+              disabled={!open}
+              label={"Select Location"}
+            />
+          )}
         </Col>
         <Col span={8}>
-          <Title level={5}>Select/Create Sub-Location</Title>
-          {isLoadingSubLocations ? <Loading /> : <MultiSelectComponent
-            onChange={setSelectedSubLocations}
-            items={subLocations.map((sub) => ({ label: sub, value: sub }))}
-            placeholder="Select or create sub-locations"
-            disabled={!selectedLocation || !open}
-            value={selectedSubLocations}
-          />}
+          {isLoadingSubLocations ? (
+            <Loading />
+          ) : (
+            <MultiSelectComponent
+              onChange={setSelectedSubLocations}
+              items={subLocations.map((sub) => ({ label: sub, value: sub }))}
+              placeholder="Select or create sub-locations"
+              disabled={!selectedLocation || !open}
+              value={selectedSubLocations}
+              label={"Select or create sub-locations"}
+            />
+          )}
         </Col>
         <Col span={8}>
-          {isLoadingEvents ?<Loading /> : <SelectComponent
-            label="Select Closed Event"
-            items={events.map((event) => ({
-              id: event.id,
-              label: event.eventInfoDetail.eventName,
-              // supportingText: `Starts: ${new Date(event.eventInfoDetail.startingDate).toLocaleDateString()}`,
-              original: event,
-            }))}
-            value={selectedEvent}
-            onSelect={(option) =>
-              handleEventSelection(option?.original || null)
-            }
-            placeholder="Type to search for closed events"
-            disabled={!open}
-          />}
+          {isLoadingEvents ? (
+            <Loading />
+          ) : (
+            <SelectComponent
+              label="Select Event"
+              items={events.map((event) => ({
+                id: event.id,
+                label: event.eventInfoDetail.eventName,
+                // supportingText: `Starts: ${new Date(event.eventInfoDetail.startingDate).toLocaleDateString()}`,
+                original: event,
+              }))}
+              value={selectedEvent}
+              onSelect={(option) =>
+                handleEventSelection(option?.original || null)
+              }
+              placeholder="Type to search for closed events"
+              disabled={!open}
+            />
+          )}
         </Col>
       </Row>
       <Divider />
@@ -261,12 +274,28 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
             <div
               style={{
                 border: "1px solid #d9d9d9",
-                borderRadius: "2px",
+                borderRadius: "12px",
                 padding: "8px",
                 maxHeight: 300,
               }}
             >
-              <Tree treeData={treeData} height={280} defaultExpandAll />
+              {treeData?.length > 0 ? (
+                <Tree treeData={treeData} height={280} defaultExpandAll />
+              ) : (
+                <div
+                  style={{
+                    height: 280,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Empty
+                    style={{ borderRadius: "12px !important" }}
+                    description="No inventory available for this event."
+                  />
+                </div>
+              )}
             </div>
           )}
         </Col>
@@ -336,7 +365,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         </Row>
       ) : null}
       <Divider />
-      <div style={{ width: "100%", display: "flex", gap: 1 }}>
+      <div style={{ width: "100%", display: "flex", gap: 5 }}>
         <GrayButtonComponent
           styles={{ width: "100%" }}
           title="Cancel"
