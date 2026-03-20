@@ -226,4 +226,11 @@ button:focus-visible {
   :root {
     scrollbar-width: none;
   }
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    place-items: center;
+    min-height: 100vh;
+  }
 }
