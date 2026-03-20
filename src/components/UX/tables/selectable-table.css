@@ -1,29 +1,58 @@
+/* selectable-table.css */
 .selectable-table-container {
-  width: 100%;
-}
-
-.selectable-table-customized .ant-table {
-  border-radius: 8px;
-  border: 1px solid var(--gray-200, #eaecf0);
+    width: 100%;
+    border: 1px solid #eaecf0;
+    border-radius: 12px;
+    box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+    font-family: 'Inter', sans-serif;
+    background-color: #fff;
+    overflow: hidden; /* Ensures border-radius is respected by child elements */
 }
 
 .selectable-table-customized .ant-table-thead > tr > th {
-  background: var(--gray-50, #f9fafb);
-  color: var(--gray-600, #475467);
-  font-weight: 500;
+    background-color: #f9fafb;
+    padding: 12px 24px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475467;
+    white-space: nowrap;
+    border-bottom: 1px solid #eaecf0;
 }
 
 .selectable-table-customized .ant-table-tbody > tr > td {
-  color: var(--gray-600, #475467);
+    padding: 16px 24px;
+    font-size: 14px;
+    color: #475467;
+    vertical-align: middle;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.selectable-table-customized .ant-table-tbody > tr.ant-table-row:nth-child(odd) > td {
+    background-color: #f9fafb;
 }
 
 .selectable-table-customized .ant-table-row-selected > td {
-  background-color: var(--blue-50, #eff8ff) !important;
+    background-color: #f0f9ff !important; /* Lighter blue for selection */
 }
 
 /* Pagination Styling */
 .selectable-table-customized .ant-pagination {
-  padding: 16px;
-  margin: 0 !important;
-  border-top: 1px solid var(--gray-200, #eaecf0);
+    padding: 16px 24px;
+    margin: 0 !important;
+    border-top: 1px solid #eaecf0;
+    background-color: #fff; /* Ensure pagination has a white background */
+}
+
+.selectable-table-customized .ant-pagination-item-active {
+    border-color: #84ADFF !important;
+    background-color: #D1E0FF !important;
+}
+
+.selectable-table-customized .ant-pagination-item a {
+    color: #475467;
+}
+
+.selectable-table-customized .ant-pagination-item-active a {
+    color: #101828 !important;
 }
