@@ -71,7 +71,7 @@ const TreeNode = ({
 
       const response = await devitrakApi.post(
         "/db_inventory/update-location-sub-location",
-        locationData
+        locationData,
       );
       if (response?.data?.ok) {
         queryClient.invalidateQueries("structuredCompanyInventory");
@@ -127,7 +127,7 @@ const TreeNode = ({
     if (check) {
       if (location.length === 1) {
         return navigate(
-          `/inventory/location?${encodeURI(location[0])}&search=`
+          `/inventory/location?${encodeURI(location[0])}&search=`,
         );
       } else {
         const subLocationPath = encodeURIComponent(location.slice(1).join(","));
@@ -137,7 +137,7 @@ const TreeNode = ({
             state: {
               sub_location: subLocationPath,
             },
-          }
+          },
         );
       }
     } else {
@@ -214,12 +214,6 @@ const TreeNode = ({
       dataIndex: "type",
       key: "type",
     },
-    {
-      title: "Qty",
-      dataIndex: "qty",
-      key: "qty",
-      width: 80,
-    },
   ];
 
   const safeSetTypePerLocationInfoModal =
@@ -229,8 +223,15 @@ const TreeNode = ({
 
   const clickTypeLocationInfo = () => {
     if (safeSetTypePerLocationInfoModal) {
+      const totalQuantity = rows.reduce((acc, row) => acc + row.qty, 0);
+      const totalRow = {
+        key: "total",
+        index: "", // No index for the total row
+        type: "Total",
+        qty: totalQuantity,
+      };
       safeSetTypePerLocationInfoModal({
-        rows,
+        rows: [...rows, totalRow], // Add total row to the existing rows
         id_key,
         columns,
         nodeName,
@@ -343,23 +344,19 @@ const TreeNode = ({
                     <EditIcon />
                   </Button>
                 )}
-                  <Avatar onClick={() => {
-                    clickTypeLocationInfo();
-                    setOpenDetails(true);
-                  }} style={{margin:"auto", background:"#fff", borderColor:"#d9d9d9"}}><ViewIcon width="20" height="20" fill="#000000e0"/></Avatar>  
-              {/* <GrayButtonComponent
-                  styles={{
-                    padding: "2.5px !important",
-                    borderRadius: "50% !important",
-                    width:"60px",
-                    height:"60px"
-                  }}
-                  icon={<ViewIcon isHovered={false} hoverFill={"#000000e0"} />}
-                  func={() => {
+                <Avatar
+                  onClick={() => {
                     clickTypeLocationInfo();
                     setOpenDetails(true);
                   }}
-                /> */}
+                  style={{
+                    margin: "auto",
+                    background: "#fff",
+                    borderColor: "#d9d9d9",
+                  }}
+                >
+                  <ViewIcon width="20" height="20" fill="#000000e0" />
+                </Avatar>
               </div>
             </Typography>
           </Button>
