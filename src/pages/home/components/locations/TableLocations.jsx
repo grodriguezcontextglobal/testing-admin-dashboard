@@ -66,15 +66,6 @@ const TableLocations = () => {
         columns={column}
         dataSource={renderingDataByLocation()}
         enablePagination={true}
-        // className="table-ant-customized"
-        // onRow={(record) => {
-        //   return {
-        //     onClick: () => {
-        //       navigate(`/inventory/location?${record.key}&search=`);
-        //     },
-        //   };
-        // }}
-        // style={{ cursor: "pointer" }}
       />
     );
   }
