@@ -204,12 +204,6 @@ const TreeNode = ({
   const id_key = useId();
   const columns = [
     {
-      title: "#",
-      dataIndex: "index",
-      key: "index",
-      width: 60,
-    },
-    {
       title: "Item Type",
       dataIndex: "type",
       key: "type",
@@ -223,15 +217,8 @@ const TreeNode = ({
 
   const clickTypeLocationInfo = () => {
     if (safeSetTypePerLocationInfoModal) {
-      const totalQuantity = rows.reduce((acc, row) => acc + row.qty, 0);
-      const totalRow = {
-        key: "total",
-        index: "", // No index for the total row
-        type: "Total",
-        qty: totalQuantity,
-      };
       safeSetTypePerLocationInfoModal({
-        rows: [...rows, totalRow], // Add total row to the existing rows
+        rows: [...rows], // Add total row to the existing rows
         id_key,
         columns,
         nodeName,
