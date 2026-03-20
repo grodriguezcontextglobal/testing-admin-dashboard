@@ -652,7 +652,7 @@ const ExpandedRowInTable = ({
             columns={columns}
             dataSource={checkDevicesInTransaction()}
             pagination={{
-              position: ["bottomLeft"],
+              position: ["bottomCenter"],
             }}
             rowSelection={{
               type: "checkbox",
