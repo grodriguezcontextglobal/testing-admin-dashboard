@@ -1,0 +1,53 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Sizes */
+.sm {
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.md {
+  padding: 2px 10px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.lg {
+  padding: 4px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Colors */
+.brand {
+  background-color: #F9F5FF;
+  color: #6941C6;
+}
+
+.gray {
+  background-color: #F2F4F7;
+  color: #344054;
+}
+
+.error {
+  background-color: #FEF3F2;
+  color: #D92D20;
+}
+
+.warning {
+  background-color: #FFFAF0;
+  color: #DC6803;
+}
+
+.success {
+  background-color: #F6FEF9;
+  color: #027A48;
+}
