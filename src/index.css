@@ -232,5 +232,7 @@ button:focus-visible {
     display: flex;
     place-items: center;
     min-height: 100vh;
+    max-width:600px;
+    width:100%
   }
 }
