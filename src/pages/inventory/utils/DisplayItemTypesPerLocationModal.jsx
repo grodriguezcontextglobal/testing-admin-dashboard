@@ -1,4 +1,5 @@
-import { Modal, Table } from "antd";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 
 const DisplayItemTypesPerLocationModal = ({
   id_key,
@@ -9,32 +10,20 @@ const DisplayItemTypesPerLocationModal = ({
   columns,
 }) => {
 //   console.log(id_key, openDetails, closeModal, nodeName, rows, columns);
-
-  return (
-    <Modal
-      key={id_key}
-      open={openDetails}
-      onCancel={closeModal}
-      footer={null}
-      width={600}
-      maskClosable={false}
-      title={`Item Types in ${nodeName} (${rows?.length} types)`}
-    >
-      <Table
-        columns={columns}
+const bodyModal = () => {
+  return <BaseTable columns={columns}
         dataSource={rows}
-        rowKey="key"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`,
-        }}
-        scroll={{ y: 400 }}
-        size="small"
-      />
-    </Modal>
+        enablePagination={true}
+        pageSize={10} />
+}
+  return (
+    <ModalUX 
+    key={id_key}
+    title={`Item Types in ${nodeName} (${rows?.length} types)`}
+    body={bodyModal()}
+    openDialog={openDetails}
+    closeModal={closeModal}
+    />
   );
 };
 export default DisplayItemTypesPerLocationModal;
