@@ -245,7 +245,7 @@ const TreeNode = ({
       style={{
         backgroundColor: selectedLocations?.has(nodeId)
           ? "rgba(24, 144, 255, 0.1)"
-          : "transparent",
+          : "var(--basewhite)",
         transition: "background-color 0.3s",
         borderRadius: "8px !important",
         // opacity: isSelectable ? 1 : 0.6,
