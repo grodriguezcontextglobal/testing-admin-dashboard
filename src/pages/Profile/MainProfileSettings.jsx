@@ -189,12 +189,12 @@ const MainProfileSettings = () => {
 
       <Grid
         container
-        sx={{
-          marginTop: { xs: 2, sm: 3 },
-          padding: { xs: "16px 0", sm: "24px 0" },
-        }}
+        // sx={{
+        //   marginTop: { xs: 2, sm: 3 },
+        //   padding: { xs: "16px 0", sm: "24px 0" },
+        // }}
       >
-        <Grid padding={isMobile ? "16px 0" : "24px 0"} item xs={12}>
+        <Grid item xs={12}>
           <Outlet />
         </Grid>
       </Grid>
