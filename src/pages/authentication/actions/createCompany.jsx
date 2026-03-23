@@ -39,6 +39,8 @@ const createCompany = async ({
         user: user.email,
         firstName: user.name,
         lastName: user.lastName,
+        email:user.email,
+        employee_id:user.userID ? user.userID : ref.current.userRegistration.uid,
         status: "confirmed",
         super_user: true,
         role: "0",
