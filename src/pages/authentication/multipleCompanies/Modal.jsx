@@ -23,6 +23,7 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import { onResetArticleEdited } from "../../../store/slices/articleSlide";
 import { onResetCustomer } from "../../../store/slices/customerSlice";
+import { setPermissions } from "../../../store/slices/permissions";
 import {
   onResetDeviceInQuickGlance,
   onResetDevicesHandle,
@@ -56,7 +57,7 @@ const ModalMultipleCompanies = ({
   const queryClient = useQueryClient();
   const findingCompanyInfoBasedOnSelection = (props) => {
     const result = dataPassed.company_data.find(
-      (element) => element.company_name === props
+      (element) => element.company_name === props,
     );
     return result;
   };
@@ -72,20 +73,20 @@ const ModalMultipleCompanies = ({
         "/db_staff/consulting-member",
         {
           email: dataPassed.email,
-        }
+        },
       );
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
           company_name: selection,
-        }
+        },
       );
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyInfoTable.data.company.at(-1).company_id,
       });
 
       const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
-        selection
+        selection,
       ).employees.find((item) => item.user === dataPassed.respo.email).role;
 
       dispatch(
@@ -110,8 +111,15 @@ const ModalMultipleCompanies = ({
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
-        })
+        }),
       );
+      const employeeInfo = findingCompanyInfoBasedOnSelection(selection,).employees.find((item) => item.user === dataPassed.respo.email)
+            dispatch(setPermissions({
+              role:employeeInfo.role,
+              companyName:findingCompanyInfoBasedOnSelection(selection).company_name,
+              locations:employeeInfo.preference.managerLocation,
+            }))
+      
       setIsLoading(false);
       dispatch(clearErrorMessage());
       queryClient.clear();
@@ -119,7 +127,10 @@ const ModalMultipleCompanies = ({
       navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
       // }
     } catch (error) {
-      console.log("loginIntoOneCompanyAccountFromMultipleCompanyRegistered",error)
+      console.log(
+        "loginIntoOneCompanyAccountFromMultipleCompanyRegistered",
+        error,
+      );
       openNotificationWithIcon("error", `${error.response.data.msg}`);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
@@ -133,10 +144,10 @@ const ModalMultipleCompanies = ({
 
   const renderingExtraCompanyInfo = (props) => {
     const result = dataPassed.company_data.filter(
-      (item) => item.company_name === props
+      (item) => item.company_name === props,
     );
     const employeeRoleInCompany = result[0]?.employees.find(
-      (item) => item.user === dataPassed.respo.email
+      (item) => item.user === dataPassed.respo.email,
     );
     return {
       company_logo: result[0]?.company_logo,
