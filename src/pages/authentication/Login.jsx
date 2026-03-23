@@ -3,7 +3,7 @@ import {
   // FormControlLabel,
   FormLabel,
   Grid,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -45,6 +45,7 @@ import Email from "./login/sections/Email";
 import MFA from "./login/sections/MFA";
 import Password from "./login/sections/Password";
 import "./style/authStyle.css";
+import { setPermissions } from "../../store/slices/permissions";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -210,6 +211,12 @@ const Login = () => {
           subscription: {},
         }),
       );
+      const employeeInfo = props.company_data[0].employees.find(emp => emp.user === props.respo.email)
+      dispatch(setPermissions({
+        role:employeeInfo.role,
+        companyName:props.company_data[0].company_name,
+        locations:employeeInfo.preference.managerLocation,
+      }))
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
       queryClient.clear();
@@ -562,7 +569,7 @@ const Login = () => {
 
             {/* Password Step */}
             {currentStep === "password" && (
-              <Password 
+              <Password
                 Checkbox={Checkbox}
                 handleSubmit={handleSubmit}
                 onSubmitLogin={onSubmitLogin}
@@ -590,10 +597,9 @@ const Login = () => {
                 formFittingTrigger={formFittingTrigger}
                 Grid={Grid}
                 FormLabel={FormLabel}
-
                 Input={Input}
                 BlueButtonComponent={BlueButtonComponent}
-                isLoading={isLoading} 
+                isLoading={isLoading}
                 forceLogin={forceLogin}
                 register={register}
               />
