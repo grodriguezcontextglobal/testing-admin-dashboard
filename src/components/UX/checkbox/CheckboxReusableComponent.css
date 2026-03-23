@@ -1,0 +1,130 @@
+.checkbox-reusable-container {
+  display: flex;
+  position: relative;
+  align-items: flex-start;
+  gap: 0.75rem; /* 12px */
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+.checkbox-reusable-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-reusable-checkmark {
+  position: relative;
+  top: 2px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid #D0D5DD; /* gray-300 */
+  background-color: #FFFFFF; /* white */
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+/* Size for checkmark box */
+.checkbox-reusable-sm .checkbox-reusable-checkmark {
+  width: 14px;
+  height: 14px;
+  top: 3px;
+}
+.checkbox-reusable-md .checkbox-reusable-checkmark {
+  width: 16px;
+  height: 16px;
+}
+.checkbox-reusable-lg .checkbox-reusable-checkmark {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* Checked state */
+.checkbox-reusable-input:checked ~ .checkbox-reusable-checkmark {
+  background-color: #7F56D9; /* primary-600 */
+  border-color: #7F56D9; /* primary-600 */
+}
+
+/* Checkmark symbol */
+.checkbox-reusable-checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-reusable-input:checked ~ .checkbox-reusable-checkmark::after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+.checkbox-reusable-md .checkbox-reusable-checkmark::after {
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.checkbox-reusable-sm .checkbox-reusable-checkmark::after {
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.checkbox-reusable-lg .checkbox-reusable-checkmark::after {
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+/* Focus state */
+.checkbox-reusable-input:focus-visible ~ .checkbox-reusable-checkmark {
+  box-shadow: 0 0 0 4px #F4EBFF; /* primary-100 */
+}
+
+
+.checkbox-reusable-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem; /* 2px */
+}
+
+/* Label and Hint styles */
+.checkbox-reusable-label {
+  color: #344054; /* gray-700 */
+  font-weight: 500;
+}
+
+.checkbox-reusable-hint {
+  color: #667085; /* gray-500 */
+  margin: 0;
+}
+
+/* Size variants for text */
+.checkbox-reusable-sm .checkbox-reusable-label,
+.checkbox-reusable-sm .checkbox-reusable-hint {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+.checkbox-reusable-md .checkbox-reusable-label,
+.checkbox-reusable-md .checkbox-reusable-hint {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+.checkbox-reusable-lg .checkbox-reusable-label,
+.checkbox-reusable-lg .checkbox-reusable-hint {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem; /* 24px */
+}
