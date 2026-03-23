@@ -4,6 +4,7 @@ import Input from "../../../../components/UX/inputs/Input";
 import { Divider } from "antd";
 import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import { useSelector } from "react-redux";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -16,8 +17,18 @@ const InventorySearchBar = ({
   refetchingQueriesFn,
   locationsQuery,
   setOpenAdvanceSearchModal,
-  setOpenCheckInDevicesFromEvent
+  setOpenCheckInDevicesFromEvent,
 }) => {
+  const { role, locations } = useSelector((state) => state.permission);
+  const canRenderButton =
+    role === "0" ||
+    locations?.some(
+      (location) =>
+        location.actions?.create &&
+        location.actions?.assign &&
+        location.actions?.delete &&
+        location.actions?.transfer,
+    );
   return (
     <Grid
       display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
@@ -54,7 +65,12 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
-        <BlueButtonComponent title="Check in devices from events" func={()=> setOpenCheckInDevicesFromEvent(true)} />
+        {canRenderButton && (
+          <BlueButtonComponent
+            title="Check in devices from events"
+            func={() => setOpenCheckInDevicesFromEvent(true)}
+          />
+        )}
       </div>
       <Grid justifyContent={"flex-start"} gap={1} container>
         <Grid item xs={12} sm={12} md={12} lg={12}>
