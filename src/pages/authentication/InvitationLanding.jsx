@@ -293,6 +293,8 @@ const InvitationLanding = () => {
       const employeesInCompany = [...hostCompanyInfo.employees];
       employeesInCompany[findInvitedStaff] = {
         ...employeesInCompany[findInvitedStaff],
+        email:resp.data.email,
+        employee_id: resp.data.uid,
         status: "Confirmed",
       };
       await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
