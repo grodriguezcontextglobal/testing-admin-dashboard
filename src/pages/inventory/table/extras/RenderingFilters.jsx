@@ -319,8 +319,8 @@ const RenderingFilters = ({
     const employeesArray = Array.isArray(employeesSource)
       ? employeesSource
       : employeesSource
-      ? Object.values(employeesSource)
-      : [];
+        ? Object.values(employeesSource)
+        : [];
 
     const validByEmail = new Map(
       employeesArray
@@ -341,8 +341,8 @@ const RenderingFilters = ({
       const candidateEmail = segments[1]?.includes("@")
         ? segments[1]
         : segments[0]?.includes("@")
-        ? segments[0]
-        : null;
+          ? segments[0]
+          : null;
 
       if (!candidateEmail) return null;
       const emp = validByEmail.get(candidateEmail);
@@ -396,7 +396,7 @@ const RenderingFilters = ({
   const baseLocationsAndSublocationsData = () => {
     let source =
       locationsAndSublocationsWithTypes?.data?.data?.ok &&
-      locationsAndSublocationsWithTypes?.data?.data?.data
+        locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
 
@@ -1041,7 +1041,7 @@ const RenderingFilters = ({
       );
     }
   };
-// console.log(typeof dataToDisplay)
+  // console.log(typeof dataToDisplay)
 
   return (
     <Grid key="rendering-filter-option-container" container>
@@ -1186,10 +1186,9 @@ const RenderingFilters = ({
                             props={`${opt.value} total devices`}
                             route={`/inventory/${String(
                               item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${
-                              (searchItem && searchItem) ||
+                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${(searchItem && searchItem) ||
                               (chosen.value && chosen.value)
-                            }`}
+                              }`}
                             style={{
                               width: "fit-content",
                             }}
@@ -1253,6 +1252,8 @@ const RenderingFilters = ({
                     />
                   ) : (
                     <RenderingMoreThanTreeviewElements
+                      id={"rendering-more-than-treeview-elements"}
+                      key={item.key}
                       item={item}
                       dictionary={dictionary}
                       searchItem={searchItem}
