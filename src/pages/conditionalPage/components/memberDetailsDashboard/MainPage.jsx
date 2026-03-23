@@ -117,7 +117,7 @@ const MainPage = () => {
           title={"Reminders"}
           func={() => null}
           icon={
-            <EmailIcon width={20} height={20} hoverFill={"var(--basewhite)"} />
+            <EmailIcon width={20} height={20} fill="#344054" />
           }
           buttonType="button"
           titleStyles={{
