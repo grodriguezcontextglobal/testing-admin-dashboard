@@ -9,33 +9,34 @@ const CardForTreeView = (props) => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
+  // const isLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 993px) and (max-width : 1200px)"
+  // );
+  // const isExtraLargeDevice = useMediaQuery(
+  //   "only screen and (min-width : 1201px)"
+  // );
   const renderingBreakPoints = () => {
     if (isSmallDevice) return "0 0 0 1rem";
     if (isMediumDevice) return "0 0 0 1rem";
-    if (isLargeDevice) return "0 0 0 2rem";
-    if (isExtraLargeDevice) return "0 0 0 2rem";
-    return "0 0 0 2rem";
+    // if (isLargeDevice) return "0 0 0 2rem";
+    // if (isExtraLargeDevice) return "0 0 0 2rem";
+    // return "0 0 0 2rem";
   };
   return (
     <Space
+      id={`tree-view-space-`}
       align="start"
       size={[8, 16]}
       wrap
       style={{
         maxWidth: "1400px",
         minWidth: "320px",
-        width: "100%",
+        width: "--webkit-fill-available",
         padding: renderingBreakPoints(),
       }}
     >
       <TreeView
-        id={`${elemId}`}
+        id={`tree-view-${elemId}`}
         key={elemId}
         data={props.data}
         setTypePerLocationInfoModal={props.setTypePerLocationInfoModal}
