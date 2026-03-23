@@ -1,6 +1,5 @@
 import {
   FormControl,
-  FormControlLabel,
   Grid,
   InputLabel,
   MenuItem,
@@ -461,7 +460,11 @@ const AssignLocationManager = () => {
                             : (e) => setValue(perm, e.target.checked)
                         }
                         name={perm}
-                        label={perm.charAt(0).toUpperCase() + perm.slice(1)}
+                        label={
+                          <p style={{width:"100%", textAlign:"left"}}>
+                            {perm.charAt(0).toUpperCase() + perm.slice(1)}
+                          </p>
+                        }
                         hint={hint}
                       />
                     </Grid>
