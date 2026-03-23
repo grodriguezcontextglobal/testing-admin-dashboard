@@ -1,8 +1,9 @@
 import PropTypes from "prop-types";
-import { Breadcrumb, Avatar, Button, Input } from "antd";
+import { Avatar, Button, Input } from "antd";
 import { useMediaQuery } from "@mui/material";
 import { Icon } from "@iconify/react";
 import "./MainHeaders.css";
+import Breadcrumb from "../../../components/UX/breadcrumbs/Breadcrumb";
 
 const MainHeaders = ({
   user,
@@ -27,14 +28,9 @@ const MainHeaders = ({
             Back
           </Button>
         ) : (
-          <Breadcrumb>
-            {breadcrumbs.map((crumb, index) => (
-              <Breadcrumb.Item key={index} href={crumb.href}>
-                {crumb.icon}
-                {crumb.label}
-              </Breadcrumb.Item>
-            ))}
-          </Breadcrumb>
+          <Breadcrumb
+            path={breadcrumbs}
+          />
         )}
       </div>
 
