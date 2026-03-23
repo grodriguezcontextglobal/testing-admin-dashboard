@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, Checkbox } from "antd";
+import { message } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +22,7 @@ import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSli
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import BaseTable from "../../../../../../components/ux/tables/BaseTable";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import CheckboxReusableComponent from "../../../../../../components/UX/checkbox/CheckboxReusableComponent";
 
 const AssignLocationManager = () => {
   const { user } = useSelector((state) => state.admin);
@@ -352,17 +353,26 @@ const AssignLocationManager = () => {
           </Grid>,
         ]}
       >
-        <Typography
-          paragraph
-          style={Subtitle}
-        >
+        <Typography paragraph style={Subtitle}>
           Assign this staff member for specific locations and define
           permissions.
         </Typography>
         <form id="assignLocationForm" onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
-            <Grid marginTop={3} justifyContent="flex-start" item xs={12} md={12} lg={12}>
-              <InputLabel style={{width:"100%", textAlign:"left"}} htmlFor="location">Location</InputLabel>
+            <Grid
+              marginTop={3}
+              justifyContent="flex-start"
+              item
+              xs={12}
+              md={12}
+              lg={12}
+            >
+              <InputLabel
+                style={{ width: "100%", textAlign: "left" }}
+                htmlFor="location"
+              >
+                Location
+              </InputLabel>
               <FormControl fullWidth>
                 <Select
                   {...register("location", { required: true })}
@@ -393,29 +403,70 @@ const AssignLocationManager = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <InputLabel>Permissions</InputLabel>
+              <InputLabel sx={{ marginBottom: "25px" }}>Permissions</InputLabel>
               <Grid container spacing={1}>
                 {[
-                  "create",
-                  "update",
-                  "transfer",
-                  "delete",
-                  "view",
-                  "assign",
-                ].map((perm) => (
-                  <Grid item xs={6} sm={4} key={perm}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          {...register(perm)}
-                          checked={watch(perm)}
-                          onChange={(e) => setValue(perm, e.target.checked)}
-                        />
-                      }
-                      label={perm.charAt(0).toUpperCase() + perm.slice(1)}
-                    />
-                  </Grid>
-                ))}
+                  {
+                    perm: "manager",
+                    hint: "Grants all permissions for this location.",
+                  },
+                  {
+                    perm: "create",
+                    hint: "Allows creating new items in this location.",
+                  },
+                  {
+                    perm: "update",
+                    hint: "Allows editing existing items in this location.",
+                  },
+                  {
+                    perm: "transfer",
+                    hint: "Allows transferring items to/from this location.",
+                  },
+                  {
+                    perm: "delete",
+                    hint: "Allows deleting items from this location.",
+                  },
+                  {
+                    perm: "view",
+                    hint: "Allows viewing items and details in this location.",
+                  },
+                  {
+                    perm: "assign",
+                    hint: "Allows assigning items to users/events from this location.",
+                  },
+                ].map(({ perm, hint }) => {
+                  const isManager = perm === "manager";
+                  const handleManagerChange = (e) => {
+                    const isChecked = e.target.checked;
+                    setValue(perm, isChecked);
+                    if (isChecked) {
+                      [
+                        "create",
+                        "update",
+                        "transfer",
+                        "delete",
+                        "view",
+                        "assign",
+                      ].forEach((p) => setValue(p, true));
+                    }
+                  };
+                  return (
+                    <Grid item xs={12} sm={6} md={4} key={perm}>
+                      <CheckboxReusableComponent
+                        {...register(perm)}
+                        checked={watch(perm)}
+                        onChange={
+                          isManager
+                            ? handleManagerChange
+                            : (e) => setValue(perm, e.target.checked)
+                        }
+                        name={perm}
+                        label={perm.charAt(0).toUpperCase() + perm.slice(1)}
+                        hint={hint}
+                      />
+                    </Grid>
+                  );
+                })}
               </Grid>
             </Grid>
           </Grid>
