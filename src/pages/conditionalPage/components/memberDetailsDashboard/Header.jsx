@@ -1,17 +1,16 @@
 import { Grid, Typography } from "@mui/material";
 import { Avatar, Divider } from "antd";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
 import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { useSelector } from "react-redux";
-import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 // import { data } from "../../mock/mockData";
 
-const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
+const MemberInfoHeader = ({ pageTitle, memberInfo, groupName,  setAddingNewMember }) => {
   const detailMemberInfo = memberInfo?.at(-1);
   const { user } = useSelector((state) => state.admin);
   const c = {
@@ -38,7 +37,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
                 margin: 0,
                 padding: 0,
               }}
-              //   onClick={() => dispatch(onResetStaffProfile())}
+            //   onClick={() => dispatch(onResetStaffProfile())}
             >
               {" "}
               <p
@@ -168,8 +167,7 @@ const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
               >
                 <BlueButtonComponent
                   title={"Add new member"}
-                  //   func={() => setModalState(true)}
-                  icon={<WhiteCirclePlusIcon />}
+                  func={() => setAddingNewMember(true)}
                 />
               </Grid>
             </Grid>
@@ -219,9 +217,8 @@ const MemberInfoHeader = ({ pageTitle, memberInfo, groupName }) => {
               {[
                 { title: "name", id: 0 },
                 {
-                  title: `${detailMemberInfo?.first_name} ${
-                    detailMemberInfo?.last_name ?? ""
-                  }`,
+                  title: `${detailMemberInfo?.first_name} ${detailMemberInfo?.last_name ?? ""
+                    }`,
                   id: 1,
                 },
                 detailMemberInfo?.external_id && {
