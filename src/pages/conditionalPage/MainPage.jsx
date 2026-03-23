@@ -1,21 +1,19 @@
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
+import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
-import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
-import { Divider } from "antd";
-import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import Loading from "../../components/animation/Loading";
+import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
+import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
+import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
-import MainTable from "./tables/MainTable";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
-
+import MainTable from "./tables/MainTable";
 const MainPage = () => {
   const location = useLocation();
   const slug = location.state?.referencing || "";
@@ -89,7 +87,6 @@ const MainPage = () => {
           <BlueButtonComponent
             title={`Add new ${titleParams}`}
             func={() => setAddingNewMember(true)}
-            icon={<WhiteCirclePlusIcon />}
           />
           <DangerButtonComponent
             style={{
