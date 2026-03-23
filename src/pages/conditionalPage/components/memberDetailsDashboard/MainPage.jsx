@@ -15,6 +15,7 @@ import { EmailIcon } from "../../../../components/icons/EmailIcon";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import AddNewMember from "../modals/AddNewMember";
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -24,6 +25,7 @@ const MainPage = () => {
   const groupNameReference = location.state?.referencing || "";
   const groupNameParams = String(groupNameReference || "").replace(/-/g, " ");
   const [membersData, setMembersData] = useState(null);
+  const [addingNewmember, setAddingNewMember] = useState(false)
   const memberInfoRetrieveQuery = useQuery({
     queryKey: ["memberInfoRetrieveQuery"],
     queryFn: () =>
@@ -125,74 +127,11 @@ const MainPage = () => {
           }}
         />
       ),
-    },
-    // {
-    //   label: "Change role",
-    //   route: "update-role-company",
-    //   permission: [0, 1],
-    //   disabled: false,
-    //   id: 3,
-    //   fn: () => null,
-    //   html: (
-    //     <GrayButtonComponent
-    //       title={"Change role"}
-    //       func={() => null}
-    //       icon={<ChangeRoleStaffIcon />}
-    //       buttonType="button"
-    //       titleStyles={{
-    //         textTransform: "none",
-    //         with: "100%",
-    //         gap: "2px",
-    //       }}
-    //     />
-    //   ),
-    // },
-    // {
-    //   label: "Send password reset email",
-    //   route: "reset-password-link",
-    //   permission: [0, 1, 2, 3, 4],
-    //   disabled: false,
-    //   id: 4,
-    //   fn: () => null,
-    //   html: (
-    //     <GrayButtonComponent
-    //       title={"Send password reset email"}
-    //       func={() => null}
-    //       icon={<UpdatePasswordIcon />}
-    //       buttonType="button"
-    //       titleStyles={{
-    //         textTransform: "none",
-    //         with: "100%",
-    //         gap: "2px",
-    //       }}
-    //     />
-    //   ),
-    // },
-    // {
-    //   label: `${profile.active ? "Remove" : "Grant"} access`,
-    //   route: `/staff/main`,
-    //   permission: [0, 1, 2],
-    //   disabled: false,
-    //   id: 5,
-    //   fn: () => null,
-    //   html: (
-    //     <GrayButtonComponent
-    //       title={`${profile.active ? "Remove" : "Grant"} access`}
-    //       func={() => null}
-    //       icon={<UpdatePasswordIcon />}
-    //       buttonType="button"
-    //       titleStyles={{
-    //         textTransform: "none",
-    //         with: "100%",
-    //         gap: "2px",
-    //       }}
-    //     />
-    //   ),
-    // },
+    }
   ];
   return (
     <>
-      <MemberInfoHeader title={titleParams} memberInfo={membersData} groupName={groupNameParams} />
+      <MemberInfoHeader title={titleParams} memberInfo={membersData} groupName={groupNameParams} setAddingNewMember={setAddingNewMember} />
       <Divider />
       <nav style={{ display: "flex", width: "100%", gap: "24px", marginY: 3 }}>
         <Grid
@@ -241,6 +180,14 @@ const MainPage = () => {
       </nav>
       <Divider />
       <Outlet />
+      {
+        AddNewMember && (
+          <AddNewMember
+            openModal={addingNewmember}
+            setOpenModal={setAddingNewMember}
+          />
+        )
+      }
     </>
   );
 };
