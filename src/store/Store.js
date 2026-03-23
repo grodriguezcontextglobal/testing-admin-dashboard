@@ -16,17 +16,18 @@ import {
 // const storage = require("redux-persist/es/storage");
 // const { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore } = require("redux-persist");
 import adminSlice from "./slices/adminSlice";
+import articleSlide from "./slices/articleSlide";
+import customerSlice from "./slices/customerSlice";
+import devicesHandleSlice from "./slices/devicesHandleSlice";
 import eventSlice from "./slices/eventSlice";
+import helperSlice from "./slices/helperSlice";
+import memberSlice from "./slices/memberSlice";
+import permissionsSlice from "./slices/permissions";
+import searchBarResultSlice from "./slices/searchBarResultSlice";
+import staffActivitySlice from "./slices/staffActivitySlice";
+import staffDetailSlide from "./slices/staffDetailSlide";
 import stripeSlice from "./slices/stripeSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
-import helperSlice from "./slices/helperSlice";
-import devicesHandleSlice from "./slices/devicesHandleSlice";
-import customerSlice from "./slices/customerSlice";
-import articleSlide from "./slices/articleSlide";
-import searchBarResultSlice from "./slices/searchBarResultSlice";
-import staffDetailSlide from "./slices/staffDetailSlide";
-import staffActivitySlice from "./slices/staffActivitySlice";
-import memberSlice from "./slices/memberSlice";
 
 const persistConfig = {
   key: "root",
@@ -36,17 +37,18 @@ const persistConfig = {
 
 const reducers = combineReducers({
   admin: adminSlice,
-  stripe: stripeSlice,
-  event: eventSlice,
-  subscription: subscriptionSlice,
-  helper: helperSlice,
-  devicesHandle: devicesHandleSlice,
-  customer: customerSlice,
   article: articleSlide,
-  searchResult: searchBarResultSlice,
-  staffDetail: staffDetailSlide,
-  staffActivity: staffActivitySlice,
+  customer: customerSlice,
+  devicesHandle: devicesHandleSlice,
+  event: eventSlice,
+  helper: helperSlice,
   member: memberSlice,
+  permission: permissionsSlice, // permission slice
+  searchResult: searchBarResultSlice,
+  staffActivity: staffActivitySlice,
+  staffDetail: staffDetailSlide,
+  stripe: stripeSlice,
+  subscription: subscriptionSlice,
 });
 
 const persistedReducers = persistReducer(persistConfig, reducers);
