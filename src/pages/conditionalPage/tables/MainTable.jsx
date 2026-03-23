@@ -198,6 +198,8 @@ const MainTable = ({ state }) => {
           dataSource={membersData}
           columns={columns}
           rowClassName="editable-row"
+          enablePagination={true}
+          pageSize={10}
         />
       )}{" "}
     </Grid>
