@@ -5,7 +5,6 @@ const MyDetailsMainPage = () => {
   return (
     <Grid
       style={{
-        padding: "5px",
         display: "flex",
         flexDirection: "row",
         justifyContent: "center",
