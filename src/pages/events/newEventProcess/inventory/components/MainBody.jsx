@@ -1,5 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { Drawer, Select } from "antd";
+import { Select } from "antd";
 import { useState } from "react";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -13,6 +13,7 @@ import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
+import BannerReusableComponentUntitleUI from "../../../../../components/UX/banner/BannerReusableComponentUntitleUI";
 
 const MainBody = ({
   AddingEventCreated,
@@ -98,29 +99,14 @@ const MainBody = ({
               options={selectOptions}
               disabled={!isAdmin && locationsAssignPermission.length === 0}
             />
-            {!isAdmin && locationsAssignPermission.length === 0 && (
-              <Drawer
-                title="Staff Permission"
-                placement="top"
-                onClose={() => setOpenDrawer(false)}
-                open={openDrawer}
-                closable
-                key={"message-triggered"}
-                maskClosable={false}
-                styles={{
-                  height: "25vh !important",
-                }}
-              >
-                <Typography
-                  style={{
-                    ...TextFontSize20LineHeight30,
-                    fontWeight: 600,
-                    color: "var(--gray600)",
-                  }}
-                >
-                  You do not have permission to assign inventory to events.
-                </Typography>
-              </Drawer>
+            {openDrawer && !isAdmin && locationsAssignPermission.length === 0 && (
+              <BannerReusableComponentUntitleUI
+                title="Permission Denied"
+                description="You do not have permissions to take this action. Contact administrator"
+                linkText=""
+                linkHref="#"
+                onDismiss={() => setOpenDrawer(false)}
+              />
             )}
             {eventInfoDetail.merchant ? (
               <MerchantService
