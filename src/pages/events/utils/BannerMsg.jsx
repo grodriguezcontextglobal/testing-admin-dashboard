@@ -1,6 +1,5 @@
 import { Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../../styles/global/Title";
@@ -41,7 +40,7 @@ const BannerMsg = () => {
         </Typography>
         {/* /event/new_subscription */}
         <Link to="/create-event-page/event-detail">
-        <BlueButtonComponent title={"Add new event"} icon={<WhiteCirclePlusIcon />} />
+        <BlueButtonComponent title={"Add new event"} />
         </Link>
       </Grid>
     </Grid>
