@@ -10,6 +10,7 @@ const ModalUX = ({
   width = 1000,
   footer = [],
   modalStyles = {},
+  closable = true
 }) => {
   return (
     <Modal
@@ -24,6 +25,7 @@ const ModalUX = ({
       title={title}
       style={modalStyles}
       destroyOnHidden={true}
+      closable={closable}
     >
       {body}
     </Modal>
