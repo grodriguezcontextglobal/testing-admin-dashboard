@@ -1,4 +1,4 @@
-import { Drawer, message, Space, Table } from "antd";
+import { message, Table } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 // Import PDF documents
@@ -10,6 +10,7 @@ import document2 from "../../../assets/pdf/document_2.pdf";
 import document3 from "../../../assets/pdf/document_3.pdf";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import Input from "../../../components/UX/inputs/Input";
+import ModalUX from "../../../components/UX/modal/ModalUX";
 
 const policyDocuments = [
   {
@@ -123,61 +124,53 @@ const DevitrakTermsAndConditions = ({
   };
 
   return (
-    <Drawer
-      title="Devitrak App Agreement and Privacy Policy"
-      placement="top"
-      width={500}
-      hideBackdrop={false}
-      closeIcon={false}
-      open={open}
-      styles={{
-        body: {
-          paddingBottom: 80,
-          zIndex: 100,
-        },
-      }}
-      extra={
-        <Space direction="horizontal" styles={{ display: "flex" }}>
-          <form
-            style={{
-              display: "flex",
-              width: "100%",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "10px",
-            }}
-            onSubmit={handleFormSubmit}
-          >
-            <Input
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <GrayButtonComponent
-              title={"Decline"}
-              buttonType="button"
-              func={() =>
-                location.pathname.includes("/invitation")
-                  ? navigate("/login", { replace: true })
-                  : navigate()
-              }
-            />
-            <BlueButtonComponent
-              title={"Agree And Sign"}
-              buttonType="submit"
-              loadingState={isLoading}
-            />
-          </form>
-        </Space>
+    <ModalUX footer={
+      <form
+        style={{
+          display: "flex",
+          width: "100%",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: "10px"
+        }}
+        onSubmit={handleFormSubmit}
+      >
+        <Input
+          placeholder="Enter your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <GrayButtonComponent
+          title={"Decline"}
+          buttonType="button"
+          func={() =>
+            location.pathname.includes("/invitation")
+              ? navigate("/login", { replace: true })
+              : navigate()
+          }
+          styles={{ width: "60%", padding: "10px 20px" }}
+        />
+        <BlueButtonComponent
+          title={"Agree And Sign"}
+          buttonType="submit"
+          loadingState={isLoading}
+          styles={{ width: "60%" }}
+        />
+      </form>
+    }
+      openDialog={open}
+      closeModal={false}
+      closable={false}
+      body={
+        <Table
+          columns={columns}
+          dataSource={policyDocuments}
+          pagination={false}
+        />
       }
-    >
-      <Table
-        columns={columns}
-        dataSource={policyDocuments}
-        pagination={false}
-      />
-    </Drawer>
+      width={1000}
+    />
   );
 };
 
