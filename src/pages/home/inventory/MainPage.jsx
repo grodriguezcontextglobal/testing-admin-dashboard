@@ -1,10 +1,7 @@
-import { Typography } from "@mui/material";
-import { Drawer, Spin } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { Spin } from "antd";
+import { lazy, Suspense } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 
 const CategoryInventory = lazy(
   () => import("../components/CategoriesInventory"),
@@ -17,18 +14,6 @@ const TableLocations = lazy(
 );
 
 const MainPage = () => {
-  const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
-  const [openDrawer, setOpenDrawer] = useState(
-    isAdmin ? false : locationsViewPermission.length === 0,
-  );
-
-  // const containerStyle = {
-  //   display: "grid",
-  //   gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-  //   gap: "16px",
-  //   width: "100%",
-  // };
-
   // Inline media query for 3 columns on desktop
   const gridLayoutStyle = `
     .main-inventory-grid {
@@ -54,31 +39,6 @@ const MainPage = () => {
           </div>
         }
       >
-        {!isAdmin && locationsViewPermission.length === 0 && (
-          <Drawer
-            title="Staff Permission"
-            placement="top"
-            onClose={() => setOpenDrawer(false)}
-            open={openDrawer}
-            closable
-            key={"message-triggered"}
-            maskClosable={false}
-            styles={{
-              height: "25vh !important",
-            }}
-          >
-            <Typography
-              style={{
-                ...TextFontSize20LineHeight30,
-                fontWeight: 600,
-                color: "var(--gray600)",
-              }}
-            >
-              You do not have permission to assign inventory to events.
-            </Typography>
-          </Drawer>
-        )}
-
         <div className="main-inventory-grid">
           {/* Column 1: Graphic */}
           <div style={{ width: "100%" }}>
