@@ -14,8 +14,8 @@ import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHe
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import CardRendered from "../inventory/utils/CardRendered";
 import CardActionsButton from "./components/CardActionsButton";
-import ConsumerDetailInformation from "./components/ConsumerDetailInformation";
-import ConsumerDetailInfoCntact from "./components/ConsumerDetailinfoContact";
+import ConsumerDetailInfoContact from "./components/ConsumerDetailInfoContact";
+import HeaderConsumerComponent from "./components/HeaderConsumerComponent";
 // import TransactionTableRefactoring from "./tables/TransactionTableRefactoring";
 import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
@@ -246,53 +246,12 @@ const DetailPerConsumer = () => {
             </Grid>
           </Grid>
           <Divider />
-          <Grid
-            gap={"5px"}
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            alignSelf={"flex-start"}
-            container
-          >
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={3}
-              lg={3}
-            >
-              <ConsumerDetailInformation />
-            </Grid>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              alignSelf={"flex-start"}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={4}
-            >
-              <ConsumerDetailInfoCntact />
-            </Grid>
-            <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-              alignSelf={"flex-start"}
-              item
-              xs={12}
-              sm={12}
-              md={3}
-              lg={3}
-            >
-              <CardActionsButton />
-            </Grid>
+          <Grid item xs={12} width={"100%"}>
+            <HeaderConsumerComponent
+              consumer={customer}
+              contact={<ConsumerDetailInfoContact />}
+              actions={<CardActionsButton />}
+            />
           </Grid>
           <Divider />{" "}
           <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
