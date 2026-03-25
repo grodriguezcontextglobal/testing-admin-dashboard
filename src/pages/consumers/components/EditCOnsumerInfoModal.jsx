@@ -1,21 +1,21 @@
-import { Grid, OutlinedInput, TextField, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, notification } from "antd";
+import { Avatar, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import Input from "../../../components/UX/inputs/Input";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import ReusableTextArea from "../../../components/UX/inputs/TextArea";
 const EditConsumerInfoModal = ({
   openEditConsumerModal,
   setOpenEditConsumerModal,
@@ -89,8 +89,8 @@ const EditConsumerInfoModal = ({
   };
   const titleRender = () => {
     return (
-      <p style={{ ...TextFontsize18LineHeight28, textAlign: "center" }}>
-        Editing consumer information.
+      <p style={{ ...TextFontsize18LineHeight28, textAlign: "left" }}>
+        Editing consumer information
       </p>
     );
   };
@@ -143,8 +143,11 @@ const EditConsumerInfoModal = ({
         container
       >
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <p style={{ ...Subtitle, width: "100%", textAlign: "center" }}>
-            Consumer information
+          <p style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
+            <Avatar size={60} src={customer?.data?.profile_picture}>{customer?.name.charAt(0)}{customer?.lastName.charAt(0)}</Avatar>&nbsp;
+            <span style={{alignSelf:"flex-start"}}>
+              Consumer information
+            </span>
           </p>
         </Grid>
         <form
@@ -175,7 +178,7 @@ const EditConsumerInfoModal = ({
                   {" "}
                   <label style={{ width: "100%" }}>
                     <p style={Subtitle}>{item.title}</p>
-                    <TextField
+                    <ReusableTextArea
                       multiline
                       rows={6}
                       fullWidth
@@ -206,7 +209,7 @@ const EditConsumerInfoModal = ({
                 >
                   <label style={{ width: "100%" }}>
                     <p style={Subtitle}>{item.title}</p>
-                    <OutlinedInput
+                    <Input
                       style={OutlinedInputStyle}
                       fullWidth
                       {...register(`${item.feature}`, { value: item.value })}
@@ -216,34 +219,18 @@ const EditConsumerInfoModal = ({
               );
             }
           })}
-          <Button
-            loading={loading}
-            htmlType="submit"
-            style={{
-              ...BlueButton,
-              ...CenteringGrid,
-              width: "100%",
-              margin: "1.5rem 0 0",
-            }}
-          >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Update consumer information
-            </Typography>
-          </Button>
-          <Button
-            onClick={() => closeDeviceModal()}
-            htmlType="reset"
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              width: "100%",
-              margin: "0.5rem 0 0",
-            }}
-          >
-            <Typography textTransform={"none"} style={GrayButtonText}>
-              Cancel{" "}
-            </Typography>
-          </Button>
+          <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", gap: "15px" }}>
+            <GrayButtonComponent
+              func={() => closeDeviceModal()}
+              buttonType="reset"
+              title="Cancel"
+            />
+            <BlueButtonComponent
+              loadingState={loading}
+              buttonType="submit"
+              title="Update consumer information"
+            />
+          </div>
         </form>
       </Grid>
     );
@@ -252,18 +239,7 @@ const EditConsumerInfoModal = ({
   return (
     <>
       {contextHolder}
-      <ModalUX title={titleRender()} openDialog={openEditConsumerModal} closeModal={closeDeviceModal} body={bodyModal()} width={800} />
-      {/* <Modal
-        title={titleRender()}
-        centered
-        open={openEditConsumerModal}
-        onOk={() => closeDeviceModal()}
-        onCancel={() => closeDeviceModal()}
-        footer={[]}
-        width={800}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
-      ></Modal> */}
+      <ModalUX closable={false} title={titleRender()} openDialog={openEditConsumerModal} closeModal={closeDeviceModal} body={bodyModal()} width={800} />
     </>
   );
 };
