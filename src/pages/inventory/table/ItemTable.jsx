@@ -124,16 +124,6 @@ const ItemTable = ({
     keepPreviousData: true,
   });
 
-  // const refactoredListInventoryCompany = useQuery({
-  //   queryKey: ["RefactoredListInventoryCompany"],
-  //   queryFn: () => devitrakApi.post(`/db_company/company-inventory-with-current-warehouse-status`, {
-  //       company_id: user.sqlInfo.company_id,
-  //     }),
-  //     enabled: !!user.sqlInfo.company_id,
-  //     staleTime: 5 * 60 * 1000, // 5 minutes
-  //     keepPreviousData: true,
-  // });
-
   const refactoredListInventoryCompany = useQuery({
     queryKey: ["RefactoredListInventoryCompany"],
     queryFn: () =>
@@ -153,7 +143,6 @@ const ItemTable = ({
   const imageSource = listImagePerItemQuery?.data?.data?.item;
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data?.result;
-  // const queryClient = useQueryClient();
   const getDataStructuringFormat = useCallback(
     (props) => {
       const resultFormatToDisplay = new Map();
@@ -255,10 +244,6 @@ const ItemTable = ({
   // Unified dataset
   const baseDataset = useMemo(() => {
     let data = refactoredDataset.length > 0 ? refactoredDataset : legacyDataset;
-
-    // Apply Role-Based and Preference-Based Filtering
-    // This replaces/augments the previous allowedLocations logic with a more robust utility
-    // data = filterDataByRoleAndPreference(data, user);
 
     // Legacy allowedLocations prop support (optional, if still needed by parent components)
     // We keep this to ensure backward compatibility if allowedLocations is passed explicitly for other reasons
