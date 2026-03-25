@@ -69,11 +69,11 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             status: Array.isArray(transactionData[0]?.device)
               ? 0
               : transactionData?.reduce(
-                  (acc, { device }) =>
-                    acc +
-                    (device?.status === false || device?.status === "Lost"),
-                  0,
-                ),
+                (acc, { device }) =>
+                  acc +
+                  (device?.status === false || device?.status === "Lost"),
+                0,
+              ),
             eventInfo: value,
             extra_data: transactionData ?? [],
             timestamp: value[0].created_at,
@@ -90,11 +90,11 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             status: Array.isArray(transactionData[0]?.device)
               ? 0
               : transactionData?.reduce(
-                  (acc, { device }) =>
-                    acc +
-                    (device?.status === false || device?.status === "Lost"),
-                  0,
-                ),
+                (acc, { device }) =>
+                  acc +
+                  (device?.status === false || device?.status === "Lost"),
+                0,
+              ),
             eventInfo: value,
             extra_data: transactionData ?? [],
             timestamp: value[0].created_at,
@@ -136,8 +136,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       dispatch(onAddSubscription(eventListQuery.data.list[0].subscription));
       dispatch(onAddPaymentIntentSelected(record.paymentIntent));
       navigate(
-        `/events/event-attendees/${
-          customer.uid ?? customer.id
+        `/events/event-attendees/${customer.uid ?? customer.id
         }/transactions-details`,
       );
     } catch (error) {
@@ -263,9 +262,8 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
             }}
           >
             {checkPaymentID[1] === "cash"
-              ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${
-                  String(checkPaymentID[4]).split("**")[1]
-                }`
+              ? `${checkPaymentID[1]} ${checkPaymentID[2]} ${String(checkPaymentID[4]).split("**")[1]
+              }`
               : `${paymentIntent}`}
           </p>
         );
@@ -424,11 +422,11 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     padding: "24px 12px",
   };
   return (
-    <div>
+    <div style={{ width: "100%", overflowX: "auto" }}>
       <TableHeader
         leftCta={<p style={headerTitleStyle}>Transactions</p>}
         rightCta={
-          <span style={{ marginBottom:"-25px" }}>
+          <span style={{ marginBottom: "-25px" }}>
             <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
           </span>
         }
@@ -456,6 +454,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         dataSource={finalDataToDisplayIncludeSearchFN()}
         className="table-ant-customized"
         enablePagination={true}
+        pageSize={10}
       />
     </div>
   );
