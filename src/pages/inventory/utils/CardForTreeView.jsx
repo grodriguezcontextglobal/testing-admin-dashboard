@@ -31,7 +31,7 @@ const CardForTreeView = (props) => {
       style={{
         maxWidth: "1400px",
         minWidth: "320px",
-        width: "--webkit-fill-available",
+        width: "-webkit-fill-available",
         padding: renderingBreakPoints(),
       }}
     >
