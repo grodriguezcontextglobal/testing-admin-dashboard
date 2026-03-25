@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Space, Spin, Table, message } from "antd";
+import { Space, Spin, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -35,6 +35,7 @@ import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import Chip from "../../../components/UX/Chip/Chip";
 import TableHeader from "../../../components/UX/TableHeader";
 import FooterExpandedRow from "./FooterExpandedRow";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -419,9 +420,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         <Space
           size="middle"
           style={{
-            display: `${
-              typeof record.status !== "string" && record.status && "flex"
-            }`,
+            display: `${typeof record.status !== "string" && record.status && "flex"
+              }`,
             justifyContent: "flex-end",
             alignItems: "center",
             width: "100%",
@@ -456,57 +456,43 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   return (
     <div style={{ gap: "10px" }}>
       {contextHolder}
-      <TableHeader
-        rightCta={
-          <RefreshButton propsFn={refetchingQueries} />
-        }
-      />
       {rowRecord.device > 0 && (
-        <Table
-          id={rowRecord.key}
-          key={rowRecord.key}
-          columns={columns}
-          dataSource={dataRendering()}
-          enablePagination={true}
-          pagination={{
-            defaultPageSize: 10,
-            position: ["bottomCenter"],
-            style: {
-              backgroundColor: "var(--gray100)",
-              padding: "16px 0",
-              margin: 0,
-            },
-          }}
-          className="table-ant-expanded-row-customized"
-          rowSelection={rowSelection}
-          virtual={true}
-          rowHoverable={false}
-        />
+        <div id={rowRecord.key} key={rowRecord.key} style={{ width: "100%" }}>
+          <TableHeader
+            rightCta={
+              <RefreshButton propsFn={refetchingQueries} />
+            }
+          />
+          <BaseTable
+            id={rowRecord.key}
+            key={rowRecord.key}
+            columns={columns}
+            dataSource={dataRendering()}
+            className="table-ant-expanded-row-customized"
+            rowSelection={rowSelection}
+            virtual={false}
+          />
+          <FooterExpandedRow
+            displayTernary={displayTernary}
+            handleReturnSingleDevice={handleReturnItemInTransaction}
+            handleLostSingleDevice={handleLostSingleDevice}
+            dataRendering={rowRecord}
+            returningDevice={handleReturnItemInTransaction}
+            formattedData={dataRendering()}
+            paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
+            deviceListInfo={dataRendering()}
+            selectedItems={selectedRows}
+            setSelectedItems={setSelectedRows}
+            refetchingDevicePerTransaction={refetchingQueries}
+            setOpenModalReleasingDeposit={setOpenModalReleasingDeposit}
+            setOpenModalCapturingDeposit={setOpenModalCapturingDeposit}
+            setOpenModal={setOpenModal}
+            assignedItemsPerTransactionData={
+              assignedDevicesQuery?.data?.data?.listOfReceivers
+            }
+          />
+        </div>
       )}
-      {/* {rowRecord.type === "lease" && (
-        <>
-        <ExpandedRowRender record={{ ...rowRecord,  data:dataRendering()}} />
-        </>
-      )} */}
-      <FooterExpandedRow
-        displayTernary={displayTernary}
-        handleReturnSingleDevice={handleReturnItemInTransaction}
-        handleLostSingleDevice={handleLostSingleDevice}
-        dataRendering={rowRecord}
-        returningDevice={handleReturnItemInTransaction}
-        formattedData={dataRendering()}
-        paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
-        deviceListInfo={dataRendering()}
-        selectedItems={selectedRows}
-        setSelectedItems={setSelectedRows}
-        refetchingDevicePerTransaction={refetchingQueries}
-        setOpenModalReleasingDeposit={setOpenModalReleasingDeposit}
-        setOpenModalCapturingDeposit={setOpenModalCapturingDeposit}
-        setOpenModal={setOpenModal}
-        assignedItemsPerTransactionData={
-          assignedDevicesQuery?.data?.data?.listOfReceivers
-        }
-      />
 
       {openModal && (
         <Choice openModal={openModal} setOpenModal={setOpenModal} />
