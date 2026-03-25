@@ -11,7 +11,7 @@ const TreeView = ({
   onSelectLocation,
 }) => {
   return (
-    <Grid width={"--webkit-fill-available"} container justifyContent={"center"} alignContent={"center"} padding={0} margin={0} gap={1}>
+    <Grid width={"-webkit-fill-available"} container justifyContent={"center"} alignContent={"center"} padding={0} margin={0} gap={1}>
       {/* <> */}
       {Object.entries(data).map(([location, details]) => (
         <Grid
