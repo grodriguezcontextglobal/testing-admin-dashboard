@@ -5,8 +5,8 @@ import "../../../styles/global/ant-table.css";
 const BaseTable = ({
   columns,
   dataSource,
-  enablePagination,
-  pageSize,
+  enablePagination = true,
+  pageSize = 10,
   ...props
 }) => {
   const paginationConfig = enablePagination
