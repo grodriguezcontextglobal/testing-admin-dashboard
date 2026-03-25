@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+// import { Icon } from "@iconify/react";
 import {
   Grid,
   Typography
@@ -19,6 +19,8 @@ import {
 } from "../../../../store/slices/stripeSlice";
 import ConsumerActivity from "./ConsumerDetail/ConsumerActivity";
 import Details from "./ConsumerDetail/Details";
+import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
+import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 
 const CustomerDetail = () => {
   const { setValue } = useForm();
@@ -45,154 +47,135 @@ const CustomerDetail = () => {
   }, [])
 
   const handleBackAction = () => {
-      dispatch(onAddNewPaymentIntent([]));
-      dispatch(onAddCustomerInfo(undefined));
-      dispatch(onAddCustomer(null));
-      dispatch(onAddNewPaymentIntent([]));
-      dispatch(onAddPaymentIntentDetailSelected([]));
-      dispatch(onAddPaymentIntentSelected(undefined));
-      dispatch(onAddDevicesAssignedInPaymentIntent(undefined));
-      navigate("/events/event-quickglance");
-    };
-    const handleBackActionToMain = () => {
-      dispatch(onAddNewPaymentIntent([]));
-      dispatch(onAddCustomerInfo(undefined));
-      dispatch(onAddCustomer(null));
-      dispatch(onAddNewPaymentIntent([]));
-      dispatch(onAddPaymentIntentDetailSelected([]));
-      dispatch(onAddPaymentIntentSelected(undefined));
-      dispatch(onAddDevicesAssignedInPaymentIntent(undefined));
-      navigate("/events");
-    };
-    return (
-        <Grid
-          style={{
-            padding: "5px",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-          container
-        >
-          <Grid
+    dispatch(onAddNewPaymentIntent([]));
+    dispatch(onAddCustomerInfo(undefined));
+    dispatch(onAddCustomer(null));
+    dispatch(onAddNewPaymentIntent([]));
+    dispatch(onAddPaymentIntentDetailSelected([]));
+    dispatch(onAddPaymentIntentSelected(undefined));
+    dispatch(onAddDevicesAssignedInPaymentIntent(undefined));
+    navigate("/events/event-quickglance");
+  };
+  const handleBackActionToMain = () => {
+    dispatch(onAddNewPaymentIntent([]));
+    dispatch(onAddCustomerInfo(undefined));
+    dispatch(onAddCustomer(null));
+    dispatch(onAddNewPaymentIntent([]));
+    dispatch(onAddPaymentIntentDetailSelected([]));
+    dispatch(onAddPaymentIntentSelected(undefined));
+    dispatch(onAddDevicesAssignedInPaymentIntent(undefined));
+    navigate("/events");
+  };
+
+  const breadcrumbStyles = {
+    blueOption: {
+      ...TextFontsize18LineHeight28,
+      color: "var(--blue-dark-600, #155EEF)",
+      cursor: "pointer"
+    },
+    blackOption: {
+      ...TextFontsize18LineHeight28,
+      color: "var(--gray-900, #101828)",
+    }
+  }
+  const breadcrumb = [
+    {
+      title: <p style={breadcrumbStyles.blueOption}>All events</p>,
+      onClick: () => handleBackActionToMain(),
+    },
+    {
+      title: <p style={breadcrumbStyles.blueOption}>{choice}</p>,
+      onClick: () => handleBackAction(),
+    },
+    {
+      title: <p style={breadcrumbStyles.blackOption}>{`${customer?.name} ${customer?.lastName}`}</p>,
+    },
+  ]
+  return (
+    <Grid
+      style={{
+        padding: "5px",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      container
+    >
+      <Grid
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+        container
+      >
+        <Grid marginY={0} item xs={12} sm={12} md={8}>
+          <Typography
+            textTransform={"none"}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              color: "var(--gray-900, #101828)",
+              lineHeight: "38px",
             }}
-            container
+            textAlign={"left"}
+            fontWeight={600}
+            fontFamily={"Inter"}
+            fontSize={"30px"}
           >
-            <Grid marginY={0} item xs={12} sm={12} md={8}>
-              <Typography
-                textTransform={"none"}
-                style={{
-                  color: "var(--gray-900, #101828)",
-                  lineHeight: "38px",
-                }}
-                textAlign={"left"}
-                fontWeight={600}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-              >
-                Consumer activity in {event?.eventInfoDetail?.eventName}
-              </Typography>
-            </Grid>
-          </Grid>
+            Consumer activity in {event?.eventInfoDetail?.eventName}
+          </Typography>
+        </Grid>
+      </Grid>
+      <Grid
+        style={{
+          paddingTop: "0px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+        container
+        marginTop={4}
+      >
+        <Grid marginY={0} item xs={12} sm={12} md={8}>
+          <Breadcrumb
+            path={breadcrumb}
+          />
           <Grid
-            style={{
-              paddingTop: "0px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            container
-            marginTop={4}
+            paddingTop={1}
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            item
+            xs={12}
           >
-            <Grid marginY={0} item xs={12} sm={12} md={8}>
-              <Grid
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontWeight={600}
-                  fontSize={"18px"}
-                  fontFamily={"Inter"}
-                  lineHeight={"28px"}
-                  color={"var(--blue-dark-600, #155EEF)"}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleBackActionToMain()}
-                >
-                  All events
-                </Typography>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontWeight={600}
-                  fontSize={"18px"}
-                  fontFamily={"Inter"}
-                  lineHeight={"28px"}
-                  color={"var(--blue-dark-600, #155EEF)"}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleBackAction()}
-                >
-                  <Icon icon="mingcute:right-line" color="#000" />
-                  {choice}
-                </Typography>
-                <Typography
-                  textTransform={"capitalize"}
-                  textAlign={"left"}
-                  fontWeight={600}
-                  fontSize={"18px"}
-                  fontFamily={"Inter"}
-                  lineHeight={"28px"}
-                  color={"var(--gray-900, #101828)"}
-                >
-                  <Icon icon="mingcute:right-line" color="#000" />
-                  {customer?.name} {customer?.lastName}
-                </Typography>{" "}
-              </Grid>
-              <Grid
-                paddingTop={1}
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-                item
-                xs={12}
-              >
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  fontWeight={400}
-                  fontSize={"14px"}
-                  fontFamily={"Inter"}
-                  lineHeight={"20px"}
-                  color={"var(--gray-600, #475467)"}
-                >
-                  {event?.eventInfoDetail?.address}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Grid textAlign={"right"} item xs={4}></Grid>
+            <Typography
+              textTransform={"none"}
+              textAlign={"left"}
+              fontWeight={400}
+              fontSize={"14px"}
+              fontFamily={"Inter"}
+              lineHeight={"20px"}
+              color={"var(--gray-600, #475467)"}
+            >
+              {event?.eventInfoDetail?.address}
+            </Typography>
           </Grid>
-          <Divider />
-          <Grid container>
-            <Grid marginY={`${(isSmallDevice || isMediumDevice) && '3dvh'}`} item xs={12} sm={12} md={12} lg={12}>
-              <Details />
-            </Grid>
-            <Grid item xs={12}>
-              <ConsumerActivity />
-            </Grid>
-          </Grid>
-          <Divider />
-          <Outlet />
-        </Grid >
-    );
+        </Grid>
+        <Grid textAlign={"right"} item xs={4}></Grid>
+      </Grid>
+      <Divider />
+      <Grid container>
+        <Grid marginY={`${(isSmallDevice || isMediumDevice) && '3dvh'}`} item xs={12} sm={12} md={12} lg={12}>
+          <Details />
+        </Grid>
+        <Grid item xs={12}>
+          <ConsumerActivity />
+        </Grid>
+      </Grid>
+      <Divider />
+      <Outlet />
+    </Grid >
+  );
   // }
 };
 
