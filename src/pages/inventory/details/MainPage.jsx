@@ -14,13 +14,8 @@ import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import ExtraInformation from "./detailComponent/components/ExtraInformation";
 import ExtraInformationItemComponent from "./detailComponent/components/ExtraInformationItemComponent";
+import MainHeaderContainingAllSections from "./UX/MainHeaderContainingAllSections";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
-const DeviceDescriptionTags = lazy(() =>
-  import("./detailComponent/DeviceDescriptionTags")
-);
-const DeviceInformationDetail = lazy(() =>
-  import("./detailComponent/DeviceInformationDetail")
-);
 const TableDetailPerDevice = lazy(() =>
   import("./detailComponent/TableDetailPerDevice")
 );
@@ -101,6 +96,14 @@ const MainPage = () => {
         ),
       },
     ];
+
+    const headersActions = [Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
+      <DeleteItem dataFound={dataFound} />
+    ),
+    Number(user.role) < 2 && (
+      <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
+    )
+    ]
     return (
       <Suspense
         fallback={
@@ -164,7 +167,6 @@ const MainPage = () => {
             <BlueButtonComponent
               title={"Add new group of devices"}
               func={() => navigate("/inventory/new-bulk-items")}
-              // icon={<WhiteCirclePlusIcon />}
               buttonType="button"
             />
           </Grid>
@@ -183,86 +185,10 @@ const MainPage = () => {
           </Grid>
         </Grid>
         <Divider style={{ margin: "0 0 15px 0" }} />
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          alignSelf={"start"}
-          container
-        >
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            sx={{
-              justifyContent: {
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "center",
-                lg: "center",
-              },
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={4}
-            lg={4}
-          >
-            <DeviceInformationDetail dataFound={dataFound} />
-          </Grid>
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            sx={{
-              justifyContent: {
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "center",
-                lg: "center",
-              },
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={3}
-            lg={3}
-          >
-            <DeviceDescriptionTags dataFound={dataFound} />
-          </Grid>
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            alignSelf={"start"}
-            gap={1}
-            sx={{
-              justifyContent: {
-                xs: "flex-start",
-                sm: "flex-start",
-                md: "flex-end",
-                lg: "flex-end",
-              },
-              margin: {
-                xs: "0.5rem 0 0",
-                sm: "0.5rem 0 0",
-                md: "0",
-                lg: "0",
-              },
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={3}
-            lg={3}
-          >
-            {Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
-              <DeleteItem dataFound={dataFound} />
-            )}
-            {Number(user.role) < 2 && (
-              <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
-            )}
-          </Grid>
-        </Grid>
+        <MainHeaderContainingAllSections
+          dataFound={dataFound}
+          actions={headersActions.filter(Boolean)}
+        />
         <Grid
           display={"flex"}
           justifyContent={"flex-start"}
