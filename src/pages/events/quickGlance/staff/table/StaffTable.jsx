@@ -220,6 +220,8 @@ const StaffTable = ({ searching }) => {
             record.id && user.role < 4 && handleDataStaffMember(record),
         };
       }}
+      enablePagination={true}
+      pageSize={10}
     />
   );
 };

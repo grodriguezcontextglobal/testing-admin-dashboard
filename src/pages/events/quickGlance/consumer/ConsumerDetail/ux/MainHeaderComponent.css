@@ -1,0 +1,59 @@
+.consumer-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: transparent;
+    border: 1px solid #eaecf0;
+}
+
+.consumer-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.consumer-header-left {
+    display: flex;
+    align-self: flex-start;
+    gap: 1rem;
+    flex: 1;
+}
+
+.consumer-header-left .name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #101828;
+    margin: 0;
+    text-align: left;
+    gap: 0.5rem;
+}
+
+.consumer-header-left .email,
+.consumer-header-left .phone {
+    font-size: 0.875rem;
+    color: #667085;
+    margin: 0;
+    text-align: left;
+    margin: 0.5rem 0;
+}
+
+.consumer-header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .consumer-header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .consumer-header-right {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+}
