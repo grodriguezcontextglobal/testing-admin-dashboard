@@ -1,0 +1,33 @@
+
+.chart-tooltip-content {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
+  .tooltip-label {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  .chart-legend-content {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .chart-legend-content li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+  
+  .legend-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  
