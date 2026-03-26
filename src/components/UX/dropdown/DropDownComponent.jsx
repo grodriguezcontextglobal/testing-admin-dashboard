@@ -30,12 +30,18 @@ function computePosition(triggerRect, menuRect, placement, offset = 8) {
   const isTop = placement.startsWith("top");
   const isStart = placement.endsWith("start");
   const isEnd = placement.endsWith("end");
+  const isCenter = placement.endsWith("center");
 
   if (isBottom) top = triggerRect.bottom + offset;
   if (isTop) top = triggerRect.top - menuRect.height - offset;
 
-  if (isStart) left = triggerRect.left;
-  if (isEnd) left = triggerRect.right - menuRect.width;
+  if (isStart) {
+    left = triggerRect.left;
+  } else if (isEnd) {
+    left = triggerRect.right - menuRect.width;
+  } else if (isCenter) {
+    left = triggerRect.left + triggerRect.width / 2 - menuRect.width / 2;
+  }
 
   // Keep within viewport with padding
   const pad = 8;
@@ -78,7 +84,7 @@ export default function Dropdown({
 
   // --- State Management ---
   const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [, setActiveIndex] = useState(-1);
   const [pos, setPos] = useState({ top: 0, left: 0, ready: false });
 
   // Controlled vs Uncontrolled value state
