@@ -1,48 +1,25 @@
-import { Typography } from "@mui/material";
 import { useState } from "react";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import UXDropdown from "../../../components/UX/dropdown/DropDownComponent";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../styles/global/Subtitle";
 import ModalAssignDeviceInEvent from "../action/ModalAssignDeviceInEvent";
 import ModalAssignDeviceToConsumer from "../action/ModalAssignDeviceToConsumer";
+import Dropdown from "../../../components/UX/dropdown/DropDownComponent";
 const AssigmentAction = ({ refetching }) => {
   const [assignDevice, setAssignDevice] = useState(false);
   const [assignDeviceEvent, setAssignDeviceEvent] = useState(false);
-
   const items = [
     {
-      label: (
-        <Typography
-          style={{ ...Subtitle, ...CenteringGrid, width: "100%" }}
-          onClick={() => {
-            setAssignDeviceEvent(true);
-          }}
-        >
-          For an event.
-        </Typography>
-      ),
-      key: 1,
-      // disabled: true,
+      label: "For an event.",
+      value: "0",
     },
     {
-      label: (
-        <Typography
-          style={{ ...Subtitle, ...CenteringGrid, width: "100%" }}
-          onClick={() => {
-            setAssignDevice(true);
-          }}
-        >
-          For a lease.
-        </Typography>
-      ),
-      key: 2,
+      label: "For a lease.",
+      value: "1",
     },
   ];
 
   return (
     <>
-      <UXDropdown
+      <Dropdown
         options={items}
         // onSelect={handleSelect}
         placement="top-end"
