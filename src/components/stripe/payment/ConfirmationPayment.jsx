@@ -1,11 +1,6 @@
 import { Icon } from "@iconify/react";
-import {
-  Button,
-  Grid,
-  InputAdornment,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { InputAdornment, Grid } from "@mui/material";
+import HeaderDynamicComponent from "../../UX/header/HeaderDynamicComponent";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, Result } from "antd";
 import { useInterval } from "interval-hooks";
@@ -13,16 +8,18 @@ import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../apis/devitrakApi";
 import FormatAttendeeDetailInfo from "../../components/admin/Attendees/quickGlancePerAttendee/FormatAttendeeDetailInfo";
 import FormatToDisplayDetail from "../../components/admin/Attendees/quickGlancePerAttendee/FormatToDisplayDetail";
 import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
-import "../../style/pages/admin/confirmedPaymentAdmin.css";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import "./ConfirmationPayment.css";
+import Input from "../../UX/inputs/Input";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../icons/WhiteCirclePlusIcon";
+
+
 // import DeviceAssigned from "../../../classes/deviceAssigned";
 const ConfirmationPaymentPage = () => {
   const { event } = useSelector((state) => state.event);
@@ -274,144 +271,42 @@ const ConfirmationPaymentPage = () => {
     navigate(`/events/event-attendees/${customer.uid}`);
   };
   return (
-    <Grid
-      style={{
-        padding: "5px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      container
-    >
-      <Grid item xs={10}>
-        <Grid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+    <div className="confirmation-payment-container">
+      <div className="confirmation-payment-content">
+        <HeaderDynamicComponent
+          title="Events"
+          subtitle={event.eventInfoDetail.address}
+          breadcrumbs={[
+            { name: "All events", onClick: handleBackAction },
+            {
+              name: event.eventInfoDetail.eventName,
+              onClick: () =>
+                navigate(
+                  `/events/event-detail/${event.eventInfoDetail.eventName}`
+                ),
+            },
+            {
+              name: `${customer?.name} ${customer?.lastName}`,
+              onClick: () =>
+                navigate(`/consumers/${customer?.uid}`),
+            },
+          ]}
+          actions={{
+            desktop: (
+              <BlueButtonComponent
+                href="/create-event-page/event-detail"
+                icon={<WhiteCirclePlusIcon />}
+                title="Add new event"
+              />
+            ),
+            mobile: (
+              <BlueButtonComponent
+                href="/create-event-page/event-detail"
+                icon={<WhiteCirclePlusIcon />}
+              />
+            ),
           }}
-          marginTop={5}
-          container
-        >
-          <Grid marginY={0} item xs={6}>
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--gray-900, #101828)",
-                lineHeight: "38px",
-              }}
-              textAlign={"left"}
-              fontWeight={600}
-              fontFamily={"Inter"}
-              fontSize={"30px"}
-            >
-              Events
-            </Typography>
-          </Grid>
-          <Grid
-            textAlign={"right"}
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            gap={1}
-            item
-            xs={6}
-          >
-            {/* /event/new_subscription */}
-            <Link to="/create-event-page/event-detail">
-              <Button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                }}
-              >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  <WhiteCirclePlusIcon />
-                  &nbsp;Add new event
-                </Typography>
-              </Button>
-            </Link>
-          </Grid>
-        </Grid>
-        <Grid
-          style={{
-            paddingTop: "0px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-          marginTop={4}
-        >
-          <Grid marginY={0} item xs={8}>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-600, #155EEF)"}
-                onClick={() => handleBackAction()}
-              >
-                All events
-              </Typography>
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
-              >
-                <Icon icon="mingcute:right-line" />
-                {event.eventInfoDetail.eventName}
-              </Typography>
-              <Typography
-                textTransform={"capitalize"}
-                textAlign={"left"}
-                fontWeight={600}
-                fontSize={"18px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--gray-900, #101828)"}
-              >
-                <Icon icon="mingcute:right-line" />
-                {customer?.name} {customer?.lastName}
-              </Typography>{" "}
-            </Grid>
-            <Grid
-              paddingTop={1}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={400}
-                fontSize={"14px"}
-                fontFamily={"Inter"}
-                lineHeight={"20px"}
-                color={"var(--gray-600, #475467)"}
-              >
-                {event.eventInfoDetail.address}
-              </Typography>
-            </Grid>
-          </Grid>
-          <Grid textAlign={"right"} item xs={4}></Grid>
-        </Grid>
+        />
         <Divider />
         <Grid container>
           <Grid item xs={12}>
@@ -432,9 +327,8 @@ const ConfirmationPaymentPage = () => {
         >
           <Grid textAlign={"right"} item xs></Grid>
           <Grid justifyContent={"right"} alignItems={"center"} item xs={3}>
-            <OutlinedInput
+            <Input
               {...register("searchEvent")}
-              style={OutlinedInputStyle}
               fullWidth
               placeholder="Search a transaction here"
               startAdornment={
@@ -488,60 +382,22 @@ const ConfirmationPaymentPage = () => {
               title="Successfully transaction!"
               subTitle={`Order number: ${payment_intent} Now you can click in return button to return to consumer page.`}
               extra={[
-                <Button
-                  style={{
-                    width: "fit-content",
-                    border: "1px solid var(--blue-dark-600, #155EEF)",
-                    borderRadius: "8px",
-                    background: "var(--blue-dark-600, #155EEF)",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                  }}
+                <BlueButtonComponent
                   onClick={() => navigate("/events/event-attendees")}
                   key="console"
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      color: "var(--base-white, #FFF",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    Return to event main page
-                  </Typography>
-                </Button>,
-                <Button
-                  style={{
-                    width: "fit-content",
-                    border: "1px solid var(--blue-dark-600, #155EEF)",
-                    borderRadius: "8px",
-                    background: "var(--blue-dark-600, #155EEF)",
-                    boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                  }}
+                  title="Return to event main page"
+                />,
+                <BlueButtonComponent
                   onClick={() => handleBackAction()}
                   key="consumer"
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      color: "var(--base-white, #FFF",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    Return to consumer page
-                  </Typography>
-                </Button>,
+                  title="Return to consumer page"
+                />,
               ]}
             />
           </Grid>
         </Grid>
-      </Grid>
-    </Grid>
+      </div>
+    </div>
   );
 };
 
