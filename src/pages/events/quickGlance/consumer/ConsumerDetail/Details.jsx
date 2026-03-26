@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import UXDropdown from "../../../../../components/UX/dropdown/DropDownComponent";
 import SingleEmailNotification from "../../../../../components/notification/email/SingleEmail";
 import AuthorizedTransaction from "./actions/transactions/AuthorizedTransaction";
 import CashTransaction from "./actions/transactions/CashTransaction";
@@ -9,6 +8,7 @@ import ChargedTransaction from "./actions/transactions/ChargedTransaction";
 import FreeTransaction from "./actions/transactions/FreeTransaction";
 import ServicesTransaction from "./actions/transactions/ServicesTransaction";
 import MainHeaderComponent from "./ux/MainHeaderComponent";
+import Dropdown from "../../../../../components/UX/dropdown/DropDownComponent";
 
 const options = [
   {
@@ -65,7 +65,7 @@ const FormatAttendeeDetailInfo = () => {
         title={"Create a new free transaction"}
       />
       {event?.eventInfoDetail?.merchant && (
-        <UXDropdown
+        <Dropdown
           options={options}
           onSelect={handleSelect}
           placement="top-center"
