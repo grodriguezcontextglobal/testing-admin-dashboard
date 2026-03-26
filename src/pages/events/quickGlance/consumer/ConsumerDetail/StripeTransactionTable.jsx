@@ -483,6 +483,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       )
                     : []
                 }
+                enablePagination={true}
+                pageSize={10}
               />
             ) : (
               <Spin indicator={<Loading />} />
