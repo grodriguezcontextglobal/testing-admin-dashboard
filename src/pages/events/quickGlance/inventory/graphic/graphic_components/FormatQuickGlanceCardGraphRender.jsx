@@ -1,11 +1,12 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
 import { Card, Space } from "antd";
-import DevicesInventoryGraph from "./DevicesInventoryGraph";
+// import DevicesInventoryGraph from "./DevicesInventoryGraph";
 // import "./QuickGlanceCard.css";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { PropTypes } from "prop-types";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import UntitledUIReactPieChartComponent from "./UntitledUIReactPiaChartComponent";
 
 const legend = ['Checked out',
   'Not-Functional Report',
@@ -130,7 +131,8 @@ const FormatQuickGlanceCardGraphRender = ({
             item
             xs={12}
           >
-            <DevicesInventoryGraph dataToRender={dataToRender} />
+            <UntitledUIReactPieChartComponent data={dataToRender} colors={COLORS} />
+            {/* <DevicesInventoryGraph dataToRender={dataToRender} /> */}
           </Grid>
 
           <Space size={[8, 16]} wrap>
