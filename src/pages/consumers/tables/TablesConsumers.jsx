@@ -2,7 +2,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Spin } from "antd";
+import { Avatar, Spin, Tooltip } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,15 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
+import "./TablesConsumers.css";
+const getInitials = (name) => {
+  if (!name) return "";
+  const words = name.split(" ");
+  if (words.length > 1) {
+    return `${words[0][0]}${words[1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
 
 export default function TablesConsumers({ searching, data, getCounting }) {
   const { user } = useSelector((state) => state.admin);
@@ -137,28 +146,9 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     fontWeight: 500,
   };
 
-  // const renderingRowStyle = {
-  //   ...TextFontsize18LineHeight28,
-  //   fontSize: "12px",
-  //   lineHeight: "18px",
-  //   color: "var(--Indigo-700, #3538CD)",
-  //   alignSelf: "stretch",
-  //   fontWeight: 400,
-  // };
-
-  // const renderingStyleInChip = (props) => {
-  //   return <p style={renderingRowStyle}>{props}</p>;
-  // };
-
   const renderingRowStyling = (props) => {
     return <p style={renderingStyle}>{props}</p>;
   };
-
-  // const cellStyle = {
-  //   display: "flex",
-  //   justifyContent: "flex-start",
-  //   alignItems: "center",
-  // };
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
@@ -294,47 +284,34 @@ export default function TablesConsumers({ searching, data, getCounting }) {
         const data =
           renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ??
           [];
+
+        if (data.length === 0) {
+          return (
+            <Chip
+              color="primary"
+              variant="filled"
+              label="No event assigned"
+            />
+          );
+        }
+
+        const firstEventName = data[0]?.eventInfoDetail?.eventName || "";
+
         return (
-          <>
-            {data.length > 0 ? (
-              <>
-                {" "}
-                <Chip
-                  color="indigo"
-                  variant="outlined"
-                  style={{
-                    position: "relative",
-                    zIndex: 2, // ensure this chip overlays the next
-                  }}
-                  label={data?.at(-1)?.eventInfoDetail?.eventName}
-                />
-                {data?.length > 1 && (
-                  <Chip
-                    label={`+${Number(data?.length) - 1}`}
-                    style={{
-                      marginLeft: -13, // pull under the first chip
-                      position: "relative",
-                      zIndex: 1, // sits behind the first chip
-                    }}
-                  />
-                )}
-              </>
-            ) : (
-              <Chip
-                color="indigo"
-                variant="outlined"
-                style={{
-                  position: "relative",
-                  zIndex: 2, // ensure this chip overlays the next
-                }}
-                label="No event assigned"
-              />
+          <div className="avatar-group-container">
+            <Tooltip title={firstEventName}>
+              <div className="event-name-chip">{firstEventName}</div>
+            </Tooltip>
+            {data.length > 1 && (
+              <Tooltip title={`${data.length - 1} more events`}>
+                <Avatar className="event-count-avatar">
+                  +{data.length - 1}
+                </Avatar>
+              </Tooltip>
             )}
-          </>
-        );
+          </div>);
       },
-    },
-  ];
+    },];
 
   return (
     <>

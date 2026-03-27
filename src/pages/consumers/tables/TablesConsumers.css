@@ -1,0 +1,45 @@
+.avatar-group-container {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group-container .ant-avatar {
+  border: 2px solid white;
+  margin-left: -12px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.avatar-group-container .ant-avatar:first-child {
+  margin-left: 0;
+  z-index: 1;
+}
+
+.avatar-group-container:hover .ant-avatar {
+  transform: translateX(4px);
+}
+
+.event-name-chip {
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  color: #096dd9;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  z-index: 1;
+  position: relative;
+  border: 2px solid white;
+}
+
+.event-count-avatar.ant-avatar {
+  background-color: #f0f0f0;
+  color: #595959;
+  border: 2px solid white;
+  margin-left: -8px;
+  z-index: 0;
+}
