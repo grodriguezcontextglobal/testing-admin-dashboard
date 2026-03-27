@@ -7,6 +7,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
+import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
 const columnsTableMain = ({
   groupingByDeviceType,
   navigate,
@@ -25,7 +26,7 @@ const columnsTableMain = ({
             }
             return item[dataKey];
           })
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
 
@@ -128,40 +129,15 @@ const columnsTableMain = ({
       responsive: responsive[2],
       render: (warehouse) => {
         return (
-          <span
-            style={{
-              ...cellStyle,
-              borderRadius: "16px",
-              justifyContent: "center",
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              background: `${
-                warehouse === 0
-                  ? "var(--blue-50, #EFF8FF)"
-                  : "var(--success-50, #ECFDF3)"
-              }`,
-              width: "fit-content",
-            }}
+          <PillUIComponent
+            color={warehouse === 0 ? "brand" : "success"}
+            size="sm"
           >
-            <p
-              style={{
-                color: `${
-                  warehouse === 0
-                    ? "var(--blue-700, #175CD3)"
-                    : "var(--success-700, #027A48)"
-                }`,
-                textTransform: "capitalize",
-              }}
-            >
-              <Icon
-                icon="tabler:point-filled"
-                rotate={3}
-                color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-              />
+            <Icon icon="tabler:point-filled" rotate={3} />
+            <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
               {warehouse === 0 ? "In Use" : "In Stock"}
-            </p>
-          </span>
+            </span>
+          </PillUIComponent>
         );
       },
     },
@@ -191,39 +167,17 @@ const columnsTableMain = ({
       },
       responsive: responsive[3],
       render: (ownership) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              ownership === "Permanent"
-                ? "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
+        <PillUIComponent
+          color={ownership === "Permanent" ? "brand" : "success"}
+          size="sm"
         >
-          <Typography
-            color={`${
-              ownership === "Permanent"
+          <Icon icon="tabler:point-filled" rotate={3} />
+          <span style={{ textTransform: "capitalize", marginLeft: "2px", color: ownership === "Permanent"
                 ? "var(--blue-700, #175CD3)"
-                : "var(--success-700, #027A48)"
-            }`}
-            style={Subtitle}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${ownership === "Permanent" ? "#2E90FA" : "#12B76A"}`}
-            />
+                : "var(--success-700, #027A48)" }}>
             {dictionary[ownership]}
-          </Typography>
-        </span>
+          </span>
+        </PillUIComponent>
       ),
     },
     {
