@@ -262,6 +262,7 @@ const TableStaffDetail = () => {
             enablePagination={true}
             columns={columns}
             dataSource={dataToRenderInTable() ? dataToRenderInTable() : []}
+            pageSize={10}
           />
         </Grid>
       </Grid>
