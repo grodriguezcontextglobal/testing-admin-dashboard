@@ -441,6 +441,10 @@ function ListEquipment() {
                 </span>
               ),
           }}
+          pagination={{
+            pageSize: 10,
+            position: ["bottomCenter"],
+          }}
         />
         {openReturnDeviceStaffModal && (
           <ModalReturnDeviceFromStaff
