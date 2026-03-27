@@ -4,11 +4,6 @@ import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-// import { ChangeRoleStaffIcon } from "../../../components/icons/ChangeRoleStaffIcon";
-import { RectanglePlusIcon } from "../../../components/icons/RectanglePlusIcon";
-// import { UpdateIcon } from "../../../components/icons/UpdateIcon";
-// import { UpdatePasswordIcon } from "../../../components/icons/UpdatePasswordIcon";
-// import { WhiteCalendarIcon } from "../../../components/icons/WhiteCalendarIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/ux/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
@@ -91,7 +86,6 @@ const StaffDetail = () => {
         <BlueButtonComponent
           title={"Assign devices"}
           func={() => null}
-          icon={<RectanglePlusIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
