@@ -294,14 +294,13 @@ const ConfirmationPaymentPage = () => {
           actions={{
             desktop: (
               <BlueButtonComponent
-                href="/create-event-page/event-detail"
-                icon={<WhiteCirclePlusIcon />}
+                func={()=> navigate("/create-event-page/event-detail")}
                 title="Add new event"
               />
             ),
             mobile: (
               <BlueButtonComponent
-                href="/create-event-page/event-detail"
+                func={()=> navigate("/create-event-page/event-detail")}
                 icon={<WhiteCirclePlusIcon />}
               />
             ),
@@ -383,12 +382,12 @@ const ConfirmationPaymentPage = () => {
               subTitle={`Order number: ${payment_intent} Now you can click in return button to return to consumer page.`}
               extra={[
                 <BlueButtonComponent
-                  onClick={() => navigate("/events/event-attendees")}
+                  fun={() => navigate("/events/event-attendees")}
                   key="console"
                   title="Return to event main page"
                 />,
                 <BlueButtonComponent
-                  onClick={() => handleBackAction()}
+                  func={() => handleBackAction()}
                   key="consumer"
                   title="Return to consumer page"
                 />,
