@@ -1,10 +1,9 @@
 import { InputLabel, Typography } from "@mui/material";
-import { InputLabelStyle } from "../../style/InputLabelStyle";
 import { Space, Tag, Tooltip } from "antd";
 import PhoneInput from "react-phone-number-input";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
+import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { InputLabelStyle } from "../../style/InputLabelStyle";
 
 const PhoneNumberContact = ({
     contactPhoneNumber,
@@ -76,7 +75,6 @@ const PhoneNumberContact = ({
             func={() => addingPhoneNumber()}
             disabled={contactPhoneNumber === ""}
             styles={{ width: "100%" }}
-            icon={<WhiteCirclePlusIcon />}
           />
         </div>
       </div>
