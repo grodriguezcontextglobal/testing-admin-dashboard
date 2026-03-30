@@ -35,14 +35,6 @@ const MainPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   allConsumersBasedOnEventsPerCompany.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
-
   const componentLocator = useId();
 
   const renderActiveAndInactiveCount = useCallback(
