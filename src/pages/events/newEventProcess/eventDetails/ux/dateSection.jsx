@@ -18,7 +18,6 @@ const DateSection = ({
 }) => {
   const isSmallDevice = window.innerWidth <= 768;
   return (
-    <>
       <div
         style={{
           width: "100%",
@@ -104,7 +103,6 @@ const DateSection = ({
           />
         </div>
       </div>
-    </>
   );
 };
 
