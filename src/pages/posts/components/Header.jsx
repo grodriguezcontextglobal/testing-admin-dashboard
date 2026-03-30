@@ -1,16 +1,10 @@
 import { Grid } from "@mui/material";
-import { Button, Popconfirm } from "antd";
+import { Popconfirm } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Edit from "../../../components/icons/edit-05.svg";
-import ReturnIcon from "../../../components/icons/reverse-right.svg";
-import TrashIcon from "../../../components/icons/trash-01.svg";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import { ButtonGroup, ButtonGroupItem } from "../../../components/UX/buttons/groupButtons/ReusableUntitledUIReactComponent";
 const Header = () => {
   const navigate = useNavigate();
   const titleStyle = {
@@ -40,6 +34,11 @@ const Header = () => {
     }
   };
 
+  const groupStyle = {
+    backgroundColor: "transparent",
+    margin: "0 -1rem",
+    cursor: "none",
+  }
   return (
     <Grid container spacing={2}>
       <Grid
@@ -58,7 +57,48 @@ const Header = () => {
           {location.pathname.includes("/posts/post") ? "Post" : "Posts"}
         </h1>
       </Grid>
-      <Grid
+      <Grid sx={{ justifyContent: { xs: "flex-start", sm: "flex-end", md: "flex-end", lg: "flex-end" } }} item xs={12} sm={6} md={6} lg={6}>
+        {location.pathname.includes("/posts/post") && (
+          <ButtonGroup key="header-button-group" id="header-button-group" style={{ cursor: "none",display: "flex", justifyContent: "flex-end" }}>
+            <ButtonGroupItem style={groupStyle}>
+              <BlueButtonComponent title={"Back"} func={() => navigate(`/posts`)} />
+            </ButtonGroupItem>
+            <ButtonGroupItem style={groupStyle}>
+              <GrayButtonComponent title={"Edit this article"} func={() => navigate(`/posts/post-edit/${location.state.id}`, {
+                state: { id: location.state.id },
+              })} />
+            </ButtonGroupItem>
+            <Popconfirm
+              title="Are you sure to delete this article?"
+              onConfirm={handleDeleteArticle}
+            >
+              <ButtonGroupItem style={groupStyle}>
+                <GrayButtonComponent title={"Delete this article"} />
+              </ButtonGroupItem>
+            </Popconfirm>
+            <ButtonGroupItem style={groupStyle}>
+              <BlueButtonComponent title={"Add new post"} func={() => navigate("/posts/new-post")} />
+
+            </ButtonGroupItem>
+          </ButtonGroup>
+        )}
+      </Grid>
+    </Grid>
+  );
+};
+
+export default Header;
+// import Edit from "../../../components/icons/edit-05.svg";
+// import ReturnIcon from "../../../components/icons/reverse-right.svg";
+// import TrashIcon from "../../../components/icons/trash-01.svg";
+// import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+// import { BlueButton } from "../../../styles/global/BlueButton";
+// import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+// import { DangerButton } from "../../../styles/global/DangerButton";
+// import { GrayButton } from "../../../styles/global/GrayButton";
+// import GrayButtonText from "../../../styles/global/GrayButtonText";
+
+{/* <Grid
         sx={{
           justifyContent: {
             xs: "flex-start",
@@ -69,7 +109,7 @@ const Header = () => {
           gap: "10px",
           display: "flex",
           alignItems: "center",
-          flexDirection:{
+          flexDirection: {
             xs: "column",
             sm: "row",
             md: "row",
@@ -137,15 +177,5 @@ const Header = () => {
             </p>
           </Button>
         </Popconfirm>
-        <Button onClick={() => navigate("/posts/new-post")} style={BlueButton}>
-          <p style={BlueButtonText}>
-            <WhiteCirclePlusIcon />
-            &nbsp;Add new post
-          </p>
-        </Button>
-      </Grid>
-    </Grid>
-  );
-};
-
-export default Header;
+        <BlueButtonComponent title={"Add new post"} func={() => navigate("/posts/new-post")} />
+      </Grid> */}
