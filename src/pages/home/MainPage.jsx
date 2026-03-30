@@ -240,7 +240,7 @@ const MainPage = () => {
             style={{
               width: "fit-content",
             }}
-            to="/inventory/new-item"
+            to="/inventory/new-bulk-items"
           >
             <BlueButtonComponent title={"Add to inventory"} func={null} />
           </Link>
@@ -371,7 +371,7 @@ const MainPage = () => {
                   },
                   message:
                     "Creating an event will let you assign and manage devices, as well as staff to an event with a start and end date. You will also be able to assign devices to consumers, collect retain deposits, collect fees for damaged devices, and keep track of your full inventory.",
-                  link: "/inventory/new-item",
+                  link: "/inventory/new-bulk-items",
                   button: BlueButton,
                   paragraphStyle: BlueButtonText,
                   paragraphText: "Add to inventory",
