@@ -12,7 +12,6 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import { ProfileIcon } from "../../../../../components/icons/ProfileIcon";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { dicStaff } from "./dictionary";
@@ -177,7 +176,6 @@ const FormFields = ({
             buttonType="button"
             func={(e) => addNewMember(e)}
             styles={{ width: "50%", margin: "0.5rem 0" }}
-            icon={<RectangleBluePlusIcon />}
           />
         </Grid>
       </Grid>
@@ -316,16 +314,6 @@ const FormFields = ({
           margin: "1rem 0",
         }}
       >
-        {/* <BlueButtonComponent
-          title={
-            staff?.adminUser.length > 0
-              ? "Save changes to continue"
-              : "Save and continue"
-          }
-          buttonType="submit"
-          styles={{ width: "50%" }}
-          icon={<WhiteCirclePlusIcon />}
-        /> */}
         <BlueButtonComponent
           title="Continue"
           buttonType="button"
