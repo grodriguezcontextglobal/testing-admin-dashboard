@@ -8,7 +8,6 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import ChartComponent from "./UI/ChartComponent";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 
 const ConsumerHeader = ({
   setCreateUserButton,
@@ -59,7 +58,7 @@ const ConsumerHeader = ({
           md={6}
           lg={6}
         >
-          <BlueButtonComponent func={()=> setCreateUserButton(true)} title={"Add new consumer"} icon={<WhiteCirclePlusIcon />} />
+          <BlueButtonComponent func={()=> setCreateUserButton(true)} title={"Add new consumer"}/>
         </Grid>
       </Grid>
       <Divider />
