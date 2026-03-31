@@ -234,7 +234,7 @@ const InvitationLanding = () => {
         ],
       },
     );
-
+    console.log(resp?.data)
     if (resp.data.ok) {
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
         (element) => element.user === email,
@@ -244,9 +244,10 @@ const InvitationLanding = () => {
         ...employeesInCompany[findInvitedStaff],
         status: "Confirmed",
       };
-      await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
+      const t = await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
         employees: employeesInCompany,
       });
+      console.log(t)
       return;
     }
   };
@@ -293,7 +294,7 @@ const InvitationLanding = () => {
       const employeesInCompany = [...hostCompanyInfo.employees];
       employeesInCompany[findInvitedStaff] = {
         ...employeesInCompany[findInvitedStaff],
-        email:resp.data.email,
+        email: resp.data.email,
         employee_id: resp.data.uid,
         status: "Confirmed",
       };
@@ -557,17 +558,17 @@ const InvitationLanding = () => {
                       checkIfUserExistsInOtherCompany()
                         ? {}
                         : {
-                            required: "Password is required",
-                            minLength: {
-                              value: 8,
-                              message: "Password must be at least 8 characters",
-                            },
-                            pattern: {
-                              value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                              message:
-                                "Password must contain uppercase, lowercase, and number",
-                            },
+                          required: "Password is required",
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters",
                           },
+                          pattern: {
+                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                            message:
+                              "Password must contain uppercase, lowercase, and number",
+                          },
+                        },
                     )}
                     error={!!errors.password}
                     helperText={errors.password?.message}
@@ -678,11 +679,11 @@ const InvitationLanding = () => {
                       checkIfUserExistsInOtherCompany()
                         ? {}
                         : {
-                            required: "Please confirm your password",
-                            validate: (value) =>
-                              value === watchPassword ||
-                              "Passwords do not match",
-                          },
+                          required: "Please confirm your password",
+                          validate: (value) =>
+                            value === watchPassword ||
+                            "Passwords do not match",
+                        },
                     )}
                     error={
                       !checkIfUserExistsInOtherCompany() &&
