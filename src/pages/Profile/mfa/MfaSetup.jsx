@@ -153,8 +153,9 @@ const MfaSetup = () => {
                     alt="MFA QR Code"
                     style={{
                       maxWidth: "200px",
-                      border: "1px solid #eee",
-                      padding: "10px",
+                      padding: 0,
+                      borderRadius:"8px",
+                      border:"10px solid #155eef",
                     }}
                   />
                 )}
