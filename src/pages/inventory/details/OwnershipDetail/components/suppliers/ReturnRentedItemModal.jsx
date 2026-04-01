@@ -1,4 +1,4 @@
-import { Box, Grid, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Checkbox,
@@ -679,178 +679,9 @@ const ReturnRentedItemModal = ({
     return renterItemList.some((item) => selectedItems.has(item.item_id));
   }, [renterItemList, selectedItems]);
 
-  const renderingOption1 = () => {
-    return (
-      <>
-        <Typography variant="h6" gutterBottom>
-          Return All Rented Items ({totalItems} items)
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          This will return all rented items to the renter and delete them from
-          records.
-        </Typography>
-
-        <Search
-          placeholder="Search by Item ID or Serial Number"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: 300 }}
-          allowClear
-        />
-
-        <Table
-          dataSource={renterItemList}
-          columns={columns.slice(1)} // Exclude select column for "return all"
-          rowKey="item_id"
-          pagination={false}
-          size="small"
-          scroll={{ y: 400 }}
-          loading={loading}
-        />
-
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Pagination
-            current={currentPage}
-            total={totalItems}
-            pageSize={pageSize}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total, range) =>
-              `${range[0]}-${range[1]} of ${total} items`
-            }
-            onChange={handlePageChange}
-            pageSizeOptions={["20", "50", "100", "200"]}
-          />
-          <BlueButtonConfirmationComponent
-            title={`Return All Items (${totalItems})`}
-            func={handleReturnAllItems}
-            loadingState={loading}
-            disabled={totalItems === 0}
-            confirmationTitle="Are you sure you want to return the all items? This action can not be reversed."
-          />
-        </Box>
-      </>
-    );
-  };
-
-  const renderingOption2 = () => {
-    return (
-      <>
-        <Typography variant="h6" gutterBottom>
-          Select Items to Return
-        </Typography>
-
-        <Search
-          placeholder="Search by Item ID or Serial Number"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: 300 }}
-          allowClear
-        />
-
-        <Space style={{ marginBottom: 16 }}>
-          <Checkbox
-            checked={isAllCurrentPageSelected}
-            indeterminate={
-              isSomeCurrentPageSelected && !isAllCurrentPageSelected
-            }
-            onChange={(e) => handleSelectAll(e.target.checked)}
-          >
-            Select All on Page ({selectedItems.size} total selected)
-          </Checkbox>
-        </Space>
-
-        <Table
-          dataSource={renterItemList}
-          columns={columns}
-          rowKey="item_id"
-          pagination={false}
-          size="small"
-          scroll={{ y: 400 }}
-          loading={loading}
-        />
-
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Pagination
-              current={currentPage}
-              total={totalItems}
-              pageSize={pageSize}
-              showSizeChanger
-              showQuickJumper
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`
-              }
-              onChange={handlePageChange}
-              pageSizeOptions={["20", "50", "100", "200"]}
-            />
-            <Typography variant="body2" color="text.secondary">
-              {selectedItems.size} item(s) selected across all pages
-            </Typography>
-          </Box>
-          <BlueButtonConfirmationComponent
-            title={`Return Selected Items (${selectedItems.size})`}
-            loadingState={loading}
-            disabled={selectedItems.size === 0}
-            confirmationTitle="Are you sure you want to return the selected items? This action can not be reversed."
-            func={handleReturnSelectedItems}
-          />
-        </Box>
-      </>
-    );
-  };
-
-  const items = [
-    {
-      key: "1",
-      label: "Return All Items",
-      children: <Paper sx={{ p: 2 }}>{renderingOption1()}</Paper>,
-    },
-    {
-      key: "2",
-      label: "Return Selected Items",
-      children: <Paper sx={{ p: 2 }}>{renderingOption2()}</Paper>,
-    },
-  ];
-
   const bodyModal = () => {
     return (
       <>
-        <Box sx={{ mt: 2 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Tabs
-                size="large"
-                tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
-                activeKey={activeTab}
-                type="card"
-                onChange={(key) => {
-                  setActiveTab(key);
-                  setCurrentPage(1);
-                  setSelectedItems(new Set());
-                  setSearchText("");
-                  fetchItemsForRenter(1, "");
-                }}
-                items={items}
-              />
-            </Grid>
-          </Grid>
-        </Box>
-        {/* Add this in the Modal content, before the Tabs component: */}
         {progress.total > 0 && (
           <Box
             sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}
@@ -868,6 +699,135 @@ const ReturnRentedItemModal = ({
             />
           </Box>
         )}
+        <Tabs
+          size="large"
+          tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
+          activeKey={activeTab}
+          type="card"
+          onChange={(key) => {
+            setActiveTab(key);
+            setCurrentPage(1);
+            setSelectedItems(new Set());
+            setSearchText("");
+            if (!isUsingProvidedData) {
+              fetchItemsForRenter(1, "");
+            }
+          }}
+        >
+          <Tabs.TabPanel tab="Return All Items" key="1">
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Return All Rented Items ({totalItems} items)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                This will return all rented items to the renter and delete them
+                from records.
+              </Typography>
+
+              <Search
+                placeholder="Search by Item ID or Serial Number"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ marginBottom: 16, width: 300 }}
+                allowClear
+              />
+
+              <Table
+                dataSource={renterItemList}
+                columns={columns.slice(1)} // Exclude select column
+                rowKey="item_id"
+                pagination={false}
+                size="small"
+                scroll={{ y: 400 }}
+                loading={loading}
+              />
+
+              <Pagination
+                current={currentPage}
+                total={totalItems}
+                pageSize={pageSize}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`
+                }
+                onChange={handlePageChange}
+                pageSizeOptions={["20", "50", "100", "200"]}
+              />
+              <BlueButtonConfirmationComponent
+                title={`Return All Items (${totalItems})`}
+                func={handleReturnAllItems}
+                loadingState={loading}
+                disabled={totalItems === 0}
+                confirmationTitle="Are you sure you want to return all items? This action cannot be reversed."
+                styles={{ width: "fit-content", margin: "15px 0 0" }}
+              />
+            </Paper>
+          </Tabs.TabPanel>
+          <Tabs.TabPane tab="Return Selected Items" key="2">
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Select Items to Return
+              </Typography>
+
+              <Search
+                placeholder="Search by Item ID or Serial Number"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ marginBottom: 16, width: 300 }}
+                allowClear
+              />
+
+              <Space style={{ marginBottom: 16 }}>
+                <Checkbox
+                  checked={isAllCurrentPageSelected}
+                  indeterminate={
+                    isSomeCurrentPageSelected && !isAllCurrentPageSelected
+                  }
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                >
+                  Select All on Page ({renterItemList.length} items)
+                </Checkbox>
+              </Space>
+
+              <Table
+                dataSource={renterItemList}
+                columns={columns}
+                rowKey="item_id"
+                pagination={false}
+                size="small"
+                scroll={{ y: 400 }}
+                loading={loading}
+              />
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Pagination
+                  current={currentPage}
+                  total={totalItems}
+                  pageSize={pageSize}
+                  showSizeChanger
+                  showQuickJumper
+                  showTotal={(total, range) =>
+                    `${range[0]}-${range[1]} of ${total} items`
+                  }
+                  onChange={handlePageChange}
+                  pageSizeOptions={["20", "50", "100", "200"]}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {selectedItems.size} item(s) selected across all pages
+                </Typography>
+              </Box>
+              <BlueButtonConfirmationComponent
+                title={`Return Selected Items (${selectedItems.size})`}
+                loadingState={loading}
+                disabled={selectedItems.size === 0}
+                confirmationTitle="Are you sure you want to return the selected items? This action cannot be reversed."
+                func={handleReturnSelectedItems}
+                styles={{ width: "fit-content", margin: "15px 0 0" }}
+              />
+            </Paper>
+          </Tabs.TabPane>
+        </Tabs>
       </>
     );
   };
