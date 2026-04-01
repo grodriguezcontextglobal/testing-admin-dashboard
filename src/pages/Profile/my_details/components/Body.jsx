@@ -8,6 +8,7 @@ import dicRole from "../../../../components/general/dicRole";
 import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import BodyRendering from "./BodyRendering";
 import "./Body.css";
+import { dicIconNotification } from "../../../../utils/dicIconNotification";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -25,9 +26,13 @@ const Body = () => {
   });
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg, dur) => {
+  const openNotificationWithIcon = (type, msg, dur) => {
     api.open({
-      message: msg,
+      message: (
+        <div>
+          <span style={{ width: "35px", aspectRatio: 1 }}>{dicIconNotification[type]}</span>&nbsp;{msg}
+        </div>
+      ),
       duration: dur,
     });
   };
@@ -47,6 +52,7 @@ const Body = () => {
     ) {
       api.destroy();
       return openNotificationWithIcon(
+        "warning",
         "Please save updates before leave this tab.",
         0
       );
@@ -132,11 +138,11 @@ const Body = () => {
     setLoading(true);
     try {
       let base64;
-      if (imageUploadedValue.length > 0 && imageUploadedValue[0].size > 1048576) {
+      if (imageUploadedValue?.length > 0 && imageUploadedValue[0].size > 1048576) {
         return alert(
           "Image is bigger than 1mb. Please resize the image or select a new one."
         );
-      } else if (imageUploadedValue.length > 0) {
+      } else if (imageUploadedValue?.length > 0) {
         base64 = await convertToBase64(imageUploadedValue[0]);
         const fileBase64 = await convertToBase64(imageUploadedValue[0]);
         const templateStaffImageUploader = new ImageUploaderFormat(
@@ -200,8 +206,8 @@ const Body = () => {
             }
           );
           await updatedStaffInEvent(data);
-          openNotificationWithIcon({ "Information updated": 3 });
-          openNotificationWithIcon({ "Information updated": 3 });
+          openNotificationWithIcon("success", "Information updated.", 3);
+          openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());
           return window.location.reload(true);
         }
@@ -212,24 +218,8 @@ const Body = () => {
           email: data.email,
           phone: data.phone,
         });
-        if (resp) {
-          const dataUser = user.data;
-          dispatch(
-            onLogin({
-              ...user,
-              name: data.name,
-              lastName: data.lastName,
-              email: data.email,
-              phone: data.phone,
-              data: {
-                ...dataUser,
-                name: data.name,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone,
-              },
-            })
-          );
+        console.log(resp?.data);
+        if (resp.data.ok) {
           const newDataUpdatedEmployeeCompany = {
             firstName: data.name,
             lastName: data.lastName,
@@ -246,8 +236,8 @@ const Body = () => {
             }
           );
           await updatedStaffInEvent(data);
-          openNotificationWithIcon({ "Information updated": 3 });
-          openNotificationWithIcon({ "Information updated": 3 });
+          openNotificationWithIcon("success", "Information updated.", 3);
+          openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());
           return window.location.reload(true);
         }
