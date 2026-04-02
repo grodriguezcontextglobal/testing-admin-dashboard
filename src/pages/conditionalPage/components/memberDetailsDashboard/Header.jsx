@@ -254,8 +254,8 @@ const MemberInfoHeader = ({ pageTitle, memberInfo, groupName,  setAddingNewMembe
               justifyContent: {
                 xs: "center",
                 sm: "center",
-                md: "flex-start",
-                lg: "flex-start",
+                md: "flex-end",
+                lg: "flex-end",
               },
               alignSelf: "flex-start",
             }}
