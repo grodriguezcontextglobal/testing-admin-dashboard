@@ -1,14 +1,15 @@
 import { Grid } from "@mui/material";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/ant-select.css";
-import "../../../styles/global/reactInput.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
+import "../../../styles/global/reactInput.css";
 import "./style.css";
 // import { renderingModals } Ffrom "./utils/BulkComponents";
 import { renderTitle } from "./utils/EditBulkComponents";
 import EditBulkForm from "./utils/EditBulkForm";
 import NewSupplier from "./utils/suppliers/NewSupplier";
-import useLogic from "./edit/useLogic";
+import useBulkActionLogic from "./add/useBulkActionLogic";
+import { renderingModals } from "./utils/BulkComponents";
 
 const options = [
   { value: "Permanent" },
@@ -29,11 +30,13 @@ const EditGroup = () => {
     displayPreviewImage,
     displaySublocationFields,
     errors,
+    handleAddSubLocationInput,
     handleDeleteMoreInfo,
     handleMoreInfoPerDevice,
+    handleRemoveSubLocationInput,
+    handleSubLocationInputChange,
     handleSubmit,
     imageUrlGenerated,
-    // imageUploadedValue,
     isRented,
     keyObject,
     labeling,
@@ -41,42 +44,41 @@ const EditGroup = () => {
     manuallyAddingSerialNumbers,
     moreInfo,
     moreInfoDisplay,
-    // openScannedItemView,
-    // openScanningModal,
+    openScannedItemView,
+    openScanningModal,
     providersList,
     queryClient,
     rangeFormat,
     refetchingAfterNewSupplier,
     register,
-    removeImage,
     renderingOptionsForSubLocations,
     renderLocationOptions,
     retrieveItemOptions,
     returningDate,
-    savingNewItem,
     scannedSerialNumbers,
     setAddSerialNumberField,
     setImageUploadedValue,
     setKeyObject,
+    setMoreInfo,
     setMoreInfoDisplay,
     setOpenScannedItemView,
     setOpenScanningModal,
-    setRemoveImage,
     setReturningDate,
     setScannedSerialNumbers,
+    setSubLocationInputs,
     setSubLocationsSubmitted,
     setSupplierModal,
-    setUpdateAllItems,
     setValueObject,
+    subLocationInputs,
     subLocationsOptions,
     subLocationsSubmitted,
     supplierList,
     supplierModal,
-    updateAllItems,
     user,
     valueObject,
     watch,
-  } = useLogic();
+    updateGroupItems
+  } = useBulkActionLogic();
   return (
     <Grid
       display={"flex"}
@@ -111,33 +113,44 @@ const EditGroup = () => {
         OutlinedInputStyle={OutlinedInputStyle}
         rangeFormat={rangeFormat}
         register={register}
-        removeImage={removeImage}
         renderingOptionsForSubLocations={renderingOptionsForSubLocations}
         renderLocationOptions={renderLocationOptions}
         retrieveItemOptions={retrieveItemOptions}
         returningDate={returningDate}
-        savingNewItem={savingNewItem}
+        savingNewItem={updateGroupItems}
         setAddSerialNumberField={setAddSerialNumberField}
         setImageUploadedValue={setImageUploadedValue}
         setKeyObject={setKeyObject}
         setMoreInfoDisplay={setMoreInfoDisplay}
         setOpenScannedItemView={setOpenScannedItemView}
         setOpenScanningModal={setOpenScanningModal}
-        setRemoveImage={setRemoveImage}
         setReturningDate={setReturningDate}
         setSubLocationsSubmitted={setSubLocationsSubmitted}
-        setUpdateAllItems={setUpdateAllItems}
         setValueObject={setValueObject}
         subLocationsOptions={subLocationsOptions}
         subLocationsSubmitted={subLocationsSubmitted}
-        updateAllItems={updateAllItems}
+        subLocationInputs={subLocationInputs}
+        setSubLocationInputs={setSubLocationInputs}
+        handleAddSubLocationInput={handleAddSubLocationInput}
+        handleRemoveSubLocationInput={handleRemoveSubLocationInput}
+        handleSubLocationInputChange={handleSubLocationInputChange}
+        suppliersOptions={supplierList}
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
-        suppliersOptions={supplierList}
+        setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
+
       />
+      {renderingModals({
+        openScanningModal,
+        setOpenScanningModal,
+        openScannedItemView,
+        setOpenScannedItemView,
+        scannedSerialNumbers,
+        setScannedSerialNumbers,
+      })}
       {supplierModal && (
         <NewSupplier
           providersList={providersList}
