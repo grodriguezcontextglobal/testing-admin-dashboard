@@ -19,6 +19,7 @@ import useSuppliers from "../../utils/hooks/useSuppliers";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { formatDate } from "../../utils/dateFormat";
+import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
 
 const useBulkActionLogic = () => {
   const {
@@ -57,6 +58,7 @@ const useBulkActionLogic = () => {
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
+  const [generalInfoForSelection, setGeneralInfoForSelection] = useState({})
   const { user } = useSelector((state) => state.admin);
   const locationInApp = useLocation()
   const {
@@ -144,26 +146,30 @@ const useBulkActionLogic = () => {
     },
   });
 
-  // const sequencialNumbericInsertItemMutation = useMutation({
-  //   mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({
-  //       queryKey: ["listOfItemsInStock"],
-  //       exact: true,
-  //       refetchType: "active",
-  //     });
-  //     queryClient.invalidateQueries({
-  //       queryKey: ["ItemsInInventoryCheckingQuery"],
-  //       exact: true,
-  //       refetchType: "active",
-  //     });
-  //     queryClient.invalidateQueries({
-  //       queryKey: ["RefactoredListInventoryCompany"],
-  //       exact: true,
-  //       refetchType: "active",
-  //     });
-  //   },
-  // });
+  const alphaNumericUpdateItemMutation = useMutation({
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-alphanumeric-serial-number",
+        template,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["listOfItemsInStock"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+        exact: true,
+        refetchType: "active",
+      });
+    },
+  });
 
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -213,18 +219,9 @@ const useBulkActionLogic = () => {
       openNotificationWithIcon,
       returningDate,
     });
-    // setScannedSerialNumbers(data.extra_serial_numbers)
-    // if (
-    //   scannedSerialNumbers.length === 0 &&
-    //   Number(data.max_serial_number) < Number(data.min_serial_number)
-    // ) {
-    //   return openNotificationWithIcon(
-    //     "Max serial number must be greater than min serial number.",
-    //   );
-    // }
     try {
       if (scannedSerialNumbers.length > 0) {
-       await bulkItemInsertAlphanumeric({
+        await bulkItemInsertAlphanumeric({
           data,
           user,
           navigate,
@@ -252,6 +249,43 @@ const useBulkActionLogic = () => {
     }
   };
 
+  const updateGroupItems = async (data) => {
+    validatingInputFields({
+      data,
+      openNotificationWithIcon,
+      returningDate,
+    });
+    try {
+      setLoadingStatus(true);
+      await bulkItemUpdateAlphanumeric({
+        data,
+        user,
+        navigate,
+        openNotificationWithIcon,
+        setLoadingStatus,
+        setValue,
+        img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+        moreInfo,
+        formatDate,
+        returningDate,
+        subLocationsSubmitted: subLocationInputs
+          .map((item) => item.value)
+          .filter((val) => val.trim() !== ""),
+        scannedSerialNumbers,
+        setScannedSerialNumbers,
+        alphaNumericUpdateItemMutation,
+        dicSuppliers,
+        queryClient,
+      });
+      openNotificationWithIcon("All items were updated database.");
+      return navigate("/inventory");
+    } catch (error) {
+      openNotificationWithIcon(`${error.message}`);
+      setLoadingStatus(false);
+    } finally {
+      setLoadingStatus(false);
+    }
+  }
   const handleMoreInfoPerDevice = () => {
     const result = [...moreInfo, { keyObject, valueObject }];
     setKeyObject("");
@@ -272,8 +306,8 @@ const useBulkActionLogic = () => {
       return setValue(
         "quantity",
         Number(watch("max_serial_number")) -
-          Number(watch("min_serial_number")) +
-          1,
+        Number(watch("min_serial_number")) +
+        1,
       );
     return 0; // Alphanumeric
   }, [
@@ -423,6 +457,7 @@ const useBulkActionLogic = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("reference_item_group"),
       );
+      setGeneralInfoForSelection(dataToRetrieve)
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (
@@ -433,8 +468,8 @@ const useBulkActionLogic = () => {
           ) {
             return;
           }
-          if(locationInApp.pathname==="/create-event-page/device-detail"){
-          setValue("ownership", "Rent")
+          if (locationInApp.pathname === "/create-event-page/device-detail") {
+            setValue("ownership", "Rent")
           }
           setValue(key, value);
           setValue("quantity", 0);
@@ -499,6 +534,7 @@ const useBulkActionLogic = () => {
   ]);
 
   useEffect(() => {
+    console.log(">>", allSerialNumbersOptions)
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
@@ -607,78 +643,80 @@ const useBulkActionLogic = () => {
     }
   }, [watch("location")]);
   return {
-    supplierList,
-    supplierModal,
-    providersList,
-    setSupplierModal,
-    refetchingAfterNewSupplier,
-    queryClient,
+    acceptAndGenerateImage,
+    addingSubLocation,
+    addSerialNumberField,
+    allSerialNumbersOptions,
+    contextHolder,
+    control,
+    convertImageTo64ForPreview,
     dicSuppliers,
-    loadingStatus,
-    setLoadingStatus,
-    moreInfoDisplay,
-    setMoreInfoDisplay,
-    moreInfo,
-    setMoreInfo,
-    keyObject,
-    setKeyObject,
-    valueObject,
-    setValueObject,
-    returningDate,
-    setReturningDate,
-    imageUploadedValue,
-    setImageUploadedValue,
     displayContainerSplotLimitField,
-    setDisplayContainerSplotLimitField,
+    displayPreviewImage,
     displaySublocationFields,
-    setDisplaySublocationFields,
-    subLocationInputs,
-    setSubLocationInputs,
+    errors,
+    generalInfoForSelection,
     handleAddSubLocationInput,
+    handleDeleteMoreInfo,
+    handleMoreInfoPerDevice,
     handleRemoveSubLocationInput,
     handleSubLocationInputChange,
-    subLocationsSubmitted,
-    setSubLocationsSubmitted,
-    allSerialNumbersOptions,
-    setAllSerialNumbersOptions,
-    addSerialNumberField,
-    setAddSerialNumberField,
-    rangeFormat,
-    setRangeFormat,
-    scannedSerialNumbers,
-    setScannedSerialNumbers,
-    openScanningModal,
-    setOpenScanningModal,
-    openScannedItemView,
-    setOpenScannedItemView,
-    labeling,
-    setLabeling,
-    isRented,
-    setIsRented,
-    displayPreviewImage,
-    setDisplayPreviewImage,
-    imageUrlGenerated,
-    setImageUrlGenerated,
-    convertImageTo64ForPreview,
-    setConvertImageTo64ForPreview,
-    register,
     handleSubmit,
-    setValue,
-    watch,
-    control,
-    errors,
-    contextHolder,
-    retrieveItemOptions,
-    renderLocationOptions,
-    savingNewItem,
-    handleMoreInfoPerDevice,
-    handleDeleteMoreInfo,
-    subLocationsOptions,
-    renderingOptionsForSubLocations,
-    addingSubLocation,
+    imageUploadedValue,
+    imageUrlGenerated,
+    isRented,
+    keyObject,
+    labeling,
+    loadingStatus,
     manuallyAddingSerialNumbers,
-    acceptAndGenerateImage,
+    moreInfo,
+    moreInfoDisplay,
+    openScannedItemView,
+    openScanningModal,
+    providersList,
+    queryClient,
+    rangeFormat,
+    refetchingAfterNewSupplier,
+    register,
+    renderingOptionsForSubLocations,
+    renderLocationOptions,
+    retrieveItemOptions,
+    returningDate,
+    savingNewItem,
+    scannedSerialNumbers,
+    setAddSerialNumberField,
+    setAllSerialNumbersOptions,
+    setConvertImageTo64ForPreview,
+    setDisplayContainerSplotLimitField,
+    setDisplayPreviewImage,
+    setDisplaySublocationFields,
+    setImageUploadedValue,
+    setImageUrlGenerated,
+    setIsRented,
+    setKeyObject,
+    setLabeling,
+    setLoadingStatus,
+    setMoreInfo,
+    setMoreInfoDisplay,
+    setOpenScannedItemView,
+    setOpenScanningModal,
+    setRangeFormat,
+    setReturningDate,
+    setScannedSerialNumbers,
+    setSubLocationInputs,
+    setSubLocationsSubmitted,
+    setSupplierModal,
+    setValue,
+    setValueObject,
+    subLocationInputs,
+    subLocationsOptions,
+    subLocationsSubmitted,
+    supplierList,
+    supplierModal,
+    updateGroupItems,
     user,
+    valueObject,
+    watch,
   };
 };
 
