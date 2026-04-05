@@ -111,7 +111,7 @@ export const renderFields = ({
     },
     {
       name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "Select or type a location where items will be taxed",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -125,7 +125,7 @@ export const renderFields = ({
     },
     {
       name: "container",
-      placeholder: "e.g. Permanent",
+      placeholder: "Select container option",
       label: "Is it a container?",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -185,7 +185,7 @@ export const renderFields = ({
     },
     {
       name: "format_range_serial_number",
-      placeholder: "e.g. SKJDD6564H, SKJDD6564J | 542101-542110",
+      placeholder: "Select option for serial number range format",
       label: "Serial number range format",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -198,7 +198,7 @@ export const renderFields = ({
     },
     {
       name: "feed_serial_number",
-      placeholder: "e.g. typing one by one or scanning multiple serial numbers",
+      placeholder: "Select option for how serial number will be submitted",
       label: "How serial number will be submitted",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -265,7 +265,7 @@ export const renderFields = ({
     },
     {
       name: "ownership",
-      placeholder: "e.g. Permanent",
+      placeholder: "Select ownership option",
       label: "Ownership status of item",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -312,7 +312,7 @@ export const renderFields = ({
       options: ["YES", "NO"],
       htmlOption: 0,
       tooltip: true,
-      tooltipMessage: "Select if the device is assignable to staff or events.",
+      tooltipMessage: "Is device assignable to staff/events?",
       displayField: true,
     },
     {
