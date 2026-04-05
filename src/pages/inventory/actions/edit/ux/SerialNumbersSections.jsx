@@ -1,309 +1,290 @@
-import { UploadOutlined } from "@ant-design/icons";
-import { Grid } from "@mui/material";
-import { Button, Col, Divider, message, Row, Tabs, Upload } from "antd";
-import { useCallback, useState } from "react";
+import { Grid, Typography } from "@mui/material";
+import { AutoComplete, Checkbox, Divider } from "antd";
+import { useEffect, useState } from "react";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
-import ReusableTextArea from "../../../../../components/UX/inputs/TextArea";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
-import SerialNumberAndMoreInfoComponentForm from "../../utils/uxForm/SerialNumberAndMoreInfoComponentForm";
-import useLogic from "../useLogic";
+import useBulkActionLogic from "../../add/useBulkActionLogic";
 
-// --- Helper for Sequential Logic ---
+const options = [{ value: "Serial number", label: "Serial number" }];
 
-const generateSequentialSerials = (start, end) => {
-  const result = [];
-  const startNum = parseInt(start, 10);
-  const endNum = parseInt(end, 10);
+const SerialNumberAndMoreInfoComponentForm = ({
+  style,
+  scannedSerialNumbers,
+  setScannedSerialNumbers,
+  moreInfo,
+  setMoreInfo,
+}) => {
+  const { generalInfoForSelection } = useBulkActionLogic()
+  useEffect(() => {
+  }, [generalInfoForSelection])
+  // State for the dynamic input fields for a single device
+  const [nextId, setNextId] = useState(2);
+  const [identifiers, setIdentifiers] = useState([
+    { id: 1, type: "Serial number", value: "" },
+  ]);
+  // State for the list of devices added
+  const [devices, setDevices] = useState([]);
 
-  // Simple numeric range (e.g., "1001" to "1050")
-  if (
-    !isNaN(startNum) &&
-    !isNaN(endNum) &&
-    start.toString() === startNum.toString() &&
-    end.toString() === endNum.toString()
-  ) {
-    if (startNum > endNum) {
-      message.error("Start serial must be less than or equal to end serial.");
-      return [];
-    }
-    for (let i = startNum; i <= endNum; i++) {
-      result.push(i.toString());
-    }
-    return result;
-  }
-
-  // Alphanumeric range (e.g., "SN-001" to "SN-100")
-  const startMatch = start.match(/^(.*?)(\d+)$/);
-  const endMatch = end.match(/^(.*?)(\d+)$/);
-
-  if (startMatch && endMatch && startMatch[1] === endMatch[1]) {
-    const prefix = startMatch[1];
-    let numStart = parseInt(startMatch[2], 10);
-    let numEnd = parseInt(endMatch[2], 10);
-    const startPadding = startMatch[2].length;
-
-    if (numStart > numEnd) {
-      message.error("Start serial must be less than or equal to end serial.");
-      return [];
-    }
-
-    for (let i = numStart; i <= numEnd; i++) {
-      result.push(prefix + i.toString().padStart(startPadding, "0"));
-    }
-    return result;
-  }
-
-  message.error(
-    "Invalid or non-matching sequential format. Use a simple number range or a common prefix with a number suffix (e.g., ABC-1 to ABC-10).",
-  );
-  return [];
-};
-
-// --- Sub-components for each Tab ---
-
-const ScanInputTab = ({ onSerialsChange, setScannedSerialNumbers }) => {
-  const [scannedSerials, setScannedSerials] = useState("");
-
-  const addSerialNumberInSequantial = () => {
-    const result = scannedSerials.split("\n").filter((s) => s.trim() !== "");
-    onSerialsChange(result);
-    return setScannedSerialNumbers(result);
-  };
-
-  return (
-    <div>
-      <p>
-        Enter each serial number on a new line. You can paste a list from your
-        scanner or a document.
-      </p>
-      <ReusableTextArea
-        rows={6}
-        value={scannedSerials}
-        onChange={(e) => setScannedSerials(e.target.value)}
-        placeholder="SN001\nSN002\nSN003..."
-        style={{ marginTop: "8px" }}
-      />
-      <BlueButtonComponent
-        title="Add serial numbers"
-        func={() => addSerialNumberInSequantial()}
-        styles={{ marginTop: "0.5rem" }}
-      />
-    </div>
-  );
-};
-
-const SequentialInputTab = ({ onSerialsChange, setScannedSerialNumbers }) => {
-  const [startSerial, setStartSerial] = useState("");
-  const [endSerial, setEndSerial] = useState("");
-
-  const addSerialNumberInSequantial = () => {
-    if (startSerial && endSerial) {
-      const result = generateSequentialSerials(startSerial, endSerial);
-      onSerialsChange(result);
-      return setScannedSerialNumbers(result);
-    } else {
-      onSerialsChange([]);
-      return setScannedSerialNumbers([]);
-    }
-  };
-  return (
-    <div>
-      <p>Enter the starting and ending serial numbers of the range.</p>
-      <Row gutter={16} style={{ marginTop: "8px" }}>
-        <Col xs={24} sm={12}>
-          <Input
-            value={startSerial}
-            onChange={(e) => setStartSerial(e.target.value)}
-            placeholder="Start Serial (e.g., 1001 or SN-1001)"
-          />
-        </Col>
-        <Col xs={24} sm={12}>
-          <Input
-            value={endSerial}
-            onChange={(e) => setEndSerial(e.target.value)}
-            placeholder="End Serial (e.g., 1050 or SN-1050)"
-          />
-        </Col>
-        <Col sx={24} sm={12}>
-          <BlueButtonComponent
-            title="Add serial numbers"
-            func={() => addSerialNumberInSequantial()}
-            styles={{ marginTop: "0.5rem" }}
-          />
-        </Col>
-      </Row>
-    </div>
-  );
-};
-
-const FileUploadTab = ({ onSerialsChange, setScannedSerialNumbers }) => {
-  const handleFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const serials = text
-        .replace(/,/g, "\n")
-        .split("\n")
-        .map((s) => s.trim())
-        .filter((s) => s);
-      onSerialsChange(serials);
-      setScannedSerialNumbers(serials);
-      message.success(
-        `${file.name} loaded successfully. Found ${serials.length} serials.`,
-      );
-    };
-    reader.onerror = () => {
-      message.error("Error reading file.");
-      onSerialsChange([]);
-      setScannedSerialNumbers([]);
-    };
-    reader.readAsText(file);
-    return false; // Prevent antd's default upload action
-  };
-
-  return (
-    <div>
-      <p>
-        Upload a .txt or .csv file with serial numbers. Serials can be separated
-        by new lines or commas.
-      </p>
-      <Upload beforeUpload={handleFile} maxCount={1} accept=".txt,.csv">
-        <Button icon={<UploadOutlined />} style={{ marginTop: "8px" }}>
-          Select File
-        </Button>
-      </Upload>
-    </div>
-  );
-};
-
-// --- Main Component ---
-
-const SerialNumbersSections = ({ style }) => {
-  const {
-    scannedSerialNumbers,
-    setScannedSerialNumbers,
-    moreInfo,
-    setMoreInfo,
-  } = useLogic();
-  const [finalSerials, setFinalSerials] = useState([]);
-console.log(moreInfo)
-console.log(setMoreInfo)
-console.log(scannedSerialNumbers)
-console.log(setScannedSerialNumbers)
-  const handleSerialsChange = useCallback((serials) => {
-    const formattedSerials = serials.map((serial) => ({
-      id: serial, // Use serial as the unique ID
-      data: { [serial]: {} }, // The structure expected by the child component
-    }));
-    setFinalSerials(formattedSerials);
-  }, []);
-
-  const handleRemoveDevice = useCallback((idToRemove) => {
-    setFinalSerials((currentSerials) =>
-      currentSerials.filter((device) => device.id !== idToRemove),
+  const handleIdentifierChange = (id, field, newValue) => {
+    setIdentifiers(
+      identifiers.map((identifier) =>
+        identifier.id === id
+          ? { ...identifier, [field]: newValue }
+          : identifier,
+      ),
     );
-  }, []);
+  };
+  const [itemInfoFound, setItemInfoFound] = useState(null)
+  const checkAndRetrieveExistingInformationItem = async () => {
+    const respo = await devitrakApi.post("/db_item/consulting-item", {
+      category_name: generalInfoForSelection.category_name,
+      item_group: generalInfoForSelection.item_group,
+      serial_number: identifiers[0].value
+    })
+    if (respo?.data?.ok && respo?.data?.items?.length > 0) {
+      setItemInfoFound(respo.data.items[0])
+      const templ = []
+      respo.data.items[0].extra_serial_number.forEach((item, index) => {
+        templ.push({
+          id: index, type: item.keyObject, value: item.valueObject
+        })
+      })
+      if (templ.length > 0) {
+        setNextId(templ.length + 1)
+        return setIdentifiers([
+          ...templ,
+          { id: (templ.length + 1), type: "Serial number", value: "" }
+        ])
+      }
+      setIdentifiers([
+        ...identifiers,
+        { id: (nextId + 1), type: "Serial number", value: "" }
+      ])
+      return setNextId(nextId + 1)
+    }
+  }
+  const addIdentifier = () => {
+    checkAndRetrieveExistingInformationItem()
+    setIdentifiers([
+      ...identifiers,
+      { id: nextId, type: "Serial number", value: "" },
+    ])
+    setNextId(identifiers.length + 1)
+  };
 
-  const items = [
-    {
-      key: "1",
-      label: "Scan / Paste",
-      children: (
-        <ScanInputTab
-          onSerialsChange={handleSerialsChange}
-          setScannedSerialNumbers={setScannedSerialNumbers}
-        />
-      ),
-    },
-    {
-      key: "2",
-      label: "Sequential Range",
-      children: (
-        <SequentialInputTab
-          onSerialsChange={handleSerialsChange}
-          setScannedSerialNumbers={setScannedSerialNumbers}
-        />
-      ),
-    },
-    {
-      key: "3",
-      label: "File Upload",
-      children: (
-        <FileUploadTab
-          onSerialsChange={handleSerialsChange}
-          setScannedSerialNumbers={setScannedSerialNumbers}
-        />
-      ),
-    },
-  ];
-  const upperOptions = [
-    {
-      key: "1",
-      label: (
-        <p style={Subtitle}>
-          Update general information to a massive group of devices
-        </p>
-      ),
-      children: (
-        <Grid container spacing={1}>
-          <div
-            // onSubmit={(e)=>handleAddDevice(e)}
-            style={{ margin: "1rem 0", gap: 0 }}
-            className="form"
-          >
-            <p
-              style={{
-                ...TextFontSize30LineHeight38,
-                color: Subtitle.color,
-                width: "100%",
-                textAlign: "left",
-              }}
+  const handleAddDevice = (e) => {
+    e.preventDefault();
+
+    // Input Validation
+    const isInvalid = identifiers.some(
+      (identifier) => !identifier.type?.trim() || !identifier.value?.trim(),
+    );
+
+    if (isInvalid) {
+      alert("Please ensure all identifier types and values are filled out.");
+      return;
+    }
+
+    const markedIndex = checkedIndex.length > 0 ? checkedIndex[0] : 0;
+    // The value of the first identifier will be the key. It must exist.
+    const primaryKey = identifiers[markedIndex].value;
+    if (!primaryKey?.trim()) {
+      alert(
+        "The value of the first identifier is required and will be used as the main device identifier.",
+      );
+      return;
+    }
+
+    // Data Structure Transformation
+    const innerObject = identifiers.reduce((acc, { type, value }) => {
+      // Ensure type is a valid string to be used as a key
+      if (type?.trim()) {
+        acc.push({ keyObject: type.trim(), valueObject: value });
+      }
+      return acc;
+    }, []);
+    innerObject.push({ keyObject: "item_id", valueObject: itemInfoFound?.item_id })
+    const serialNumber = {
+      [primaryKey]: innerObject,
+    };
+    const newMoreInfo = [...moreInfo, { [primaryKey]: innerObject }];
+    // Integration
+    setDevices([...devices, { id: Date.now(), data: serialNumber }]);
+    setMoreInfo(newMoreInfo);
+    const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
+    setScannedSerialNumbers(newScannedSerialNumbers);
+    // Reset the form for the next entry
+    setNextId(2);
+    setIdentifiers([{ id: 1, type: "Serial number", value: "" }]);
+    setCheckedIndex([]);
+  };
+
+  const removeField = (id) => {
+    if (identifiers.length === 1) return;
+    setIdentifiers(identifiers.filter((item) => item.id !== id));
+  };
+
+  const handleRemoveDevice = (deviceId) => {
+    // Find the device to get its primary key before removing it
+    const deviceToRemove = devices.find((d) => d.id === deviceId);
+    if (!deviceToRemove) return;
+
+    const primaryKey = Object.keys(deviceToRemove.data)[0];
+
+    // Filter the devices list
+    const newDevices = devices.filter((d) => d.id !== deviceId);
+    setDevices(newDevices);
+
+    // Filter the moreInfo list to remove the corresponding entry
+    // eslint-disable-next-line no-prototype-builtins
+    const newMoreInfo = moreInfo.filter(
+      // eslint-disable-next-line no-prototype-builtins
+      (info) => !info.hasOwnProperty(primaryKey),
+    );
+    setMoreInfo(newMoreInfo);
+    setScannedSerialNumbers(
+      scannedSerialNumbers.filter((serial) => serial !== primaryKey),
+    );
+  };
+
+  const [checkedIndex, setCheckedIndex] = useState([]);
+  const checkedPriorityKey = (index) => {
+    if (checkedIndex.includes(index)) {
+      return setCheckedIndex(checkedIndex.filter((_, i) => i !== index));
+    } else {
+      return setCheckedIndex([index]);
+    }
+  };
+
+  return (
+    <Grid container spacing={1}>
+      <div
+        // onSubmit={(e)=>handleAddDevice(e)}
+        style={{ margin: "1rem 0", gap: 0 }}
+        className="form"
+      >
+        <Typography
+          variant="h5"
+          sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
+        >
+          Serial numbers and identifiers
+        </Typography>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ width: "100%", textAlign: "left", mb: 3 }}
+        >
+          Users can select an identifier to designate it as the primary key for
+          the submitted devices. If no identifier is explicitly selected, the
+          system will automatically use the first available identifier as the
+          primary key by default.
+        </Typography>
+
+        <Grid container>
+          <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
+            <Typography
+              variant="caption"
+              display="block"
+              color="text.secondary"
+              sx={{ fontWeight: "600" }}
             >
-              Serial numbers and identifiers
-            </p>
-            <p
-              style={{
-                ...TextFontSize20LineHeight30,
-                color: Subtitle.color,
-                width: "100%",
-                textAlign: "left",
-              }}
+              Identifier *
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+            <Typography
+              variant="caption"
+              display="block"
+              color="text.secondary"
+              sx={{ fontWeight: "600" }}
             >
-              You can enter all the details manually or use a scanner to enter
-              the serial numbers.
-            </p>
-            <div style={{ marginTop: "16px", width: "100%" }}>
-              <Tabs defaultActiveKey="1" items={items} />
-            </div>
-          </div>
-          <Divider />
-          <RenderingItemsAddedForStore
-            devices={finalSerials}
-            handleRemoveDevice={handleRemoveDevice}
-          />
+              Number *
+            </Typography>
+          </Grid>
         </Grid>
-      ),
-    },
-    {
-      key: "2",
-      label: <p style={Subtitle}>Update specific information each devices</p>,
-      children: (
-        <SerialNumberAndMoreInfoComponentForm
-          style={style}
-          scannedSerialNumbers={scannedSerialNumbers}
-          setScannedSerialNumbers={setScannedSerialNumbers}
-          moreInfo={moreInfo}
-          setMoreInfo={setMoreInfo}
-        />
-      ),
-    },
-  ];
+        {identifiers.map((identifier, index) => (
+          <Grid
+            container
+            spacing={1}
+            key={identifier.id}
+            sx={{ margin: 0, alignItems: "center" }}
+          >
+            <Grid
+              display={"flex"}
+              margin={0}
+              item
+              xs={12}
+              sm={3}
+              md={2.5}
+              lg={1.5}
+            >
+              <Checkbox
+                checked={checkedIndex.includes(index)}
+                onChange={() => checkedPriorityKey(index)}
+              />
+              <AutoComplete
+                style={{ ...style, margin: "0 0 0 0.2rem" }}
+                options={options.map((item) => ({
+                  label: item.label,
+                  value: item.label,
+                }))}
+                value={identifier.type}
+                onChange={(newValue) => {
+                  handleIdentifierChange(identifier.id, "type", newValue);
+                }}
+                placeholder="Select type"
+              />
+            </Grid>
+            <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+              <Input
+                placeholder="e.g. 3241684981556474651"
+                value={identifier.value}
+                onChange={(e) =>
+                  handleIdentifierChange(identifier.id, "value", e.target.value)
+                }
+                style={{ width: "100%", margin: 0 }}
+                allowClear
+              />
+              <BlueButtonComponent
+                title={<WhiteCirclePlusIcon />}
+                buttonType="button"
+                func={addIdentifier}
+              />
+              {identifiers.length > 1 && (
+                <DangerButtonComponent
+                  title="Remove"
+                  func={() => removeField(identifier.id)}
+                />
+              )}
+            </Grid>
+          </Grid>
+        ))}
 
-  return <Tabs defaultActiveKey="1" items={upperOptions} />;
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mt: -3, mb: 2 }}
+        >
+          You can use a scanner to input the number. You can also add more
+          identifiers.
+        </Typography>
+        <GrayButtonComponent
+          func={(e) => handleAddDevice(e)}
+          title="Add this device"
+        />
+      </div>
+      <Divider />
+      <RenderingItemsAddedForStore
+        devices={devices}
+        handleRemoveDevice={handleRemoveDevice}
+      />
+    </Grid>
+  );
 };
 
-export default SerialNumbersSections;
+export default SerialNumberAndMoreInfoComponentForm;
