@@ -3,36 +3,23 @@ import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-// import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import {
-  // addingExtraInfo,
   gripingFields,
-  // renderingMoreInfoSubmitted,
   renderingOptionsButtons,
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { renderFields } from "./EditBulkFields";
+import { renderFields } from "./BulkItemsFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
-// import { styleUpdateAllItemsButton } from "./EditBulkComponents";
-// import editUIComponents from "./EditUIComponents";
+import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
 
 const EditBulkForm = ({
-  // handleDeleteMoreInfo,
-  // handleMoreInfoPerDevice,
-  // keyObject,
-  // setKeyObject,
-  // setMoreInfoDisplay,
-  // setUpdateAllItems,
-  // setValueObject,
-  // updateAllItems,
-  // valueObject,
   acceptImage,
   addingSubLocation,
   addSerialNumberField,
@@ -49,7 +36,7 @@ const EditBulkForm = ({
   labeling,
   loadingStatus,
   manuallyAddingSerialNumbers,
-  // moreInfo,
+  moreInfo,
   moreInfoDisplay,
   options,
   OutlinedInputStyle,
@@ -60,14 +47,14 @@ const EditBulkForm = ({
   retrieveItemOptions,
   returningDate,
   savingNewItem,
-  // scannedSerialNumbers,
+  scannedSerialNumbers,
   setAddSerialNumberField,
   setImageUploadedValue,
-  // setMoreInfo,
+  setMoreInfo,
   setOpenScannedItemView,
   setOpenScanningModal,
   setReturningDate,
-  // setScannedSerialNumbers,
+  setScannedSerialNumbers,
   setSubLocationsSubmitted,
   subLocationsOptions,
   subLocationsSubmitted,
@@ -375,44 +362,25 @@ const EditBulkForm = ({
           }
         })}
       </Grid>
-      <ButtonsForm stylingComponents={stylingComponents} loadingStatus={loadingStatus} moreInfoDisplay={moreInfoDisplay} />
-      {/* <SerialNumbersSections
+      <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
           fontFamily: "Inter",
           fontSize: "14px",
           width: "100%",
         }}
-        scannedSerialNumbers={scannedSerialNumbers}
-        setScannedSerialNumbers={setScannedSerialNumbers}
         moreInfo={moreInfo}
+        scannedSerialNumbers={scannedSerialNumbers}
         setMoreInfo={setMoreInfo}
+        setScannedSerialNumbers={setScannedSerialNumbers}
       />
-      <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-      <div
-        style={{
-          display: "grid",
-          gridAutoColumns: "minmax(1fr, 1fr 1fr)",
-          gap: "0.5rem",
-        }}
-      >
-        <BlueButtonComponent
-          title={"Update group of items"}
-          loadingState={loadingStatus}
-          disabled={loadingStatus}
-          styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-          buttonType="submit"
-        />
-        <Link to="/inventory" style={{ width: "100%" }}>
-          <GrayButtonComponent
-            title={"Go back"}
-            func={() => null}
-            // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
-            styles={{ width: "100%" }}
-            buttonType="reset"
-          />
-        </Link>
-      </div> */}
+      <ButtonsForm
+        stylingComponents={stylingComponents}
+        loadingStatus={loadingStatus}
+        moreInfoDisplay={moreInfoDisplay}
+        scannedSerialNumbers={scannedSerialNumbers}
+        primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Save and add ${scannedSerialNumbers.length} items` : `Save and add item`}
+      />
     </form>
   );
 };
