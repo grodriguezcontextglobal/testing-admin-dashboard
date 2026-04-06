@@ -8,6 +8,7 @@ import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
 import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
+// import Chip from "../../../components/UX/Chip/Chip";
 const columnsTableMain = ({
   groupingByDeviceType,
   navigate,
@@ -129,6 +130,12 @@ const columnsTableMain = ({
       responsive: responsive[2],
       render: (warehouse) => {
         return (
+          // <Chip
+          //   color={warehouse === 0 ? "warning" : "success"}
+          //   size="sm"
+          //   outlined={warehouse === 0 ? true : false}
+          //   filled={warehouse === 0 ? false : true}
+          // />
           <PillUIComponent
             color={warehouse === 0 ? "brand" : "success"}
             size="sm"
@@ -160,6 +167,10 @@ const columnsTableMain = ({
           text: "Sale",
           value: "Sale",
         },
+        {
+          text: "Resale",
+          value: "Resale",
+        },
       ],
       onFilter: (value, record) => record.ownership === value,
       sorter: {
@@ -172,9 +183,11 @@ const columnsTableMain = ({
           size="sm"
         >
           <Icon icon="tabler:point-filled" rotate={3} />
-          <span style={{ textTransform: "capitalize", marginLeft: "2px", color: ownership === "Permanent"
-                ? "var(--blue-700, #175CD3)"
-                : "var(--success-700, #027A48)" }}>
+          <span style={{
+            textTransform: "capitalize", marginLeft: "2px", color: ownership === "Permanent"
+              ? "var(--blue-700, #175CD3)"
+              : "var(--success-700, #027A48)"
+          }}>
             {dictionary[ownership]}
           </span>
         </PillUIComponent>
