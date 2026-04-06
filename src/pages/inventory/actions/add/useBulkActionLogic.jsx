@@ -58,7 +58,7 @@ const useBulkActionLogic = () => {
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
-  const [generalInfoForSelection, setGeneralInfoForSelection] = useState({})
+  const [generalInfoForSelection, setGeneralInfoForSelection] = useState(null)
   const { user } = useSelector((state) => state.admin);
   const locationInApp = useLocation()
   const {
@@ -123,7 +123,6 @@ const useBulkActionLogic = () => {
       ),
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
-  // console.log(companyLocationsListQuery?.data?.data?.data)
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
@@ -457,7 +456,6 @@ const useBulkActionLogic = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("reference_item_group"),
       );
-      setGeneralInfoForSelection(dataToRetrieve)
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (
@@ -489,18 +487,12 @@ const useBulkActionLogic = () => {
               }),
             ]);
           }
-          // if (key === "sub_location") {
-          //   setValue("sub_location", "");
-          //   const checkType =
-          //     typeof value === "string" ? JSON.parse(value) : value;
-          //   if (checkType.length > 0) {
-          //     return setSubLocationsSubmitted([...checkType]);
-          //   }
-          // }
         });
+        return setGeneralInfoForSelection(dataToRetrieve)
       }
     } else {
       setValue("item_group", newReference);
+      return setGeneralInfoForSelection(null)
     }
     if (newReference?.length === 0) {
       setValue("item_group", "");
@@ -516,8 +508,8 @@ const useBulkActionLogic = () => {
       setValue("container", "");
       setValue("containerSpotLimit", "0");
       setValue("enabledAssignFeature", 1);
+      setGeneralInfoForSelection(null)
     }
-
     return () => {
       controller.abort();
     };
@@ -534,7 +526,6 @@ const useBulkActionLogic = () => {
   ]);
 
   useEffect(() => {
-    console.log(">>", allSerialNumbersOptions)
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
@@ -545,16 +536,6 @@ const useBulkActionLogic = () => {
       controller.abort();
     };
   }, [watch("container")]);
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   if (!moreInfoDisplay) {
-  //     setMoreInfo([]);
-  //   }
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, [moreInfoDisplay]);
 
   useEffect(() => {
     const controller = new AbortController();
