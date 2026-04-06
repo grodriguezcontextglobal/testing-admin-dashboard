@@ -24,7 +24,7 @@ export const renderFields = ({
   const fields = [
     {
       name: "reference_category_name",
-      placeholder: "e.g. Electronic",
+      placeholder: "Select category reference",
       label: "Category reference",
       htmlElement: "",
       style: {
@@ -42,7 +42,7 @@ export const renderFields = ({
     {
       name: "reference_item_group",
       placeholder:
-        "Type the name of the item for retrieving the reference item.",
+        "Select item group reference.",
       label: "Item name reference",
       htmlElement: "",
       style: {
@@ -59,7 +59,7 @@ export const renderFields = ({
     },
     {
       name: "item_group",
-      placeholder: "Type the name of the item",
+      placeholder: "Select item group",
       label: "Item name",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -72,7 +72,7 @@ export const renderFields = ({
     },
     {
       name: "category_name",
-      placeholder: "e.g. Electronic",
+      placeholder: "Select category",
       label: "Category",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -85,7 +85,7 @@ export const renderFields = ({
     },
     {
       name: "brand",
-      placeholder: "e.g. Apple",
+      placeholder: "Select brand",
       label: "Brand",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -98,7 +98,7 @@ export const renderFields = ({
     },
     {
       name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "Select replacement cost",
       label: "Replacement cost",
       htmlElement: "",
       style: OutlinedInputStyle,
