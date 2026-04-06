@@ -18,8 +18,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
   setScannedSerialNumbers,
   moreInfo,
   setMoreInfo,
+  generalInfoForSelection
 }) => {
-  const { generalInfoForSelection, user } = useBulkActionLogic()
+  const { user } = useBulkActionLogic()
   // State for the dynamic input fields for a single device
   const [nextId, setNextId] = useState(2);
   const [identifiers, setIdentifiers] = useState([
@@ -46,6 +47,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
     if (generalInfoForSelection) {
       bodyTempl.category_name = generalInfoForSelection.category_name
       bodyTempl.item_group = generalInfoForSelection.item_group
+      bodyTempl.brand = generalInfoForSelection.brand
     }
     const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl)
     if (respo?.data?.ok && respo?.data?.items?.length > 0) {
@@ -163,6 +165,13 @@ const SerialNumberAndMoreInfoComponentForm = ({
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddDevice(e);
+    }
+  };
+
   return (
     <Grid container spacing={1}>
       <div
@@ -249,6 +258,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                 onChange={(e) =>
                   handleIdentifierChange(identifier.id, "value", e.target.value)
                 }
+                onKeyDown={handleKeyDown}
                 style={{ width: "100%", margin: 0 }}
                 allowClear
               />
