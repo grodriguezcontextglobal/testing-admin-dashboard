@@ -37,6 +37,7 @@ const EditGroup = () => {
     handleSubLocationInputChange,
     handleSubmit,
     imageUrlGenerated,
+    generalInfoForSelection,
     isRented,
     keyObject,
     labeling,
@@ -98,6 +99,7 @@ const EditGroup = () => {
         displayPreviewImage={displayPreviewImage}
         displaySublocationFields={displaySublocationFields}
         errors={errors}
+        generalInfoForSelection={generalInfoForSelection}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
         handleSubmit={handleSubmit}
