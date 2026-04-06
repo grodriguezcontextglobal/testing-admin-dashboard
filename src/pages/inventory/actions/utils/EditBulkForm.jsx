@@ -29,6 +29,7 @@ const EditBulkForm = ({
   displayPreviewImage,
   displaySublocationFields,
   errors,
+  generalInfoForSelection,
   handleSubmit,
   imageUploadedValue,
   imageUrlGenerated,
@@ -373,6 +374,7 @@ const EditBulkForm = ({
         scannedSerialNumbers={scannedSerialNumbers}
         setMoreInfo={setMoreInfo}
         setScannedSerialNumbers={setScannedSerialNumbers}
+        generalInfoForSelection={generalInfoForSelection}
       />
       <ButtonsForm
         stylingComponents={stylingComponents}
