@@ -64,6 +64,7 @@ export const dictionary = {
   Permanent: "Owned",
   Rent: "Leased",
   Sale: "For sale",
+  Resale: "For sale",
 };
 export const cellStyle = {
   display: "flex",
