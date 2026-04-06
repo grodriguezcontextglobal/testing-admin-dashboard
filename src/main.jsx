@@ -38,7 +38,7 @@ if (container && !container._reactRootContainer) {
 
 function AppLoader() {
   const [configured, setConfigured] = React.useState(false);
-  //http://127.0.0.1:34001/api/
+//http://129.213.150.139/standby/api
   React.useEffect(() => {
     configureApi().then(() => setConfigured(true));
   }, []);
