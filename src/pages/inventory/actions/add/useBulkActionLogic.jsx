@@ -102,7 +102,7 @@ const useBulkActionLogic = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
   const companyLocationsListQuery = useQuery({
@@ -441,21 +441,21 @@ const useBulkActionLogic = () => {
       message.error("Failed to upload image: " + error.message);
     }
   };
-  useEffect(() => {
-    const controller = new AbortController();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   itemsInInventoryQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     const newReference = watch("reference_item_group");
-    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("reference_item_group"),
-      );
+    let infoToSet = null;
+
+    if (retrieveItemDataSelected().has(newReference)) {
+      const dataToRetrieve = retrieveItemDataSelected().get(newReference);
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
           if (
@@ -467,34 +467,30 @@ const useBulkActionLogic = () => {
             return;
           }
           if (locationInApp.pathname === "/create-event-page/device-detail") {
-            setValue("ownership", "Rent")
+            setValue("ownership", "Rent");
           }
-          setValue(key, value);
           setValue("quantity", 0);
-          const grouping = groupBy(
-            itemsInInventoryQuery?.data?.data?.items,
-            "item_group",
-          );
-          if (grouping[watch("reference_item_group")]) {
-            const dataToRetrieve = orderBy(
-              grouping[watch("reference_item_group")],
-              "serial_number",
-              "asc",
-            );
-            setAllSerialNumbersOptions([
-              ...dataToRetrieve.map((x) => {
-                return x.serial_number;
-              }),
-            ]);
-          }
+          setValue(key, value);
         });
-        return setGeneralInfoForSelection(dataToRetrieve)
+        const grouping = groupBy(
+          itemsInInventoryQuery?.data?.data?.items,
+          "item_group"
+        );
+        if (grouping[newReference]) {
+          const sortedData = orderBy(
+            grouping[newReference],
+            "serial_number",
+            "asc"
+          );
+          setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
+        }
+        infoToSet = dataToRetrieve;
       }
     } else {
       setValue("item_group", newReference);
-      return setGeneralInfoForSelection(null)
     }
-    if (newReference?.length === 0) {
+
+    if (!newReference || newReference.length === 0) {
       setValue("item_group", "");
       setValue("photo", []);
       setValue("category_name", "");
@@ -508,8 +504,11 @@ const useBulkActionLogic = () => {
       setValue("container", "");
       setValue("containerSpotLimit", "0");
       setValue("enabledAssignFeature", 1);
-      setGeneralInfoForSelection(null)
+      infoToSet = null;
     }
+
+    setGeneralInfoForSelection(infoToSet);
+
     return () => {
       controller.abort();
     };
