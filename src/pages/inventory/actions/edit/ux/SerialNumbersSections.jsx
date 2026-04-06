@@ -1,14 +1,14 @@
 import { Grid, Typography } from "@mui/material";
 import { AutoComplete, Checkbox, Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
-import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
 import useBulkActionLogic from "../../add/useBulkActionLogic";
+import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
@@ -19,9 +19,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   moreInfo,
   setMoreInfo,
 }) => {
-  const { generalInfoForSelection } = useBulkActionLogic()
-  useEffect(() => {
-  }, [generalInfoForSelection])
+  const { generalInfoForSelection, user } = useBulkActionLogic()
   // State for the dynamic input fields for a single device
   const [nextId, setNextId] = useState(2);
   const [identifiers, setIdentifiers] = useState([
@@ -41,11 +39,15 @@ const SerialNumberAndMoreInfoComponentForm = ({
   };
   const [itemInfoFound, setItemInfoFound] = useState(null)
   const checkAndRetrieveExistingInformationItem = async () => {
-    const respo = await devitrakApi.post("/db_item/consulting-item", {
-      category_name: generalInfoForSelection.category_name,
-      item_group: generalInfoForSelection.item_group,
-      serial_number: identifiers[0].value
-    })
+    const bodyTempl = {
+      company_id: user.sqlInfo.company_id,
+      serial_number: identifiers[0].value,
+    }
+    if (generalInfoForSelection) {
+      bodyTempl.category_name = generalInfoForSelection.category_name
+      bodyTempl.item_group = generalInfoForSelection.item_group
+    }
+    const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl)
     if (respo?.data?.ok && respo?.data?.items?.length > 0) {
       setItemInfoFound(respo.data.items[0])
       const templ = []
