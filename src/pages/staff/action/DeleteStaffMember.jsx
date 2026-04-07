@@ -1,14 +1,15 @@
 import { Icon } from "@iconify/react";
 import { Button, Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Avatar, Modal, Table, Typography, notification } from "antd";
+import { Avatar, Modal, Typography, notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import dicRole from "../../../components/general/dicRole";
-import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import { onLogin } from "../../../store/slices/adminSlice";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
@@ -209,28 +210,25 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
               display: "flex",
               padding: "2px 8px",
               alignItems: "center",
-              background: `${
-                !active || active === "Pending"
+              background: `${!active || active === "Pending"
                   ? "#ffefef"
                   : "var(--success-50, #ECFDF3)"
-              }`,
+                }`,
               width: "fit-content",
             }}
           >
             <Typography
-              color={`${
-                !active || active === "Pending"
+              color={`${!active || active === "Pending"
                   ? "#d31717"
                   : "var(--success-700, #027A48)"
-              }`}
+                }`}
               style={styling}
             >
               <Icon
                 icon="tabler:point-filled"
                 rotate={3}
-                color={`${
-                  !active || active === "Pending" ? "#d31717" : "#12B76A"
-                }`}
+                color={`${!active || active === "Pending" ? "#d31717" : "#12B76A"
+                  }`}
               />
               {renderTernary(active)}
             </Typography>
@@ -382,7 +380,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
               </Button>
             </div>
           </Grid>
-          <Table
+          {getInfoNeededToBeRenderedInTable()?.length > 0 && <BaseTable
             style={{ width: "100%", cursor: "pointer" }}
             dataSource={getInfoNeededToBeRenderedInTable()}
             columns={columns}
@@ -392,9 +390,9 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
               type: selectionType,
               ...rowSelection,
             }}
-          />
+          />}
         </Grid>
-        <DangerButtonComponent title={"Delete staff members"} func={() => handleDeleteStaffMember()} />
+        <DangerButtonConfirmationComponent styles={{ margin: "0.5rem 0" }} confirmationTitle="Are you sure you want to delete the selected staff members?" title={"Delete staff members"} func={() => handleDeleteStaffMember()} />
       </Modal>
     );
   }
