@@ -197,20 +197,20 @@ const FooterExpandedRow = ({
             title="Mark selected as returned"
             confirmationTitle="Are you sure?"
             styles={{ width: "100%" }}
-            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+          // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
           <GrayButtonComponent
             func={() => setExpressCheckoutModal(true)}
             title="Scan-in devices"
             styles={{ width: "100%" }}
-            // icon={<img src={ScanIcon} alt="ScanIcon" />}
+          // icon={<img src={ScanIcon} alt="ScanIcon" />}
           />
           <GrayButtonConfirmationComponent
             title={"Mark all as returned"}
             confirmationTitle="Are you sure?"
             func={() => returningAllItemsAtOnce(transactionDeviceData)}
             styles={{ width: "100%" }}
-            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+          // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
         </div>
       ),
@@ -229,17 +229,17 @@ const FooterExpandedRow = ({
           <GrayButtonComponent
             func={() => sendEmailDeviceReport()}
             title="Send report to client"
-            // icon={<img src={Report} alt="Report" />}
+          // icon={<img src={Report} alt="Report" />}
           />
           <GrayButtonComponent
             func={() => setOpenModalCapturingDeposit(true)}
             title="Capture deposit"
-            // icon={<PaymentIcon />}
+          // icon={<PaymentIcon />}
           />
           <GrayButtonComponent
             func={() => setOpenModalReleasingDeposit(true)}
             title="Release deposit"
-            // icon={<WithdrawIcon />}
+          // icon={<WithdrawIcon />}
           />
         </div>
       ),
@@ -267,11 +267,12 @@ const FooterExpandedRow = ({
           }
         };
         return (
-          <GrayButtonComponent
-            styles={{ width: "100%" }}
-            disabled={true}
-            title={`$${Number(retrieveAmount()).toLocaleString()} total`}
-          />
+          <span style={{ height: "100%", width: "100%", display: "block" }}>
+            <GrayButtonComponent
+              styles={{ width: "100%" }}
+              disabled={true}
+              title={`$${Number(retrieveAmount()).toLocaleString()} total`} />
+          </span>
         );
       },
     },
@@ -294,29 +295,26 @@ const FooterExpandedRow = ({
           >
             <GrayButtonComponent
               disabled={true}
-              title={`${
-                groupingByStatus[true]
-                  ? Number(groupingByStatus[true].length)
-                  : 0
-              } 
+              title={`${groupingByStatus[true]
+                ? Number(groupingByStatus[true].length)
+                : 0
+                } 
               Active`}
             />
             <GrayButtonComponent
               disabled={true}
-              title={`${
-                groupingByStatus[false]
-                  ? Number(groupingByStatus[false].length)
-                  : 0
-              } 
+              title={`${groupingByStatus[false]
+                ? Number(groupingByStatus[false].length)
+                : 0
+                } 
               Returned`}
             />
             <GrayButtonComponent
               disabled={true}
-              title={`${
-                groupingByStatus["lost"] || groupingByStatus["Lost"]
-                  ? Number(lostNumber.length)
-                  : 0
-              } 
+              title={`${groupingByStatus["lost"] || groupingByStatus["Lost"]
+                ? Number(lostNumber.length)
+                : 0
+                } 
               Lost`}
             />
           </div>
@@ -343,7 +341,7 @@ const FooterExpandedRow = ({
               title={"Charge for all lost"}
               confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
               func={() => lostFeeChargeCustomer(lostItemsList)}
-              // icon={<img src={Lost} alt="Lost" />}
+            // icon={<img src={Lost} alt="Lost" />}
             />
             <GrayButtonComponent disabled={true} title={dataToBeRendered()} />
           </div>
@@ -375,39 +373,39 @@ const FooterExpandedRow = ({
               }
               title="Mark selected as returned"
               confirmationTitle="Are you sure?"
-              // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
             />
             <GrayButtonComponent
               func={() => setExpressCheckoutModal(true)}
               title="Scan-in devices"
-              // icon={<img src={ScanIcon} alt="ScanIcon" />}
+            // icon={<img src={ScanIcon} alt="ScanIcon" />}
             />
             <GrayButtonConfirmationComponent
               title={"Mark all as returned"}
               confirmationTitle="Are you sure?"
               func={() => returningAllItemsAtOnce(transactionDeviceData)}
-              // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
+            // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
             />
             <GrayButtonComponent
               func={() => sendEmailDeviceReport()}
               title="Send report to client"
-              // icon={<img src={Report} alt="Report" />}
+            // icon={<img src={Report} alt="Report" />}
             />
             <GrayButtonComponent
               func={() => setOpenModalCapturingDeposit(true)}
               title="Capture deposit"
-              // icon={<PaymentIcon />}
+            // icon={<PaymentIcon />}
             />
             <GrayButtonComponent
               func={() => setOpenModalReleasingDeposit(true)}
               title="Release deposit"
-              // icon={<WithdrawIcon />}
+            // icon={<WithdrawIcon />}
             />
             <GrayButtonConfirmationComponent
               title={"Charge for all lost"}
               confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
               func={() => lostFeeChargeCustomer(lostItemsList)}
-              // icon={<img src={Lost} alt="Lost" />}
+            // icon={<img src={Lost} alt="Lost" />}
             />
           </div>
         );
