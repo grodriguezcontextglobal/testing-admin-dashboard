@@ -1,4 +1,5 @@
-import { Badge, Table } from "antd";
+import { Badge } from "antd";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 export const ExpandedRowRender = ({ event, check }) => {
   const substractingDeviceSetupRecord = () => {
     let result = [];
@@ -56,11 +57,12 @@ export const ExpandedRowRender = ({ event, check }) => {
   ];
 
   return (
-      <Table
+      <BaseTable
+        enablePagination={false}
+        pageSize={10}
         key={"nested-item-table"}
         columns={columns}
         dataSource={printDeviceRecord()}
-        pagination={false}
       />
   );
 };
