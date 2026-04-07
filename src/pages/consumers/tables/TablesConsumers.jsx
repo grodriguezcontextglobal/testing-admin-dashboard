@@ -16,14 +16,6 @@ import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 import "./TablesConsumers.css";
-const getInitials = (name) => {
-  if (!name) return "";
-  const words = name.split(" ");
-  if (words.length > 1) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-};
 
 export default function TablesConsumers({ searching, data, getCounting }) {
   const { user } = useSelector((state) => state.admin);
