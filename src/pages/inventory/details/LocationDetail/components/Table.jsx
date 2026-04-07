@@ -1,12 +1,12 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
 import { groupBy, uniqueId } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import TableHeader from "../../../../../components/UX/TableHeader";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import Loading from "../../../../../components/animation/Loading";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -22,8 +22,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   
   // State to track filtered data count for dynamic pagination
   const [filteredDataCount, setFilteredDataCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   
   const urlQuery =
     location.state === null
@@ -164,20 +162,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     location.key,
   ]);
 
-  // Handle table changes including filtering, pagination, and sorting
-  const handleTableChange = (pagination, filters, sorter, extra) => {
-    // Update pagination state
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
-    
-    // Update filtered data count when filters are applied
-    if (extra.action === 'filter') {
-      setFilteredDataCount(extra.currentDataSource.length);
-      // Reset to first page when filtering
-      setCurrentPage(1);
-    }
-  };
-
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -204,18 +188,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           listItemsQuery.refetch();
           itemsInInventoryQuery.refetch();
         }} />} rightCta={<DownloadingXlslFile props={dataToDisplay()} />}/>
-        <Table
-          pagination={{
-            position: ["bottomCenter"],
-            pageSizeOptions: [10, 20, 30, 50, 100],
-            total: filteredDataCount,
-            current: currentPage,
-            pageSize: pageSize,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} of ${total} items`,
-          }}
+        <BaseTable
+          enablePagination={true}
+          pageSize={10}
           style={{ width: "100%" }}
           columns={columnsTableMain({
             cellStyle,
@@ -236,7 +211,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay()}
           className="table-ant-customized"
-          onChange={handleTableChange}
+          // onChange={handleTableChange}
         />
       </Grid>
     </Suspense>
