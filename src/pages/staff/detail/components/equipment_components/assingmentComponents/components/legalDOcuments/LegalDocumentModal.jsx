@@ -1,10 +1,11 @@
 import { Box, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, message, Select, Table, Tabs, Tooltip } from "antd";
-import { useState, useMemo, useEffect } from "react";
+import { Divider, message, Select, Tabs, Tooltip } from "antd";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
+import BaseTable from "../../../../../../../../components/UX/tables/BaseTable";
 import { BorderedCloseIcon } from "../../../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../../../components/icons/QuestionIcon";
@@ -334,7 +335,9 @@ const LegalDocumentModal = ({
             {activeTab === 0 ? (
               // Assigned Documents Tab
               <>
-                <Table
+                <BaseTable
+                  enablePagination={true}
+                  pageSize={10}
                   columns={assignedColumns}
                   dataSource={selectedDocuments}
                   rowKey="id"
