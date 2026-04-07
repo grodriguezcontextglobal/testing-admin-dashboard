@@ -1,4 +1,5 @@
-import { Table, Typography } from "antd";
+import { Typography } from "antd";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import { Subtitle } from "../../../styles/global/Subtitle";
 
 const LocationsList = ({ locations }) => {
@@ -27,11 +28,12 @@ const LocationsList = ({ locations }) => {
       <Typography style={{ ...Subtitle, marginBottom: "20px" }}>
         Existing Locations
       </Typography>
-      <Table
+      <BaseTable
+        enablePagination={true}
+        pageSize={10}
         dataSource={locations}
         columns={columns}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
+        rowKey="id" 
       />
     </div>
   );
