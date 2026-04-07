@@ -1,12 +1,12 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
 import { groupBy } from "lodash";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import TableHeader from "../../../../../components/UX/TableHeader";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import Loading from "../../../../../components/animation/Loading";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -30,9 +30,6 @@ const TableItemOwnership = ({
 
   // State to track filtered data count for dynamic pagination
   const [filteredDataCount, setFilteredDataCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
   const listItemsQuery = useQuery({
     queryKey: [
       "currentStateDevicePerGroupName",
@@ -129,20 +126,6 @@ const TableItemOwnership = ({
     return result;
   }, [structuredDataRendering, searchItem]);
 
-  // Handle table changes including filtering, pagination, and sorting
-  const handleTableChange = (pagination, filters, sorter, extra) => {
-    // Update pagination state
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
-
-    // Update filtered data count when filters are applied
-    if (extra.action === "filter") {
-      setFilteredDataCount(extra.currentDataSource.length);
-      // Reset to first page when filtering
-      setCurrentPage(1);
-    }
-  };
-
   return (
     <Suspense
       fallback={
@@ -227,19 +210,10 @@ const TableItemOwnership = ({
               rightCta={<DownloadingXlslFile props={dataRenderingMemo} />}
             />
 
-            <Table
-              pagination={{
-                position: ["bottomCenter"],
-                pageSizeOptions: [10, 20, 30, 50, 100],
-                total: filteredDataCount,
-                current: currentPage,
-                pageSize: pageSize,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} items`,
-              }}
+            <BaseTable
               style={{ width: "100%" }}
+              enablePagination={true}
+              pageSize={10}
               columns={columnsTableMain({
                 groupingByDeviceType,
                 navigate,
@@ -257,7 +231,6 @@ const TableItemOwnership = ({
               })}
               dataSource={dataRenderingMemo}
               className="table-ant-customized"
-              onChange={handleTableChange}
             />
           </>
         )}
