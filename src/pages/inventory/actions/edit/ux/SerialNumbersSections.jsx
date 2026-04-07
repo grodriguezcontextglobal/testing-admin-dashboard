@@ -168,7 +168,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleAddDevice(e);
+      checkAndRetrieveExistingInformationItem(e);
     }
   };
 
