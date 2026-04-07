@@ -447,14 +447,6 @@ const renderingOptionsForSubLocations = (item) => {
     setValue("location", watch("tax_location"));
   }, [watch("tax_location")]);
 
-  useEffect(() => {
-    if (watch("location") !== watch("tax_location")) {
-      alert(
-        "Location and Tax Location are not the same. Are you sure you want to continue?"
-      );
-    }
-  }, [watch("location")]);
-
   return (
     <Grid
       display={"flex"}
