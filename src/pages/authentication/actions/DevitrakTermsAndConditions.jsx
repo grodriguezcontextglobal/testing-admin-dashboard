@@ -1,4 +1,4 @@
-import { message, Table } from "antd";
+import { message } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 // Import PDF documents
@@ -11,6 +11,7 @@ import document3 from "../../../assets/pdf/document_3.pdf";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import Input from "../../../components/UX/inputs/Input";
 import ModalUX from "../../../components/UX/modal/ModalUX";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 
 const policyDocuments = [
   {
@@ -163,10 +164,10 @@ const DevitrakTermsAndConditions = ({
       closeModal={false}
       closable={false}
       body={
-        <Table
+        <BaseTable
           columns={columns}
           dataSource={policyDocuments}
-          pagination={false}
+          enablePagination={false}
         />
       }
       width={1000}
