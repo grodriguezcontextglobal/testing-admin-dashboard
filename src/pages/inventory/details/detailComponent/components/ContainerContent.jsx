@@ -1,15 +1,10 @@
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Divider, message, Modal, Select } from "antd";
+import { message, Select } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 
 const ContainerContent = ({
   openModal,
@@ -250,104 +245,108 @@ const ContainerContent = ({
     }
   };
 
+  const modalBody = () => {
+    return <p>OLA</p>
+  }
   return (
-    <Modal
-      open={openModal}
-      onCancel={closeModal}
-      footer={[]}
-      centered
-      maskClosable={false}
-      title="Add/Update content."
-      width={1000}
-    >
-      <Grid
-        display={"flex"}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        gap={1}
-        container
-      >
-        {renderFilterOptions()}
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <div style={{ display: "flex", gap: "10px" }}>
-            <Button
-              onClick={handleSearchItems}
-              style={BlueButton}
-              loading={loading}
-            >
-              <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-                Search items
-              </p>
-            </Button>
-            {searchResults.length > 0 && (
-              <h2
-                style={{
-                  ...Subtitle,
-                  color: "var(--danger-action)",
-                  margin: "0 0 0 10px",
-                  textDecoration: "underline",
-                }}
-              >
-                {searchResults.length} results
-              </h2>
-            )}
-          </div>
-          {itemToContent.length > 0 && (
-            <Button
-              style={BlueButton}
-              onClick={() => {
-                // console.log(itemToContent);
-                null
-              }}
-            >
-              <p style={BlueButtonText}>
-                Done {itemToContent.length} items selected
-              </p>
-            </Button>
-          )}
-        </Grid>
-        <Grid item xs={12}>
-          {renderSearchResults()}
-        </Grid>
-        <Divider />
-        <Grid
-          style={{ display: itemToContent?.length > 0 ? "flex" : "none" }}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          gap={1}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-        >
-          <Button style={GrayButton} onClick={() => setItemToContent([])}>
-            <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
-          </Button>
-          <Button
-            loading={loading}
-            style={BlueButton}
-            onClick={
-              containerItemsContent.length > 0
-                ? updateExistingContent
-                : savingItemsInContainer
-            }
-          >
-            <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-              {containerItemsContent.length > 0 ? "Update" : "Save"}
-            </p>
-          </Button>{" "}
-        </Grid>
-      </Grid>
-    </Modal>
+    <ModalUX body={modalBody()} openDialog={openModal} closeModal={closeModal} />
+    // <Modal
+    //   open={openModal}
+    //   onCancel={closeModal}
+    //   footer={[]}
+    //   centered
+    //   maskClosable={false}
+    //   title="Add/Update content."
+    //   width={1000}
+    // >
+    //   <Grid
+    //     display={"flex"}
+    //     justifyContent={"flex-start"}
+    //     alignItems={"center"}
+    //     gap={1}
+    //     container
+    //   >
+    //     {renderFilterOptions()}
+    //     <Grid
+    //       display={"flex"}
+    //       justifyContent={"space-between"}
+    //       alignItems={"center"}
+    //       item
+    //       xs={12}
+    //       sm={12}
+    //       md={12}
+    //       lg={12}
+    //     >
+    //       <div style={{ display: "flex", gap: "10px" }}>
+    //         <Button
+    //           onClick={handleSearchItems}
+    //           style={BlueButton}
+    //           loading={loading}
+    //         >
+    //           <p style={{ ...BlueButtonText, ...CenteringGrid }}>
+    //             Search items
+    //           </p>
+    //         </Button>
+    //         {searchResults.length > 0 && (
+    //           <h2
+    //             style={{
+    //               ...Subtitle,
+    //               color: "var(--danger-action)",
+    //               margin: "0 0 0 10px",
+    //               textDecoration: "underline",
+    //             }}
+    //           >
+    //             {searchResults.length} results
+    //           </h2>
+    //         )}
+    //       </div>
+    //       {itemToContent.length > 0 && (
+    //         <Button
+    //           style={BlueButton}
+    //           onClick={() => {
+    //             // console.log(itemToContent);
+    //             null
+    //           }}
+    //         >
+    //           <p style={BlueButtonText}>
+    //             Done {itemToContent.length} items selected
+    //           </p>
+    //         </Button>
+    //       )}
+    //     </Grid>
+    //     <Grid item xs={12}>
+    //       {renderSearchResults()}
+    //     </Grid>
+    //     <Divider />
+    //     <Grid
+    //       style={{ display: itemToContent?.length > 0 ? "flex" : "none" }}
+    //       justifyContent={"flex-start"}
+    //       alignItems={"center"}
+    //       gap={1}
+    //       item
+    //       xs={12}
+    //       sm={12}
+    //       md={12}
+    //     >
+    //       <Button style={GrayButton} onClick={() => setItemToContent([])}>
+    //         <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
+    //       </Button>
+    //       <Button
+    //         loading={loading}
+    //         style={BlueButton}
+    //         onClick={
+    //           containerItemsContent.length > 0
+    //             ? updateExistingContent
+    //             : savingItemsInContainer
+    //         }
+    //       >
+    //         <p style={{ ...BlueButtonText, ...CenteringGrid }}>
+    //           {containerItemsContent.length > 0 ? "Update" : "Save"}
+    //         </p>
+    //       </Button>{" "}
+    //     </Grid>
+    //   </Grid>
+    // </Modal>
   );
 };
 
