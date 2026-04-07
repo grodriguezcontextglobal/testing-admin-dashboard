@@ -29,6 +29,12 @@ export const bulkItemInsertAlphanumeric = async ({
       queryClient,
       user,
     });
+    const checkLocations = data.tax_location !== data.location;
+    if (checkLocations) {
+      alert(
+        "Location and Tax Location are not the same for your record.",
+      );
+    }
     const template = {
       category_name: data.category_name,
       item_group: data.item_group,
