@@ -1,19 +1,20 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Modal, Table } from "antd";
+import { Button, message, Modal } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import Loading from "../../../../../../../components/animation/Loading";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
+import BaseTable from "../../../../../../../components/UX/tables/BaseTable";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
 import { DangerButton } from "../../../../../../../styles/global/DangerButton";
 import { DangerButtonText } from "../../../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
-import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
 import { useDeviceStatus } from "../hooks/useDeviceStatus";
+import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
 
 const ModalAddingDeviceFromSearchbar = () => {
   const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
@@ -310,12 +311,11 @@ const ModalAddingDeviceFromSearchbar = () => {
           </Grid>
           <Grid item xs={12}>
             {checkDevicesInTransaction().length > 0 && (
-              <Table
+              <BaseTable
                 columns={columns}
                 dataSource={checkDevicesInTransaction()}
-                pagination={{
-                  position: ["bottomLeft"],
-                }}
+                enablePagination={true}
+                pageSize={10}
               />
             )}
           </Grid>
