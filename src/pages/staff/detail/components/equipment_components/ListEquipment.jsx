@@ -1,4 +1,4 @@
-import { Spin, Table } from "antd";
+import { Spin } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrow
 import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow.jsx";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import BaseTable from "../../../../../components/UX/tables/BaseTable.jsx";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
@@ -140,7 +141,9 @@ const VerificationDetailsTable = ({
   ];
 
   return (
-    <Table
+    <BaseTable
+      enablePagination={true}
+      pageSize={10}
       columns={innerColumns}
       dataSource={docs}
       pagination={false}
@@ -411,7 +414,9 @@ function ListEquipment() {
         >
           <RefreshButton propsFn={handleRefresh} />{" "}
         </div>
-        <Table
+        <BaseTable
+          enablePagination={true}
+          pageSize={10}
           style={{ width: "100%" }}
           columns={columns}
           dataSource={assignedEquipmentList}
@@ -440,10 +445,6 @@ function ListEquipment() {
                   {expanded ? <UpDoubleArrow /> : <DownDoubleArrowIcon />}
                 </span>
               ),
-          }}
-          pagination={{
-            pageSize: 10,
-            position: ["bottomCenter"],
           }}
         />
         {openReturnDeviceStaffModal && (
