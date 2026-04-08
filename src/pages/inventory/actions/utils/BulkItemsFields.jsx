@@ -24,7 +24,7 @@ export const renderFields = ({
   const fields = [
     {
       name: "reference_category_name",
-      placeholder: "e.g. Electronic",
+      placeholder: "Type or select a category reference",
       label: "Category reference",
       htmlElement: "",
       style: {
@@ -82,7 +82,7 @@ export const renderFields = ({
 {
       name: "reference_item_group",
       placeholder:
-        "Type the name of the item for retrieving the reference item.",
+        "Select item for retrieving the reference item.",
       label: "Item name reference",
       htmlElement: "",
       style: {
@@ -112,7 +112,7 @@ export const renderFields = ({
     },
     {
       name: "category_name",
-      placeholder: "e.g. Electronic",
+      placeholder: "Select or type category of device",
       label: "Category of device",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -125,7 +125,7 @@ export const renderFields = ({
     },
     {
       name: "brand",
-      placeholder: "e.g. Apple",
+      placeholder: "Select or type brand of device",
       label: "Brand of device",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -138,7 +138,7 @@ export const renderFields = ({
     },    
     {
       name: "cost",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "Select or type replacement cost of device",
       label: "Replacement cost of device",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -193,7 +193,7 @@ export const renderFields = ({
       options: options,
       htmlOption: 0,
       tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
+      tooltipMessage: "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
     },
     {
