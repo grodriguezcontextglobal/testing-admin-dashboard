@@ -1,27 +1,19 @@
 import {
   Box,
-  Card,
-  CardContent,
   Grid,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { message } from "antd";
 import { useEffect, useState } from "react";
-import { EditIcon } from "../../../components/icons/EditIcon";
-// import { UploadIcon } from "../../../components/icons/UploadIcon";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DocumentUpload from "./actions/UploadDocument";
 import HistoryDocumentProvider from "./components/HistoryDocumentProvider";
+import ProviderCard from "./components/ProviderCard";
 import UpdateProvider from "./components/UpdateProvider";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
@@ -202,12 +194,6 @@ const Main = () => {
     }
   };
 
-  // Function to format address for display
-  const formatAddress = (address) => {
-    if (typeof address === "string") return address; // Handle old format
-    const { street, city, state, postalCode } = address;
-    return `${street}, ${city}, ${state} ${postalCode}`;
-  };
   // Add loading and error states
   if (providersList.isLoading) {
     return (
@@ -259,109 +245,11 @@ const Main = () => {
 
       {providers?.map((provider) => (
         <Grid item xs={12} md={6} key={provider.id}>
-          <Card
-            sx={{
-              height: "100%",
-              boxShadow:
-                "0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06)",
-              borderRadius: "8px",
-            }}
-          >
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  mb: 2,
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: isMobile ? "1rem" : "1.25rem",
-                  }}
-                >
-                  {provider.companyName}
-                </Typography>
-                <Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEditClick(provider)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleViewDocuments(provider)}
-                    sx={{ mr: 1 }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                  {/* <IconButton
-                    size="small"
-                    onClick={() => setUploadDocumentModal(true)} //handleDocumentUpload(provider.id)
-                  >
-                    <UploadIcon />
-                  </IconButton> */}
-                </Box>
-              </Box>
-
-              <Typography
-                sx={{
-                  color: "text.secondary",
-                  mb: 1,
-                  fontSize: isMobile ? "0.875rem" : "1rem",
-                }}
-              >
-                {formatAddress(provider.address)}
-              </Typography>
-
-              {/* <Typography
-                sx={{
-                  mb: 1,
-                  fontSize: isMobile ? "0.875rem" : "1rem",
-                }}
-              >
-                <strong>Industry:</strong> {provider.industry}
-              </Typography>
-
-              <Typography
-                sx={{
-                  mb: 2,
-                  fontSize: isMobile ? "0.875rem" : "1rem",
-                }}
-              >
-                <strong>Services/Equipment:</strong> {provider.services}
-              </Typography> */}
-
-              {provider?.documents?.length > 0 && (
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1, fontWeight: 600 }}
-                  >
-                    Documents
-                  </Typography>
-                  <List dense sx={{ bgcolor: "background.paper" }}>
-                    {provider.documents.map((doc) => (
-                      <ListItem key={doc.id}>
-                        {/* <DescriptionIcon sx={{ mr: 1, fontSize: 20, color: 'primary.main' }} /> */}
-                        <ListItemText
-                          primary={doc.name}
-                          secondary={new Date(
-                            doc.uploadDate
-                          ).toLocaleDateString()}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+          <ProviderCard
+            provider={provider}
+            handleEditClick={handleEditClick}
+            handleViewDocuments={handleViewDocuments}
+          />
         </Grid>
       ))}
 
