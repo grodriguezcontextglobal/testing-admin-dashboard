@@ -8,10 +8,9 @@ import {
   OutlinedInput,
   Select,
 } from "@mui/material";
-import { Button } from "antd";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 
 const UpdateProvider = ({
@@ -183,16 +182,14 @@ const UpdateProvider = ({
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={() => closeModal()}
-            variant="outlined"
-            sx={{ mr: 1 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            style={BlueButton}
-            onClick={handleSubmit}
+          <GrayButtonComponent
+            title="Cancel"
+            func={() => closeModal()}
+            styles={{margin:"0 .5rem 0 0"}}
+          />
+          <BlueButtonComponent
+            title={dialogMode === "add" ? "Add Provider" : "Update Provider"}
+            func={handleSubmit}
             disabled={
               !newProvider?.companyName ||
               !newProvider?.industry ||
@@ -205,11 +202,7 @@ const UpdateProvider = ({
               !newProvider?.contactInfo?.email ||
               !newProvider?.contactInfo?.phone
             }
-          >
-            <p style={BlueButtonText}>
-              {dialogMode === "add" ? "Add Provider" : "Update Provider"}
-            </p>
-          </Button>
+          />
         </DialogActions>
       </>
     );
