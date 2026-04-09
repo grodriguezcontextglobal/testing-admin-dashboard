@@ -13,7 +13,7 @@ const RefactoredHeaderUntitledUiReact = ({ actions, image, title, subtitle, cent
                 src={image}
                 shape="circle"
             >
-                {image ? "" : `${title.at(0)}${subtitle.at(0)}`}
+                {image ? "" : `${title}`}
             </Avatar>
         );
     };
