@@ -10,7 +10,7 @@ const ButtonsForm = ({
   primaryButtonTitle = "Save new group of items",
   secondaryButtonTitle = "Go back",
   backLink = "/inventory",
-  scannedSerialNumbers,
+
   callFunction = () => null,
 }) => {
   const location = useLocation()
@@ -29,7 +29,7 @@ const ButtonsForm = ({
           loadingState={loadingStatus}
           styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
           buttonType="submit"
-          disabled={loadingStatus || scannedSerialNumbers?.length === 0}
+          disabled={loadingStatus}
         />
         {location.pathname === "/create-event-page/device-detail" ? null : <Link to={backLink} style={{ width: "100%" }}>
           <GrayButtonComponent
