@@ -122,7 +122,7 @@ const CustomerDetail = () => {
             fontFamily={"Inter"}
             fontSize={"30px"}
           >
-            Consumer activity in {event?.eventInfoDetail?.eventName}
+            Customer dashboard in {event?.eventInfoDetail?.eventName}
           </Typography>
         </Grid>
       </Grid>
