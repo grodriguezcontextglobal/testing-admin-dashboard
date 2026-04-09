@@ -68,7 +68,7 @@ const ItemTable = ({
   downloadDataReport,
   // total,
   // searchedResult,
-  // dataFilterOptions,
+  dataFilterOptions,
   // refreshFn,
   setTypePerLocationInfoModal,
   setOpenDetails,
@@ -385,28 +385,28 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-        <Grid
-          display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <RenderingFilters
-            dataToDisplay={dataToDisplayMemo}
-            searchItem={searchValues?.searchItem}
-            user={user}
-            openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
-            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-            searchedResult={searchValues?.searchedResult}
-            chosen={searchValues?.chosenOption}
-            setFiltering={searchValues?.setChosenOption}
-            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-            setOpenDetails={setOpenDetails}
-            allowedLocations={allowedLocations}
-          />
-        </Grid>
+          <Grid
+            display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+          >
+            <RenderingFilters
+              dataToDisplay={dataToDisplayMemo}
+              searchItem={searchValues?.searchItem}
+              user={user}
+              openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
+              setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+              searchedResult={searchValues?.searchedResult}
+              chosen={searchValues?.chosenOption}
+              setFiltering={searchValues?.setChosenOption}
+              setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+              setOpenDetails={setOpenDetails}
+              allowedLocations={allowedLocations}
+            />
+          </Grid>
         <Grid
           flexDirection={"column"}
           justifyContent={"flex-start"}
