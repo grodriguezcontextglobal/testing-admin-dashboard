@@ -13,7 +13,7 @@ import {
 import { message, Modal, Select, Tabs } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import DocumentCard from "./DocumentCard";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DocumentUpload from "../../../components/documents/DocumentUpload";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -188,10 +188,10 @@ const Documents = () => {
         const doc = documents.find((d) => d._id === folderDoc.document_id);
         return doc
           ? {
-              ...doc,
-              active: folderDoc.active,
-              document_name: folderDoc.document_name,
-            }
+            ...doc,
+            active: folderDoc.active,
+            document_name: folderDoc.document_name,
+          }
           : null;
       })
       .filter(Boolean);
@@ -217,63 +217,10 @@ const Documents = () => {
     }
 
     return (
-      <Grid container spacing={2}>
+      <Grid sx={{ backgroundColor: "transparent", border: "transparent", outline: "none" }} container spacing={1}>
         {documents.map((doc) => (
           <Grid item xs={12} sm={6} md={4} key={doc._id}>
-            <Paper
-              sx={{
-                borderRadius: "12px",
-                border: "1px solid var(--gray-200)",
-                background: "var(--basewhite)",
-                boxShadow:
-                  "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-                textAlign: "left",
-                padding: 0,
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-              }}
-            >
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" noWrap>
-                  {doc.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {doc.description}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  When displayed: {doc.trigger_action}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Type: {doc.document_type}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  borderTop: "1px solid var(--gray-200)",
-                  p: 2,
-                  mt: "auto",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Link
-                  to={`/profile/documents/view/${doc._id}`}
-                  style={{
-                    color: "#004EEB",
-                    textDecoration: "none",
-                    fontFamily: "Inter",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    lineHeight: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Document details
-                </Link>
-              </Box>
-            </Paper>
+            <DocumentCard doc={doc} />
           </Grid>
         ))}
       </Grid>
@@ -419,7 +366,7 @@ const Documents = () => {
     {
       key: "1",
       label: "All Documents",
-      children: <Paper sx={{ p: 2 }}>{renderDocumentContent()}</Paper>,
+      children: renderDocumentContent(),  //<Paper sx={{ p: 2 }}>{renderDocumentContent()}</Paper>,
     },
     {
       key: "2",
@@ -431,7 +378,7 @@ const Documents = () => {
     {
       key: "3",
       label: "Document Folders",
-      children: <Paper sx={{ p: 2 }}>{renderFolderContent()}</Paper>,
+      children: renderFolderContent(),  //<Paper sx={{ p: 2 }}>{renderFolderContent()}</Paper>,
     },
   ];
 
