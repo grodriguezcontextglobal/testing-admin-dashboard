@@ -808,7 +808,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: chosen.length>0 ? false : true,
+      show: chosen?.length > 0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -852,7 +852,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: chosen.length>0 ? false : true,
+      show: chosen?.length > 0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -894,7 +894,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: chosen.length>0 ? false : true,
+      show: chosen?.length > 0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -938,7 +938,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: chosen.length>0 ? false : true,
+      show: chosen?.length > 0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -984,7 +984,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: chosen.length>0 ? false : true,
+      show: chosen?.length > 0 ? false : true,
       columns: [
         {
           title: "Name",
