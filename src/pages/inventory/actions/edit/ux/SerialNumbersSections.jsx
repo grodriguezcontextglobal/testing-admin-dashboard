@@ -70,6 +70,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
         { id: (nextId + 1), type: "Serial number", value: "" }
       ])
       return setNextId(nextId + 1)
+    } else {
+      setItemInfoFound(null)
+      setIdentifiers([{ id: nextId, type: "Serial number", value: "" }])
+      return alert("No item found with that serial number in this category and group information. Please check the category and group and try again.")
     }
   }
   const addIdentifier = () => {
