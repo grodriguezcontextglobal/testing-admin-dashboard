@@ -20,7 +20,7 @@ import AddNewMember from "../modals/AddNewMember";
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
-  const slug = location.pathname.split("/").filter(Boolean).at(-2);
+  const slug = location.pathname.split("/").filter(Boolean)?.at(-2);
   const titleParams = String(slug || "").replace(/-/g, " ");
   const groupNameReference = location.state?.referencing || "";
   const groupNameParams = String(groupNameReference || "").replace(/-/g, " ");
