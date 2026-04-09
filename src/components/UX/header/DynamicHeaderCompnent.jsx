@@ -43,8 +43,13 @@ const RefactoredHeaderUntitledUiReact = ({ actions, image, title, subtitle, cent
 };
 
 RefactoredHeaderUntitledUiReact.propTypes = {
-    dataFound: PropTypes.array.isRequired,
     actions: PropTypes.node,
+    image: PropTypes.string,
+    title: PropTypes.string.isRequired,
+    subtitle: PropTypes.string,
+    centerContentComponentTitle: PropTypes.string,
+    email: PropTypes.string,
+    phone: PropTypes.string,
 };
 
 RefactoredHeaderUntitledUiReact.defaultProps = {
