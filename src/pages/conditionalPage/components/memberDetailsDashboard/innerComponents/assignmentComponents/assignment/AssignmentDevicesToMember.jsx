@@ -133,7 +133,7 @@ const AssignmentDevicesToMember = () => {
         return setValueItemSelected({
           ...optionRendering,
           min_serial_number: fetchSelectedItem.data.result[0].serial_number,
-          max_serial_number: fetchSelectedItem.data.result.at(-1).serial_number,
+          max_serial_number: fetchSelectedItem.data.result?.at(-1)?.serial_number,
           data: JSON.stringify(fetchSelectedItem.data.result),
           quantity: 0,
         });
@@ -145,7 +145,7 @@ const AssignmentDevicesToMember = () => {
       return setValueItemSelected({
         ...optionRendering,
         min_serial_number: fetchSelectedItem.data.result[0].serial_number,
-        max_serial_number: fetchSelectedItem.data.result.at(-1).serial_number,
+        max_serial_number: fetchSelectedItem.data.result?.at(-1)?.serial_number,
         data: JSON.stringify(fetchSelectedItem.data.result),
         quantity: 0,
       });
@@ -342,7 +342,7 @@ const AssignmentDevicesToMember = () => {
           quantity: props.quantity,
           consumerUses: false,
           startingNumber: props.deviceInfo[0].serial_number,
-          endingNumber: props.deviceInfo.at(-1).serial_number,
+          endingNumber: props.deviceInfo?.at(-1)?.serial_number,
         },
       ],
       extraServicesNeeded: false,
@@ -391,7 +391,7 @@ const AssignmentDevicesToMember = () => {
         {
           item_group: deviceInfo[0].item_group,
           category_name: deviceInfo[0].category_name,
-          min_serial_number: deviceInfo.at(-1).serial_number,
+          min_serial_number: deviceInfo?.at(-1)?.serial_number,
           quantity: props.quantity,
           selectedList: deviceInfo,
         },
