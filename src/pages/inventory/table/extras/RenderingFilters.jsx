@@ -63,11 +63,12 @@ const RenderingFilters = ({
   setOpenDetails,
   allowedLocations,
   setFiltering,
-}) => {
+}) => {  
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
-    Sale: "For sale",
+    Sale: "For resale",
+    Resale: "For resale",
   };
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
@@ -807,7 +808,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: true,
+      show: chosen.length>0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -851,7 +852,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: true,
+      show: chosen.length>0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -893,7 +894,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: true,
+      show: chosen.length>0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -937,7 +938,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: true,
+      show: chosen.length>0 ? false : true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
     },
     {
@@ -983,7 +984,7 @@ const RenderingFilters = ({
       renderMoreOptions: false,
       tree: false,
       identifierRender: 0,
-      show: true,
+      show: chosen.length>0 ? false : true,
       columns: [
         {
           title: "Name",
