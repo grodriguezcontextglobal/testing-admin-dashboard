@@ -339,28 +339,6 @@ const MainPage = () => {
                 userPreferences: userPreferences,
               }}
             >
-              {/* <Tabs
-                defaultActiveKey="1"
-                activeKey={activeView}
-                onChange={setActiveView}
-                style={{ width: "100%" }}
-                items={[
-                  {
-                    key: "1",
-                    label: "Inventory Items",
-                    children: renderingOption[currentTab],
-                  },
-                  {
-                    key: "2",
-                    label: "Locations",
-                    children: (
-                      <LocationsList
-                        locations={locationsQuery.data?.data?.result || []}
-                      />
-                    ),
-                  },
-                ]}
-              /> */}
               {renderingOption[currentTab]}
             </SearchItemContext.Provider>
           </Grid>
@@ -378,12 +356,6 @@ const MainPage = () => {
           columns={typePerLocationInfoModal.columns}
         />
       )}
-      {/* {addInventoryFromXLSXFileModal && (
-        <AddInventoryFromXLSXFile
-          openModal={addInventoryFromXLSXFileModal}
-          closeModal={setAddInventoryFromXLSXFileModal}
-        />
-      )} */}
       {openCreateLocationModal && (
         <CreateLocationModal
           openModal={openCreateLocationModal}
