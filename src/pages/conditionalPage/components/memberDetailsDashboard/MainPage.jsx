@@ -132,8 +132,7 @@ const MainPage = () => {
   return (
     <>
       <MemberInfoHeader title={titleParams} memberInfo={membersData} groupName={groupNameParams} setAddingNewMember={setAddingNewMember} />
-      <Divider />
-      <nav style={{ display: "flex", width: "100%", gap: "24px", marginY: 3 }}>
+      <nav style={{ display: "flex", width: "100%", gap: "24px", margin: "1.5rem 0" }}>
         <Grid
           style={{
             display: "flex",
