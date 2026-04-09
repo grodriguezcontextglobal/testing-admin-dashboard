@@ -24,7 +24,7 @@ const UpdateMemberInformation = () => {
   const navigate = useNavigate()
   const [newImageProfileURL, setNewImageProfileURL] = useState(null);
   const [newImageUploaded, setNewImageUploaded] = useState(null);
-  const slug = location.pathname.split("/").filter(Boolean).at(-2);
+  const slug = location.pathname.split("/").filter(Boolean)?.at(-2);
   const [membersData, setMembersData] = useState(null);
   const memberInfoRetrieveQuery = useQuery({
     queryKey: ["memberInfoRetrieveQuery"],
