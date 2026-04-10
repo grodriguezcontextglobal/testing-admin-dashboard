@@ -66,6 +66,8 @@ export const bulkItemInsertAlphanumeric = async ({
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
     };
+
+    console.log(template)
     await alphaNumericInsertItemMutation.mutate(template);
     setValue("category_name", "");
     setValue("item_group", "");

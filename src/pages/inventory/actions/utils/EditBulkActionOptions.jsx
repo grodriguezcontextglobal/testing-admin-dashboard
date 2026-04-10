@@ -54,6 +54,7 @@ export const bulkItemUpdateAlphanumeric = async ({
       ? dicSuppliers.find(([key]) => key === data.supplier)[1]
       : null,
   };
+  console.log(template)
   await alphaNumericUpdateItemMutation.mutate(template);
   Object.keys(template).map((key) => {
     setValue(key, "");

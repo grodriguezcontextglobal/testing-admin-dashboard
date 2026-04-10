@@ -231,9 +231,9 @@ const useBulkActionLogic = () => {
           moreInfo,
           formatDate,
           returningDate,
-          subLocationsSubmitted: subLocationInputs
-            .map((item) => item.value)
-            .filter((val) => val.trim() !== ""),
+          subLocationsSubmitted: subLocationsSubmitted,
+            // .map((item) => item.value)
+            // .filter((val) => val.trim() !== ""),
           scannedSerialNumbers,
           setScannedSerialNumbers,
           alphaNumericInsertItemMutation,
@@ -267,9 +267,9 @@ const useBulkActionLogic = () => {
         moreInfo,
         formatDate,
         returningDate,
-        subLocationsSubmitted: subLocationInputs
-          .map((item) => item.value)
-          .filter((val) => val.trim() !== ""),
+        subLocationsSubmitted: subLocationsSubmitted,
+          // .map((item) => item.value)
+          // .filter((val) => val.trim() !== ""),
         scannedSerialNumbers,
         setScannedSerialNumbers,
         alphaNumericUpdateItemMutation,
@@ -338,6 +338,7 @@ const useBulkActionLogic = () => {
   };
 
   const handleSubLocationInputChange = (id, value) => {
+    console.log("handleSubLocationInputChange", value)
     const newInputs = subLocationInputs.map((item) => {
       if (item.id === id) {
         return { ...item, value };
@@ -346,7 +347,7 @@ const useBulkActionLogic = () => {
     });
     setSubLocationInputs(newInputs);
   };
-
+console.log({subLocationsSubmitted})
   const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
       return {
