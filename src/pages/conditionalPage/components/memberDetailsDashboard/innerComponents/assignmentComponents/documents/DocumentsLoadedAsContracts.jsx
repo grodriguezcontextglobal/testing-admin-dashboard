@@ -1,19 +1,13 @@
 import { Box, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider, message, Select, Table, Tabs, Tooltip } from "antd";
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
-import GrayButtonText from "../../../../../../../styles/global/GrayButtonText";
-import { GrayButton } from "../../../../../../../styles/global/GrayButton";
-import { CheckIcon } from "../../../../../../../components/icons/CheckIcon";
-import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
-import { Subtitle } from "../../../../../../../styles/global/Subtitle";
-import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
 import { QuestionIcon } from "../../../../../../../components/icons/QuestionIcon";
+import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
+import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 
 const LegalDocumentModal = ({
   addContracts,
@@ -213,53 +207,7 @@ const LegalDocumentModal = ({
           key: "0",
         },
       ];
-
-  const buttonContainerStyling = () => {
-    let p = {};
-    let button = {};
-    let fill = null;
-    if (addContracts) {
-      p = { ...BlueButtonText };
-      button = { ...BlueButton };
-      fill = "#fff";
-    } else {
-      p = { ...GrayButtonText };
-      button = { ...GrayButton };
-      fill = "#000";
-    }
-    return { p, button, fill };
-  };
-
-  const renderingIcon = () => {
-    return addContracts ? (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          aspectRatio: "1",
-          width: "fit-content",
-          height: "auto",
-        }}
-      >
-        <CheckIcon stroke={buttonContainerStyling().fill} />
-        &nbsp;
-      </div>
-    ) : (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          aspectRatio: "1",
-          width: "fit-content",
-          height: "auto",
-        }}
-      >
-        <BorderedCloseIcon fill={buttonContainerStyling().fill} />
-        &nbsp;
-      </div>
-    );
-  };
-
+      
   return (
     <div key={profile._id ? profile._id : profile.uid ? profile.uid : profile.member_id} style={{ width: "100%" }} id="legal-document-modal">
       {/* Show folder status indicator */}
@@ -289,9 +237,6 @@ const LegalDocumentModal = ({
             <BlueButtonComponent
               title={"Add legal document"}
               func={() => setAddContracts(!addContracts)}
-              styles={buttonContainerStyling().button}
-              titleStyles={buttonContainerStyling().p}
-              icon={renderingIcon()}
             />
           </InputLabel>
         </>

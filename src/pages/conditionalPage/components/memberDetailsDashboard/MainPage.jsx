@@ -1,21 +1,17 @@
 import { useSelector } from "react-redux";
-import { RectanglePlusIcon } from "../../../../components/icons/RectanglePlusIcon";
-import { UpdateIcon } from "../../../../components/icons/UpdateIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 // import { ChangeRoleStaffIcon } from "../../../../components/icons/ChangeRoleStaffIcon";
 // import { UpdatePasswordIcon } from "../../../../components/icons/UpdatePasswordIcon";
 import { Grid } from "@mui/material";
-import { Divider } from "antd";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import Home from "../../../../components/icons/Home";
-import MemberInfoHeader from "./Header";
-import { EmailIcon } from "../../../../components/icons/EmailIcon";
 import { useQuery } from "@tanstack/react-query";
+import { Divider } from "antd";
 import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import AddNewMember from "../modals/AddNewMember";
+import MemberInfoHeader from "./Header";
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -53,7 +49,6 @@ const MainPage = () => {
         <BlueButtonComponent
           title={"Home"}
           func={() => null}
-          icon={<Home width={20} height={20} />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -74,7 +69,6 @@ const MainPage = () => {
         <BlueButtonComponent
           title={"Assign devices"}
           func={() => null}
-          icon={<RectanglePlusIcon />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -95,7 +89,6 @@ const MainPage = () => {
         <LightBlueButtonComponent
           title={"Update member info"}
           func={() => null}
-          icon={<UpdateIcon stroke={"#0040c1"} />}
           buttonType="button"
           titleStyles={{
             textTransform: "none",
@@ -116,9 +109,6 @@ const MainPage = () => {
         <GrayButtonComponent
           title={"Reminders"}
           func={() => null}
-          icon={
-            <EmailIcon width={20} height={20} fill="#344054" />
-          }
           buttonType="button"
           titleStyles={{
             textTransform: "none",
