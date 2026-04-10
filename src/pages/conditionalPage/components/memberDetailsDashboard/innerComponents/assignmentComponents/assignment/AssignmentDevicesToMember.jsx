@@ -28,6 +28,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../../styles/global/T
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
 import { dicIcons } from "../../utils/dicIcons";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
+import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -54,25 +55,38 @@ const AssignmentDevicesToMember = () => {
     // Set default expected return date to today
     setValue("expectedReturnDate", dateToUse);
   }, [dateToUse, setValue]);
-  const itemsInInventoryQuery = useQuery({
-    queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
-    queryFn: () =>
-      devitrakApi.post("/db_event/retrieve-item-group-location-quantity", {
+
+  const { role, locationsAssignPermission } = useStaffRoleAndLocations();
+  const bodyFetchRequest = () => {
+    if (role === "0" || role === 0) {
+      return {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
-      }),
+      };
+    }
+    return {
+      company_id: user.sqlInfo.company_id,
+      warehouse: 1,
+      enableAssignFeature: 1,
+      location: locationsAssignPermission,
+    };
+  };
+  const itemsInInventoryQuery = useQuery({
+    queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.post(
+        "/db_event/retrieve-item-group-location-quantity",
+        {
+          company_id: user.sqlInfo.company_id,
+          warehouse: 1,
+          enableAssignFeature: 1,
+          location: locationsAssignPermission,
+        }
+      ),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 100, // 1 minutes
   });
-  // const staffMemberQuery = useQuery({
-  //   queryKey: ["staffMemberInfo"],
-  //   queryFn: () =>
-  //     devitrakApi.post("/db_member/consulting-member", {
-  //       member_id: memberInfo.member_id,
-  //     }),
-  //   enabled: !!memberInfo.member_id,
-  // });
   const queryClient = useQueryClient();
   dataFound.current = itemsInInventoryQuery?.data?.data;
   const optionsToRenderInSelector = () => {
@@ -208,12 +222,10 @@ const AssignmentDevicesToMember = () => {
   const createEvent = async (props) => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${
-          memberInfo.email
-        } / ${new Date().toLocaleDateString()}`,
-        venue_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${
-          memberInfo.email
-        } / ${new Date().toLocaleDateString()}`,
+        event_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
+          } / ${new Date().toLocaleDateString()}`,
+        venue_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
+          } / ${new Date().toLocaleDateString()}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -239,9 +251,8 @@ const AssignmentDevicesToMember = () => {
         status: "Operational",
         activity: true,
         comment: "No comment",
-        eventSelected: `${memberInfo.first_name} ${memberInfo.last_name} / ${
-          memberInfo.email
-        } / ${new Date().toLocaleDateString()}`,
+        eventSelected: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
+          } / ${new Date().toLocaleDateString()}`,
         provider: user.company,
         type: db[index].item_group,
         company: user.companyData.id,
@@ -259,9 +270,8 @@ const AssignmentDevicesToMember = () => {
           company_name: user.companyData.company_name,
           emailAdmin: user.email,
           member: {
-            name: `${memberInfo.first_name ?? ""} ${
-              memberInfo.last_name ?? ""
-            }`,
+            name: `${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""
+              }`,
             email: memberInfo.email,
           },
           contractList: contractList,
@@ -294,9 +304,8 @@ const AssignmentDevicesToMember = () => {
     });
   };
   const createEventNoSQL = async (props) => {
-    const eventName = `${memberInfo.first_name} ${memberInfo.last_name} / ${
-      memberInfo.email
-    } / ${new Date().toLocaleDateString()}`;
+    const eventName = `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
+      } / ${new Date().toLocaleDateString()}`;
     const eventLink = eventName.replace(/ /g, "%20");
     const eventFormat = {
       user: user.email,
@@ -471,8 +480,8 @@ const AssignmentDevicesToMember = () => {
               {
                 query: `SELECT * FROM item_inv 
               WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? AND warehouse = ? And serial_number in (${selectedData
-                .map((item) => `'${item.serial_number}'`)
-                .join(",")})
+                    .map((item) => `'${item.serial_number}'`)
+                    .join(",")})
               `,
                 values: [
                   valueItemSelected.item_group,
@@ -513,9 +522,8 @@ const AssignmentDevicesToMember = () => {
               color: "var(--gray600, #475467)",
             }}
           >
-            Assign a device to member: {`${memberInfo.first_name ?? ""} ${
-              memberInfo.last_name ?? ""
-            }`} from existing inventory.  
+            Assign a device to member: {`${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""
+              }`} from existing inventory.
           </p>
         </InputLabel>
         <InputLabel
@@ -871,7 +879,7 @@ const AssignmentDevicesToMember = () => {
                       disabled={
                         loadingStatus ||
                         valueItemSelected.max_serial_number ===
-                          valueItemSelected.min_serial_number
+                        valueItemSelected.min_serial_number
                       }
                       required
                       {...register("startingNumber", {
