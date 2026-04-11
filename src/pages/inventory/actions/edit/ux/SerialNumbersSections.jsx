@@ -169,12 +169,12 @@ const SerialNumberAndMoreInfoComponentForm = ({
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      checkAndRetrieveExistingInformationItem(e);
-    }
-  };
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     checkAndRetrieveExistingInformationItem(e);
+  //   }
+  // };
 
   return (
     <Grid container spacing={1}>
@@ -223,62 +223,66 @@ const SerialNumberAndMoreInfoComponentForm = ({
           </Grid>
         </Grid>
         {identifiers.map((identifier, index) => (
-          <Grid
-            container
-            spacing={1}
-            key={identifier.id}
-            sx={{ margin: 0, alignItems: "center" }}
-          >
+          <form key={identifier.id} id={`form-add-new-identifier`} onSubmit={(e) => addIdentifier(e)}>
+
             <Grid
-              display={"flex"}
-              margin={0}
-              item
-              xs={12}
-              sm={3}
-              md={2.5}
-              lg={1.5}
+              container
+              spacing={1}
+              key={identifier.id}
+              sx={{ margin: 0, alignItems: "center" }}
             >
-              <Checkbox
-                checked={checkedIndex.includes(index)}
-                onChange={() => checkedPriorityKey(index)}
-              />
-              <AutoComplete
-                style={{ ...style, margin: "0 0 0 0.2rem" }}
-                options={options.map((item) => ({
-                  label: item.label,
-                  value: item.label,
-                }))}
-                value={identifier.type}
-                onChange={(newValue) => {
-                  handleIdentifierChange(identifier.id, "type", newValue);
-                }}
-                placeholder="Select type"
-              />
-            </Grid>
-            <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
-              <Input
-                placeholder="e.g. 3241684981556474651"
-                value={identifier.value}
-                onChange={(e) =>
-                  handleIdentifierChange(identifier.id, "value", e.target.value)
-                }
-                onKeyDown={handleKeyDown}
-                style={{ width: "100%", margin: 0 }}
-                allowClear
-              />
-              <BlueButtonComponent
-                title={<WhiteCirclePlusIcon />}
-                buttonType="button"
-                func={addIdentifier}
-              />
-              {identifiers.length > 1 && (
-                <DangerButtonComponent
-                  title="Remove"
-                  func={() => removeField(identifier.id)}
+              <Grid
+                display={"flex"}
+                margin={0}
+                item
+                xs={12}
+                sm={3}
+                md={2.5}
+                lg={1.5}
+              >
+                <Checkbox
+                  checked={checkedIndex.includes(index)}
+                  onChange={() => checkedPriorityKey(index)}
                 />
-              )}
+                <AutoComplete
+                  style={{ ...style, margin: "0 0 0 0.2rem" }}
+                  options={options.map((item) => ({
+                    label: item.label,
+                    value: item.label,
+                  }))}
+                  value={identifier.type}
+                  onChange={(newValue) => {
+                    handleIdentifierChange(identifier.id, "type", newValue);
+                  }}
+                  placeholder="Select type"
+                />
+              </Grid>
+              <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+                <Input
+                  placeholder="e.g. 3241684981556474651"
+                  value={identifier.value}
+                  onChange={(e) =>
+                    handleIdentifierChange(identifier.id, "value", e.target.value)
+                  }
+                  // onKeyDown={handleKeyDown}
+                  style={{ width: "100%", margin: 0 }}
+                  allowClear
+                />
+                <BlueButtonComponent
+                  title={<WhiteCirclePlusIcon />}
+                  buttonType="submit"
+                  // func={addIdentifier}
+                  form={`form-add-new-identifier`}
+                />
+                {identifiers.length > 1 && (
+                  <DangerButtonComponent
+                    title="Remove"
+                    func={() => removeField(identifier.id)}
+                  />
+                )}
+              </Grid>
             </Grid>
-          </Grid>
+          </form>
         ))}
 
         <Typography
@@ -289,10 +293,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
           You can use a scanner to input the number. You can also add more
           identifiers.
         </Typography>
-        <GrayButtonComponent
+        {identifiers.length > 1 && (<GrayButtonComponent
           func={(e) => handleAddDevice(e)}
           title="Add this device"
-        />
+        />)}
       </div>
       <Divider />
       <RenderingItemsAddedForStore
