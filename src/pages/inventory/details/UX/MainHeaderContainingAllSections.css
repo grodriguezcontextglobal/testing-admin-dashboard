@@ -19,7 +19,8 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex: 1;
+    /* flex: 1; */
+    width: fit-content;
 }
 
 .main-header-center {
