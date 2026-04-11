@@ -223,7 +223,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
           </Grid>
         </Grid>
         {identifiers.map((identifier, index) => (
-          <form key={identifier.id} id={`form-add-new-identifier`} onSubmit={(e) => addIdentifier(e)}>
+          <form key={identifier.id} id={`form-add-new-identifier`} onSubmit={(e) => addIdentifier(e)} style={{ width: "100%" }}>
 
             <Grid
               container
