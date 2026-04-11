@@ -71,7 +71,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     >
       <Card
         id={`card-contact-person_${dataPropsCopy?.item_id}`}
-        style={{ ...CardStyle, width: "100%", padding: 0 }}
+        style={{ ...CardStyle, width: "fit-content", padding: 0 }}
         styles={{
           body: {
             padding: 0,
