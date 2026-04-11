@@ -28,7 +28,7 @@
     /* flex-direction: column; */
     align-self: flex-start;
     gap: 1rem;
-    width: 100%;
+    width: fit-content;
 }
 
 .main-header-info .title {
