@@ -62,7 +62,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
         setNextId(templ.length + 1)
         return setIdentifiers([
           ...templ,
-          { id: (templ.length + 1), type: "Serial number", value: "" }
+          // { id: (templ.length + 1), type: "Serial number", value: "" }
         ])
       }
       setIdentifiers([
@@ -71,6 +71,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
       ])
       return setNextId(nextId + 1)
     }
+    return alert("No item found with that serial number in category " + generalInfoForSelection.category_name)
   }
   const addIdentifier = () => {
     checkAndRetrieveExistingInformationItem()
