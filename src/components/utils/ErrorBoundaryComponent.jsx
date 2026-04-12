@@ -36,10 +36,9 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
     "Failed to load resource: net::ERR_FAILED",
   ]
   if (
-    String(error.message).includes(string=>errorList.includes(string))
+    errorList.some((string) => String(error.message).includes(string))
   ) {
     //insert message to be displayed in screen to inform user that the App had been updated and he/she needs to refresh the page  
-    alert("The App had been updated. Please refresh the page to enjoy the latest features/layout for user experience.");
     return window.location.reload({
       force: true,
     });
