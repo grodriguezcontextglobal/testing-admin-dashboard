@@ -209,7 +209,8 @@ export const agreedAgreement = async ({
       "Error submitting agreement:",
       error?.message || error?.msg || error,
     );
-    throw error; // Re-throw to be handled by the form submission
+    //throw error; // Re-throw to be handled by the form submission
+    return setOpen(false);
   } finally {
     setIsLoading(false);
   }
