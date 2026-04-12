@@ -77,7 +77,7 @@ const BulkItemForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(savingNewItem)}>
+    <form onSubmit={handleSubmit(savingNewItem)} id="bulkItemForm">
       <Grid container spacing={1}>
         {renderFields({
           retrieveItemOptions,
@@ -380,6 +380,7 @@ const BulkItemForm = ({
         moreInfoDisplay={moreInfoDisplay}
         scannedSerialNumbers={scannedSerialNumbers}
         primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Save and add ${scannedSerialNumbers.length} items` : `Save and add item`}
+        formId="bulkItemForm"
       />
     </form>
   );
