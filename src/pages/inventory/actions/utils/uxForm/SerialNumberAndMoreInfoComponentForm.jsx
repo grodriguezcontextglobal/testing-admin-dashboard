@@ -30,8 +30,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
       identifiers.map((identifier) =>
         identifier.id === id
           ? { ...identifier, [field]: newValue }
-          : identifier,
-      ),
+          : identifier
+      )
     );
   };
 
@@ -43,12 +43,19 @@ const SerialNumberAndMoreInfoComponentForm = ({
     setNextId(nextId + 1);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addIdentifier();
+    }
+  };
+
   const handleAddDevice = (e) => {
     e.preventDefault();
 
     // Input Validation
     const isInvalid = identifiers.some(
-      (identifier) => !identifier.type?.trim() || !identifier.value?.trim(),
+      (identifier) => !identifier.type?.trim() || !identifier.value?.trim()
     );
 
     if (isInvalid) {
@@ -61,7 +68,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const primaryKey = identifiers[markedIndex].value;
     if (!primaryKey?.trim()) {
       alert(
-        "The value of the first identifier is required and will be used as the main device identifier.",
+        "The value of the first identifier is required and will be used as the main device identifier."
       );
       return;
     }
@@ -110,11 +117,11 @@ const SerialNumberAndMoreInfoComponentForm = ({
     // eslint-disable-next-line no-prototype-builtins
     const newMoreInfo = moreInfo.filter(
       // eslint-disable-next-line no-prototype-builtins
-      (info) => !info.hasOwnProperty(primaryKey),
+      (info) => !info.hasOwnProperty(primaryKey)
     );
     setMoreInfo(newMoreInfo);
     setScannedSerialNumbers(
-      scannedSerialNumbers.filter((serial) => serial !== primaryKey),
+      scannedSerialNumbers.filter((serial) => serial !== primaryKey)
     );
   };
 
@@ -128,11 +135,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   };
   return (
     <Grid container spacing={1}>
-      <div
-        // onSubmit={(e)=>handleAddDevice(e)}
-        style={{ margin: "1rem 0", gap: 0 }}
-        className="form"
-      >
+      <div style={{ margin: "1rem 0", gap: 0, width: "100%" }} className="form">
         <Typography
           variant="h5"
           sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
@@ -172,68 +175,72 @@ const SerialNumberAndMoreInfoComponentForm = ({
             </Typography>
           </Grid>
         </Grid>
-        {identifiers.map((identifier, index) => (
-          <Grid
-            container
-            spacing={1}
-            key={identifier.id}
-            sx={{ margin: 0, alignItems: "center" }}
-          >
+        <div style={{ width: "100%" }}>
+          {identifiers.map((identifier, index) => (
             <Grid
-              display={"flex"}
-              margin={0}
-              item
-              xs={12}
-              sm={3}
-              md={2.5}
-              lg={1.5}
+              container
+              spacing={1}
+              key={identifier.id}
+              sx={{ margin: 0, alignItems: "center" }}
             >
-              <Checkbox
-                checked={checkedIndex.includes(index)}
-                onChange={() => checkedPriorityKey(index)}
-              />
-              <AutoComplete
-                style={{ ...style, margin: "0 0 0 0.2rem" }}
-                options={options.map((item) => ({
-                  label: item.label,
-                  value: item.label,
-                }))}
-                value={identifier.type}
-                onChange={(newValue) => {
-                  handleIdentifierChange(identifier.id, "type", newValue);
-                }}
-                placeholder="Select type"
-              />
-            </Grid>
-            <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
-              <Input
-                placeholder="e.g. 3241684981556474651"
-                value={identifier.value}
-                onChange={(e) =>
-                  handleIdentifierChange(identifier.id, "value", e.target.value)
-                }
-                style={{ width: "100%", margin: 0 }}
-                allowClear
-              />
-              <BlueButtonComponent
-                title={<WhiteCirclePlusIcon />}
-                buttonType="button"
-                func={addIdentifier}
-              />
-              {identifiers.length > 1 && (
-                <DangerButtonComponent
-                  title="Remove"
-                  func={() => removeField(identifier.id)}
+              <Grid
+                display={"flex"}
+                margin={0}
+                item
+                xs={12}
+                sm={3}
+                md={2.5}
+                lg={1.5}
+              >
+                <Checkbox
+                  checked={checkedIndex.includes(index)}
+                  onChange={() => checkedPriorityKey(index)}
                 />
-              )}
+                <AutoComplete
+                  style={{ ...style, margin: "0 0 0 0.2rem" }}
+                  options={options.map((item) => ({
+                    label: item.label,
+                    value: item.label,
+                  }))}
+                  value={identifier.type}
+                  onChange={(newValue) => {
+                    handleIdentifierChange(identifier.id, "type", newValue);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Select type"
+                />
+              </Grid>
+              <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+                <Input
+                  placeholder="e.g. 3241684981556474651"
+                  value={identifier.value}
+                  onChange={(e) =>
+                    handleIdentifierChange(identifier.id, "value", e.target.value)
+                  }
+                  style={{ width: "100%", margin: 0 }}
+                  onKeyDown={handleKeyDown}
+                  allowClear
+                />
+                <BlueButtonComponent
+                  title={<WhiteCirclePlusIcon />}
+                  buttonType="button"
+                  func={addIdentifier}
+                />
+                {identifiers.length > 1 && (
+                  <DangerButtonComponent
+                    title="Remove"
+                    func={() => removeField(identifier.id)}
+                  />
+                )}
+              </Grid>
             </Grid>
-          </Grid>
-        ))}
+          ))}
+        </div>
 
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mt: -3, mb: 2 }}
+          sx={{ mt: 2, mb: 2 }}
         >
           You can use a scanner to input the number. You can also add more
           identifiers.
