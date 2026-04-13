@@ -22,7 +22,7 @@ const RenderingMoreThanTreeviewElements = ({
                 : `/inventory/${String(
                     item.routeTitle
                   ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
-                    searchItem && searchItem
+                searchItem || ""
                   }`
             }
             title={dictionary[opt?.key] ?? opt?.key}
