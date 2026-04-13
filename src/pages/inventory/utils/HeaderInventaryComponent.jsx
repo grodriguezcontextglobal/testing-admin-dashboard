@@ -11,6 +11,7 @@ import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueBu
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 // import { XLSXIcon } from "../../../components/icons/XLSXIcon";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 
 /**
  * HeaderInventaryComponent
@@ -30,7 +31,7 @@ import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocati
 const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
-  // setAddInventoryFromXLSXFileModal,
+  setAddInventoryFromXLSXFileModal,
   setOpenCreateLocationModal,
 }) => {
   const {
@@ -69,17 +70,17 @@ const HeaderInventaryComponent = ({
         md={8}
         lg={8}
       >
-        {/* {canCreate && (
+        {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
             styles={{ with: "100%" }}
-            icon={
-              <XLSXIcon
-                stroke={"var(--blue-dark--800)"}
-                width={"20"}
-                height={"18"}
-              />
-            }
+            // icon={
+            //   <XLSXIcon
+            //     stroke={"var(--blue-dark--800)"}
+            //     width={"20"}
+            //     height={"18"}
+            //   />
+            // }
             buttonType="button"
             titleStyles={{
               textTransform: "none",
@@ -88,7 +89,7 @@ const HeaderInventaryComponent = ({
             }}
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
-        )} */}
+        )}
         {isAdmin && (
           <BlueButtonComponent
             title={"Create Location"}
