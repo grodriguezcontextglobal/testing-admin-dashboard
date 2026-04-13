@@ -1,12 +1,11 @@
-import { useState, useMemo } from "react";
-import DocumentXLSXUpload from "../../../components/documents/DocumentXLSXUpload";
+import { Alert } from "antd";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import TourModal from "../utils/TourModal";
-import { useSelector } from "react-redux";
-import { Alert } from "antd";
 
-import { getPermittedLocations } from "./utils/permissionUtils";
+import DocumentInventoryXLSXUpload from "../../../components/documents/DocumentInventoryXLSXUpload";
 
 /**
  * AddInventoryFromXLSXFile Component
@@ -28,15 +27,18 @@ import { getPermittedLocations } from "./utils/permissionUtils";
  */
 const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
   const [tourModal, setTourModal] = useState(false);
-  const { user } = useSelector((state) => state.admin);
-
-  // Check if user has create permission in ANY location
+  const { role, locations } = useSelector(state => state.permission)
   const canCreate = useMemo(() => {
-    const permittedLocations = getPermittedLocations(user, "create");
-    // If null, it means ALL locations (Role 0)
-    // If array, check if it has length > 0
-    return permittedLocations === null || permittedLocations.length > 0;
-  }, [user]);
+    if (role === "0") {
+      return true;
+    }
+    if (Array.isArray(locations)) {
+      return locations.some(
+        (location) => location.assign || location.create || location.update
+      );
+    }
+    return false;
+  }, [role, locations]);
 
   const closingModal = () => {
     return closeModal(false);
@@ -69,7 +71,7 @@ const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
             title="Inventory Import Template Guide"
             func={() => setTourModal(true)}
           />
-          {canCreate && <DocumentXLSXUpload key="upload-button" />}
+          {canCreate && <DocumentInventoryXLSXUpload closeModal={closeModal} key="upload-button" />}
         </div>,
       ]}
     />
