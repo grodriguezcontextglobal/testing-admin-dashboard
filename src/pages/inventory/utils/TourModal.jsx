@@ -1,6 +1,8 @@
-import { Space, Typography } from "antd";
+import { Button, Space, Tooltip, Typography } from "antd";
 import { useRef } from "react";
 import TourModals from "../../../components/UX/tours/TourModals";
+import { DownloadOutlined } from "@ant-design/icons";
+import { utils, writeFile } from "xlsx";
 
 const { Text } = Typography;
 
@@ -18,22 +20,15 @@ const TourModal = ({ open, setOpen }) => {
   const companyRef = useRef(null);
   const locationRef = useRef(null);
   const extraInfoRef = useRef(null);
-  const containerRef = useRef(null);
-  const containerCapacityRef = useRef(null);
   const imageRef = useRef(null);
   const statusRef = useRef(null);
-  const assignableRef = useRef(null);
   const containerItemsRef = useRef(null);
-  const isStoredInContainerRef = useRef(null);
-  const containerIdRef = useRef(null);
-  const displayItemRef = useRef(null);
   const returnedRentedInfoRef = useRef(null);
   const subLocationRef = useRef(null);
   const supplierInfoRef = useRef(null);
 
   // Helper to attach ref to the header cell
   const attachRef = (ref) => () => ({ ref });
-
   const columns = [
     {
       title: <Text type="danger">Category*</Text>,
@@ -120,20 +115,6 @@ const TourModal = ({ open, setOpen }) => {
       onHeaderCell: attachRef(extraInfoRef),
     },
     {
-      title: <Text type="danger">Container*</Text>,
-      dataIndex: "container",
-      key: "container",
-      width: 120,
-      onHeaderCell: attachRef(containerRef),
-    },
-    {
-      title: <Text type="danger">Container Capacity*</Text>,
-      dataIndex: "containerSpotLimit",
-      key: "containerSpotLimit",
-      width: 160,
-      onHeaderCell: attachRef(containerCapacityRef),
-    },
-    {
       title: <Text type="danger">Image*</Text>,
       dataIndex: "image_url",
       key: "image_url",
@@ -146,41 +127,6 @@ const TourModal = ({ open, setOpen }) => {
       key: "status",
       width: 120,
       onHeaderCell: attachRef(statusRef),
-    },
-    {
-      title: <Text type="danger">Assignable*</Text>,
-      dataIndex: "enableAssignFeature",
-      key: "enableAssignFeature",
-      width: 120,
-      onHeaderCell: attachRef(assignableRef),
-    },
-    {
-      title: <Text type="danger">Container Items*</Text>,
-      dataIndex: "container_items",
-      key: "container_items",
-      width: 150,
-      onHeaderCell: attachRef(containerItemsRef),
-    },
-    {
-      title: <Text type="danger">Stored in Container?*</Text>,
-      dataIndex: "isItInContainer",
-      key: "isItInContainer",
-      width: 150,
-      onHeaderCell: attachRef(isStoredInContainerRef),
-    },
-    {
-      title: <Text type="danger">Container ID*</Text>,
-      dataIndex: "container_id",
-      key: "container_id",
-      width: 120,
-      onHeaderCell: attachRef(containerIdRef),
-    },
-    {
-      title: <Text type="danger">Display Item*</Text>,
-      dataIndex: "display_item",
-      key: "display_item",
-      width: 120,
-      onHeaderCell: attachRef(displayItemRef),
     },
     {
       title: <Text type="danger">Return Date*</Text>,
@@ -220,15 +166,8 @@ const TourModal = ({ open, setOpen }) => {
       company: "MyCompany",
       location: "Shelf A",
       extra_serial_number: "Material: Silicon",
-      container: "0",
-      containerSpotLimit: "0",
       image_url: "http://example.com/img.png",
       status: "Operational",
-      enableAssignFeature: "1",
-      container_items: "[]",
-      isItInContainer: "0",
-      container_id: "null",
-      display_item: "1",
       returnedRentedInfo: "null",
       sub_location: "[]",
       supplier_info: "TechCorp",
@@ -361,30 +300,6 @@ const TourModal = ({ open, setOpen }) => {
       target: () => extraInfoRef.current,
     },
     {
-      title: "Container",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          
-          <Text type="secondary">Default: 0</Text>
-        </Space>
-      ),
-      target: () => containerRef.current,
-    },
-    {
-      title: "Container Capacity",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          <Text>
-            Possible names: container limit, limit, capacity, container capacity
-          </Text>
-          <Text type="secondary">Default: 0</Text>
-        </Space>
-      ),
-      target: () => containerCapacityRef.current,
-    },
-    {
       title: "Image",
       description: (
         <Space direction="vertical">
@@ -406,17 +321,6 @@ const TourModal = ({ open, setOpen }) => {
       target: () => statusRef.current,
     },
     {
-      title: "Assignable",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          
-          <Text type="secondary">Default: 1</Text>
-        </Space>
-      ),
-      target: () => assignableRef.current,
-    },
-    {
       title: "Container Items",
       description: (
         <Space direction="vertical">
@@ -426,41 +330,6 @@ const TourModal = ({ open, setOpen }) => {
         </Space>
       ),
       target: () => containerItemsRef.current,
-    },
-    {
-      title: "Stored in Container?",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          <Text>
-            Possible names: is it in a container, is it store inside a container
-          </Text>
-          <Text type="secondary">Default: 0</Text>
-        </Space>
-      ),
-      target: () => isStoredInContainerRef.current,
-    },
-    {
-      title: "Container ID",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          
-          <Text type="secondary">Default: null</Text>
-        </Space>
-      ),
-      target: () => containerIdRef.current,
-    },
-    {
-      title: "Display Item",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          
-          <Text type="secondary">Default: 1</Text>
-        </Space>
-      ),
-      target: () => displayItemRef.current,
     },
     {
       title: "Return Date",
@@ -502,12 +371,91 @@ const TourModal = ({ open, setOpen }) => {
       target: () => supplierInfoRef.current,
     },
   ];
+  const tourData = [
+  {
+    "Category": "Audio",
+    "Device Name": "Audio Device 1",
+    "Cost": "45.5",
+    "Brand": "Sony",
+    "Description": "Audio Device 1 used for events and rentals",
+    "Ownership": "Rent",
+    "Main Warehouse": "Miami, FL",
+    "Serial Number": "100001",
+    "Warehouse": true,
+    "Company": "ABC Interpreting",
+    "Location": "Miami, FL",
+    "Extra Info": "",
+    "Image": "",
+    "Status": "Operational",
+    "Return Date": "2026-05-01 12:00:00",
+    "Sub Locations": "Section A, Locker A105",
+    "Supplier Info": "Rental Equipment LLC"
+  },
+  {
+    "Category": "Interpretation",
+    "Device Name": "PL6 RF Receiver",
+    "Cost": "99.0",
+    "Brand": "Congress Audio",
+    "Description": "Receiver used for interpretation events 70-75 MHz",
+    "Ownership": "Permanent",
+    "Main Warehouse": "Fort Lauderdale, FL",
+    "Serial Number": "100002",
+    "Warehouse": false,
+    "Company": "ABC Interpreting",
+    "Location": "Orlando, FL",
+    "Extra Info": "",
+    "Image": "",
+    "Status": "Operational",
+    "Return Date": "2026-05-10 15:30:00",
+    "Sub Locations": "Section B, Locker B203",
+    "Supplier Info": ""
+  },
+  {
+    "Category": "Fitness",
+    "Device Name": "C4 Pre Workout",
+    "Cost": "25.75",
+    "Brand": "Cellucor",
+    "Description": "Pre workout supplement for fitness events",
+    "Ownership": "Rent",
+    "Main Warehouse": "Miami, FL",
+    "Serial Number": "100003",
+    "Warehouse": true,
+    "Company": "ABC Interpreting",
+    "Location": "Miami, FL",
+    "Extra Info": "",
+    "Image": "",
+    "Status": "Operational",
+    "Return Date": "2026-05-15 10:00:00",
+    "Sub Locations": "",
+    "Supplier Info": "Rental Equipment LLC"
+  }
+];
+
+  const handleDownloadTemplate = () => {
+    // eslint-disable-next-line no-unused-vars
+    const dataToExport = tourData.map(({ key, ...rest }) => rest);
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Template");
+    writeFile(wb, "Inventory_Template.xlsx");
+  };
 
   return (
     <TourModals
       open={open}
       setOpen={setOpen}
-      title="Inventory Import Template Guide"
+      title={<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span>Inventory Import Template Guide</span>
+        <Tooltip title="Download Template">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadTemplate}
+            size="small"
+          />
+        </Tooltip>
+      </div>}
       description={
         <>
           This tour guides you through the expected structure of your Excel
