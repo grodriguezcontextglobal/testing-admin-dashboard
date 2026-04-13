@@ -35,6 +35,7 @@ import CreateLocationModal from "./utils/CreateLocationModal";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -96,9 +97,9 @@ const MainPage = () => {
     // Role 0 Bypass: Admin/Owner has full access (return null to indicate no filter)
     if (
       user?.companyData.employees.find((e) => e.user === user.email).role ===
-        0 ||
+      0 ||
       user?.companyData.employees.find((e) => e.user === user.email).role ===
-        "0"
+      "0"
     ) {
       return null;
     }
@@ -181,6 +182,10 @@ const MainPage = () => {
     queryClient.resetQueries({
       queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
     });
+    clearCacheMemory(
+      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    );
+    clearCacheMemory(`providerCompanies_${user.companyData.id}`);
     setIsLoadingState(false);
     setValue("searchItem", "");
     setParams(null);
@@ -290,7 +295,7 @@ const MainPage = () => {
           locationsQuery={locationsQuery}
           setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
-          />
+        />
         <Divider />
         <FilterOptionsContext.Provider
           value={{
@@ -366,7 +371,7 @@ const MainPage = () => {
         />
       )}
       {
-        openCheckInDevicesFromEvent && <CheckInDevicesFromEventsModal open={openCheckInDevicesFromEvent}  close={()=> setOpenCheckInDevicesFromEvent(false)} user={user}/>
+        openCheckInDevicesFromEvent && <CheckInDevicesFromEventsModal open={openCheckInDevicesFromEvent} close={() => setOpenCheckInDevicesFromEvent(false)} user={user} />
       }
 
       {
