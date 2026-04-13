@@ -1,22 +1,22 @@
-import { Grid, IconButton, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { Grid, IconButton, InputAdornment, Typography } from "@mui/material";
 import { Breadcrumb, Divider } from "antd";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import Loading from "../../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
+import Input from "../../../../components/UX/inputs/Input";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../../styles/global/LightBlueButton";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
-import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import HeaderInventaryComponent from "../../utils/HeaderInventaryComponent";
 import CardInfo from "../UX/CardInfo";
-import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -25,19 +25,18 @@ const MainPage = () => {
     totalValue: 0,
     totalAvailable: 0,
   });
+  const handleReferenceDataChange = useCallback((newRefData) => {
+    setReferenceData(newRefData);
+  }, []);
   const location = useLocation();
   const locationName = location.search.split("&")[0];
-  const { register, watch, setValue, handleSubmit } = useForm({
+  const searchParam = location.search.split("&")[1]?.split("=")[1];
+  const initialSearchValue = (searchParam && searchParam !== 'undefined') ? searchParam : null;
+  const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: location.search.split("&")[1]?.split("=")[1],
+      searchDevice: initialSearchValue || '',
     },
   });
-
-  useEffect(() => {
-    if (watch("searchDevice") === "undefined" || watch("searchDevice") === null) {
-      setValue("searchDevice", "");
-    }
-  }, [locationName]);
 
   const subLocations =
     location.state !== null
@@ -108,7 +107,7 @@ const MainPage = () => {
       title: navigateToSublocation(item, index),
     })),
   ];
-  const [searchedValueItem, setSearchedValueItem] = useState(null);
+  const [searchedValueItem, setSearchedValueItem] = useState(initialSearchValue);
   const handleSubmitForm = (data) => {
     return setSearchedValueItem(data.searchDevice);
   };
@@ -220,11 +219,11 @@ const MainPage = () => {
           lg={12}
         >
           <form style={{ width: "100%", display: "flex", gap: "10px" }} onSubmit={handleSubmit(handleSubmitForm)}>
-            <OutlinedInput
+            <Input
               {...register("searchDevice")}
               fullWidth
               placeholder="Search devices here"
-              style={OutlinedInputStyle}
+              // style={InputStyle}
               startAdornment={
                 <InputAdornment position="start">
                   <MagnifyIcon />
@@ -243,6 +242,7 @@ const MainPage = () => {
                     }}
                     onClick={() => {
                       setSearchedValueItem(null);
+                      setValue("searchDevice", "");
                     }}
                   >
                     <p style={{ color: "#fff", fontSize: "1rem", fontWeight: 600, aspectRatio:1 }}>x</p>
@@ -263,7 +263,7 @@ const MainPage = () => {
           >
             <TableDeviceLocation
               searchItem={searchedValueItem}
-              referenceData={setReferenceData}
+              referenceData={handleReferenceDataChange}
             />
           </Grid>
         </Grid>
