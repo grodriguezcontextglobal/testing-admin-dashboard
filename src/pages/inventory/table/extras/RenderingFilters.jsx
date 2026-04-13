@@ -1187,8 +1187,8 @@ const RenderingFilters = ({
                             props={`${opt.value} total devices`}
                             route={`/inventory/${String(
                               item.routeTitle
-                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${(searchItem && searchItem) ||
-                              (chosen.value && chosen.value)
+                            ).toLowerCase()}?${decodeURI(opt.key)}&search=${(searchItem || chosen.value) ||
+                            ""
                               }`}
                             style={{
                               width: "fit-content",

@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy, uniqueId } from "lodash";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -21,6 +21,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const navigate = useNavigate();
   
   // State to track filtered data count for dynamic pagination
+  // eslint-disable-next-line no-unused-vars
   const [filteredDataCount, setFilteredDataCount] = useState(0);
   
   const urlQuery =
@@ -60,7 +61,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const groupingByDeviceType = groupBy(imageSource, "item_group");
   const renderedListItems = listItemsQuery?.data?.data.result;
   
-  const dataStructuringFormat = () => {
+  const structuredData = useMemo(() => {
     const resultFormatToDisplay = new Set();
     const groupingBySerialNumber = groupBy(
       itemsInInventoryQuery?.data?.data?.items,
@@ -89,11 +90,10 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
       return Array.from(resultFormatToDisplay);
     }
     return [];
-  };
+  }, [renderedListItems, itemsInInventoryQuery.data, groupingByDeviceType]);
   
   useEffect(() => {
     const controller = new AbortController();
-    dataStructuringFormat();
     listItemsQuery.refetch();
     listImagePerItemQuery.refetch();
     itemsInInventoryQuery.refetch();
@@ -103,64 +103,51 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     };
   }, [user.company, location.key]);
 
-  const dataToDisplay = () => {
-    const structuredData = dataStructuringFormat();
+  const dataToDisplay = useMemo(() => {
     if (!searchItem || searchItem === "") {
-      if (structuredData.length > 0) {
-        // Initialize filtered count with the full data length
-        if (filteredDataCount === 0) {
-          setFilteredDataCount(structuredData.length);
-        }
-        return structuredData;
-      }
-      return [];
-    } else if (String(searchItem).length > 0) {
-      const filteredData = structuredData?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searchItem).toLowerCase())
-      );
-      // Update filtered count when search is applied
-      setFilteredDataCount(filteredData.length);
-      return filteredData;
+      return structuredData;
     }
-  };
+    const filteredData = structuredData?.filter((item) =>
+      JSON.stringify(item)
+        .toLowerCase()
+        .includes(String(searchItem).toLowerCase())
+    );
+    return filteredData;
+  }, [structuredData, searchItem]);
 
-  const calculatingValue = () => {
+  useEffect(() => {
+    if (dataToDisplay) {
+      setFilteredDataCount(dataToDisplay.length);
+    }
+  }, [dataToDisplay]);
+
+  const totalValue = useMemo(() => {
     let result = 0;
-    for (let data of dataStructuringFormat()) {
+    for (let data of structuredData) {
       result += Number(data.cost);
     }
     return result;
-  };
+  }, [structuredData]);
   
-  const totalAvailable = () => {
-    const itemList = groupBy(
-      itemsInInventoryQuery?.data?.data?.items,
-      "warehouse"
-    );
+  const availabilityInfo = useMemo(() => {
+    const items = itemsInInventoryQuery?.data?.data?.items;
+    if (!items) {
+      return { totalUnits: 0, totalAvailable: 0 };
+    }
+    const itemList = groupBy(items, "warehouse");
     return {
-      totalUnits: itemsInInventoryQuery?.data?.data?.items.length ?? 0,
-      totalAvailable: itemList[1]?.length,
+      totalUnits: items.length,
+      totalAvailable: itemList[1]?.length || 0,
     };
-  };
+  }, [itemsInInventoryQuery.data]);
   
   useEffect(() => {
-    const controller = new AbortController();
     referenceData({
-      totalDevices: dataStructuringFormat().length,
-      totalValue: calculatingValue(),
-      totalAvailable: totalAvailable().totalAvailable,
+      totalDevices: structuredData.length,
+      totalValue: totalValue,
+      totalAvailable: availabilityInfo.totalAvailable,
     });
-
-    return () => {
-      controller.abort();
-    };
-  }, [
-    itemsInInventoryQuery.data,
-    dataStructuringFormat().length,
-    location.key,
-  ]);
+  }, [structuredData, totalValue, availabilityInfo, referenceData, location.key]);
 
   const dictionary = {
     Permanent: "Owned",
@@ -187,7 +174,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           listImagePerItemQuery.refetch();
           listItemsQuery.refetch();
           itemsInInventoryQuery.refetch();
-        }} />} rightCta={<DownloadingXlslFile props={dataToDisplay()} />}/>
+        }} />} rightCta={<DownloadingXlslFile props={dataToDisplay} />} />
         <BaseTable
           enablePagination={true}
           pageSize={10}
@@ -207,9 +194,9 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
               ["xs", "sm", "md", "lg"],
               ["xs", "sm", "md", "lg"],
             ],
-            data: dataToDisplay()
+            data: dataToDisplay
           })}
-          dataSource={dataToDisplay()}
+          dataSource={dataToDisplay}
           className="table-ant-customized"
           // onChange={handleTableChange}
         />
