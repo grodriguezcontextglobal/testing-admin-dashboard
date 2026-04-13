@@ -34,6 +34,7 @@ import CheckInDevicesFromEventsModal from "./utils/CheckInDevicesFromEventsModal
 import CreateLocationModal from "./utils/CreateLocationModal";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
+import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -366,6 +367,17 @@ const MainPage = () => {
       )}
       {
         openCheckInDevicesFromEvent && <CheckInDevicesFromEventsModal open={openCheckInDevicesFromEvent}  close={()=> setOpenCheckInDevicesFromEvent(false)} user={user}/>
+      }
+
+      {
+        addInventoryFromXLSXFileModal && (
+          <AddInventoryFromXLSXFile
+            openModal={addInventoryFromXLSXFileModal}
+            closeModal={setAddInventoryFromXLSXFileModal}
+            refetch={companyHasInventoryQuery.refetch}
+            user={user}
+          />
+        )
       }
     </Suspense>
   );
