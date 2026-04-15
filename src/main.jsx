@@ -8,8 +8,8 @@ import App from "./App.jsx";
 import "./index.css";
 import { persistor, store } from "./store/Store.js";
 import { configureApi } from "./api/devitrakApi.jsx";
-import { ErrorBoundary } from "react-error-boundary";
-import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
+// import { ErrorBoundary } from "react-error-boundary";
+// import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
 import Loading from "./components/animation/Loading.jsx";
 
 const queryClient = new QueryClient();
@@ -23,11 +23,11 @@ if (container && !container._reactRootContainer) {
         <BrowserRouter basename="/">
           <PersistGate persistor={persistor}>
             <QueryClientProvider client={queryClient}>
-              <ErrorBoundary FallbackComponent={ErrorBoundaryComponent} onError={ErrorLogFetch}>
+              {/* <ErrorBoundary FallbackComponent={ErrorBoundaryComponent} onError={ErrorLogFetch}> */}
               <Suspense fallback={<Loading />}>
                 <AppLoader />
               </Suspense>
-              </ErrorBoundary>
+              {/* </ErrorBoundary> */}
             </QueryClientProvider>
           </PersistGate>
         </BrowserRouter>
@@ -38,7 +38,7 @@ if (container && !container._reactRootContainer) {
 
 function AppLoader() {
   const [configured, setConfigured] = React.useState(false);
-//http://129.213.150.139/standby/api
+//https://standby.invoxia.cc/api
   React.useEffect(() => {
     configureApi().then(() => setConfigured(true));
   }, []);

@@ -3,15 +3,11 @@ import {
 } from "@mui/material";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-// import { EditIcon } from "../../../components/icons/EditIcon";
-// import { RectangleBluePlusIcon } from "../../../components/icons/RectangleBluePlusIcon";
-// import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-// import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-// import { XLSXIcon } from "../../../components/icons/XLSXIcon";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import { useSelector } from "react-redux";
 
 /**
  * HeaderInventaryComponent
@@ -35,12 +31,12 @@ const HeaderInventaryComponent = ({
   setOpenCreateLocationModal,
 }) => {
   const {
-    isAdmin,locationsCreatePermission, locationsUpdatePermission
+    isAdmin
   } = useStaffRoleAndLocations();
+  const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
-  const canCreate = isAdmin ? isAdmin : locationsCreatePermission.length > 0
-  const canUpdate = isAdmin ? isAdmin : locationsUpdatePermission.length > 0
-
+  const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
+  const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
   return (
     <Grid
       style={{
@@ -74,13 +70,6 @@ const HeaderInventaryComponent = ({
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
             styles={{ with: "100%" }}
-            // icon={
-            //   <XLSXIcon
-            //     stroke={"var(--blue-dark--800)"}
-            //     width={"20"}
-            //     height={"18"}
-            //   />
-            // }
             buttonType="button"
             titleStyles={{
               textTransform: "none",
@@ -94,9 +83,6 @@ const HeaderInventaryComponent = ({
           <BlueButtonComponent
             title={"Create Location"}
             styles={{ with: "100%" }}
-            // icon={
-            //   <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />
-            // }
             buttonType="button"
             titleStyles={{
               textTransform: "none",
@@ -112,13 +98,6 @@ const HeaderInventaryComponent = ({
             <LightBlueButtonComponent
               title={"Update a group of items"}
               styles={{ with: "100%" }}
-              // icon={
-              //   <EditIcon
-              //     stroke={"var(--blue-dark--800)"}
-              //     width={"20"}
-              //     height={"18"}
-              //   />
-              // }
               buttonType="button"
               titleStyles={{
                 textTransform: "none",
@@ -150,20 +129,6 @@ const HeaderInventaryComponent = ({
                 func={() => null}
               />
             </Link>
-            {/* <Link to="/inventory/new-item">
-              <LightBlueButtonComponent
-                title={"Add one item"}
-                styles={{ with: "100%" }}
-                // icon={<RectangleBluePlusIcon />}
-                buttonType="button"
-                titleStyles={{
-                  textTransform: "none",
-                  with: "100%",
-                  gap: "2px",
-                }}
-                func={() => null}
-              />
-            </Link> */}
           </>
         )}
       </Grid>
