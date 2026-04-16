@@ -194,7 +194,7 @@ const MainProfileSettings = () => {
         //   padding: { xs: "16px 0", sm: "24px 0" },
         // }}
       >
-        <Grid item xs={12}>
+        <Grid item xs={12} sm={12} md={12} lg={12} sx={{ padding: { xs: "16px 0", sm: "24px 0" } }}>
           <Outlet />
         </Grid>
       </Grid>
