@@ -99,9 +99,9 @@ const Login = () => {
       dispatch(
         onAddQRCodeLink(
           props.qrCodeLink ??
-            `https://app.devitrak.net/?event=${encodeURI(
-              props.eventInfoDetail.eventName,
-            )}&company=${encodeURI(props.company)}`,
+          `https://app.devitrak.net/?event=${encodeURI(
+            props.eventInfoDetail.eventName,
+          )}&company=${encodeURI(props.company)}`,
         ),
       );
       dispatch(
@@ -119,9 +119,9 @@ const Login = () => {
     dispatch(
       onAddQRCodeLink(
         props.qrCodeLink ??
-          `https://app.devitrak.net/?event=${encodeURI(
-            props.eventInfoDetail.eventName,
-          )}&company=${encodeURI(props.company)}`,
+        `https://app.devitrak.net/?event=${encodeURI(
+          props.eventInfoDetail.eventName,
+        )}&company=${encodeURI(props.company)}`,
       ),
     );
     dispatch(
@@ -213,9 +213,9 @@ const Login = () => {
       );
       const employeeInfo = props.company_data[0].employees.find(emp => emp.user === props.respo.email)
       dispatch(setPermissions({
-        role:employeeInfo.role,
-        companyName:props.company_data[0].company_name,
-        locations:employeeInfo.preference.managerLocation,
+        role: employeeInfo.role,
+        companyName: props.company_data[0].company_name,
+        locations: employeeInfo.preference.managerLocation,
       }))
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
@@ -366,7 +366,7 @@ const Login = () => {
       if (
         currentStep === "mfa" &&
         error.response?.data?.msg !==
-          "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
+        "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
       ) {
         setValue("mfaCode", ""); // Clear invalid code
         return; // Stay on MFA step
@@ -378,7 +378,7 @@ const Login = () => {
       // Reset form and go back to email step on error
       setValue("password", "");
       setCurrentStep("email");
-      setUserEmail("");
+      // setUserEmail("");
       setValue("email", "");
     } finally {
       setIsLoading(false);
@@ -432,67 +432,48 @@ const Login = () => {
     }
   };
 
+  const handleSendForceLogoutEmail = async () => {
+    try {
+      const staffEmail = userEmail || null;
+      if (!staffEmail) {
+        openNotificationWithIcon("error", "Please enter your email address first.");
+        return;
+      }
+
+      setIsLoading(true);
+      await devitrakApi.post("/nodemailer/forcing-revoking-active-session", {
+        email: staffEmail,
+      });
+
+      openNotificationWithIcon(
+        "success",
+        "An email has been sent to you to revoke the active session."
+      );
+      setForceLogin(false); // Close the modal
+    } catch (error) {
+      console.log(error)
+      openNotificationWithIcon(
+        "error",
+        "Failed to send force logout email. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const forceEndActiveSession = () => {
     return (
       <div style={{ width: "100%", margin: "auto", flexDirection: "column" }}>
-        <Typography style={{ width: "100%" }}>
-          Active session already exists for this account. If this is you, please
-          re submit password and click Force Login button to end the previous
-          session.
+        <Typography style={{ width: "100%", marginBottom: "20px" }}>
+          An active session already exists for this account. To continue, please
+          send an email to end the previous session.
         </Typography>
-        <form onSubmit={handleSubmit(onSubmitLogin)} style={{ width: "100%" }}>
-          <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
-            <Input
-              required
-              {...register("password", { required: true, minLength: 6 })}
-              placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-              type={showPassword ? "text" : "password"}
-              label="Password"
-              endAdornment={
-                <InputAdornment position="end">
-                  <button
-                    type="button"
-                    style={{
-                      padding: 0,
-                      backgroundColor: "transparent",
-                      outline: "none",
-                      margin: 0,
-                      width: "fit-content",
-                      aspectRatio: "1",
-                      borderRadius: "50%",
-                    }}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <VisibleIcon fill={"var(--blue-dark-600)"} />
-                    ) : (
-                      <HidenIcon stroke={"var(--blue-dark-600)"} />
-                    )}
-                  </button>
-                </InputAdornment>
-              }
-            />
-          </Grid>
-
-          <div style={{ display: "flex", gap: "12px", width: "100%" }}>
-            <BlueButtonComponent
-              disabled={false}
-              loadingState={isLoading}
-              buttonType="submit"
-              title="Force login"
-              styles={{ flex: "1" }}
-              func={() => {
-                setForceLogin(true);
-                setTimeout(() => {
-                  openNotificationWithIcon(
-                    "success",
-                    "Force login success. Close all pop up to continue and log in with the regular login process.",
-                  );
-                }, 900);
-              }}
-            />
-          </div>
-        </form>
+        <BlueButtonComponent
+          buttonType="button"
+          func={handleSendForceLogoutEmail}
+          title="Send email to revoke session"
+          styles={{ width: "100%" }}
+        />
       </div>
     );
   };
