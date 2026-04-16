@@ -21,11 +21,9 @@ const ForceLogout = () => {
         const userEmail = searchParams.get("email");
         const password = searchParams.get("cred");
         const timestamp = searchParams.get("timestamp");
-
         const linkTime = parseInt(timestamp, 10);
         const currentTime = new Date().getTime();
         const minutesDifference = (currentTime - linkTime) / (1000 * 60);
-
         if (isNaN(linkTime) || minutesDifference > 5) {
             notification.error({
                 message: "Error",
@@ -113,7 +111,9 @@ const ForceLogout = () => {
                         loadingState={isLoading}
                         buttonType="submit"
                         title="Revoke and Continue to Login"
-                        fullWidth
+                        styles={{
+                            width: '100%',
+                        }}
                     />
                 </Box>
             </Grid>
