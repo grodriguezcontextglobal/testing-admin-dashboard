@@ -1,12 +1,12 @@
 import { useMediaQuery, useTheme } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
-import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
+import { onLogout } from "../../../../store/slices/adminSlice";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
 import "./Body.css";
 import BodyForm from "./BodyForm";
@@ -14,7 +14,6 @@ const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const [loading, setLoading] = useState(false);
   const openNotificationWithIcon = (msg, time) => {
     api.open({
       message: msg,
@@ -79,9 +78,17 @@ const Body = () => {
   const industryListOptions = useQuery({
     queryKey: ["existingRegisteredIndustryOptions"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
-    refetchOnMount: false,
+    enabled: !!user.companyData.company_name,
   });
-
+  const eventsCompany = useQuery({
+    queryKey: ["allEventsRelatedCompany"],
+    queryFn: () =>
+      devitrakApi.post("/event/event-list", {
+        company: user.companyData.company_name,
+      }),
+    enabled: !!user.companyData.company_name,
+  });
+  const [industryOptionStored, setIndustryOptionStored] = useState([]);
   const features = [
     {
       title: "Company name",
@@ -146,168 +153,136 @@ const Body = () => {
       name: "industry",
     },
   ];
-
-  const eventsCompany = useQuery({
-    queryKey: ["allEventsRelatedCompany"],
-    queryFn: () =>
-      devitrakApi.post("/event/event-list", {
-        company: user.companyData.company_name,
-      }),
-    refetchOnMount: false,
-  });
-  useEffect(() => {
-    const controller = new AbortController();
-    eventsCompany.refetch();
-    industryListOptions.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  const [industryOptionStored, setIndustryOptionStored] = useState([]);
-
   useEffect(() => {
     if (industryListOptions.data) {
       setIndustryOptionStored(industryListOptions.data.data.industry);
     }
   }, [industryListOptions.data]);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  if (eventsCompany.data && industryListOptions.data) {
-    const updatingAllEventsRelatedCompany = async (props) => {
-      const eventsData = eventsCompany?.data?.data?.list;
-      await devitrakApi.patch("/event/update-events", {
-        ids: [...eventsData.map((item) => item.id)],
-        newValues: {
-          company: props,
-        },
-      });
-      // if (eventsData.length > 0) {
-      //   for (let data of eventsData) {
-      //     await devitrakApi.patch(`/event/edit-event/${data.id}`, {
-      //       ...data,
-      //       company: props,
-      //     });
-      //   }
-      // }
-    };
-
-    const handleUpdatePersonalInfo = async (data) => {
-      let base64;
-      setLoading(true);
-      try {
-        if (data.companyLogo[0] && data.companyLogo[0].size > 1048576) {
-          return alert(
+  const updateCompanyInfoMutation = useMutation({
+    mutationFn: async (data) => {
+      let base64 = user.companyData.company_logo;
+      if (data.companyLogo[0]) {
+        if (data.companyLogo[0].size > 1048576) {
+          throw new Error(
             "Image is bigger than 1mb. Please resize the image or select a new one."
           );
-        } else {
-          if (data.companyLogo[0]) {
-            const fileBase64 = await convertToBase64(data.companyLogo[0]);
-            const imageUploader = new ImageUploaderFormat(
-              fileBase64,
-              user.companyData.id,
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              ""
-            );
-            const uploadingCompanyLogo = await devitrakApi.post(
-              "cloudinary/upload-image",
-              imageUploader.company_uploader()
-            );
-            if (uploadingCompanyLogo.data) {
-              base64 = uploadingCompanyLogo.data.imageUploaded.secure_url;
-            }
-          } else {
-            base64 = user.companyData.company_logo;
-          }
-          const resp = await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              phone: {
-                main: data.mainPhoneNumber,
-                alternative: data.alternativePhoneNumber,
-                fax: "unknown",
-              },
-              company_name: data.companyName,
-              company_logo: base64,
-              address: {
-                street: data.street,
-                city: data.city,
-                state: data.state,
-                postal_code: data.zipCode,
-              },
-              website: data.website,
-              industry: data.industry,
-              main_email: data.email,
-            }
-          );
-          if (resp.data) {
-            await devitrakApi.post("/db_company/update_company", {
-              company_name: data.companyName,
-              street_address: data.street,
-              city_address: data.city,
-              state_address: data.state,
-              zip_address: data.zipCode,
-              phone_number: data.mainPhoneNumber,
-              industry: data.industry,
-              email_company: data.email,
-              company_id: user.sqlInfo.company_id,
-            });
-            if (data.companyName !== user.companyData.company_name) {
-              await updatingAllEventsRelatedCompany(data.companyName);
-            }
-            setLoading(false);
-            openNotificationWithIcon("Information updated", 3);
-            dispatch(onLogout());
-            return window.location.reload(true);
-          }
         }
-      } catch (error) {
-        alert("Something went wrong. Please try again.");
-        return setLoading(false);
+        const fileBase64 = await convertToBase64(data.companyLogo[0]);
+        const imageUploader = new ImageUploaderFormat(
+          fileBase64,
+          user.companyData.id
+        );
+        const uploadingCompanyLogo = await devitrakApi.post(
+          "cloudinary/upload-image",
+          imageUploader.company_uploader()
+        );
+        if (uploadingCompanyLogo.data) {
+          base64 = uploadingCompanyLogo.data.imageUploaded.secure_url;
+        }
       }
-    };
 
-    const removingCompanyLogo = async () => {
-      setLoading(true);
-      const resp = await devitrakApi.patch(
+      const companyUpdatePayload = {
+        phone: {
+          main: data.mainPhoneNumber,
+          alternative: data.alternativePhoneNumber,
+          fax: "unknown",
+        },
+        company_name: data.companyName,
+        company_logo: base64,
+        address: {
+          street: data.street,
+          city: data.city,
+          state: data.state,
+          postal_code: data.zipCode,
+        },
+        website: data.website,
+        industry: data.industry,
+        main_email: data.email,
+        employees: data.employees,
+      };
+      const dbCompanyUpdatePayload = {
+        company_name: data.companyName,
+        street_address: data.street,
+        city_address: data.city,
+        state_address: data.state,
+        zip_address: data.zipCode,
+        phone_number: data.mainPhoneNumber,
+        industry: data.industry,
+        email_company: data.email,
+        company_id: user.sqlInfo.company_id,
+      };
+      console.log("nosql",companyUpdatePayload)
+      console.log("sql",dbCompanyUpdatePayload)
+      const [companyUpdateResult, dbCompanyUpdateResult] = await Promise.all([
+        devitrakApi.patch(
+          `/company/update-company/${user.companyData.id}`,
+          companyUpdatePayload
+        ),
+        devitrakApi.post("/db_company/update_company", dbCompanyUpdatePayload),
+      ]);
+      console.log("data.companyName !== user.companyData.company_name", data.companyName !== user.companyData.company_name)
+      if (data.companyName !== user.companyData.company_name) {
+        const eventsData = eventsCompany?.data?.data?.list;
+        if (eventsData && eventsData.length > 0) {
+          await devitrakApi.patch("/event/update-events", {
+            ids: [...eventsData.map((item) => item.id)],
+            newValues: {
+              company: data.companyName,
+            },
+          });
+        }
+      }
+      // dispatch(onLogout());
+      return { companyUpdateResult, dbCompanyUpdateResult, companyUpdatePayload };
+    },
+    onSuccess: () => {
+      openNotificationWithIcon(
+        "Company information updated successfully",
+        3000
+      );
+      dispatch(onLogout());
+    },
+  });
+
+  const removeLogoMutation = useMutation({
+    mutationFn: async () => {
+      return devitrakApi.patch(
         `/company/update-company/${user.companyData.id}`,
         {
           company_logo: "",
         }
       );
-      api.destroy();
-      if (resp.data.ok) {
-        setLoading(false);
-        dispatch(
-          onLogin({
-            ...user,
-            companyData: {
-              ...user.companyData,
-              company_logo: "",
-            },
-          })
-        );
-        return openNotificationWithIcon(
-          "Company logo removed. Please log out and log in to see the changes.",
-          3
-        );
-      }
+    },
+    onSuccess: () => {
+      openNotificationWithIcon(
+        "Company logo removed successfully",
+        3000
+      );
+    },
+  });
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  if (eventsCompany.data && industryListOptions.data) {
+    const handleUpdate = (data) => {
+      updateCompanyInfoMutation.mutate(data);
+    };
+
+    const removingCompanyLogo = () => {
+      removeLogoMutation.mutate();
     };
     return (
       <>
         {contextHolder}
         <BodyForm
-          handleUpdatePersonalInfo={handleUpdatePersonalInfo}
+          handleUpdatePersonalInfo={handleUpdate}
           handleSubmit={handleSubmit}
           isMobile={isMobile}
-          loading={loading}
+          loading={
+            updateCompanyInfoMutation.isLoading || removeLogoMutation.isLoading
+          }
           features={features}
           user={user}
           checkIfOriginalDataHasChange={checkIfOriginalDataHasChange}
