@@ -7,7 +7,6 @@ const Email = ({
   Input,
   BlueButtonComponent,
   isLoading,
-  forceLogin,
   register,
 }) => {
   return (
@@ -27,9 +26,8 @@ const Email = ({
       >
         <FormLabel style={{ marginBottom: "0.9rem" }}>Email</FormLabel>
         <Input
-          required={!forceLogin}    
+          required={true}    
           {...register("email", {
-            required: !forceLogin,
             minLength: 10,
           })}
           type="email"
