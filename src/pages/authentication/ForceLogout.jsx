@@ -25,10 +25,7 @@ const ForceLogout = () => {
         const currentTime = new Date().getTime();
         const minutesDifference = (currentTime - linkTime) / (1000 * 60);
         if (isNaN(linkTime) || minutesDifference > 5) {
-            notification.error({
-                message: "Error",
-                description: "This link has expired. Please try logging in again to generate a new one.",
-            });
+            openNotificationWithIcon("Error", "This link has expired. Please try logging in again to generate a new one.");
             return navigate("/login");
         }
 
@@ -37,16 +34,13 @@ const ForceLogout = () => {
             setValue("email", userEmail);
             setValue("password", password);
         } else {
-            notification.error({
-                message: "Error",
-                description: "Invalid link. Please click the link from your email again.",
-            });
-            navigate("/login");
+            openNotificationWithIcon("Error", "Invalid link. Please click the link from your email again.");
+            return navigate("/login");
         }
     }, [searchParams, navigate, setValue]);
 
-    const openNotificationWithIcon = (type, message, description) => {
-        notification[type]({
+    const openNotificationWithIcon = (message, description) => {
+        notification.open({
             message: message,
             description: description,
         });
@@ -57,7 +51,6 @@ const ForceLogout = () => {
         try {
             await devitrakApi.post("/staff/force-logout", data);
             openNotificationWithIcon(
-                "success",
                 "Success",
                 "Your previous session has been revoked. You can now log in."
             );
@@ -65,7 +58,7 @@ const ForceLogout = () => {
         } catch (error) {
             const message =
                 error.response?.data?.msg || "Failed to revoke session. Please try again.";
-            openNotificationWithIcon("error", "Error", message);
+            openNotificationWithIcon("Error", message);
         } finally {
             setIsLoading(false);
         }
