@@ -84,7 +84,7 @@ const Body = () => {
     queryKey: ["allEventsRelatedCompany"],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
-        company: user.companyData.company_name,
+        company_id: user.companyData.id,
       }),
     enabled: !!user.companyData.company_name,
   });
@@ -212,16 +212,49 @@ const Body = () => {
         email_company: data.email,
         company_id: user.sqlInfo.company_id,
       };
-      console.log("nosql",companyUpdatePayload)
-      console.log("sql",dbCompanyUpdatePayload)
-      const [companyUpdateResult, dbCompanyUpdateResult] = await Promise.all([
+      const updatePromises = [
         devitrakApi.patch(
           `/company/update-company/${user.companyData.id}`,
           companyUpdatePayload
         ),
         devitrakApi.post("/db_company/update_company", dbCompanyUpdatePayload),
-      ]);
-      console.log("data.companyName !== user.companyData.company_name", data.companyName !== user.companyData.company_name)
+      ];
+
+      const stripeAccount = user.companyData.stripe_connected_account;
+      if (stripeAccount && (stripeAccount.live || stripeAccount.test)) {
+        const stripeUpdateData = {
+          company_email: data.email,
+          company_name: data.companyName,
+          company_phone: data.mainPhoneNumber,
+          website: data.website,
+          address: {
+            street: data.street,
+            city: data.city,
+            state: data.state,
+            postal_code: data.zipCode,
+          },
+        };
+
+        if (stripeAccount.test) {
+          updatePromises.push(
+            devitrakApi.post("/stripe/company-account-stripe/update", {
+              ...stripeUpdateData,
+              connectedAccountId: stripeAccount.test,
+            })
+          );
+        }
+        if (stripeAccount.live) {
+          updatePromises.push(
+            devitrakApi.post("/stripe/company-account-stripe/update", {
+              ...stripeUpdateData,
+              connectedAccountId: stripeAccount.live,
+            })
+          );
+        }
+      }
+      const promiseResults = await Promise.all(updatePromises);
+      const companyUpdateResult = promiseResults[0];
+      const dbCompanyUpdateResult = promiseResults[1];
       if (data.companyName !== user.companyData.company_name) {
         const eventsData = eventsCompany?.data?.data?.list;
         if (eventsData && eventsData.length > 0) {
@@ -234,7 +267,11 @@ const Body = () => {
         }
       }
       // dispatch(onLogout());
-      return { companyUpdateResult, dbCompanyUpdateResult, companyUpdatePayload };
+      return {
+        companyUpdateResult,
+        dbCompanyUpdateResult,
+        companyUpdatePayload,
+      };
     },
     onSuccess: () => {
       openNotificationWithIcon(
