@@ -1,27 +1,18 @@
-import {
-  Box,
-  Chip,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  InputLabel,
-  OutlinedInput,
-  Paper,
-  Typography,
-} from "@mui/material";
-import { message, Modal, Select, Tabs } from "antd";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import DocumentCard from "./DocumentCard";
+import { useQueryClient } from "@tanstack/react-query";
 import { devitrakApi } from "../../../api/devitrakApi";
+import DocumentCard from "./DocumentCard";
 import DocumentUpload from "../../../components/documents/DocumentUpload";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import Header from "../components/Header";
-import { useQueryClient } from "@tanstack/react-query";
+import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
+import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
+import "./Documents.css";
+import Chip from "../../../components/UX/Chip/Chip";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -101,6 +92,9 @@ const Documents = () => {
   };
 
   const handleSaveFolder = async () => {
+    if (!folderForm.folder_name || !folderForm.trigger_action) {
+      return message.error("Please fill all required fields.");
+    }
     try {
       const folderData = {
         ...folderForm,
@@ -116,7 +110,6 @@ const Documents = () => {
       } else {
         await devitrakApi.post("/document/new_folder", folderData);
         queryClient.invalidateQueries(["folders", user.companyData.id]);
-
         message.success("Folder created successfully");
       }
 
@@ -148,12 +141,10 @@ const Documents = () => {
     });
   };
 
-  // New function to handle document selection changes
   const onChangeDocuments = (selectedValues) => {
     setSelectedDocuments(selectedValues);
   };
 
-  // New function to add selected documents to folder
   const handleAddSelectedDocuments = () => {
     const newDocuments = selectedDocuments
       .filter(
@@ -181,7 +172,6 @@ const Documents = () => {
     }
   };
 
-  // Function to get documents that are in the folder
   const getFolderDocuments = () => {
     return folderForm.documents
       .map((folderDoc) => {
@@ -197,7 +187,6 @@ const Documents = () => {
       .filter(Boolean);
   };
 
-  // Function to get available documents (not in folder)
   const getAvailableDocuments = () => {
     return documents.filter(
       (doc) =>
@@ -209,408 +198,265 @@ const Documents = () => {
 
   const renderDocumentContent = () => {
     if (loading) {
-      return <Typography>Loading documents...</Typography>;
+      return <p>Loading documents...</p>;
     }
 
     if (documents.length === 0) {
-      return <Typography>No documents found</Typography>;
+      return <p>No documents found</p>;
     }
 
     return (
-      <Grid sx={{ backgroundColor: "transparent", border: "transparent", outline: "none" }} container spacing={1}>
+      <div className="document-grid">
         {documents.map((doc) => (
-          <Grid item xs={12} sm={6} md={4} key={doc._id}>
-            <DocumentCard doc={doc} />
-          </Grid>
+          <DocumentCard doc={doc} key={doc._id} />
         ))}
-      </Grid>
+      </div>
     );
   };
 
   const renderFolderContent = () => {
     return (
-      <Box>
-        <Box
-          sx={{
-            mb: 3,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h6">Document Folders</Typography>
+      <div className="folders-section">
+        <div className="folders-header">
+          <h3>Document Folders</h3>
           <BlueButtonComponent
             title={"Create Folder"}
             func={handleCreateFolder}
           />
-        </Box>
+        </div>
 
-        <Grid container spacing={2}>
+        <div className="folder-grid">
           {folders.map((folder) => (
-            <Grid item xs={12} sm={6} md={4} lg={4} key={folder.folder_id}>
-              <Paper
-                sx={{
-                  borderRadius: "12px",
-                  border: "1px solid var(--gray-200)",
-                  background: "var(--basewhite)",
-                  boxShadow:
-                    "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-                  textAlign: "left",
-                  padding: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                }}
-              >
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="h6" noWrap>
-                    {folder.folder_name || folder.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {folder.folder_description || folder.description}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 1 }}
-                  >
-                    Trigger:{" "}
-                    {triggerActions.find(
-                      (t) => t.value === folder.folder_trigger_action
-                    )?.label || folder.folder_trigger_action}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Documents: {folder.documents?.length || 0}
-                  </Typography>
+            <div className="folder-card" key={folder.folder_id}>
+              <div className="folder-card-main">
+                <h3>{folder.folder_name || folder.name}</h3>
+                <p>{folder.folder_description || folder.description}</p>
+                <p>
+                  Trigger:{" "}
+                  {triggerActions.find(
+                    (t) => t.value === folder.folder_trigger_action
+                  )?.label || folder.folder_trigger_action}
+                </p>
+                <p>Documents: {folder.documents?.length || 0}</p>
 
-                  {/* Display documents in folder */}
-                  {folder.documents && folder.documents.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        Documents in folder:
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 0.5,
-                          mt: 0.5,
-                        }}
-                      >
-                        {folder.documents.slice(0, 3).map((folderDoc) => {
-                          const doc = documents.find(
-                            (d) => d._id === folderDoc.document_id
-                          );
-                          return doc ? (
-                            <Chip
-                              key={folderDoc.document_id}
-                              label={folderDoc.document_name || doc.title}
-                              size="small"
-                              variant="outlined"
-                              color={folderDoc.active ? "primary" : "default"}
-                              sx={{
-                                fontSize: "0.7rem",
-                                height: "20px",
-                                opacity: folderDoc.active ? 1 : 0.6,
-                              }}
-                            />
-                          ) : null;
-                        })}
-                        {folder.documents.length > 3 && (
-                          <Chip
-                            label={`+${folder.documents.length - 3} more`}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontSize: "0.7rem", height: "20px" }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
-                <Box
-                  sx={{
-                    borderTop: "1px solid var(--gray-200)",
-                    p: 2,
-                    mt: "auto",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 1,
-                  }}
-                >
-                  <BlueButtonComponent
-                    title={`View`}
-                    func={() => handleEditFolder(folder)}
-                    loadingState={false}
-                  />
-                  <DangerButtonConfirmationComponent
-                    title={`Delete`}
-                    func={() => handleDeleteFolder(folder.folder_id)}
-                    confirmationTitle="Are you sure you want to delete this folder?. This action cannot be undone."
-                    loadingState={false}
-                  />
-                </Box>
-              </Paper>
-            </Grid>
+                {folder.documents && folder.documents.length > 0 && (
+                  <div className="folder-card-docs">
+                    <strong>Documents in folder:</strong>
+                    <div className="tags-container">
+                      {folder.documents.slice(0, 3).map((folderDoc) => {
+                        const doc = documents.find(
+                          (d) => d._id === folderDoc.document_id
+                        );
+                        return doc ? (
+                          <span
+                            key={folderDoc.document_id}
+                            className={`tag ${folderDoc.active ? "active" : ""
+                              }`}
+                          >
+                            {folderDoc.document_name || doc.title}
+                          </span>
+                        ) : null;
+                      })}
+                      {folder.documents.length > 3 && (
+                        <span className="tag">
+                          +{folder.documents.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="folder-card-footer">
+                <BlueButtonComponent
+                  title={`View`}
+                  func={() => handleEditFolder(folder)}
+                />
+                <DangerButtonConfirmationComponent
+                  title={`Delete`}
+                  func={() => handleDeleteFolder(folder.folder_id)}
+                  confirmationTitle="Are you sure you want to delete this folder?. This action cannot be undone."
+                />
+              </div>
+            </div>
           ))}
-        </Grid>
-      </Box>
+        </div>
+      </div>
     );
   };
 
-  const items = [
-    {
-      key: "1",
-      label: "All Documents",
-      children: renderDocumentContent(),  //<Paper sx={{ p: 2 }}>{renderDocumentContent()}</Paper>,
-    },
-    {
-      key: "2",
-      label: "Upload Document",
-      children: (
-        <DocumentUpload activeTab={setActiveTab} refetch={fetchDocuments} />
-      ),
-    },
-    {
-      key: "3",
-      label: "Document Folders",
-      children: renderFolderContent(),  //<Paper sx={{ p: 2 }}>{renderFolderContent()}</Paper>,
-    },
-  ];
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    if (key === "1") {
+      fetchDocuments();
+    } else if (key === "3") {
+      fetchFolders();
+    }
+  };
 
-  const availableOptions = getAvailableDocuments().map((doc) => ({
+  const availableOptionsForMultiSelect = getAvailableDocuments().map((doc) => ({
+    id: doc._id,
     label: doc.title,
-    value: doc._id,
   }));
 
+  const selectedDocumentsSet = new Set(selectedDocuments);
+
+  const handleSelectionChange = (newSelection) => {
+    onChangeDocuments(Array.from(newSelection));
+  };
+
   return (
-    <>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Header
-            title={"Documents"}
-            description={"Upload and manage documents and folders."}
-          />
-          <Tabs
-            activeKey={activeTab}
-            onChange={(key) => {
-              setActiveTab(key);
-              if (key === "1") {
-                fetchDocuments();
-              } else if (key === "3") {
-                fetchFolders();
-              }
-            }}
-            items={items}
-          />
-        </Grid>
-      </Grid>
+    <div className="documents-container">
+      <Header
+        title={"Documents"}
+        description={"Upload and manage documents and folders."}
+      />
+      <div className="tabs-container">
+        <div className="tabs-header">
+          <div
+            className={`tab-item ${activeTab === "1" ? "active" : ""}`}
+            onClick={() => handleTabChange("1")}
+          >
+            All Documents
+          </div>
+          <div
+            className={`tab-item ${activeTab === "2" ? "active" : ""}`}
+            onClick={() => handleTabChange("2")}
+          >
+            Upload Document
+          </div>
+          <div
+            className={`tab-item ${activeTab === "3" ? "active" : ""}`}
+            onClick={() => handleTabChange("3")}
+          >
+            Document Folders
+          </div>
+        </div>
+        <div className="tab-content">
+          {activeTab === "1" && renderDocumentContent()}
+          {activeTab === "2" && (
+            <DocumentUpload activeTab={setActiveTab} refetch={fetchDocuments} />
+          )}
+          {activeTab === "3" && renderFolderContent()}
+        </div>
+      </div>
 
-      {/* Folder Dialog */}
-      <Modal
-        open={openFolderDialog}
-        onCancel={() => {
-          setOpenFolderDialog(false);
-          setSelectedDocuments([]);
-        }}
-        onOk={() => setOpenFolderDialog(false)}
-        footer={null}
-        width={1000}
-      >
-        <DialogTitle>
-          {editingFolder ? "Edit Folder" : "Create New Folder"}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-            <InputLabel
-              style={{
-                width: "100%",
-                textAlign: "left",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              Folder Name
-              <OutlinedInput
-                value={folderForm.folder_name}
-                onChange={(e) =>
-                  setFolderForm({ ...folderForm, folder_name: e.target.value })
-                }
-                fullWidth
-                placeholder="Folder Name"
-                style={{ ...OutlinedInputStyle }}
-              />
-            </InputLabel>
+      {openFolderDialog && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>
+                {editingFolder ? "Edit Folder" : "Create New Folder"}
+              </h3>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Folder Name*</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={folderForm.folder_name}
+                  onChange={(e) =>
+                    setFolderForm({
+                      ...folderForm,
+                      folder_name: e.target.value,
+                    })
+                  }
+                  placeholder="Folder Name"
+                />
+              </div>
 
-            <InputLabel
-              style={{
-                width: "100%",
-                textAlign: "left",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              Folder description
-              <OutlinedInput
-                placeholder="Description"
-                value={folderForm.folder_description}
-                onChange={(e) =>
-                  setFolderForm({
-                    ...folderForm,
-                    folder_description: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                maxRows={5}
-                style={{ ...OutlinedInputStyle }}
-              />
-            </InputLabel>
+              <div className="form-group">
+                <label className="form-label">Folder description*</label>
+                <textarea
+                  className="form-textarea"
+                  placeholder="Description"
+                  value={folderForm.folder_description}
+                  onChange={(e) =>
+                    setFolderForm({
+                      ...folderForm,
+                      folder_description: e.target.value,
+                    })
+                  }
+                />
+              </div>
 
-            <InputLabel
-              style={{
-                width: "100%",
-                textAlign: "left",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              Trigger Action
-              <Select
-                style={{ width: "100%", marginBottom: "1rem" }}
-                placeholder="Where to use this folder"
-                value={folderForm.trigger_action}
-                onChange={(value) =>
-                  setFolderForm({
-                    ...folderForm,
-                    trigger_action: value,
-                  })
-                }
-                allowClear
-                options={triggerActions}
-              />
-            </InputLabel>
+              <div className="form-group">
+                <label className="form-label">Trigger Action*</label>
+                <SelectComponent
+                  placeholder="Where to use this folder"
+                  value={folderForm.trigger_action}
+                  onSelect={(item) => {
+                    console.log(item)
+                    return setFolderForm({
+                      ...folderForm,
+                      trigger_action: item.value,
+                    })
+                  }
+                  }
+                  items={triggerActions}
+                />
+              </div>
 
-            <Box>
-              {/* Documents currently in folder */}
-              <InputLabel
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                Documents in folder ({folderForm.documents.length})
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 1,
-                    mb: 2,
-                    minHeight: "40px",
-                    border: "1px solid #d9d9d9",
-                    borderRadius: "6px",
-                    p: 1,
-                  }}
-                >
-                  {folderForm.documents.length === 0 ? (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ alignSelf: "center" }}
-                    >
-                      No documents in folder
-                    </Typography>
-                  ) : (
-                    getFolderDocuments().map((doc) => (
-                      <Box
-                        key={doc._id}
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
+              <div>
+                <div className="form-group">
+                  <label className="form-label">
+                    Documents in folder ({folderForm.documents.length})
+                  </label>
+                  <div className="documents-in-folder">
+                    {folderForm.documents.length === 0 ? (
+                      <p>No documents in folder</p>
+                    ) : (
+                      getFolderDocuments().map((doc) => (
                         <Chip
+                          key={doc._id}
                           label={doc.document_name || doc.title}
-                          onDelete={() =>
-                            handleRemoveDocumentFromFolder(doc._id)
-                          }
-                          color={doc.active ? "primary" : "default"}
-                          variant="outlined"
-                          sx={{ opacity: doc.active ? 1 : 0.6 }}
+                          color={doc.active ? "success" : "default"}
+                          onDelete={() => handleRemoveDocumentFromFolder(doc._id)}
                         />
-                      </Box>
-                    ))
-                  )}
-                </Box>
-              </InputLabel>
+                      ))
+                    )}
+                  </div>
+                </div>
 
-              {/* Add documents to folder */}
-              <InputLabel
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  display: "flex",
-                  flexDirection: "column",
+                <div className="form-group">
+                  <label className="form-label">
+                    Add Documents to Folder
+                  </label>
+                  <div className="document-selection-container">
+                    <MultiSelectComponent
+                      placeholder="Select documents to add"
+                      selectedKeys={selectedDocumentsSet}
+                      onSelectionChange={handleSelectionChange}
+                      items={availableOptionsForMultiSelect}
+                      disabled={availableOptionsForMultiSelect.length === 0}
+                    />
+                    <BlueButtonComponent
+                      title={`Add (${selectedDocuments.length})`}
+                      func={handleAddSelectedDocuments}
+                      disabled={selectedDocuments.length === 0}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <DangerButtonComponent
+                title={"Cancel"}
+                func={() => {
+                  setOpenFolderDialog(false);
+                  setSelectedDocuments([]);
                 }}
-              >
-                Add Documents to Folder
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Select
-                    mode="multiple"
-                    style={{ width: "100%", marginBottom: "1rem" }}
-                    placeholder="Select documents to add"
-                    value={selectedDocuments}
-                    onChange={onChangeDocuments}
-                    options={availableOptions}
-                    optionFilterProp="label"
-                    optionLabelProp="label"
-                    virtual={true}
-                    allowClear
-                    disabled={availableOptions.length === 0}
-                    notFoundContent={
-                      availableOptions.length === 0
-                        ? "All documents are already in folder"
-                        : "No documents found"
-                    }
-                  />
-                  <BlueButtonComponent
-                    title={`Add (${selectedDocuments.length})`}
-                    func={handleAddSelectedDocuments}
-                    loadingState={false}
-                    disabled={selectedDocuments.length === 0}
-                  />
-                </Box>
-              </InputLabel>
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <DangerButtonComponent
-            title={"Cancel"}
-            func={() => {
-              setOpenFolderDialog(false);
-              setSelectedDocuments([]);
-            }}
-            loadingState={false}
-          />
-          <BlueButtonComponent
-            title={editingFolder ? "Update" : "Create"}
-            func={handleSaveFolder}
-            loadingState={false}
-            disabled={!folderForm.folder_name || !folderForm.trigger_action}
-          />
-        </DialogActions>
-      </Modal>
-    </>
+              />
+              <BlueButtonComponent
+                title={editingFolder ? "Update" : "Create"}
+                func={handleSaveFolder}
+                disabled={!folderForm.folder_name || !folderForm.trigger_action}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
