@@ -1,40 +1,65 @@
-import { Box, Grid, Paper, Stack, Typography } from "@mui/material";
-import { Button, message, Modal, Spin, Tag } from "antd";
+import { message, Modal, Spin } from "antd";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ArrowBackIcon from "../../../components/icons/arrow-left.svg";
-import DownloadIcon from "../../../components/icons/DownDoubleArrowIcon";
-import EditIcon from "../../../components/icons/EditIcon.svg";
-import DeleteIcon from "../../../components/icons/trash-01.svg";
-import { useSelector } from "react-redux";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import DocumentPreview from "./DocumentPreview"; // Import the new component
+import "./ViewDocument.css";
 
 const ViewDocument = () => {
   const { id } = useParams();
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const [documentData, setDocumentData] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchDocument = async () => {
+    const fetchDocumentAndPdfUrl = async () => {
       try {
-        const response = await devitrakApi.get(
-          `/document/${id}`
-        );
-        setDocumentData(response.data.document);
+        const [docResponse, pdfResponse] = await Promise.all([
+          devitrakApi.get(`/document/${id}`),
+          devitrakApi.get(`/document/download/${id}/${user.uid}`),
+        ]);
+
+        setDocumentData(docResponse.data.document);
+
+        if (pdfResponse.data?.ok && pdfResponse.data?.downloadUrl) {
+          setPdfUrl(pdfResponse.data.downloadUrl);
+        }
       } catch (error) {
-        message.error("Error fetching document. Please try again later.");
-        throw error;
+        message.error(
+          "Error fetching document details. Please try again later."
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDocument();
-  }, [id]);
+    fetchDocumentAndPdfUrl();
+
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await devitrakApi.get(
+          `/document/download/${id}/${user.uid}`
+        );
+        if (data?.ok && data?.downloadUrl) {
+          setPdfUrl(data.downloadUrl);
+        }
+      } catch (error) {
+        console.error("Failed to refresh PDF URL:", error);
+      }
+    }, 270000); // Refresh every 4.5 minutes to renew the signed URL
+
+    return () => clearInterval(interval);
+  }, [id, user.uid]);
 
   const handleBack = () => {
-    navigate(-1);
+    navigate("/profile/documents");
   };
 
   const handleEdit = () => {
@@ -60,130 +85,85 @@ const ViewDocument = () => {
     });
   };
 
-  const handleDownload = async () => {
-    try {
-      const { data } = await devitrakApi.get(`/document/download/${id}/${user.uid}`);
-      window.open(data.downloadUrl, "_blank");
-      if (!data?.ok || !data?.downloadUrl) {
-        throw new Error("Invalid or missing download URL");
-      }
-      return message.success("Document displayed successfully");
-    } catch (error) {
-      message.error("Failed to download document");
-      throw new Error(error);
+  const handleDownload = () => {
+    if (pdfUrl) {
+      window.open(pdfUrl, "_blank");
     }
   };
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
+      <div className="loading-container">
         <Spin size="large" />
-      </Box>
+      </div>
     );
   }
 
   if (!documentData) {
     return (
-      <Box p={3}>
-        <Typography variant="h6" color="error">
-          Document not found
-        </Typography>
-      </Box>
+      <div className="view-document-container">
+        <p className="error-message">Document not found</p>
+      </div>
     );
   }
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Box
-          sx={{
-            my: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            startIcon={
-              <img src={ArrowBackIcon} alt="Back" width={20} height={20} />
-            }
-            onClick={handleBack}
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
-          <Stack direction="row" spacing={2} sx={{ float: "right" }}>
-            <Button
-              variant="outlined"
-              startIcon={
-                <img src={DownloadIcon} alt="Download" width={20} height={20} />
-              }
-              onClick={handleDownload}
-            >
-              View
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={
-                <img src={EditIcon} alt="Edit" width={20} height={20} />
-              }
-              onClick={handleEdit}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={
-                <img src={DeleteIcon} alt="Delete" width={20} height={20} />
-              }
-              onClick={handleDelete}
-            >
-              Delete
-            </Button>
-          </Stack>
-        </Box>
-        <Paper sx={{ p: 3, mb: 2 }}>
-          <Typography variant="h5" gutterBottom>
-            {documentData.title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            {documentData.description}
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" component="span" sx={{ mr: 1 }}>
-              Type:
-            </Typography>
-            <Tag color="blue">{documentData.document_type}</Tag>
-            {documentData.trigger_action && (
-              <Tag color="green">{documentData.trigger_action}</Tag>
-            )}
-          </Box>
-          {documentData.tags && documentData.tags.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              {documentData.tags.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
-              ))}
-            </Box>
+    <div className="view-document-container">
+      <div className="view-document-header">
+        <GrayButtonComponent
+          title="Back"
+          icon={<img src={ArrowBackIcon} alt="Back" />}
+          func={handleBack}
+        />
+        <div className="actions">
+          <BlueButtonComponent
+            title="View"
+            func={handleDownload}
+          />
+          <GrayButtonComponent
+            title="Edit"
+            func={handleEdit}
+          />
+          <DangerButtonComponent
+            title="Delete"
+            func={handleDelete}
+          />
+        </div>
+      </div>
+      <div className="view-document-content">
+        <h1 className="view-document-title">{documentData.title}</h1>
+        <p className="view-document-description">{documentData.description || "No description available"}</p>
+        <div className="view-document-tags">
+          <span className="view-document-tag">{documentData.document_type}</span>
+          {documentData.trigger_action && (
+            <span className="view-document-tag">
+              {String(documentData.trigger_action).toLocaleUpperCase()}
+            </span>
           )}
-          <Typography variant="subtitle2" gutterBottom>
-            Language: {documentData.language}
-          </Typography>
-          {documentData.expiration_date && (
-            <Typography variant="subtitle2" gutterBottom>
-              Expires:{" "}
-              {new Date(documentData.expiration_date).toLocaleDateString()}
-            </Typography>
-          )}
-        </Paper>
-      </Grid>
-    </Grid>
+        </div>
+        {documentData.tags && documentData.tags.length > 0 && (
+          <div className="view-document-tags">
+            {documentData.tags.map((tag) => (
+              <span key={tag} className="view-document-tag">
+                {String(tag).toLocaleUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
+        <p className="view-document-info">Language: {documentData.language}</p>
+        {documentData.expiration_date && (
+          <p className="view-document-info">
+            Expires:{" "}
+            {new Date(documentData.expiration_date).toLocaleDateString()}
+          </p>
+        )}
+      </div>
+      <div className="document-preview-container" style={{ marginTop: '24px' }}>
+        <DocumentPreview pdfUrl={pdfUrl} />
+      </div>
+    </div>
   );
 };
+
 
 export default ViewDocument;
