@@ -6,9 +6,9 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import dicRole from "../../../../components/general/dicRole";
 import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
-import BodyRendering from "./BodyRendering";
 import "./Body.css";
 import { dicIconNotification } from "../../../../utils/dicIconNotification";
+import BodyRendering from "./BodyRendering.refactored";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
