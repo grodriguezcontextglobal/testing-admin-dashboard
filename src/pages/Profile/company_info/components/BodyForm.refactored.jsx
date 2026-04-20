@@ -75,7 +75,7 @@ const BodyFormRefactored = ({
         )
     } else if (feature && feature?.array) {
         return (
-            <details className="employees-details">
+            <details className="employees-details" open>
                 <summary className="employees-summary">Employees</summary>
                 <div className="employees-grid">
                     {user.companyData.employees.map((employee) => (
