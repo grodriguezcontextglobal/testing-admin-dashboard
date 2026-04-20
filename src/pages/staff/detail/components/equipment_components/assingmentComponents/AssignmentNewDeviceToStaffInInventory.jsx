@@ -83,6 +83,7 @@ const AssignmentNewDeviceToStaffInInventory = () => {
           profile={profile}
           selectedDocuments={contractList}
           setSelectedDocuments={setContractList}
+          titleRef={"staff"}
         />
       </div>
       <div style={{ display: "flex", justifyContent: "flex-start" }}>
