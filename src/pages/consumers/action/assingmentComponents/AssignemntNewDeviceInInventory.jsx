@@ -585,6 +585,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           profile={profile}
           selectedDocuments={contractList}
           setSelectedDocuments={setContractList}
+          titleRef={"consumer"}
         />
       </div>
       <div style={{ display: "flex", justifyContent: "flex-start" }}>
