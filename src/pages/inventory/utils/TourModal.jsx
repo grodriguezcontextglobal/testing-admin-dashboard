@@ -162,9 +162,9 @@ const TourModal = ({ open, setOpen }) => {
       ownership: "Owned",
       main_warehouse: "Washington, DC",
       serial_number: "SN123456",
-      warehouse: "Washington, DC",
+      warehouse: "Washington, DCYes",
       company: "MyCompany",
-      location: "Shelf A",
+      location: "Warehouse",
       extra_serial_number: "Material: Silicon",
       image_url: "http://example.com/img.png",
       status: "Operational",
@@ -189,7 +189,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>A descriptive name for the item, e.g., &apos;iPhone 13 Pro&apos;.</Text>
         </Space>
       ),
       target: () => itemGroupRef.current,
@@ -199,7 +199,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>The cost of the item. Should be a number, e.g., 750.00.</Text>
           <Text type="secondary">Default: 0</Text>
         </Space>
       ),
@@ -210,7 +210,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>The brand of the item, e.g., &apos;Apple&apos;, &apos;Samsung&apos;.</Text>
         </Space>
       ),
       target: () => brandRef.current,
@@ -220,7 +220,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>A detailed description of the item.</Text>
         </Space>
       ),
       target: () => descriptionRef.current,
@@ -230,7 +230,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>e.g., &apos;Owned&apos;, &apos;Rent&apos;.</Text>
           <Text type="secondary">Values: &ldquo;Owned&ldquo;, &ldquo;Rent&ldquo;</Text>
         </Space>
       ),
@@ -241,7 +241,9 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>
+            Location where item will be deductable for taxes, e.g., &apos;New York,.
+          </Text>
         </Space>
       ),
       target: () => mainWarehouseRef.current,
@@ -251,7 +253,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>The unique serial number of the item.</Text>
         </Space>
       ),
       target: () => serialNumberRef.current,
@@ -261,7 +263,10 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>
+            Indicates if the item is currently in a warehouse. e.g. &apos;Yes&apos; or
+            &apos;No&apos;.
+          </Text>
         </Space>
       ),
       target: () => warehouseRef.current,
@@ -271,7 +276,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>The company that owns the item.</Text>
         </Space>
       ),
       target: () => companyRef.current,
@@ -281,7 +286,9 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>
+            The specific location within the warehouse, e.g., &apos;New York,.
+          </Text>
         </Space>
       ),
       target: () => locationRef.current,
@@ -291,6 +298,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
+          <Text>Any additional information about the item.</Text>
           <Text>
             Possible names: extra information, extra info, more details, extra
             details, details
@@ -304,7 +312,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>A URL to an image of the item.</Text>
         </Space>
       ),
       target: () => imageRef.current,
@@ -314,7 +322,9 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>
+            The current status of the item, e.g., &apos;Operational&apos;, &apos;In Repair&apos;.
+          </Text>
           <Text type="secondary">Default: &ldquo;Operational&ldquo;</Text>
         </Space>
       ),
@@ -325,7 +335,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+
           <Text type="secondary">Default: []</Text>
         </Space>
       ),
@@ -336,6 +346,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
+          <Text>The date the item is expected to be returned (if rented).</Text>
           <Text>
             Possible names: return date, date returning, expected return,
             expected returning date
@@ -350,7 +361,7 @@ const TourModal = ({ open, setOpen }) => {
       description: (
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
-          
+          <Text>Any sub-locations where the item might be stored.</Text>
           <Text type="secondary">Default: []</Text>
         </Space>
       ),
@@ -362,6 +373,9 @@ const TourModal = ({ open, setOpen }) => {
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
           <Text>
+            Information about the supplier if the item is rented.
+          </Text>
+          <Text>
             Possible names: supplier information, supplier, rental company
             information
           </Text>
@@ -372,64 +386,64 @@ const TourModal = ({ open, setOpen }) => {
     },
   ];
   const tourData = [
-  {
-    "Category": "Audio",
-    "Device Name": "Audio Device 1",
-    "Cost": "45.5",
-    "Brand": "Sony",
-    "Description": "Audio Device 1 used for events and rentals",
-    "Ownership": "Rent",
-    "Main Warehouse": "Miami, FL",
-    "Serial Number": "100001",
-    "Warehouse": true,
-    "Company": "ABC Interpreting",
-    "Location": "Miami, FL",
-    "Extra Info": "",
-    "Image": "",
-    "Status": "Operational",
-    "Return Date": "2026-05-01 12:00:00",
-    "Sub Locations": "Section A, Locker A105",
-    "Supplier Info": "Rental Equipment LLC"
-  },
-  {
-    "Category": "Interpretation",
-    "Device Name": "PL6 RF Receiver",
-    "Cost": "99.0",
-    "Brand": "Congress Audio",
-    "Description": "Receiver used for interpretation events 70-75 MHz",
-    "Ownership": "Permanent",
-    "Main Warehouse": "Fort Lauderdale, FL",
-    "Serial Number": "100002",
-    "Warehouse": false,
-    "Company": "ABC Interpreting",
-    "Location": "Orlando, FL",
-    "Extra Info": "",
-    "Image": "",
-    "Status": "Operational",
-    "Return Date": "2026-05-10 15:30:00",
-    "Sub Locations": "Section B, Locker B203",
-    "Supplier Info": ""
-  },
-  {
-    "Category": "Fitness",
-    "Device Name": "C4 Pre Workout",
-    "Cost": "25.75",
-    "Brand": "Cellucor",
-    "Description": "Pre workout supplement for fitness events",
-    "Ownership": "Rent",
-    "Main Warehouse": "Miami, FL",
-    "Serial Number": "100003",
-    "Warehouse": true,
-    "Company": "ABC Interpreting",
-    "Location": "Miami, FL",
-    "Extra Info": "",
-    "Image": "",
-    "Status": "Operational",
-    "Return Date": "2026-05-15 10:00:00",
-    "Sub Locations": "",
-    "Supplier Info": "Rental Equipment LLC"
-  }
-];
+    {
+      "Category": "Audio",
+      "Device Name": "Audio Device 1",
+      "Cost": "45.5",
+      "Brand": "Sony",
+      "Description": "Audio Device 1 used for events and rentals",
+      "Ownership": "Rent",
+      "Main Warehouse": "Miami, FL",
+      "Serial Number": "100001",
+      "Warehouse": true,
+      "Company": "ABC Interpreting",
+      "Location": "Miami, FL",
+      "Extra Info": "",
+      "Image": "",
+      "Status": "Operational",
+      "Return Date": "2026-05-01 12:00:00",
+      "Sub Locations": "Section A, Locker A105",
+      "Supplier Info": "Rental Equipment LLC"
+    },
+    {
+      "Category": "Interpretation",
+      "Device Name": "PL6 RF Receiver",
+      "Cost": "99.0",
+      "Brand": "Congress Audio",
+      "Description": "Receiver used for interpretation events 70-75 MHz",
+      "Ownership": "Permanent",
+      "Main Warehouse": "Fort Lauderdale, FL",
+      "Serial Number": "100002",
+      "Warehouse": false,
+      "Company": "ABC Interpreting",
+      "Location": "Orlando, FL",
+      "Extra Info": "",
+      "Image": "",
+      "Status": "Operational",
+      "Return Date": "2026-05-10 15:30:00",
+      "Sub Locations": "Section B, Locker B203",
+      "Supplier Info": ""
+    },
+    {
+      "Category": "Fitness",
+      "Device Name": "C4 Pre Workout",
+      "Cost": "25.75",
+      "Brand": "Cellucor",
+      "Description": "Pre workout supplement for fitness events",
+      "Ownership": "Rent",
+      "Main Warehouse": "Miami, FL",
+      "Serial Number": "100003",
+      "Warehouse": true,
+      "Company": "ABC Interpreting",
+      "Location": "Miami, FL",
+      "Extra Info": "",
+      "Image": "",
+      "Status": "Operational",
+      "Return Date": "2026-05-15 10:00:00",
+      "Sub Locations": "",
+      "Supplier Info": "Rental Equipment LLC"
+    }
+  ];
 
   const handleDownloadTemplate = () => {
     // eslint-disable-next-line no-unused-vars
