@@ -650,6 +650,7 @@ const AssignmentFromExistingInventory = () => {
                 profile={profile}
                 selectedDocuments={contractList}
                 setSelectedDocuments={setContractList}
+                titleRef={"staff"}
               />
               <Divider />
               <InputLabel
