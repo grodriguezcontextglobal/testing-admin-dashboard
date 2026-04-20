@@ -1,4 +1,3 @@
-import { useMediaQuery, useTheme } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect, useState } from "react";
@@ -6,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
+import SectionFooter from "../../../../components/documents/new_form_components/SectionFooter";
+import SectionHeader from "../../../../components/documents/new_form_components/SectionHeader";
 import { onLogout } from "../../../../store/slices/adminSlice";
-import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
 import "./Body.css";
-import BodyForm from "./BodyForm";
+import BodyForm from "./BodyForm.refactored";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -299,10 +299,12 @@ const Body = () => {
     },
   });
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  if (eventsCompany.data && industryListOptions.data) {
+  const handleCancel = () => {
+    console.log("cancel");
+  };
     const handleUpdate = (data) => {
       updateCompanyInfoMutation.mutate(data);
     };
@@ -311,27 +313,44 @@ const Body = () => {
       removeLogoMutation.mutate();
     };
     return (
-      <>
+      <div style={{ width: "100%", padding: 0 }}>
         {contextHolder}
-        <BodyForm
-          handleUpdatePersonalInfo={handleUpdate}
-          handleSubmit={handleSubmit}
-          isMobile={isMobile}
-          loading={
-            updateCompanyInfoMutation.isLoading || removeLogoMutation.isLoading
-          }
-          features={features}
-          user={user}
-          checkIfOriginalDataHasChange={checkIfOriginalDataHasChange}
-          removingCompanyLogo={removingCompanyLogo}
-          register={register}
-          CardSearchStaffFound={CardSearchStaffFound}
-          control={control}
-          industryListOptions={industryOptionStored}
-        />
-      </>
+        <form
+          onSubmit={handleSubmit(handleUpdate)}
+          className="company-form"
+        >
+          <SectionHeader
+            title="Company info"
+            subtitle="Update your company info and branding here."
+          />
+          {features.map((feature) => (
+            <BodyForm
+              key={feature.id}
+              feature={feature}
+              checkIfOriginalDataHasChange={checkIfOriginalDataHasChange}
+              control={control}
+              industryListOptions={industryOptionStored}
+              register={register}
+              user={user}
+            />
+          ))}
+          <BodyForm
+            feature={{ title: "Company logo", id: 6, logo: true }}
+            user={user}
+            removingCompanyLogo={removingCompanyLogo}
+            register={register}
+          />
+          <BodyForm
+            feature={{ title: "Employees", id: 7, array: true }}
+            user={user}
+          />
+          <SectionFooter
+            cancelButton={handleCancel}
+            saveButton={handleSubmit(handleUpdate)}
+          />
+        </form>
+      </div>
     );
   }
-};
 
 export default Body;
