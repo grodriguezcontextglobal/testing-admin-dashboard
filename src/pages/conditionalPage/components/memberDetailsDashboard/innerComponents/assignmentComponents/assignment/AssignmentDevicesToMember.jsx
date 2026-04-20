@@ -709,6 +709,7 @@ const AssignmentDevicesToMember = () => {
                 profile={memberInfo}
                 selectedDocuments={contractList}
                 setSelectedDocuments={setContractList}
+                titleRef={`${memberInfo.first_name} ${memberInfo.last_name}`}
               />
               <Divider />
               <InputLabel
