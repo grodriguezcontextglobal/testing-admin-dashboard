@@ -10,7 +10,7 @@ const SectionFooter = ({ cancelButton, saveButton }) => {
         justifyContent: "flex-end",
         gap: "12px",
         padding: "20px 0",
-        borderTop: "1px solid #eaecf0",
+        // borderTop: "1px solid #eaecf0",
       }}
     >
       <GrayButtonComponent title="Cancel" func={cancelButton} />      

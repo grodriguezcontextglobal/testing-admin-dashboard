@@ -267,7 +267,7 @@
 /* Employees Section */
 .employees-details {
   width: 100%;
-  border-top: 1px solid #eaecf0;
+  /* border-top: 1px solid #eaecf0; */
   padding-top: 20px;
 }
 
