@@ -17,11 +17,21 @@ const AssigmentAction = ({ refetching }) => {
     },
   ];
 
+  const handleSelect = (option) => {
+    const key = option.value;
+    if (key === "0") {
+      return setAssignDeviceEvent(true);
+    } else if (key === "1") {
+      return setAssignDevice(true);
+    }
+  };
+
+
   return (
     <>
       <Dropdown
         options={items}
-        // onSelect={handleSelect}
+        onSelect={handleSelect}
         placement="top-end"
         variant="ghost" //"outline" // | "ghost" | "primary""
         renderTrigger={({ onClick, ref }) => (
