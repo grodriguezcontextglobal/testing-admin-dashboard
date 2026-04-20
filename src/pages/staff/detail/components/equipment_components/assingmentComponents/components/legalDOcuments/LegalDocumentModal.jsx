@@ -6,8 +6,6 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
 import BaseTable from "../../../../../../../../components/UX/tables/BaseTable";
-import { BorderedCloseIcon } from "../../../../../../../../components/icons/BorderedCloseIcon";
-import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../../../components/icons/QuestionIcon";
 import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
@@ -231,35 +229,35 @@ const LegalDocumentModal = ({
     return { p, button, fill };
   };
 
-  const renderingIcon = () => {
-    return addContracts ? (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          aspectRatio: "1",
-          width: "fit-content",
-          height: "auto",
-        }}
-      >
-        <CheckIcon stroke={buttonContainerStyling().fill} />
-        &nbsp;
-      </div>
-    ) : (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          aspectRatio: "1",
-          width: "fit-content",
-          height: "auto",
-        }}
-      >
-        <BorderedCloseIcon fill={buttonContainerStyling().fill} />
-        &nbsp;
-      </div>
-    );
-  };
+  // const renderingIcon = () => {
+  //   return addContracts ? (
+  //     <div
+  //       style={{
+  //         display: "flex",
+  //         alignItems: "center",
+  //         aspectRatio: "1",
+  //         width: "fit-content",
+  //         height: "auto",
+  //       }}
+  //     >
+  //       <CheckIcon stroke={buttonContainerStyling().fill} />
+  //       &nbsp;
+  //     </div>
+  //   ) : (
+  //     <div
+  //       style={{
+  //         display: "flex",
+  //         alignItems: "center",
+  //         aspectRatio: "1",
+  //         width: "fit-content",
+  //         height: "auto",
+  //       }}
+  //     >
+  //       <BorderedCloseIcon fill={buttonContainerStyling().fill} />
+  //       &nbsp;
+  //     </div>
+  //   );
+  // };
 
   return (
     <div key={profile._id ?? profile.uid} style={{ width: "100%" }} id="legal-document-modal">
@@ -292,7 +290,6 @@ const LegalDocumentModal = ({
               func={() => setAddContracts(!addContracts)}
               styles={buttonContainerStyling().button}
               titleStyles={buttonContainerStyling().p}
-              icon={renderingIcon()}
             />
           </InputLabel>
         </>
