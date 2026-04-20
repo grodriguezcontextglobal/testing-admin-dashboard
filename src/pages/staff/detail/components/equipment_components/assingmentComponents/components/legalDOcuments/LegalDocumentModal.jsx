@@ -23,6 +23,7 @@ const LegalDocumentModal = ({
   profile,
   selectedDocuments,
   setSelectedDocuments,
+  titleRef,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useSelector((state) => state.admin);
@@ -283,7 +284,7 @@ const LegalDocumentModal = ({
             }}
           >
             <p style={Subtitle}>
-              Do you want to email a device contract to staff?{" "}
+              Do you want to email a device contract to {titleRef}?{" "}
             </p>
             <BlueButtonComponent
               title={"Add legal document"}
