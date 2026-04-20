@@ -5,13 +5,13 @@ const SectionLabel = ({ title, description }) => {
     <Box>
       <Typography
         variant="h6"
-        sx={{ fontSize: "14px", fontWeight: 500, color: "#344054" }}
+        sx={{ textAlign: "left", fontSize: "14px", fontWeight: 500, color: "#344054" }}
       >
         {title}
       </Typography>
       <Typography
         variant="body1"
-        sx={{ fontSize: "14px", fontWeight: 400, color: "#475467" }}
+        sx={{ textAlign: "left", fontSize: "14px", fontWeight: 400, color: "#475467" }}
       >
         {description}
       </Typography>
