@@ -463,6 +463,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
                 profile={customer}
                 selectedDocuments={contractList}
                 setSelectedDocuments={setContractList}
+                titleRef={"consumer"}
               />
               <Divider />
               <InputLabel
