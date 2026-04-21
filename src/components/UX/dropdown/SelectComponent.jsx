@@ -100,8 +100,7 @@ const SelectComponent = ({
         <div className="select-dropdown">
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => {
-                console.log(item)
-                return               <div
+              return <div
                 key={getValue(item)}
                 className={`select-item ${typeof item === "object" && item.disabled ? "disabled" : ""}`}
                 onClick={() => handleItemClick(item)}
