@@ -36,6 +36,7 @@ import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import DeleteGroups from "./actions/DeleteGroups";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -255,6 +256,7 @@ const MainPage = () => {
     return setTypePerLocationInfoModal(null);
   };
   const [openCheckInDevicesFromEvent, setOpenCheckInDevicesFromEvent] = useState(false)
+  const [openDeleteItemModal, setOpenDeleteItemModal] = useState(false)
   return (
     <Suspense
       fallback={
@@ -295,6 +297,7 @@ const MainPage = () => {
           locationsQuery={locationsQuery}
           setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
+          setOpenDeleteItemModal={setOpenDeleteItemModal}
         />
         <Divider />
         <FilterOptionsContext.Provider
@@ -373,7 +376,9 @@ const MainPage = () => {
       {
         openCheckInDevicesFromEvent && <CheckInDevicesFromEventsModal open={openCheckInDevicesFromEvent} close={() => setOpenCheckInDevicesFromEvent(false)} user={user} />
       }
-
+      {
+        openDeleteItemModal && <DeleteGroups openModal={openDeleteItemModal} closeModal={setOpenDeleteItemModal} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
       {
         addInventoryFromXLSXFileModal && (
           <AddInventoryFromXLSXFile
