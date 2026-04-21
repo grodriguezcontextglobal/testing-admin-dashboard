@@ -5,6 +5,7 @@ import { Divider } from "antd";
 import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -18,6 +19,7 @@ const InventorySearchBar = ({
   locationsQuery,
   setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
+  setOpenDeleteItemModal,
 }) => {
   const { role, locations } = useSelector((state) => state.permission);
   const canRenderButton =
@@ -65,12 +67,20 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
-        {canRenderButton && (
-          <BlueButtonComponent
-            title="Check in devices from events"
-            func={() => setOpenCheckInDevicesFromEvent(true)}
-          />
-        )}
+        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
+          {canRenderButton && (
+            <DangerButtonComponent
+              title="Delete group"
+              func={() => setOpenDeleteItemModal(true)}
+            />
+          )}
+          {canRenderButton && (
+            <BlueButtonComponent
+              title="Check in devices from events"
+              func={() => setOpenCheckInDevicesFromEvent(true)}
+            />
+          )}
+        </div>
       </div>
       <Grid justifyContent={"flex-start"} gap={1} container>
         <Grid item xs={12} sm={12} md={12} lg={12}>
