@@ -158,6 +158,7 @@ const ReviewAndSubmitEvent = () => {
       company_id: user.companyData.id,
       legal_contract: eventInfoDetail.legal_documents_list?.length > 0,
       legal_documents_list: eventInfoDetail.legal_documents_list,
+      contract_for: "event",
     });
     if (newEventInfo.data.ok) {
       const eventId = checkArray(newEventInfo.data.event);
