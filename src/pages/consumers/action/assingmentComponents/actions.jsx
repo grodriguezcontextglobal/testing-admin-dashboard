@@ -58,20 +58,18 @@ export const createNewLease = ({
     console.log(error);
   }
 };
-export const createEvent = ({ template, customer, user, newEventInfo, timeReferenceForEventName }) => {
+export const createEvent = ({ template, customer, user, newEventInfo, timeReferenceForEventName, referenceDateTime,
+}) => {
   try {
     const createEventSQL = async () => {
       try {
-      const eventName = `${customer.name} ${customer.lastName} / ${
-        customer.email
-      } / ${timeReferenceForEventName} / Lease / ${
-        customer.id ?? customer.uid
-      }`;
+        const eventName = `${customer.name} ${customer.lastName} / ${customer.email
+          } / ${timeReferenceForEventName} / Lease / ${customer.id ?? customer.uid
+          }`;
         const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
           event_name: eventName,
-          venue_name: `${customer.name} ${customer.lastName} / ${
-            customer.email
-          } / ${new Date().toLocaleDateString()}`,
+          venue_name: `${customer.name} ${customer.lastName} / ${customer.email
+            } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
           street_address: template.street,
           city_address: template.city,
           state_address: template.state,
@@ -101,16 +99,15 @@ export const createDeviceRecordInNoSQLDatabase = ({
   addContracts,
   verificationInfo,
   stampTime,
-  timeReferenceForEventName
+  timeReferenceForEventName,
+  referenceDateTime,
 }) => {
   try {
     const db = deviceInfo;
     let items = [];
-      const eventName = `${customer.name} ${customer.lastName} / ${
-        customer.email
-      } / ${timeReferenceForEventName} / Lease / ${
-        customer.id ?? customer.uid
-      }`;
+    const eventName = `${customer.name} ${customer.lastName} / ${customer.email
+      } / ${timeReferenceForEventName} / Lease / ${customer.id ?? customer.uid
+      } / reference:${referenceDateTime}`;
     const createDevicePoolEvent = async () => {
       for (let index = 0; index < db.length; index++) {
         const deviceTemplate = {
@@ -191,14 +188,13 @@ export const createEventNoSQL = ({
   addContracts,
   stampTime,
   timeReferenceForEventName,
+  referenceDateTime,
 }) => {
   try {
     const createEventNoSQL = async () => {
-      const eventName = `${customer.name} ${customer.lastName} / ${
-        customer.email
-      } / ${timeReferenceForEventName} / Lease / ${
-        customer.id ?? customer.uid
-      }`;
+      const eventName = `${customer.name} ${customer.lastName} / ${customer.email
+        } / ${timeReferenceForEventName} / Lease / ${customer.id ?? customer.uid
+        } / reference:${referenceDateTime}`;
       const leasedTime = new Date();
       leasedTime.setFullYear(leasedTime.getFullYear() + 2);
       const eventLink = eventName.replace(/ /g, "%20");
@@ -259,6 +255,7 @@ export const createEventNoSQL = ({
         qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
         type: "lease",
         company_id: user.companyData.id,
+        contract_for: "consumer",
       };
       const newEventInfo = await devitrakApi.post(
         "/event/create-event",
@@ -356,7 +353,6 @@ export const emailContractToStaffMember = ({
     console.log(error);
   }
 };
-
 export const transactionDeviceAdded = ({
   deviceInfo,
   qty,
@@ -365,15 +361,14 @@ export const transactionDeviceAdded = ({
   customer,
   verificationInfo,
   user,
-  timeReferenceForEventName
+  timeReferenceForEventName,
+  referenceDateTime,
 }) => {
   try {
     const createTransaction = async () => {
-      const eventName = `${customer.name} ${customer.lastName} / ${
-        customer.email
-      } / ${timeReferenceForEventName} / Lease / ${
-        customer.id ?? customer.uid
-      }`;
+      const eventName = `${customer.name} ${customer.lastName} / ${customer.email
+        } / ${timeReferenceForEventName} / Lease / ${customer.id ?? customer.uid
+        } / reference:${referenceDateTime}`;
 
       const id = nanoid(12);
       const max = 918273645;
