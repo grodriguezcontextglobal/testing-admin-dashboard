@@ -16,18 +16,17 @@ const ForceLogout = () => {
         handleSubmit,
         setValue,
     } = useForm();
-
     useEffect(() => {
-        const userEmail = searchParams.get("email");
-        const password = searchParams.get("cred");
-        const timestamp = searchParams.get("timestamp");
-        const linkTime = parseInt(timestamp, 10);
-        const currentTime = new Date().getTime();
-        const minutesDifference = (currentTime - linkTime) / (1000 * 60);
-        if (isNaN(linkTime) || minutesDifference > 5) {
-            openNotificationWithIcon("Error", "This link has expired. Please try logging in again to generate a new one.");
-            return navigate("/login");
-        }
+        const userEmail = searchParams.get("x_email") || searchParams.get("email");
+        const password = searchParams.get("x_cred") || searchParams.get("cred");
+        // const timestamp = searchParams.get("x_timestamp") || searchParams.get("timestamp");
+        // const linkTime = parseInt(timestamp, 10);
+        // const currentTime = new Date().getTime();
+        // const minutesDifference = (currentTime - linkTime) / (1000 * 60);
+        // if (isNaN(linkTime) || minutesDifference > 5) {
+        //     openNotificationWithIcon("Error", "This link has expired. Please try logging in again to generate a new one.");
+        //     return navigate("/login");
+        // }
 
         if (userEmail && password) {
             setEmail(userEmail);
