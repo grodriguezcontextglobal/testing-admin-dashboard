@@ -47,6 +47,7 @@ const AssignmentFromExistingInventory = () => {
   const dateToUse = useMemo(() => formatDate(new Date()), []);
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
+  const referenceDateTime = useMemo(() => new Date().getTime(), []);
   const navigate = useNavigate();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
@@ -195,10 +196,10 @@ const AssignmentFromExistingInventory = () => {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
         event_name: `${profile.firstName} ${profile.lastName} / ${
           profile.email
-        } / ${new Date().toLocaleDateString()}`,
+        } / ${new Date().toLocaleDateString()} / reference: ${referenceDateTime}`,
         venue_name: `${profile.firstName} ${profile.lastName} / ${
           profile.email
-        } / ${new Date().toLocaleDateString()}`,
+        } / ${new Date().toLocaleDateString()} / reference: ${referenceDateTime}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -226,7 +227,7 @@ const AssignmentFromExistingInventory = () => {
         comment: "No comment",
         eventSelected: `${profile.firstName} ${profile.lastName} / ${
           profile.email
-        } / ${new Date().toLocaleDateString()}`,
+        } / ${new Date().toLocaleDateString()} / reference: ${referenceDateTime}`,
         provider: user.company,
         type: db[index].item_group,
         company: user.companyData.id,
@@ -279,7 +280,7 @@ const AssignmentFromExistingInventory = () => {
   const createEventNoSQL = async (props) => {
     const eventName = `${profile.firstName} ${profile.lastName} / ${
       profile.email
-    } / ${new Date().toLocaleDateString()}`;
+    } / ${new Date().toLocaleDateString()} / reference: ${referenceDateTime}`;
     const leasedTime = new Date();
     leasedTime.setFullYear(leasedTime.getFullYear() + 2);
     const eventLink = eventName.replace(/ /g, "%20");
@@ -339,6 +340,7 @@ const AssignmentFromExistingInventory = () => {
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       type: "lease",
       company_id: user.companyData.id,
+      contract_for: "staff",
     };
     const newEventInfo = await devitrakApi.post(
       "/event/create-event",
