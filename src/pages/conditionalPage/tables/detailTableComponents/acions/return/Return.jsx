@@ -64,6 +64,18 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       await closingEventAndReturningDevice();
     },
   });
+  const closeEvent = useMutation({
+    mutationFn: async (event) => {
+      await devitrakApi.patch(`/event/edit-event/${event?.id}`, {
+        active: false,
+        show: false
+      })
+      await devitrakApi.delete(`/event/delete-event/${event?.id}`);
+    },
+    onSuccess: () => {
+      alert("Transaction closed and device returned to inventory company");
+    }
+  });
   const updateDeviceInPoolArea = useMutation({
     mutationKey: ["updateDeviceInPoolArea"],
     mutationFn: async (id) => {
@@ -132,17 +144,20 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         }
       );
       if (checkEventByDevice.data) {
+        const eventInfo = await devitrakApi.get(
+          `/event/event-list-per-company?company=${user.company}&type=lease`
+        );
+        const eventId = eventInfo.data?.list?.filter(item => item.eventInfoDetail.eventName === checkEventByDevice.data.receiversInventory.at(-1).eventSelected);
+        const filterEventsBasedOnInventory = eventId.filter(item => item.deviceSetup.some(item => item.group === storedRecord.device_item_group));
+        await closeEvent.mutateAsync(filterEventsBasedOnInventory?.at(-1));
         await updateDeviceInPoolArea.mutateAsync(
           checkEventByDevice.data.receiversInventory.at(-1).id
         );
       }
     } catch (error) {
       setLoading(false);
-      // console.log(error);
-      // return closeModal();
     } finally {
       setLoading(false);
-      // closeModal();
     }
   };
   return (
