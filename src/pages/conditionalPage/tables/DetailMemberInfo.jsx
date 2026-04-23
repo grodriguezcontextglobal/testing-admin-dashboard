@@ -9,6 +9,8 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
 import { columns } from "./detailTableComponents/columns";
 import BaseTable from "../../../components/UX/tables/BaseTable";
+import TableHeader from "../../../components/UX/TableHeader";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 const DetailMemberInfo = () => {
   const { memberInfo } = useSelector((state) => state.member);
   const { user } = useSelector((state) => state.admin);
@@ -25,7 +27,6 @@ const DetailMemberInfo = () => {
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!memberId && !!user.sqlInfo.company_id,
-    staleTime: Infinity,
   });
   const queryClient = useQueryClient();
   const bodyModal = (
@@ -69,6 +70,7 @@ const DetailMemberInfo = () => {
           Current assigned devices:&nbsp;
         </p>
       </Grid>
+      <TableHeader leftCta={<RefreshButton propsFn={devicesAssignedActive.refetch} />} />
       <Grid
         display={"flex"}
         justifyContent={"center"}
@@ -77,6 +79,8 @@ const DetailMemberInfo = () => {
         xs={12}
       >
         <BaseTable
+          key={memberId}
+          id={memberId}
           sticky
           size="large"
           rowKey="device_id"
