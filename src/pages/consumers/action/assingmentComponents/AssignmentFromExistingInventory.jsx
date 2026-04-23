@@ -161,7 +161,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     [api]
   );
   const reference = useRef(null);
-
+  const referenceDateTime = useMemo(() => new Date().toISOString(), []);
   const option1 = async (props) => {
     try {
       await createEvent({
@@ -171,6 +171,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         newEventInfo,
         customer,
         timeReferenceForEventName,
+        referenceDateTime,
       });
       const deviceInfo = props.selectedData; //*array of existing devices in sql db
       if (newEventInfo.insertId && deviceInfo.length > 0) {
@@ -205,7 +206,8 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           contractList,
           addContracts,
           stampTime,
-          timeReferenceForEventName
+          timeReferenceForEventName,
+          referenceDateTime,
         });
         await addDeviceToEvent({
           item_group: deviceInfo[0].item_group,
@@ -227,7 +229,8 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           customer,
           verificationInfo,
           user,
-          timeReferenceForEventName
+          timeReferenceForEventName,
+          referenceDateTime,
         });
         openNotificationWithIcon("Equipment assigned to consumer.");
         return closeModal();
