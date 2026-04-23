@@ -1,18 +1,16 @@
 import { Grid } from "@mui/material";
-import { Divider } from "antd";
 import { PropTypes } from "prop-types";
-import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "../../../../../styles/global/ant-select.css";
 // import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
-import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
-import CustomizedSwitch from "./assingmentComponents/components/CustomizedSwitch";
+// import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
+// import CustomizedSwitch from "./assingmentComponents/components/CustomizedSwitch";
 const Assignment = () => {
   const { profile } = useSelector((state) => state.staffDetail);
-  const [existingOption, setExistingOption] = useState(true);
+  // const [existingOption, setExistingOption] = useState(true);
   const navigate = useNavigate();
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
@@ -28,18 +26,18 @@ const Assignment = () => {
         marginY={2}
         key={"settingUp-deviceList-event"}
       >
-        <Divider>
+        {/* <Divider>
           <CustomizedSwitch
             state={existingOption}
             handler={setExistingOption}
           />
-        </Divider>
-        {existingOption ? (
+        </Divider> */}
+        {/* {existingOption ? ( */}
           <AssignmentFromExistingInventory />
-        ) : (
-          // <AssignemntNewDeviceInInventory />
-          <AssignmentNewDeviceToStaffInInventory />
-        )}
+         {/* ) : (
+            <AssignemntNewDeviceInInventory />
+           <AssignmentNewDeviceToStaffInInventory />
+         )} */}
       </Grid>
     );
   };
