@@ -59,25 +59,43 @@ const Device = () => {
   }, []);
   const updateDeviceFeatures = (data) => {
     let copyData = [...dataToRender];
+    let newCheckConsumerUses;
+    let isChecking;
+
     if (checkConsumerUses.some((element) => element === data)) {
+      // If it's currently checked, uncheck it
       copyData[data] = {
         ...copyData[data],
         consumerUses: false,
       };
-      setCheckConsumerUses(
-        checkConsumerUses.filter((element) => element !== data)
-      );
+      newCheckConsumerUses = checkConsumerUses.filter((element) => element !== data);
+      isChecking = false;
     } else {
+      // If it's currently unchecked, check it
       copyData[data] = {
         ...copyData[data],
         consumerUses: true,
       };
-      setCheckConsumerUses([...checkConsumerUses, data]);
+      newCheckConsumerUses = [...checkConsumerUses, data];
+      isChecking = true;
     }
-    updateGlobalStore(copyData);
-    return setDataToRender(copyData);
-  };
 
+    setCheckConsumerUses(newCheckConsumerUses);
+    updateGlobalStore(copyData);
+    setDataToRender(copyData);
+
+    // Update allConsumerUsesChecked based on the new state of newCheckConsumerUses
+    if (!isChecking) {
+      // If an item was unchecked, "select all" must be unchecked
+      setAllConsumerUsesChecked(false);
+    } else if (copyData.length > 0 && newCheckConsumerUses.length === copyData.length) {
+      // If an item was checked, and now all are checked, "select all" should be checked
+      setAllConsumerUsesChecked(true);
+    } else {
+      // If an item was checked, but not all are checked, "select all" should be unchecked
+      setAllConsumerUsesChecked(false);
+    }
+  };
   const handleSelectAllConsumerUses = (e) => {
     const checked = e.target.checked;
     let copyData = [...dataToRender];
@@ -120,21 +138,42 @@ const Device = () => {
 
   const updateContainerFeatures = (data) => {
     let copyData = [...dataToRender];
+    let newContainer;
+    let isChecking;
+
     if (container.some((element) => element === data)) {
+      // If it's currently checked, uncheck it
       copyData[data] = {
         ...copyData[data],
         isItSetAsContainerForEvent: false,
       };
-      setContainer(container.filter((element) => element !== data));
+      newContainer = container.filter((element) => element !== data);
+      isChecking = false;
     } else {
+      // If it's currently unchecked, check it
       copyData[data] = {
         ...copyData[data],
         isItSetAsContainerForEvent: true,
       };
-      setContainer([...container, data]);
+      newContainer = [...container, data];
+      isChecking = true;
     }
+
+    setContainer(newContainer);
     updateGlobalStore(copyData);
-    return setDataToRender(copyData);
+    setDataToRender(copyData);
+
+    // Update allContainersChecked based on the new state of newContainer
+    if (!isChecking) {
+      // If an item was unchecked, "select all" must be unchecked
+      setAllContainersChecked(false);
+    } else if (copyData.length > 0 && newContainer.length === copyData.length) {
+      // If an item was checked, and now all are checked, "select all" should be checked
+      setAllContainersChecked(true);
+    } else {
+      // If an item was checked, but not all are checked, "select all" should be unchecked
+      setAllContainersChecked(false);
+    }
   };
 
   const renderingStyle = {
@@ -179,7 +218,7 @@ const Device = () => {
 
   const columns = [
     {
-      title: "Quantity",
+      title: "Qty",
       dataIndex: "quantity",
       key: "quantity",
       responsive: ["xs", "sm", "md", "lg"],
@@ -203,7 +242,7 @@ const Device = () => {
       title: "Group",
       dataIndex: "item_group",
       key: "item_group",
-      responsive: ["md", "lg"],
+      responsive: ["xs", "sm", "md", "lg"],
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {
@@ -214,7 +253,9 @@ const Device = () => {
             <Checkbox
               checked={allConsumerUsesChecked}
               onChange={handleSelectAllConsumerUses}
-            >Select all items
+            ><p style={{ fontWeight: 500, lineHeight: "18px", fontSize: "12px" }}>
+              Select all
+              </p>
             </Checkbox>
           </div>
         </Tooltip>
@@ -249,7 +290,9 @@ const Device = () => {
             <Checkbox
               checked={allContainersChecked}
               onChange={handleSelectAllContainers}
-            >Select all items
+            ><p style={{ fontWeight: 500, lineHeight: "18px", fontSize: "12px" }}>
+              Select all
+              </p>
             </Checkbox>
           </div>
         </Tooltip>
