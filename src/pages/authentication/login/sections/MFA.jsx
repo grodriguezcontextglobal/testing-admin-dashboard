@@ -20,7 +20,7 @@ const MFA = ({ handleSubmit, formFittingTrigger, register, isLoading, onSubmitLo
                     MFA Code
                   </FormLabel>
                   <Input
-                  label={"MFA Code"}
+                  // label={"MFA Code"}
                     type="text"
                     required
                     {...register("mfaCode", {
