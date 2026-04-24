@@ -1,5 +1,5 @@
 import { Grid, InputLabel } from "@mui/material";
-import { Button, Table } from "antd";
+import { Button, Checkbox, Table, Tooltip } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
@@ -17,6 +17,8 @@ const Device = () => {
   const [dataToRender, setDataToRender] = useState([]);
   const [container, setContainer] = useState([]);
   const [checkConsumerUses, setCheckConsumerUses] = useState([]);
+  const [allConsumerUsesChecked, setAllConsumerUsesChecked] = useState(false);
+  const [allContainersChecked, setAllContainersChecked] = useState(false);
   const dispatch = useDispatch();
   useEffect(() => {
     const controller = new AbortController();
@@ -27,10 +29,26 @@ const Device = () => {
           result.add(data);
         }
       }
-      return setDataToRender(Array.from(result));
+      return Array.from(result);
     };
 
-    formattingData();
+    const formattedData = formattingData();
+    setDataToRender(formattedData);
+
+    // Initialize checkConsumerUses and container based on initial data
+    const initialConsumerUses = formattedData.map((item, index) => item.consumerUses ? index : -1).filter(index => index !== -1);
+    setCheckConsumerUses(initialConsumerUses);
+
+    const initialContainers = formattedData.map((item, index) => item.isItSetAsContainerForEvent ? index : -1).filter(index => index !== -1);
+    setContainer(initialContainers);
+
+    // Initialize allConsumerUsesChecked
+    const initialAllConsumerUsesChecked = formattedData.length > 0 && formattedData.every(item => item.consumerUses);
+    setAllConsumerUsesChecked(initialAllConsumerUsesChecked);
+
+    // Initialize allContainersChecked
+    const initialAllContainersChecked = formattedData.length > 0 && formattedData.every(item => item.isItSetAsContainerForEvent);
+    setAllContainersChecked(initialAllContainersChecked);
     return () => {
       controller.abort();
     };
@@ -58,6 +76,46 @@ const Device = () => {
     }
     updateGlobalStore(copyData);
     return setDataToRender(copyData);
+  };
+
+  const handleSelectAllConsumerUses = (e) => {
+    const checked = e.target.checked;
+    let copyData = [...dataToRender];
+    let newCheckConsumerUses = [];
+
+    if (checked) {
+      newCheckConsumerUses = copyData.map((_, index) => index);
+      copyData = copyData.map((item) => ({ ...item, consumerUses: true }));
+    } else {
+      copyData = copyData.map((item) => ({ ...item, consumerUses: false }));
+    }
+    setCheckConsumerUses(newCheckConsumerUses);
+    updateGlobalStore(copyData);
+    setDataToRender(copyData);
+    setAllConsumerUsesChecked(checked);
+  };
+
+  const handleSelectAllContainers = (e) => {
+    const checked = e.target.checked;
+    let copyData = [...dataToRender];
+    let newContainer = [];
+
+    if (checked) {
+      newContainer = copyData.map((_, index) => index);
+      copyData = copyData.map((item) => ({
+        ...item,
+        isItSetAsContainerForEvent: true,
+      }));
+    } else {
+      copyData = copyData.map((item) => ({
+        ...item,
+        isItSetAsContainerForEvent: false,
+      }));
+    }
+    setContainer(newContainer);
+    updateGlobalStore(copyData);
+    setDataToRender(copyData);
+    setAllContainersChecked(checked);
   };
 
   const updateContainerFeatures = (data) => {
@@ -93,15 +151,13 @@ const Device = () => {
     let p = {};
     let button = {};
     let fill = null;
-    if (reference) {
-      p = { ...BlueButtonText };
-      button = { ...BlueButton };
-      fill = "#fff";
-    } else {
-      p = { ...GrayButtonText };
-      button = { ...GrayButton };
-      fill = "#000";
-    }
+    // if (reference) {
+    //   p = { ...BlueButtonText };
+    //   button = { border: "none", outline: "none" };
+    // } else {
+    p = { ...GrayButtonText };
+    button = { border: "none", outline: "none" };
+    // }
     return { p, button, fill };
   };
 
@@ -110,15 +166,14 @@ const Device = () => {
     let p = {};
     let button = {};
     let fill = null;
-    if (reference) {
-      p = { ...BlueButtonText };
-      button = { ...BlueButton };
-      fill = "#fff";
-    } else {
-      p = { ...GrayButtonText };
-      button = { ...GrayButton };
-      fill = "#000";
-    }
+    // if (reference) {
+    //   p = { ...BlueButtonText };
+    //   button = { border: "none", outline: "none" };
+    //   // fill = "#fff";
+    // } else {
+    p = { ...GrayButtonText };
+    button = { border: "none", outline: "none" };
+    // }
     return { p, button, fill };
   };
 
@@ -152,7 +207,18 @@ const Device = () => {
       render: (text) => <div style={renderingStyle}>{text}</div>,
     },
     {
-      title: "Action",
+      title: (
+        <Tooltip title="Check to assign all devices for consumer use.">
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
+            <p style={{ marginBottom: "10px" }}>Assignable for consumer use?</p>
+            <Checkbox
+              checked={allConsumerUsesChecked}
+              onChange={handleSelectAllConsumerUses}
+            >Select all items
+            </Checkbox>
+          </div>
+        </Tooltip>
+      ),
       render: (text, record, index) => (
         <div
           style={{
@@ -162,78 +228,50 @@ const Device = () => {
             gap: "8px",
           }}
         >
-          <Button
-            style={buttonStyling({ index }).button}
+          <Checkbox
+            checked={checkConsumerUses.some((element) => element === index)}
+            // style={buttonStyling({ index }).button}
             onClick={() => updateDeviceFeatures(index)}
+
           >
             <p style={buttonStyling({ index }).p}>
-              {checkConsumerUses.some((element) => element === index) ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    aspectRatio: "1",
-                    width: "fit-content",
-                    height: "auto",
-                  }}
-                >
-                  <CheckIcon stroke={buttonStyling({ index }).fill} />
-                  &nbsp;
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    aspectRatio: "1",
-                    width: "fit-content",
-                    height: "auto",
-                  }}
-                >
-                  <BorderedCloseIcon fill={buttonStyling({ index }).fill} />
-                  &nbsp;
-                </div>
-              )}
-              &nbsp;For consumers use?
+              &nbsp;For consumers use
             </p>
-          </Button>
-          &nbsp;
-          <Button
-            style={buttonContainerStyling({ index }).button}
+          </Checkbox>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <Tooltip title="Check to mark all devices as containers.">
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
+            <p style={{ marginBottom: "10px" }}>Does it carry/store other devices inside?</p>
+            <Checkbox
+              checked={allContainersChecked}
+              onChange={handleSelectAllContainers}
+            >Select all items
+            </Checkbox>
+          </div>
+        </Tooltip>
+      ),
+      render: (text, record, index) => (
+        <div
+          style={{
+            ...renderingStyle,
+            display: "flex",
+            alignSelf: "flex-start",
+            gap: "8px",
+          }}
+        >
+          <Checkbox
+            checked={container.some((element) => element === index)}
+            // style={buttonContainerStyling({ index }).button}
             onClick={() => updateContainerFeatures(index)}
           >
             <p style={buttonContainerStyling({ index }).p}>
-              {container.some((element) => element === index) ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    aspectRatio: "1",
-                    width: "fit-content",
-                    height: "auto",
-                  }}
-                >
-                  <CheckIcon stroke={buttonContainerStyling({ index }).fill} />
-                  &nbsp;
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    aspectRatio: "1",
-                    width: "fit-content",
-                    height: "auto",
-                  }}
-                >
-                  <BorderedCloseIcon
-                    fill={buttonContainerStyling({ index }).fill}
-                  />
-                </div>
-              )}
-              &nbsp;Is it a container?
+              &nbsp;Is it a container
             </p>
-          </Button>
+          </Checkbox>
         </div>
       ),
     },
@@ -296,7 +334,7 @@ const Device = () => {
         columns={columns}
         pagination={false}
         bordered={false}
-        showHeader={false}
+      // showHeader={false}
       />
     </Grid>
   );
