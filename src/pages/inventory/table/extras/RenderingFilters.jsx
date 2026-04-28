@@ -7,16 +7,16 @@ import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../store/slices/adminSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import {
   displayTotalDevicesAndTotalAvailablePerLocation,
   extractDataForRendering,
@@ -63,13 +63,15 @@ const RenderingFilters = ({
   setOpenDetails,
   allowedLocations,
   setFiltering,
-}) => {  
+  setOpenCreateLocationModal,
+}) => {
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
     Sale: "For resale",
     Resale: "For resale",
   };
+  const { isAdmin } = useStaffRoleAndLocations();
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -109,9 +111,9 @@ const RenderingFilters = ({
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-  const renderingCardData = user?.companyData?.employees?.find(
-    (element) => element.user === user.email
-  );
+  // const renderingCardData = user?.companyData?.employees?.find(
+  //   (element) => element.user === user.email
+  // );
   const extractedData = extractDataForRendering(
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
@@ -1005,31 +1007,31 @@ const RenderingFilters = ({
       ],
     },
   ];
-  const deepEqual = (obj1, obj2) => {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
+  // const deepEqual = (obj1, obj2) => {
+  //   const keys1 = Object.keys(obj1);
+  //   const keys2 = Object.keys(obj2);
 
-    if (keys1?.length !== keys2?.length) return false;
+  //   if (keys1?.length !== keys2?.length) return false;
 
-    return keys1.every((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
+  //   return keys1.every((key) => {
+  //     const val1 = obj1[key];
+  //     const val2 = obj2[key];
 
-      const areObjects =
-        val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
-      return areObjects ? deepEqual(val1, val2) : val1 === val2;
-    });
-  };
-  const compareArraysOfObjects = (arr1, arr2) => {
-    if (arr1?.length !== arr2?.length) return false;
+  //     const areObjects =
+  //       val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
+  //     return areObjects ? deepEqual(val1, val2) : val1 === val2;
+  //   });
+  // };
+  // const compareArraysOfObjects = (arr1, arr2) => {
+  //   if (arr1?.length !== arr2?.length) return false;
 
-    const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
-    const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
+  //   const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
+  //   const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
 
-    return sortedArr1.every((obj1, index) =>
-      deepEqual(obj1, sortedArr2[index])
-    );
-  };
+  //   return sortedArr1.every((obj1, index) =>
+  //     deepEqual(obj1, sortedArr2[index])
+  //   );
+  // };
 
   const handleResetFilters = () => {
     if (setFiltering) setFiltering([]);
@@ -1122,6 +1124,9 @@ const RenderingFilters = ({
                 style={{
                   width: "100%",
                   margin: "0 0 1rem",
+                  display:"flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
                 <p
@@ -1153,7 +1158,8 @@ const RenderingFilters = ({
                       : "units"}
                   </span>{" "}
                   &nbsp;{" "}
-                  {item.buttonFn &&
+
+                  {/* {item.buttonFn &&
                     !compareArraysOfObjects(
                       [],
                       renderingCardData.preference.inventory_location
@@ -1163,8 +1169,20 @@ const RenderingFilters = ({
                           Update locations preferences
                         </p>
                       </button>
-                    )}
+                    )} */}
                 </p>
+                {item.key === "location_1" && isAdmin && (<BlueButtonComponent
+                  title={"Create Location"}
+                  styles={{ with: "100%" }}
+                  buttonType="button"
+                  titleStyles={{
+                    textTransform: "none",
+                    with: "100%",
+                    gap: "2px",
+                  }}
+                  func={() => setOpenCreateLocationModal(true)}
+                />)}
+
               </summary>
               <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Grid container>
