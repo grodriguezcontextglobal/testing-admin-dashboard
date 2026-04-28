@@ -15,73 +15,74 @@ const options = [{ value: "Serial number", label: "Serial number" }];
 
 const SerialNumberAndMoreInfoComponentForm = ({
   style,
+  updateAll,
   scannedSerialNumbers,
   setScannedSerialNumbers,
   moreInfo,
   setMoreInfo,
-  generalInfoForSelection
+  generalInfoForSelection,
 }) => {
-  const { user } = useBulkActionLogic()
-  // State for the dynamic input fields for a single device
-  const uuid = uniqueId()
+  const { user } = useBulkActionLogic();
+  const uuid = uniqueId();
   const [, setNextId] = useState(uuid);
   const [identifiers, setIdentifiers] = useState([
     { id: uuid, type: "Serial number", value: "" },
   ]);
-  // State for the list of devices added
   const [devices, setDevices] = useState([]);
+  const [itemInfoFound, setItemInfoFound] = useState(null);
+  const [checkedIndex, setCheckedIndex] = useState([]);
 
   const handleIdentifierChange = (id, field, newValue) => {
     setIdentifiers(
       identifiers.map((identifier) =>
         identifier.id === id
           ? { ...identifier, [field]: newValue }
-          : identifier,
-      ),
+          : identifier
+      )
     );
   };
-  const [itemInfoFound, setItemInfoFound] = useState(null)
+
   const checkAndRetrieveExistingInformationItem = async () => {
     const bodyTempl = {
       company_id: user.sqlInfo.company_id,
       serial_number: identifiers[0].value,
-    }
+    };
     if (generalInfoForSelection) {
-      bodyTempl.category_name = generalInfoForSelection.category_name
-      bodyTempl.item_group = generalInfoForSelection.item_group
-      bodyTempl.brand = generalInfoForSelection.brand
+      bodyTempl.category_name = generalInfoForSelection.category_name;
+      bodyTempl.item_group = generalInfoForSelection.item_group;
+      bodyTempl.brand = generalInfoForSelection.brand;
     }
-    const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl)
+    const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl);
     if (respo?.data?.ok && respo?.data?.items?.length > 0) {
-      setItemInfoFound(respo.data.items[0])
-      const templ = []
+      setItemInfoFound(respo.data.items[0]);
+      const templ = [];
       respo.data.items[0].extra_serial_number.forEach((item, index) => {
         templ.push({
-          id: index, type: item.keyObject, value: item.valueObject
-        })
-      })
+          id: index,
+          type: item.keyObject,
+          value: item.valueObject,
+        });
+      });
       if (templ.length > 0) {
-        setNextId(uuid)
-        return setIdentifiers([
-          ...templ,
-          // { id: (templ.length + 1), type: "Serial number", value: "" }
-        ])
+        setNextId(uuid);
+        return setIdentifiers([...templ]);
       }
-      setIdentifiers([
-        ...identifiers,
-        { id: uuid, type: "Serial number", value: "" }
-      ])
-      return setNextId(uuid)
+      setIdentifiers([...identifiers, { id: uuid, type: "", value: "" }]);
+      return setNextId(uuid);
     }
-    return alert("No item found with that serial number in category " + generalInfoForSelection.category_name)
-  }
+    return alert(
+      "No item found with that serial number in category " +
+        generalInfoForSelection.category_name
+    );
+  };
+
   const addIdentifier = () => {
-    checkAndRetrieveExistingInformationItem()
+    const newId = uniqueId();
     setIdentifiers([
       ...identifiers,
-      { id: uuid, type: "Serial number", value: "" },
-    ])
-    setNextId(uuid)
+      { id: newId, type: "Serial number", value: "" },
+    ]);
+    setNextId(newId);
   };
 
   const handleAddDevice = (e) => {
@@ -159,7 +160,6 @@ const SerialNumberAndMoreInfoComponentForm = ({
     );
   };
 
-  const [checkedIndex, setCheckedIndex] = useState([]);
   const checkedPriorityKey = (index) => {
     if (checkedIndex.includes(index)) {
       return setCheckedIndex(checkedIndex.filter((_, i) => i !== index));
@@ -243,6 +243,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                 <Checkbox
                   checked={checkedIndex.includes(index)}
                   onChange={() => checkedPriorityKey(index)}
+                  disabled={updateAll}
                 />
               </Grid>
               <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
@@ -258,6 +259,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Select type"
+                  required={!updateAll}
+                  disabled={updateAll}
                 />
               </Grid>
               <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
@@ -270,11 +273,14 @@ const SerialNumberAndMoreInfoComponentForm = ({
                   style={{ width: "100%", margin: "0 0 0 -8px" }}
                   onKeyDown={handleKeyDown}
                   allowClear
+                  required={!updateAll}
+                  disabled={updateAll}
                 />
                 <BlueButtonComponent
                   title={<WhiteCirclePlusIcon />}
                   buttonType="button"
                   func={addIdentifier}
+                  disabled={updateAll}
                 />
                 {identifiers.length > 1 && (
                   <DangerButtonComponent
@@ -298,6 +304,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
         <GrayButtonComponent
           func={(e) => handleAddDevice(e)}
           title="Add this device"
+          disabled={updateAll}
         />
       </div>
       <Divider />
