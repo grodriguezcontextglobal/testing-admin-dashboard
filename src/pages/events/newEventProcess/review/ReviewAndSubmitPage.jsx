@@ -1,13 +1,11 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { notification, Spin } from "antd";
-import { groupBy } from "lodash";
 import { lazy, Suspense, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
-import { checkArray } from "../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
@@ -20,11 +18,10 @@ const Staff = lazy(() => import("./review/Staff"));
 const ReviewAndSubmitEvent = () => {
   // const { subscription } = useSelector((state) => state.subscription);
   const {
-    eventInfoDetail,
     staff,
     deviceSetup,
     contactInfo,
-    extraServiceListSetup,
+    event,
   } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -38,30 +35,7 @@ const ReviewAndSubmitEvent = () => {
       duration: 0,
     });
   };
-  let dataRef = [...staff.adminUser, ...staff.headsetAttendees];
-  const checkAndAddRootAdministratorAsAdminStaff = () => {
-    const checkDouble = new Map();
-    for (let data of dataRef) {
-      if (!checkDouble.has(data.email)) {
-        checkDouble.set(data.email, data);
-      }
-    }
-    dataRef = [...checkDouble.values()];
-    if (!dataRef.some((element) => element.email === user.email)) {
-      dataRef = [
-        ...dataRef,
-        {
-          firstName: user.name,
-          lastName: user.lastName,
-          email: user.email,
-          role: "Administrator",
-        },
-      ];
-      return groupBy(dataRef, "role");
-    }
 
-    return groupBy(dataRef, "role");
-  };
   const createStaffInEvent = async (newEventId) => {
     const employeeStaff = [...staff.adminUser, ...staff.headsetAttendees];
     const staffRoleDate = new Map();
@@ -96,137 +70,82 @@ const ReviewAndSubmitEvent = () => {
     }
   };
 
-  const deviceSetupNoSQL = () => {
-    const result = new Set();
+  const lockedItemsInWarehouseForEventShipping = async()=> {
     for (let data of deviceSetup) {
-      result.add({
-        category: data.category_name,
-        group: data.item_group,
-        value: data.cost,
-        description: data.descript_item,
-        company: data.company,
-        isItSetAsContainerForEvent: data.isItSetAsContainerForEvent ? data.isItSetAsContainerForEvent : false,
-        quantity: data.quantity,
-        ownership: data.ownership,
-        container: false,
-        createdBy: user.email,
-        key: nanoid(),
-        dateCreated: new Date().toString(),
-        resume: `${data.category_name} ${data.item_group} ${data.cost} ${
-          data.descript_item
-        } ${data.company} ${data.quantity} ${data.ownership} ${
-          user.email
-        } ${new Date().toString()} ${true} ${data.startingNumber} ${
-          data.endingNumber
-        }`,
-        consumerUses: data.consumerUses, //change this to false to force company to set device for consumer and others to set device for staff
-        startingNumber: null, //data.startingNumber
-        endingNumber: null, //data.endingNumber,
-        existing: data.existing,
+      const findItemsId = await devitrakApi.post(`/db_company/retrieve-company-inventory`,{
+      category: data.category_name,
+      group: data.item_group,
+      location: data.location,
+      limit:data.quantity,
+      company_id: user.sqlInfo.company_id,
       });
-    }
-    return Array.from(result);
-  };
-
-  const staffDetail = () => {
-    const profileStaffList = {
-      adminUser:
-        checkAndAddRootAdministratorAsAdminStaff()["Administrator"] ?? [],
-      headsetAttendees:
-        checkAndAddRootAdministratorAsAdminStaff()["headsetAttendees"] ?? [],
-    };
-    return profileStaffList;
-  };
-
-  const createEventNoSQLDatabase = async () => {
-    const eventLink = eventInfoDetail.eventName.replace(/ /g, "%20");
-    const newEventInfo = await devitrakApi.post("/event/create-event", {
-      user: user.email,
-      company: user.company,
-      subscription: [],
-      eventInfoDetail: {
-        ...eventInfoDetail,
-        dateBeginTime: new Date(eventInfoDetail.dateBegin).getTime(),
-      },
-      staff: staffDetail(),
-      deviceSetup: deviceSetupNoSQL(),
-      extraServicesNeeded: extraServiceListSetup?.length > 0,
-      extraServices: extraServiceListSetup,
-      active: true,
-      contactInfo: contactInfo,
-      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
-      company_id: user.companyData.id,
-      legal_contract: eventInfoDetail.legal_documents_list?.length > 0,
-      legal_documents_list: eventInfoDetail.legal_documents_list,
-      contract_for: "event",
-    });
-    if (newEventInfo.data.ok) {
-      const eventId = checkArray(newEventInfo.data.event);
-      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
-        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
+      if(findItemsId.data.ok && findItemsId.data.items.length === 0){
+        openNotificationWithIcon(`Item ${data.item_group} not found in warehouse`);
+        return;
+      }
+      //update items in inventory to lock them out for inventory manager
+      await devitrakApi.post(`/db_event/reserve-items-for-event`,{
+        items: JSON.parse(findItemsId.data.mapped_result),//pass in JSON.stringify format
+        company_id: user.sqlInfo.company_id
       });
-    }
-  };
-
-  const createEvent = async () => {
-    const address = eventInfoDetail.address.split(" ");
-    const respo = await devitrakApi.post("/db_event/new_event", {
-      event_name: eventInfoDetail.eventName,
-      venue_name: eventInfoDetail.floor,
-      street_address: address.slice(0, -3).toString().replaceAll(",", " "),
-      city_address: address.at(-3),
-      state_address: address.at(-2).replace(",", ""),
-      zip_address: address.at(-1),
-      email_company: contactInfo.email,
-      phone_number: contactInfo.phone[0],
-      company_assigned_event_id: user.sqlInfo.company_id,
-      contact_name: contactInfo.name,
-    });
-    await createEventNoSQLDatabase();
-    if (respo.data) {
-      const newEventId = respo.data.consumer.insertId;
-      await createStaffInEvent(newEventId);
+      //lock items in inventory for event shipping
+      await devitrakApi.post(`/db_event/lock-items-for-event`,{
+        items: JSON.parse(findItemsId.data.mapped_result),
+        company_id: user.sqlInfo.company_id,
+        event_id: event.idSql,
+        //event_id, company_id, items
+      });
     }
     return;
   };
 
-  const checkAndCreateNewDevicesInSqlDB = async () => {
-    if (deviceSetup.some((element) => element.existing === false)) {
-      const check = "there is devices to be created in db";
-      for (let data of deviceSetup) {
-        if (!data.existing) {
-          const template = {
-            category_name: data.category_name,
-            item_group: data.item_group,
-            cost: data.cost,
-            brand: data.brand,
-            descript_item: data.descript_item,
-            ownership: data.ownership,
-            min_serial_number: data.min_serial_number,
-            max_serial_number: data.max_serial_number,
-            warehouse: data.warehouse,
-            main_warehouse: data.main_warehouse,
-            created_at: data.created_at,
-            update_at: data.updated_at,
-            company: data.company,
-            location: data.location,
-            current_location: data.current_location,
-            sub_location: data.sub_location,
-            extra_serial_number: data.extra_serial_number,
-            company_id: data.company_id,
-            return_date: data.return_date,
-            container: data.container,
-            containerSpotLimit: data.containerSpotLimit,
-            enableAssignFeature: data.enableAssignFeature,
-            image_url: data.image_url,
-          };
-          await devitrakApi.post("/db_item/bulk-item", template);
-        }
+  const deviceSetupNoSQL = () => {
+    const result = new Map();
+    for (let data of deviceSetup) {
+      if (!result.has(data.item_group)) {
+        result.set(data.item_group, {
+          category: data.category_name,
+          group: data.item_group,
+          value: data.cost,
+          description: data.descript_item,
+          company: data.company,
+          isItSetAsContainerForEvent: data.isItSetAsContainerForEvent ? data.isItSetAsContainerForEvent : false,
+          quantity: data.quantity,
+          ownership: data.ownership,
+          container: false,
+          createdBy: user.email,
+          key: nanoid(),
+          dateCreated: new Date().toString(),
+          resume: `${data.category_name} ${data.item_group} ${data.cost} ${data.descript_item
+            } ${data.company} ${data.quantity} ${data.ownership} ${user.email
+            } ${new Date().toString()} ${true} ${data.startingNumber} ${data.endingNumber
+            }`,
+          consumerUses: data.consumerUses, //change this to false to force company to set device for consumer and others to set device for staff
+          startingNumber: null, //data.startingNumber
+          endingNumber: null, //data.endingNumber,
+          existing: data.existing,
+        });
+      } else {
+        const temp = result.get(data.item_group);
+        temp.quantity += data.quantity;
+        temp.resume = `${data.category_name} ${data.item_group} ${data.cost} ${data.descript_item
+          } ${data.company} ${temp.quantity} ${data.ownership} ${user.email
+          } ${new Date().toString()} ${true} ${data.startingNumber} ${data.endingNumber
+          }`;
+        result.set(data.item_group, temp);
       }
-      return check;
-    } else {
-      return;
     }
+    return Array.from(result.values());
+  };
+
+  const createEventNoSQLDatabase = async () => {
+    await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
+      deviceSetup: deviceSetupNoSQL(),
+      active: true,
+      contactInfo: contactInfo,
+      contract_for: "event",
+    });
+    return await lockedItemsInWarehouseForEventShipping();
   };
 
   const processOfCreatingInformationOfNewEvent = async () => {
@@ -236,8 +155,9 @@ const ReviewAndSubmitEvent = () => {
       );
       setLoadingStatus(true);
       setButtonDisable(true);
-      await checkAndCreateNewDevicesInSqlDB(); //creating new devices in sql db => moving to event quick glance
-      await createEvent();
+      // await checkAndCreateNewDevicesInSqlDB(); //creating new devices in sql db => moving to event quick glance
+      await createStaffInEvent(event.idSql);
+      await createEventNoSQLDatabase();
       setLoadingStatus(false);
       setButtonDisable(false);
       openNotificationWithIcon("Event information created.");
@@ -267,58 +187,42 @@ const ReviewAndSubmitEvent = () => {
         container
       >
         {contextHolder}
-        {/* <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"flex-start"}
-          alignItems={"stretch"}
-          border={"0.1px solid #000"}
-          className={`${loadingStatus ? "blur-container" : ""}`}
-          // gap={2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        > */}
-          <InputLabel style={{ width: "100%" }}>
-            <Typography
-              textTransform={"none"}
-              style={{
-                ...TextFontSize20LineHeight30,
-                fontWeight: 600,
-                textAlign: "left",
-                color: "var(--gray-600, #475467)",
-              }}
-              alignSelf={"stretch"}
-            >
-              Review all the event information below
-            </Typography>
-          </InputLabel>
-          <Event />
-          <Staff />
-          <Device />
-          <Service />
-          <BlueButtonComponent
-            title={"Create and save"}
-            func={processOfCreatingInformationOfNewEvent}
-            disabled={buttonDisable}
-            loadingState={loadingStatus}
-            styles={{
-              width: "100%",
-              border: `${
-                buttonDisable
-                  ? "1px solid var(--base-white, #FFF)"
-                  : "1px solid var(--blue-dark-600, #155EEF)"
-              }`,
-              background: `${
-                buttonDisable
-                  ? "var(--base-white, #FFF)"
-                  : "var(--blue-dark-600, #155EEF)"
-              }`,
+        <InputLabel style={{ width: "100%" }}>
+          <Typography
+            textTransform={"none"}
+            style={{
+              ...TextFontSize20LineHeight30,
+              fontWeight: 600,
+              textAlign: "left",
+              color: "var(--gray-600, #475467)",
             }}
-          />
-          {loadingStatus && <Spin indicator={<Loading />} fullscreen />}
+            alignSelf={"stretch"}
+          >
+            Review all the event information below
+          </Typography>
+        </InputLabel>
+        <Event />
+        <Staff />
+        <Device />
+        <Service />
+        <BlueButtonComponent
+          title={"Create and save"}
+          func={processOfCreatingInformationOfNewEvent}
+          disabled={buttonDisable}
+          loadingState={loadingStatus}
+          styles={{
+            width: "100%",
+            border: `${buttonDisable
+                ? "1px solid var(--base-white, #FFF)"
+                : "1px solid var(--blue-dark-600, #155EEF)"
+              }`,
+            background: `${buttonDisable
+                ? "var(--base-white, #FFF)"
+                : "var(--blue-dark-600, #155EEF)"
+              }`,
+          }}
+        />
+        {loadingStatus && <Spin indicator={<Loading />} fullscreen />}
         {/* </Grid> */}
         {loadingStatus && (
           <ModalCreatingEventInProgress openEndingEventModal={loadingStatus} />
