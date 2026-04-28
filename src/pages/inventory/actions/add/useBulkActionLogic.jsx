@@ -20,6 +20,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { formatDate } from "../../utils/dateFormat";
 import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const useBulkActionLogic = () => {
   const {
@@ -142,6 +143,10 @@ const useBulkActionLogic = () => {
         exact: true,
         refetchType: "active",
       });
+      clearCacheMemory(
+        `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+      );
+      clearCacheMemory(`providerCompanies_${user.companyData.id}`);
     },
   });
 
@@ -338,7 +343,6 @@ const useBulkActionLogic = () => {
   };
 
   const handleSubLocationInputChange = (id, value) => {
-    console.log("handleSubLocationInputChange", value)
     const newInputs = subLocationInputs.map((item) => {
       if (item.id === id) {
         return { ...item, value };
@@ -347,7 +351,6 @@ const useBulkActionLogic = () => {
     });
     setSubLocationInputs(newInputs);
   };
-console.log({subLocationsSubmitted})
   const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
       return {
