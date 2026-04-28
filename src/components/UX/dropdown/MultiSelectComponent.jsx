@@ -1,42 +1,71 @@
 import { useState, useEffect, useRef } from "react";
+import { Icon } from "@iconify/react";
 import "./MultiSelectComponent.css";
 
 const MultiSelectComponent = ({
+  size = "md",
   label,
+  tooltip,
   hint,
-  placeholder = "Search...",
+  placeholder = "Select options",
   items = [],
-  value = [],
-  onChange,
+  selectedKeys: initialSelectedKeys = new Set(),
+  onSelectionChange,
+  supportingText,
+  onReset,
+  onSelectAll,
   isRequired,
+  disabled,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState(initialSelectedKeys);
   const containerRef = useRef(null);
 
-  const getItemId = (item) => item.id || item.value;
+  useEffect(() => {
+    setSelectedKeys(initialSelectedKeys);
+  }, [initialSelectedKeys]);
+
+  const handleSelectionChange = (newSelection) => {
+    setSelectedKeys(newSelection);
+    if (onSelectionChange) {
+      onSelectionChange(newSelection);
+    }
+  };
 
   const handleToggleItem = (item) => {
     if (item.disabled) return;
-    const isSelected = value.some(
-      (selected) => getItemId(selected) === getItemId(item),
-    );
-    const newSelection = isSelected
-      ? value.filter((selected) => getItemId(selected) !== getItemId(item))
-      : [...value, item];
-    onChange(newSelection);
+    const newKeys = new Set(selectedKeys);
+    if (newKeys.has(item.id)) {
+      newKeys.delete(item.id);
+    } else {
+      newKeys.add(item.id);
+    }
+    handleSelectionChange(newKeys);
   };
 
   const handleRemoveItem = (item) => {
-    const newSelection = value.filter(
-      (selected) => getItemId(selected) !== getItemId(item),
-    );
-    onChange(newSelection);
+    const newKeys = new Set(selectedKeys);
+    newKeys.delete(item.id);
+    handleSelectionChange(newKeys);
+  };
+
+  const handleReset = () => {
+    handleSelectionChange(new Set());
+    if (onReset) onReset();
+  };
+
+  const handleSelectAll = () => {
+    const allIds = new Set(items.map((item) => item.id));
+    handleSelectionChange(allIds);
+    if (onSelectAll) onSelectAll();
   };
 
   const filteredItems = items.filter((item) =>
-    item.label.toLowerCase().includes(searchTerm.toLowerCase()),
+    item.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const selectedItems = items.filter(item => selectedKeys.has(item.id));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -54,63 +83,99 @@ const MultiSelectComponent = ({
   }, []);
 
   return (
-    <div className="multiselect-container" ref={containerRef}>
-      {label && (
-        <label className="multiselect-label">
-          {label}
-          {isRequired && <span>*</span>}
-        </label>
-      )}
+    <div
+      className={`multiselect-container ${size} ${disabled ? "disabled" : ""
+        }`}
+      ref={containerRef}
+    >
+      <div className="label-wrapper">
+        {label && (
+          <label className="multiselect-label">
+            {label}
+            {isRequired && <span className="required-asterisk">*</span>}
+          </label>
+        )}
+        {tooltip && (
+          <span className="tooltip-icon" data-tooltip={tooltip}>
+            <Icon icon="heroicons:question-mark-circle" />
+          </span>
+        )}
+      </div>
+
       <div
         className="multiselect-input-wrapper"
-        onClick={() => setIsOpen(true)}
+        onClick={() => !disabled && setIsOpen(true)}
       >
-        {value.map((item) => (
-          <div key={getItemId(item)} className="multiselect-tag">
-            {item.avatarUrl && (
-              <img
-                src={item.avatarUrl}
-                alt={item.label}
-                className="multiselect-tag-avatar"
-              />
-            )}
-            <span>{item.label}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveItem(item);
-              }}
-              className="multiselect-tag-remove"
-            >
-              &times;
-            </button>
-          </div>
-        ))}
+        <div className="tags-container">
+          {selectedItems.map((item) => (
+            <div key={item.id} className="multiselect-tag">
+              {item.avatarUrl && (
+                <img
+                  src={item.avatarUrl}
+                  alt={item.label}
+                  className="multiselect-tag-avatar"
+                />
+              )}
+              <span>{item.label}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveItem(item);
+                }}
+                className="multiselect-tag-remove"
+              >
+                <Icon icon="heroicons:x-mark" />
+              </button>
+            </div>
+          ))}
+        </div>
         <input
           type="text"
           className="multiselect-input"
-          placeholder={value.length === 0 ? placeholder : ""}
+          placeholder={selectedItems.length === 0 ? placeholder : ""}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !disabled && setIsOpen(true)}
+          disabled={disabled}
         />
+        <div className="multiselect-actions">
+          {selectedKeys.size > 0 && (
+            <button className="reset-button" onClick={handleReset}>
+              <Icon icon="heroicons:x-mark" />
+            </button>
+          )}
+          <span className="dropdown-arrow">
+            <Icon icon="heroicons:chevron-up-down" />
+          </span>
+        </div>
       </div>
-      {hint && <p className="multiselect-hint">{hint}</p>}
-      {isOpen && (
+
+      {(hint || supportingText) && (
+        <div className="hint-wrapper">
+          {hint && <p className="multiselect-hint">{hint}</p>}
+          {supportingText && (
+            <p className="multiselect-supporting-text">{supportingText}</p>
+          )}
+        </div>
+      )}
+
+      {isOpen && !disabled && (
         <div className="multiselect-dropdown">
+          <div className="dropdown-actions">
+            <button onClick={handleSelectAll}>Select all</button>
+            <button onClick={handleReset}>Reset</button>
+          </div>
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => (
               <div
-                key={getItemId(item)}
+                key={item.id}
                 className={`multiselect-item ${item.disabled ? "disabled" : ""}`}
                 onClick={() => handleToggleItem(item)}
               >
                 <input
                   type="checkbox"
                   className="multiselect-item-checkbox"
-                  checked={value.some(
-                    (selected) => getItemId(selected) === getItemId(item),
-                  )}
+                  checked={selectedKeys.has(item.id)}
                   disabled={item.disabled}
                   readOnly
                 />
