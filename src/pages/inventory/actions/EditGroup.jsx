@@ -78,7 +78,9 @@ const EditGroup = () => {
     user,
     valueObject,
     watch,
-    updateGroupItems
+    updateGroupItems,
+    updateAll,
+    setUpdateAll,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -143,7 +145,8 @@ const EditGroup = () => {
         setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
-
+        updateAll={updateAll}
+        setUpdateAll={setUpdateAll}
       />
       {renderingModals({
         openScanningModal,
