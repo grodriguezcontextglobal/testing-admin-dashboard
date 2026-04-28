@@ -35,6 +35,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
+        logistic_status:"in-stock"
       }),
   });
   const [api, contextHolder] = notification.useNotification();
