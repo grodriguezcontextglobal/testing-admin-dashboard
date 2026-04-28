@@ -212,7 +212,7 @@ const MainPage = () => {
         reference={null}
         refreshFn={refetchingQueriesFn}
         searchedResult={searchedResult}
-        // searchItem={settingParamsForSearchResult}
+        setOpenCreateLocationModal={setOpenCreateLocationModal}
         setDataFilterOptions={setDataFilterOptions}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         total={getTotalToDisplay()}
@@ -279,7 +279,6 @@ const MainPage = () => {
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
-          setOpenCreateLocationModal={setOpenCreateLocationModal}
         />
         <MobileActionsButtons user={user} />
         <Divider />
