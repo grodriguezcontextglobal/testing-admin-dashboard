@@ -47,6 +47,7 @@ const Form = () => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
+        logistic_status:"in-stock"
       };
     }
     return {
@@ -54,6 +55,7 @@ const Form = () => {
       warehouse: 1,
       enableAssignFeature: 1,
       location: locationsAssignPermission,
+      logistic_status:"in-stock"
     };
   };
   // const itemQuery = useQuery({
