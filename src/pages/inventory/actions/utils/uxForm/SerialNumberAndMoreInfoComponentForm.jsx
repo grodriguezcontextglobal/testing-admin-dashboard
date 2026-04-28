@@ -7,8 +7,9 @@ import DangerButtonComponent from "../../../../../components/UX/buttons/DangerBu
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
 import RenderingItemsAddedForStore from "./RenderingItemsAddedForStore";
+import { uniqueId } from "lodash";
 
-const options = [{ value: "Serial", label: "Serial" }];
+const options = [{ value: "Serial number", label: "Serial number" }];
 
 const SerialNumberAndMoreInfoComponentForm = ({
   style,
@@ -18,9 +19,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
   setMoreInfo,
 }) => {
   // State for the dynamic input fields for a single device
-  const [nextId, setNextId] = useState(2);
+  const uuid = uniqueId()
+  const [, setNextId] = useState(uuid);
   const [identifiers, setIdentifiers] = useState([
-    { id: 1, type: "Serial number", value: "" },
+    { id: uuid, type: "Serial number", value: "" },
   ]);
   // State for the list of devices added
   const [devices, setDevices] = useState([]);
@@ -38,9 +40,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
   const addIdentifier = () => {
     setIdentifiers([
       ...identifiers,
-      { id: nextId, type: "Serial number", value: "" },
-    ]);
-    setNextId(nextId + 1);
+      { id: Math.random().toString(36).substring(2), type: "Serial number", value: "" },
+    ])
+    setNextId(Math.random().toString(36).substring(2))
   };
 
   const handleKeyDown = (e) => {
@@ -92,8 +94,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
-    setNextId(2);
-    setIdentifiers([{ id: 1, type: "Serial number", value: "" }]);
+    setNextId(uuid);
+    setIdentifiers([{ id: uuid, type: "Serial number", value: "" }]);
     setCheckedIndex([]);
   };
 
@@ -135,7 +137,11 @@ const SerialNumberAndMoreInfoComponentForm = ({
   };
   return (
     <Grid container spacing={1}>
-      <div style={{ margin: "1rem 0", gap: 0, width: "100%" }} className="form">
+      <div
+        // onSubmit={(e)=>handleAddDevice(e)}
+        style={{ margin: "1rem 0", gap: 0 }}
+        className="form"
+      >
         <Typography
           variant="h5"
           sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
@@ -154,7 +160,17 @@ const SerialNumberAndMoreInfoComponentForm = ({
         </Typography>
 
         <Grid container>
-          <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
+          <Grid margin={0} item xs={12} sm={3} md={1} lg={1}>
+            <Typography
+              variant="caption"
+              display="block"
+              color="text.secondary"
+              sx={{ fontWeight: "600" }}
+            >
+              Primary key *
+            </Typography>
+          </Grid>
+          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
             <Typography
               variant="caption"
               display="block"
@@ -164,7 +180,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
               Identifier *
             </Typography>
           </Grid>
-          <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
             <Typography
               variant="caption"
               display="block"
@@ -181,23 +197,17 @@ const SerialNumberAndMoreInfoComponentForm = ({
               container
               spacing={1}
               key={identifier.id}
-              sx={{ margin: 0, alignItems: "center" }}
+              sx={{ margin: 0, alignItems: "center", spacing: 0.5 }}
             >
-              <Grid
-                display={"flex"}
-                margin={0}
-                item
-                xs={12}
-                sm={3}
-                md={2.5}
-                lg={1.5}
-              >
+              <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
                 <Checkbox
                   checked={checkedIndex.includes(index)}
                   onChange={() => checkedPriorityKey(index)}
                 />
+              </Grid>
+              <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
                 <AutoComplete
-                  style={{ ...style, margin: "0 0 0 0.2rem" }}
+                  style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
                   options={options.map((item) => ({
                     label: item.label,
                     value: item.label,
@@ -217,7 +227,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                   onChange={(e) =>
                     handleIdentifierChange(identifier.id, "value", e.target.value)
                   }
-                  style={{ width: "100%", margin: 0 }}
+                  style={{ width: "100%", margin: "0 0 0 -8px" }}
                   onKeyDown={handleKeyDown}
                   allowClear
                 />
@@ -230,6 +240,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                   <DangerButtonComponent
                     title="Remove"
                     func={() => removeField(identifier.id)}
+                    disabled={identifier.length === 1}
                   />
                 )}
               </Grid>
@@ -240,7 +251,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mt: 2, mb: 2 }}
+          sx={{ mt: 3, mb: 2 }}
         >
           You can use a scanner to input the number. You can also add more
           identifiers.
