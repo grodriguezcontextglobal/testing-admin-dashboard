@@ -32,6 +32,7 @@ const useBulkActionLogic = () => {
     queryClient,
     dicSuppliers,
   } = useSuppliers();
+  const [updateAll, setUpdateAll] = useState(false)
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -124,6 +125,7 @@ const useBulkActionLogic = () => {
       ),
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
+
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
@@ -280,6 +282,7 @@ const useBulkActionLogic = () => {
         alphaNumericUpdateItemMutation,
         dicSuppliers,
         queryClient,
+        updateAll,
       });
       openNotificationWithIcon("All items were updated database.");
       return navigate("/inventory");
@@ -321,6 +324,7 @@ const useBulkActionLogic = () => {
     scannedSerialNumbers.length,
   ]);
   qtyDiff();
+
   const subLocationsOptions = useMemo(
     () =>
       retrieveExistingSubLocationsForCompanyInventory(
@@ -329,6 +333,7 @@ const useBulkActionLogic = () => {
       ),
     [watch("location")],
   );
+
   const handleAddSubLocationInput = () => {
     setSubLocationInputs([...subLocationInputs, { id: Date.now(), value: "" }]);
   };
@@ -351,6 +356,7 @@ const useBulkActionLogic = () => {
     });
     setSubLocationInputs(newInputs);
   };
+
   const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
       return {
@@ -404,6 +410,7 @@ const useBulkActionLogic = () => {
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
+
   const manuallyAddingSerialNumbers = () => {
     if (String(watch("serial_number_list")).length < 1) return;
     if (scannedSerialNumbers.includes(watch("serial_number_list")))
@@ -445,13 +452,6 @@ const useBulkActionLogic = () => {
       message.error("Failed to upload image: " + error.message);
     }
   };
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   itemsInInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -694,6 +694,8 @@ const useBulkActionLogic = () => {
     user,
     valueObject,
     watch,
+    updateAll,
+    setUpdateAll,
   };
 };
 
