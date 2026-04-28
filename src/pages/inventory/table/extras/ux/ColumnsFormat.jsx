@@ -100,9 +100,9 @@ const ColumnsFormat = ({
       render: (warehouse, record) => {
         return (
           <PillUIComponent
-            color={warehouse === 0 ? "brand" : "success"}
+            color={record?.data?.logistic_status !== "in-stock" ? "brand" : "success"}
             size="sm"
-          >{warehouseDicStatus[record.data.logistic_status]}</PillUIComponent>
+          >{warehouseDicStatus[record?.data?.logistic_status] || ""}</PillUIComponent>
         );
       },
     },
