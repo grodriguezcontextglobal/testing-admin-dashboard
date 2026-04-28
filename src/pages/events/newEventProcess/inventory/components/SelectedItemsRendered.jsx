@@ -47,8 +47,8 @@ const SelectedItemsRendered = ({ selectedItem, removeItemSelected }) => {
                 key={`${item._id}${index}`}
               >
                 <CheckIcon />
-                &nbsp;{item.item_group}
-                {"      "}&nbsp;Qty: {item.quantity}
+                &nbsp;{item.item_group}&nbsp;{"-"}&nbsp; 
+                {item.location}&nbsp;{"-"}&nbsp;Qty: {item.quantity}
               </Tag>
             );
           })}
