@@ -2,12 +2,11 @@ import {
   Grid,
 } from "@mui/material";
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import { useSelector } from "react-redux";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 
 /**
  * HeaderInventaryComponent
@@ -28,11 +27,7 @@ const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
   setAddInventoryFromXLSXFileModal,
-  setOpenCreateLocationModal,
 }) => {
-  const {
-    isAdmin
-  } = useStaffRoleAndLocations();
   const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
   const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
@@ -79,24 +74,10 @@ const HeaderInventaryComponent = ({
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
         )}
-        {isAdmin && (
-          <BlueButtonComponent
-            title={"Create Location"}
-            styles={{ with: "100%" }}
-            buttonType="button"
-            titleStyles={{
-              textTransform: "none",
-              with: "100%",
-              gap: "2px",
-            }}
-            func={() => setOpenCreateLocationModal(true)}
-          />
-        )}
-
         {canUpdate && (
           <Link to="/inventory/edit-group">
             <LightBlueButtonComponent
-              title={"Update a group of items"}
+              title={"Update inventory"}
               styles={{ with: "100%" }}
               buttonType="button"
               titleStyles={{
@@ -113,7 +94,7 @@ const HeaderInventaryComponent = ({
           <>
             <Link to="/inventory/new-bulk-items">
               <BlueButtonComponent
-                title={"Add a group of items"}
+                title={"Add inventory"}
                 styles={{ with: "100%" }}
                 // icon={
                 //   <WhiteCirclePlusIcon
