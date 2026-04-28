@@ -9,6 +9,7 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import Input from "../../../../../components/UX/inputs/Input";
 import useBulkActionLogic from "../../add/useBulkActionLogic";
 import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
+import { uniqueId } from "lodash";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
@@ -22,9 +23,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
 }) => {
   const { user } = useBulkActionLogic()
   // State for the dynamic input fields for a single device
-  const [nextId, setNextId] = useState(2);
+  const uuid = uniqueId()
+  const [, setNextId] = useState(uuid);
   const [identifiers, setIdentifiers] = useState([
-    { id: 1, type: "Serial number", value: "" },
+    { id: uuid, type: "Serial number", value: "" },
   ]);
   // State for the list of devices added
   const [devices, setDevices] = useState([]);
@@ -59,7 +61,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
         })
       })
       if (templ.length > 0) {
-        setNextId(templ.length + 1)
+        setNextId(uuid)
         return setIdentifiers([
           ...templ,
           // { id: (templ.length + 1), type: "Serial number", value: "" }
@@ -67,9 +69,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
       }
       setIdentifiers([
         ...identifiers,
-        { id: (nextId + 1), type: "Serial number", value: "" }
+        { id: uuid, type: "Serial number", value: "" }
       ])
-      return setNextId(nextId + 1)
+      return setNextId(uuid)
     }
     return alert("No item found with that serial number in category " + generalInfoForSelection.category_name)
   }
@@ -77,9 +79,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
     checkAndRetrieveExistingInformationItem()
     setIdentifiers([
       ...identifiers,
-      { id: nextId, type: "Serial number", value: "" },
+      { id: uuid, type: "Serial number", value: "" },
     ])
-    setNextId(identifiers.length + 1)
+    setNextId(uuid)
   };
 
   const handleAddDevice = (e) => {
@@ -124,8 +126,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
-    setNextId(2);
-    setIdentifiers([{ id: 1, type: "Serial number", value: "" }]);
+    setNextId(uuid);
+    setIdentifiers([{ id: uuid, type: "Serial number", value: "" }]);
     setCheckedIndex([]);
   };
 
@@ -198,7 +200,17 @@ const SerialNumberAndMoreInfoComponentForm = ({
         </Typography>
 
         <Grid container>
-          <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
+          <Grid margin={0} item xs={12} sm={3} md={1} lg={1}>
+            <Typography
+              variant="caption"
+              display="block"
+              color="text.secondary"
+              sx={{ fontWeight: "600" }}
+            >
+              Primary key *
+            </Typography>
+          </Grid>
+          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
             <Typography
               variant="caption"
               display="block"
@@ -208,7 +220,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
               Identifier *
             </Typography>
           </Grid>
-          <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
             <Typography
               variant="caption"
               display="block"
@@ -219,69 +231,66 @@ const SerialNumberAndMoreInfoComponentForm = ({
             </Typography>
           </Grid>
         </Grid>
-        {identifiers.map((identifier, index) => (
-          <Grid
-            container
-            spacing={1}
-            key={identifier.id}
-            sx={{ margin: 0, alignItems: "center" }}
-          >
+        <div style={{ width: "100%" }}>
+          {identifiers.map((identifier, index) => (
             <Grid
-              display={"flex"}
-              margin={0}
-              item
-              xs={12}
-              sm={3}
-              md={2.5}
-              lg={1.5}
+              container
+              spacing={1}
+              key={identifier.id}
+              sx={{ margin: 0, alignItems: "center", spacing: 0.5 }}
             >
-              <Checkbox
-                checked={checkedIndex.includes(index)}
-                onChange={() => checkedPriorityKey(index)}
-              />
-              <AutoComplete
-                style={{ ...style, margin: "0 0 0 0.2rem" }}
-                options={options.map((item) => ({
-                  label: item.label,
-                  value: item.label,
-                }))}
-                value={identifier.type}
-                onChange={(newValue) => {
-                  handleIdentifierChange(identifier.id, "type", newValue);
-                }}
-                placeholder="Select type"
-              />
-            </Grid>
-            <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
-              <Input
-                placeholder="e.g. 3241684981556474651"
-                value={identifier.value}
-                onChange={(e) =>
-                  handleIdentifierChange(identifier.id, "value", e.target.value)
-                }
-                onKeyDown={handleKeyDown}
-                style={{ width: "100%", margin: 0 }}
-                allowClear
-              />
-              <BlueButtonComponent
-                title={<WhiteCirclePlusIcon />}
-                buttonType="button"
-                func={addIdentifier}
-              />
-              {identifiers.length > 1 && (
-                <DangerButtonComponent
-                  title="Remove"
-                  func={() => removeField(identifier.id)}
+              <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
+                <Checkbox
+                  checked={checkedIndex.includes(index)}
+                  onChange={() => checkedPriorityKey(index)}
                 />
-              )}
+              </Grid>
+              <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
+                <AutoComplete
+                  style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
+                  options={options.map((item) => ({
+                    label: item.label,
+                    value: item.label,
+                  }))}
+                  value={identifier.type}
+                  onChange={(newValue) => {
+                    handleIdentifierChange(identifier.id, "type", newValue);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Select type"
+                />
+              </Grid>
+              <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+                <Input
+                  placeholder="e.g. 3241684981556474651"
+                  value={identifier.value}
+                  onChange={(e) =>
+                    handleIdentifierChange(identifier.id, "value", e.target.value)
+                  }
+                  style={{ width: "100%", margin: "0 0 0 -8px" }}
+                  onKeyDown={handleKeyDown}
+                  allowClear
+                />
+                <BlueButtonComponent
+                  title={<WhiteCirclePlusIcon />}
+                  buttonType="button"
+                  func={addIdentifier}
+                />
+                {identifiers.length > 1 && (
+                  <DangerButtonComponent
+                    title="Remove"
+                    func={() => removeField(identifier.id)}
+                  />
+                )}
+              </Grid>
             </Grid>
-          </Grid>
-        ))}
+          ))}
+        </div>
 
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mt: -3, mb: 2 }}
+          sx={{ mt: 3, mb: 2 }}
         >
           You can use a scanner to input the number. You can also add more
           identifiers.
