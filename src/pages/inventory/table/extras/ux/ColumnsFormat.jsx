@@ -7,7 +7,9 @@ import {
 import { Avatar } from "antd";
 import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
+import PillUIComponent from "../../../../../components/UX/Chip/PillUIComponent";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
 
 const ColumnsFormat = ({
   dictionary,
@@ -95,47 +97,12 @@ const ColumnsFormat = ({
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
-      render: (warehouse) => {
-        // if (record.enableAssignFeature === 1) {
+      render: (warehouse, record) => {
         return (
-          <span
-            style={{
-              ...cellStyle,
-              borderRadius: "16px",
-              justifyContent: "center",
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              background: `${
-                warehouse === 0
-                  ? "var(--blue-50, #EFF8FF)"
-                  : "var(--success-50, #ECFDF3)"
-              }`,
-              width: "fit-content",
-            }}
-          >
-            <p
-              style={{
-                color: `${
-                  warehouse === 0
-                    ? "var(--blue-700, #175CD3)"
-                    : "var(--success-700, #027A48)"
-                }`,
-                textTransform: "capitalize",
-                width: "100%",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <Icon
-                icon="tabler:point-filled"
-                rotate={3}
-                color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-              />
-              {warehouse === 0 ? "In Use" : "In Stock"}
-            </p>
-          </span>
+          <PillUIComponent
+            color={warehouse === 0 ? "brand" : "success"}
+            size="sm"
+          >{warehouseDicStatus[record.data.logistic_status]}</PillUIComponent>
         );
       },
     },
@@ -155,20 +122,18 @@ const ColumnsFormat = ({
             display: "flex",
             padding: "2px 8px",
             alignItems: "center",
-            background: `${
-              ownership === "Permanent"
+            background: `${ownership === "Permanent"
                 ? "var(--blue-50, #EFF8FF)"
                 : "var(--success-50, #ECFDF3)"
-            }`,
+              }`,
             width: "fit-content",
           }}
         >
           <Typography
-            color={`${
-              ownership === "Permanent"
+            color={`${ownership === "Permanent"
                 ? "var(--blue-700, #175CD3)"
                 : "var(--success-700, #027A48)"
-            }`}
+              }`}
             style={{
               ...Subtitle,
               width: "100%",
