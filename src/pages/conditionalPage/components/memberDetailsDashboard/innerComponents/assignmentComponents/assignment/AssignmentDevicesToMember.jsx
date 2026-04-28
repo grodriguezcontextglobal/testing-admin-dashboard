@@ -56,22 +56,24 @@ const AssignmentDevicesToMember = () => {
     setValue("expectedReturnDate", dateToUse);
   }, [dateToUse, setValue]);
 
+  const referenceDateTime = useMemo(() => new Date().getTime(), []);
+
   const { role, locationsAssignPermission } = useStaffRoleAndLocations();
-  const bodyFetchRequest = () => {
-    if (role === "0" || role === 0) {
-      return {
-        company_id: user.sqlInfo.company_id,
-        warehouse: 1,
-        enableAssignFeature: 1,
-      };
-    }
-    return {
-      company_id: user.sqlInfo.company_id,
-      warehouse: 1,
-      enableAssignFeature: 1,
-      location: locationsAssignPermission,
-    };
-  };
+  // const bodyFetchRequest = () => {
+  //   if (role === "0" || role === 0) {
+  //     return {
+  //       company_id: user.sqlInfo.company_id,
+  //       warehouse: 1,
+  //       enableAssignFeature: 1,
+  //     };
+  //   }
+  //   return {
+  //     company_id: user.sqlInfo.company_id,
+  //     warehouse: 1,
+  //     enableAssignFeature: 1,
+  //     location: locationsAssignPermission,
+  //   };
+  // };
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
@@ -223,9 +225,9 @@ const AssignmentDevicesToMember = () => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
         event_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         venue_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -252,7 +254,7 @@ const AssignmentDevicesToMember = () => {
         activity: true,
         comment: "No comment",
         eventSelected: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         provider: user.company,
         type: db[index].item_group,
         company: user.companyData.id,
@@ -305,7 +307,7 @@ const AssignmentDevicesToMember = () => {
   };
   const createEventNoSQL = async (props) => {
     const eventName = `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-      } / ${new Date().toLocaleDateString()}`;
+      } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`;
     const eventLink = eventName.replace(/ /g, "%20");
     const eventFormat = {
       user: user.email,
@@ -365,6 +367,7 @@ const AssignmentDevicesToMember = () => {
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       type: "lease",
       company_id: user.companyData.id,
+      contract_for: "member",
     };
     const newEventInfo = await devitrakApi.post(
       "/event/create-event",
