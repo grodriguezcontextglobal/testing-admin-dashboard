@@ -13,11 +13,12 @@ import {
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { renderFields } from "./BulkItemsFields";
+// import { renderFields } from "./BulkItemsFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
+import { renderFields } from "./EditBulkFields";
 
 const EditBulkForm = ({
   acceptImage,
