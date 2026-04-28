@@ -41,6 +41,8 @@ const MainBody = ({
   setValue,
   staff,
   triggerAddingAdminStaff,
+  register,
+  handleSubmit,
 }) => {
   const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
     useStaffRoleAndLocations();
@@ -115,6 +117,8 @@ const MainBody = ({
                 handleAddingNewItemToDeviceSetupEvent={
                   handleAddingNewItemToDeviceSetupEvent
                 }
+                register={register}
+                handleSubmit={handleSubmit}
               />
             ) : (
               <NoMerchantService
@@ -123,6 +127,8 @@ const MainBody = ({
                 handleAddingNewItemToDeviceSetupEvent={
                   handleAddingNewItemToDeviceSetupEvent
                 }
+                register={register}
+                handleSubmit={handleSubmit}
               />
             )}
             <SelectedItemsRendered
