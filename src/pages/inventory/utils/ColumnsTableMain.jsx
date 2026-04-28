@@ -8,6 +8,7 @@ import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
 import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
+import { warehouseDicStatus } from "./warehouseDicStatus";
 // import Chip from "../../../components/UX/Chip/Chip";
 const columnsTableMain = ({
   groupingByDeviceType,
@@ -109,40 +110,39 @@ const columnsTableMain = ({
     },
     {
       title: "Status",
-      dataIndex: "warehouse",
-      key: "warehouse",
+      // dataIndex: "logistic_status",
+      // key: "logistic_status",
       showSorterTooltip: { target: "full-header" },
       filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
       filters: [
         {
           text: "In Stock",
-          value: 1,
+          value: "in-stock",
         },
         {
-          text: "In Use",
-          value: 0,
+          text: "In Transit",
+          value: "in-transit",
+        },
+        {
+          text: "Reserved",
+          value: "in-reserved",
         },
       ],
-      onFilter: (value, record) => record.warehouse === value,
+      onFilter: (value, record) => record.data.logistic_status === value,
       sorter: {
-        compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
+        compare: (a, b) => ("" + a.data.logistic_status).localeCompare(b.data.logistic_status),
       },
       responsive: responsive[2],
-      render: (warehouse) => {
+      render: (record) => {
         return (
-          // <Chip
-          //   color={warehouse === 0 ? "warning" : "success"}
-          //   size="sm"
-          //   outlined={warehouse === 0 ? true : false}
-          //   filled={warehouse === 0 ? false : true}
-          // />
           <PillUIComponent
-            color={warehouse === 0 ? "brand" : "success"}
+            color={record.data.logistic_status !== "in-stock" ? "brand" : "success"}
             size="sm"
           >
             <Icon icon="tabler:point-filled" rotate={3} />
             <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
-              {warehouse === 0 ? "In Use" : "In Stock"}
+              {/* {warehouseDicStatus[record.data.logistic_status]} */}
+              {warehouseDicStatus[record.data.logistic_status]}
             </span>
           </PillUIComponent>
         );
