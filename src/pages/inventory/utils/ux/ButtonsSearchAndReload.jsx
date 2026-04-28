@@ -2,7 +2,7 @@ import { Grid } from "@mui/material";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 const ButtonsSearchAndReload = ({
-  setOpenAdvanceSearchModal,
+  // setOpenAdvanceSearchModal,
   refetchingQueriesFn,
   locationsQuery,
 }) => {
@@ -17,20 +17,6 @@ const ButtonsSearchAndReload = ({
       md
       lg
     >
-      <GrayButtonComponent
-        title={"Forecast Inventory"}
-        func={() => {
-          setOpenAdvanceSearchModal(true);
-        }}
-        styles={{
-          width: "100%",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        titleStyles={{
-          textTransform: "none",
-        }}
-      />
       <GrayButtonComponent
         title={"Reload"}
         func={() => {
