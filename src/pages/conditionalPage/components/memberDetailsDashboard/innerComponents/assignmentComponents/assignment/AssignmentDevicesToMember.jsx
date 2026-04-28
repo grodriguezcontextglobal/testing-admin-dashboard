@@ -84,6 +84,7 @@ const AssignmentDevicesToMember = () => {
           warehouse: 1,
           enableAssignFeature: 1,
           location: locationsAssignPermission,
+          logistic_status:"in-stock"
         }
       ),
     enabled: !!user.sqlInfo.company_id,
