@@ -1,11 +1,12 @@
 import { Grid, Typography } from "@mui/material";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
-import { Divider } from "antd";
-import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
+// import { Divider } from "antd";
+// import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -15,8 +16,8 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
-  refetchingQueriesFn,
-  locationsQuery,
+  // refetchingQueriesFn,
+  // locationsQuery,
   setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
@@ -82,8 +83,8 @@ const InventorySearchBar = ({
           )}
         </div>
       </div>
-      <Grid justifyContent={"flex-start"} gap={1} container>
-        <Grid item xs={12} sm={12} md={12} lg={12}>
+      <Grid display={"flex"} spacing={1} container>
+        <Grid item xs={12} sm={12} md={8} lg={8}>
           <form
             style={{ width: "100%" }}
             id="search-form"
@@ -101,12 +102,29 @@ const InventorySearchBar = ({
             />
           </form>
         </Grid>
-        <Divider />
-        <ButtonsSearchAndReload
+        <Grid item xs={12} sm={12} md={4} lg={4}>
+
+          <GrayButtonComponent
+            title={"Forecast Inventory"}
+            func={() => {
+              setOpenAdvanceSearchModal(true);
+            }}
+            styles={{
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+            titleStyles={{
+              textTransform: "none",
+            }}
+          />
+        </Grid>
+        {/* <Divider /> */}
+        {/* <ButtonsSearchAndReload
           setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
           refetchingQueriesFn={refetchingQueriesFn}
           locationsQuery={locationsQuery}
-        />
+        /> */}
       </Grid>
     </Grid>
   );
