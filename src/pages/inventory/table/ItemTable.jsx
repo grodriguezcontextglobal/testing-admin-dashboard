@@ -69,7 +69,7 @@ const ItemTable = ({
   // total,
   // searchedResult,
   dataFilterOptions,
-  // refreshFn,
+  setOpenCreateLocationModal,
   setTypePerLocationInfoModal,
   setOpenDetails,
   allowedLocations,
@@ -209,6 +209,7 @@ const ItemTable = ({
       const itemId = data.item_id || data.id;
 
       if (itemId) {
+        // console.log("itemId",itemId)
         const row = {
           key: itemId,
           item_id: itemId,
@@ -227,6 +228,7 @@ const ItemTable = ({
           condition: data.status ?? null,
           assignedToStaffMember:
             data.usage && data.usage.length > 0 ? data.usage : null,
+            data: data,
         };
         rowMap.set(itemId, row);
       }
@@ -405,6 +407,7 @@ const ItemTable = ({
               setTypePerLocationInfoModal={setTypePerLocationInfoModal}
               setOpenDetails={setOpenDetails}
               allowedLocations={allowedLocations}
+              setOpenCreateLocationModal={setOpenCreateLocationModal}
             />
           </Grid>
         <Grid
