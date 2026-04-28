@@ -136,13 +136,12 @@ const columnsTableMain = ({
       render: (record) => {
         return (
           <PillUIComponent
-            color={record.data.logistic_status !== "in-stock" ? "brand" : "success"}
+            color={record?.data?.logistic_status !== "in-stock" ? "brand" : "success"}
             size="sm"
           >
             <Icon icon="tabler:point-filled" rotate={3} />
             <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
-              {/* {warehouseDicStatus[record.data.logistic_status]} */}
-              {warehouseDicStatus[record.data.logistic_status]}
+              {warehouseDicStatus[record?.data?.logistic_status]}
             </span>
           </PillUIComponent>
         );
