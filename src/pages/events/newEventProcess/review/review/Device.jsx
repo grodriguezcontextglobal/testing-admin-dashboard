@@ -1,13 +1,8 @@
 import { Grid, InputLabel } from "@mui/material";
-import { Button, Checkbox, Table, Tooltip } from "antd";
+import { Checkbox, Table, Tooltip } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { BorderedCloseIcon } from "../../../../../components/icons/BorderedCloseIcon";
-import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
@@ -185,8 +180,8 @@ const Device = () => {
     fontWeight: 400,
   };
 
-  const buttonStyling = ({ index }) => {
-    const reference = checkConsumerUses.some((element) => element === index);
+  const buttonStyling = () => {
+    // const reference = checkConsumerUses.some((element) => element === index);
     let p = {};
     let button = {};
     let fill = null;
@@ -200,8 +195,7 @@ const Device = () => {
     return { p, button, fill };
   };
 
-  const buttonContainerStyling = ({ index }) => {
-    const reference = container.some((element) => element === index);
+  const buttonContainerStyling = () => {
     let p = {};
     let button = {};
     let fill = null;
