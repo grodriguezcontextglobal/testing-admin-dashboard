@@ -15,7 +15,7 @@ import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
 
 const FormDocuments = () => {
   // eslint-disable-next-line no-unused-vars
-  const { eventInfoDetail } = useSelector((state) => state.event);
+  const { eventInfoDetail, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   // const [activeTab, setActiveTab] = useState(1);
   // const [selectedDocuments, setSelectedDocuments] = useState([]);
@@ -202,7 +202,7 @@ const FormDocuments = () => {
     },
   ];
 
-  const nextStep = () => {
+  const nextStep = async () => {
     // Update the store with all assigned documents
     dispatch(
       onAddEventInfoDetail({
@@ -210,7 +210,12 @@ const FormDocuments = () => {
         legal_documents_list: dataToDisplay,
       })
     );
+    // Update the event document list
     if (dataToDisplay.length > 0) {
+      await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
+        legal_contract: dataToDisplay.length > 0,
+        legal_documents_list: dataToDisplay,
+      });
       message.success("Documents updated successfully");
     }
     // Navigate to next step or perform next action
