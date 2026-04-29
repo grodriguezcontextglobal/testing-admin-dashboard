@@ -168,6 +168,7 @@ const AssignmentFromExistingInventory = () => {
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
+      logistic_status: "assigned",
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       category_name: props.category_name,

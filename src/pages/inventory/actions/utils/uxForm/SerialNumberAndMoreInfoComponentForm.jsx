@@ -87,11 +87,11 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const serialNumber = {
       [primaryKey]: innerObject,
     };
-    const newMoreInfo = [...moreInfo, { [primaryKey]: innerObject }];
+    const newMoreInfo = [...(moreInfo ?? []), { [primaryKey]: innerObject }];
     // Integration
     setDevices([...devices, { id: Date.now(), data: serialNumber }]);
     setMoreInfo(newMoreInfo);
-    const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
+    const newScannedSerialNumbers = [...(scannedSerialNumbers ?? []), primaryKey];
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
     setNextId(uuid);
@@ -117,13 +117,13 @@ const SerialNumberAndMoreInfoComponentForm = ({
 
     // Filter the moreInfo list to remove the corresponding entry
     // eslint-disable-next-line no-prototype-builtins
-    const newMoreInfo = moreInfo.filter(
+    const newMoreInfo = (moreInfo ?? []).filter(
       // eslint-disable-next-line no-prototype-builtins
       (info) => !info.hasOwnProperty(primaryKey)
     );
     setMoreInfo(newMoreInfo);
     setScannedSerialNumbers(
-      scannedSerialNumbers.filter((serial) => serial !== primaryKey)
+      (scannedSerialNumbers ?? []).filter((serial) => serial !== primaryKey)
     );
   };
 

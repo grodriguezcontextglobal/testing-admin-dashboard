@@ -15,7 +15,6 @@ const RenderingItemsAddedForStore = ({ devices, handleRemoveDevice }) => {
                   <Chip
                     label={Object.keys(device.data)[0]}
                     onDelete={() => handleRemoveDevice(device.id)}
-                    variant="outlined"
                     style={{
                       backgroundColor:"transparent",// "rgba(40, 199, 111, 0.12)",
                       color: "rgb(40, 199, 111)",

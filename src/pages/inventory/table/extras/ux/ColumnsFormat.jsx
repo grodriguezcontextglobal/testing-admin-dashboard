@@ -10,6 +10,7 @@ import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrow
 import PillUIComponent from "../../../../../components/UX/Chip/PillUIComponent";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
+import { getLogisticStatusColor } from "../../../utils/logisticStatusConfig";
 
 const ColumnsFormat = ({
   dictionary,
@@ -98,11 +99,12 @@ const ColumnsFormat = ({
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
       render: (warehouse, record) => {
+        const status = record?.data?.logistic_status;
         return (
           <PillUIComponent
-            color={record?.data?.logistic_status !== "in-stock" ? "brand" : "success"}
+            color={getLogisticStatusColor(status)}
             size="sm"
-          >{warehouseDicStatus[record?.data?.logistic_status] || ""}</PillUIComponent>
+          >{warehouseDicStatus[status] || ""}</PillUIComponent>
         );
       },
     },
@@ -114,43 +116,15 @@ const ColumnsFormat = ({
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
       render: (ownership) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${ownership === "Permanent"
-                ? "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-              }`,
-            width: "fit-content",
-          }}
+        <PillUIComponent
+          color={ownership === "Permanent" ? "brand" : "success"}
+          size="sm"
         >
-          <Typography
-            color={`${ownership === "Permanent"
-                ? "var(--blue-700, #175CD3)"
-                : "var(--success-700, #027A48)"
-              }`}
-            style={{
-              ...Subtitle,
-              width: "100%",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${ownership === "Permanent" ? "#2E90FA" : "#12B76A"}`}
-            />
+          <Icon icon="tabler:point-filled" rotate={3} />
+          <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
             {dictionary[ownership]}
-          </Typography>
-        </span>
+          </span>
+        </PillUIComponent>
       ),
     },
     {
