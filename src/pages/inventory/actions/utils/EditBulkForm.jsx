@@ -1,5 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Checkbox, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
@@ -13,12 +13,11 @@ import {
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-// import { renderFields } from "./BulkItemsFields";
+import { renderFields } from "./BulkItemsFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
-import { renderFields } from "./EditBulkFields";
 
 const EditBulkForm = ({
   acceptImage,
@@ -38,6 +37,7 @@ const EditBulkForm = ({
   labeling,
   loadingStatus,
   manuallyAddingSerialNumbers,
+  moreInfo,
   moreInfoDisplay,
   options,
   OutlinedInputStyle,
@@ -48,20 +48,19 @@ const EditBulkForm = ({
   retrieveItemOptions,
   returningDate,
   savingNewItem,
-  itemIdsToUpdate,
-  setItemIdsToUpdate,
+  scannedSerialNumbers,
   setAddSerialNumberField,
   setImageUploadedValue,
+  setMoreInfo,
   setOpenScannedItemView,
   setOpenScanningModal,
   setReturningDate,
+  setScannedSerialNumbers,
   setSubLocationsSubmitted,
   subLocationsOptions,
   subLocationsSubmitted,
   suppliersOptions,
   watch,
-  updateAll,
-  setUpdateAll,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -79,7 +78,7 @@ const EditBulkForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(savingNewItem)} id="updateBulkItems">
+    <form onSubmit={handleSubmit(savingNewItem)} id="updateBulkItems"> 
       <Grid container spacing={1}>
         {renderFields({
           retrieveItemOptions,
@@ -196,9 +195,9 @@ const EditBulkForm = ({
                     textAlign: "left",
                     display:
                       imageUploadedValue ||
-                        String(watch("image_url")).startsWith(
-                          "https://res.cloudinary",
-                        )
+                      String(watch("image_url")).startsWith(
+                        "https://res.cloudinary",
+                      )
                         ? "flex"
                         : "none",
                   }}
@@ -244,16 +243,17 @@ const EditBulkForm = ({
                     </Typography>
                   </Tooltip>
                 </InputLabel>
-                {item.htmlElement.length < 1 ? (
+                {(item.htmlElement?.length ?? 0) < 1 ? (
                   <Controller
                     control={control}
                     name={item.name}
                     rules={
                       item.required
                         ? {
-                          required: `${item.label || "This field"
+                            required: `${
+                              item.label || "This field"
                             } is required`,
-                        }
+                          }
                         : {}
                     }
                     render={({ field: { value, onChange } }) => {
@@ -293,7 +293,7 @@ const EditBulkForm = ({
                               style={{
                                 display:
                                   item.name === "sub_location" &&
-                                    subLocationsSubmitted.length > 0
+                                  (subLocationsSubmitted?.length ?? 0) > 0
                                     ? "block"
                                     : "none",
                                 width: "100%",
@@ -363,26 +363,6 @@ const EditBulkForm = ({
           }
         })}
       </Grid>
-      <Checkbox
-        checked={updateAll}
-        value={updateAll}
-        onChange={() => setUpdateAll(!updateAll)}
-        style={{
-          fontFamily: "Inter",
-          fontSize: "18px",
-          lineHeight: "28px",
-          width: "-webkit-fill-available",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          padding: "0px 0px 0px 12px",
-          marginLeft: "-15px"
-        }}
-      >
-        <p>
-          &nbsp;Update all inventory
-        </p>
-      </Checkbox>
       <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
@@ -390,21 +370,18 @@ const EditBulkForm = ({
           fontSize: "14px",
           width: "100%",
         }}
-        updateAll={updateAll}
-        itemIdsToUpdate={itemIdsToUpdate}
-        setItemIdsToUpdate={setItemIdsToUpdate}
+        moreInfo={moreInfo}
+        scannedSerialNumbers={scannedSerialNumbers}
+        setMoreInfo={setMoreInfo}
+        setScannedSerialNumbers={setScannedSerialNumbers}
         generalInfoForSelection={generalInfoForSelection}
       />
       <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
-        scannedSerialNumbers={itemIdsToUpdate}
-        primaryButtonTitle={
-          itemIdsToUpdate.length > 1
-            ? `Update ${itemIdsToUpdate.length} items`
-            : `Update item`
-        }
+        scannedSerialNumbers={scannedSerialNumbers}
+        primaryButtonTitle={(scannedSerialNumbers?.length ?? 0) > 1 ? `Update ${scannedSerialNumbers.length} items` : `Update item`}
         formId="updateBulkItems"
       />
     </form>
