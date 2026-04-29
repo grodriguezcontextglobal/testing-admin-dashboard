@@ -112,6 +112,7 @@ const EditGroup = () => {
         loadingStatus={loadingStatus}
         manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
         moreInfo={moreInfo}
+        setMoreInfo={setMoreInfo}
         moreInfoDisplay={moreInfoDisplay}
         options={options}
         OutlinedInputStyle={OutlinedInputStyle}
@@ -142,7 +143,6 @@ const EditGroup = () => {
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
-        setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
         updateAll={updateAll}

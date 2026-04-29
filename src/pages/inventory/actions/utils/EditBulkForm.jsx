@@ -48,7 +48,8 @@ const EditBulkForm = ({
   retrieveItemOptions,
   returningDate,
   savingNewItem,
-  scannedSerialNumbers,
+  itemIdsToUpdate,
+  setItemIdsToUpdate,
   setAddSerialNumberField,
   setImageUploadedValue,
   setMoreInfo,
@@ -370,18 +371,21 @@ const EditBulkForm = ({
           fontSize: "14px",
           width: "100%",
         }}
-        moreInfo={moreInfo}
-        scannedSerialNumbers={scannedSerialNumbers}
-        setMoreInfo={setMoreInfo}
-        setScannedSerialNumbers={setScannedSerialNumbers}
+        updateAll={updateAll}
+        itemIdsToUpdate={itemIdsToUpdate}
+        setItemIdsToUpdate={setItemIdsToUpdate}
         generalInfoForSelection={generalInfoForSelection}
       />
       <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
-        scannedSerialNumbers={scannedSerialNumbers}
-        primaryButtonTitle={(scannedSerialNumbers?.length ?? 0) > 1 ? `Update ${scannedSerialNumbers.length} items` : `Update item`}
+        scannedSerialNumbers={itemIdsToUpdate}
+        primaryButtonTitle={
+          itemIdsToUpdate.length > 1
+            ? `Update ${itemIdsToUpdate.length} items`
+            : `Update item`
+        }
         formId="updateBulkItems"
       />
     </form>

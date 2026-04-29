@@ -260,7 +260,6 @@ const useAutomaticallyAvailableItemsToEvent = ({
       });
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: 0,
-        logistic_status: "reserved",
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
         startingNumber: database[0].serial_number,

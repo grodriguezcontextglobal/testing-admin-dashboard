@@ -64,11 +64,7 @@ export const bulkItemUpdateAlphanumeric = async ({
       setValue(key, "");
     });
     setScannedSerialNumbers([]);
-    openNotificationWithIcon(
-      "success",
-      "Items updated",
-      "New group of items were created and stored in database."
-    );
+    openNotificationWithIcon("Items updated. New group of items were created and stored in database.");
     setLoadingStatus(false);
     await clearCacheMemory(
       `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
@@ -135,9 +131,7 @@ export const bulkItemUpdateSequential = async ({
     setValue(key, "");
   });
   openNotificationWithIcon(
-    "success",
-    "Items updated successfully",
-    "New group of items were created and stored in database."
+    "Items updated successfully. New group of items were created and stored in database."
   );
   setLoadingStatus(false);
   await clearCacheMemory(
