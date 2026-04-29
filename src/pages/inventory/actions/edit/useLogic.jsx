@@ -75,6 +75,7 @@ const useLogic = () => {
       ),
     },
   ]);
+  const [generalInfoForSelection, setGeneralInfoForSelection] = useState({})
   const { user } = useSelector((state) => state.admin);
   const {
     register,
@@ -113,23 +114,23 @@ const useLogic = () => {
     },
   });
 
-  const sequencialNumbericUpdateItemMutation = useMutation({
-    mutationFn: (template) =>
-      devitrakApi.post(
-        "/db_company/update-items-based-on-serial-number",
-        template,
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        key: ["listOfItemsInStock"],
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        key: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-      });
-    },
-  });
+  // const sequencialNumbericUpdateItemMutation = useMutation({
+  //   mutationFn: (template) =>
+  //     devitrakApi.post(
+  //       "/db_company/update-items-based-on-serial-number",
+  //       template,
+  //     ),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({
+  //       key: ["listOfItemsInStock"],
+  //       exact: true,
+  //     });
+  //     queryClient.invalidateQueries({
+  //       key: ["ItemsInInventoryCheckingQuery"],
+  //       exact: true,
+  //     });
+  //   },
+  // });
 
   const updateAllItemsMutation = useMutation({
     mutationFn: (template) =>
@@ -304,24 +305,6 @@ const useLogic = () => {
           dicSuppliers,
         });
       } 
-      else {
-        await bulkItemUpdateSequential({
-          data,
-          user,
-          navigate,
-          openNotificationWithIcon,
-          setLoadingStatus,
-          setValue,
-          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-          moreInfo,
-          formatDate,
-          returningDate,
-          subLocationsSubmitted,
-          originalTemplate: refTemplateToUpdate.current,
-          sequencialNumbericUpdateItemMutation,
-          dicSuppliers,
-        });
-      }
       return setLoadingStatus(false);
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
@@ -349,8 +332,8 @@ const useLogic = () => {
       return setValue(
         "quantity",
         Number(watch("max_serial_number")) -
-          Number(watch("min_serial_number")) +
-          1,
+        Number(watch("min_serial_number")) +
+        1,
       );
     return 0; // Alphanumeric
   }, [
@@ -513,6 +496,7 @@ const useLogic = () => {
       const dataToRetrieve = retrieveItemDataSelected().get(
         watch("reference_item_group"),
       );
+      setGeneralInfoForSelection(dataToRetrieve);
       refTemplateToUpdate.current = dataToRetrieve;
       if (Object.entries(dataToRetrieve).length > 0) {
         Object.entries(dataToRetrieve).forEach(([key, value]) => {
@@ -530,15 +514,6 @@ const useLogic = () => {
           if (key === "sub_location" || key === "location") {
             return;
           }
-
-          // if (key === "sub_location") {
-          //   setValue("sub_location", "");
-          //   const checkType =
-          //     typeof value === "string" ? JSON.parse(value) : value;
-          //   if (checkType.length > 0) {
-          //     return setSubLocationsSubmitted([...checkType]);
-          //   }
-          // }
           setValue(key, value);
           setValue("quantity", 0);
           const grouping = groupBy(
@@ -576,6 +551,7 @@ const useLogic = () => {
   ]);
 
   useEffect(() => {
+    console.log(allSerialNumbersOptions)
     const controller = new AbortController();
     if (String(watch("container")).includes("Yes")) {
       setDisplayContainerSplotLimitField(true);
@@ -694,14 +670,6 @@ const useLogic = () => {
     setValue("location", watch("tax_location"));
   }, [watch("tax_location")]);
 
-  useEffect(() => {
-    if (watch("location") !== watch("tax_location")) {
-      alert(
-        "Location and Tax Location are not the same. Are you sure you want to continue?",
-      );
-    }
-  }, [watch("location")]);
-
   return {
     acceptAndGenerateImage,
     addingSubLocation,
@@ -714,11 +682,12 @@ const useLogic = () => {
     displayPreviewImage,
     displaySublocationFields,
     errors,
+    generalInfoForSelection,
     handleDeleteMoreInfo,
     handleMoreInfoPerDevice,
     handleSubmit,
-    imageUrlGenerated,
     imageUploadedValue,
+    imageUrlGenerated,
     isRented,
     keyObject,
     labeling,
