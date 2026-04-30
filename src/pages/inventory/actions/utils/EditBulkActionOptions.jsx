@@ -26,8 +26,6 @@ export const bulkItemUpdateAlphanumeric = async ({
     alert("Please scan at least one serial number.");
     return;
   } else {
-
-
     const template = {
       updateAll: updateAll,
       category_name: data.category_name,
@@ -58,7 +56,6 @@ export const bulkItemUpdateAlphanumeric = async ({
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
     };
-    console.log(template)
     await alphaNumericUpdateItemMutation.mutate(template);
     Object.keys(template).map((key) => {
       setValue(key, "");
