@@ -15,74 +15,77 @@ const options = [{ value: "Serial number", label: "Serial number" }];
 
 const SerialNumberAndMoreInfoComponentForm = ({
   style,
-  updateAll,
   scannedSerialNumbers,
   setScannedSerialNumbers,
   moreInfo,
   setMoreInfo,
   generalInfoForSelection,
+  updateAll,
 }) => {
-  const { user } = useBulkActionLogic();
-  const uuid = uniqueId();
-  const [, setNextId] = useState(uuid);
+  const { user } = useBulkActionLogic()
+  // State for the dynamic input fields for a single device
+  const uuid = uniqueId()
+  const [nextId, setNextId] = useState(uuid);
   const [identifiers, setIdentifiers] = useState([
     { id: uuid, type: "Serial number", value: "" },
   ]);
+  // State for the list of devices added
   const [devices, setDevices] = useState([]);
-  const [itemInfoFound, setItemInfoFound] = useState(null);
-  const [checkedIndex, setCheckedIndex] = useState([]);
 
   const handleIdentifierChange = (id, field, newValue) => {
     setIdentifiers(
       identifiers.map((identifier) =>
         identifier.id === id
           ? { ...identifier, [field]: newValue }
-          : identifier
-      )
+          : identifier,
+      ),
     );
   };
-
+  const [itemInfoFound, setItemInfoFound] = useState(null)
   const checkAndRetrieveExistingInformationItem = async () => {
     const bodyTempl = {
       company_id: user.sqlInfo.company_id,
       serial_number: identifiers[0].value,
-    };
-    if (generalInfoForSelection) {
-      bodyTempl.category_name = generalInfoForSelection.category_name;
-      bodyTempl.item_group = generalInfoForSelection.item_group;
-      bodyTempl.brand = generalInfoForSelection.brand;
     }
-    const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl);
+    if (generalInfoForSelection) {
+      bodyTempl.category_name = generalInfoForSelection.category_name
+      bodyTempl.item_group = generalInfoForSelection.item_group
+      bodyTempl.brand = generalInfoForSelection.brand
+    }
+    const respo = await devitrakApi.post("/db_item/consulting-item", bodyTempl)
     if (respo?.data?.ok && respo?.data?.items?.length > 0) {
-      setItemInfoFound(respo.data.items[0]);
-      const templ = [];
+      setItemInfoFound(respo.data.items[0])
+      const templ = []
       respo.data.items[0].extra_serial_number.forEach((item, index) => {
         templ.push({
-          id: index,
-          type: item.keyObject,
-          value: item.valueObject,
-        });
-      });
+          id: index, type: item.keyObject, value: item.valueObject
+        })
+      })
       if (templ.length > 0) {
-        setNextId(uuid);
-        return setIdentifiers([...templ]);
+        setNextId(uuid)
+        return setIdentifiers([
+          ...templ,
+          { id: uuid, type: "Serial number", value: "" }
+        ])
       }
-      setIdentifiers([...identifiers, { id: uuid, type: "", value: "" }]);
-      return setNextId(uuid);
+      setIdentifiers([
+        ...identifiers,
+        { id: uuid, type: "Serial number", value: "" }
+      ])
+      return setNextId(nextId)
+    } else {
+      setItemInfoFound(null)
+      setIdentifiers([ ])
+      return alert("No item found with that serial number in this category and group information. Please check the category and group and try again.")
     }
-    return alert(
-      "No item found with that serial number in category " +
-        generalInfoForSelection.category_name
-    );
-  };
-
+  }
   const addIdentifier = () => {
-    const newId = uniqueId();
+    checkAndRetrieveExistingInformationItem()
     setIdentifiers([
       ...identifiers,
-      { id: newId, type: "Serial number", value: "" },
-    ]);
-    setNextId(newId);
+      { id: nextId, type: "Serial number", value: "" },
+    ])
+    setNextId(uuid)
   };
 
   const handleAddDevice = (e) => {
@@ -120,15 +123,15 @@ const SerialNumberAndMoreInfoComponentForm = ({
     const serialNumber = {
       [primaryKey]: innerObject,
     };
-    const newMoreInfo = [...(moreInfo ?? []), { [primaryKey]: innerObject }];
+    const newMoreInfo = [...moreInfo, { [primaryKey]: innerObject }];
     // Integration
     setDevices([...devices, { id: Date.now(), data: serialNumber }]);
     setMoreInfo(newMoreInfo);
-    const newScannedSerialNumbers = [...(scannedSerialNumbers ?? []), primaryKey];
+    const newScannedSerialNumbers = [...scannedSerialNumbers, primaryKey];
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
-    setNextId(uuid);
-    setIdentifiers([{ id: uuid, type: "Serial number", value: "" }]);
+    console.log(identifiers)
+    setIdentifiers([ { id: uuid, type: "Serial number", value: "" }]);
     setCheckedIndex([]);
   };
 
@@ -150,16 +153,17 @@ const SerialNumberAndMoreInfoComponentForm = ({
 
     // Filter the moreInfo list to remove the corresponding entry
     // eslint-disable-next-line no-prototype-builtins
-    const newMoreInfo = (moreInfo ?? []).filter(
+    const newMoreInfo = moreInfo.filter(
       // eslint-disable-next-line no-prototype-builtins
       (info) => !info.hasOwnProperty(primaryKey),
     );
     setMoreInfo(newMoreInfo);
     setScannedSerialNumbers(
-      (scannedSerialNumbers ?? []).filter((serial) => serial !== primaryKey),
+      scannedSerialNumbers.filter((serial) => serial !== primaryKey),
     );
   };
 
+  const [checkedIndex, setCheckedIndex] = useState([]);
   const checkedPriorityKey = (index) => {
     if (checkedIndex.includes(index)) {
       return setCheckedIndex(checkedIndex.filter((_, i) => i !== index));
@@ -170,6 +174,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
+      e.preventDefault();
+      checkAndRetrieveExistingInformationItem(e);
+    }
+    if(e.type === "click"){
       e.preventDefault();
       checkAndRetrieveExistingInformationItem(e);
     }
@@ -200,17 +208,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
         </Typography>
 
         <Grid container>
-          <Grid margin={0} item xs={12} sm={3} md={1} lg={1}>
-            <Typography
-              variant="caption"
-              display="block"
-              color="text.secondary"
-              sx={{ fontWeight: "600" }}
-            >
-              Primary key *
-            </Typography>
-          </Grid>
-          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
+          <Grid margin={0} item xs={12} sm={3} md={2.5} lg={1.5}>
             <Typography
               variant="caption"
               display="block"
@@ -220,7 +218,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
               Identifier *
             </Typography>
           </Grid>
-          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
+          <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
             <Typography
               variant="caption"
               display="block"
@@ -231,72 +229,69 @@ const SerialNumberAndMoreInfoComponentForm = ({
             </Typography>
           </Grid>
         </Grid>
-        <div style={{ width: "100%" }}>
-          {identifiers.map((identifier, index) => (
+        {identifiers.map((identifier, index) => (
+          <Grid
+            container
+            spacing={1}
+            key={identifier.id}
+            sx={{ margin: 0, alignItems: "center" }}
+          >
             <Grid
-              container
-              spacing={1}
-              key={identifier.id}
-              sx={{ margin: 0, alignItems: "center", spacing: 0.5 }}
+              display={"flex"}
+              margin={0}
+              item
+              xs={12}
+              sm={3}
+              md={2.5}
+              lg={1.5}
             >
-              <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
-                <Checkbox
-                  checked={checkedIndex.includes(index)}
-                  onChange={() => checkedPriorityKey(index)}
-                  disabled={updateAll}
-                />
-              </Grid>
-              <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
-                <AutoComplete
-                  style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
-                  options={options.map((item) => ({
-                    label: item.label,
-                    value: item.label,
-                  }))}
-                  value={identifier.type}
-                  onChange={(newValue) => {
-                    handleIdentifierChange(identifier.id, "type", newValue);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Select type"
-                  required={!updateAll}
-                  disabled={updateAll}
-                />
-              </Grid>
-              <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
-                <Input
-                  placeholder="e.g. 3241684981556474651"
-                  value={identifier.value}
-                  onChange={(e) =>
-                    handleIdentifierChange(identifier.id, "value", e.target.value)
-                  }
-                  style={{ width: "100%", margin: "0 0 0 -8px" }}
-                  onKeyDown={handleKeyDown}
-                  allowClear
-                  required={!updateAll}
-                  disabled={updateAll}
-                />
-                <BlueButtonComponent
-                  title={<WhiteCirclePlusIcon />}
-                  buttonType="button"
-                  func={addIdentifier}
-                  disabled={updateAll}
-                />
-                {identifiers.length > 1 && (
-                  <DangerButtonComponent
-                    title="Remove"
-                    func={() => removeField(identifier.id)}
-                  />
-                )}
-              </Grid>
+              <Checkbox
+                checked={checkedIndex.includes(index)}
+                onChange={() => checkedPriorityKey(index)}
+              />
+              <AutoComplete
+                style={{ ...style, margin: "0 0 0 0.2rem" }}
+                options={options.map((item) => ({
+                  label: item.label,
+                  value: item.label,
+                }))}
+                value={identifier.type}
+                onChange={(newValue) => {
+                  handleIdentifierChange(identifier.id, "type", newValue);
+                }}
+                placeholder="Select type"
+              />
             </Grid>
-          ))}
-        </div>
+            <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
+              <Input
+                placeholder="e.g. 3241684981556474651"
+                value={identifier.value}
+                onChange={(e) =>
+                  handleIdentifierChange(identifier.id, "value", e.target.value)
+                }
+                // onKeyDown={(e) => index === 0 ? handleKeyDown(e) : addIdentifier()}
+                style={{ width: "100%", margin: 0 }}
+                allowClear
+              />
+              {!updateAll && <BlueButtonComponent
+                title={index === 0 ? "Check" : <WhiteCirclePlusIcon />}
+                buttonType="button"
+                func={(e) => index === 0 ? handleKeyDown(e) : addIdentifier()}
+              />}
+              {index !== 0 && identifiers.length > 1 && (
+                <DangerButtonComponent
+                  title="Remove"
+                  func={() => removeField(identifier.id)}
+                />
+              )}
+            </Grid>
+          </Grid>
+        ))}
 
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mt: 3, mb: 2 }}
+          sx={{ mt: -3, mb: 2 }}
         >
           You can use a scanner to input the number. You can also add more
           identifiers.
@@ -304,7 +299,6 @@ const SerialNumberAndMoreInfoComponentForm = ({
         <GrayButtonComponent
           func={(e) => handleAddDevice(e)}
           title="Add this device"
-          disabled={updateAll}
         />
       </div>
       <Divider />
