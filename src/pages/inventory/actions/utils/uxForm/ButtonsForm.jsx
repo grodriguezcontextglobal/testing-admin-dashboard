@@ -30,13 +30,12 @@ const ButtonsForm = ({
           styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
           buttonType="submit"
           disabled={loadingStatus}
-          formId={formId}
+          form={formId}
         />
         {location.pathname === "/create-event-page/device-detail" ? null : <Link to={backLink} style={{ width: "100%" }}>
           <GrayButtonComponent
             title={secondaryButtonTitle}
             func={() => callFunction()}
-            // icon={<WhiteCirclePlusIcon stroke="#344054" hoverStroke="#fff" />}
             styles={{ width: "100%" }}
             buttonType="reset"
           />
