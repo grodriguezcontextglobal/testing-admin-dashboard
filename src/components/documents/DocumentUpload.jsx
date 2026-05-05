@@ -30,7 +30,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
     formDataToSend.append("created_by", user.uid);
     formDataToSend.append("at_", new Date().toISOString());
     formDataToSend.append("requires_signature", false);
-
+    formDataToSend.append("document_type", "document");
     // Append all form fields
     Object.keys(values).forEach((key) => {
       if (
@@ -47,7 +47,6 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       } else {
         formDataToSend.append(key, values[key]);
       }
-      formDataToSend.append("document_type", "document");
     });
 
     try {
