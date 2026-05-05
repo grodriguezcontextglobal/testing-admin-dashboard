@@ -401,13 +401,15 @@ const EditBulkForm = ({
         updateAll={updateAll}
         setUpdateAll={setUpdateAll}
       />
-      }      <ButtonsForm
+      }
+      <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
         scannedSerialNumbers={scannedSerialNumbers}
         primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Update ${scannedSerialNumbers.length} items` : `Update item`}
         formId="updateBulkItems"
+        updateAll={updateAll}
       />
     </form>
   );
