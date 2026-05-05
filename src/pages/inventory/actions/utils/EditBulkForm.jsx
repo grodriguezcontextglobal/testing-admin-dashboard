@@ -13,11 +13,12 @@ import {
   renderOptional,
   stylingComponents,
 } from "./BulkComponents";
-import { renderFields } from "./BulkItemsFields";
+// import { renderFields } from "./BulkItemsFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
+import { renderFields } from "./EditBulkFields";
 
 const EditBulkForm = ({
   acceptImage,
@@ -385,7 +386,7 @@ const EditBulkForm = ({
           </p>
         </Checkbox>
       </div>
-      <SerialNumberAndMoreInfoComponentForm
+{      <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
           fontFamily: "Inter",
@@ -400,7 +401,7 @@ const EditBulkForm = ({
         updateAll={updateAll}
         setUpdateAll={setUpdateAll}
       />
-      <ButtonsForm
+}      <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
