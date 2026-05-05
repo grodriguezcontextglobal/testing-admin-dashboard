@@ -18,7 +18,11 @@ export const renderFields = ({
 }) => {
   const normalizeOptions = (opts) => {
     if (!Array.isArray(opts)) return [];
-    return opts.map((opt) => (typeof opt === "string" ? { value: opt } : opt));
+    return opts.map((opt) =>
+      typeof opt === "string"
+        ? { value: opt, label: opt }
+        : { ...opt, label: opt.label || opt.value }
+    );
   };
 
   const fields = [
@@ -116,15 +120,15 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: [
+      options: normalizeOptions([
         {
           value: "No - It is not a container",
         },
         {
           value: "Yes - It is a container",
         },
-      ],
-      htmlOption: 0,
+      ]),
+      htmlOption: 3,
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayField: true,
@@ -150,8 +154,8 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: options,
-      htmlOption: 0,
+      options: normalizeOptions(options),
+      htmlOption: 3,
       tooltip: true,
       tooltipMessage: "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
@@ -189,8 +193,8 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: ["YES", "NO"],
-      htmlOption: 0,
+      options: normalizeOptions(["YES", "NO"]),
+      htmlOption: 3,
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
