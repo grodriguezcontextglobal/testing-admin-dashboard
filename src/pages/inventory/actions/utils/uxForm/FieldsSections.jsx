@@ -1,3 +1,4 @@
+import { Radio } from "antd";
 const FieldsSections = ({
   Grid,
   item,
@@ -18,39 +19,60 @@ const FieldsSections = ({
   value,
   onChange,
 }) => {
-  return (
-    <Grid
-      container
-      spacing={1}
-      style={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <Grid item xs={12} sm={12} md={12} lg={12}>
-        <AutoComplete
-          aria-required={true}
-          className="custom-autocomplete" // Add a custom className here
-          variant="outlined"
-          style={{
-            ...AntSelectorStyle,
-            border: errors[item.name]
-              ? "1px solid red"
-              : "solid 0.3 var(--gray600)",
-            fontFamily: "Inter",
-            fontSize: "14px",
-            width: "100%",
-          }}
-          value={value}
-          onChange={(value) => onChange(value)}
-          options={item.options?.map((x) =>
-            typeof x === "string" ? { value: x } : x,
-          )}
-          placeholder={item.placeholder}
-          allowClear
+    const renderComponent = () => {
+        if (item.htmlOption === 3) {
+        return (
+          <Radio.Group
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              style={{ width: "100%" }}
+          >
+                  {item.options.map((option) => (
+                      <Radio key={option.value} value={option.value}>
+                          {option.label}
+                      </Radio>
+                  ))}
+              </Radio.Group>
+          );
+      }
+      return (
+          <AutoComplete
+              aria-required={true}
+            className="custom-autocomplete"
+            variant="outlined"
+            style={{
+                ...AntSelectorStyle,
+                border: errors[item.name]
+                    ? "1px solid red"
+                    : "solid 0.3 var(--gray600)",
+                fontFamily: "Inter",
+                fontSize: "14px",
+                width: "100%",
+            }}
+            value={value}
+            onChange={(value) => onChange(value)}
+            options={item.options?.map((x) =>
+            typeof x === "string" ? { value: x } : x
+        )}
+            placeholder={item.placeholder}
+            allowClear
         />
+        );
+    };
+
+    return (
+        <Grid
+            container
+            spacing={1}
+            style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}
+        >
+            <Grid item xs={12} sm={12} md={12} lg={12}>
+                {renderComponent()}
         {renderingErrorMessage(errors[item.name])}
         {renderingOptionsButtons({
           watch,
