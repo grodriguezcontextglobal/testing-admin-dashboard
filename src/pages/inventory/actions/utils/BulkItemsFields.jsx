@@ -18,15 +18,11 @@ export const renderFields = ({
 }) => {
   const normalizeOptions = (opts) => {
     if (!Array.isArray(opts)) return [];
-    return opts.map((opt) => {
-      if (typeof opt === "string") {
-        return { value: opt, label: opt };
-      }
-      if (opt && typeof opt === 'object' && opt.hasOwnProperty('value') && !opt.hasOwnProperty('label')) {
-        return { ...opt, label: opt.value };
-      }
-      return opt;
-    });
+    return opts.map((opt) =>
+      typeof opt === "string"
+        ? { value: opt, label: opt }
+        : { ...opt, label: opt.label || opt.value }
+    );
   };
 
   const fields = [
@@ -120,7 +116,7 @@ export const renderFields = ({
     {
       name: "container",
       placeholder: "Select container option",
-      label: "Is device a container?",
+      label: "Is this carrying/storage units?",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,

@@ -136,7 +136,7 @@ export const renderFields = ({
     {
       name: "containerSpotLimit",
       placeholder: "e.g. 120 | 250 | 500",
-      label: "Container Spot Limit",
+      label: "Is this carrying/storage units?",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
