@@ -13,13 +13,14 @@ const RenderingItemsAddedForStore = ({ devices, handleRemoveDevice }) => {
               {devices.map((device) => (
                 <Grid item key={device.id}>
                   <Chip
+                  variant="outlined"
                     label={Object.keys(device.data)[0]}
                     onDelete={() => handleRemoveDevice(device.id)}
                     style={{
-                      backgroundColor:"transparent",// "rgba(40, 199, 111, 0.12)",
+                      backgroundColor:"rgba(40, 199, 111, 0.12)",
                       color: "rgb(40, 199, 111)",
                       fontWeight: 600,
-                      padding:"0 0 0 8px"
+                      padding:"0 8px"
                     }}
                   />
                 </Grid>
