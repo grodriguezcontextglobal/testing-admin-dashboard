@@ -386,7 +386,7 @@ const EditBulkForm = ({
           </p>
         </Checkbox>
       </div>
-{      <SerialNumberAndMoreInfoComponentForm
+      {generalInfoForSelection && <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
           fontFamily: "Inter",
@@ -401,7 +401,7 @@ const EditBulkForm = ({
         updateAll={updateAll}
         setUpdateAll={setUpdateAll}
       />
-}      <ButtonsForm
+      }      <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
