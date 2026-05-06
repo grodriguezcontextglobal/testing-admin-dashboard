@@ -24,11 +24,12 @@ import Input from "../../../components/UX/inputs/Input";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import Loading from "../../../components/animation/Loading";
 import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
+import Chip from "../../../components/UX/Chip/Chip";
 const { Title } = Typography;
 const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedLocationObject, setSelectedLocationObject] = useState(null);
-  const [selectedSubLocations, setSelectedSubLocations] = useState([]);
+  const [selectedSubLocations, setSelectedSubLocations] = useState(new Set());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventInventory, setEventInventory] = useState([]);
   const [scannedSerials, setScannedSerials] = useState([]);
@@ -75,7 +76,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       extraItems: [],
     });
 
-    setSelectedEvent(event);
+    setSelectedEvent(event.eventInfoDetail.eventName);
     if (!event || !event.deviceSetup) {
       message.warning("Selected event has no device setup.");
       return;
@@ -198,6 +199,16 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     </>
   );
 
+  const handleItemChange = (value) => {
+    setSelectedSubLocations(value);
+  };
+
+  const itemsToDisplay = useMemo(
+    () =>
+      Array.isArray(subLocations) ? subLocations.map((sub) => ({ label: sub, id: sub })) : []
+      [subLocations],
+  );
+
   const body = (
     <>
       <Row gutter={[16, 16]}>
@@ -205,21 +216,41 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
           {isLoadingLocations ? (
             <Loading />
           ) : (
-            <SelectComponent
-              items={locations.map((loc) => ({
-                label: loc.location,
-                id: loc.id,
-              }))}
-              value={selectedLocationObject}
-              onSelect={(option) => {
-                setSelectedLocation(option?.id || null);
-                setSelectedLocationObject(option);
-                setSelectedSubLocations([]);
-              }}
-              placeholder="Select Location"
-              disabled={!open}
-              label={"Select Location"}
-            />
+            <>
+              <SelectComponent
+                items={locations.map((loc) => ({
+                  label: loc.location,
+                  id: loc.id,
+                }))}
+                value={selectedLocationObject}
+                onSelect={(option) => {
+                  setSelectedLocation(option?.id || null);
+                  setSelectedLocationObject(option);
+                  setSelectedSubLocations(new Set());
+                }}
+                placeholder="Select Location"
+                disabled={!open}
+                label={"Select Location"}
+              />
+              <div style={{ marginTop: '1rem' }}>
+                <Title level={5}>Sub-locations selected</Title>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                  {Array.from(selectedSubLocations).map((sub) => (
+                    <Chip
+                      variant="outlined"
+                      label={sub}
+                      onDelete={() => handleRemoveSubLocation(sub)}
+                      style={{
+                        backgroundColor: "rgba(40, 199, 111, 0.12)",
+                        color: "rgb(40, 199, 111)",
+                        fontWeight: 600,
+                        padding: "0 8px"
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </Col>
         <Col span={8}>
@@ -227,12 +258,12 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
             <Loading />
           ) : (
             <MultiSelectComponent
-              onChange={setSelectedSubLocations}
-              items={subLocations.map((sub) => ({ label: sub, value: sub }))}
-              placeholder="Select or create sub-locations"
-              disabled={!selectedLocation || !open}
-              value={selectedSubLocations}
-              label={"Select or create sub-locations"}
+              label="Sub Locations"
+              placeholder="Select sub locations"
+              items={itemsToDisplay}
+              selectedKeys={selectedSubLocations}
+              onSelectionChange={handleItemChange}
+              disabled={!selectedLocation}
             />
           )}
         </Col>
@@ -249,9 +280,10 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                 original: event,
               }))}
               value={selectedEvent}
-              onSelect={(option) =>
+              onSelect={(option) =>(
+                setSelectedEvent(option?.label || null),
                 handleEventSelection(option?.original || null)
-              }
+              )}
               placeholder="Type to search for closed events"
               disabled={!open}
             />
@@ -341,8 +373,8 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       />
       <Divider />
       {comparisonResults.matchedItems.length > 0 ||
-      comparisonResults.missingItems.length > 0 ||
-      comparisonResults.extraItems.length > 0 ? (
+        comparisonResults.missingItems.length > 0 ||
+        comparisonResults.extraItems.length > 0 ? (
         <Row gutter={[16, 16]}>
           <Col span={8}>
             {renderComparisonList(
