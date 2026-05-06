@@ -37,6 +37,7 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
+import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -82,6 +83,7 @@ const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
+  const [openShippingModal, setOpenShippingModal] = useState(false);
   const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchItem: "...",
@@ -297,6 +299,7 @@ const MainPage = () => {
           setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
+          setOpenShippingModal={setOpenShippingModal}
         />
         <Divider />
         <FilterOptionsContext.Provider
@@ -377,6 +380,9 @@ const MainPage = () => {
       }
       {
         openDeleteItemModal && <DeleteGroups openModal={openDeleteItemModal} closeModal={setOpenDeleteItemModal} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
+      {
+        openShippingModal && <ShippingInventoryModal visible={openShippingModal} onClose={() => setOpenShippingModal(false)} refetch={companyHasInventoryQuery.refetch} user={user} />
       }
       {
         addInventoryFromXLSXFileModal && (
