@@ -138,6 +138,11 @@ const ReviewAndSubmitEvent = () => {
     return Array.from(result.values());
   };
 
+  const completingEventConfigurationProcess = async (eventId) => {
+    await devitrakApi.post(`/db_event/update-event/${eventId}`,{
+      configuration:"completed"
+    });
+  };
   const createEventNoSQLDatabase = async () => {
     await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
       deviceSetup: deviceSetupNoSQL(),
@@ -145,6 +150,7 @@ const ReviewAndSubmitEvent = () => {
       contactInfo: contactInfo,
       contract_for: "event",
     });
+    await completingEventConfigurationProcess(event.idSql);
     return await lockedItemsInWarehouseForEventShipping();
   };
 
