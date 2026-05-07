@@ -1,29 +1,32 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { message, Tag, Divider, Spin } from 'antd';
-import { useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { Grid, Typography } from '@mui/material';
+import { Grid, InputLabel, Typography } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Divider, message, Spin, Tag } from 'antd';
 import { saveAs } from 'file-saver';
+import { useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import ModalUX from '../../../components/UX/modal/ModalUX';
-import Input from '../../../components/UX/inputs/Input';
-import BaseTable from '../../../components/UX/tables/BaseTable';
-import SelectComponent from '../../../components/UX/dropdown/SelectComponent';
-import BlueButton from '../../../components/UX/buttons/BlueButton';
-import GrayButton from '../../../components/UX/buttons/GrayButton';
 import { devitrakApi } from '../../../api/devitrakApi';
+import { default as BlueButton, default as BlueButtonComponent } from '../../../components/UX/buttons/BlueButton';
+import DangerButtonComponent from '../../../components/UX/buttons/DangerButton';
+import GrayButton from '../../../components/UX/buttons/GrayButton';
+import SelectComponent from '../../../components/UX/dropdown/SelectComponent';
+import Input from '../../../components/UX/inputs/Input';
+import ModalUX from '../../../components/UX/modal/ModalUX';
+import BaseTable from '../../../components/UX/tables/BaseTable';
+import ExchangeModal from './components/ExchangeModal';
+import GrayButtonComponent from '../../../components/UX/buttons/GrayButton';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 const formatDateTime = (iso) => {
     if (!iso) return '—';
     return new Date(iso).toLocaleString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
+        day: 'numeric', hour: '2-digit', minute: '2-digit',
+        month: 'short', year: 'numeric',
     });
 };
 
-const statusColor = { locked_in_warehouse: 'blue', shipped: 'green', delivered: 'purple' };
+const statusColor = { delivered: 'purple', locked_in_warehouse: 'blue', shipped: 'green' };
 
 // ─── component ───────────────────────────────────────────────────────────────
 
@@ -31,22 +34,28 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
     const { user } = useSelector((state) => state.admin);
     const queryClient = useQueryClient();
 
+    const [openModalNotification, setOpenModalNotification] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [destination, setDestination] = useState('');
     const [shipOutDate, setShipOutDate] = useState('');
     const [authorizer, setAuthorizer] = useState('');
     const [receiver, setReceiver] = useState('');
     const [isExporting, setIsExporting] = useState(false);
+    const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
+    const [itemToExchange, setItemToExchange] = useState(null);
+    const [newSerialNumber, setNewSerialNumber] = useState('');
+    const [courier, setCourier] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
 
-    const companyId = user?.infoSql?.company_id;
-
+    const companyId = 137 //user?.infoSql?.company_id;
+    // console.log(user)
     // ── 1. active events with reserved inventory ──────────────────────────────
     const eventsQuery = useQuery({
-        queryKey: ['shippingEvents', companyId],
+        queryKey: ['shippingEvents'],
         queryFn: async () => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
-                company_id: companyId,
                 active: 1,
+                company_id: companyId,
                 shipping_status: 'locked_in_warehouse',
             });
             if (!res.data?.ok || !res.data?.items) return [];
@@ -56,21 +65,21 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                 if (!map.has(item.event_id)) {
                     map.set(item.event_id, {
                         id: item.event_id,
-                        label: item.event_name,
                         address: item.event_address ?? '',
                         eventDate: item.event_date ?? null,
+                        label: item.event_name,
+                        rawData: item,
                     });
                 }
             });
             return Array.from(map.values());
         },
         enabled: !!companyId && visible,
-        staleTime: 30_000,
+        // staleTime: 30_000,
     });
-
     // ── 2. packaging list for selected event ──────────────────────────────────
     const itemsQuery = useQuery({
-        queryKey: ['shippingItems', selectedEvent?.id],
+        enabled: !!selectedEvent,
         queryFn: async () => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 company_id: companyId,
@@ -79,7 +88,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
             });
             return res.data?.items ?? [];
         },
-        enabled: !!selectedEvent,
+        queryKey: ['shippingItems', selectedEvent?.id],
         staleTime: 30_000,
     });
 
@@ -99,12 +108,12 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                 }),
             ]);
         },
+        onError: () => message.error('Could not ship out inventory.'),
         onSuccess: () => {
             message.success('Inventory shipped out successfully.');
             queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
             handleClose();
         },
-        onError: () => message.error('Could not ship out inventory.'),
     });
 
     // ── handlers ──────────────────────────────────────────────────────────────
@@ -179,8 +188,10 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                 { field: 'Event Name', value: selectedEvent.label },
                 { field: 'Destination / Location', value: destination || selectedEvent.address },
                 { field: 'Ship-Out Date', value: shipOutDate ? formatDateTime(shipOutDate) : '—' },
+                { field: 'Courier', value: courier || '—' },
+                { field: 'Tracking Number', value: trackingNumber || '—' },
                 { field: 'Authorized By', value: authorizer || '—' },
-                { field: 'Received By', value: receiver || '—' },
+                { field: 'Who will receive inventory at destination', value: receiver || '—' },
                 { field: 'Total Items', value: items.length },
                 { field: 'Report Generated', value: new Date().toLocaleString() },
             ];
@@ -193,7 +204,6 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                 { header: 'Serial Number', key: 'serial_number', width: 22 },
                 { header: 'Item / Group', key: 'item_group', width: 28 },
                 { header: 'Category', key: 'category_name', width: 20 },
-                { header: 'Brand', key: 'brand', width: 18 },
                 { header: 'Condition', key: 'status', width: 14 },
                 { header: 'Shipping Status', key: 'shipping_status', width: 20 },
                 { header: 'Location (Origin)', key: 'location', width: 24 },
@@ -203,14 +213,13 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
 
             items.forEach((item, i) => {
                 wsItems.addRow({
-                    idx: i + 1,
-                    serial_number: item.serial_number ?? '',
-                    item_group: item.item_group ?? item.item_name ?? '',
                     category_name: item.category_name ?? '',
-                    brand: item.brand ?? '',
-                    status: item.status ?? item.condition ?? '',
-                    shipping_status: item.shipping_status ?? '',
+                    idx: i + 1,
+                    item_group: item.item_group ?? item.item_name ?? '',
                     location: item.location ?? item.main_warehouse ?? '',
+                    serial_number: item.serial_number ?? '',
+                    shipping_status: item.shipping_status ?? '',
+                    status: item.status ?? item.condition ?? '',
                 });
             });
 
@@ -232,59 +241,56 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
 
     const columns = [
         {
-            title: '#',
             key: 'idx',
-            width: 50,
             render: (_, __, i) => i + 1,
+            title: '#',
+            width: 50,
         },
         {
-            title: 'Serial Number',
             dataIndex: 'serial_number',
             key: 'serial_number',
             render: (v) => <Typography variant="body2" fontFamily="monospace">{v ?? '—'}</Typography>,
+            title: 'Serial Number',
         },
         {
-            title: 'Item / Group',
             dataIndex: 'item_group',
             key: 'item_group',
             render: (v, row) => v ?? row.item_name ?? '—',
+            title: 'Item / Group',
         },
         {
-            title: 'Category',
             dataIndex: 'category_name',
             key: 'category_name',
+            title: 'Category',
         },
         {
-            title: 'Brand',
-            dataIndex: 'brand',
-            key: 'brand',
-        },
-        {
-            title: 'Condition',
             dataIndex: 'status',
             key: 'status',
             render: (v, row) => v ?? row.condition ?? '—',
+            title: 'Condition',
         },
         {
-            title: 'Status',
-            dataIndex: 'shipping_status',
-            key: 'shipping_status',
-            render: (v) => (
-                <Tag color={statusColor[v] ?? 'default'}>
-                    {v ? v.replace(/_/g, ' ') : '—'}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Origin Location',
             dataIndex: 'location',
             key: 'location',
             render: (v, row) => v ?? row.main_warehouse ?? '—',
+            title: 'Origin Location',
+        },
+        {
+            dataIndex: '',
+            render: (v, row) => {
+                return (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                        <BlueButtonComponent title={"Exchange"} func={() => { setItemToExchange(row); setIsExchangeModalVisible(true) }} />
+                        <DangerButtonComponent title={"Remove"} func={() => { setItemToExchange(row); setOpenModalNotification(true) }} />
+                    </div>
+                )
+            },
+            title: '',
         },
     ];
 
     // ── render ────────────────────────────────────────────────────────────────
-
+    // console.log(itemsQuery)
     const body = (
         <Grid container spacing={2}>
 
@@ -294,7 +300,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     Active Event
                 </Typography>
                 <SelectComponent
-                    label="Select event with reserved inventory"
+                    // label="Select event with reserved inventory"
                     placeholder="Search event..."
                     items={eventsQuery.data ?? []}
                     onSelect={handleEventSelection}
@@ -305,7 +311,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     <Spin size="small" style={{ marginTop: 8 }} />
                 )}
                 {eventsQuery.isSuccess && (eventsQuery.data ?? []).length === 0 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                         No active events with inventory locked in warehouse.
                     </Typography>
                 )}
@@ -319,47 +325,129 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-                <Input
-                    label="Destination / Location"
-                    placeholder="e.g. Convention Center, Miami FL"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    disabled={!selectedEvent}
-                    required
-                />
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Destination / Location
+                    </Typography>
+                    <Input
+                        // label="Destination / Location"
+                        placeholder="e.g. Convention Center, Miami FL"
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
             </Grid>
 
             <Grid item xs={12} md={6}>
-                <Input
-                    label="Ship-Out Date & Time"
-                    type="datetime-local"
-                    value={shipOutDate}
-                    onChange={(e) => setShipOutDate(e.target.value)}
-                    disabled={!selectedEvent}
-                    required
-                />
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Ship-Out Date & Time
+                    </Typography>
+                    <Input
+                        // label="Ship-Out Date & Time"
+                        type="datetime-local"
+                        value={shipOutDate}
+                        onChange={(e) => setShipOutDate(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
             </Grid>
 
             <Grid item xs={12} md={6}>
-                <Input
-                    label="Authorized By"
-                    placeholder="Name of person authorizing shipment"
-                    value={authorizer}
-                    onChange={(e) => setAuthorizer(e.target.value)}
-                    disabled={!selectedEvent}
-                    required
-                />
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Courier
+                    </Typography>
+                    <Input
+                        // label="Courier"
+                        placeholder="e.g. FedEx, UPS, DHL"
+                        value={courier}
+                        onChange={(e) => setCourier(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
             </Grid>
 
             <Grid item xs={12} md={6}>
-                <Input
-                    label="Received By"
-                    placeholder="Name of person receiving at destination"
-                    value={receiver}
-                    onChange={(e) => setReceiver(e.target.value)}
-                    disabled={!selectedEvent}
-                    required
-                />
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Tracking Number
+                    </Typography>
+                    <Input
+                        // label="Tracking Number"
+                        placeholder="e.g. 123456789012345678901234567890"
+                        value={trackingNumber}
+                        onChange={(e) => setTrackingNumber(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Courier
+                    </Typography>
+                    <Input
+                        // label="Authorized By"
+                        placeholder="Name of person authorizing shipment"
+                        value={courier}
+                        onChange={(e) => setCourier(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Tracking Number
+                    </Typography>
+                    <Input
+                        // label="Authorized By"
+                        placeholder="Name of person authorizing shipment"
+                        value={trackingNumber}
+                        onChange={(e) => setTrackingNumber(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Authorized By
+                    </Typography>
+                    <Input
+                        // label="Authorized By"
+                        placeholder="Name of person authorizing shipment"
+                        value={authorizer}
+                        onChange={(e) => setAuthorizer(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+                <InputLabel>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                        Who will receive inventory at destination
+                    </Typography>
+                    <Input
+                        // label="Received By"
+                        placeholder="Name of person receiving at destination"
+                        value={receiver}
+                        onChange={(e) => setReceiver(e.target.value)}
+                        disabled={!selectedEvent}
+                        required
+                    />
+                </InputLabel>
             </Grid>
 
             {/* ── Packaging list ── */}
@@ -424,13 +512,54 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
     );
 
     return (
-        <ModalUX
-            openDialog={visible}
-            closeModal={handleClose}
-            title="Ship Out Inventory"
-            width={1100}
-            body={body}
-        />
+        <>
+            <ModalUX
+                openDialog={visible}
+                closeModal={handleClose}
+                title="Ship Out Inventory"
+                width={1100}
+                body={body}
+            />
+            {
+                isExchangeModalVisible && (
+                    <ExchangeModal
+                        visible={isExchangeModalVisible}
+                        onClose={() => setIsExchangeModalVisible(false)}
+                        itemToExchange={itemToExchange}
+                        newSerialNumber={newSerialNumber}
+                        setNewSerialNumber={setNewSerialNumber}
+                        refetchShippingEvents={itemsQuery.refetch}
+                        eventId={selectedEvent?.id}
+                    />
+                )
+            }
+            {
+                openModalNotification && (
+                    <ModalUX
+                        openDialog={openModalNotification}
+                        closeModal={() => setOpenModalNotification(false)}
+                        title="Remove"
+                        body={
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                                Are you sure you want to exchange this item: {itemToExchange.item_name} serial number: {itemToExchange.serial_number}?
+                            </Typography>
+                        }
+                        footer={
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                <GrayButtonComponent
+                                    title="Cancel"
+                                    func={() => setOpenModalNotification(false)}
+                                />
+                                <BlueButtonComponent
+                                    title="Remove"
+                                    func={() => { alert(`Deleted. Serial number ${itemToExchange.serial_number}, item id ${itemToExchange.item_id}`); setOpenModalNotification(false); }}
+                                />
+                            </div>
+                        }
+                    />
+                )
+            }
+        </>
     );
 };
 
