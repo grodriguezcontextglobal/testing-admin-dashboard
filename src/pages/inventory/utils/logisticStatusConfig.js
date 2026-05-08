@@ -47,28 +47,28 @@ export const logisticStatusConfig = {
     category: "storage",
     allowedTransitions: ["in-stock", "in-transit"],
   },
-  "in-stock": {
+  "in-reserved": {
+    label: "Reserved",
+    description: "Item is reserved for an event",
+    category: "usage",
+    allowedTransitions: ["reserved", "in-transit", "shipped"],
+  },
+    "in-stock": {
     label: "In Stock",
     description: "Item is available in warehouse and ready for assignment",
     category: "availability",
     allowedTransitions: ["reserved", "allocated", "in-transit", "archived"],
-  },
-    "in-transit": {
-    label: "In Transit",
-    description: "Item is moving between locations",
-    category: "logistics",
-    allowedTransitions: ["received", "assigned", "in-stock"],
   },
   "in-transit": {
     label: "In Transit",
     description: "Item is moving between locations",
     category: "logistics",
     allowedTransitions: ["received", "assigned", "in-stock"],
-  },
+  },  
   "in-use": {
     label: "In Use",
     description: "Item is actively being used",
-    category: "usage",
+    category: "logistics",
     allowedTransitions: ["returned", "damaged", "lost"],
   },
   lost: {
@@ -89,19 +89,25 @@ export const logisticStatusConfig = {
     category: "return",
     allowedTransitions: ["in-stock"],
   },
-    reserved: {
+  reserved: {
     label: "Reserved",
     description: "Item is reserved for a future assignment but still in place",
     category: "availability",
     allowedTransitions: ["allocated", "in-stock", "in-transit"],
   },
-  returned: {
+    returned: {
     label: "Returned",
     description: "Item has been returned from use",
     category: "return",
     allowedTransitions: ["pending-checkin", "in-stock"],
   },
-"under-inspection": {
+  "shipped": {
+    label: "Shipped",
+    description: "Item was shipped to event",
+    category: "usage",
+    allowedTransitions: ["in-transit", "received", "in-idle"],
+  },
+  "under-inspection": {
     label: "Under Inspection",
     description: "Item is being checked for damage or issues",
     category: "return",
