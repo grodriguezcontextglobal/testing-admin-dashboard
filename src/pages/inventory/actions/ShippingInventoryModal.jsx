@@ -27,6 +27,7 @@ const formatDateTime = (iso) => {
 };
 
 const statusColor = { delivered: 'purple', locked_in_warehouse: 'blue', shipped: 'green' };
+const statusRef = { delivered: 'Delivered', locked_in_warehouse: 'Locked in Warehouse', shipped: 'Shipped' };
 
 // ─── component ───────────────────────────────────────────────────────────────
 
@@ -93,7 +94,58 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
     });
 
     // ── 3. ship-out mutation ──────────────────────────────────────────────────
-    const shipOutMutation = useMutation({
+    const createShipmentRecordMutation = useMutation({
+        mutationFn: async (shipmentData) => {
+            const { data } = await devitrakApi.post('/db_shipment/', shipmentData);
+            return data;
+        },
+        onError: (error) => {
+            console.error("Error creating shipment record:", error);
+            message.error('Could not create shipment record. Please try again.');
+        },
+        onSuccess: () => {
+            const items = itemsQuery.data ?? [];
+            if (items.length > 0) {
+                const item_ids = items.map((item) => item.item_id);
+                updateItemStatusMutation.mutate({
+                    company_id: companyId,
+                    event_id: selectedEvent.id,
+                    item_ids,
+                });
+            } else {
+                // If there are no items, we can just close the modal and show success.
+                message.success('Shipment record created successfully.');
+                queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
+                handleClose();
+            }
+        },
+    });
+
+    const bulkUpdateItemStatusMutation = useMutation({
+        mutationFn: async ({ company_id, event_id, item_ids }) => {
+            await Promise.all([
+                devitrakApi.put('/db_item/event-items/bulk-update', {
+                    company_id,
+                    event_id,
+                    updates: { shipping_status: 'in-transit' }, // The new status
+                    filters: { shipping_status: 'locked_in_warehouse' }, // The old status
+                }),
+                devitrakApi.post('/db_inventory/update-large-data', {
+                    item_ids,
+                    warehouse: 0, // Mark items as out of warehouse
+                    updates: { shipping_status: 'in-transit', warehouse: 0 }
+                }),
+            ]);
+        },
+        onError: () => message.error('Could not bulk update item statuses.'),
+        onSuccess: () => {
+            message.success('Shipment record created and inventory shipped out successfully.');
+            queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
+            handleClose();
+        },
+    });
+
+    const updateItemStatusMutation = useMutation({
         mutationFn: async ({ company_id, event_id, item_ids }) => {
             await Promise.all([
                 devitrakApi.put('/db_item/event-items', {
@@ -102,15 +154,16 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     items: item_ids,
                     updates: { shipping_status: 'in-transit' },
                 }),
-                devitrakApi.post('/update-large-data', {
+                devitrakApi.post('/db_inventory/update-large-data', {
                     item_ids,
-                    warehouse: 0,
+                    warehouse: 0, // Mark items as out of warehouse
+                    updates: { shipping_status: 'in-transit', warehouse: 0 }
                 }),
             ]);
         },
-        onError: () => message.error('Could not ship out inventory.'),
+        onError: () => message.error('Could not update item statuses after creating shipment record.'),
         onSuccess: () => {
-            message.success('Inventory shipped out successfully.');
+            message.success('Shipment record created and inventory shipped out successfully.');
             queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
             handleClose();
         },
@@ -124,6 +177,8 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
         setShipOutDate('');
         setAuthorizer('');
         setReceiver('');
+        setCourier('');
+        setTrackingNumber('');
     };
 
     const handleClose = () => {
@@ -132,6 +187,8 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
         setShipOutDate('');
         setAuthorizer('');
         setReceiver('');
+        setCourier('');
+        setTrackingNumber('');
         onClose();
     };
 
@@ -140,24 +197,35 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
         destination.trim() &&
         shipOutDate &&
         authorizer.trim() &&
-        receiver.trim();
+        receiver.trim() &&
+        courier.trim() &&
+        trackingNumber.trim();
 
     const handleShipOut = () => {
         if (!isFormValid) {
             message.warning('Please complete all required fields.');
             return;
         }
+
         const items = itemsQuery.data ?? [];
         if (items.length === 0) {
-            message.warning('No items found for this event.');
+            message.warning('No items to ship.');
             return;
         }
-        const item_ids = items.map((item) => item.item_id);
-        shipOutMutation.mutate({
+        const package_list = items.map((item) => item.item_id);
+
+        const shipmentData = {
+            authorizer_name: authorizer,
             company_id: companyId,
+            courier: courier,
+            destination: destination,
             event_id: selectedEvent.id,
-            item_ids,
-        });
+            package_list,
+            recipient_name: receiver,
+            status: 'pending',
+            tracking_number: trackingNumber,
+        };
+        createShipmentRecordMutation.mutate(shipmentData);
     };
 
     // ── report (XLSX) ─────────────────────────────────────────────────────────
@@ -276,6 +344,12 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
             title: 'Origin Location',
         },
         {
+            dataIndex: 'shipping_status',
+            key: 'shipping_status',
+            render: (v) => <Typography variant="body2" color={statusColor[v] || 'text.secondary'}>{statusRef[v] || '—'}</Typography>,
+            title: 'Shipping Status',
+        },
+        {
             dataIndex: '',
             render: (v, row) => {
                 return (
@@ -355,7 +429,6 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     />
                 </InputLabel>
             </Grid>
-
             <Grid item xs={12} md={6}>
                 <InputLabel>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
@@ -371,7 +444,6 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     />
                 </InputLabel>
             </Grid>
-
             <Grid item xs={12} md={6}>
                 <InputLabel>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
@@ -379,7 +451,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     </Typography>
                     <Input
                         // label="Tracking Number"
-                        placeholder="e.g. 123456789012345678901234567890"
+                        placeholder="e.g. 1234567890"
                         value={trackingNumber}
                         onChange={(e) => setTrackingNumber(e.target.value)}
                         disabled={!selectedEvent}
@@ -388,36 +460,6 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                 </InputLabel>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Courier
-                    </Typography>
-                    <Input
-                        // label="Authorized By"
-                        placeholder="Name of person authorizing shipment"
-                        value={courier}
-                        onChange={(e) => setCourier(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Tracking Number
-                    </Typography>
-                    <Input
-                        // label="Authorized By"
-                        placeholder="Name of person authorizing shipment"
-                        value={trackingNumber}
-                        onChange={(e) => setTrackingNumber(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
             <Grid item xs={12} md={6}>
                 <InputLabel>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
@@ -486,7 +528,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                         <GrayButton
                             title="Cancel"
                             func={handleClose}
-                            disabled={shipOutMutation.isPending}
+                            disabled={createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending}
                         />
                     </Grid>
                     <Grid item>
@@ -501,8 +543,8 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                         <BlueButton
                             title="Ship Out Inventory"
                             func={handleShipOut}
-                            disabled={!isFormValid}
-                            isLoading={shipOutMutation.isPending}
+                            disabled={!isFormValid || createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending || bulkUpdateItemStatusMutation.isPending}
+                            isLoading={createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending || bulkUpdateItemStatusMutation.isPending}
                         />
                     </Grid>
                 </Grid>
