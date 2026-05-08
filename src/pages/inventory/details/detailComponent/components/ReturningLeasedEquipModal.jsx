@@ -25,7 +25,7 @@ const ReturningLeasedEquipModal = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
+  const [progress, setProgress] = useState({ current: 0, step: "", total: 0 });
   const [supplierInfo, setSupplierInfo] = useState(null);
   const { handleSubmit } = useForm();
   const queryClient = useQueryClient();
@@ -80,10 +80,12 @@ const ReturningLeasedEquipModal = ({
       const returnDate = new Date().toISOString();
       const payload = {
         item_ids: [dataFound.item_id],
-        warehouse: 1,
-        enableAssignFeature: 0,
-        returnedRentedInfo: JSON.stringify([]),
-        return_date: returnDate,
+        updates: {
+          warehouse: 1,
+          enableAssignFeature: 0,
+          returnedRentedInfo: JSON.stringify([]),
+          return_date: returnDate,
+        }
       };
       await devitrakApi.post("/db_inventory/update-large-data", payload);
 
@@ -95,9 +97,9 @@ const ReturningLeasedEquipModal = ({
       // Step 2: Email notification to staff
       await EmailReturnRentalItems({
         items: [dataFound.item_id],
+        setProgress,
         supplier_id: dataFound.supplier_info,
         user: user,
-        setProgress,
       });
 
       // Step 3: Delete items from records
@@ -168,49 +170,49 @@ const ReturningLeasedEquipModal = ({
     }
 
     const supplier = supplierInfo[0];
-    
+
     return (
       <div
         style={{
-          width: "100%",
+          background: "var(--blue-50, #EFF8FF)",
+          border: "1px solid var(--blue-200, #B2DDFF)",
+          borderRadius: "8px",
           marginBottom: "24px",
           padding: "16px",
-          borderRadius: "8px",
-          border: "1px solid var(--blue-200, #B2DDFF)",
-          background: "var(--blue-50, #EFF8FF)",
+          width: "100%",
         }}
       >
         <Typography
           style={{
             ...Subtitle,
+            color: "var(--blue-700, #175CD3)",
             fontWeight: 600,
             marginBottom: "12px",
-            color: "var(--blue-700, #175CD3)",
           }}
         >
           Returning to Provider
         </Typography>
-        
+
         <Grid container spacing={2}>
           {/* Company Name */}
           <Grid item xs={12} sm={6}>
             <div style={{ marginBottom: "8px" }}>
               <Typography
                 style={{
+                  color: "var(--gray-600, #475467)",
                   fontSize: "12px",
                   fontWeight: 500,
-                  color: "var(--gray-600, #475467)",
-                  textTransform: "uppercase",
                   letterSpacing: "0.5px",
+                  textTransform: "uppercase",
                 }}
               >
                 Company Name
               </Typography>
               <Typography
                 style={{
+                  color: "var(--gray-900, #101828)",
                   fontSize: "14px",
                   fontWeight: 600,
-                  color: "var(--gray-900, #101828)",
                   marginTop: "2px",
                 }}
               >
@@ -224,20 +226,20 @@ const ReturningLeasedEquipModal = ({
             <div style={{ marginBottom: "8px" }}>
               <Typography
                 style={{
+                  color: "var(--gray-600, #475467)",
                   fontSize: "12px",
                   fontWeight: 500,
-                  color: "var(--gray-600, #475467)",
-                  textTransform: "uppercase",
                   letterSpacing: "0.5px",
+                  textTransform: "uppercase",
                 }}
               >
                 Email
               </Typography>
               <Typography
                 style={{
+                  color: "var(--gray-700, #344054)",
                   fontSize: "14px",
                   fontWeight: 400,
-                  color: "var(--gray-700, #344054)",
                   marginTop: "2px",
                 }}
               >
@@ -251,20 +253,20 @@ const ReturningLeasedEquipModal = ({
             <div style={{ marginBottom: "8px" }}>
               <Typography
                 style={{
+                  color: "var(--gray-600, #475467)",
                   fontSize: "12px",
                   fontWeight: 500,
-                  color: "var(--gray-600, #475467)",
-                  textTransform: "uppercase",
                   letterSpacing: "0.5px",
+                  textTransform: "uppercase",
                 }}
               >
                 Phone
               </Typography>
               <Typography
                 style={{
+                  color: "var(--gray-700, #344054)",
                   fontSize: "14px",
                   fontWeight: 400,
-                  color: "var(--gray-700, #344054)",
                   marginTop: "2px",
                 }}
               >
@@ -278,20 +280,20 @@ const ReturningLeasedEquipModal = ({
             <div style={{ marginBottom: "8px" }}>
               <Typography
                 style={{
+                  color: "var(--gray-600, #475467)",
                   fontSize: "12px",
                   fontWeight: 500,
-                  color: "var(--gray-600, #475467)",
-                  textTransform: "uppercase",
                   letterSpacing: "0.5px",
+                  textTransform: "uppercase",
                 }}
               >
                 Address
               </Typography>
               <Typography
                 style={{
+                  color: "var(--gray-700, #344054)",
                   fontSize: "14px",
                   fontWeight: 400,
-                  color: "var(--gray-700, #344054)",
                   marginTop: "2px",
                 }}
               >
@@ -325,18 +327,18 @@ const ReturningLeasedEquipModal = ({
           key={dataFound.item_id}
           id="handleReturningLeasedEquip"
           style={{
-            width: "100%",
-            justifyContent: "flex-start",
             alignItems: "center",
-            textAlign: "left",
+            alignSelf: "stretch",
+            background: "var(--gray-100, #F2F4F7)",
+            border: "1px solid var(--gray-300, #D0D5DD)",
+            borderRadius: "8px",
             display: "flex",
-            padding: "24px",
             flexDirection: "column",
             gap: "24px",
-            alignSelf: "stretch",
-            borderRadius: "8px",
-            border: "1px solid var(--gray-300, #D0D5DD)",
-            background: "var(--gray-100, #F2F4F7)",
+            justifyContent: "flex-start",
+            padding: "24px",
+            textAlign: "left",
+            width: "100%",
           }}
           className="form"
           onSubmit={handleSubmit(handleReturnRentalItem)}
@@ -345,12 +347,12 @@ const ReturningLeasedEquipModal = ({
           {supplierInfo ? renderSupplierInfo() : "Supplier information not found"}
           <div
             style={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-start",
               alignItems: "center",
-              textAlign: "left",
+              display: "flex",
               gap: "10px",
+              justifyContent: "flex-start",
+              textAlign: "left",
+              width: "100%",
             }}
           >
             <GrayButtonComponent
@@ -371,10 +373,10 @@ const ReturningLeasedEquipModal = ({
           </div>
         </form>
       </Grid>
-      
+
       {/* Add this in the Modal content, before the Tabs component: */}
       {progress.total > 0 && (
-        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+        <Box sx={{ bgcolor: "background.paper", borderRadius: 1, mb: 2, p: 2 }}>
           <Typography variant="body2" gutterBottom>
             {progress.step}
           </Typography>
