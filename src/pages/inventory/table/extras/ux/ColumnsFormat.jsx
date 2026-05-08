@@ -50,13 +50,13 @@ const ColumnsFormat = ({
         <span style={cellStyle}>
           <Avatar
             size={"80px"}
-            style={{ borderRadius: "8px", background: "transparent" }}
+            style={{ background: "transparent", borderRadius: "8px" }}
           >
             {record.image_url ? (
               <img
                 src={record.image_url}
                 alt={`${record.item}-${record.item_group}-${record.serial_number}`}
-                style={{ width: "100%", height: "auto" }}
+                style={{ height: "auto", width: "100%" }}
               />
             ) : (
               <Avatar size={"80px"}>
@@ -76,12 +76,8 @@ const ColumnsFormat = ({
       ),
     },
     {
-      title: "Device name",
       dataIndex: "item_group",
       key: "item_group",
-      sorter: {
-        compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
-      },
       render: (item_group) => (
         <span style={cellStyle}>
           {" "}
@@ -90,14 +86,14 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: {
+        compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
+      },
+      title: "Device name",
     },
     {
-      title: "Status",
       dataIndex: "warehouse",
       key: "warehouse",
-      sorter: {
-        compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
-      },
       render: (warehouse, record) => {
         const status = record?.data?.logistic_status;
         return (
@@ -107,14 +103,14 @@ const ColumnsFormat = ({
           >{warehouseDicStatus[status] || ""}</PillUIComponent>
         );
       },
+      sorter: {
+        compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
+      },
+      title: "Status",
     },
     {
-      title: "Ownership",
       dataIndex: "ownership",
       key: "ownership",
-      sorter: {
-        compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
-      },
       render: (ownership) => (
         <PillUIComponent
           color={ownership === "Permanent" ? "brand" : "success"}
@@ -126,15 +122,14 @@ const ColumnsFormat = ({
           </span>
         </PillUIComponent>
       ),
+      sorter: {
+        compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
+      },
+      title: "Ownership",
     },
     {
-      title: "Taxable address",
       dataIndex: "main_warehouse",
       key: "main_warehouse",
-      sorter: {
-        compare: (a, b) =>
-          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
-      },
       render: (main_warehouse) => (
         <span style={cellStyle}>
           {" "}
@@ -143,14 +138,15 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: {
+        compare: (a, b) =>
+          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
+      },
+      title: "Taxable address",
     },
     {
-      title: "Location",
       dataIndex: "location",
       key: "location",
-      sorter: {
-        compare: (a, b) => ("" + a.location).localeCompare(b.location),
-      },
       render: (location) => {
         let result = location;
         if (String(result).toLowerCase().includes("leased equipment")) {
@@ -177,12 +173,14 @@ const ColumnsFormat = ({
           </span>
         );
       },
+      sorter: {
+        compare: (a, b) => ("" + a.location).localeCompare(b.location),
+      },
+      title: "Location",
     },
     {
-      title: "Main Serial Number",
       dataIndex: "serial_number",
       key: "serial_number",
-      sorter: (a, b) => a.serial_number - b.serial_number,
       render: (serial_number) => (
         <span style={cellStyle}>
           {" "}
@@ -191,6 +189,8 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: (a, b) => a.serial_number - b.serial_number,
+      title: "Main Serial Number",
     },
     {
       title: "Actions",
@@ -205,9 +205,9 @@ const ColumnsFormat = ({
         return (
           <div
             style={{
+              alignItems: "center",
               display: "flex",
               gap: "8px",
-              alignItems: "center",
               justifyContent: "flex-end",
             }}
           >
