@@ -28,12 +28,12 @@ const InventorySearchBar = ({
   const { user } = useSelector(state => state.admin)
   const canRenderButton =
     role === "0" ||
-    locations?.some(
+    locations?.every(
       (location) =>
         location.actions?.create &&
         location.actions?.assign &&
         location.actions?.delete &&
-        location.actions?.transfer,
+        location.actions?.transfer
     );
   return (
     <Grid
@@ -48,11 +48,11 @@ const InventorySearchBar = ({
     >
       <div
         style={{
-          width: "100%",
+          alignItems: "center",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           margin: "0px 0px 1rem 0px",
+          width: "100%",
         }}
       >
         <Typography
@@ -71,7 +71,7 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
+        <div style={{ alignItems: "center", display: "flex", gap: 6, justifyContent: "flex-end" }}>
           {canRenderButton && (
             <DangerButtonComponent
               title="Delete group"
@@ -104,9 +104,9 @@ const InventorySearchBar = ({
               fullWidth
               placeholder="Search device here"
               endAdornment={adornmentButtonsComponent({
-                setValue,
                 setParams,
                 setSearchedResult,
+                setValue,
               })}
             />
           </form>
@@ -119,9 +119,9 @@ const InventorySearchBar = ({
               setOpenAdvanceSearchModal(true);
             }}
             styles={{
-              width: "100%",
-              justifyContent: "space-between",
               alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
             }}
             titleStyles={{
               textTransform: "none",
