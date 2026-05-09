@@ -11,18 +11,6 @@ export const logisticStatusConfig = {
     category: "system",
     allowedTransitions: [],
   },
-  archived: {
-    label: "Archived",
-    description: "Item is inactive or removed from operations",
-    category: "system",
-    allowedTransitions: [],
-  },
-  archived: {
-    label: "Archived",
-    description: "Item is inactive or removed from operations",
-    category: "system",
-    allowedTransitions: [],
-  },
   assigned: {
     label: "Assigned",
     description: "Item is assigned to a user or event",
@@ -125,13 +113,6 @@ export const logisticStatusConfig = {
     category: "exception",
     allowedTransitions: ["in-stock", "archived"],
   },
-  "in-event": {
-    label: "In Event",
-    description: "Item is being used in an event",
-    category: "usage",
-    allowedTransitions: ["in-event", "assigned", "in-use"],
-  },
-
 };
 
 const categoryColorMap = {
