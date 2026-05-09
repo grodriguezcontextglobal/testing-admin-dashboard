@@ -10,7 +10,7 @@ import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrow
 import PillUIComponent from "../../../../../components/UX/Chip/PillUIComponent";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
-import { getLogisticStatusColor } from "../../../utils/logisticStatusConfig";
+// import { getLogisticStatusColor } from "../../../utils/logisticStatusConfig";
 
 const ColumnsFormat = ({
   dictionary,
@@ -96,11 +96,35 @@ const ColumnsFormat = ({
       key: "warehouse",
       render: (warehouse, record) => {
         const status = record?.data?.logistic_status;
+        // console.log(status, getLogisticStatusColor(status))
+        // const backgroundColor = {
+        //   allocated: "brand",
+        //   archived: "danger",
+        //   assigned: "info",
+        //   "awaiting-pickup": "warning",
+        //   damaged: "danger",
+        //   "in-container": "info",
+        //   "in-event": "info",
+        //   "in-reserved": "info",
+        //   "in-stock": "success",
+        //   "in-transit": "info",
+        //   "in-use": "info",
+        //   lost: "danger",
+        //   "pending-checkin": "warning",
+        //   "ready-for-restock": "success",
+        //   reserved: "info",
+        //   returned: "success",
+        //   shipped: "success",
+        //   "under-inspection": "warning",
+        //   "under-maintenance": "danger",
+        // }
+        // console.log(status, backgroundColor[status])
         return (
           <PillUIComponent
-            color={getLogisticStatusColor(status)}
+            color={status === "in-stock" ? "success" : status === "in-transit" ? "warning" : status === "in-event" ? "brand" : status === "shipped" ? "brand":"success"} //{backgroundColor[status]}
             size="sm"
-          >{warehouseDicStatus[status] || ""}</PillUIComponent>
+          >{warehouseDicStatus[status] || ""}
+          </PillUIComponent>
         );
       },
       sorter: {
