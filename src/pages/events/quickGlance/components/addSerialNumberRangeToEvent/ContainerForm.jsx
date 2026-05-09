@@ -29,27 +29,28 @@ const ContainerForm = ({
   const processBatch = useCallback(
     async (batch) => {
       const sqlTemplate = {
-        event_id: event.sql.event_id,
-        item_group: deviceTitle,
-        company_id: user.sqlInfo.company_id,
         category_name: event.deviceSetup.find(
           (item) => item.group === deviceTitle
         ).category,
+        company_id: user.sqlInfo.company_id,
+        company_id_nosql:event.company_id,
         data: batch,
-        warehouse: 0,
+        event_id: event.sql.event_id,
         eventName: event.eventInfoDetail.eventName,
-        company_id_nosql:event.company_id
+        item_group: deviceTitle,
+        logistic_status:"in-event",
+        warehouse: 0
       };
 
       const noSqlTemplate = {
         type: deviceTitle,
-        deviceList: batch,
-        company: event.company_id,
-        status:"Operational",
         activity:false,
         comment:"No comment",
+        company: event.company_id,
+        deviceList: batch,
         eventSelected:event.eventInfoDetail.eventName,
-        provider:event.company
+        provider:event.company,
+        status:"Operational"
       };
       // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
       await devitrakApi.post('/db_event/allocate-device-container-event', sqlTemplate)
@@ -95,6 +96,7 @@ const ContainerForm = ({
 
   useEffect(() => {
     finalizeProcessAndUpdateEventInventory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status === "success"])
   
   return (
@@ -121,7 +123,7 @@ const ContainerForm = ({
       <Divider />
 
       <div>
-        <div style={{ margin:"0.5rem 0", gap:2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ alignItems: "center", display: "flex", gap:2, justifyContent: "space-between", margin:"0.5rem 0" }}>
         <Typography.Title level={5}>
           Scanned Items ({scannedSerials.length})
         </Typography.Title>
