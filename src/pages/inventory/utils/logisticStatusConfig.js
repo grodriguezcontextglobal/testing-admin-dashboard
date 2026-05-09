@@ -47,24 +47,30 @@ export const logisticStatusConfig = {
     category: "storage",
     allowedTransitions: ["in-stock", "in-transit"],
   },
-  "in-reserved": {
+  "in-event": {
+    label: "In Event",
+    description: "Item is being used in an event",
+    category: "usage",
+    allowedTransitions: ["in-event", "in-use"],
+  },
+    "in-reserved": {
     label: "Reserved",
     description: "Item is reserved for an event",
     category: "usage",
     allowedTransitions: ["reserved", "in-transit", "shipped"],
   },
-    "in-stock": {
+  "in-stock": {
     label: "In Stock",
     description: "Item is available in warehouse and ready for assignment",
     category: "availability",
     allowedTransitions: ["reserved", "allocated", "in-transit", "archived"],
-  },
+  },  
   "in-transit": {
     label: "In Transit",
     description: "Item is moving between locations",
     category: "logistics",
     allowedTransitions: ["received", "assigned", "in-stock"],
-  },  
+  },
   "in-use": {
     label: "In Use",
     description: "Item is actively being used",
@@ -89,13 +95,13 @@ export const logisticStatusConfig = {
     category: "return",
     allowedTransitions: ["in-stock"],
   },
-  reserved: {
+    reserved: {
     label: "Reserved",
     description: "Item is reserved for a future assignment but still in place",
     category: "availability",
     allowedTransitions: ["allocated", "in-stock", "in-transit"],
   },
-    returned: {
+  returned: {
     label: "Returned",
     description: "Item has been returned from use",
     category: "return",
@@ -119,6 +125,13 @@ export const logisticStatusConfig = {
     category: "exception",
     allowedTransitions: ["in-stock", "archived"],
   },
+  "in-event": {
+    label: "In Event",
+    description: "Item is being used in an event",
+    category: "usage",
+    allowedTransitions: ["in-event", "assigned", "in-use"],
+  },
+
 };
 
 const categoryColorMap = {
