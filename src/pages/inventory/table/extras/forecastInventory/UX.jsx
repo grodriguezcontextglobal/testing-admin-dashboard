@@ -20,6 +20,7 @@ const UX = ({
   handleReturnNavigation,
   handleUpdatePeriodOnly,
   locationData,
+  navigate,
   openAdvanceSearchModal,
   overallSummary,
   ownedInventory,
@@ -117,14 +118,15 @@ const UX = ({
       </Grid>
       <DivAnt />
       {/* Rental Analysis Buckets */}
-      {rentedInventory.total_items > 0 && (
+      {/* {rentedInventory.total_items > 0 && ( */}
         <Grid id="rental-equipment-inventory" item xs={12}>
           <RentalEquipmentInventory
             rentalAnalysis={rentalAnalysis}
             // RentedInventoryTable={RentedInventoryTable}
+            navigate={navigate}
           />
         </Grid>
-      )}{" "}
+      {/* )}{" "} */}
       <DivAnt />
       {/* Event Inventory - Enhanced */}
       <Grid item xs={12}>
