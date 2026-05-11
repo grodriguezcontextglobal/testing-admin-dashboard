@@ -1,16 +1,30 @@
-import { Grid, Stack } from "@mui/material";
+import { Grid, InputLabel, Stack } from "@mui/material";
 import Chip from "../../../../../components/UX/Chip/Chip";
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
 
-const columns = [
-  { title: "Category", dataIndex: "category_name", key: "category_name" },
-  { title: "Item", dataIndex: "item_group", key: "item_group" },
-  { title: "Serial", dataIndex: "serial_number", key: "serial_number" },
-  { title: "Location", dataIndex: "location", key: "location" },
-];
 
-const RentalEquipmentInventory = ({ rentalAnalysis }) => {
+const RentalEquipmentInventory = ({ rentalAnalysis, navigate }) => {
+  const columns = [
+    // {
+    //   title: "Category",
+    //   dataIndex: "category_name",
+    //   key: "category_name",
+    // },
+    { title: "Device", dataIndex: "item_group", key: "item_group" },
+    {
+      title: "Serial", dataIndex: "serial_number", key: "serial_number", render: (text, record) => (
+        <p
+          style={{ cursor: "pointer", color: "var(--blue700)" }}
+          onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
+        >
+          {text}
+        </p>
+      ),
+    },
+    { title: "Location", dataIndex: "location", key: "location" },
+  ];
+  console.log(rentalAnalysis)
   return (
     <ReusableCardWithHeaderAndFooter
       style={{ width: "-webkit-fill-available" }}
@@ -38,43 +52,49 @@ const RentalEquipmentInventory = ({ rentalAnalysis }) => {
       )}
       <Grid container spacing={1} alignItems="flex-start">
         <Grid item xs={12} md={4} lg={4}>
-          <ReusableCardWithHeaderAndFooter
+          {/* <ReusableCard
             id="returned-before-search-period"
             title={`Returned Before search Period (${rentalAnalysis?.before_period?.length ?? 0})`}
-          >
-            <BaseTable
-              columns={columns}
-              dataSource={rentalAnalysis?.before_period ?? []}
-              locale={{ emptyText: "—" }}
-              enablePagination={true}
-            />
-          </ReusableCardWithHeaderAndFooter>
+          > */}
+          <InputLabel>Returned Before search Period</InputLabel>
+          <BaseTable
+            enablePagination={true}
+            pageSize={10}
+            columns={columns}
+            dataSource={rentalAnalysis?.before_period ?? []}
+            locale={{ emptyText: "—" }}
+          />
+          {/* </ReusableCard> */}
         </Grid>
         <Grid item xs={12} md={4} lg={4}>
-          <ReusableCardWithHeaderAndFooter
+          {/* <ReusableCardWithHeaderAndFooter
             id="returning-within-search-period"
             title={`Returning Within search Period (${rentalAnalysis?.within_period?.length ?? 0})`}
-          >
-            <BaseTable
-              columns={columns}
-              dataSource={rentalAnalysis?.within_period ?? []}
-              enablePagination={true}
-              locale={{ emptyText: "—" }}
-            />
-          </ReusableCardWithHeaderAndFooter>
+          > */}
+          <InputLabel>Returning Within search Period</InputLabel>
+          <BaseTable
+            enablePagination={true}
+            pageSize={10}
+            columns={columns}
+            dataSource={rentalAnalysis?.within_period ?? []}
+            locale={{ emptyText: "—" }}
+          />
+          {/* </ReusableCardWithHeaderAndFooter> */}
         </Grid>
         <Grid item xs={12} md={4} lg={4}>
-          <ReusableCardWithHeaderAndFooter
+          {/* <ReusableCardWithHeaderAndFooter
             id="returning-after-search-period"
             title={`Returning After search Period (${rentalAnalysis?.after_period?.length ?? 0})`}
-          >
-            <BaseTable
-              columns={columns}
-              dataSource={rentalAnalysis?.after_period ?? []}
-              enablePagination={true}
-              locale={{ emptyText: "—" }}
-            />
-          </ReusableCardWithHeaderAndFooter>
+          > */}
+          <InputLabel>Returning After search Period</InputLabel>
+          <BaseTable
+            enablePagination={true}
+            pageSize={10}
+            columns={columns}
+            dataSource={rentalAnalysis?.after_period ?? []}
+            locale={{ emptyText: "—" }}
+          />
+          {/* </ReusableCardWithHeaderAndFooter> */}
         </Grid>
       </Grid>
     </ReusableCardWithHeaderAndFooter>
