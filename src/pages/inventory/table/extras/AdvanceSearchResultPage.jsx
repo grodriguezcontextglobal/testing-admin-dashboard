@@ -397,6 +397,7 @@ const AdvanceSearchResultPage = () => {
         handleReturnNavigation={handleReturnNavigation}
         handleUpdatePeriodOnly={handleUpdatePeriodOnly}
         locationData={locationData}
+        navigate={navigate}
         openAdvanceSearchModal={openAdvanceSearchModal}
         overallSummary={overallSummary}
         ownedInventory={ownedInventory}
